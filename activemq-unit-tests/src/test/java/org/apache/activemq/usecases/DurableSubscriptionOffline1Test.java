@@ -55,6 +55,7 @@ public class DurableSubscriptionOffline1Test extends DurableSubscriptionOfflineT
 
         List<Object[]> testParameters = new ArrayList<Object[]>();
         Boolean[] booleanValues = {Boolean.FALSE, Boolean.TRUE};
+//IC see: https://issues.apache.org/jira/browse/AMQ-5176
         List<Boolean> booleans = java.util.Arrays.asList(booleanValues);
         for (Boolean booleanValue : booleans) {
             for (PersistenceAdapterChoice persistenceAdapterChoice : persistenceAdapterChoices) {

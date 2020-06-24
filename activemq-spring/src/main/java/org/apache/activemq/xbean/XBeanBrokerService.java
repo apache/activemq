@@ -55,6 +55,8 @@ public class XBeanBrokerService extends BrokerService {
      */
     @PostConstruct
     private void postConstruct() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             afterPropertiesSet();
         } catch (Exception ex) {
@@ -68,8 +70,11 @@ public class XBeanBrokerService extends BrokerService {
      * @org.apache.xbean.InitMethod
      */
     public void afterPropertiesSet() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2064
         ensureSystemUsageHasStore();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2813
         if (shouldAutostart()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3696
             start();
         }
     }
@@ -80,6 +85,7 @@ public class XBeanBrokerService extends BrokerService {
     }
 
     private void ensureSystemUsageHasStore() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2064
         SystemUsage usage = getSystemUsage();
         if (usage.getStoreUsage().getStore() == null) {
             usage.getStoreUsage().setStore(getPersistenceAdapter());
@@ -87,6 +93,7 @@ public class XBeanBrokerService extends BrokerService {
         if (usage.getTempUsage().getStore() == null) {
             usage.getTempUsage().setStore(getTempDataStore());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         if (usage.getJobSchedulerUsage().getStore() == null) {
             usage.getJobSchedulerUsage().setStore(getJobSchedulerStore());
         }
@@ -99,6 +106,8 @@ public class XBeanBrokerService extends BrokerService {
      */
     @PreDestroy
     private void preDestroy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             destroy();
         } catch (Exception ex) {
@@ -118,6 +127,7 @@ public class XBeanBrokerService extends BrokerService {
     @Override
     public void stop() throws Exception {
         // must clear this Spring cache to avoid any memory leaks
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         CachedIntrospectionResults.clearClassLoader(getClass().getClassLoader());
         super.stop();
     }

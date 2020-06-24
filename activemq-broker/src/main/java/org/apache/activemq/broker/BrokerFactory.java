@@ -40,6 +40,7 @@ public final class BrokerFactory {
         try {
             return (BrokerFactoryHandler)BROKER_FACTORY_HANDLER_FINDER.newInstance(type);
         } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1565
             throw IOExceptionSupport.create("Could not load " + type + " factory:" + e, e);
         }
     }
@@ -51,6 +52,7 @@ public final class BrokerFactory {
      * @throws Exception
      */
     public static BrokerService createBroker(URI brokerURI) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1206
         return createBroker(brokerURI, false);
     }
 
@@ -95,6 +97,7 @@ public final class BrokerFactory {
      * @throws Exception
      */
     public static BrokerService createBroker(String brokerURI, boolean startBroker) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1206
         return createBroker(new URI(brokerURI), startBroker);
     }
 

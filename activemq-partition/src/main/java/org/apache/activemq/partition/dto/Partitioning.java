@@ -37,6 +37,7 @@ public class Partitioning {
 
     static final public ObjectMapper MAPPER = new ObjectMapper();
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5105
         MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         MAPPER.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }

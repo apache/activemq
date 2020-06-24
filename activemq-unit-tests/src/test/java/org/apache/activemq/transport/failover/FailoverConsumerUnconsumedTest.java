@@ -101,6 +101,7 @@ public class FailoverConsumerUnconsumedTest {
     @Test
     public void testFailoverClientAckMissingRedelivery() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
         final int maxConsumers = 2;
         broker = createBroker(true);
 
@@ -294,6 +295,7 @@ public class FailoverConsumerUnconsumedTest {
         }));
 
         final CountDownLatch shutdownConsumerAdded = new CountDownLatch(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
 
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
@@ -328,6 +330,7 @@ public class FailoverConsumerUnconsumedTest {
         broker.start();
 
         assertTrue("consumer added through failover", shutdownConsumerAdded.await(30, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
 
         // each should again get prefetch messages - all unconsumed deliveries should be rolledback
         assertTrue("after start all messages are re dispatched", Wait.waitFor(new Wait.Condition() {
@@ -370,6 +373,7 @@ public class FailoverConsumerUnconsumedTest {
         }
 
         public int deliveredSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
             return deliveredMessages.size();
         }
     }

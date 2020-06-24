@@ -38,6 +38,7 @@ public class StoreUsageLimitsTest {
     final int WAIT_TIME_MILLS = 20 * 1000;
     private static final String limitsLogLevel = "warn";
     final String toMatch = new String(Long.toString(Long.MAX_VALUE / (1024 * 1024)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6084
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();

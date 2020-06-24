@@ -81,6 +81,7 @@ public abstract class AbstractMechanism implements Mechanism {
 
     @Override
     public String getAuthzid() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         return authzid;
     }
 
@@ -91,6 +92,7 @@ public abstract class AbstractMechanism implements Mechanism {
 
     @Override
     public boolean isApplicable(String username, String password) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         return true;
     }
 }

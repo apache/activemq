@@ -50,6 +50,7 @@ import static org.junit.Assert.assertTrue;
 public class StorePerDestinationTest  {
     static final Logger LOG = LoggerFactory.getLogger(StorePerDestinationTest.class);
     final static int maxFileLength = 1024*100;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
     final static int numToSend = 5000;
     final Vector<Throwable> exceptions = new Vector<Throwable>();
     BrokerService brokerService;
@@ -178,11 +179,13 @@ public class StorePerDestinationTest  {
 
     @Test
     public void testDirectoryDefault() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3533
         MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter = new MultiKahaDBPersistenceAdapter();
         ArrayList<FilteredKahaDBPersistenceAdapter> adapters = new ArrayList<FilteredKahaDBPersistenceAdapter>();
 
         FilteredKahaDBPersistenceAdapter otherFilteredKahaDBPersistenceAdapter =
                 new FilteredKahaDBPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4744
         PersistenceAdapter otherStore = createStore(false);
         File someOtherDisk = new File("target" + File.separator + "someOtherDisk");
         otherStore.setDirectory(someOtherDisk);
@@ -192,6 +195,7 @@ public class StorePerDestinationTest  {
 
         FilteredKahaDBPersistenceAdapter filteredKahaDBPersistenceAdapterDefault =
                 new FilteredKahaDBPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4744
         PersistenceAdapter storeDefault = createStore(false);
         filteredKahaDBPersistenceAdapterDefault.setPersistenceAdapter(storeDefault);
         adapters.add(filteredKahaDBPersistenceAdapterDefault);
@@ -199,6 +203,7 @@ public class StorePerDestinationTest  {
         multiKahaDBPersistenceAdapter.setFilteredPersistenceAdapters(adapters);
 
         assertEquals(multiKahaDBPersistenceAdapter.getDirectory(), storeDefault.getDirectory().getParentFile());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3639
         assertEquals(someOtherDisk, otherStore.getDirectory().getParentFile());
     }
 
@@ -240,6 +245,7 @@ public class StorePerDestinationTest  {
         });
 
         executorService.shutdown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         assertTrue("consumers executor finished on time", executorService.awaitTermination(5*60, TimeUnit.SECONDS));
         final SystemUsage usage = brokerService.getSystemUsage();
         assertTrue("Store is not hogged", Wait.waitFor(new Wait.Condition() {

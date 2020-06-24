@@ -43,6 +43,8 @@ import org.slf4j.LoggerFactory;
 public class RedeliveryRestartTest extends TestSupport {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(RedeliveryRestartTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
     ActiveMQConnection connection;
     BrokerService broker = null;
     String queueName = "redeliveryRestartQ";
@@ -139,6 +141,7 @@ public class RedeliveryRestartTest extends TestSupport {
     @org.junit.Test
     public void testDurableSubRedeliveryFlagAfterRestartNotSupported() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("failover:(" + broker.getTransportConnectors().get(0).getPublishableConnectString()
             + ")?jms.prefetchPolicy.all=0");
         connection = (ActiveMQConnection) connectionFactory.createConnection();
@@ -190,6 +193,8 @@ public class RedeliveryRestartTest extends TestSupport {
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Destination destination = session.createQueue(queueName);
         populateDestination(10, destination, connection);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
 
         MessageConsumer consumer = session.createConsumer(destination);
         TextMessage msg = null;
@@ -206,6 +211,7 @@ public class RedeliveryRestartTest extends TestSupport {
         restartBroker();
 
         // make failover aware of the restarted auto assigned port
+//IC see: https://issues.apache.org/jira/browse/AMQ-4355
         connection.getTransport().narrow(FailoverTransport.class).add(true, broker.getTransportConnectors().get(0)
                 .getPublishableConnectString());
 
@@ -220,6 +226,8 @@ public class RedeliveryRestartTest extends TestSupport {
         session.commit();
 
         // consume the rest that were not redeliveries
+//IC see: https://issues.apache.org/jira/browse/AMQ-4355
+//IC see: https://issues.apache.org/jira/browse/AMQ-4355
         for (int i = 0; i < 5; i++) {
             msg = (TextMessage) consumer.receive(20000);
             LOG.info("not redelivered? got: " + msg);
@@ -235,6 +243,8 @@ public class RedeliveryRestartTest extends TestSupport {
     @org.junit.Test
     public void testValidateRedeliveryFlagAfterRecovery() throws Exception {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString()
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
             + "?jms.prefetchPolicy.all=0");
         connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
@@ -242,8 +252,11 @@ public class RedeliveryRestartTest extends TestSupport {
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Destination destination = session.createQueue(queueName);
         populateDestination(1, destination, connection);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
 
         MessageConsumer consumer = session.createConsumer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         TextMessage msg = (TextMessage) consumer.receive(5000);
         LOG.info("got: " + msg);
         assertNotNull("got the message", msg);
@@ -273,6 +286,8 @@ public class RedeliveryRestartTest extends TestSupport {
     }
 
     private void restartBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         broker.stop();
         broker.waitUntilStopped();
         broker = createRestartedBroker();

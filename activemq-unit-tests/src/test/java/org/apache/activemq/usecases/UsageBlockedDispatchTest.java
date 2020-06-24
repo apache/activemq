@@ -49,6 +49,7 @@ public class UsageBlockedDispatchTest extends TestSupport {
     @Override
     public void setUp() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7107
         broker = createBroker();
         broker.setDataDirectory("target" + File.separator + "activemq-data");
         broker.setPersistent(true);
@@ -76,6 +77,7 @@ public class UsageBlockedDispatchTest extends TestSupport {
     }
 
     protected BrokerService createBroker() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7107
         BrokerService broker = new BrokerService();
         setDefaultPersistenceAdapter(broker);
         return broker;
@@ -132,6 +134,7 @@ public class UsageBlockedDispatchTest extends TestSupport {
         MessageConsumer consumer = consumerSession.createConsumer(willGetAPage);
 
         consumer.receive(messageReceiveTimeout);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7107
 
         final AtomicBoolean gotExpectedLogEvent = new AtomicBoolean(false);
         Appender appender = new DefaultTestAppender() {
@@ -149,6 +152,7 @@ public class UsageBlockedDispatchTest extends TestSupport {
 
             MessageConsumer noDispatchConsumer = consumerSession.createConsumer(shouldBeStuckForDispatch);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7107
             Message m = noDispatchConsumer.receive(messageReceiveTimeout);
             assertNull("did not get a message", m);
 

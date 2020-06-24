@@ -72,6 +72,7 @@ public class JMSDurableSubNoLocalChangedTest {
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5996
         startBroker();
     }
 
@@ -159,6 +160,7 @@ public class JMSDurableSubNoLocalChangedTest {
 
         // Durable subscriber should receive them
         for (int i = 0; i < MSG_COUNT; ++i) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5996
             Message message = durableSubscriber.receive(2000);
             assertNotNull("Should get local messages now", message);
         }
@@ -184,6 +186,7 @@ public class JMSDurableSubNoLocalChangedTest {
 
         // Standard subscriber should receive them
         for (int i = 0; i < MSG_COUNT; ++i) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5996
             Message message = nonDurableSubscriber.receive(2000);
             assertNotNull(message);
         }
@@ -241,6 +244,7 @@ public class JMSDurableSubNoLocalChangedTest {
         // Durable noLocal=false subscription should not receive them as the subscriptions should
         // have been removed and recreated to update the noLocal flag.
         {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5996
             Message message = durableSubscriber.receive(500);
             assertNull(message);
         }
@@ -265,6 +269,7 @@ public class JMSDurableSubNoLocalChangedTest {
     }
 
     private void startBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5996
         createBroker(true);
     }
 

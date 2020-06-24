@@ -55,6 +55,7 @@ public class InvokeRequestReplyUsingJmsReplyToHeaderTest extends CamelTestSuppor
 
         Exchange reply = template.request("activemq:test.server?replyTo=queue:test.reply", new Processor() {
             public void process(Exchange exchange) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2182
                 exchange.getIn().setBody("James");
                 Map<String, Object> headers = new HashMap<String, Object>();
                 headers.put("cheese", 123);

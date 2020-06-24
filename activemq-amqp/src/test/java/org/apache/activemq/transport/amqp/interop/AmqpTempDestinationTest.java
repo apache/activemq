@@ -52,6 +52,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testCannotCreateSenderWithNamedTempQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5711
         doTestCannotCreateSenderWithNamedTempDestination(false);
     }
 
@@ -94,6 +95,8 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
     protected void doTestCannotCreateReceiverWithNamedTempDestination(boolean topic) throws Exception {
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -135,6 +138,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         AmqpSender sender = session.createSender(target);
         assertNotNull(sender);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6467
         Target remoteTarget = (Target) sender.getEndpoint().getRemoteTarget();
         Map<Symbol, Object> dynamicNodeProperties = remoteTarget.getDynamicNodeProperties();
         Symbol[] capabilites = remoteTarget.getCapabilities();
@@ -195,6 +199,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testCreateDynamicReceiverToTopic() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         doTestCreateDynamicSender(true);
     }
 
@@ -216,6 +221,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         AmqpReceiver receiver = session.createReceiver(source);
         assertNotNull(receiver);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6467
         Source remoteSource = (Source) receiver.getEndpoint().getRemoteSource();
         Map<Symbol, Object> dynamicNodeProperties = remoteSource.getDynamicNodeProperties();
         Symbol[] capabilites = remoteSource.getCapabilities();
@@ -290,6 +296,9 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -343,6 +352,9 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -388,6 +400,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
 
         // Set the dynamic node lifetime-policy
         Map<Symbol, Object> dynamicNodeProperties = new HashMap<Symbol, Object>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
         source.setDynamicNodeProperties(dynamicNodeProperties);
 
@@ -410,6 +423,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
 
         // Set the dynamic node lifetime-policy
         Map<Symbol, Object> dynamicNodeProperties = new HashMap<Symbol, Object>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
         target.setDynamicNodeProperties(dynamicNodeProperties);
 

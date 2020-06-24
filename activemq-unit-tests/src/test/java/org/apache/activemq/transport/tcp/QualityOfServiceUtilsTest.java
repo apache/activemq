@@ -32,7 +32,9 @@ public class QualityOfServiceUtilsTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         Socket socket = new Socket();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         ECN = socket.getTrafficClass() & Integer.parseInt("00000011", 2);
         socket.close();
     }
@@ -58,6 +60,7 @@ public class QualityOfServiceUtilsTest extends TestCase {
 
     public void testValidDiffServNames() {
         Map<String, Integer> namesToExpected = new HashMap<String, Integer>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         namesToExpected.put("CS0", Integer.valueOf("000000", 2));
         namesToExpected.put("CS1", Integer.valueOf("001000", 2));
         namesToExpected.put("CS2", Integer.valueOf("010000", 2));
@@ -93,6 +96,7 @@ public class QualityOfServiceUtilsTest extends TestCase {
 
     private void testValidDiffServName(String name, int expected) {
         int dscp = -1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         try {
             dscp = QualityOfServiceUtils.getDSCP(name);
         } catch (IllegalArgumentException e) {
@@ -101,6 +105,7 @@ public class QualityOfServiceUtilsTest extends TestCase {
         }
         // Make sure it adjusted for any system ECN values.
         assertEquals("Incorrect Differentiated Services Code Point "  + dscp
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
             + " returned for name " + name + ".", ECN | (expected << 2), dscp);
     }
 
@@ -118,6 +123,7 @@ public class QualityOfServiceUtilsTest extends TestCase {
             int dscp = QualityOfServiceUtils.getDSCP(Integer.toString(val));
             // Make sure it adjusted for any system ECN values.
             assertEquals("Incorrect Differentiated Services Code Point "
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
                 + "returned for value " + val + ".", ECN | (val << 2), dscp);
         } catch (IllegalArgumentException e) {
             fail("IllegalArgumentException thrown for valid Differentiated "

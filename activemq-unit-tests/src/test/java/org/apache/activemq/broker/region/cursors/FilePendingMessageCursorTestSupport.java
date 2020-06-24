@@ -39,16 +39,19 @@ public class FilePendingMessageCursorTestSupport {
     @After
     public void stopBroker() throws Exception {
         if (brokerService != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6005
             brokerService.stop();
         }
     }
 
     private void createBrokerWithTempStoreLimit() throws Exception {
         brokerService = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         brokerService.setUseJmx(false);
         SystemUsage usage = brokerService.getSystemUsage();
         usage.getTempUsage().setLimit(1025*1024*15);
         brokerService.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6005
 
         // put something in the temp store to on demand initialise it
         PList dud = brokerService.getTempDataStore().getPList("dud");
@@ -60,6 +63,7 @@ public class FilePendingMessageCursorTestSupport {
         createBrokerWithTempStoreLimit();
         SystemUsage usage = brokerService.getSystemUsage();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         PList dud = brokerService.getTempDataStore().getPList("dud");
         // fill the temp store
         int id=0;
@@ -82,6 +86,7 @@ public class FilePendingMessageCursorTestSupport {
     @Test
     public void testResetClearsIterator() throws Exception {
         createBrokerWithTempStoreLimit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
 
         underTest = new FilePendingMessageCursor(brokerService.getBroker(), "test", false);
         // ok to add

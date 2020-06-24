@@ -63,6 +63,7 @@ public class AMQ6293Test {
         brokerService = new BrokerService();
         TransportConnector connector = brokerService.addConnector("tcp://localhost:0");
         connectionUri = connector.getPublishableConnectString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6293
         brokerService.setPersistent(false);
         brokerService.getManagementContext().setCreateConnector(false);
 
@@ -132,6 +133,7 @@ public class AMQ6293Test {
     }
 
     private void sendTestMessages(int numMessages) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6293
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         MessageProducer producer = session.createProducer(queue);
 
@@ -141,6 +143,7 @@ public class AMQ6293Test {
             producer.send(textMessage);
             if (i % 1000 == 0) {
                 LOG.info("Sent {} messages", i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6293
                 session.commit();
             }
         }

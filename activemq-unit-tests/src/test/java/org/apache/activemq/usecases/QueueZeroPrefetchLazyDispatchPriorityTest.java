@@ -72,6 +72,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
     public void testPriorityMessages() throws Exception {
 
         for (int i = 0; i < ITERATIONS; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
             // send 4 message priority MEDIUM
             produceMessages(4, 4, "TestQ");
@@ -101,6 +102,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
     public void testPriorityMessagesMoreThanPageSize() throws Exception {
 
         final int numToSend = 5;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         for (int i = 0; i < ITERATIONS; i++) {
             produceMessages(numToSend - 1, 4, "TestQ");
 
@@ -203,6 +205,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
     public void testJmsBrowserGetsPagedIn() throws Exception {
         final int numToSend = 5;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         for (int i = 0; i < ITERATIONS; i++) {
             produceMessages(numToSend, 4, "TestQ");
 
@@ -316,6 +319,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
             QueueBrowser consumer = session.createBrowser(new ActiveMQQueue(queueName));
             connection.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
             Enumeration<?> enumeration = consumer.getEnumeration();
             while (enumeration.hasMoreElements()) {
                 Message message = (Message) enumeration.nextElement();

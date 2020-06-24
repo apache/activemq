@@ -38,6 +38,7 @@ public class MessageInterceptorRegistry {
 
 
     public static MessageInterceptorRegistry getInstance() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4714
         return INSTANCE;
     }
 
@@ -56,6 +57,7 @@ public class MessageInterceptorRegistry {
     }
 
     private MessageInterceptorRegistry(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4714
         this.brokerService=BrokerRegistry.getInstance().findFirst();
         messageInterceptorRegistryMap.put(brokerService,this);
     }

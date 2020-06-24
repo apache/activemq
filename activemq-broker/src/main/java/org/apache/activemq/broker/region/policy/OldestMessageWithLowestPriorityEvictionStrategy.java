@@ -43,6 +43,7 @@ public class OldestMessageWithLowestPriorityEvictionStrategy extends MessageEvic
                 pivot = i;
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-871
         return new MessageReference[] {(MessageReference) messages.remove(pivot)};
     }
 }

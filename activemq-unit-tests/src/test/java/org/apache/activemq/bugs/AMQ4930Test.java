@@ -38,6 +38,7 @@ public class AMQ4930Test extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4930Test.class);
     final int messageCount = 150;
     final int messageSize = 1024*1024;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
     final int maxBrowsePageSize = 50;
     final ActiveMQQueue bigQueue = new ActiveMQQueue("BIG");
     BrokerService broker;
@@ -47,11 +48,14 @@ public class AMQ4930Test extends TestCase {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setAdvisorySupport(false);
         broker.getSystemUsage().getMemoryUsage().setLimit(100*1024*1024);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-7126
 
         PolicyMap pMap = new PolicyMap();
         PolicyEntry policy = new PolicyEntry();
         // disable expriy processing as this will call browse in parallel
         policy.setExpireMessagesPeriod(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
         policy.setMaxPageSize(maxBrowsePageSize);
         policy.setMaxBrowsePageSize(maxBrowsePageSize);
         pMap.setDefaultEntry(policy);
@@ -68,6 +72,7 @@ public class AMQ4930Test extends TestCase {
     }
 
     public void testWithStatsDisabled() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
         ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics().setEnabled(false);
         doTestBrowsePending(DeliveryMode.PERSISTENT);
     }
@@ -100,6 +105,7 @@ public class AMQ4930Test extends TestCase {
         final Queue underTest = (Queue) ((RegionBroker)broker.getRegionBroker()).getQueueRegion().getDestinationMap().get(bigQueue);
 
         // do twice to attempt to pull in 2*maxBrowsePageSize which uses up the system memory limit
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
         Message[] browsed = underTest.browse();
         LOG.info("Browsed: " + browsed.length);
         assertEquals("maxBrowsePageSize", maxBrowsePageSize, browsed.length);
@@ -117,6 +123,7 @@ public class AMQ4930Test extends TestCase {
             assertEquals("maxBrowsePageSize", maxBrowsePageSize, browsed.length);
             Runtime.getRuntime().gc();
             Runtime.getRuntime().gc();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
             assertTrue("No growth: " + Runtime.getRuntime().freeMemory()/1024 + " >= " + (free - (free * 0.2)), Runtime.getRuntime().freeMemory()/1024 >= (free - (free * 0.2)));
         }
     }

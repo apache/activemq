@@ -39,6 +39,7 @@ public class JcaPooledConnectionFactory extends XaPooledConnectionFactory {
 
     protected ConnectionPool createConnectionPool(Connection connection) {
         return new JcaConnectionPool(connection, getTransactionManager(), getName()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
 
             @Override
             protected Connection wrap(final Connection connection) {
@@ -54,6 +55,7 @@ public class JcaPooledConnectionFactory extends XaPooledConnectionFactory {
                         synchronized (this) {
                             setHasExpired(true);
                             // only log if not stopped
+//IC see: https://issues.apache.org/jira/browse/AMQ-5312
                             if (!stopped.get()) {
                                 LOG.info("Expiring connection " + connection + " on IOException: " + error.getMessage());
                                 // log stacktrace at debug level

@@ -153,6 +153,8 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
     public void testRemoveMessages() throws Exception {
         final int QUEUE_SIZE = 30000;
         final long TEST_TIMEOUT = 20000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4332
+//IC see: https://issues.apache.org/jira/browse/AMQ-4332
 
         // Populate a test queue with uniquely-identifiable messages.
         Connection conn = createConnection();
@@ -177,6 +179,12 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
         Queue queue = (Queue) broker.getRegionBroker().getDestinationMap().get(
                 destination);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker.getBroker());
         context.getMessageEvaluationContext().setDestination(destination);

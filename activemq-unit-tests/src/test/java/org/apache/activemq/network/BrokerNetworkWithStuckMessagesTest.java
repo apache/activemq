@@ -131,18 +131,23 @@ public class BrokerNetworkWithStuckMessagesTest {
         config.setBrokerName("local");
         config.setDispatchAsync(false);
         config.setDuplex(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
 
         Transport localTransport = createTransport();
         Transport remoteTransport = createRemoteTransport();
 
         // Create a network bridge between the two brokers
         bridge = new DemandForwardingBridge(config, localTransport, remoteTransport);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
         bridge.setBrokerService(localBroker);
         bridge.start();
 
 
         // introduce a second broker/bridge on remote that should not get any messages because of networkTtl=1
         // local <-> remote <-> secondRemote
+//IC see: https://issues.apache.org/jira/browse/AMQ-4283
         createSecondRemoteBroker();
         config = new NetworkBridgeConfiguration();
         config.setBrokerName("remote");
@@ -177,6 +182,7 @@ public class BrokerNetworkWithStuckMessagesTest {
         bridge.stop();
         localBroker.stop();
         remoteBroker.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4283
         secondRemoteBroker.stop();
     }
 
@@ -200,6 +206,8 @@ public class BrokerNetworkWithStuckMessagesTest {
 
         // Send a 10 messages to the local broker
         for (int i = 0; i < sendNumMessages; ++i) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
             destinationInfo1 = createDestinationInfo(connection1, connectionInfo1, ActiveMQDestination.QUEUE_TYPE);
             connection1.request(createMessage(producerInfo, destinationInfo1, DeliveryMode.NON_PERSISTENT));
         }
@@ -209,11 +217,14 @@ public class BrokerNetworkWithStuckMessagesTest {
         assertEquals(sendNumMessages, messages.length);
 
         // Create a synchronous consumer on the remote broker
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         StubConnection connection2 = createRemoteConnection();
         ConnectionInfo connectionInfo2 = createConnectionInfo();
         SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);
         connection2.send(connectionInfo2);
         connection2.send(sessionInfo2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ActiveMQDestination destinationInfo2 =
             createDestinationInfo(connection2, connectionInfo2, ActiveMQDestination.QUEUE_TYPE);
         final ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destinationInfo2);
@@ -221,10 +232,15 @@ public class BrokerNetworkWithStuckMessagesTest {
 
         // Consume 5 of the messages from the remote broker and ack them.
         for (int i = 0; i < receiveNumMessages; ++i) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
             Message message1 = receiveMessage(connection2, 20000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
             assertNotNull(message1);
             LOG.info("on remote, got: " + message1.getMessageId());
             connection2.send(createAck(consumerInfo2, message1, 1, MessageAck.INDIVIDUAL_ACK_TYPE));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4539
             assertTrue("JMSActiveMQBrokerPath property present and correct",
                     ((ActiveMQMessage)message1).getStringProperty(ActiveMQMessage.BROKER_PATH_PROPERTY).contains(localBroker.getBroker().getBrokerId().toString()));
         }
@@ -244,6 +260,7 @@ public class BrokerNetworkWithStuckMessagesTest {
 
         // try and pull the messages from remote, should be denied b/c on networkTtl
         LOG.info("creating demand on second remote...");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4283
         StubConnection connection3 = createSecondRemoteConnection();
         ConnectionInfo connectionInfo3 = createConnectionInfo();
         SessionInfo sessionInfo3 = createSessionInfo(connectionInfo3);
@@ -277,6 +294,7 @@ public class BrokerNetworkWithStuckMessagesTest {
         messages = browseQueueWithJmx(remoteBroker);
         assertEquals(5, messages.length);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4539
         assertTrue("can see broker path property",
                 ((String)((CompositeData)messages[1]).get("BrokerPath")).contains(localBroker.getBroker().getBrokerId().toString()));
 
@@ -351,10 +369,12 @@ public class BrokerNetworkWithStuckMessagesTest {
 
         connection1.stop();
         connection2.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4283
         connection3.stop();
     }
 
     protected BrokerService createBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         localBroker = new BrokerService();
         localBroker.setBrokerName("localhost");
         localBroker.setUseJmx(true);
@@ -362,6 +382,8 @@ public class BrokerNetworkWithStuckMessagesTest {
         localBroker.setPersistent(false);
         connector = createConnector();
         localBroker.addConnector(connector);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         configureBroker(localBroker);
         localBroker.start();
         localBroker.waitUntilStarted();
@@ -374,6 +396,8 @@ public class BrokerNetworkWithStuckMessagesTest {
     }
 
     private void configureBroker(BrokerService broker) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setExpireMessagesPeriod(0);
@@ -392,6 +416,8 @@ public class BrokerNetworkWithStuckMessagesTest {
         remoteBroker.setPersistent(false);
         remoteConnector = createRemoteConnector();
         remoteBroker.addConnector(remoteConnector);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         configureBroker(remoteBroker);
         remoteBroker.start();
         remoteBroker.waitUntilStarted();
@@ -404,6 +430,7 @@ public class BrokerNetworkWithStuckMessagesTest {
     }
 
     protected BrokerService createSecondRemoteBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4283
         secondRemoteBroker = new BrokerService();
         secondRemoteBroker.setBrokerName("secondRemotehost");
         secondRemoteBroker.setUseJmx(false);
@@ -431,6 +458,7 @@ public class BrokerNetworkWithStuckMessagesTest {
     }
 
     protected Transport createSecondRemoteTransport() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4283
         Transport transport = TransportFactory.connect(secondRemoteConnector.getServer().getConnectURI());
         return transport;
     }
@@ -444,6 +472,7 @@ public class BrokerNetworkWithStuckMessagesTest {
     }
 
     protected TransportConnector createSecondRemoteConnector() throws Exception, IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4283
         return new TransportConnector(TransportFactory.bind(new URI(getSecondRemoteURI())));
     }
 
@@ -474,6 +503,7 @@ public class BrokerNetworkWithStuckMessagesTest {
     }
 
     protected StubConnection createSecondRemoteConnection() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4283
         Transport transport = TransportFactory.connect(secondRemoteConnector.getServer().getConnectURI());
         StubConnection connection = new StubConnection(transport);
         connections.add(connection);
@@ -482,6 +512,7 @@ public class BrokerNetworkWithStuckMessagesTest {
 
     @SuppressWarnings({ "unchecked", "unused" })
     private Object[] browseQueueWithJms(BrokerService broker) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         Object[] messages = null;
         Connection connection = null;
         Session session = null;

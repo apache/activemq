@@ -44,6 +44,7 @@ public class MQTTSubscription {
         this.protocolConverter = protocolConverter;
         this.consumerInfo = consumerInfo;
         this.qos = qos;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         this.topicName = topicName;
     }
 
@@ -56,6 +57,7 @@ public class MQTTSubscription {
      * @return a new {@link MessageAck} command to acknowledge the message.
      */
     public MessageAck createMessageAck(MessageDispatch md) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5399
         return new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
     }
 
@@ -77,10 +79,12 @@ public class MQTTSubscription {
         if (publish.qos().ordinal() > this.qos.ordinal()) {
             publish.qos(this.qos);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
         switch (publish.qos()) {
             case AT_LEAST_ONCE:
             case EXACTLY_ONCE:
                 // set packet id, and optionally dup flag
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
                 protocolConverter.getPacketIdGenerator().setPacketId(protocolConverter.getClientId(), this, message, publish);
             case AT_MOST_ONCE:
         }
@@ -108,6 +112,7 @@ public class MQTTSubscription {
      * @returns the original topic name value the client used when subscribing.
      */
     public String getTopicName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         return this.topicName;
     }
 
@@ -138,6 +143,7 @@ public class MQTTSubscription {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         return "MQTT Sub: topic[" + topicName + "] -> [" + consumerInfo.getDestination() + "]";
     }
 }

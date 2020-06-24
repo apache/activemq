@@ -51,6 +51,7 @@ import org.junit.Test;
 public class AMQ3537Test implements InvocationHandler, Serializable {
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util,org.apache.activemq.bugs");
     }
 

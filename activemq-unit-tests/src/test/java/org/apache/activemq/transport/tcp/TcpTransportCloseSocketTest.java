@@ -106,6 +106,7 @@ public class TcpTransportCloseSocketTest {
         factory.setClientID("id");
 
         final TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByName("tcp").getServer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6586
 
         //Try and create 2 connections, the second should fail because of a duplicate clientId
         int failed = 0;

@@ -77,6 +77,7 @@ public class DurableSubSelectorDelayTest {
 
         final KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
         assertTrue("less than two journal file should be left, was: " + pa.getStore().getJournal().getFileMap().size(), Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -93,6 +94,7 @@ public class DurableSubSelectorDelayTest {
     final class MsgProducer extends Thread {
 
         final String url = "vm://" + DurableSubSelectorDelayTest.getName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
 
         final ConnectionFactory cf = new ActiveMQConnectionFactory(url);
 
@@ -121,6 +123,7 @@ public class DurableSubSelectorDelayTest {
                     send();
                 }
             } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
                 e.printStackTrace(System.out);
                 throw new RuntimeException(e);
             }
@@ -169,6 +172,7 @@ public class DurableSubSelectorDelayTest {
     private final class DurableSubscriber {
 
         final ConnectionFactory cf = new ActiveMQConnectionFactory(connectionUri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
 
         private final String subName;
 
@@ -179,6 +183,7 @@ public class DurableSubSelectorDelayTest {
         public DurableSubscriber(int id) throws JMSException {
             this.id = id;
             conClientId = "cli" + id;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
             subName = "subscription" + id;
             selector = "RELEVANT = true";
         }
@@ -192,6 +197,7 @@ public class DurableSubSelectorDelayTest {
 
             Session sess = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageConsumer consumer = sess.createDurableSubscriber(topic, subName, selector, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
 
             try {
 
@@ -199,10 +205,12 @@ public class DurableSubSelectorDelayTest {
                     long max = end - System.currentTimeMillis();
 
                     if (max <= 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
                         break;
                     }
 
                     Message message = consumer.receive(max);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
                     if (message == null) {
                         continue;
                     }
@@ -228,6 +236,7 @@ public class DurableSubSelectorDelayTest {
 
         private void unsubscribe() throws JMSException {
             Connection con = openConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
             Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
             session.unsubscribe(subName);
             session.close();
@@ -265,6 +274,7 @@ public class DurableSubSelectorDelayTest {
         broker.setDeleteAllMessagesOnStartup(deleteAllMessages);
 
         File kahadbData = new File("activemq-data/" + getName() + "-kahadb");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
         if (deleteAllMessages)
             delete(kahadbData);
 
@@ -275,6 +285,7 @@ public class DurableSubSelectorDelayTest {
         broker.setPersistenceAdapter(kahadb);
 
         connectionUri = broker.addConnector("tcp://localhost:0").getPublishableConnectString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
 
         broker.getSystemUsage().getMemoryUsage().setLimit(256 * 1024 * 1024);
         broker.getSystemUsage().getTempUsage().setLimit(256 * 1024 * 1024);

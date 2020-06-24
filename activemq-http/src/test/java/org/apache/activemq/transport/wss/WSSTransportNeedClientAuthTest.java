@@ -110,6 +110,8 @@ public class WSSTransportNeedClientAuthTest {
 
     @Test
     public void testMQTTNeedClientAuth() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
         SslContextFactory factory = new SslContextFactory.Client();
         factory.setKeyStorePath(KEYSTORE);
         factory.setKeyStorePassword(PASSWORD);

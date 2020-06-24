@@ -45,6 +45,7 @@ public class QueueMbeanRestartTest extends TestSupport {
 
     @Parameterized.Parameters
     public static Collection<TestSupport.PersistenceAdapterChoice[]> getTestParameters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4415
         TestSupport.PersistenceAdapterChoice[] kahaDb = {TestSupport.PersistenceAdapterChoice.KahaDB};
         TestSupport.PersistenceAdapterChoice[] levelDb = {TestSupport.PersistenceAdapterChoice.LevelDB};
         TestSupport.PersistenceAdapterChoice[] jdbc = {TestSupport.PersistenceAdapterChoice.JDBC};
@@ -87,6 +88,7 @@ public class QueueMbeanRestartTest extends TestSupport {
     private void restartBroker() throws Exception {
         broker.stop();
         broker.waitUntilStopped();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4877
         Thread.sleep(5 * 1000);
         createBroker(false);
         broker.waitUntilStarted();
@@ -95,6 +97,7 @@ public class QueueMbeanRestartTest extends TestSupport {
     private void verifyPresenceOfQueueMbean() throws Exception {
         for (ObjectName name : broker.getManagementContext().queryNames(null, null)) {
             LOG.info("candidate :" + name);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             String type = name.getKeyProperty("destinationType");
             if (type != null && type.equals("Queue")) {
                 assertEquals(
@@ -116,6 +119,7 @@ public class QueueMbeanRestartTest extends TestSupport {
     private void createBroker(boolean deleteAll) throws Exception {
         broker = new BrokerService();
         setPersistenceAdapter(broker, persistenceAdapterChoice);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4415
 
         broker.setDeleteAllMessagesOnStartup(deleteAll);
         broker.start();

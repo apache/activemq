@@ -91,6 +91,7 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
         StubConnection connectionA;
         StubConnection connectionB;
         TransportConnector serverA;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2283
         if (connector.getServer().getConnectURI().getPort() == ft.getConnectedTransportURI().getPort()) {
             connectionA = connection1;
             connectionB = connection2;
@@ -134,6 +135,7 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
     	if ( groupName == null ) {
     		groupName = "group-"+System.currentTimeMillis();
     	}
+//IC see: https://issues.apache.org/jira/browse/AMQ-1489
         return "multicast://default?group="+groupName;
     }
 

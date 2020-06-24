@@ -63,6 +63,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private static final String DEFAULT_BROKER_HOST;
     private static final int DEFAULT_BROKER_PORT;
     static{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4825
         String host = null;
         String port = null;
         try {
@@ -137,6 +138,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
     private RedeliveryPolicyMap redeliveryPolicyMap = new RedeliveryPolicyMap();
     {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3224
         redeliveryPolicyMap.setDefaultEntry(new RedeliveryPolicy());
     }
     private BlobTransferPolicy blobTransferPolicy = new BlobTransferPolicy();
@@ -258,6 +260,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public QueueConnection createQueueConnection() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3944
         return createActiveMQConnection().enforceQueueOnlyConnection();
     }
 
@@ -275,6 +278,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public TopicConnection createTopicConnection() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-624
+//IC see: https://issues.apache.org/jira/browse/AMQ-624
+//IC see: https://issues.apache.org/jira/browse/AMQ-624
         return createActiveMQConnection();
     }
 
@@ -301,6 +307,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     // /////////////////////////////////////////////
 
     protected ActiveMQConnection createActiveMQConnection() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-624
         return createActiveMQConnection(userName, password);
     }
 
@@ -313,6 +320,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     protected Transport createTransport() throws JMSException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             URI connectBrokerUL = brokerURL;
             String scheme = brokerURL.getScheme();
             if (scheme == null) {
@@ -376,8 +384,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
         ActiveMQConnection connection = new ActiveMQConnection(transport, getClientIdGenerator(),
                 getConnectionIdGenerator(), stats);
+//IC see: https://issues.apache.org/jira/browse/AMQ-624
         return connection;
     }
 
@@ -388,47 +398,74 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setCopyMessageOnSend(isCopyMessageOnSend());
         connection.setUseCompression(isUseCompression());
         connection.setObjectMessageSerializationDefered(isObjectMessageSerializationDefered());
+//IC see: https://issues.apache.org/jira/browse/AMQ-792
         connection.setDispatchAsync(isDispatchAsync());
         connection.setUseAsyncSend(isUseAsyncSend());
         connection.setAlwaysSyncSend(isAlwaysSyncSend());
         connection.setAlwaysSessionAsync(isAlwaysSessionAsync());
         connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
         connection.setOptimizeAcknowledgeTimeOut(getOptimizeAcknowledgeTimeOut());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
         connection.setOptimizedAckScheduledAckInterval(getOptimizedAckScheduledAckInterval());
         connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1915
         connection.setExclusiveConsumer(isExclusiveConsumer());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3224
         connection.setRedeliveryPolicyMap(getRedeliveryPolicyMap());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1053
         connection.setTransformer(getTransformer());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         connection.setBlobTransferPolicy(getBlobTransferPolicy().copy());
         connection.setWatchTopicAdvisories(isWatchTopicAdvisories());
         connection.setProducerWindowSize(getProducerWindowSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1253
         connection.setWarnAboutUnstartedConnectionTimeout(getWarnAboutUnstartedConnectionTimeout());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
         connection.setSendTimeout(getSendTimeout());
         connection.setCloseTimeout(getCloseTimeout());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
         connection.setSendAcksAsync(isSendAcksAsync());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2160
         connection.setAuditDepth(getAuditDepth());
         connection.setAuditMaximumProducerNumber(getAuditMaximumProducerNumber());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
         connection.setUseDedicatedTaskRunner(isUseDedicatedTaskRunner());
         connection.setConsumerFailoverRedeliveryWaitPeriod(getConsumerFailoverRedeliveryWaitPeriod());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2777
         connection.setCheckForDuplicates(isCheckForDuplicates());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2790
         connection.setMessagePrioritySupported(isMessagePrioritySupported());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         connection.setTransactedIndividualAck(isTransactedIndividualAck());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1853
         connection.setNonBlockingRedelivery(isNonBlockingRedelivery());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         connection.setMaxThreadPoolSize(getMaxThreadPoolSize());
         connection.setSessionTaskRunner(getSessionTaskRunner());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         connection.setRejectedTaskHandler(getRejectedTaskHandler());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3947
         connection.setNestedMapAndListEnabled(isNestedMapAndListEnabled());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5031
         connection.setRmIdFromConnectionId(isRmIdFromConnectionId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5406
         connection.setConsumerExpiryCheckEnabled(isConsumerExpiryCheckEnabled());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         connection.setTrustedPackages(getTrustedPackages());
         connection.setTrustAllPackages(isTrustAllPackages());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6362
         connection.setConnectResponseTimeout(getConnectResponseTimeout());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1434
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2062
         if (exceptionListener != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2240
             connection.setExceptionListener(exceptionListener);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2635
         if (clientInternalExceptionListener != null) {
             connection.setClientInternalExceptionListener(clientInternalExceptionListener);
         }
@@ -459,6 +496,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             // It might be a standard URI or...
             try {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2240
                 Map<String,String> map = URISupport.parseQuery(this.brokerURL.getQuery());
                 Map<String,Object> jmsOptionsMap = IntrospectionSupport.extractProperties(map, "jms.");
                 if (buildFromMap(jmsOptionsMap)) {
@@ -482,6 +520,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             // It might be a composite URI.
             try {
                 CompositeData data = URISupport.parseComposite(this.brokerURL);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2240
                 Map<String,Object> jmsOptionsMap = IntrospectionSupport.extractProperties(data.getParameters(), "jms.");
                 if (buildFromMap(jmsOptionsMap)) {
                     if (!jmsOptionsMap.isEmpty()) {
@@ -580,6 +619,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public BlobTransferPolicy getBlobTransferPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return blobTransferPolicy;
     }
 
@@ -603,6 +643,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public synchronized boolean isWatchTopicAdvisories() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1176
         return watchTopicAdvisories;
     }
 
@@ -666,6 +707,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public RedeliveryPolicy getRedeliveryPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3224
         return redeliveryPolicyMap.getDefaultEntry();
     }
 
@@ -690,6 +732,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public MessageTransformer getTransformer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1053
         return transformer;
     }
 
@@ -697,6 +740,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @return the sendTimeout (in milliseconds)
      */
     public int getSendTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
         return sendTimeout;
     }
 
@@ -711,6 +755,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @return the sendAcksAsync
      */
     public boolean isSendAcksAsync() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
         return sendAcksAsync;
     }
 
@@ -725,6 +770,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @return the messagePrioritySupported
      */
     public boolean isMessagePrioritySupported() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2790
         return this.messagePrioritySupported;
     }
 
@@ -794,6 +840,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     @Override
     public void populateProperties(Properties props) {
         props.setProperty("dispatchAsync", Boolean.toString(isDispatchAsync()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-792
 
         if (getBrokerURL() != null) {
             props.setProperty(Context.PROVIDER_URL, getBrokerURL());
@@ -804,6 +851,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             props.setProperty("clientID", getClientID());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-406
         IntrospectionSupport.getProperties(getPrefetchPolicy(), props, "prefetchPolicy.");
         IntrospectionSupport.getProperties(getRedeliveryPolicy(), props, "redeliveryPolicy.");
         IntrospectionSupport.getProperties(getBlobTransferPolicy(), props, "blobTransferPolicy.");
@@ -821,6 +869,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("useCompression", Boolean.toString(isUseCompression()));
         props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
         props.setProperty("watchTopicAdvisories", Boolean.toString(isWatchTopicAdvisories()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1176
 
         if (getUserName() != null) {
             props.setProperty("userName", getUserName());
@@ -832,19 +881,32 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("statsEnabled", Boolean.toString(isStatsEnabled()));
         props.setProperty("alwaysSyncSend", Boolean.toString(isAlwaysSyncSend()));
         props.setProperty("producerWindowSize", Integer.toString(getProducerWindowSize()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
         props.setProperty("sendTimeout", Integer.toString(getSendTimeout()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6362
         props.setProperty("connectResponseTimeout", Integer.toString(getConnectResponseTimeout()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
         props.setProperty("sendAcksAsync",Boolean.toString(isSendAcksAsync()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2160
         props.setProperty("auditDepth", Integer.toString(getAuditDepth()));
         props.setProperty("auditMaximumProducerNumber", Integer.toString(getAuditMaximumProducerNumber()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2777
         props.setProperty("checkForDuplicates", Boolean.toString(isCheckForDuplicates()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2790
         props.setProperty("messagePrioritySupported", Boolean.toString(isMessagePrioritySupported()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         props.setProperty("transactedIndividualAck", Boolean.toString(isTransactedIndividualAck()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1853
         props.setProperty("nonBlockingRedelivery", Boolean.toString(isNonBlockingRedelivery()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         props.setProperty("maxThreadPoolSize", Integer.toString(getMaxThreadPoolSize()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3947
         props.setProperty("nestedMapAndListEnabled", Boolean.toString(isNestedMapAndListEnabled()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4435
         props.setProperty("consumerFailoverRedeliveryWaitPeriod", Long.toString(getConsumerFailoverRedeliveryWaitPeriod()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5031
         props.setProperty("rmIdFromConnectionId", Boolean.toString(isRmIdFromConnectionId()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5406
         props.setProperty("consumerExpiryCheckEnabled", Boolean.toString(isConsumerExpiryCheckEnabled()));
     }
 
@@ -948,6 +1010,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @param optimizeAcknowledgeTimeOut
      */
     public void setOptimizeAcknowledgeTimeOut(long optimizeAcknowledgeTimeOut) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3332
         this.optimizeAcknowledgeTimeOut =  optimizeAcknowledgeTimeOut;
     }
 
@@ -970,6 +1033,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public String getClientIDPrefix() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-836
         return clientIDPrefix;
     }
 
@@ -1003,6 +1067,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @param connectionIDPrefix
      */
     public void setConnectionIDPrefix(String connectionIDPrefix) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
         this.connectionIDPrefix = connectionIDPrefix;
     }
 
@@ -1062,6 +1127,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public TransportListener getTransportListener() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1434
         return transportListener;
     }
 
@@ -1079,6 +1145,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
 
     public ExceptionListener getExceptionListener() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2062
         return exceptionListener;
     }
 
@@ -1092,10 +1159,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * created by this factory
      */
     public void setExceptionListener(ExceptionListener exceptionListener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2240
         this.exceptionListener = exceptionListener;
     }
 
     public int getAuditDepth() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2160
         return auditDepth;
     }
 
@@ -1112,6 +1181,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public void setUseDedicatedTaskRunner(boolean useDedicatedTaskRunner) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
         this.useDedicatedTaskRunner = useDedicatedTaskRunner;
     }
 
@@ -1128,6 +1199,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public ClientInternalExceptionListener getClientInternalExceptionListener() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2635
         return clientInternalExceptionListener;
     }
 
@@ -1149,6 +1221,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @return the checkForDuplicates
      */
     public boolean isCheckForDuplicates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2777
         return this.checkForDuplicates;
     }
 
@@ -1160,6 +1233,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public boolean isTransactedIndividualAck() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
          return transactedIndividualAck;
      }
 
@@ -1174,6 +1248,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
 
      public boolean isNonBlockingRedelivery() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1853
          return nonBlockingRedelivery;
      }
 
@@ -1187,6 +1262,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      }
 
     public int getMaxThreadPoolSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         return maxThreadPoolSize;
     }
 
@@ -1203,6 +1279,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public RejectedExecutionHandler getRejectedTaskHandler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         return rejectedTaskHandler;
     }
 
@@ -1218,6 +1295,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @return the scheduledOptimizedAckInterval
      */
     public long getOptimizedAckScheduledAckInterval() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
         return optimizedAckScheduledAckInterval;
     }
 
@@ -1233,6 +1311,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
 
     public boolean isRmIdFromConnectionId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5031
         return rmIdFromConnectionId;
     }
 
@@ -1248,6 +1327,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @return true if MessageConsumer instance will check for expired messages before dispatch.
      */
     public boolean isConsumerExpiryCheckEnabled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5406
         return consumerExpiryCheckEnabled;
     }
 
@@ -1264,6 +1344,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public List<String> getTrustedPackages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         return trustedPackages;
     }
 
@@ -1280,6 +1361,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
 	public int getConnectResponseTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6362
 		return connectResponseTimeout;
 	}
 

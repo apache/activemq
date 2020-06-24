@@ -128,12 +128,16 @@ public final class OpenTypeSupport {
             addItem("JMSPriority", "JMSPriority", SimpleType.INTEGER);
             addItem("JMSRedelivered", "JMSRedelivered", SimpleType.BOOLEAN);
             addItem("JMSTimestamp", "JMSTimestamp", SimpleType.DATE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
             addItem(CompositeDataConstants.JMSXGROUP_ID, "Message Group ID", SimpleType.STRING);
             addItem(CompositeDataConstants.JMSXGROUP_SEQ, "Message Group Sequence Number", SimpleType.INTEGER);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4717
             addItem(CompositeDataConstants.JMSXUSER_ID, "The user that sent the message", SimpleType.STRING);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4539
             addItem(CompositeDataConstants.BROKER_PATH, "Brokers traversed", SimpleType.STRING);
             addItem(CompositeDataConstants.ORIGINAL_DESTINATION, "Original Destination Before Senting To DLQ", SimpleType.STRING);
             addItem(CompositeDataConstants.PROPERTIES, "User Properties Text", SimpleType.STRING);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
 
             // now lets expose the type safe properties
             stringPropertyTabularType = createTabularType(String.class, SimpleType.STRING);
@@ -162,19 +166,25 @@ public final class OpenTypeSupport {
             rc.put("JMSCorrelationID", m.getJMSCorrelationID());
             rc.put("JMSDestination", "" + m.getJMSDestination());
             rc.put("JMSMessageID", m.getJMSMessageID());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
             rc.put("JMSReplyTo",toString(m.getJMSReplyTo()));
             rc.put("JMSType", m.getJMSType());
             rc.put("JMSDeliveryMode", m.getJMSDeliveryMode() == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON-PERSISTENT");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
             rc.put("JMSExpiration", Long.valueOf(m.getJMSExpiration()));
             rc.put("JMSPriority", Integer.valueOf(m.getJMSPriority()));
             rc.put("JMSRedelivered", Boolean.valueOf(m.getJMSRedelivered()));
             rc.put("JMSTimestamp", new Date(m.getJMSTimestamp()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
             rc.put(CompositeDataConstants.JMSXGROUP_ID, m.getGroupID());
             rc.put(CompositeDataConstants.JMSXGROUP_SEQ, m.getGroupSequence());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4717
             rc.put(CompositeDataConstants.JMSXUSER_ID, m.getUserID());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4539
             rc.put(CompositeDataConstants.BROKER_PATH, Arrays.toString(m.getBrokerPath()));
             rc.put(CompositeDataConstants.ORIGINAL_DESTINATION, toString(m.getOriginalDestination()));
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
                 rc.put(CompositeDataConstants.PROPERTIES, "" + m.getProperties());
             } catch (IOException e) {
                 rc.put(CompositeDataConstants.PROPERTIES, "");
@@ -224,6 +234,7 @@ public final class OpenTypeSupport {
         }
 
         protected String toString(Object value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
             if (value == null) {
                 return null;
             }
@@ -244,6 +255,7 @@ public final class OpenTypeSupport {
             Set<Map.Entry<String,Object>> entries = m.getProperties().entrySet();
             for (Map.Entry<String, Object> entry : entries) {
                 Object value = entry.getValue();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4530
                 if (value instanceof UTF8Buffer && valueType.equals(String.class)) {
                     String actual = value.toString();
                     CompositeDataSupport compositeData = createTabularRowValue(type, entry.getKey(), actual);
@@ -276,6 +288,7 @@ public final class OpenTypeSupport {
         @Override
         protected void init() throws OpenDataException {
             super.init();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
             addItem(CompositeDataConstants.BODY_LENGTH, "Body length", SimpleType.LONG);
             addItem(CompositeDataConstants.BODY_PREVIEW, "Body preview", new ArrayType(1, SimpleType.BYTE));
         }
@@ -283,11 +296,13 @@ public final class OpenTypeSupport {
         @Override
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQBytesMessage m = (ActiveMQBytesMessage)o;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3180
             m.setReadOnlyBody(true);
             Map<String, Object> rc = super.getFields(o);
             long length = 0;
             try {
                 length = m.getBodyLength();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                 rc.put(CompositeDataConstants.BODY_LENGTH, Long.valueOf(length));
             } catch (JMSException e) {
                 rc.put(CompositeDataConstants.BODY_LENGTH, Long.valueOf(0));
@@ -296,6 +311,7 @@ public final class OpenTypeSupport {
                 byte preview[] = new byte[(int)Math.min(length, 255)];
                 m.readBytes(preview);
                 m.reset();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3889
 
                 // This is whack! Java 1.5 JMX spec does not support primitive
                 // arrays!
@@ -305,6 +321,7 @@ public final class OpenTypeSupport {
                     data[i] = new Byte(preview[i]);
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                 rc.put(CompositeDataConstants.BODY_PREVIEW, data);
             } catch (JMSException e) {
                 rc.put(CompositeDataConstants.BODY_PREVIEW, new Byte[] {});
@@ -324,6 +341,7 @@ public final class OpenTypeSupport {
         @Override
         protected void init() throws OpenDataException {
             super.init();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
             addItem(CompositeDataConstants.CONTENT_MAP, "Content map", SimpleType.STRING);
         }
 
@@ -332,6 +350,7 @@ public final class OpenTypeSupport {
             ActiveMQMapMessage m = (ActiveMQMapMessage)o;
             Map<String, Object> rc = super.getFields(o);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                 rc.put(CompositeDataConstants.CONTENT_MAP, "" + m.getContentMap());
             } catch (JMSException e) {
                 rc.put(CompositeDataConstants.CONTENT_MAP, "");
@@ -386,6 +405,7 @@ public final class OpenTypeSupport {
         @Override
         protected void init() throws OpenDataException {
             super.init();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
             addItem(CompositeDataConstants.MESSAGE_TEXT, CompositeDataConstants.MESSAGE_TEXT, SimpleType.STRING);
         }
 
@@ -394,6 +414,7 @@ public final class OpenTypeSupport {
             ActiveMQTextMessage m = (ActiveMQTextMessage)o;
             Map<String, Object> rc = super.getFields(o);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                 rc.put(CompositeDataConstants.MESSAGE_TEXT, "" + m.getText());
             } catch (JMSException e) {
                 rc.put(CompositeDataConstants.MESSAGE_TEXT, "");
@@ -416,6 +437,7 @@ public final class OpenTypeSupport {
             addItem("jobId", "jobId", SimpleType.STRING);
             addItem("cronEntry", "Cron entry", SimpleType.STRING);
             addItem("start", "start time", SimpleType.STRING);
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
             addItem("delay", "initial delay", SimpleType.LONG);
             addItem("next", "next time", SimpleType.STRING);
             addItem("period", "period between jobs", SimpleType.LONG);
@@ -429,6 +451,7 @@ public final class OpenTypeSupport {
             rc.put("jobId", job.getJobId());
             rc.put("cronEntry", "" + job.getCronEntry());
             rc.put("start", job.getStartTime());
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
             rc.put("delay", job.getDelay());
             rc.put("next", job.getNextExecutionTime());
             rc.put("period", job.getPeriod());
@@ -447,6 +470,7 @@ public final class OpenTypeSupport {
         @Override
         protected void init() throws OpenDataException {
             super.init();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
             addItem(CompositeDataConstants.MESSAGE_URL, "Body Url", SimpleType.STRING);
         }
 
@@ -455,6 +479,7 @@ public final class OpenTypeSupport {
             ActiveMQBlobMessage m = (ActiveMQBlobMessage)o;
             Map<String, Object> rc = super.getFields(o);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                 rc.put(CompositeDataConstants.MESSAGE_URL, "" + m.getURL().toString());
             } catch (JMSException e) {
                 rc.put(CompositeDataConstants.MESSAGE_URL, "");
@@ -466,6 +491,7 @@ public final class OpenTypeSupport {
     static class SlowConsumerEntryOpenTypeFactory extends AbstractOpenTypeFactory {
        @Override
         protected String getTypeName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
             return SlowConsumerEntry.class.getName();
         }
 
@@ -523,6 +549,7 @@ public final class OpenTypeSupport {
         OPEN_TYPE_FACTORIES.put(ActiveMQStreamMessage.class, new StreamMessageOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(ActiveMQTextMessage.class, new TextMessageOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(Job.class, new JobOpenTypeFactory());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
         OPEN_TYPE_FACTORIES.put(SlowConsumerEntry.class, new SlowConsumerEntryOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(ActiveMQBlobMessage.class, new ActiveMQBlobMessageOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(HealthStatus.class, new HealthStatusOpenTypeFactory());

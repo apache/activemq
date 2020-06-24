@@ -57,9 +57,12 @@ public class AMQ4126Test {
         if (System.getProperty(java_security_auth_login_config) != null) {
             oldLoginConf = System.getProperty(java_security_auth_login_config);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4388
+//IC see: https://issues.apache.org/jira/browse/AMQ-4387
         System.setProperty(java_security_auth_login_config, confBase + "/login.config");
         broker = BrokerFactory.createBroker(xbean + confBase + "/" + JaasStompSSLBroker_xml);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4364
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setUseJmx(true);
         broker.start();
@@ -76,6 +79,8 @@ public class AMQ4126Test {
     }
 
     public Socket createSocket(String host, int port) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4388
+//IC see: https://issues.apache.org/jira/browse/AMQ-4387
         System.setProperty("javax.net.ssl.trustStore", certBase + "/broker1.ks");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
@@ -123,6 +128,8 @@ public class AMQ4126Test {
         URI brokerURI = broker.getConnectorByName(connectorName).getConnectUri();
         String uri = "ssl://" + brokerURI.getHost() + ":" + brokerURI.getPort() + "?socket.verifyHostName=false";
         ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory(uri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4388
+//IC see: https://issues.apache.org/jira/browse/AMQ-4387
         cf.setTrustStore("org/apache/activemq/security/broker1.ks");
         cf.setTrustStorePassword("password");
         cf.setKeyStore("org/apache/activemq/security/client.ks");
@@ -160,6 +167,7 @@ public class AMQ4126Test {
 
     @Test
     public void testJmx() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4364
         TestCase.assertFalse(findDestination(destinationName));
         broker.getAdminView().addQueue(destinationName);
         TestCase.assertTrue(findDestination(destinationName));

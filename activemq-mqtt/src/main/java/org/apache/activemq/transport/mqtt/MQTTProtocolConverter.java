@@ -138,8 +138,11 @@ public class MQTTProtocolConverter {
 
     public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerService brokerService) {
         this.mqttTransport = mqttTransport;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4896
         this.brokerService = brokerService;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
         this.packetIdGenerator = MQTTPacketIdGenerator.getMQTTPacketIdGenerator(brokerService);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4123
         this.defaultKeepAlive = 0;
     }
 
@@ -155,6 +158,7 @@ public class MQTTProtocolConverter {
         if (command instanceof ActiveMQMessage) {
             ActiveMQMessage msg = (ActiveMQMessage) command;
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
                 if (!getPublishDollarTopics() && findSubscriptionStrategy().isControlTopic(msg.getDestination())) {
                     // We don't allow users to send to $ prefixed topics to avoid failing MQTT 3.1.1
                     // specification requirements for system assigned destinations.
@@ -177,9 +181,11 @@ public class MQTTProtocolConverter {
             command.setResponseRequired(true);
             resposeHandlers.put(command.getCommandId(), handler);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5112
         getMQTTTransport().sendToActiveMQ(command);
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
     void sendToMQTT(MQTTFrame frame) {
         try {
             mqttTransport.sendToMQTT(frame);
@@ -193,19 +199,24 @@ public class MQTTProtocolConverter {
      */
     public void onMQTTCommand(MQTTFrame frame) throws IOException, JMSException {
         switch (frame.messageType()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
             case PINGREQ.TYPE:
                 LOG.debug("Received a ping from client: " + getClientId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6345
                 checkConnected();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5112
                 sendToMQTT(PING_RESP_FRAME);
                 LOG.debug("Sent Ping Response to " + getClientId());
                 break;
             case CONNECT.TYPE:
+//IC see: https://issues.apache.org/jira/browse/AMQ-4990
                 CONNECT connect = new CONNECT().decode(frame);
                 onMQTTConnect(connect);
                 LOG.debug("MQTT Client {} connected. (version: {})", getClientId(), connect.version());
                 break;
             case DISCONNECT.TYPE:
                 LOG.debug("MQTT Client {} disconnecting", getClientId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4392
                 onMQTTDisconnect();
                 break;
             case SUBSCRIBE.TYPE:
@@ -236,6 +247,7 @@ public class MQTTProtocolConverter {
 
     void onMQTTConnect(final CONNECT connect) throws MQTTProtocolException {
         if (connected.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5058
             throw new MQTTProtocolException("Already connected.");
         }
         this.connect = connect;
@@ -243,6 +255,7 @@ public class MQTTProtocolConverter {
         // The Server MUST respond to the CONNECT Packet with a CONNACK return code 0x01
         // (unacceptable protocol level) and then disconnect the Client if the Protocol Level
         // is not supported by the Server [MQTT-3.1.2-2].
+//IC see: https://issues.apache.org/jira/browse/AMQ-5886
         if (connect.version() < 3 || connect.version() > 4) {
             CONNACK ack = new CONNACK();
             ack.code(CONNACK.Code.CONNECTION_REFUSED_UNACCEPTED_PROTOCOL_VERSION);
@@ -260,6 +273,7 @@ public class MQTTProtocolConverter {
             clientId = connect.clientId().toString();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4695
         String userName = null;
         if (connect.userName() != null) {
             userName = connect.userName().toString();
@@ -267,6 +281,7 @@ public class MQTTProtocolConverter {
         String passswd = null;
         if (connect.password() != null) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5881
             if (userName == null && connect.version() != V3_1) {
                 // [MQTT-3.1.2-22]: If the user name is not present then the
                 // password must also be absent.
@@ -279,14 +294,17 @@ public class MQTTProtocolConverter {
         }
 
         version = connect.version();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5734
 
         configureInactivityMonitor(connect.keepAlive());
 
         connectionInfo.setConnectionId(connectionId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
         if (clientId != null && !clientId.isEmpty()) {
             connectionInfo.setClientId(clientId);
         } else {
             // Clean Session MUST be set for 0 length Client Id
+//IC see: https://issues.apache.org/jira/browse/AMQ-5058
             if (!connect.cleanSession()) {
                 CONNACK ack = new CONNACK();
                 ack.code(CONNACK.Code.CONNECTION_REFUSED_IDENTIFIER_REJECTED);
@@ -315,11 +333,13 @@ public class MQTTProtocolConverter {
                     Throwable exception = ((ExceptionResponse) response).getException();
                     //let the client know
                     CONNACK ack = new CONNACK();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5288
                     if (exception instanceof InvalidClientIDException) {
                         ack.code(CONNACK.Code.CONNECTION_REFUSED_IDENTIFIER_REJECTED);
                     } else if (exception instanceof SecurityException) {
                         ack.code(CONNACK.Code.CONNECTION_REFUSED_NOT_AUTHORIZED);
                     } else if (exception instanceof CredentialException) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5233
                         ack.code(CONNACK.Code.CONNECTION_REFUSED_BAD_USERNAME_OR_PASSWORD);
                     } else {
                         ack.code(CONNACK.Code.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
@@ -344,20 +364,25 @@ public class MQTTProtocolConverter {
                             ack.code(CONNACK.Code.CONNECTION_REFUSED_BAD_USERNAME_OR_PASSWORD);
                             getMQTTTransport().sendToMQTT(ack.encode());
                             getMQTTTransport().onException(IOExceptionSupport.create(exception));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5058
                             return;
                         }
 
                         CONNACK ack = new CONNACK();
                         ack.code(CONNACK.Code.CONNECTION_ACCEPTED);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
                         connected.set(true);
                         getMQTTTransport().sendToMQTT(ack.encode());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5299
                         if (connect.cleanSession()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
                             packetIdGenerator.stopClientSession(getClientId());
                         } else {
                             packetIdGenerator.startClientSession(getClientId());
                         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
                         findSubscriptionStrategy().onConnect(connect);
                     }
                 });
@@ -365,7 +390,9 @@ public class MQTTProtocolConverter {
         });
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4392
     void onMQTTDisconnect() throws MQTTProtocolException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6343
         if (connected.compareAndSet(true, false)) {
             sendToActiveMQ(connectionInfo.createRemoveCommand(), null);
             sendToActiveMQ(new ShutdownInfo(), null);
@@ -376,13 +403,19 @@ public class MQTTProtocolConverter {
     void onSubscribe(SUBSCRIBE command) throws MQTTProtocolException {
         checkConnected();
         LOG.trace("MQTT SUBSCRIBE message:{} client:{} connection:{}",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5481
                   command.messageId(), clientId, connectionInfo.getConnectionId());
         Topic[] topics = command.topics();
         if (topics != null) {
             byte[] qos = new byte[topics.length];
             for (int i = 0; i < topics.length; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5883
+//IC see: https://issues.apache.org/jira/browse/AMQ-5884
+//IC see: https://issues.apache.org/jira/browse/AMQ-5885
                 MQTTProtocolSupport.validate(topics[i].name().toString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
                     qos[i] = findSubscriptionStrategy().onSubscribe(topics[i]);
                 } catch (IOException e) {
                     throw new MQTTProtocolException("Failed to process subscription request", true, e);
@@ -398,20 +431,29 @@ public class MQTTProtocolConverter {
             }
         } else {
             LOG.warn("No topics defined for Subscription " + command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5883
+//IC see: https://issues.apache.org/jira/browse/AMQ-5884
+//IC see: https://issues.apache.org/jira/browse/AMQ-5885
             throw new MQTTProtocolException("SUBSCRIBE command received with no topic filter");
         }
     }
 
     public void onUnSubscribe(UNSUBSCRIBE command) throws MQTTProtocolException {
         checkConnected();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5997
         if (command.qos() != QoS.AT_LEAST_ONCE && (version != V3_1 || publishDollarTopics != true)) {
             throw new MQTTProtocolException("Failed to process unsubscribe request", true, new Exception("UNSUBSCRIBE frame not properly formatted, QoS"));
         }
         UTF8Buffer[] topics = command.topics();
         if (topics != null) {
             for (UTF8Buffer topic : topics) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5883
+//IC see: https://issues.apache.org/jira/browse/AMQ-5884
+//IC see: https://issues.apache.org/jira/browse/AMQ-5885
                 MQTTProtocolSupport.validate(topic.toString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
                     findSubscriptionStrategy().onUnSubscribe(topic.toString());
                 } catch (IOException e) {
                     throw new MQTTProtocolException("Failed to process unsubscribe request", true, e);
@@ -444,10 +486,13 @@ public class MQTTProtocolConverter {
             }
         } else if (command.isMessageDispatch()) {
             MessageDispatch md = (MessageDispatch) command;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
             MQTTSubscription sub = findSubscriptionStrategy().getSubscription(md.getConsumerId());
             if (sub != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
                 MessageAck ack = sub.createMessageAck(md);
                 PUBLISH publish = sub.createPublish((ActiveMQMessage) md.getMessage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
                 switch (publish.qos()) {
                     case AT_LEAST_ONCE:
                     case EXACTLY_ONCE:
@@ -460,6 +505,7 @@ public class MQTTProtocolConverter {
                     }
                 }
                 LOG.trace("MQTT Snd PUBLISH message:{} client:{} connection:{}",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5481
                           publish.messageId(), clientId, connectionInfo.getConnectionId());
                 getMQTTTransport().sendToMQTT(publish.encode());
                 if (ack != null && !sub.expectAck(publish)) {
@@ -480,8 +526,10 @@ public class MQTTProtocolConverter {
     void onMQTTPublish(PUBLISH command) throws IOException, JMSException {
         checkConnected();
         LOG.trace("MQTT Rcv PUBLISH message:{} client:{} connection:{}",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5481
                   command.messageId(), clientId, connectionInfo.getConnectionId());
         //Both version 3.1 and 3.1.1 do not allow the topic name to contain a wildcard in the publish packet
+//IC see: https://issues.apache.org/jira/browse/AMQ-5882
         if (containsMqttWildcard(command.topicName().toString())) {
             // [MQTT-3.3.2-2]: The Topic Name in the PUBLISH Packet MUST NOT contain wildcard characters
             getMQTTTransport().onException(IOExceptionSupport.create("The topic name must not contain wildcard characters.", null));
@@ -496,8 +544,10 @@ public class MQTTProtocolConverter {
     void onMQTTPubAck(PUBACK command) {
         short messageId = command.messageId();
         LOG.trace("MQTT Rcv PUBACK message:{} client:{} connection:{}",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5481
                   messageId, clientId, connectionInfo.getConnectionId());
         packetIdGenerator.ackPacketId(getClientId(), messageId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
         MessageAck ack;
         synchronized (consumerAcks) {
             ack = consumerAcks.remove(messageId);
@@ -529,6 +579,8 @@ public class MQTTProtocolConverter {
 
     void onMQTTPubComp(PUBCOMP command) {
         short messageId = command.messageId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
         packetIdGenerator.ackPacketId(getClientId(), messageId);
         MessageAck ack;
         synchronized (consumerAcks) {
@@ -543,24 +595,31 @@ public class MQTTProtocolConverter {
         ActiveMQBytesMessage msg = new ActiveMQBytesMessage();
 
         msg.setProducerId(producerId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
         MessageId id = new MessageId(producerId, publisherIdGenerator.getNextSequenceId());
         msg.setMessageId(id);
         LOG.trace("MQTT-->ActiveMQ: MQTT_MSGID:{} client:{} connection:{} ActiveMQ_MSGID:{}",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5481
                 command.messageId(), clientId, connectionInfo.getConnectionId(), msg.getMessageId());
         msg.setTimestamp(System.currentTimeMillis());
         msg.setPriority((byte) Message.DEFAULT_PRIORITY);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6575
         msg.setPersistent(command.qos() != QoS.AT_MOST_ONCE);
         msg.setIntProperty(QOS_PROPERTY_NAME, command.qos().ordinal());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         if (command.retain()) {
             msg.setBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAIN_PROPERTY, true);
         }
 
         ActiveMQDestination destination;
         synchronized (activeMQDestinationMap) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7376
             destination = activeMQDestinationMap.get(command.topicName().toString());
             if (destination == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
                 String topicName = MQTTProtocolSupport.convertMQTTToActiveMQ(command.topicName().toString());
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
                     destination = findSubscriptionStrategy().onSend(topicName);
                 } catch (IOException e) {
                     throw JMSExceptionSupport.create(e);
@@ -587,12 +646,14 @@ public class MQTTProtocolConverter {
             qoS = message.isPersistent() ? QoS.AT_MOST_ONCE : QoS.AT_LEAST_ONCE;
         }
         result.qos(qoS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         if (message.getBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAINED_PROPERTY)) {
             result.retain(true);
         }
 
         String topicName;
         synchronized (mqttTopicMap) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
             ActiveMQDestination destination = message.getDestination();
             if (destination.isPattern() && message.getOriginalDestination() != null) {
                 destination = message.getOriginalDestination();
@@ -607,7 +668,9 @@ public class MQTTProtocolConverter {
         result.topicName(new UTF8Buffer(topicName));
 
         if (message.getDataStructureType() == ActiveMQTextMessage.DATA_STRUCTURE_TYPE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4117
             ActiveMQTextMessage msg = (ActiveMQTextMessage) message.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3855
             msg.setReadOnlyBody(true);
             String messageText = msg.getText();
             if (messageText != null) {
@@ -628,6 +691,7 @@ public class MQTTProtocolConverter {
             }
         } else {
             ByteSequence byteSequence = message.getContent();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
             if (byteSequence != null && byteSequence.getLength() > 0) {
                 if (message.isCompressed()) {
                     Inflater inflater = new Inflater();
@@ -639,12 +703,14 @@ public class MQTTProtocolConverter {
                         bytesOut.write(data, 0, read);
                     }
                     byteSequence = bytesOut.toByteSequence();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4392
                     bytesOut.close();
                 }
                 result.payload(new Buffer(byteSequence.data, byteSequence.offset, byteSequence.length));
             }
         }
         LOG.trace("ActiveMQ-->MQTT:MQTT_MSGID:{} client:{} connection:{} ActiveMQ_MSGID:{}",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5481
                 result.messageId(), clientId, connectionInfo.getConnectionId(), message.getMessageId());
         return result;
     }
@@ -653,18 +719,23 @@ public class MQTTProtocolConverter {
         return mqttTransport;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7115
     AtomicBoolean transportErrorHandled = new AtomicBoolean(false);
     public void onTransportError() {
         if (transportErrorHandled.compareAndSet(false, true)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
             if (connect != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5108
                 if (connected.get()) {
                     if (connect.willTopic() != null && connect.willMessage() != null) {
                         try {
                             PUBLISH publish = new PUBLISH();
                             publish.topicName(connect.willTopic());
                             publish.qos(connect.willQos());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
                             publish.messageId(packetIdGenerator.getNextSequenceId(getClientId()));
                             publish.payload(connect.willMessage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6060
                             publish.retain(connect.willRetain());
                             ActiveMQMessage message = convertMessage(publish);
                             message.setProducerId(producerId);
@@ -693,6 +764,7 @@ public class MQTTProtocolConverter {
 
         // Client has sent a valid CONNECT frame, we can stop the connect checker.
         monitor.stopConnectChecker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5468
 
         long keepAliveMS = keepAliveSeconds * 1000L;
 
@@ -708,22 +780,27 @@ public class MQTTProtocolConverter {
 
             long readGracePeriod = (long) (keepAliveMS * MQTT_KEEP_ALIVE_GRACE_PERIOD);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
             monitor.setProtocolConverter(this);
             monitor.setReadKeepAliveTime(keepAliveMS);
             monitor.setReadGraceTime(readGracePeriod);
             monitor.startReadChecker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5468
 
             LOG.debug("MQTT Client {} established heart beat of  {} ms ({} ms + {} ms grace period)",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
                       new Object[] { getClientId(), keepAliveMS, keepAliveMS, readGracePeriod });
         } catch (Exception ex) {
             LOG.warn("Failed to start MQTT InactivityMonitor ", ex);
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
     void handleException(Throwable exception, MQTTFrame command) {
         LOG.warn("Exception occurred processing: \n" + command + ": " + exception.toString());
         LOG.debug("Exception detail", exception);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5108
         if (connected.get() && connectionInfo != null) {
             connected.set(false);
             sendToActiveMQ(connectionInfo.createRemoveCommand(), null);
@@ -731,6 +808,7 @@ public class MQTTProtocolConverter {
         stopTransport();
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
     void checkConnected() throws MQTTProtocolException {
         if (!connected.get()) {
             throw new MQTTProtocolException("Not connected.");
@@ -747,6 +825,7 @@ public class MQTTProtocolConverter {
 
     ResponseHandler createResponseHandler(final PUBLISH command) {
         if (command != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5834
             return new ResponseHandler() {
                 @Override
                 public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
@@ -761,6 +840,8 @@ public class MQTTProtocolConverter {
                             PUBACK ack = new PUBACK();
                             ack.messageId(command.messageId());
                             LOG.trace("MQTT Snd PUBACK message:{} client:{} connection:{}",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5481
+//IC see: https://issues.apache.org/jira/browse/AMQ-5481
                                       command.messageId(), clientId, connectionInfo.getConnectionId());
                             converter.getMQTTTransport().sendToMQTT(ack.encode());
                             break;
@@ -775,6 +856,7 @@ public class MQTTProtocolConverter {
                             converter.getMQTTTransport().sendToMQTT(req.encode());
                             break;
                         default:
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
                             break;
                     }
                 }
@@ -812,10 +894,12 @@ public class MQTTProtocolConverter {
     }
 
     public MQTTPacketIdGenerator getPacketIdGenerator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
         return packetIdGenerator;
     }
 
     public void setPublishDollarTopics(boolean publishDollarTopics) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5292
         this.publishDollarTopics = publishDollarTopics;
     }
 
@@ -824,10 +908,12 @@ public class MQTTProtocolConverter {
     }
 
     public ConnectionId getConnectionId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         return connectionId;
     }
 
     public SessionId getSessionId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         return sessionId;
     }
 
@@ -855,11 +941,13 @@ public class MQTTProtocolConverter {
     }
 
     protected boolean containsMqttWildcard(String value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5882
         return value != null && (value.contains(SINGLE_LEVEL_WILDCARD) ||
                 value.contains(MULTI_LEVEL_WILDCARD));
     }
 
     protected MQTTSubscriptionStrategy findSubscriptionStrategy() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         if (subsciptionStrategy == null) {
             synchronized (STRATAGY_FINDER) {
                 if (subsciptionStrategy != null) {
@@ -890,6 +978,7 @@ public class MQTTProtocolConverter {
 
     // for testing
     public void setSubsciptionStrategy(MQTTSubscriptionStrategy subsciptionStrategy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7115
         this.subsciptionStrategy = subsciptionStrategy;
     }
 }

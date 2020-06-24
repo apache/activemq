@@ -72,6 +72,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         info.setSelector(tightUnmarshalString(dataIn, bs));
         info.setSubscriptionName(tightUnmarshalString(dataIn, bs));
         info.setSubscribedDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1356
 
     }
 
@@ -89,6 +90,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         rc += tightMarshalString1(info.getSelector(), bs);
         rc += tightMarshalString1(info.getSubscriptionName(), bs);
         rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getSubscribedDestination(), bs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1356
 
         return rc + 0;
     }
@@ -109,6 +111,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         tightMarshalString2(info.getSelector(), dataOut, bs);
         tightMarshalString2(info.getSubscriptionName(), dataOut, bs);
         tightMarshalNestedObject2(wireFormat, (DataStructure)info.getSubscribedDestination(), dataOut, bs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1356
 
     }
 
@@ -128,6 +131,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         info.setSelector(looseUnmarshalString(dataIn));
         info.setSubscriptionName(looseUnmarshalString(dataIn));
         info.setSubscribedDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalNestedObject(wireFormat, dataIn));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1356
 
     }
 
@@ -145,6 +149,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         looseMarshalString(info.getSelector(), dataOut);
         looseMarshalString(info.getSubscriptionName(), dataOut);
         looseMarshalNestedObject(wireFormat, (DataStructure)info.getSubscribedDestination(), dataOut);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1356
 
     }
 }

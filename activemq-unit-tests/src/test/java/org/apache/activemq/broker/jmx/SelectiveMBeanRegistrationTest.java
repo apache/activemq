@@ -56,6 +56,7 @@ public class SelectiveMBeanRegistrationTest  {
 
         ManagementContext managementContext = new ManagementContext();
         managementContext.setCreateConnector(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5656
         managementContext.setSuppressMBean("endpoint=dynamicProducer,endpoint=Consumer,destinationName=ActiveMQ.Advisory.*");
         brokerService.setManagementContext(managementContext);
 
@@ -75,11 +76,13 @@ public class SelectiveMBeanRegistrationTest  {
         session.createConsumer(queue);
 
         // create a plain topic
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
         Destination topic = session.createTopic("ATopic");
         session.createConsumer(topic);
 
 
         final ManagedRegionBroker managedRegionBroker = (ManagedRegionBroker) brokerService.getBroker().getAdaptor(ManagedRegionBroker.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6175
 
         // mbean exists
         assertTrue("one sub", Wait.waitFor(new Wait.Condition() {
@@ -95,6 +98,7 @@ public class SelectiveMBeanRegistrationTest  {
         // and is not tracked
         assertFalse("not tracked as registered", managedRegionBroker.getRegisteredMbeans().contains(managedRegionBroker.getQueueSubscribers()[0]));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
 
         // verify dynamicProducer suppressed
         session.createProducer(null);
@@ -104,6 +108,7 @@ public class SelectiveMBeanRegistrationTest  {
         assertTrue("one sub", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6175
                 return managedRegionBroker.getDynamicDestinationProducers().length == 1;
             }
         }));
@@ -116,7 +121,9 @@ public class SelectiveMBeanRegistrationTest  {
 
         assertFalse("producer not tracked as registered", managedRegionBroker.getRegisteredMbeans().contains(managedRegionBroker.getDynamicDestinationProducers()[0]));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5656
         query = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationName=ActiveMQ.Advisory.*,*");
         mbeans = mbeanServer.queryMBeans(query, null);
         assertEquals(0, mbeans.size());

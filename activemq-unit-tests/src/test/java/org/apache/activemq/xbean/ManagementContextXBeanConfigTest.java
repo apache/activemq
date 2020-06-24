@@ -58,6 +58,7 @@ public class ManagementContextXBeanConfigTest extends TestCase {
         assertEquals("test.domain", brokerService.getManagementContext().getJmxDomainName());
         // Make sure the broker is registered in the right jmx domain.
         Hashtable<String, String> map = new Hashtable<String, String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         map.put("type", "Broker");
         map.put("brokerName", JMXSupport.encodeObjectNamePart("localhost"));
         ObjectName on = new ObjectName("test.domain", map);
@@ -69,6 +70,7 @@ public class ManagementContextXBeanConfigTest extends TestCase {
         brokerService = getBrokerService(MANAGEMENT_CONTEXT_TEST_XML);
         brokerService.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3044
         JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:2011/jmxrmi");
         Map<String, Object> env = new HashMap<String, Object>();
         env.put(JMXConnector.CREDENTIALS, new String[]{"admin", "activemq"});
@@ -104,6 +106,7 @@ public class ManagementContextXBeanConfigTest extends TestCase {
     public void assertAuthentication(JMXConnector connector) throws Exception {
         connector.connect();
         MBeanServerConnection connection = connector.getMBeanServerConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName name = new ObjectName("test.domain:type=Broker,brokerName=localhost");
         BrokerViewMBean mbean = MBeanServerInvocationHandler
                 .newProxyInstance(connection, name, BrokerViewMBean.class, true);

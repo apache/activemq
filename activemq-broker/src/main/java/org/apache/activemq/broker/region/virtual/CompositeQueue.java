@@ -36,11 +36,13 @@ public class CompositeQueue extends CompositeDestination {
     @Override
     public Destination interceptMappedDestination(Destination destination) {
         // nothing to do for mapped destinations
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
         return destination;
     }
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         return "CompositeQueue [" + getName() + "]";
     }
 }

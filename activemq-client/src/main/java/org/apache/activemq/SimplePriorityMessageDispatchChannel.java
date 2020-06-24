@@ -183,6 +183,7 @@ public class SimplePriorityMessageDispatchChannel implements MessageDispatchChan
             for (int i = 0; i < MAX_PRIORITY; i++) {
                 lists[i].clear();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4562
             this.size = 0;
         }
     }
@@ -260,6 +261,8 @@ public class SimplePriorityMessageDispatchChannel implements MessageDispatchChan
     protected int getPriority(MessageDispatch message) {
         int priority = javax.jms.Message.DEFAULT_PRIORITY;
         if (message.getMessage() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2866
+//IC see: https://issues.apache.org/jira/browse/AMQ-4562
             priority = Math.max(message.getMessage().getPriority(), 0);
             priority = Math.min(priority, 9);
         }

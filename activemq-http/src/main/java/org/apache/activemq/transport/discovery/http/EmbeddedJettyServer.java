@@ -32,10 +32,12 @@ public class EmbeddedJettyServer implements org.apache.activemq.Service {
         URI uri = new URI(agent.getRegistryURL());
 
         int port = 80;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         if( uri.getPort() >=0 ) {
             port = uri.getPort();
         }
         server = new Server(port);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2600
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SECURITY | ServletContextHandler.NO_SESSIONS);
         
         context.setContextPath("/");

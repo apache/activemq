@@ -40,6 +40,7 @@ public class CreateDestination extends DestinationFacade implements Controller {
     }
 
 	public String[] getSupportedHttpMethods() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2613
 		return new String[]{"POST"};
 	}
     

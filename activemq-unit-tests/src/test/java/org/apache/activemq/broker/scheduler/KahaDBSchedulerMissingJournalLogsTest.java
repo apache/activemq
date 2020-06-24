@@ -119,6 +119,7 @@ public class KahaDBSchedulerMissingJournalLogsTest {
 
         try {
             createBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5746
             broker.start();
             fail("Should not start when logs are missing.");
         } catch (Exception e) {
@@ -179,6 +180,7 @@ public class KahaDBSchedulerMissingJournalLogsTest {
         long time = 360 * 1000;
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 500);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7458
         message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, 0);
         producer.send(message);
     }

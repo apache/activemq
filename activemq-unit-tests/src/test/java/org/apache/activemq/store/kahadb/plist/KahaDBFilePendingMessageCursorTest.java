@@ -38,12 +38,14 @@ public class KahaDBFilePendingMessageCursorTest extends FilePendingMessageCursor
     @Test
     public void testAddRemoveAddIndexSize() throws Exception {
         brokerService = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         brokerService.setUseJmx(false);
         SystemUsage usage = brokerService.getSystemUsage();
         usage.getMemoryUsage().setLimit(1024*150);
         String body = new String(new byte[1024]);
         Destination destination = new Queue(brokerService, new ActiveMQQueue("Q"), null, new DestinationStatistics(), null);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6005
         brokerService.start();
         underTest = new FilePendingMessageCursor(brokerService.getBroker(), "test", false);
         underTest.setSystemUsage(usage);
@@ -75,6 +77,7 @@ public class KahaDBFilePendingMessageCursorTest extends FilePendingMessageCursor
             while(underTest.hasNext()) {
                 MessageReference ref = underTest.next();
                 underTest.remove();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
                 ref.decrementReferenceCount();
                 assertEquals("id is correct", receivedCount++, ref.getMessageId().getProducerSequenceId());
             }

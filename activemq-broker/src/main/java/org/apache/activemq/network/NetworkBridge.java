@@ -57,6 +57,7 @@ public interface NetworkBridge extends Service {
      * @return the id of the remote broker this bridge is connected to.
      */
     String getRemoteBrokerId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4825
 
     /**
      * @return the network address of the local broker connection.
@@ -82,17 +83,20 @@ public interface NetworkBridge extends Service {
      * @return the statistics for this NetworkBridge
      */
     NetworkBridgeStatistics getNetworkBridgeStatistics();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
 
     /**
      * @param objectName
      *      The ObjectName assigned to this bridge in the MBean server.
      */
     void setMbeanObjectName(ObjectName objectName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3523
 
     /**
      * @return the MBean name used to identify this bridge in the MBean server.
      */
     ObjectName getMbeanObjectName();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
     void resetStats();
 }

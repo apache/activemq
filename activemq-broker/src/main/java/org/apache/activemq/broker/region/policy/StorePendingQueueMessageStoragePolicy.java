@@ -39,6 +39,7 @@ public class StorePendingQueueMessageStoragePolicy implements PendingQueueMessag
      *      org.apache.activemq.kaha.Store)
      */
     public PendingMessageCursor getQueuePendingMessageCursor(Broker broker,Queue queue) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1562
         return new StoreQueueCursor(broker,queue);
     }
 

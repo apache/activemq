@@ -118,6 +118,8 @@ public class RegionBroker extends EmptyBroker {
     private final Runnable purgeInactiveDestinationsTask = new Runnable() {
         @Override
         public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6979
+//IC see: https://issues.apache.org/jira/browse/AMQ-5129
             if (purgeInactiveDestinationsTaskInProgress.compareAndSet(false, true)) {
                 taskRunnerFactory.execute(purgeInactiveDestinationsWork);
             }
@@ -127,6 +129,7 @@ public class RegionBroker extends EmptyBroker {
         @Override
         public void run() {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2821
                 purgeInactiveDestinations();
             } catch (Throwable ignored) {
                 LOG.error("Unexpected exception on purgeInactiveDestinations {}", this, ignored);
@@ -137,6 +140,7 @@ public class RegionBroker extends EmptyBroker {
     };
 
     public RegionBroker(BrokerService brokerService, TaskRunnerFactory taskRunnerFactory, SystemUsage memoryManager, DestinationFactory destinationFactory,
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
         DestinationInterceptor destinationInterceptor, Scheduler scheduler, ThreadPoolExecutor executor) throws IOException {
         this.brokerService = brokerService;
         this.executor = executor;
@@ -151,11 +155,14 @@ public class RegionBroker extends EmptyBroker {
         this.destinationInterceptor = destinationInterceptor;
         tempQueueRegion = createTempQueueRegion(memoryManager, taskRunnerFactory, destinationFactory);
         tempTopicRegion = createTempTopicRegion(memoryManager, taskRunnerFactory, destinationFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6979
+//IC see: https://issues.apache.org/jira/browse/AMQ-5129
         this.taskRunnerFactory = taskRunnerFactory;
     }
 
     @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         Map<ActiveMQDestination, Destination> answer = new HashMap<ActiveMQDestination, Destination>(getQueueRegion().getDestinationMap());
         answer.putAll(getTopicRegion().getDestinationMap());
         return answer;
@@ -163,6 +170,9 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5212
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         try {
             return getRegion(destination).getDestinationMap();
         } catch (JMSException jmse) {
@@ -172,6 +182,7 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public Set<Destination> getDestinations(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
         try {
             return getRegion(destination).getDestinations(destination);
         } catch (JMSException jmse) {
@@ -200,6 +211,7 @@ public class RegionBroker extends EmptyBroker {
     }
 
     protected Region createTempQueueRegion(SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4091
         return new TempQueueRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
@@ -219,6 +231,7 @@ public class RegionBroker extends EmptyBroker {
         tempQueueRegion.start();
         tempTopicRegion.start();
         int period = this.brokerService.getSchedulePeriodForDestinationPurge();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2821
         if (period > 0) {
             this.scheduler.executePeriodically(purgeInactiveDestinationsTask, period);
         }
@@ -229,9 +242,11 @@ public class RegionBroker extends EmptyBroker {
         started = false;
         this.scheduler.cancel(purgeInactiveDestinationsTask);
         ServiceStopper ss = new ServiceStopper();
+//IC see: https://issues.apache.org/jira/browse/AMQ-585
         doStop(ss);
         ss.throwFirstException();
         // clear the state
+//IC see: https://issues.apache.org/jira/browse/AMQ-2245
         clientIdSet.clear();
         connections.clear();
         destinations.clear();
@@ -243,6 +258,7 @@ public class RegionBroker extends EmptyBroker {
     }
 
     public ConnectionContext getConnectionContext(String clientId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         return clientIdSet.get(clientId);
     }
 
@@ -254,14 +270,17 @@ public class RegionBroker extends EmptyBroker {
         }
 
         ConnectionContext oldContext = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5396
 
         synchronized (clientIdSet) {
             oldContext = clientIdSet.get(clientId);
             if (oldContext != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5385
                 if (context.isAllowLinkStealing()) {
                     clientIdSet.put(clientId, context);
                 } else {
                     throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
                         + oldContext.getConnection().getRemoteAddress());
                 }
             } else {
@@ -269,12 +288,14 @@ public class RegionBroker extends EmptyBroker {
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5396
         if (oldContext != null) {
             if (oldContext.getConnection() != null) {
                 Connection connection = oldContext.getConnection();
                 LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
                 if (connection instanceof TransportConnection) {
                     TransportConnection transportConnection = (TransportConnection) connection;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5772
                     transportConnection.stopAsync(new IOException("Stealing link for clientId " + clientId + " From Connection " + oldContext.getConnection().getConnectionId()));
                 } else {
                     connection.stop();
@@ -298,6 +319,7 @@ public class RegionBroker extends EmptyBroker {
             // we may be removing the duplicate connection, not the first connection to be created
             // so lets check that their connection IDs are the same
             if (oldValue == context) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-839
                 if (isEqual(oldValue.getConnectionId(), info.getConnectionId())) {
                     clientIdSet.remove(clientId);
                 }
@@ -328,6 +350,7 @@ public class RegionBroker extends EmptyBroker {
             return answer;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
         synchronized (destinationGate) {
             answer = destinations.get(destination);
             if (answer != null) {
@@ -339,6 +362,8 @@ public class RegionBroker extends EmptyBroker {
                 while (destinationGate.containsKey(destination)) {
                     destinationGate.wait();
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                 answer = destinations.get(destination);
                 if (answer != null) {
                     return answer;
@@ -369,6 +394,7 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         if (destinations.containsKey(destination)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
             getRegion(destination).removeDestination(context, destination, timeout);
             destinations.remove(destination);
         }
@@ -377,6 +403,7 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         addDestination(context, info.getDestination(), true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
 
     }
 
@@ -399,12 +426,16 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3326
         if (destination != null) {
             inactiveDestinationsPurgeLock.readLock().lock();
             try {
                 // This seems to cause the destination to be added but without
                 // advisories firing...
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                 context.getBroker().addDestination(context, destination, isAllowTempAutoCreationOnSend());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
                 getRegion(destination).addProducer(context, info);
             } finally {
                 inactiveDestinationsPurgeLock.readLock().unlock();
@@ -415,9 +446,11 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3326
         if (destination != null) {
             inactiveDestinationsPurgeLock.readLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
                 getRegion(destination).removeProducer(context, info);
             } finally {
                 inactiveDestinationsPurgeLock.readLock().unlock();
@@ -428,12 +461,15 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3197
         if (destinationInterceptor != null) {
             destinationInterceptor.create(this, context, destination);
         }
         inactiveDestinationsPurgeLock.readLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
             return getRegion(destination).addConsumer(context, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3326
         } finally {
             inactiveDestinationsPurgeLock.readLock().unlock();
         }
@@ -444,7 +480,9 @@ public class RegionBroker extends EmptyBroker {
         ActiveMQDestination destination = info.getDestination();
         inactiveDestinationsPurgeLock.readLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
             getRegion(destination).removeConsumer(context, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3326
         } finally {
             inactiveDestinationsPurgeLock.readLock().unlock();
         }
@@ -452,6 +490,7 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3326
         inactiveDestinationsPurgeLock.readLock().lock();
         try {
             topicRegion.removeSubscription(context, info);
@@ -463,14 +502,22 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
         ActiveMQDestination destination = message.getDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1160
+//IC see: https://issues.apache.org/jira/browse/AMQ-1072
+//IC see: https://issues.apache.org/jira/browse/AMQ-936
+//IC see: https://issues.apache.org/jira/browse/AMQ-567
         message.setBrokerInTime(System.currentTimeMillis());
         if (producerExchange.isMutable() || producerExchange.getRegion() == null
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
             || (producerExchange.getRegionDestination() != null && producerExchange.getRegionDestination().isDisposed())) {
             // ensure the destination is registered with the RegionBroker
             producerExchange.getConnectionContext().getBroker()
                 .addDestination(producerExchange.getConnectionContext(), destination, isAllowTempAutoCreationOnSend());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
             producerExchange.setRegion(getRegion(destination));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3092
             producerExchange.setRegionDestination(null);
         }
 
@@ -478,7 +525,9 @@ public class RegionBroker extends EmptyBroker {
 
         // clean up so these references aren't kept (possible leak) in the producer exchange
         // especially since temps are transitory
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
         if (producerExchange.isMutable()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
             producerExchange.setRegionDestination(null);
             producerExchange.setRegion(null);
         }
@@ -488,6 +537,7 @@ public class RegionBroker extends EmptyBroker {
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         if (consumerExchange.isWildcard() || consumerExchange.getRegion() == null) {
             ActiveMQDestination destination = ack.getDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
             consumerExchange.setRegion(getRegion(destination));
         }
         consumerExchange.getRegion().acknowledge(consumerExchange, ack);
@@ -495,6 +545,7 @@ public class RegionBroker extends EmptyBroker {
 
     public Region getRegion(ActiveMQDestination destination) throws JMSException {
         switch (destination.getDestinationType()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
             case ActiveMQDestination.QUEUE_TYPE:
                 return queueRegion;
             case ActiveMQDestination.TOPIC_TYPE:
@@ -566,6 +617,7 @@ public class RegionBroker extends EmptyBroker {
     public String getBrokerName() {
         if (brokerName == null) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4012
                 brokerName = InetAddressUtil.getLocalHostName().toLowerCase(Locale.ENGLISH);
             } catch (Exception e) {
                 brokerName = "localhost";
@@ -588,6 +640,8 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public synchronized void addBroker(Connection connection, BrokerInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         BrokerInfo existing = brokerInfos.get(info.getBrokerId());
         if (existing == null) {
             existing = info.copy();
@@ -596,6 +650,7 @@ public class RegionBroker extends EmptyBroker {
         }
         existing.incrementRefCount();
         LOG.debug("{} addBroker: {} brokerInfo size: {}", new Object[]{ getBrokerName(), info.getBrokerName(), brokerInfos.size() });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
         addBrokerInClusterUpdate(info);
     }
 
@@ -604,12 +659,15 @@ public class RegionBroker extends EmptyBroker {
         if (info != null) {
             BrokerInfo existing = brokerInfos.get(info.getBrokerId());
             if (existing != null && existing.decrementRefCount() == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
                 brokerInfos.remove(info.getBrokerId());
             }
             LOG.debug("{} removeBroker: {} brokerInfo size: {}", new Object[]{ getBrokerName(), info.getBrokerName(), brokerInfos.size()});
             // When stopping don't send cluster updates since we are the one's tearing down
             // our own bridges.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4505
             if (!brokerService.isStopping()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
                 removeBrokerInClusterUpdate(info);
             }
         }
@@ -618,27 +676,37 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public synchronized BrokerInfo[] getPeerBrokerInfos() {
         BrokerInfo[] result = new BrokerInfo[brokerInfos.size()];
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         result = brokerInfos.values().toArray(result);
         return result;
     }
 
     @Override
     public void preProcessDispatch(final MessageDispatch messageDispatch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5513
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         final Message message = messageDispatch.getMessage();
         if (message != null) {
             long endTime = System.currentTimeMillis();
             message.setBrokerOutTime(endTime);
             if (getBrokerService().isEnableStatistics()) {
                 long totalTime = endTime - message.getBrokerInTime();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
                 ((Destination) message.getRegionDestination()).getDestinationStatistics().getProcessTime().addTime(totalTime);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5541
             if (((BaseDestination) message.getRegionDestination()).isPersistJMSRedelivered() && !message.isRedelivered()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
                 final int originalValue = message.getRedeliveryCounter();
                 message.incrementRedeliveryCounter();
                 try {
                     if (message.isPersistent()) {
                         ((BaseDestination) message.getRegionDestination()).getMessageStore().updateMessage(message);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5513
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
                     messageDispatch.setTransmitCallback(new TransmitCallback() {
                         // dispatch is considered a delivery, so update sub state post dispatch otherwise
                         // on a disconnect/reconnect cached messages will not reflect initial delivery attempt
@@ -659,6 +727,8 @@ public class RegionBroker extends EmptyBroker {
                         }
                     });
                 } catch (IOException error) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5347
+//IC see: https://issues.apache.org/jira/browse/AMQ-2719
                     RuntimeException runtimeException = new RuntimeException("Failed to persist JMSRedeliveryFlag on " + message.getMessageId() + " in " + message.getDestination(), error);
                     LOG.warn(runtimeException.getLocalizedMessage(), runtimeException);
                     throw runtimeException;
@@ -676,6 +746,7 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         ActiveMQDestination destination = messageDispatchNotification.getDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
         getRegion(destination).processDispatchNotification(messageDispatchNotification);
     }
 
@@ -686,10 +757,12 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public Set<ActiveMQDestination> getDurableDestinations() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-877
         return destinationFactory.getDestinations();
     }
 
     protected void doStop(ServiceStopper ss) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-585
         ss.stop(queueRegion);
         ss.stop(topicRegion);
         ss.stop(tempQueueRegion);
@@ -697,11 +770,13 @@ public class RegionBroker extends EmptyBroker {
     }
 
     public boolean isKeepDurableSubsActive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-669
         return keepDurableSubsActive;
     }
 
     public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
         this.keepDurableSubsActive = keepDurableSubsActive;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
         ((TopicRegion) topicRegion).setKeepDurableSubsActive(keepDurableSubsActive);
     }
 
@@ -744,12 +819,14 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public boolean isExpired(MessageReference messageReference) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6361
         return messageReference.canProcessAsExpired();
     }
 
     private boolean stampAsExpired(Message message) throws IOException {
         boolean stamped = false;
         if (message.getProperty(ORIGINAL_EXPIRATION) == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
             long expiration = message.getExpiration();
             message.setProperty(ORIGINAL_EXPIRATION, new Long(expiration));
             stamped = true;
@@ -760,6 +837,8 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public void messageExpired(ConnectionContext context, MessageReference node, Subscription subscription) {
         LOG.debug("Message expired {}", node);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
         getRoot().sendToDeadLetterQueue(context, node, subscription, new Throwable("Message Expired. Expiration:" + node.getExpiration()));
     }
 
@@ -772,6 +851,8 @@ public class RegionBroker extends EmptyBroker {
                     DeadLetterStrategy deadLetterStrategy = ((Destination) node.getRegionDestination()).getDeadLetterStrategy();
                     if (deadLetterStrategy != null) {
                         if (deadLetterStrategy.isSendToDeadLetterQueue(message)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6121
+//IC see: https://issues.apache.org/jira/browse/AMQ-6122
                             ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(message, subscription);
                             // Prevent a DLQ loop where same message is sent from a DLQ back to itself
                             if (deadLetterDestination.equals(message.getDestination())) {
@@ -781,10 +862,13 @@ public class RegionBroker extends EmptyBroker {
 
                             // message may be inflight to other subscriptions so do not modify
                             message = message.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5614
                             long dlqExpiration = deadLetterStrategy.getExpiration();
                             if (dlqExpiration > 0) {
                                 dlqExpiration += System.currentTimeMillis();
                             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2527
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
                                 stampAsExpired(message);
                             }
                             message.setExpiration(dlqExpiration);
@@ -792,6 +876,8 @@ public class RegionBroker extends EmptyBroker {
                                 message.setPersistent(true);
                                 message.setProperty("originalDeliveryMode", "NON_PERSISTENT");
                             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                             if (poisonCause != null) {
                                 message.setProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY,
                                         poisonCause.toString());
@@ -800,12 +886,15 @@ public class RegionBroker extends EmptyBroker {
                             // not get filled when the message is first sent,
                             // it is only populated if the message is routed to
                             // another destination like the DLQ
+//IC see: https://issues.apache.org/jira/browse/AMQ-5141
                             ConnectionContext adminContext = context;
                             if (context.getSecurityContext() == null || !context.getSecurityContext().isBrokerContext()) {
                                 adminContext = BrokerSupport.getConnectionContext(this);
                             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6691
                             addDestination(adminContext, deadLetterDestination, false).getActiveMQDestination().setDLQ(true);
                             BrokerSupport.resendNoCopy(adminContext, message, deadLetterDestination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4517
                             return true;
                         }
                     } else {
@@ -817,6 +906,7 @@ public class RegionBroker extends EmptyBroker {
             LOG.warn("Caught an exception sending to DLQ: {}", node, e);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4517
         return false;
     }
 
@@ -835,13 +925,17 @@ public class RegionBroker extends EmptyBroker {
      */
     @Override
     public long getBrokerSequenceId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4513
         synchronized (sequenceGenerator) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1656
             return sequenceGenerator.getNextSequenceId();
         }
     }
 
     @Override
     public Scheduler getScheduler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         return this.scheduler;
     }
 
@@ -853,6 +947,7 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
         ActiveMQDestination destination = control.getDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
         try {
             getRegion(destination).processConsumerControl(consumerExchange, control);
         } catch (JMSException jmse) {
@@ -864,6 +959,7 @@ public class RegionBroker extends EmptyBroker {
         List<TransportConnector> connectors = this.brokerService.getTransportConnectors();
         for (TransportConnector connector : connectors) {
             if (connector.isUpdateClusterClients()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
                 connector.addPeerBroker(info);
                 connector.updateClientClusterInfo();
             }
@@ -871,6 +967,7 @@ public class RegionBroker extends EmptyBroker {
     }
 
     protected void removeBrokerInClusterUpdate(BrokerInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         List<TransportConnector> connectors = this.brokerService.getTransportConnectors();
         for (TransportConnector connector : connectors) {
             if (connector.isUpdateClusterClients() && connector.isUpdateClusterClientsOnRemove()) {
@@ -881,20 +978,27 @@ public class RegionBroker extends EmptyBroker {
     }
 
     protected void purgeInactiveDestinations() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3326
         inactiveDestinationsPurgeLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3157
             List<Destination> list = new ArrayList<Destination>();
             Map<ActiveMQDestination, Destination> map = getDestinationMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             if (isAllowTempAutoCreationOnSend()) {
                 map.putAll(tempQueueRegion.getDestinationMap());
                 map.putAll(tempTopicRegion.getDestinationMap());
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3339
             long maxPurgedDests = this.brokerService.getMaxPurgedDestinationsPerSweep();
             long timeStamp = System.currentTimeMillis();
             for (Destination d : map.values()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3157
                 d.markForGC(timeStamp);
                 if (d.canGC()) {
                     list.add(d);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3339
                     if (maxPurgedDests > 0 && list.size() == maxPurgedDests) {
                         break;
                     }
@@ -902,6 +1006,7 @@ public class RegionBroker extends EmptyBroker {
             }
 
             if (!list.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2821
                 ConnectionContext context = BrokerSupport.getConnectionContext(this);
                 context.setBroker(this);
 
@@ -910,20 +1015,26 @@ public class RegionBroker extends EmptyBroker {
                     if (dest instanceof BaseDestination) {
                         log = ((BaseDestination) dest).getLog();
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5253
                     log.info("{} Inactive for longer than {} ms - removing ...", dest.getName(), dest.getInactiveTimeoutBeforeGC());
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                         getRoot().removeDestination(context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0);
                     } catch (Throwable e) {
                         LOG.error("Failed to remove inactive destination {}", dest, e);
                     }
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3326
         } finally {
             inactiveDestinationsPurgeLock.writeLock().unlock();
         }
     }
 
     public boolean isAllowTempAutoCreationOnSend() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         return allowTempAutoCreationOnSend;
     }
 
@@ -933,6 +1044,7 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public void reapplyInterceptor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4995
         queueRegion.reapplyInterceptor();
         topicRegion.reapplyInterceptor();
         tempQueueRegion.reapplyInterceptor();

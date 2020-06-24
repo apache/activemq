@@ -85,6 +85,7 @@ public class JDBCIOExceptionHandlerTest {
     }
 
     protected BrokerService createBroker(boolean withJMX) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5162
         return createBroker("localhost", withJMX, true, true);
     }
 
@@ -102,6 +103,7 @@ public class JDBCIOExceptionHandlerTest {
         jdbc.setDataSource(dataSource);
 
         jdbc.setLockKeepAlivePeriod(1000l);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5162
         if (leaseLocker) {
             LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
             leaseDatabaseLocker.setHandleStartException(true);
@@ -110,6 +112,7 @@ public class JDBCIOExceptionHandlerTest {
         }
 
         broker.setPersistenceAdapter(jdbc);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5174
         LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
         ioExceptionHandler.setResumeCheckSleepPeriod(1000l);
         ioExceptionHandler.setStopStartConnectors(startStopConnectors);
@@ -123,6 +126,7 @@ public class JDBCIOExceptionHandlerTest {
 
     @Test
     public void testStartWithDatabaseDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
         final AtomicBoolean connectorStarted = new AtomicBoolean(false);
         final AtomicBoolean connectorStopped = new AtomicBoolean(false);
 
@@ -146,6 +150,7 @@ public class JDBCIOExceptionHandlerTest {
         rootLogger.addAppender(appender);
 
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
         BrokerService broker = new BrokerService();
         broker.getManagementContext().setCreateConnector(true);
         broker.getManagementContext().setCreateMBeanServer(true);
@@ -182,6 +187,7 @@ public class JDBCIOExceptionHandlerTest {
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
             if (connectorStarted.get() && !connectorStopped.get()) {
                 fail("JMX Server Connector should have been stopped!");
             }
@@ -212,6 +218,7 @@ public class JDBCIOExceptionHandlerTest {
 
     @Test
     public void testSlaveStoppedLease() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5162
         testSlaveStopped(true);
     }
 
@@ -240,12 +247,15 @@ public class JDBCIOExceptionHandlerTest {
 
                     if (lease) {
                         LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5162
+//IC see: https://issues.apache.org/jira/browse/AMQ-5162
                         leaseDatabaseLocker.setHandleStartException(true);
                         leaseDatabaseLocker.setLockAcquireSleepInterval(2000l);
                         jdbc.setLocker(leaseDatabaseLocker);
                     }
 
                     broker.setPersistenceAdapter(jdbc);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5174
                     LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
                     ioExceptionHandler.setResumeCheckSleepPeriod(1000l);
                     ioExceptionHandler.setStopStartConnectors(false);
@@ -316,6 +326,7 @@ public class JDBCIOExceptionHandlerTest {
         } finally {
             LOG.debug("*** broker is stopping...");
             broker.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
             broker.waitUntilStopped();
         }
     }

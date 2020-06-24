@@ -26,6 +26,7 @@ import org.apache.activemq.broker.region.TopicSubscription;
 public class TopicSubscriptionView extends SubscriptionView implements TopicSubscriptionViewMBean {
 
     public TopicSubscriptionView(String clientId, String userName, TopicSubscription subs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         super(clientId, userName, subs);
     }
 
@@ -61,6 +62,7 @@ public class TopicSubscriptionView extends SubscriptionView implements TopicSubs
 
     @Override
     public boolean isActive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2691
         if (subscription instanceof DurableTopicSubscription) {
             return ((DurableTopicSubscription)subscription).isActive();
         } else {

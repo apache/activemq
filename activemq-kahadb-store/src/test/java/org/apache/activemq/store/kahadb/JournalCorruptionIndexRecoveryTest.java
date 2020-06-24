@@ -92,6 +92,7 @@ public class JournalCorruptionIndexRecoveryTest {
         broker.setDeleteAllMessagesOnStartup(delete);
         broker.setPersistent(true);
         broker.setUseJmx(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         broker.setDataDirectory(KAHADB_DIRECTORY);
         broker.addConnector("tcp://localhost:0");
 
@@ -117,6 +118,7 @@ public class JournalCorruptionIndexRecoveryTest {
         adapter.setCheckForCorruptJournalFiles(true);
         adapter.setIgnoreMissingJournalfiles(true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL_ASYNC.name());
     }
 
@@ -199,6 +201,7 @@ public class JournalCorruptionIndexRecoveryTest {
 
     private void corruptBatch(int id, boolean atEnd) throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         Collection<DataFile> files = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
         DataFile dataFile = (DataFile) files.toArray()[id];
 
@@ -230,6 +233,7 @@ public class JournalCorruptionIndexRecoveryTest {
     }
 
     private int getNumberOfJournalFiles() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         Collection<DataFile> files = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
         int reality = 0;
         for (DataFile file : files) {
@@ -242,6 +246,7 @@ public class JournalCorruptionIndexRecoveryTest {
 
     private int produceMessages(Destination destination, int numToSend) throws Exception {
         int sent = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
         connection.start();
         try {
@@ -267,6 +272,8 @@ public class JournalCorruptionIndexRecoveryTest {
     }
 
     private int drainQueue(int max) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6378
+//IC see: https://issues.apache.org/jira/browse/AMQ-6376
         return drain(cf, destination, max);
     }
 

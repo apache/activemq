@@ -41,6 +41,7 @@ public class HttpMaxFrameSizeTest {
         brokerService.setPersistent(false);
         brokerService.setUseJmx(false);
         brokerService.deleteAllMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7327
         brokerService.addConnector("http://localhost:8888?wireFormat.maxFrameSize=4000");
         brokerService.start();
         brokerService.waitUntilStarted();
@@ -53,9 +54,11 @@ public class HttpMaxFrameSizeTest {
 
     @Test
     public void sendOversizedMessageTest() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7327
         try {
             send(5000);
         } catch (JMSException jmsException) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7419
             Assert.assertTrue(jmsException.getMessage().contains("405 Method Not Allowed"));
         }
     }

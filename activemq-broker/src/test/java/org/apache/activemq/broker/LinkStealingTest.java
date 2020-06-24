@@ -49,6 +49,7 @@ public class LinkStealingTest {
     public void setUp() throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         brokerService.setPlugins(new BrokerPlugin[] { new BrokerPluginSupport() {
             @Override
             public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
@@ -68,6 +69,7 @@ public class LinkStealingTest {
     public void tearDown() throws Exception {
         if (brokerService != null) {
             brokerService.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
             brokerService = null;
         }
     }
@@ -113,6 +115,7 @@ public class LinkStealingTest {
         }
 
         //Need to wait because removeConnection might not be called yet
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {

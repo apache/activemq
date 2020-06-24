@@ -90,6 +90,7 @@ public class AMQ5266SingleDestTest {
     @Parameterized.Parameters(name="#{0},producerThreads:{1},consumerThreads:{2},mL:{3},useCache:{4},useDefaultStore:{5},optimizedDispatch:{6}")
     public static Iterable<Object[]> parameters() {
         return Arrays.asList(new Object[][]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                {1000,  40,  40,   1024*1024*1,  true, TestSupport.PersistenceAdapterChoice.KahaDB, false},
                {1000,  40,  40,   1024*1024*1,  true, TestSupport.PersistenceAdapterChoice.LevelDB, false},
                {1000,  40,  40,   1024*1024*1,  true, TestSupport.PersistenceAdapterChoice.JDBC, false},
@@ -107,6 +108,8 @@ public class AMQ5266SingleDestTest {
     public void startBroker() throws Exception {
         brokerService = new BrokerService();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
         TestSupport.setPersistenceAdapter(brokerService, persistenceAdapterChoice);
         brokerService.setDeleteAllMessagesOnStartup(true);
         brokerService.setUseJmx(false);
@@ -127,6 +130,8 @@ public class AMQ5266SingleDestTest {
         brokerService.setDestinationPolicy(policyMap);
 
         brokerService.getSystemUsage().getMemoryUsage().setLimit(64 * 1024 * 1024);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
 
         TransportConnector transportConnector = brokerService.addConnector("tcp://0.0.0.0:0");
         brokerService.start();
@@ -227,6 +232,8 @@ public class AMQ5266SingleDestTest {
         }
 
         // verify empty dlq
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
         assertEquals("No pending messages", 0l, ((RegionBroker) brokerService.getRegionBroker()).getDestinationStatistics().getMessages().getCount());
     }
 

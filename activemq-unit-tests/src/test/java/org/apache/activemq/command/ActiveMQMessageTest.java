@@ -267,6 +267,7 @@ public class ActiveMQMessageTest extends TestCase {
         assertEquals(0, msg.getJMSPriority());
 
         msg.setJMSPriority(90);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         assertEquals(9, msg.getJMSPriority());
     }
 
@@ -286,6 +287,7 @@ public class ActiveMQMessageTest extends TestCase {
         msg.setStringProperty("test", "test");
         assertTrue(msg.propertyExists("test"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2840
         msg.setIntProperty("JMSXDeliveryCount", 1);
         assertTrue(msg.propertyExists("JMSXDeliveryCount"));
     }
@@ -355,6 +357,7 @@ public class ActiveMQMessageTest extends TestCase {
     }
 
     public void testSetJMSDeliveryModeProperty() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5323
         ActiveMQMessage message = new ActiveMQMessage();
         String propertyName = "JMSDeliveryMode";
 
@@ -392,10 +395,12 @@ public class ActiveMQMessageTest extends TestCase {
     @SuppressWarnings("rawtypes")
     public void testGetPropertyNames() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2840
         String name1 = "floatProperty";
         msg.setFloatProperty(name1, 1.3f);
         String name2 = "JMSXDeliveryCount";
         msg.setIntProperty(name2, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2840
         String name3 = "JMSRedelivered";
         msg.setBooleanProperty(name3, false);
         boolean found1 = false;
@@ -418,6 +423,7 @@ public class ActiveMQMessageTest extends TestCase {
         ActiveMQMessage msg = new ActiveMQMessage();
         String name1 = "floatProperty";
         msg.setFloatProperty(name1, 1.3f);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2840
         String name2 = "JMSXDeliveryCount";
         msg.setIntProperty(name2, 1);
         String name3 = "JMSRedelivered";
@@ -513,6 +519,7 @@ public class ActiveMQMessageTest extends TestCase {
 
         msg.beforeMarshall(new OpenWireFormat());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         Map<String, Object> properties = msg.getProperties();
         assertEquals(properties.get("stringProperty"), "string");
         assertEquals(((Byte) properties.get("byteProperty")).byteValue(), 1);
@@ -675,6 +682,7 @@ public class ActiveMQMessageTest extends TestCase {
         ActiveMQMessage msg = new ActiveMQMessage();
         String propertyName = "property";
         msg.setIntProperty(propertyName, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4530
 
         assertEquals(((Integer) msg.getObjectProperty(propertyName)).intValue(), 1);
         assertEquals(msg.getIntProperty(propertyName), 1);

@@ -116,6 +116,7 @@ public class DurableSubProcessMultiRestartTest {
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
 
         final KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
         assertTrue("only less than two journal files should be left: " + pa.getStore().getJournal().getFileMap().size(),
             Wait.waitFor(new Wait.Condition() {
 

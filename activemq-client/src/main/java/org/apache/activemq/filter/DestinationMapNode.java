@@ -55,6 +55,7 @@ public class DestinationMapNode implements DestinationNode {
      * exist
      */
     public DestinationNode getChild(String path) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
         return childNodes.get(path);
     }
 
@@ -96,6 +97,7 @@ public class DestinationMapNode implements DestinationNode {
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public List removeValues() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-808
         ArrayList v = new ArrayList(values);
         // parent.getAnyChildNode().getValues().removeAll(v);
         values.clear();
@@ -112,6 +114,7 @@ public class DestinationMapNode implements DestinationNode {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected void removeDesendentValues(Set answer) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5594
         ArrayList<DestinationNode> candidates = new ArrayList<>();
         for (Map.Entry<String, DestinationNode> child : childNodes.entrySet()) {
             candidates.add(child.getValue());
@@ -143,10 +146,12 @@ public class DestinationMapNode implements DestinationNode {
     }
 
     public void set(String[] paths, int idx, Object value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5043
         if (idx >= paths.length) {
             values.clear();
             values.add(value);
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5043
             getChildOrCreate(paths[idx]).set(paths, idx + 1, value);
         }
     }
@@ -190,7 +195,9 @@ public class DestinationMapNode implements DestinationNode {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void appendDescendantValues(Set answer) {
         // add children values, then recursively add their children
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
         for(DestinationNode child : childNodes.values()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5074
             answer.addAll(child.getValues());
             child.appendDescendantValues(answer);
         }
@@ -208,9 +215,11 @@ public class DestinationMapNode implements DestinationNode {
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void appendMatchingWildcards(Set answer, String[] paths, int idx) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1068
         if (idx - 1 > pathLength) {
             return;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
         DestinationNode wildCardNode = getChild(ANY_CHILD);
         if (wildCardNode != null) {
             wildCardNode.appendMatchingValues(answer, paths, idx + 1);
@@ -218,6 +227,7 @@ public class DestinationMapNode implements DestinationNode {
         wildCardNode = getChild(ANY_DESCENDENT);
         if (wildCardNode != null) {
             // for a wildcard Node match, add all values of the descendant node
+//IC see: https://issues.apache.org/jira/browse/AMQ-5074
             answer.addAll(wildCardNode.getValues());
             // and all descendants for paths like ">.>"
             answer.addAll(wildCardNode.getDesendentValues());
@@ -226,10 +236,12 @@ public class DestinationMapNode implements DestinationNode {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void appendMatchingValues(Set answer, String[] paths, int idx) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5644
         appendMatchingValues(answer, paths, idx, true);
     }
 
     public void appendMatchingValues(Set<DestinationNode> answer, String[] paths, int startIndex, boolean deep) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1068
         DestinationNode node = this;
         boolean couldMatchAny = true;
         int size = paths.length;
@@ -244,6 +256,7 @@ public class DestinationMapNode implements DestinationNode {
             node.appendMatchingWildcards(answer, paths, i);
 
             if (path.equals(ANY_CHILD)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1068
                 node = new AnyChildDestinationNode(node);
             } else {
                 node = node.getChild(path);
@@ -253,6 +266,7 @@ public class DestinationMapNode implements DestinationNode {
             answer.addAll(node.getValues());
             if (couldMatchAny) {
                 // lets allow FOO.BAR to match the FOO.BAR.> entry in the map
+//IC see: https://issues.apache.org/jira/browse/AMQ-1068
                 DestinationNode child = node.getChild(ANY_DESCENDENT);
                 if (child != null) {
                     answer.addAll(child.getValues());

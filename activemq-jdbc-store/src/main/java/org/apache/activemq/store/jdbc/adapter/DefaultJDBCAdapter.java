@@ -86,6 +86,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         // Need to run the scripts anyways since they may contain ALTER statements that upgrade a previous version of the table
         boolean messageTableAlreadyExists = messageTableAlreadyExists(transactionContext);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6317
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
         for (String createStatement : this.statements.getCreateSchemaStatements()) {
             // This will fail usually since the tables will be
             // created already.
@@ -136,6 +138,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     private void commitIfAutoCommitIsDisabled(TransactionContext c) throws SQLException, IOException {
         if (!c.getConnection().getAutoCommit()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2414
+//IC see: https://issues.apache.org/jira/browse/AMQ-2414
             c.getConnection().commit();
         }
     }
@@ -145,6 +149,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         Statement s = null;
         try {
             s = c.getConnection().createStatement();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             String[] dropStatments = this.statements.getDropSchemaStatements();
             for (int i = 0; i < dropStatments.length; i++) {
                 // This will fail usually since the tables will be
@@ -154,11 +159,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     s.execute(dropStatments[i]);
                 } catch (SQLException e) {
                     LOG.warn("Could not drop JDBC tables; they may not exist." + " Failure was: " + dropStatments[i]
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
                             + " Message: " + e.getMessage() + " SQLState: " + e.getSQLState() + " Vendor code: "
                             + e.getErrorCode());
                     JDBCPersistenceAdapter.log("Failure details: ", e);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6317
             commitIfAutoCommitIsDisabled(c);
         } finally {
             try {
@@ -173,6 +180,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             s = c.getConnection().prepareStatement(this.statements.getFindLastSequenceIdInMsgsStatement());
             rs = s.executeQuery();
             long seq1 = 0;
@@ -181,6 +189,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             rs.close();
             s.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             s = c.getConnection().prepareStatement(this.statements.getFindLastSequenceIdInAcksStatement());
             rs = s.executeQuery();
             long seq2 = 0;
@@ -220,6 +229,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
      */
     @Override
     public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                              long expiration, byte priority, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
         try {
@@ -234,16 +244,19 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setLong(3, messageID.getProducerSequenceId());
             s.setString(4, destination.getQualifiedName());
             s.setLong(5, expiration);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
             s.setLong(6, priority);
             setBinaryData(s, 7, data);
             if (xid != null) {
                 byte[] xidVal = xid.getEncodedXidBytes();
                 xidVal[0] = '+';
+//IC see: https://issues.apache.org/jira/browse/AMQ-4628
                 String xidString = printBase64Binary(xidVal);
                 s.setString(8, xidString);
             } else {
                 s.setString(8, null);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
             if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
@@ -260,6 +273,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doUpdateMessage(TransactionContext c, ActiveMQDestination destination, MessageId id, byte[] data) throws SQLException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         PreparedStatement s = null;
         try {
             s = c.getConnection().prepareStatement(this.statements.getUpdateMessageStatement());
@@ -283,6 +298,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(this.statements.getAddMessageStatement());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
                 if (this.batchStatements) {
                     c.setAddMessageStatement(s);
                 }
@@ -293,6 +310,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(4, destination.getQualifiedName());
             s.setLong(5, expirationTime);
             s.setString(6, messageRef);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
             if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
@@ -316,6 +334,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, destination.getQualifiedName());
             rs = s.executeQuery();
             if (!rs.next()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
                 return new long[]{0,0};
             }
             return new long[]{rs.getLong(1), rs.getLong(2)};
@@ -349,6 +368,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             s = c.getConnection().prepareStatement(this.statements.getFindMessageStatement());
             s.setLong(1, seq);
             rs = s.executeQuery();
@@ -367,11 +388,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
      */
     @Override
     public void doRemoveMessage(TransactionContext c, long seq, XATransactionId xid) throws SQLException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-659
         PreparedStatement s = c.getRemovedMessageStatement();
         try {
             if (s == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                 s = c.getConnection().prepareStatement(xid == null ?
                         this.statements.getRemoveMessageStatement() : this.statements.getUpdateXidFlagStatement());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
                 if (this.batchStatements) {
                     c.setRemovedMessageStatement(s);
                 }
@@ -380,14 +404,20 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 s.setLong(1, seq);
             } else {
                 byte[] xidVal = xid.getEncodedXidBytes();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
                 xidVal[0] = '-';
+//IC see: https://issues.apache.org/jira/browse/AMQ-4628
                 String xidString = printBase64Binary(xidVal);
                 s.setString(1, xidString);
                 s.setLong(2, seq);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
             if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 throw new SQLException("Failed to remove message seq: " + seq);
             }
         } finally {
@@ -435,10 +465,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setMaxRows(limit);
             rs = s.executeQuery();
             // jdbc scrollable cursor requires jdbc ver > 1.0 and is often implemented locally so avoid
+//IC see: https://issues.apache.org/jira/browse/AMQ-2540
             LinkedList<MessageId> reverseOrderIds = new LinkedList<MessageId>();
             while (rs.next()) {
                 reverseOrderIds.addFirst(new MessageId(rs.getString(2), rs.getLong(3)));
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
             if (LOG.isDebugEnabled()) {
                 LOG.debug("messageIdScan with limit (" + limit + "), resulted in: " + reverseOrderIds.size() + " ids");
             }
@@ -453,6 +485,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                                          String subscriptionName, long seq, long priority) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
         try {
@@ -475,6 +508,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, clientId);
             s.setString(4, subscriptionName);
             s.setLong(5, priority);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
             if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
@@ -490,6 +524,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                              String subscriptionName, long seq, long priority) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
         try {
@@ -497,12 +532,16 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 s = c.getConnection().prepareStatement(xid == null ?
                         this.statements.getUpdateDurableLastAckStatement() :
                         this.statements.getUpdateDurableLastAckInTxStatement());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
                 if (this.batchStatements) {
                     c.setUpdateLastAckStatement(s);
                 }
             }
             if (xid != null) {
                 byte[] xidVal = encodeXid(xid, seq, priority);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4628
+//IC see: https://issues.apache.org/jira/browse/AMQ-4628
                 String xidString = printBase64Binary(xidVal);
                 s.setString(1, xidString);
             } else {
@@ -512,6 +551,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, clientId);
             s.setString(4, subscriptionName);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
             if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
@@ -519,6 +559,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                             + seq + ", for sub: " + subscriptionName);
             }
         } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
             if (!this.batchStatements) {
                 close(s);
             }
@@ -526,8 +567,10 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     private byte[] encodeXid(XATransactionId xid, long seq, long priority) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         byte[] xidVal = xid.getEncodedXidBytes();
         // encode the update
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         DataByteArrayOutputStream outputStream = xid.internalOutputStream();
         outputStream.position(1);
         outputStream.writeLong(seq);
@@ -567,6 +610,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             rs = s.executeQuery();
             if (this.statements.isUseExternalMessageReferences()) {
                 while (rs.next()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1080
                     if (!listener.recoverMessageReference(rs.getString(2))) {
                         break;
                     }
@@ -591,6 +635,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesStatement());
             s.setMaxRows(Math.min(maxReturned * 2, maxRows));
             s.setString(1, destination.getQualifiedName());
@@ -626,6 +671,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         ResultSet rs = null;
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesByPriorityStatement());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1870
+//IC see: https://issues.apache.org/jira/browse/AMQ-3557
+//IC see: https://issues.apache.org/jira/browse/AMQ-1870
+//IC see: https://issues.apache.org/jira/browse/AMQ-3557
+//IC see: https://issues.apache.org/jira/browse/AMQ-1870
             s.setMaxRows(Math.min(maxReturned * 2, maxRows));
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
@@ -655,14 +705,17 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public int doGetDurableSubscriberMessageCount(TransactionContext c, ActiveMQDestination destination,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             String clientId, String subscriptionName, boolean isPrioritizedMessages) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         int result = 0;
         try {
             if (isPrioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                 s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatementWithPriority());
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5919
                 s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatement());
             }
             s.setString(1, destination.getQualifiedName());
@@ -707,9 +760,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     close(s);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             s = c.getConnection().prepareStatement(this.statements.getCreateDurableSubStatement());
             int maxPriority = 1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             if (isPrioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                 maxPriority = 10;
             }
 
@@ -721,6 +777,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 s.setLong(5, lastMessageId);
                 s.setString(6, info.getSubscribedDestination().getQualifiedName());
                 s.setLong(7, priority);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
 
                 if (s.executeUpdate() != 1) {
                     throw new IOException("Could not create durable subscription for: " + info.getClientId());
@@ -734,6 +791,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public SubscriptionInfo doGetSubscriberEntry(TransactionContext c, ActiveMQDestination destination,
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             String clientId, String subscriptionName) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -751,6 +809,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             subscription.setClientId(clientId);
             subscription.setSubscriptionName(subscriptionName);
             subscription.setSelector(rs.getString(1));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             subscription.setSubscribedDestination(ActiveMQDestination.createDestination(rs.getString(2),
                     ActiveMQDestination.QUEUE_TYPE));
             return subscription;
@@ -762,6 +821,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public SubscriptionInfo[] doGetAllSubscriptions(TransactionContext c, ActiveMQDestination destination)
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -776,6 +836,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 subscription.setSelector(rs.getString(1));
                 subscription.setSubscriptionName(rs.getString(2));
                 subscription.setClientId(rs.getString(3));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
                 subscription.setSubscribedDestination(ActiveMQDestination.createDestination(rs.getString(4),
                         ActiveMQDestination.QUEUE_TYPE));
                 rc.add(subscription);
@@ -789,6 +850,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doRemoveAllMessages(TransactionContext c, ActiveMQDestination destinationName) throws SQLException,
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             IOException {
         PreparedStatement s = null;
         try {
@@ -806,6 +868,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doDeleteSubscription(TransactionContext c, ActiveMQDestination destination, String clientId,
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             String subscriptionName) throws SQLException, IOException {
         PreparedStatement s = null;
         try {
@@ -819,12 +882,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
     char priorityIterator = 0; // unsigned
     @Override
     public void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         try {
             LOG.debug("Executing SQL: " + this.statements.getDeleteOldMessagesStatementWithPriority());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
             s = c.getExclusiveConnection().prepareStatement(this.statements.getDeleteOldMessagesStatementWithPriority());
             int priority = priorityIterator++%10;
             s.setInt(1, priority);
@@ -838,9 +903,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public long doGetLastAckedDurableSubscriberMessageId(TransactionContext c, ActiveMQDestination destination,
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             String clientId, String subscriberName) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         long result = -1;
         try {
             s = c.getConnection().prepareStatement(this.statements.getLastAckedDurableSubscriberMessageStatement());
@@ -849,7 +916,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, subscriberName);
             rs = s.executeQuery();
             if (rs.next()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                 result = rs.getLong(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
                 if (result == 0 && rs.wasNull()) {
                     result = -1;
                 }
@@ -881,6 +950,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             s = c.getConnection().prepareStatement(this.statements.getFindAllDestinationsStatement());
             rs = s.executeQuery();
             while (rs.next()) {
@@ -897,6 +967,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
      * @return true if batchStatements
      */
     public boolean isBatchStatements() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5116
         return batchStatements;
     }
 
@@ -949,6 +1020,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public int getMaxRows() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         return maxRows;
     }
 
@@ -962,6 +1034,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doRecordDestination(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
         PreparedStatement s = null;
         try {
             s = c.getConnection().prepareStatement(this.statements.getCreateDurableSubStatement());
@@ -986,10 +1059,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
             s = c.getConnection().prepareStatement(this.statements.getFindOpsPendingOutcomeStatement());
             rs = s.executeQuery();
             while (rs.next()) {
                 long id = rs.getLong(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4628
                 String encodedString = rs.getString(2);
                 byte[] encodedXid = parseBase64Binary(encodedString);
                 if (encodedXid[0] == '+') {
@@ -1005,9 +1080,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s = c.getConnection().prepareStatement(this.statements.getFindAcksPendingOutcomeStatement());
             rs = s.executeQuery();
             while (rs.next()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4628
                 String encodedString = rs.getString(1);
                 byte[] encodedXid = parseBase64Binary(encodedString);
                 String destination = rs.getString(2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
                 String subId = rs.getString(3);
                 String subName = rs.getString(4);
                 jdbcMemoryTransactionStore.recoverLastAck(encodedXid,
@@ -1022,10 +1099,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doCommitAddOp(TransactionContext c, long preparedSequence, long sequence) throws SQLException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         PreparedStatement s = null;
         try {
             s = c.getConnection().prepareStatement(this.statements.getClearXidFlagStatement());
             s.setLong(1, sequence);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5567
             s.setLong(2, preparedSequence);
             if (s.executeUpdate() != 1) {
                 throw new IOException("Could not remove prepared transaction state from message add for sequenceId: " + sequence);
@@ -1038,6 +1117,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public int doGetMessageCount(TransactionContext c, ActiveMQDestination destination) throws SQLException,
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -1058,19 +1138,24 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long[] lastRecoveredEntries,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
             long maxSeq, int maxReturned, boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
             if (isPrioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6049
                 s = c.getConnection().prepareStatement(limitQuery(this.statements.getFindNextMessagesByPriorityStatement()));
             } else {
                 s = c.getConnection().prepareStatement(limitQuery(this.statements.getFindNextMessagesStatement()));
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
             s.setMaxRows(Math.min(maxReturned, maxRows));
             s.setString(1, destination.getQualifiedName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
             s.setLong(2, maxSeq);
             int paramId = 3;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             if (isPrioritizedMessages) {
                 for (int i=9;i>=0;i--) {
                     s.setLong(paramId++, lastRecoveredEntries[i]);
@@ -1080,21 +1165,30 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             rs = s.executeQuery();
             int count = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1918
             if (this.statements.isUseExternalMessageReferences()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
                 while (rs.next() && count < maxReturned) {
                     if (listener.recoverMessageReference(rs.getString(1))) {
                         count++;
                     } else {
                         LOG.debug("Stopped recover next messages");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1943
+//IC see: https://issues.apache.org/jira/browse/AMQ-2437
                         break;
                     }
                 }
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
                 while (rs.next() && count < maxReturned) {
                     if (listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2))) {
                         count++;
                     } else {
                         LOG.debug("Stopped recover next messages");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1943
+//IC see: https://issues.apache.org/jira/browse/AMQ-2437
                         break;
                     }
                 }
@@ -1109,6 +1203,10 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public long doGetLastProducerSequenceId(TransactionContext c, ProducerId id)
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
             throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -1128,6 +1226,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     public static void dumpTables(Connection c, String destinationName, String clientId, String
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
+//IC see: https://issues.apache.org/jira/browse/AMQ-5919
       subscriptionName) throws SQLException {
         printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out);
         printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
@@ -1141,6 +1241,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     public static void dumpTables(java.sql.Connection c) throws SQLException {
         printQuery(c, "SELECT COUNT(*) from ACTIVEMQ_MSGS", System.out);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
 
         //printQuery(c, "SELECT COUNT(*) from ACTIVEMQ_ACKS", System.out);
 
@@ -1188,6 +1290,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public String limitQuery(String query) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6049
         return query;
     }
 }

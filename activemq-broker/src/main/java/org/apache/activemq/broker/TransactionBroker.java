@@ -64,6 +64,7 @@ public class TransactionBroker extends BrokerFilter {
     private TransactionStore transactionStore;
     private Map<TransactionId, XATransaction> xaTransactions = new LinkedHashMap<TransactionId, XATransaction>();
     final ConnectionContext context = new ConnectionContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
 
     public TransactionBroker(Broker next, TransactionStore transactionStore) {
         super(next);
@@ -96,6 +97,7 @@ public class TransactionBroker extends BrokerFilter {
                 public void recover(XATransactionId xid, Message[] addedMessages, MessageAck[] aks) {
                     try {
                         beginTransaction(context, xid);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
                         XATransaction transaction = (XATransaction) getTransaction(context, xid, false);
                         for (int i = 0; i < addedMessages.length; i++) {
                             forceDestinationWakeupOnCompletion(context, transaction, addedMessages[i].getDestination(), addedMessages[i]);
@@ -119,6 +121,7 @@ public class TransactionBroker extends BrokerFilter {
     }
 
     private void registerMBean(XATransaction transaction) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         if (getBrokerService().getRegionBroker() instanceof ManagedRegionBroker ) {
             ManagedRegionBroker managedRegionBroker = (ManagedRegionBroker) getBrokerService().getRegionBroker();
             managedRegionBroker.registerRecoveredTransactionMBean(transaction);
@@ -127,12 +130,15 @@ public class TransactionBroker extends BrokerFilter {
 
     private void forceDestinationWakeupOnCompletion(ConnectionContext context, Transaction transaction,
                                                     ActiveMQDestination amqDestination, BaseCommand ack) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         registerSync(amqDestination, transaction, ack);
     }
 
     private void registerSync(ActiveMQDestination destination, Transaction transaction, BaseCommand command) {
         Synchronization sync = new PreparedDestinationCompletion(this, destination, command.isMessage());
         // ensure one per destination in the list
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         Synchronization existing = transaction.findMatching(sync);
         if (existing != null) {
            ((PreparedDestinationCompletion)existing).incrementOpCount();
@@ -143,6 +149,7 @@ public class TransactionBroker extends BrokerFilter {
 
     static class PreparedDestinationCompletion extends Synchronization {
         private final TransactionBroker transactionBroker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         final ActiveMQDestination destination;
         final boolean messageSend;
         int opCount = 1;
@@ -173,6 +180,7 @@ public class TransactionBroker extends BrokerFilter {
         @Override
         public void afterRollback() throws Exception {
             if (!messageSend) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
                 Destination dest = transactionBroker.addDestination(transactionBroker.context, destination, false);
                 dest.clearPendingMessages(opCount);
                 dest.getDestinationStatistics().getMessages().add(opCount);
@@ -207,6 +215,7 @@ public class TransactionBroker extends BrokerFilter {
     public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
         List<TransactionId> txs = new ArrayList<TransactionId>();
         synchronized (xaTransactions) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2950
             for (Iterator<XATransaction> iter = xaTransactions.values().iterator(); iter.hasNext();) {
                 Transaction tx = iter.next();
                 if (tx.isPrepared()) {
@@ -224,6 +233,7 @@ public class TransactionBroker extends BrokerFilter {
     public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         // the transaction may have already been started.
         if (xid.isXATransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2950
             XATransaction transaction = null;
             synchronized (xaTransactions) {
                 transaction = xaTransactions.get(xid);
@@ -290,6 +300,7 @@ public class TransactionBroker extends BrokerFilter {
         if (message.getTransactionId() != null) {
             transaction = getTransaction(context, message.getTransactionId(), false);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4929
         context.setTransaction(transaction);
         try {
             next.send(producerExchange, message);
@@ -309,10 +320,12 @@ public class TransactionBroker extends BrokerFilter {
             iter.remove();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2950
         synchronized (xaTransactions) {
             // first find all txs that belongs to the connection
             ArrayList<XATransaction> txs = new ArrayList<XATransaction>();
             for (XATransaction tx : xaTransactions.values()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
                 if (tx.getConnectionId() != null && tx.getConnectionId().equals(info.getConnectionId()) && !tx.isPrepared()) {
                     txs.add(tx);
                 }
@@ -338,6 +351,7 @@ public class TransactionBroker extends BrokerFilter {
     //
     // ////////////////////////////////////////////////////////////////////////////
     public Transaction getTransaction(ConnectionContext context, TransactionId xid, boolean mightBePrepared) throws JMSException, XAException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5953
         Transaction transaction = null;
         if (xid.isXATransaction()) {
             synchronized (xaTransactions) {
@@ -350,6 +364,7 @@ public class TransactionBroker extends BrokerFilter {
             return transaction;
         }
         if (xid.isXATransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5311
             XAException e = XATransaction.newXAException("Transaction '" + xid + "' has not been started.", XAException.XAER_NOTA);
             throw e;
         } else {

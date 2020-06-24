@@ -38,6 +38,7 @@ public class BlobUploader {
 
     public BlobUploader(BlobTransferPolicy blobTransferPolicy, InputStream in) {
         // need to do a defensive copy
+//IC see: https://issues.apache.org/jira/browse/AMQ-4002
         this.blobTransferPolicy = blobTransferPolicy.copy();
         this.in = in;
     }

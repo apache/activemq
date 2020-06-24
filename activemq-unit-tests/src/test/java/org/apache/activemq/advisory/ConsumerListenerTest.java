@@ -83,6 +83,7 @@ public class ConsumerListenerTest extends EmbeddedBrokerTestSupport implements C
 
     public void testConsumerEventsOnTemporaryDestination() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
         Session s = connection.createSession(true,Session.AUTO_ACKNOWLEDGE);
         Destination dest = useTopic ? s.createTemporaryTopic() : s.createTemporaryQueue();
         consumerEventSource = new ConsumerEventSource(connection, dest);

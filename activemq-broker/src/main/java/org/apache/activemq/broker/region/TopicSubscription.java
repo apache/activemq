@@ -70,22 +70,28 @@ public class TopicSubscription extends AbstractSubscription {
     protected final List<DispatchedNode> dispatched = new ArrayList<>();
 
     public TopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, SystemUsage usageManager) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1672
         super(broker, context, info);
         this.usageManager = usageManager;
         String matchedName = "TopicSubscription:" + CURSOR_NAME_COUNTER.getAndIncrement() + "[" + info.getConsumerId().toString() + "]";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3746
         if (info.getDestination().isTemporary() || broker.getTempDataStore()==null ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
             this.matched = new VMPendingMessageCursor(false);
         } else {
             this.matched = new FilePendingMessageCursor(broker,matchedName,false);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3746
         this.scheduler = broker.getScheduler();
     }
 
     public void init() throws Exception {
         this.matched.setSystemUsage(usageManager);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
         this.matched.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.matched.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2704
         if (enableAudit) {
             audit= new ActiveMQMessageAudit(maxAuditDepth, maxProducersToAudit);
         }
@@ -99,20 +105,25 @@ public class TopicSubscription extends AbstractSubscription {
         }
         // Lets use an indirect reference so that we can associate a unique
         // locator /w the message.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         node = new IndirectMessageReference(node.getMessage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
         getSubscriptionStatistics().getEnqueues().increment();
         synchronized (matchedListMutex) {
             // if this subscriber is already discarding a message, we don't want to add
             // any more messages to it as those messages can only be advisories generated in the process,
             // which can trigger the recursive call loop
             if (discarding) return;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5718
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4165
             if (!isFull() && matched.isEmpty()) {
                 // if maximumPendingMessages is set we will only discard messages which
                 // have not been dispatched (i.e. we allow the prefetch buffer to be filled)
                 dispatch(node);
                 setSlowConsumer(false);
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3909
                 if (info.getPrefetchSize() > 1 && matched.size() > info.getPrefetchSize()) {
                     // Slow consumers should log and set their state as such.
                     if (!isSlowConsumer()) {
@@ -129,11 +140,13 @@ public class TopicSubscription extends AbstractSubscription {
                         while (matched.isFull()) {
                             if (getContext().getStopping().get()) {
                                 LOG.warn("{}: stopped waiting for space in pendingMessage cursor for: {}", toString(), node.getMessageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
                                 getSubscriptionStatistics().getEnqueues().decrement();
                                 return;
                             }
                             if (!warnedAboutWait) {
                                 LOG.info("{}: Pending message cursor [{}] is full, temp usag ({}%) or memory usage ({}%) limit reached, blocking message add() pending the release of resources.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                                         new Object[]{
                                                 toString(),
                                                 matched,
@@ -168,7 +181,9 @@ public class TopicSubscription extends AbstractSubscription {
                             LinkedList<MessageReference> list = null;
                             MessageReference[] oldMessages=null;
                             synchronized(matched){
+//IC see: https://issues.apache.org/jira/browse/AMQ-2626
                                 list = matched.pageInList(pageInSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3909
                                 oldMessages = messageEvictionStrategy.evictMessages(list);
                                 for (MessageReference ref : list) {
                                     ref.decrementReferenceCount();
@@ -179,6 +194,10 @@ public class TopicSubscription extends AbstractSubscription {
                                 messagesToEvict = oldMessages.length;
                                 for (int i = 0; i < messagesToEvict; i++) {
                                     MessageReference oldMessage = oldMessages[i];
+//IC see: https://issues.apache.org/jira/browse/AMQ-1207
+//IC see: https://issues.apache.org/jira/browse/AMQ-880
+//IC see: https://issues.apache.org/jira/browse/AMQ-450
+//IC see: https://issues.apache.org/jira/browse/AMQ-879
                                     discard(oldMessage);
                                 }
                             }
@@ -186,6 +205,7 @@ public class TopicSubscription extends AbstractSubscription {
                             // for a bad strategy lets just not evict
                             if (messagesToEvict == 0) {
                                 LOG.warn("No messages to evict returned for {} from eviction strategy: {} out of {} candidates", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                                         destination, messageEvictionStrategy, list.size()
                                 });
                                 break;
@@ -200,6 +220,7 @@ public class TopicSubscription extends AbstractSubscription {
 
     private boolean isDuplicate(MessageReference node) {
         boolean duplicate = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2704
         if (enableAudit && audit != null) {
             duplicate = audit.isDuplicate(node);
             if (LOG.isDebugEnabled()) {
@@ -223,8 +244,10 @@ public class TopicSubscription extends AbstractSubscription {
             while (matched.hasNext()) {
                 MessageReference node = matched.next();
                 node.decrementReferenceCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6361
                 if (node.isExpired()) {
                     matched.remove();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
                     node.decrementReferenceCount();
                     if (broker.isExpired(node)) {
                         ((Destination) node.getRegionDestination()).getDestinationStatistics().getExpired().increment();
@@ -245,11 +268,15 @@ public class TopicSubscription extends AbstractSubscription {
                 matched.reset();
                 while (matched.hasNext()) {
                     MessageReference node = matched.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
                     node.decrementReferenceCount();
                     if (node.getMessageId().equals(mdn.getMessageId())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
                         synchronized(dispatchLock) {
                             matched.remove();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
                             getSubscriptionStatistics().getDispatched().increment();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
                             if (isUseTopicSubscriptionInflightStats()) {
                                 dispatched.add(new DispatchedNode(node));
                                 getSubscriptionStatistics().getInflightMessageSize().addSize(node.getSize());
@@ -268,6 +295,7 @@ public class TopicSubscription extends AbstractSubscription {
     @Override
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         super.acknowledge(context, ack);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
 
         if (ack.isStandardAck()) {
             updateStatsOnAck(context, ack);
@@ -276,6 +304,7 @@ public class TopicSubscription extends AbstractSubscription {
                 throw new JMSException("Poison ack cannot be transacted: " + ack);
             }
             updateStatsOnAck(context, ack);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
             contractPrefetchExtension(ack.getMessageCount());
         } else if (ack.isIndividualAck()) {
             updateStatsOnAck(context, ack);
@@ -304,6 +333,7 @@ public class TopicSubscription extends AbstractSubscription {
 
                 @Override
                 public void afterRollback() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
                     contractPrefetchExtension(ack.getMessageCount());
                 }
 
@@ -324,10 +354,17 @@ public class TopicSubscription extends AbstractSubscription {
 
         // The slave should not deliver pull messages.
         if (getPrefetchSize() == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5413
+//IC see: https://issues.apache.org/jira/browse/AMQ-5433
+//IC see: https://issues.apache.org/jira/browse/AMQ-5647
+//IC see: https://issues.apache.org/jira/browse/AMQ-5684
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
             final long currentDispatchedCount = getSubscriptionStatistics().getDispatched().getCount();
             prefetchExtension.set(pull.getQuantity());
             dispatchMatched();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3746
 
             // If there was nothing dispatched.. we may need to setup a timeout.
             if (currentDispatchedCount == getSubscriptionStatistics().getDispatched().getCount() || pull.isAlwaysSignalDone()) {
@@ -344,6 +381,10 @@ public class TopicSubscription extends AbstractSubscription {
 
                         @Override
                         public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5413
+//IC see: https://issues.apache.org/jira/browse/AMQ-5433
+//IC see: https://issues.apache.org/jira/browse/AMQ-5647
+//IC see: https://issues.apache.org/jira/browse/AMQ-5684
                             pullTimeout(currentDispatchedCount, pull.isAlwaysSignalDone());
                         }
                     }, pull.getTimeout());
@@ -359,6 +400,7 @@ public class TopicSubscription extends AbstractSubscription {
      */
     private final void pullTimeout(long currentDispatchedCount, boolean alwaysSendDone) {
         synchronized (matchedListMutex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
             if (currentDispatchedCount == getSubscriptionStatistics().getDispatched().getCount() || alwaysSendDone) {
                 try {
                     dispatch(null);
@@ -377,9 +419,12 @@ public class TopicSubscription extends AbstractSubscription {
      */
     private void updateStatsOnAck(final MessageAck ack) {
         //Allow disabling inflight stats to save memory usage
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         if (isUseTopicSubscriptionInflightStats()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
             synchronized(dispatchLock) {
                 boolean inAckRange = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
                 List<DispatchedNode> removeList = new ArrayList<>();
                 for (final DispatchedNode node : dispatched) {
                     MessageId messageId = node.getMessageId();
@@ -401,6 +446,7 @@ public class TopicSubscription extends AbstractSubscription {
 
                     final Destination destination = node.getDestination();
                     incrementStatsOnAck(destination, ack, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
                     if (!ack.isInTransaction()) {
                         contractPrefetchExtension(1);
                     }
@@ -430,6 +476,7 @@ public class TopicSubscription extends AbstractSubscription {
 
     @Override
     public int countBeforeFull() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5813
         return getPrefetchSize() == 0 ? prefetchExtension.get() : info.getPrefetchSize() + prefetchExtension.get() - getDispatchedQueueSize();
     }
 
@@ -440,12 +487,14 @@ public class TopicSubscription extends AbstractSubscription {
 
     @Override
     public long getPendingMessageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7228
         return matched.messageSize();
     }
 
     @Override
     public int getDispatchedQueueSize() {
         return (int)(getSubscriptionStatistics().getDispatched().getCount() -
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
                      getSubscriptionStatistics().getDequeues().getCount());
     }
 
@@ -455,6 +504,7 @@ public class TopicSubscription extends AbstractSubscription {
 
     @Override
     public long getDispatchedCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
         return getSubscriptionStatistics().getDispatched().getCount();
     }
 
@@ -472,6 +522,7 @@ public class TopicSubscription extends AbstractSubscription {
      * @return the number of messages discarded due to being a slow consumer
      */
     public int discarded() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7228
         return discarded.get();
     }
 
@@ -481,6 +532,7 @@ public class TopicSubscription extends AbstractSubscription {
      *         prefetch buffer being full).
      */
     public int matched() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7228
         return matched.size();
     }
 
@@ -505,6 +557,7 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     public synchronized int getMaxProducersToAudit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2704
         return maxProducersToAudit;
     }
 
@@ -532,6 +585,7 @@ public class TopicSubscription extends AbstractSubscription {
 
     public synchronized void setEnableAudit(boolean enableAudit) {
         this.enableAudit = enableAudit;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3909
         if (enableAudit && audit == null) {
             audit = new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
         }
@@ -541,6 +595,7 @@ public class TopicSubscription extends AbstractSubscription {
     // -------------------------------------------------------------------------
     @Override
     public boolean isFull() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         return getPrefetchSize() == 0 ? prefetchExtension.get() == 0 : getDispatchedQueueSize() - prefetchExtension.get() >= info.getPrefetchSize();
     }
 
@@ -554,6 +609,7 @@ public class TopicSubscription extends AbstractSubscription {
      */
     @Override
     public boolean isLowWaterMark() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         return (getDispatchedQueueSize() - prefetchExtension.get()) <= (info.getPrefetchSize() * .4);
     }
 
@@ -562,6 +618,7 @@ public class TopicSubscription extends AbstractSubscription {
      */
     @Override
     public boolean isHighWaterMark() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         return (getDispatchedQueueSize() - prefetchExtension.get()) >= (info.getPrefetchSize() * .9);
     }
 
@@ -627,6 +684,7 @@ public class TopicSubscription extends AbstractSubscription {
                         matched.remove();
                         // Message may have been sitting in the matched list a while
                         // waiting for the consumer to ak the message.
+//IC see: https://issues.apache.org/jira/browse/AMQ-1560
                         if (message.isExpired()) {
                             discard(message);
                             continue; // just drop it.
@@ -634,6 +692,7 @@ public class TopicSubscription extends AbstractSubscription {
                         dispatch(message);
                     }
                 } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-791
                     matched.release();
                 }
             }
@@ -641,8 +700,13 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     private void dispatch(final MessageReference node) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5413
+//IC see: https://issues.apache.org/jira/browse/AMQ-5433
+//IC see: https://issues.apache.org/jira/browse/AMQ-5647
+//IC see: https://issues.apache.org/jira/browse/AMQ-5684
         Message message = node != null ? node.getMessage() : null;
         if (node != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2314
             node.incrementReferenceCount();
         }
         // Make sure we can dispatch a message.
@@ -651,9 +715,15 @@ public class TopicSubscription extends AbstractSubscription {
         md.setConsumerId(info.getConsumerId());
         if (node != null) {
             md.setDestination(((Destination)node.getRegionDestination()).getActiveMQDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
             synchronized(dispatchLock) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
                 getSubscriptionStatistics().getDispatched().increment();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
                 if (isUseTopicSubscriptionInflightStats()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
                     dispatched.add(new DispatchedNode(node));
                     getSubscriptionStatistics().getInflightMessageSize().addSize(node.getSize());
                 }
@@ -671,6 +741,7 @@ public class TopicSubscription extends AbstractSubscription {
             }
 
             if (getPrefetchSize() == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
                 decrementPrefetchExtension(1);
             }
         }
@@ -678,6 +749,7 @@ public class TopicSubscription extends AbstractSubscription {
         if (info.isDispatchAsync()) {
             if (node != null) {
                 md.setTransmitCallback(new TransmitCallback() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
 
                     @Override
                     public void onSuccess() {
@@ -709,10 +781,12 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     private void discard(MessageReference message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5718
         discarding = true;
         try {
             message.decrementReferenceCount();
             matched.remove(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7228
             discarded.incrementAndGet();
             if (destination != null) {
                 destination.getDestinationStatistics().getDequeues().increment();
@@ -720,8 +794,11 @@ public class TopicSubscription extends AbstractSubscription {
             LOG.debug("{}, discarding message {}", this, message);
             Destination dest = (Destination) message.getRegionDestination();
             if (dest != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
                 dest.messageDiscarded(getContext(), this, message);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
             broker.getRoot().sendToDeadLetterQueue(getContext(), message, this, new Throwable("TopicSubDiscard. ID:" + info.getConsumerId()));
         } finally {
             discarding = false;
@@ -731,6 +808,7 @@ public class TopicSubscription extends AbstractSubscription {
     @Override
     public String toString() {
         return "TopicSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + getDispatchedQueueSize() + ", delivered="
+//IC see: https://issues.apache.org/jira/browse/AMQ-6577
                 + getDequeueCounter() + ", matched=" + matched() + ", discarded=" + discarded() + ", prefetchExtension=" + prefetchExtension.get()
                 + ", usePrefetchExtension=" + isUsePrefetchExtension();
     }
@@ -740,13 +818,17 @@ public class TopicSubscription extends AbstractSubscription {
         this.active=false;
         synchronized (matchedListMutex) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-791
                 matched.destroy();
             } catch (Exception e) {
                 LOG.warn("Failed to destroy cursor", e);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
         setSlowConsumer(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
         synchronized(dispatchLock) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
             dispatched.clear();
         }
     }
@@ -758,6 +840,7 @@ public class TopicSubscription extends AbstractSubscription {
 
     @Override
     public void setPrefetchSize(int newSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3909
         info.setPrefetchSize(newSize);
         try {
             dispatchMatched();
@@ -767,6 +850,7 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     public boolean isUseTopicSubscriptionInflightStats() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         return useTopicSubscriptionInflightStats;
     }
 
@@ -780,6 +864,7 @@ public class TopicSubscription extends AbstractSubscription {
         private final Destination destination;
 
         public DispatchedNode(final MessageReference node) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
             super();
             this.size = node.getSize();
             this.messageId = node.getMessageId();

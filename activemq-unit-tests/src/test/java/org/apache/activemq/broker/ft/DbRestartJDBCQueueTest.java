@@ -54,6 +54,7 @@ public class DbRestartJDBCQueueTest extends JmsTopicSendReceiveWithTwoConnection
         verbose = true;
         // startup db
         sharedDs = (EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
 
         broker = new BrokerService();
 
@@ -67,6 +68,7 @@ public class DbRestartJDBCQueueTest extends JmsTopicSendReceiveWithTwoConnection
         broker.setDeleteAllMessagesOnStartup(true);
         JDBCPersistenceAdapter persistenceAdapter = new JDBCPersistenceAdapter();
         persistenceAdapter.setDataSource(sharedDs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         persistenceAdapter.setUseLock(false);
         persistenceAdapter.setLockKeepAlivePeriod(500);
         persistenceAdapter.getLocker().setLockAcquireSleepInterval(500);
@@ -77,6 +79,7 @@ public class DbRestartJDBCQueueTest extends JmsTopicSendReceiveWithTwoConnection
 
     protected void tearDown() throws  Exception {
        super.tearDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
        broker.stop();
     }
 

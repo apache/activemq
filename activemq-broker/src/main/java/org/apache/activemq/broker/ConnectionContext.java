@@ -65,10 +65,13 @@ public class ConnectionContext {
     private XATransactionId xid;
 
     public ConnectionContext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
         this.messageEvaluationContext = new NonCachedMessageEvaluationContext();
     }
 
     public ConnectionContext(MessageEvaluationContext messageEvaluationContext) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
         this.messageEvaluationContext=messageEvaluationContext;
     }
 
@@ -80,6 +83,7 @@ public class ConnectionContext {
     }
 
     public ConnectionContext copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2435
         ConnectionContext rc = new ConnectionContext(this.messageEvaluationContext);
         rc.connection = this.connection;
         rc.connector = this.connector;
@@ -91,6 +95,9 @@ public class ConnectionContext {
         rc.connectionId = this.connectionId;
         rc.clientId = this.clientId;
         rc.userName = this.userName;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         rc.reconnect = this.reconnect;
         rc.wireFormatInfo = this.wireFormatInfo;
         rc.longTermStoreContext = this.longTermStoreContext;
@@ -111,6 +118,7 @@ public class ConnectionContext {
 
     public void setSecurityContext(SecurityContext subject) {
         this.securityContext = subject;
+//IC see: https://issues.apache.org/jira/browse/AMQ-940
         if (subject != null) {
             setUserName(subject.getUserName());
         } else {
@@ -175,6 +183,7 @@ public class ConnectionContext {
     }
 
     public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-591
         return messageAuthorizationPolicy;
     }
 
@@ -218,6 +227,9 @@ public class ConnectionContext {
     }
 
     public boolean isReconnect() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         return reconnect;
     }
 
@@ -270,6 +282,7 @@ public class ConnectionContext {
     }
 
     public boolean isAllowedToConsume(MessageReference n) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-591
         if (messageAuthorizationPolicy != null) {
             return messageAuthorizationPolicy.isAllowedToConsume(this, n.getMessage());
         }
@@ -277,6 +290,7 @@ public class ConnectionContext {
     }
 
     public synchronized boolean isNetworkConnection() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1181
         return networkConnection;
     }
 
@@ -285,6 +299,8 @@ public class ConnectionContext {
     }
 
     public AtomicBoolean getStopping() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1179
+//IC see: https://issues.apache.org/jira/browse/AMQ-1180
         return stopping;
     }
 
@@ -319,6 +335,8 @@ public class ConnectionContext {
     }
 
     public void setConnectionState(ConnectionState connectionState) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         this.connectionState = connectionState;
     }
 
@@ -327,6 +345,7 @@ public class ConnectionContext {
     }
 
     public void setXid(XATransactionId id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         this.xid = id;
     }
 
@@ -335,6 +354,7 @@ public class ConnectionContext {
     }
 
     public boolean isAllowLinkStealing(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
        return connector != null && connector.isAllowLinkStealing();
     }
 }

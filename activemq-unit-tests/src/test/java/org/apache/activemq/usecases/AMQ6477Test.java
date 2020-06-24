@@ -181,6 +181,7 @@ public class AMQ6477Test {
         Field dispatchLockField = null;
         //Can only test PrefetchSubscriptions for now as TopicSubscriptions don't track the message
         //references anymore that are dispatched
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         if (sub instanceof PrefetchSubscription) {
             dispatchedField = PrefetchSubscription.class.getDeclaredField("dispatched");
             dispatchLockField = PrefetchSubscription.class.getDeclaredField("dispatchLock");

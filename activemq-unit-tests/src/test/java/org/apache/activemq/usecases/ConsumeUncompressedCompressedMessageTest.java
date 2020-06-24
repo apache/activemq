@@ -126,6 +126,7 @@ public class ConsumeUncompressedCompressedMessageTest {
     public void testReceiveAndResendWithCompressionOff() throws Exception {
 
         assertTrue(connection.isUseCompression());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         createProducerAndSendMessages(1);
 
@@ -168,6 +169,7 @@ public class ConsumeUncompressedCompressedMessageTest {
     private QueueViewMBean getProxyToQueueViewMBean()
             throws MalformedObjectNameException, JMSException {
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
                 + ":destinationType=Queue,destinationName=" + queue.getQueueName()
                 + ",type=Broker,brokerName=localhost");
         QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext()

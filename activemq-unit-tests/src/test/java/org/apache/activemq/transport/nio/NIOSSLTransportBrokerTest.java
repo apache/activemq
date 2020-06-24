@@ -31,6 +31,7 @@ public class NIOSSLTransportBrokerTest extends TransportBrokerTestSupport {
 
     @Override
     protected String getBindLocation() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
         return "nio+ssl://localhost:0?transport.soWriteTimeout=20000";
     }
 
@@ -43,8 +44,10 @@ public class NIOSSLTransportBrokerTest extends TransportBrokerTestSupport {
     protected void setUp() throws Exception {
         System.setProperty("javax.net.ssl.trustStore", TRUST_KEYSTORE);
         System.setProperty("javax.net.ssl.trustStorePassword", PASSWORD);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         System.setProperty("javax.net.ssl.trustStoreType", KEYSTORE_TYPE);
         System.setProperty("javax.net.ssl.keyStore", SERVER_KEYSTORE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
         System.setProperty("javax.net.ssl.keyStoreType", KEYSTORE_TYPE);
         System.setProperty("javax.net.ssl.keyStorePassword", PASSWORD);
         //System.setProperty("javax.net.debug", "ssl,handshake,data,trustmanager");

@@ -50,6 +50,7 @@ public class DefaultIOExceptionHandlerTest {
         underTest.setBrokerService(new BrokerService() {
             @Override
             public boolean isStarted() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
                 return true;
             }
 
@@ -58,6 +59,7 @@ public class DefaultIOExceptionHandlerTest {
                 shutdownOnExitSet.set(isSystemExitOnShutdown());
                 stopCalled.countDown();
                 // ensure we don't actually exit the jvm
+//IC see: https://issues.apache.org/jira/browse/AMQ-6065
                 setSystemExitOnShutdown(false);
                 super.stop();
             }

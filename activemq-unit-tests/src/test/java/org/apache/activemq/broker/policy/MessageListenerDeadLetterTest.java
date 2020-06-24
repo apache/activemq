@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 public class MessageListenerDeadLetterTest extends DeadLetterTestSupport {
     private static final Logger LOG = LoggerFactory
             .getLogger(MessageListenerDeadLetterTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3177
 
     private int rollbackCount;
 

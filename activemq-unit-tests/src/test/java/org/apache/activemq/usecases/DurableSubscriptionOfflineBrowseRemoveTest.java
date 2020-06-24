@@ -80,6 +80,7 @@ public class DurableSubscriptionOfflineBrowseRemoveTest extends DurableSubscript
     @Override
     public void configurePlugins(BrokerService brokerService) throws Exception {
         List<DestinationMapEntry> authorizationEntries = new ArrayList<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5938
 
         AuthorizationEntry entry = new AuthorizationEntry();
         entry.setTopic(">");
@@ -109,6 +110,7 @@ public class DurableSubscriptionOfflineBrowseRemoveTest extends DurableSubscript
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://" + getName(true));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5938
         connectionFactory.setUserName(IDENTITY);
         connectionFactory.setPassword(IDENTITY);
         connectionFactory.setWatchTopicAdvisories(false);

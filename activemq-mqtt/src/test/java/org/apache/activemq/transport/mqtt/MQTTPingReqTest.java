@@ -118,6 +118,7 @@ public class MQTTPingReqTest extends MQTTTestSupport {
         }
 
         disableDispatchAssertion(transport.get());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6345
 
         //Send a PINGREQ without a connect packet first
         final MQTTProtocolCodec codec = new MQTTProtocolCodec();
@@ -159,6 +160,7 @@ public class MQTTPingReqTest extends MQTTTestSupport {
         connection.connect();
         Transport transport =  callbackConnection.transport();
         disableDispatchAssertion(transport);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6345
 
         //SEND a PINGREQ and wait for the response
         final MQTTProtocolCodec codec = new MQTTProtocolCodec();
@@ -172,6 +174,7 @@ public class MQTTPingReqTest extends MQTTTestSupport {
     private void disableDispatchAssertion(final Transport transport) {
         //Since we are purposefully bypassing the normal way of sending a packet, turn off the
         //assertion
+//IC see: https://issues.apache.org/jira/browse/AMQ-6345
         DispatchQueue dispatchQueue = transport.getDispatchQueue();
         if (dispatchQueue instanceof SerialDispatchQueue) {
             SerialDispatchQueue spyQueue = Mockito.spy((SerialDispatchQueue)dispatchQueue);

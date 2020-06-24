@@ -26,6 +26,7 @@ public class LongSequenceGenerator {
 
     private static final AtomicLongFieldUpdater<LongSequenceGenerator> SEQUENCE_UPDATER =
             AtomicLongFieldUpdater.newUpdater(LongSequenceGenerator.class, "lastSequenceId");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7300
 
     private volatile long lastSequenceId;
 
@@ -34,6 +35,7 @@ public class LongSequenceGenerator {
     }
 
     public long getLastSequenceId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7300
         return lastSequenceId;
     }
 

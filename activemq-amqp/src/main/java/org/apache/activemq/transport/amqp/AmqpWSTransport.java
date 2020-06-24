@@ -101,6 +101,7 @@ public class AmqpWSTransport extends TransportSupport implements WSTransport, AM
 
     @Override
     public int getMaxFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         return (int) Math.min(((AmqpWireFormat) getWireFormat()).getMaxFrameSize(), Integer.MAX_VALUE);
     }
 

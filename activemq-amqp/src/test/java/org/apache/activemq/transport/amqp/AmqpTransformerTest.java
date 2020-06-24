@@ -95,6 +95,7 @@ public class AmqpTransformerTest {
         assertTrue(message instanceof BytesMessage);
         Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
         assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5828
         assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
         assertEquals(7, message.getJMSPriority());
 
@@ -143,6 +144,7 @@ public class AmqpTransformerTest {
         Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
         assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
         assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5828
 
         // should not equal 7 (should equal the default) because "raw" does not map headers
         assertEquals(4, message.getJMSPriority());
@@ -159,6 +161,9 @@ public class AmqpTransformerTest {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=jms"));
 
         // send "text message" with AMQP JMS API
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         Connection amqpConnection = JMSClientContext.INSTANCE.createConnection(amqpConnectionURI);
         amqpConnection.start();
 
@@ -175,6 +180,9 @@ public class AmqpTransformerTest {
         amqpConnection.close();
 
         // receive with openwire JMS
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireConnectionURI);
         Connection openwireConn = factory.createConnection();
         openwireConn.start();
@@ -189,6 +197,7 @@ public class AmqpTransformerTest {
         Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
         assertFalse("Didn't use the correct transformation, expected NOT to be NATIVE", nativeTransformationUsed);
         assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5828
 
         c.close();
         session.close();
@@ -198,6 +207,7 @@ public class AmqpTransformerTest {
     @Test(timeout = 60000)
     public void testSendAMQPMessageWithComplexAnnotationsReceiveCore() throws Exception {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=jms"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7274
 
         URI remoteURI = new URI("tcp://" + amqpConnectionURI.getHost() + ":" + amqpConnectionURI.getPort());
         AmqpClient client = new AmqpClient(remoteURI, null, null);
@@ -247,10 +257,13 @@ public class AmqpTransformerTest {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         brokerService.setUseJmx(false);
         brokerService.setDeleteAllMessagesOnStartup(true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4568
         TransportConnector connector = brokerService.addConnector(amqpUrl);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         amqpConnectionURI = connector.getPublishableConnectURI();
         connector = brokerService.addConnector("tcp://0.0.0.0:0");
         openwireConnectionURI = connector.getPublishableConnectURI();
@@ -268,6 +281,7 @@ public class AmqpTransformerTest {
     }
 
     private AmqpMessage createAmqpMessage(byte value, int payloadSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7274
         AmqpMessage message = new AmqpMessage();
         byte[] payload = new byte[payloadSize];
         for (int i = 0; i < payload.length; i++) {

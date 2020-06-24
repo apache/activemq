@@ -63,9 +63,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     }
 
     public void setUri(URI discoveryURI) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         this.discoveryUri = discoveryURI;
         setDiscoveryAgent(DiscoveryAgentFactory.createDiscoveryAgent(discoveryURI));
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
             parameters = URISupport.parseParameters(discoveryURI);
             // allow discovery agent to grab it's parameters
             IntrospectionSupport.setProperties(getDiscoveryAgent(), parameters);
@@ -75,6 +77,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     }
 
     public URI getUri() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         return discoveryUri;
     }
 
@@ -94,6 +97,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
             if (localURI.equals(uri)) {
                 LOG.debug("not connecting loopback: {}", uri);
                 return;
@@ -105,6 +109,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             }
 
             // Should we try to connect to that URI?
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
             if (activeEvents.putIfAbsent(uri, event) != null) {
                 LOG.debug("Discovery agent generated a duplicate onServiceAdd event for: {}", uri);
                 return;
@@ -112,6 +117,10 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
             URI connectUri = uri;
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
                 connectUri = URISupport.applyParameters(connectUri, parameters, DISCOVERED_OPTION_PREFIX);
             } catch (URISyntaxException e) {
                 LOG.warn("could not apply query parameters: {} to: {}", new Object[]{ parameters, connectUri }, e);
@@ -123,9 +132,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             Transport localTransport;
             try {
                 // Allows the transport to access the broker's ssl configuration.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7037
                 if (getSslContext() != null) {
                     SslContext.setCurrentSslContext(getSslContext());
                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1749
                     SslContext.setCurrentSslContext(getBrokerService().getSslContext());
                 }
                 try {
@@ -133,6 +144,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 } catch (Exception e) {
                     LOG.warn("Could not connect to remote URI: {}: {}", connectUri, e.getMessage());
                     LOG.debug("Connection failure exception: ", e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6171
                     try {
                         discoveryAgent.serviceFailed(event);
                     } catch (IOException e1) {
@@ -147,6 +159,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     LOG.warn("Could not connect to local URI: {}: {}", localURI, e.getMessage());
                     LOG.debug("Connection failure exception: ", e);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6171
                     try {
                         discoveryAgent.serviceFailed(event);
                     } catch (IOException e1) {
@@ -157,11 +170,14 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             } finally {
                 SslContext.setCurrentSslContext(null);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
             NetworkBridge bridge = createBridge(localTransport, remoteTransport, event);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
                 synchronized (bridges) {
                     bridges.put(uri, bridge);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
                 bridge.start();
             } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
@@ -191,7 +207,9 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             }
 
             // Only remove bridge if this is the active discovery event for the URL.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
             if (activeEvents.remove(uri, event)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
                 synchronized (bridges) {
                     bridges.remove(uri);
                 }
@@ -229,7 +247,9 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 stopper.onException(this, e);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3347
         bridges.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
         activeEvents.clear();
         try {
             this.discoveryAgent.stop();
@@ -242,8 +262,10 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
     protected NetworkBridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
         class DiscoverNetworkBridgeListener extends MBeanNetworkListener {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3109
 
             public DiscoverNetworkBridgeListener(BrokerService brokerService, ObjectName connectorName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
                 super(brokerService, DiscoveryNetworkConnector.this, connectorName);
             }
 
@@ -259,8 +281,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             }
         }
         NetworkBridgeListener listener = new DiscoverNetworkBridgeListener(getBrokerService(), getObjectName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3109
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6861
         DemandForwardingBridge result = getBridgeFactory().createNetworkBridge(this, localTransport, remoteTransport, listener);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2030
         result.setBrokerService(getBrokerService());
         return configureBridge(result);
     }

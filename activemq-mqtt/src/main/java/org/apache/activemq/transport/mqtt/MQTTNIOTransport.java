@@ -57,6 +57,7 @@ public class MQTTNIOTransport extends TcpTransport {
     }
 
     public MQTTNIOTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         super(wireFormat, socket, initBuffer);
     }
 
@@ -85,10 +86,12 @@ public class MQTTNIOTransport extends TcpTransport {
 
         inputBuffer = ByteBuffer.allocate(8 * 1024);
         NIOOutputStream outPutStream = new NIOOutputStream(channel, 8 * 1024);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5781
         dataOut = new DataOutputStream(outPutStream);
         buffOut = outPutStream;
         codec = new MQTTCodec(this, (MQTTWireFormat) getWireFormat());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         try {
             if (initBuffer != null) {
                 processBuffer(initBuffer.buffer, initBuffer.readSize);
@@ -117,6 +120,7 @@ public class MQTTNIOTransport extends TcpTransport {
                     break;
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
                 processBuffer(inputBuffer, readSize);
             }
         } catch (IOException e) {
@@ -127,11 +131,13 @@ public class MQTTNIOTransport extends TcpTransport {
     }
 
     protected void processBuffer(ByteBuffer buffer, int readSize) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         buffer.flip();
         DataByteArrayInputStream dis = new DataByteArrayInputStream(buffer.array());
         codec.parse(dis, readSize);
 
         receiveCounter += readSize;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4106
 
         // clear the buffer
         buffer.clear();

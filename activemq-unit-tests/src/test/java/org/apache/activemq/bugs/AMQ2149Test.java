@@ -70,6 +70,7 @@ public class AMQ2149Test {
         
     private final String SEQ_NUM_PROPERTY = "seqNum";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
     final int MESSAGE_LENGTH_BYTES = 75 * 1024;
     final long SLEEP_BETWEEN_SEND_MS = 25;
     final int NUM_SENDERS_AND_RECEIVERS = 10;
@@ -78,12 +79,14 @@ public class AMQ2149Test {
     private static final long DEFAULT_BROKER_STOP_PERIOD = 10 * 1000;
     private static final long DEFAULT_NUM_TO_SEND = 1400;
     
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
     long brokerStopPeriod = DEFAULT_BROKER_STOP_PERIOD;
     long numtoSend = DEFAULT_NUM_TO_SEND;
     long sleepBetweenSend = SLEEP_BETWEEN_SEND_MS;
     String brokerURL = DEFAULT_BROKER_URL;
     
     int numBrokerRestarts = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
     final static int MAX_BROKER_RESTARTS = 4;
     BrokerService broker;
     Vector<Throwable> exceptions = new Vector<Throwable>();
@@ -94,12 +97,14 @@ public class AMQ2149Test {
     
     public void createBroker(Configurer configurer) throws Exception {
         broker = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
         broker.setAdvisorySupport(false);
         configurePersistenceAdapter(broker);
         
         broker.getSystemUsage().getMemoryUsage().setLimit(MESSAGE_LENGTH_BYTES * 200 * NUM_SENDERS_AND_RECEIVERS);
 
         broker.addConnector(BROKER_CONNECTOR);        
+//IC see: https://issues.apache.org/jira/browse/AMQ-4886
         broker.setBrokerName(testName.getMethodName());
         broker.setDataDirectoryFile(dataDirFile);
         if (configurer != null) {
@@ -114,9 +119,12 @@ public class AMQ2149Test {
     @Before
     public void setUp() throws Exception {
         LOG.debug("Starting test {}", testName.getMethodName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4886
         dataDirFile = new File("target/"+ testName.getMethodName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
         numtoSend = DEFAULT_NUM_TO_SEND;
         brokerStopPeriod = DEFAULT_BROKER_STOP_PERIOD;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
         sleepBetweenSend = SLEEP_BETWEEN_SEND_MS;
         brokerURL = DEFAULT_BROKER_URL;
     }
@@ -166,8 +174,11 @@ public class AMQ2149Test {
         private String lastId = null;
 
         public Receiver(javax.jms.Destination dest, boolean transactional) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             this.dest = dest;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             this.transactional = transactional;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
             ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);
             connectionFactory.setWatchTopicAdvisories(false);
             connection = connectionFactory.createConnection();
@@ -199,6 +210,7 @@ public class AMQ2149Test {
                 if ((seqNum % TRANSACITON_BATCH) == 0) {
                     LOG.info(dest + " received " + seqNum);
                     
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                     if (transactional) {
                         LOG.info("committing..");
                         session.commit();
@@ -208,6 +220,8 @@ public class AMQ2149Test {
                     // after an indoubt commit we need to accept what we get
                     // either a batch replay or next batch
                     if (seqNum != nextExpectedSeqNum) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5994
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
                         if (seqNum == nextExpectedSeqNum - TRANSACITON_BATCH) {
                             nextExpectedSeqNum -= TRANSACITON_BATCH;
                             LOG.info("In doubt commit failed, getting replay at:" +  nextExpectedSeqNum);
@@ -228,8 +242,11 @@ public class AMQ2149Test {
                 ++nextExpectedSeqNum;
                 lastId = message.getJMSMessageID();
             } catch (TransactionRolledBackException expectedSometimesOnFailoverRecovery) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5994
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
                 ++nextExpectedSeqNum;
                 LOG.info("got rollback: " + expectedSometimesOnFailoverRecovery, expectedSometimesOnFailoverRecovery);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
                 if (expectedSometimesOnFailoverRecovery.getMessage().contains("completion in doubt")) {
                     // in doubt - either commit command or reply missing
                     // don't know if we will get a replay
@@ -240,6 +257,7 @@ public class AMQ2149Test {
                     // batch will be replayed
                     nextExpectedSeqNum -= TRANSACITON_BATCH;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
             } catch (JMSException expectedSometimesOnFailoverRecoveryWithNestedTransactionRolledBackException) {
                 ++nextExpectedSeqNum;
                 LOG.info("got rollback: " + expectedSometimesOnFailoverRecoveryWithNestedTransactionRolledBackException, expectedSometimesOnFailoverRecoveryWithNestedTransactionRolledBackException);
@@ -272,7 +290,9 @@ public class AMQ2149Test {
         private volatile long nextSequenceNumber = 0;
 
         public Sender(javax.jms.Destination dest) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             this.dest = dest;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
             ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(brokerURL);
             activeMQConnectionFactory.setWatchTopicAdvisories(false);
             connection = activeMQConnectionFactory.createConnection();
@@ -285,14 +305,18 @@ public class AMQ2149Test {
 
         public void run() {
             final String longString = buildLongString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             while (nextSequenceNumber < numtoSend) {
                 try {
                     final Message message = session
                             .createTextMessage(longString);
                     message.setLongProperty(SEQ_NUM_PROPERTY,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5994
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
                             ++nextSequenceNumber);
                     messageProducer.send(message);
                     
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                     if ((nextSequenceNumber % 500) == 0) {
                         LOG.info(dest + " sent " + nextSequenceNumber);
                     }
@@ -305,6 +329,7 @@ public class AMQ2149Test {
                     LOG.error(dest + " send error", e);
                     exceptions.add(e);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                 if (sleepBetweenSend > 0) {
                     try {
                         Thread.sleep(sleepBetweenSend);
@@ -376,11 +401,13 @@ public class AMQ2149Test {
         });
         
         verifyOrderedMessageReceipt();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
         verifyStats(false, false);
     }
 
     @Test(timeout = 10 * 60 * 1000)
     public void testOrderWithRestart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
                 broker.deleteAllMessages();     
@@ -388,6 +415,7 @@ public class AMQ2149Test {
         });
         
         final Timer timer = new Timer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
         schedualRestartTask(timer, new Configurer() {
             public void configure(BrokerService broker) throws Exception {    
             }
@@ -406,6 +434,7 @@ public class AMQ2149Test {
     public void testTopicOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                 broker.deleteAllMessages();
             }
         });
@@ -419,6 +448,8 @@ public class AMQ2149Test {
             timer.cancel();
         }
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
         verifyStats(true, false);
     }
 
@@ -435,6 +466,7 @@ public class AMQ2149Test {
     public void doTestTransactionalOrderWithRestart(byte destinationType) throws Exception {
         numtoSend = 5000;
         sleepBetweenSend = 3;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
         brokerStopPeriod = 10 * 1000;
               
         createBroker(new Configurer() {
@@ -444,6 +476,7 @@ public class AMQ2149Test {
         });
         
         final Timer timer = new Timer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
         schedualRestartTask(timer, null);
         
         try {
@@ -452,6 +485,7 @@ public class AMQ2149Test {
             timer.cancel();
         }
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
         verifyStats(true, true);
     }
 
@@ -465,12 +499,14 @@ public class AMQ2149Test {
                 // dispatches, all of which will be suppressed - either by the reference store
                 // not allowing duplicate references or consumers acking duplicates
                 LOG.info("with restart: not asserting qneue/dequeue stat match for: " + dest.getName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                         + " " + stats.getEnqueues().getCount() + " <= " +stats.getDequeues().getCount());
             } else {
                 assertEquals("qneue/dequeue match for: " + dest.getName(),
                         stats.getEnqueues().getCount(), stats.getDequeues().getCount());   
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
         Destination activeMQDlq = regionBroker.getQueueRegion().getDestinationMap().get(new ActiveMQQueue("ActiveMQ.DLQ"));
         if (activeMQDlq != null) {
 
@@ -501,6 +537,7 @@ public class AMQ2149Test {
                     LOG.info("stopping broker..");
                     try {
                         broker.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                         broker.waitUntilStopped();
                     } catch (Exception e) {
                         LOG.error("ex on broker stop", e);
@@ -517,6 +554,7 @@ public class AMQ2149Test {
                 }
                 if (++numBrokerRestarts < MAX_BROKER_RESTARTS && timer != null) {
                     // do it again
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                     try {
                         timer.schedule(new RestartTask(), brokerStopPeriod);
                     } catch (IllegalStateException ignore_alreadyCancelled) {
@@ -569,6 +607,7 @@ public class AMQ2149Test {
 
         while(!receivers.isEmpty() && System.currentTimeMillis() < expiry) {
             Receiver receiver = receivers.firstElement();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             if (receiver.getNextExpectedSeqNo() >= numtoSend || !exceptions.isEmpty()) {
                 receiver.close();
                 receivers.remove(receiver);
@@ -583,6 +622,7 @@ public class AMQ2149Test {
         connections.clear();
 
         assertTrue("No timeout waiting for senders/receivers to complete", System.currentTimeMillis() < expiry);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2314
         if (!exceptions.isEmpty()) {
             exceptions.get(0).printStackTrace();
         }
@@ -598,6 +638,7 @@ public class AMQ2149Test {
 
 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4886
 class TeardownTask implements Callable<Boolean> {
     private Object brokerLock;
     private BrokerService broker;

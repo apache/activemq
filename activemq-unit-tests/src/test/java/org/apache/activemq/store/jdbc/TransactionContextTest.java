@@ -41,6 +41,7 @@ public class TransactionContextTest {
 
     @Before
     public void setup() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
         underTest = new TransactionContext(jdbcPersistenceAdapter, 0, 0);
     }
 

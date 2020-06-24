@@ -61,12 +61,14 @@ public class JournalSyncStrategyTest  {
     @Test
     public void testPeriodicSync()throws Exception {
         store = configureStore(JournalDiskSyncStrategy.PERIODIC);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         store.setJournalDiskSyncInterval(800);
         store.start();
         final Journal journal = store.getJournal();
         assertTrue(journal.isJournalDiskSyncPeriodic());
         assertFalse(store.isEnableJournalDiskSyncs());
         assertEquals(store.getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.PERIODIC.name());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         assertEquals(store.getJournalDiskSyncStrategyEnum(), JournalDiskSyncStrategy.PERIODIC);
         assertEquals(store.getJournal().getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.PERIODIC);
         assertEquals(store.getJournalDiskSyncInterval(), 800);
@@ -87,7 +89,9 @@ public class JournalSyncStrategyTest  {
         store.start();
         assertFalse(store.getJournal().isJournalDiskSyncPeriodic());
         assertTrue(store.isEnableJournalDiskSyncs());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         assertEquals(store.getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.ALWAYS.name());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         assertEquals(store.getJournalDiskSyncStrategyEnum(), JournalDiskSyncStrategy.ALWAYS);
         assertEquals(store.getJournal().getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.ALWAYS);
 
@@ -102,7 +106,9 @@ public class JournalSyncStrategyTest  {
         store.start();
         assertFalse(store.getJournal().isJournalDiskSyncPeriodic());
         assertFalse(store.isEnableJournalDiskSyncs());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         assertEquals(store.getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.NEVER.name());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         assertEquals(store.getJournalDiskSyncStrategyEnum(), JournalDiskSyncStrategy.NEVER);
         assertEquals(store.getJournal().getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.NEVER);
 

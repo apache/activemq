@@ -60,6 +60,7 @@ public class MBeanTest extends RuntimeConfigTestSupport {
         LOG.info("Result from update: " + result);
 
         assertTrue("got sensible result: " + result, result.contains("started"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
         assertEquals("one new network connectors", 1, brokerService.getNetworkConnectors().size());
 
@@ -97,6 +98,7 @@ public class MBeanTest extends RuntimeConfigTestSupport {
         LOG.info("Result from failed update: " + result);
 
         assertTrue("got sensible result: " + result, result.contains("dudElement"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
         HashMap<String, String> propsAfter = new HashMap<String, String>();
         IntrospectionSupport.getProperties(runtimeConfigurationView, propsAfter, null);
@@ -111,6 +113,7 @@ public class MBeanTest extends RuntimeConfigTestSupport {
         result = runtimeConfigurationView.updateNow();
 
         LOG.info("Result from update: " + result);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         assertTrue("got sensible result: " + result, result.contains("started"));
         assertEquals("one new network connectors", 1, brokerService.getNetworkConnectors().size());
 

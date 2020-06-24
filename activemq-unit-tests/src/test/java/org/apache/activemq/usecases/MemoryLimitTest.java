@@ -130,6 +130,8 @@ public class MemoryLimitTest extends TestSupport {
 
         // consume one message
         MessageConsumer consumer = sess.createConsumer(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         Message msg = consumer.receive(5000);
         msg.acknowledge();
 
@@ -137,6 +139,7 @@ public class MemoryLimitTest extends TestSupport {
 
         LOG.info("Broker usage: " + broker.getSystemUsage().getMemoryUsage());
         assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() <= 91);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7126
 
         // let's make sure we can consume all messages
         for (int i = 1; i < 2000; i++) {
@@ -151,6 +154,7 @@ public class MemoryLimitTest extends TestSupport {
 
     @Test(timeout = 120000)
     public void testMoveMessages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5585
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?jms.prefetchPolicy.all=10");
         factory.setOptimizeAcknowledge(true);
         Connection conn = factory.createConnection();
@@ -162,6 +166,7 @@ public class MemoryLimitTest extends TestSupport {
         final ProducerThread producer = new ProducerThread(sess, queue) {
             @Override
             protected Message createMessage(int i) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 BytesMessage bytesMessage = session.createBytesMessage();
                 bytesMessage.writeBytes(payload);
                 return bytesMessage;
@@ -216,6 +221,7 @@ public class MemoryLimitTest extends TestSupport {
         final ProducerThread producer = new ProducerThread(sess, sess.createQueue("STORE.1")) {
             @Override
             protected Message createMessage(int i) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 return session.createTextMessage(payload + "::" + i);
             }
         };
@@ -224,6 +230,7 @@ public class MemoryLimitTest extends TestSupport {
         final ProducerThread producer2 = new ProducerThread(sess, sess.createQueue("STORE.2")) {
             @Override
             protected Message createMessage(int i) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 return session.createTextMessage(payload + "::" + i);
             }
         };

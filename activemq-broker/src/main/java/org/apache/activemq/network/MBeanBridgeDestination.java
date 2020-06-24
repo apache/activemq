@@ -45,6 +45,7 @@ public class MBeanBridgeDestination {
 
     public MBeanBridgeDestination(BrokerService brokerService, NetworkBridgeConfiguration networkBridgeConfiguration, NetworkBridge bridge, NetworkBridgeView networkBridgeView) {
         this.brokerService = brokerService;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         this.networkBridgeConfiguration = networkBridgeConfiguration;
         this.bridge = bridge;
         this.networkBridgeView = networkBridgeView;
@@ -104,6 +105,7 @@ public class MBeanBridgeDestination {
     }
 
     public void start() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         if (networkBridgeConfiguration.isGcDestinationViews()) {
             long period = networkBridgeConfiguration.getGcSweepTime();
             if (period > 0) {

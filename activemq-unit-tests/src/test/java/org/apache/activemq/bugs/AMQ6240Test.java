@@ -42,6 +42,7 @@ public class AMQ6240Test extends EmbeddedBrokerTestSupport {
         final ActiveMQConnection cx = (ActiveMQConnection)createConnection();
         final ActiveMQDestination queue = createDestination("noPfc");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6240
         cx.setSendTimeout(4000);
         cx.setCloseTimeout(1000);
 

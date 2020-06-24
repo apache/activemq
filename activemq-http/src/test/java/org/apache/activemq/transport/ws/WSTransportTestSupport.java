@@ -55,6 +55,7 @@ public class WSTransportTestSupport {
     @Before
     public void setUp() throws Exception {
         LOG.info("========== Starting test: {} ==========", name.getMethodName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6343
         broker = createBroker(true, true);
     }
 
@@ -70,6 +71,7 @@ public class WSTransportTestSupport {
     }
 
     protected String getWSConnectionURI() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return "ws://127.0.0.1:" + getProxyPort();
     }
 
@@ -103,6 +105,7 @@ public class WSTransportTestSupport {
 
         wsConnectUri = broker.addConnector(getWSConnectorURI()).getPublishableConnectURI();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6343
         broker.setAdvisorySupport(advisorySupport);
         broker.setUseJmx(true);
         broker.getManagementContext().setCreateConnector(false);

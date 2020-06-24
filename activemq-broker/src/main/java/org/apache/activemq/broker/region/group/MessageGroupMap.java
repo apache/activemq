@@ -37,6 +37,7 @@ public interface MessageGroupMap {
     MessageGroupSet removeConsumer(ConsumerId consumerId);
 
     void removeAll();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4766
 
     /**
      * @return  a map of group names and associated consumer Id
@@ -46,5 +47,6 @@ public interface MessageGroupMap {
     String getType();
 
     void setDestination(Destination destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5483
 
 }

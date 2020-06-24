@@ -44,6 +44,7 @@ public class NIOSSLTransportServer extends TcpTransportServer {
 
     @Override
     protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         NIOSSLTransport transport = new NIOSSLTransport(format, socket, null, null, null);
         if (context != null) {
             transport.setSslContext(context);

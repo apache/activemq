@@ -31,6 +31,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 
 public class ReflectionSupportTest extends TestCase {
 	
+//IC see: https://issues.apache.org/jira/browse/AMQ-2086
     List<ActiveMQDestination> favorites = new ArrayList<ActiveMQDestination>();
     String favoritesString = "[queue://test, topic://test]";
     List<ActiveMQDestination> nonFavorites = new ArrayList<ActiveMQDestination>();
@@ -48,10 +49,12 @@ public class ReflectionSupportTest extends TestCase {
         map.put("age", "27");
         map.put("name", "Hiram");
         map.put("enabled", "true");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2086
         map.put("uri", "test://value");        
         map.put("favorites", favoritesString);
         map.put("nonFavorites", nonFavoritesString);
         map.put("others", null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
         map.put("systems", "windows,mac");
         
         IntrospectionSupport.setProperties(pojo, map);
@@ -60,9 +63,11 @@ public class ReflectionSupportTest extends TestCase {
         assertEquals("Hiram", pojo.getName());
         assertEquals(true, pojo.isEnabled());
         assertEquals(new URI("test://value"), pojo.getUri());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2086
         assertEquals(favorites, pojo.getFavorites());
         assertEquals(nonFavorites, pojo.getNonFavorites());
         assertNull(pojo.getOthers());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
         assertEquals("windows", pojo.getSystems()[0]);
         assertEquals("mac", pojo.getSystems()[1]);
     }
@@ -75,6 +80,7 @@ public class ReflectionSupportTest extends TestCase {
     	pojo.setFavorites(favorites);
     	pojo.setNonFavorites(nonFavorites);
     	pojo.setOthers(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
         pojo.setSystems(new String[]{"windows", "mac"});
     	
     	Properties props = new Properties();
@@ -83,6 +89,7 @@ public class ReflectionSupportTest extends TestCase {
     	
     	assertEquals("Dejan", props.get("name"));
     	assertEquals("31", props.get("age"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
     	assertEquals("true", props.get("enabled"));
     	assertEquals(favoritesString, props.get("favorites"));
     	assertEquals(nonFavoritesString, props.get("nonFavorites"));
@@ -92,6 +99,7 @@ public class ReflectionSupportTest extends TestCase {
     
     public void testSetBoolean() {
                   
+//IC see: https://issues.apache.org/jira/browse/AMQ-2274
         TestWitBoolean target = new TestWitBoolean();
         assertTrue(!target.getKeepAlive());
 

@@ -68,6 +68,7 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         broker.start();
         
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(new URI(VM_BROKER_URI));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3033
         Connection connection = cf.createConnection("system", "manager");
         connection.start();
         
@@ -96,6 +97,7 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         cf = new ActiveMQConnectionFactory("tcp://localhost:61616?wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
         connection = cf.createConnection("system", "manager");
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2852
         connection.close();
         broker.stop();
         broker.waitUntilStopped();
@@ -106,6 +108,7 @@ public class VmTransportNetworkBrokerTest extends TestCase {
             public boolean isSatisified() throws Exception {
                 LOG.info(ThreadExplorer.show("active after stop"));
                 // get final threads but filter out any daemon threads that the JVM may have created.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3754
                 Thread[] threads = filterDaemonThreads(ThreadExplorer.listThreads());
                 threadCountAfterStop.set(threads.length);
                 return threadCountAfterStop.get() <= originalThreadCount;

@@ -26,12 +26,14 @@ public class HsqldbJDBCAdapter extends BytesJDBCAdapter {
 
     @Override
     public void setStatements(Statements statements) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3922
         statements.setBinaryDataType("BLOB");
         super.setStatements(statements);
     }
 
     @Override
     public String limitQuery(String query) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7368
         return query + " LIMIT " + getMaxRows();
     }
 

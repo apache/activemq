@@ -62,6 +62,7 @@ public class AmqpWireFormat implements WireFormat {
     private ResetListener resetListener;
 
     public interface ResetListener {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5475
         void onProtocolReset();
     }
 
@@ -102,15 +103,18 @@ public class AmqpWireFormat implements WireFormat {
 
     @Override
     public Object unmarshal(DataInput dataIn) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4914
         if (!magicRead) {
             Buffer magic = new Buffer(8);
             magic.readFrom(dataIn);
             magicRead = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5475
             return new AmqpHeader(magic, false);
         } else {
             int size = dataIn.readInt();
             if (size > maxFrameSize) {
                 throw new AmqpProtocolException("Frame size exceeded max frame length.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5731
             } else if (size <= 0) {
                 throw new AmqpProtocolException("Frame size value was invalid: " + size);
             }
@@ -141,11 +145,13 @@ public class AmqpWireFormat implements WireFormat {
      * @return true if the header is valid against the current WireFormat.
      */
     public boolean isHeaderValid(AmqpHeader header, boolean authenticated) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5475
         if (!header.hasValidPrefix()) {
             LOG.trace("AMQP Header arrived with invalid prefix: {}", header);
             return false;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
         if (!(header.getProtocolId() == 0 || header.getProtocolId() == SASL_PROTOCOL)) {
             LOG.trace("AMQP Header arrived with invalid protocol ID: {}", header);
             return false;
@@ -215,6 +221,7 @@ public class AmqpWireFormat implements WireFormat {
     }
 
     public int getMaxAmqpFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5350
         return maxAmqpFrameSize;
     }
 
@@ -223,6 +230,7 @@ public class AmqpWireFormat implements WireFormat {
     }
 
     public boolean isAllowNonSaslConnections() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5475
         return allowNonSaslConnections;
     }
 
@@ -239,6 +247,7 @@ public class AmqpWireFormat implements WireFormat {
     }
 
     public void setProducerCredit(int producerCredit) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         this.producerCredit = producerCredit;
     }
 
@@ -255,6 +264,7 @@ public class AmqpWireFormat implements WireFormat {
     }
 
     public int getIdleTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
         return idelTimeout;
     }
 

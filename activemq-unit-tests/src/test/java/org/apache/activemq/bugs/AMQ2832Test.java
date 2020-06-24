@@ -63,6 +63,8 @@ public class AMQ2832Test {
     private String connectionUri;
 
     protected void startBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
         doStartBroker(true, false);
     }
 
@@ -108,6 +110,7 @@ public class AMQ2832Test {
         adapter.setCheckpointInterval(5000);
         adapter.setCleanupInterval(5000);
         adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
 
         if (recover) {
             adapter.setForceRecoverIndex(true);
@@ -136,6 +139,9 @@ public class AMQ2832Test {
     @Test
     public void testAckChain() throws Exception {
         startBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2736
+//IC see: https://issues.apache.org/jira/browse/AMQ-6083
 
         makeAckChain();
 
@@ -230,6 +236,8 @@ public class AMQ2832Test {
         broker.waitUntilStopped();
 
         recoverBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
 
         consumer = new StagedConsumer();
         // need to force recovery?
@@ -247,7 +255,10 @@ public class AMQ2832Test {
     @Test
     public void testAlternateLossScenario() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
         startBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4500
         PersistenceAdapter pa  = broker.getPersistenceAdapter();
         if (pa instanceof LevelDBStore) {
             return;
@@ -289,6 +300,8 @@ public class AMQ2832Test {
         assertTrue("Less than three journal file expected, was " + getNumberOfJournalFiles(), Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
+//IC see: https://issues.apache.org/jira/browse/AMQ-7135
                 return getNumberOfJournalFiles() <= 4;
             }
         }, TimeUnit.MINUTES.toMillis(3)));
@@ -360,6 +373,8 @@ public class AMQ2832Test {
     }
 
     private int produceMessagesToConsumeMultipleDataFiles(int numToSend) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
         return produceMessages(destination, numToSend);
     }
 

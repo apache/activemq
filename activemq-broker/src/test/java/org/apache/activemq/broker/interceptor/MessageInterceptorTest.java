@@ -106,6 +106,7 @@ public class MessageInterceptorTest extends TestCase {
     public void testNoStackOverFlow() throws Exception {
 
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4714
         final MessageInterceptorRegistry registry = MessageInterceptorRegistry.getInstance().get(BrokerRegistry.getInstance().findFirst());
         registry.addMessageInterceptorForTopic(topic.getTopicName(), new MessageInterceptor() {
             @Override
@@ -202,6 +203,8 @@ public class MessageInterceptorTest extends TestCase {
     public void testReRouteAllWithNullProducerExchange() throws Exception {
         final ActiveMQQueue queue = new ActiveMQQueue("Reroute.From."+topic.getTopicName());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4714
+//IC see: https://issues.apache.org/jira/browse/AMQ-4714
         final MessageInterceptorRegistry registry = MessageInterceptorRegistry.getInstance().get(BrokerRegistry.getInstance().findFirst());
         registry.addMessageInterceptorForTopic(topic.getTopicName(), new MessageInterceptor() {
             @Override
@@ -238,6 +241,7 @@ public class MessageInterceptorTest extends TestCase {
 
         final ActiveMQQueue testQueue = new ActiveMQQueue("testQueueFor."+getName());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4714
         final MessageInterceptorRegistry registry = MessageInterceptorRegistry.getInstance().get(BrokerRegistry.getInstance().findFirst());
         registry.addMessageInterceptorForTopic(">", new MessageInterceptor() {
             @Override

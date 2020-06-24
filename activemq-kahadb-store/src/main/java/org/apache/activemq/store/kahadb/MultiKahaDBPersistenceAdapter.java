@@ -74,12 +74,14 @@ import static org.apache.activemq.store.kahadb.MessageDatabase.DEFAULT_DIRECTORY
  */
 public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter,
     BrokerServiceAware, NoLocalSubscriptionAware {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
 
     static final Logger LOG = LoggerFactory.getLogger(MultiKahaDBPersistenceAdapter.class);
 
     final static ActiveMQDestination matchAll = new AnyDestination(new ActiveMQDestination[]{new ActiveMQQueue(">"), new ActiveMQTopic(">")});
     final int LOCAL_FORMAT_ID_MAGIC = Integer.valueOf(System.getProperty("org.apache.activemq.store.kahadb.MultiKahaDBTransactionStore.localXaFormatId", "61616"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4729
     final class DelegateDestinationMap extends DestinationMap {
         @Override
         public void setEntries(List<DestinationMapEntry>  entries) {
@@ -88,6 +90,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     };
     final DelegateDestinationMap destinationMap = new DelegateDestinationMap();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5580
     List<PersistenceAdapter> adapters = new CopyOnWriteArrayList<PersistenceAdapter>();
     private File directory = new File(IOHelper.getDefaultDataDirectory() + File.separator + "mKahaDB");
 
@@ -138,6 +141,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
                 filteredAdapter.setDestination(matchAll);
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3639
             if (filteredAdapter.isPerDestination()) {
                 configureDirectory(adapter, null);
                 // per destination adapters will be created on demand or during recovery
@@ -149,10 +153,12 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
             configureAdapter(adapter);
             adapters.add(adapter);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4729
         destinationMap.setEntries(entries);
     }
 
     public static String nameFromDestinationFilter(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4183
         if (destination.getQualifiedName().length() > IOHelper.getMaxFileNameLength()) {
             LOG.warn("Destination name is longer than 'MaximumFileNameLength' system property, " +
                      "potential problem with recovery can result from name truncation.");
@@ -174,6 +180,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     @Override
     public void checkpoint(final boolean cleanup) throws IOException {
         for (PersistenceAdapter persistenceAdapter : adapters) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7086
             persistenceAdapter.checkpoint(cleanup);
         }
     }
@@ -190,12 +197,14 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     private PersistenceAdapter getMatchingPersistenceAdapter(ActiveMQDestination destination) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4729
         Object result = destinationMap.chooseValue(destination);
         if (result == null) {
             throw new RuntimeException("No matching persistence adapter configured for destination: " + destination + ", options:" + adapters);
         }
         FilteredKahaDBPersistenceAdapter filteredAdapter = (FilteredKahaDBPersistenceAdapter) result;
         if (filteredAdapter.getDestination() == matchAll && filteredAdapter.isPerDestination()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4407
             filteredAdapter = addAdapter(filteredAdapter, destination);
             if (LOG.isTraceEnabled()) {
                 LOG.trace("created per destination adapter for: " + destination  + ", " + result);
@@ -217,6 +226,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     private void stopAdapter(PersistenceAdapter kahaDBPersistenceAdapter, String destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3841
         try {
             kahaDBPersistenceAdapter.stop();
         } catch (Exception e) {
@@ -243,7 +253,9 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
             persistenceAdapter.deleteAllMessages();
         }
         transactionStore.deleteAllMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3639
         IOHelper.deleteChildren(getDirectory());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6520
         for (Object o : destinationMap.get(new AnyDestination(new ActiveMQDestination[]{new ActiveMQQueue(">"), new ActiveMQTopic(">")}))) {
             if (o instanceof FilteredKahaDBPersistenceAdapter) {
                 FilteredKahaDBPersistenceAdapter filteredKahaDBPersistenceAdapter = (FilteredKahaDBPersistenceAdapter) o;
@@ -289,6 +301,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     @Override
     public void allowIOResumption() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
         for (PersistenceAdapter persistenceAdapter : adapters) {
             persistenceAdapter.allowIOResumption();
         }
@@ -319,6 +332,8 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         }
         if (adapter instanceof PersistenceAdapter && adapter.getDestinations().isEmpty()) {
             adapter.removeTopicMessageStore(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
             removeMessageStore(adapter, destination);
             destinationMap.remove(destination, adapter);
         }
@@ -370,6 +385,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     @Override
     public void doStart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4729
         Object result = destinationMap.chooseValue(matchAll);
         if (result != null) {
             FilteredKahaDBPersistenceAdapter filteredAdapter = (FilteredKahaDBPersistenceAdapter) result;
@@ -398,6 +414,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     private void registerExistingAdapter(FilteredKahaDBPersistenceAdapter filteredAdapter, File candidate) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
         PersistenceAdapter adapter = adapterFromTemplate(filteredAdapter, candidate.getName());
         startAdapter(adapter, candidate.getName());
         Set<ActiveMQDestination> destinations = adapter.getDestinations();
@@ -422,6 +439,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     private void configureIndexDirectory(PersistenceAdapter adapter, PersistenceAdapter template, String destinationName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6520
         if (template instanceof KahaDBPersistenceAdapter) {
             KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) template;
             if (kahaDBPersistenceAdapter.getIndexDirectory() != null) {
@@ -458,6 +476,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     private FilteredKahaDBPersistenceAdapter registerAdapter(FilteredKahaDBPersistenceAdapter template, PersistenceAdapter adapter, ActiveMQDestination destination) {
         adapters.add(adapter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
         FilteredKahaDBPersistenceAdapter result = new FilteredKahaDBPersistenceAdapter(template, destination, adapter);
         destinationMap.put(destination, result);
         return result;
@@ -491,6 +510,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         for (PersistenceAdapter persistenceAdapter : adapters) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4729
             stopper.stop(persistenceAdapter);
         }
     }
@@ -511,6 +531,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6033
         super.setBrokerService(brokerService);
         for (PersistenceAdapter persistenceAdapter : adapters) {
             if( persistenceAdapter instanceof BrokerServiceAware ) {
@@ -555,6 +576,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
 
     public void setJournalCleanupInterval(long journalCleanupInterval) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
         transactionStore.setJournalCleanupInterval(journalCleanupInterval);
     }
 
@@ -563,6 +585,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     public void setCheckForCorruption(boolean checkForCorruption) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7488
         transactionStore.setCheckForCorruption(checkForCorruption);
     }
 
@@ -571,6 +594,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     public List<PersistenceAdapter> getAdapters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5438
         return Collections.unmodifiableList(adapters);
     }
 
@@ -582,6 +606,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     @Override
     public Locker createDefaultLocker() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4729
         SharedFileLocker locker = new SharedFileLocker();
         locker.configure(this);
         return locker;
@@ -589,6 +614,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         return new JobSchedulerStoreImpl();
     }
 
@@ -598,6 +624,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     @Override
     public boolean isPersistNoLocal() {
         // Prior to v11 the broker did not store the noLocal value for durable subs.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
         return brokerService.getStoreOpenWireVersion() >= 11;
     }
 }

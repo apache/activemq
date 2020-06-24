@@ -84,6 +84,7 @@ public class LDAPLoginModule implements LoginModule {
         this.subject = subject;
         this.handler = callbackHandler;
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-1781
         config = new LDAPLoginProperty [] {
         		new LDAPLoginProperty (INITIAL_CONTEXT_FACTORY, (String)options.get(INITIAL_CONTEXT_FACTORY)),
         		new LDAPLoginProperty (CONNECTION_URL, (String)options.get(CONNECTION_URL)),
@@ -99,6 +100,7 @@ public class LDAPLoginModule implements LoginModule {
         		new LDAPLoginProperty (ROLE_SEARCH_MATCHING, (String)options.get(ROLE_SEARCH_MATCHING)),
         		new LDAPLoginProperty (ROLE_SEARCH_SUBTREE, (String)options.get(ROLE_SEARCH_SUBTREE)),
         		new LDAPLoginProperty (USER_ROLE_NAME, (String)options.get(USER_ROLE_NAME)),
+//IC see: https://issues.apache.org/jira/browse/AMQ-3770
                 new LDAPLoginProperty (EXPAND_ROLES, (String) options.get(EXPAND_ROLES)),
                 new LDAPLoginProperty (EXPAND_ROLES_MATCHING, (String) options.get(EXPAND_ROLES_MATCHING)),
 
@@ -120,8 +122,10 @@ public class LDAPLoginModule implements LoginModule {
             throw (LoginException)new LoginException().initCause(uce);
         }
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-1781
         String password;
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         String username = ((NameCallback)callbacks[0]).getName();
         if (username == null)
         	return false;
@@ -134,7 +138,9 @@ public class LDAPLoginModule implements LoginModule {
         // authenticate will throw LoginException
         // in case of failed authentication
         authenticate(username, password);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3323
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         user = new UserPrincipal(username);
         succeeded = true;
         return true;
@@ -163,6 +169,7 @@ public class LDAPLoginModule implements LoginModule {
 
         Set<Principal> principals = subject.getPrincipals();
         principals.add(user);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3308
         for (GroupPrincipal gp : groups) {
             principals.add(gp);
         }
@@ -197,11 +204,13 @@ public class LDAPLoginModule implements LoginModule {
 
     protected boolean authenticate(String username, String password) throws LoginException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1781
         MessageFormat userSearchMatchingFormat;
         boolean userSearchSubtreeBool;
         
         DirContext context = null;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3323
         if (log.isDebugEnabled()) {
             log.debug("Create the LDAP initial context.");
         }
@@ -222,6 +231,7 @@ public class LDAPLoginModule implements LoginModule {
         try {
 
             String filter = userSearchMatchingFormat.format(new String[] {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5345
                 doRFC2254Encoding(username)
             });
             SearchControls constraints = new SearchControls();
@@ -232,6 +242,7 @@ public class LDAPLoginModule implements LoginModule {
             }
 
             // setup attributes
+//IC see: https://issues.apache.org/jira/browse/AMQ-3308
             List<String> list = new ArrayList<String>();
             if (isLoginPropertySet(USER_ROLE_NAME)) {
                 list.add(getLDAPPropertyValue(USER_ROLE_NAME));
@@ -240,6 +251,7 @@ public class LDAPLoginModule implements LoginModule {
             list.toArray(attribs);
             constraints.setReturningAttributes(attribs);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3323
             if (log.isDebugEnabled()) {
                 log.debug("Get the user DN.");
                 log.debug("Looking for the user in LDAP with ");
@@ -248,6 +260,7 @@ public class LDAPLoginModule implements LoginModule {
             }
 
             NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(USER_BASE), filter, constraints);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3308
 
             if (results == null || !results.hasMore()) {
                 log.warn("User " + username + " not found in LDAP.");
@@ -260,12 +273,14 @@ public class LDAPLoginModule implements LoginModule {
                 // ignore for now
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4685
             String dn;
             if (result.isRelative()) {
                 log.debug("LDAP returned a relative name: {}", result.getName());
 
                 NameParser parser = context.getNameParser("");
                 Name contextName = parser.parse(context.getNameInNamespace());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1781
                 Name baseName = parser.parse(getLDAPPropertyValue(USER_BASE));
                 Name entryName = parser.parse(result.getName());
                 Name name = contextName.addAll(baseName);
@@ -299,9 +314,12 @@ public class LDAPLoginModule implements LoginModule {
 
             Attributes attrs = result.getAttributes();
             if (attrs == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3323
                 throw new FailedLoginException("User found, but LDAP entry malformed: " + username);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3308
             List<String> roles = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1781
             if (isLoginPropertySet(USER_ROLE_NAME)) {
                 roles = addAttributeValues(getLDAPPropertyValue(USER_ROLE_NAME), attrs, roles);
             }
@@ -310,6 +328,7 @@ public class LDAPLoginModule implements LoginModule {
             if (bindUser(context, dn, password)) {
                 // if authenticated add more roles
                 roles = getRoles(context, dn, username, roles);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3323
                 if (log.isDebugEnabled()) {
                     log.debug("Roles " + roles + " for user " + username);
                 }
@@ -332,6 +351,7 @@ public class LDAPLoginModule implements LoginModule {
             throw ex;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6833
         if (context != null) {
             close(context);
         }
@@ -340,12 +360,15 @@ public class LDAPLoginModule implements LoginModule {
     }
 
     protected List<String> getRoles(DirContext context, String dn, String username, List<String> currentRoles) throws NamingException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3308
         List<String> list = currentRoles;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1781
         MessageFormat roleSearchMatchingFormat;
         boolean roleSearchSubtreeBool;
         boolean expandRolesBool;
         roleSearchMatchingFormat = new MessageFormat(getLDAPPropertyValue(ROLE_SEARCH_MATCHING));
         roleSearchSubtreeBool = Boolean.valueOf(getLDAPPropertyValue(ROLE_SEARCH_SUBTREE)).booleanValue();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3770
         expandRolesBool = Boolean.valueOf(getLDAPPropertyValue(EXPAND_ROLES)).booleanValue();
         
         if (list == null) {
@@ -355,6 +378,7 @@ public class LDAPLoginModule implements LoginModule {
             return list;
         }
         String filter = roleSearchMatchingFormat.format(new String[] {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5345
             doRFC2254Encoding(dn), doRFC2254Encoding(username)
         });
 
@@ -364,14 +388,17 @@ public class LDAPLoginModule implements LoginModule {
         } else {
             constraints.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3323
         if (log.isDebugEnabled()) {
             log.debug("Get user roles.");
             log.debug("Looking for the user roles in LDAP with ");
             log.debug("  base DN: " + getLDAPPropertyValue(ROLE_BASE));
             log.debug("  filter: " + filter);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3770
         HashSet<String> haveSeenNames = new HashSet<String>();
         Queue<String> pendingNameExpansion = new LinkedList<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3308
         NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(ROLE_BASE), filter, constraints);
         while (results.hasMore()) {
             SearchResult result = results.next();
@@ -437,6 +464,7 @@ public class LDAPLoginModule implements LoginModule {
     protected boolean bindUser(DirContext context, String dn, String password) throws NamingException {
         boolean isValid = false;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3323
         if (log.isDebugEnabled()) {
             log.debug("Binding the user.");
         }
@@ -455,6 +483,7 @@ public class LDAPLoginModule implements LoginModule {
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1781
         if (isLoginPropertySet(CONNECTION_USERNAME)) {
             context.addToEnvironment(Context.SECURITY_PRINCIPAL, getLDAPPropertyValue(CONNECTION_USERNAME));
         } else {
@@ -481,6 +510,7 @@ public class LDAPLoginModule implements LoginModule {
         if (attr == null) {
             return values;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3308
         NamingEnumeration<?> e = attr.getAll();
         while (e.hasMore()) {
             String value = (String)e.next();
@@ -492,9 +522,11 @@ public class LDAPLoginModule implements LoginModule {
     protected DirContext open() throws NamingException {
         try {
             Hashtable<String, String> env = new Hashtable<String, String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1781
             env.put(Context.INITIAL_CONTEXT_FACTORY, getLDAPPropertyValue(INITIAL_CONTEXT_FACTORY));
             if (isLoginPropertySet(CONNECTION_USERNAME)) {
                 env.put(Context.SECURITY_PRINCIPAL, getLDAPPropertyValue(CONNECTION_USERNAME));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5345
             } else {
                 throw new NamingException("Empty username is not allowed");
             }
@@ -510,6 +542,8 @@ public class LDAPLoginModule implements LoginModule {
             context = new InitialDirContext(env);
 
         } catch (NamingException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3177
+//IC see: https://issues.apache.org/jira/browse/AMQ-3177
             log.error(e.toString());
             throw e;
         }
@@ -517,6 +551,7 @@ public class LDAPLoginModule implements LoginModule {
     }
     
     private String getLDAPPropertyValue (String propertyName){
+//IC see: https://issues.apache.org/jira/browse/AMQ-1781
     	for (int i=0; i < config.length; i++ )
     		if (config[i].getPropertyName() == propertyName)
     			return config[i].getPropertyValue();
@@ -525,6 +560,7 @@ public class LDAPLoginModule implements LoginModule {
     
     private boolean isLoginPropertySet(String propertyName) {
     	for (int i=0; i < config.length; i++ ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5345
     		if (config[i].getPropertyName() == propertyName && (config[i].getPropertyValue() != null && !"".equals(config[i].getPropertyValue())))
     				return true;
     	}

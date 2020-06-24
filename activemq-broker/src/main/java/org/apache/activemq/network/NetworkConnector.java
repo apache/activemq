@@ -102,6 +102,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
 
 
     public void addExcludedDestination(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7391
         this.excludedDestinations.add(destination);
     }
 
@@ -135,6 +136,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         destsList = getStaticallyIncludedDestinations();
         dests = destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setStaticallyIncludedDestinations(dests);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6366
         result.setDurableDestinations(getDurableTopicDestinations(durableDestinations));
         return result;
     }
@@ -154,7 +156,9 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
             }
 
             ActiveMQDestination[] dest = new ActiveMQDestination[topics.size()];
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             dest = topics.toArray(dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6366
             return dest;
         }
         return null;
@@ -182,10 +186,12 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     }
 
     public boolean isStarted() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3347
         return serviceSupport.isStarted();
     }
 
     public boolean isStopped() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3348
         return serviceSupport.isStopped();
     }
 
@@ -216,6 +222,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         NetworkBridgeViewMBean view = new NetworkBridgeView(bridge);
         try {
             ObjectName objectName = createNetworkBridgeObjectName(bridge);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
             AnnotatedMBean.registerMBean(getBrokerService().getManagementContext(), view, objectName);
         } catch (Throwable e) {
             LOG.debug("Network bridge could not be registered in JMX: {}", e.getMessage(), e);
@@ -241,10 +248,13 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     // ask all the bridges as we can't know to which this consumer is tied
     public boolean removeDemandSubscription(ConsumerId consumerId) {
         boolean removeSucceeded = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2448
+//IC see: https://issues.apache.org/jira/browse/AMQ-2298
         for (NetworkBridge bridge : bridges.values()) {
             if (bridge instanceof DemandForwardingBridgeSupport) {
                 DemandForwardingBridgeSupport demandBridge = (DemandForwardingBridgeSupport) bridge;
                 if (demandBridge.removeDemandSubscriptionByLocalId(consumerId)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2298
                     removeSucceeded = true;
                     break;
                 }

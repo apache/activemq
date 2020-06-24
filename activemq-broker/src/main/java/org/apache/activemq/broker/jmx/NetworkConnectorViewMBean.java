@@ -32,6 +32,7 @@ public interface NetworkConnectorViewMBean extends Service {
      * @return Advisory prefetch setting.
      */
     @MBeanInfo("The prefetch setting for the advisory message consumer.  If set to <= 0 then this setting is disabled "
+//IC see: https://issues.apache.org/jira/browse/AMQ-6267
             + "and the prefetchSize attribute is used instead for configuring the advisory consumer.")
     int getAdvisoryPrefetchSize();
 
@@ -62,6 +63,8 @@ public interface NetworkConnectorViewMBean extends Service {
     void setDynamicOnly(boolean dynamicOnly);
 
     void setMessageTTL(int messageTTL);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
 
     void setConsumerTTL(int consumerTTL);
 
@@ -70,6 +73,7 @@ public interface NetworkConnectorViewMBean extends Service {
     void setPrefetchSize(int prefetchSize);
 
     void setAdvisoryPrefetchSize(int advisoryPrefetchSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6267
 
     void setUserName(String userName);
 
@@ -78,6 +82,7 @@ public interface NetworkConnectorViewMBean extends Service {
     void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority);
 
     void setSuppressDuplicateQueueSubscriptions(boolean val);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3439
 
     void setSuppressDuplicateTopicSubscriptions(boolean val);
 

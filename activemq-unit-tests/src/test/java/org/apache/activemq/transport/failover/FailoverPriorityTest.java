@@ -53,6 +53,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
 
         assertAllConnectedTo(urls.get(BROKER_A_NAME));
         assertBrokerInfo(BROKER_A_NAME);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6124
 
         restart(false, BROKER_A_NAME, BROKER_B_NAME);
 
@@ -91,6 +92,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
 
     public void testThreeBrokers() throws Exception {
         // Broker A
+//IC see: https://issues.apache.org/jira/browse/AMQ-4461
         addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
         addTransportConnector(getBroker(BROKER_A_NAME), "openwire", BROKER_A_CLIENT_TC_ADDRESS, false);
         addNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
@@ -116,6 +118,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
         Thread.sleep(1000);
 
         setClientUrl("failover:(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + "," + BROKER_C_CLIENT_TC_ADDRESS + ")?randomize=false&priorityBackup=true&initialReconnectDelay=1000&useExponentialBackOff=false");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4461
 
         createClients(5);
 
@@ -127,6 +130,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
 
     public void testPriorityBackupAndUpdateClients() throws Exception {
         // Broker A
+//IC see: https://issues.apache.org/jira/browse/AMQ-4501
         addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
         addTransportConnector(getBroker(BROKER_A_NAME), "openwire", BROKER_A_CLIENT_TC_ADDRESS, true);
         addNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
@@ -169,6 +173,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
 
         if (primary) {
             assertAllConnectedTo(urls.get(secondaryName));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6124
             assertBrokerInfo(secondaryName);
         } else {
             assertAllConnectedTo(urls.get(primaryName));
@@ -189,6 +194,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
 
         assertAllConnectedTo(urls.get(primaryName));
         assertBrokerInfo(primaryName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6124
 
     }
 

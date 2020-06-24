@@ -72,6 +72,7 @@ public class HttpJMSMessagesWithCompressionTest {
 
     protected ConnectionFactory createConnectionFactory() throws URISyntaxException {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(getBrokerURL());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         factory.setTrustedPackages(Arrays.asList("java.lang".split(",")));
         return factory;
     }

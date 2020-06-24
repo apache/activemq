@@ -72,13 +72,17 @@ public class MessageListenerRedeliveryTest {
     }
 
     protected String getTestName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
         return name.getMethodName();
     }
 
     protected RedeliveryPolicy getRedeliveryPolicy() {
         RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1847
         redeliveryPolicy.setInitialRedeliveryDelay(0);
         redeliveryPolicy.setRedeliveryDelay(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
         redeliveryPolicy.setMaximumRedeliveries(3);
         redeliveryPolicy.setBackOffMultiplier((short) 2);
         redeliveryPolicy.setUseExponentialBackOff(true);
@@ -86,6 +90,7 @@ public class MessageListenerRedeliveryTest {
     }
 
     protected Connection createConnection() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&marshal=true");
         factory.setRedeliveryPolicy(getRedeliveryPolicy());
         return factory.createConnection();
@@ -105,6 +110,8 @@ public class MessageListenerRedeliveryTest {
             try {
                 LOG.info("Message Received: " + message);
                 counter++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
                 if (counter <= 4) {
                     LOG.info("Message Rollback.");
                     session.rollback();
@@ -196,6 +203,8 @@ public class MessageListenerRedeliveryTest {
 
         MessageConsumer consumer = session.createConsumer(queue);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
         ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer) consumer;
         mc.setRedeliveryPolicy(getRedeliveryPolicy());
 
@@ -209,6 +218,8 @@ public class MessageListenerRedeliveryTest {
         }
         // first try
         assertEquals(2, listener.counter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
 
         try {
             Thread.sleep(1000);
@@ -217,6 +228,8 @@ public class MessageListenerRedeliveryTest {
         }
         // second try (redelivery after 1 sec)
         assertEquals(3, listener.counter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
 
         try {
             Thread.sleep(2000);
@@ -225,6 +238,8 @@ public class MessageListenerRedeliveryTest {
         }
         // third try (redelivery after 2 seconds) - it should give up after that
         assertEquals(4, listener.counter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
 
         // create new message
         producer.send(createTextMessage(session));
@@ -237,6 +252,10 @@ public class MessageListenerRedeliveryTest {
         }
         // it should be committed, so no redelivery
         assertEquals(5, listener.counter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
 
         try {
             Thread.sleep(1500);
@@ -245,6 +264,10 @@ public class MessageListenerRedeliveryTest {
         }
         // no redelivery, counter should still be 4
         assertEquals(5, listener.counter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
 
         session.close();
     }
@@ -252,8 +275,10 @@ public class MessageListenerRedeliveryTest {
     @Test(timeout = 60000)
     public void testQueueSessionListenerExceptionRetry() throws Exception {
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-906
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
         Queue queue = session.createQueue("queue-" + getTestName());
         MessageProducer producer = createProducer(session, queue);
         Message message = createTextMessage(session, "1");
@@ -264,6 +289,7 @@ public class MessageListenerRedeliveryTest {
         MessageConsumer consumer = session.createConsumer(queue);
 
         final CountDownLatch gotMessage = new CountDownLatch(2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
         final AtomicInteger count = new AtomicInteger(0);
         final int maxDeliveries = getRedeliveryPolicy().getMaximumRedeliveries();
         final ArrayList<String> received = new ArrayList<String>();
@@ -278,6 +304,7 @@ public class MessageListenerRedeliveryTest {
                     fail(e.toString());
                 }
                 if (count.incrementAndGet() < maxDeliveries) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
                     throw new RuntimeException(getTestName() + " force a redelivery");
                 }
                 // new blood
@@ -288,6 +315,7 @@ public class MessageListenerRedeliveryTest {
 
         assertTrue("got message before retry expiry", gotMessage.await(20, TimeUnit.SECONDS));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
         for (int i = 0; i < maxDeliveries; i++) {
             assertEquals("got first redelivered: " + i, "1", received.get(i));
         }
@@ -347,10 +375,12 @@ public class MessageListenerRedeliveryTest {
         LOG.info("DLQ'd message cause reported as: {}", cause);
 
         assertTrue("cause 'cause' exception is remembered", cause.contains("RuntimeException"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
         assertTrue("is correct exception", cause.contains(getTestName()));
         assertTrue("cause exception is remembered", cause.contains("Throwable"));
         assertTrue("cause policy is remembered", cause.contains("RedeliveryPolicy"));
         assertTrue("cause redelivered count is remembered", cause.contains("[" + (maxDeliveries+1) +"]"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
 
         session.close();
     }
@@ -360,12 +390,15 @@ public class MessageListenerRedeliveryTest {
         connection.start();
 
         final Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
         Queue queue = session.createQueue("queue-" + getTestName());
         MessageProducer producer = createProducer(session, queue);
         Message message = createTextMessage(session);
         producer.send(message);
         session.commit();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
         final Message[] dlqMessage = new Message[1];
         ActiveMQDestination dlqDestination = new ActiveMQQueue("ActiveMQ.DLQ");
         MessageConsumer dlqConsumer = session.createConsumer(dlqDestination);
@@ -394,6 +427,7 @@ public class MessageListenerRedeliveryTest {
                 } catch (JMSException e) {
                     e.printStackTrace();
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
                 throw new RuntimeException(getTestName() + " force a redelivery");
             }
         });
@@ -410,8 +444,10 @@ public class MessageListenerRedeliveryTest {
 
         LOG.info("DLQ'd message cause reported as: {}", cause);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4637
         assertTrue("cause 'cause' exception is remembered", cause.contains("RuntimeException"));
         assertTrue("is correct exception", cause.contains(getTestName()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4637
         assertTrue("cause exception is remembered", cause.contains("Throwable"));
         assertTrue("cause policy is remembered", cause.contains("RedeliveryPolicy"));
 

@@ -68,6 +68,7 @@ public final class OpenWireFormat implements WireFormat {
     private WireFormatInfo preferedWireFormatInfo;
 
     public OpenWireFormat() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         this(DEFAULT_STORE_VERSION);
     }
 
@@ -84,6 +85,8 @@ public final class OpenWireFormat implements WireFormat {
     }
 
     public OpenWireFormat copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3383
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
         OpenWireFormat answer = new OpenWireFormat(version);
         answer.stackTraceEnabled = stackTraceEnabled;
         answer.tcpNoDelayEnabled = tcpNoDelayEnabled;
@@ -109,6 +112,7 @@ public final class OpenWireFormat implements WireFormat {
     @Override
     public String toString() {
         return "OpenWireFormat{version=" + version + ", cacheEnabled=" + cacheEnabled + ", stackTraceEnabled=" + stackTraceEnabled + ", tightEncodingEnabled="
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
                + tightEncodingEnabled + ", sizePrefixDisabled=" + sizePrefixDisabled +  ", maxFrameSize=" + maxFrameSize + "}";
         // return "OpenWireFormat{id="+id+",
         // tightEncodingEnabled="+tightEncodingEnabled+"}";
@@ -129,6 +133,7 @@ public final class OpenWireFormat implements WireFormat {
         ByteSequence sequence = null;
         int size = 1;
         if (command != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5099
 
             DataStructure c = (DataStructure)command;
             byte type = c.getDataStructureType();
@@ -165,6 +170,7 @@ public final class OpenWireFormat implements WireFormat {
                 if (!sizePrefixDisabled) {
                     size = sequence.getLength() - 4;
                     int pos = sequence.offset;
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
                     ByteSequenceData.writeIntBig(sequence, size);
                     sequence.offset = pos;
                 }
@@ -227,6 +233,7 @@ public final class OpenWireFormat implements WireFormat {
                 size += bs.marshalledSize();
 
                 if (!sizePrefixDisabled) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-718
                     dataOut.writeInt(size);
                 }
 
@@ -247,6 +254,7 @@ public final class OpenWireFormat implements WireFormat {
 
                 if (!sizePrefixDisabled) {
                     ByteSequence sequence = bytesOut.toByteSequence();
+//IC see: https://issues.apache.org/jira/browse/AMQ-718
                     dataOut.writeInt(sequence.getLength());
                     dataOut.write(sequence.getData(), sequence.getOffset(), sequence.getLength());
                 }
@@ -255,6 +263,7 @@ public final class OpenWireFormat implements WireFormat {
 
         } else {
             if (!sizePrefixDisabled) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
                 dataOut.writeInt(size);
             }
             dataOut.writeByte(NULL_TYPE);
@@ -267,6 +276,8 @@ public final class OpenWireFormat implements WireFormat {
         if (!sizePrefixDisabled) {
             int size = dis.readInt();
             if (size > maxFrameSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6228
+//IC see: https://issues.apache.org/jira/browse/AMQ-6228
                 throw IOExceptionSupport.createFrameSizeException(size, maxFrameSize);
             }
             // int size = dis.readInt();
@@ -330,6 +341,7 @@ public final class OpenWireFormat implements WireFormat {
         String mfName = "org.apache.activemq.openwire.v" + version + ".MarshallerFactory";
         Class mfClass;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1515
             mfClass = Class.forName(mfName, false, getClass().getClassLoader());
         } catch (ClassNotFoundException e) {
             throw (IllegalArgumentException)new IllegalArgumentException("Invalid version: " + version
@@ -466,6 +478,9 @@ public final class OpenWireFormat implements WireFormat {
         if (dis.readBoolean()) {
 
             byte dataType = dis.readByte();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
             DataStreamMarshaller dsm = dataMarshallers[dataType & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + dataType);
@@ -484,6 +499,13 @@ public final class OpenWireFormat implements WireFormat {
         if (o != null) {
             byte type = o.getDataStructureType();
             dataOut.writeByte(type);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
             DataStreamMarshaller dsm = dataMarshallers[type & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + type);
@@ -566,6 +588,7 @@ public final class OpenWireFormat implements WireFormat {
     }
 
     public void setCacheEnabled(boolean cacheEnabled) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3618
         if(cacheEnabled){
             marshallCache = new DataStructure[MARSHAL_CACHE_SIZE];
             unmarshallCache = new DataStructure[MARSHAL_CACHE_SIZE];
@@ -598,6 +621,7 @@ public final class OpenWireFormat implements WireFormat {
     }
 
     public long getMaxFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
         return maxFrameSize;
     }
 
@@ -608,12 +632,14 @@ public final class OpenWireFormat implements WireFormat {
     public void renegotiateWireFormat(WireFormatInfo info) throws IOException {
 
         if (preferedWireFormatInfo == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-682
             throw new IllegalStateException("Wireformat cannot not be renegotiated.");
         }
 
         this.setVersion(min(preferedWireFormatInfo.getVersion(), info.getVersion()));
         info.setVersion(this.getVersion());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
         this.setMaxFrameSize(min(preferedWireFormatInfo.getMaxFrameSize(), info.getMaxFrameSize()));
         info.setMaxFrameSize(this.getMaxFrameSize());
 
@@ -666,6 +692,7 @@ public final class OpenWireFormat implements WireFormat {
     }
 
     protected long min(long version1, long version2) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
         if (version1 < version2 && version1 > 0 || version2 <= 0) {
             return version1;
         }

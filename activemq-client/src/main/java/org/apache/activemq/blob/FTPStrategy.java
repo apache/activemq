@@ -34,6 +34,7 @@ public class FTPStrategy {
     protected String ftpPass = "";
 
     public FTPStrategy(BlobTransferPolicy transferPolicy) throws MalformedURLException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         this.transferPolicy = transferPolicy;
         this.url = new URL(this.transferPolicy.getUploadUrl());
     }

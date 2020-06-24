@@ -38,6 +38,7 @@ public class CachedLDAPAuthorizationModuleTest extends AbstractCachedLDAPAuthori
     @Override
     protected SimpleCachedLDAPAuthorizationMap createMap() {
         SimpleCachedLDAPAuthorizationMap map = super.createMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3791
         map.setConnectionURL("ldap://localhost:" + getLdapServer().getPort());
         map.setConnectionPassword("secret");
         return map;

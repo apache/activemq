@@ -27,11 +27,13 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
 
     private static final boolean SKIP_METADATA_UPDATE =
         Boolean.getBoolean("org.apache.activemq.kahaDB.files.skipMetadataUpdate");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
 
     RandomAccessFile raf;
     File file;
     String mode;
     final boolean isSkipMetadataUpdate;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
 
     public RecoverableRandomAccessFile(File file, String mode, boolean skipMetadataUpdate) throws FileNotFoundException {
         this.file = file;
@@ -68,6 +70,7 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
 
     @Override
     public void close() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3725
         if (raf != null) {
             raf.close();
         }
@@ -375,6 +378,7 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
     }
 
     public void setLength(long length) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         throw new IllegalStateException("File size is pre allocated");
     }
 
@@ -397,7 +401,9 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
     }
 
     public void sync() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
             getRaf().getChannel().force(!isSkipMetadataUpdate);;
         } catch (IOException ioe) {
             handleException();

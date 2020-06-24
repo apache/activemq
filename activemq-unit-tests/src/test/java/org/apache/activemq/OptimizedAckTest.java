@@ -51,6 +51,7 @@ public class OptimizedAckTest extends TestSupport {
     }
 
     public void testReceivedMessageStillInflight() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4288
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue("test");
@@ -109,6 +110,8 @@ public class OptimizedAckTest extends TestSupport {
             }
         }));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4288
+//IC see: https://issues.apache.org/jira/browse/AMQ-4288
         for (int i = 0; i < 6; i++) {
             Thread.sleep(400);
             javax.jms.Message msg = consumer.receive(4000);
@@ -132,6 +135,7 @@ public class OptimizedAckTest extends TestSupport {
     }
 
     public void testReceivedMessageNotInFlightAfterScheduledAckFires() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
         connection.setOptimizedAckScheduledAckInterval(TimeUnit.SECONDS.toMillis(10));
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -152,6 +156,7 @@ public class OptimizedAckTest extends TestSupport {
             }
         }));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4288
         for (int i = 0; i < 6; i++) {
             javax.jms.Message msg = consumer.receive(4000);
             assertNotNull(msg);

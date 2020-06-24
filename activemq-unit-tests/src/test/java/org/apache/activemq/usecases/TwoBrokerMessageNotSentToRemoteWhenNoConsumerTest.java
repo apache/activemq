@@ -94,6 +94,7 @@ public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultip
         boolean dynamicOnly = true;
         int networkTTL = 2;
         boolean conduit = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2198
         bridgeBrokers("BrokerA", "BrokerB", dynamicOnly, networkTTL, conduit);
         bridgeBrokers("BrokerB", "BrokerA", dynamicOnly, networkTTL, conduit);
 

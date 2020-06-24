@@ -46,6 +46,7 @@ public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTestSupport {
     @Override
     protected void createMaster() throws Exception {
         master = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2481
         master.setBrokerName("shared-master");
         configureSharedPersistenceAdapter(master);
         master.addConnector(brokerUrl);

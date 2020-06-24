@@ -25,6 +25,7 @@ import org.apache.activemq.store.jdbc.Statements;
 
 public class GenerateJDBCStatements {
     public static String returnStatement(Object statement){
+//IC see: https://issues.apache.org/jira/browse/AMQ-2681
     	return ((String)statement).replace("<", "&lt;").replace(">", "&gt;");
     	
     }

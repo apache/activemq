@@ -120,6 +120,7 @@ public class TransportLoggerView implements TransportLoggerViewMBean {
      */
     private void register() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
         	AnnotatedMBean.registerMBean(this.managementContext, this, this.name);
         } catch (Exception e) {
             log.error("Could not register MBean for TransportLoggerView " + id + "with name " + this.name.toString() + ", reason: " + e, e);

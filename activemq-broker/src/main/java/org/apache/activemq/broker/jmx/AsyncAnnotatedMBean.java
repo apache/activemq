@@ -39,6 +39,7 @@ public class AsyncAnnotatedMBean extends AnnotatedMBean {
 
     public <T> AsyncAnnotatedMBean(ExecutorService executor, long timeout, T impl, Class<T> mbeanInterface, ObjectName objectName) throws NotCompliantMBeanException {
         super(impl, mbeanInterface, objectName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7094
 
         this.executor = executor;
         this.timeout = timeout;
@@ -68,6 +69,7 @@ public class AsyncAnnotatedMBean extends AnnotatedMBean {
         for (Class c : object.getClass().getInterfaces()) {
             if (mbeanName.equals(c.getName())) {
                 if (timeout == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
                     return context.registerMBean(new AnnotatedMBean(object, c, objectName), objectName);
                 } else {
                     return context.registerMBean(new AsyncAnnotatedMBean(executor, timeout, object, c, objectName), objectName);

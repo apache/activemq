@@ -55,6 +55,7 @@ public class SystemUsage implements Service {
     private final List<SystemUsage> children = new CopyOnWriteArrayList<SystemUsage>();
 
     public SystemUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         this("default", null, null, null);
     }
 
@@ -65,6 +66,8 @@ public class SystemUsage implements Service {
         this.storeUsage = new StoreUsage(name + ":store", adapter);
         this.tempUsage = new TempUsage(name + ":temp", tempStore);
         this.jobSchedulerUsage = new JobSchedulerUsage(name + ":jobScheduler", jobSchedulerStore);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         this.memoryUsage.setExecutor(getExecutor());
         this.storeUsage.setExecutor(getExecutor());
         this.tempUsage.setExecutor(getExecutor());
@@ -77,6 +80,7 @@ public class SystemUsage implements Service {
         this.memoryUsage = new MemoryUsage(parent.memoryUsage, name + ":memory");
         this.storeUsage = new StoreUsage(parent.storeUsage, name + ":store");
         this.tempUsage = new TempUsage(parent.tempUsage, name + ":temp");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         this.jobSchedulerUsage = new JobSchedulerUsage(parent.jobSchedulerUsage, name + ":jobScheduler");
         this.memoryUsage.setExecutor(getExecutor());
         this.storeUsage.setExecutor(getExecutor());
@@ -112,6 +116,7 @@ public class SystemUsage implements Service {
      * @return the schedulerUsage
      */
     public JobSchedulerUsage getJobSchedulerUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         return this.jobSchedulerUsage;
     }
 
@@ -128,6 +133,7 @@ public class SystemUsage implements Service {
         this.memoryUsage.start();
         this.storeUsage.start();
         this.tempUsage.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         this.jobSchedulerUsage.start();
     }
 
@@ -139,6 +145,7 @@ public class SystemUsage implements Service {
         this.memoryUsage.stop();
         this.storeUsage.stop();
         this.tempUsage.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         this.jobSchedulerUsage.stop();
     }
 
@@ -185,6 +192,7 @@ public class SystemUsage implements Service {
     }
 
     public long getSendFailIfNoSpaceAfterTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2507
         if (sendFailIfNoSpaceAfterTimeoutExplicitySet || parent == null) {
             return sendFailIfNoSpaceAfterTimeout;
         } else {
@@ -202,6 +210,7 @@ public class SystemUsage implements Service {
         this.memoryUsage.setName(name + ":memory");
         this.storeUsage.setName(name + ":store");
         this.tempUsage.setName(name + ":temp");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         this.jobSchedulerUsage.setName(name + ":jobScheduler");
     }
 
@@ -213,6 +222,8 @@ public class SystemUsage implements Service {
             memoryUsage.setParent(parent.memoryUsage);
         }
         this.memoryUsage = memoryUsage;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         this.memoryUsage.setExecutor(getExecutor());
     }
 
@@ -227,6 +238,8 @@ public class SystemUsage implements Service {
             storeUsage.setParent(parent.storeUsage);
         }
         this.storeUsage = storeUsage;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         this.storeUsage.setExecutor(executor);
     }
 
@@ -241,10 +254,13 @@ public class SystemUsage implements Service {
             tempDiskUsage.setParent(parent.tempUsage);
         }
         this.tempUsage = tempDiskUsage;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         this.tempUsage.setExecutor(getExecutor());
     }
 
     public void setJobSchedulerUsage(JobSchedulerUsage jobSchedulerUsage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         if (jobSchedulerUsage.getStore() == null) {
             jobSchedulerUsage.setStore(this.jobSchedulerUsage.getStore());
         }
@@ -280,12 +296,14 @@ public class SystemUsage implements Service {
         if (this.tempUsage != null) {
             this.tempUsage.setExecutor(this.executor);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         if(this.jobSchedulerUsage != null) {
             this.jobSchedulerUsage.setExecutor(this.executor);
         }
     }
 
    public String getCheckLimitsLogLevel() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4819
        return checkLimitsLogLevel;
    }
 

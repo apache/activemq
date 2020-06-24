@@ -47,6 +47,7 @@ public class AMQ4147Test extends JmsMultipleBrokersTestSupport {
     public void testVMTransportRemoteMemoryUsage() throws Exception {
         BrokerService broker1 = createBroker(new URI(
                 "broker:(vm://broker1)/broker1?persistent=false&useJmx=false"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         BrokerService broker2 = createBroker(new URI(
                 "broker:(vm://broker2)/broker2?persistent=false&useJmx=false"));
@@ -131,6 +132,7 @@ public class AMQ4147Test extends JmsMultipleBrokersTestSupport {
     public void testTcpTransportRemoteMemoryUsage() throws Exception {
         BrokerService broker1 = createBroker(new URI(
                 "broker:(vm://broker1)/broker1?persistent=false&useJmx=false"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         BrokerService broker2 = createBroker(new URI(
                 "broker:(tcp://localhost:0)/broker2?persistent=false&useJmx=false"));

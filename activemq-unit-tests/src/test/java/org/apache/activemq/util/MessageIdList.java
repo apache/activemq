@@ -136,6 +136,7 @@ public class MessageIdList extends Assert implements MessageListener {
     }
 
     public void waitForMessagesToArrive(int messageCount){
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
         waitForMessagesToArrive(messageCount, maximumDuration);
     }
     public void waitForMessagesToArrive(int messageCount, long maximumDuration) {

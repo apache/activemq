@@ -40,9 +40,11 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
     private static final transient Logger LOG = LoggerFactory.getLogger(DbRestartJDBCQueueMasterSlaveTest.class);
     
     protected void messageSent() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
         verifyExpectedBroker(inflightMessageCount);
         if (++inflightMessageCount == failureCount) {
             LOG.info("STOPPING DB!@!!!!");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
             final EmbeddedDataSource ds = ((SyncCreateDataSource)getExistingDataSource()).getDelegate();
             ds.setShutdownDatabase("shutdown");
             ds.setCreateDatabase("not_any_more");
@@ -64,6 +66,7 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
         if (inflightMessageCount == 0) {
             assertEquals("connected to master", master.getBrokerName(), ((ActiveMQConnection)sendConnection).getBrokerName());
         } else if (inflightMessageCount == failureCount + 10) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
             assertEquals("connected to slave, count:" + inflightMessageCount, slave.get().getBrokerName(), ((ActiveMQConnection)sendConnection).getBrokerName());
         }
     }
@@ -75,11 +78,13 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
 
     protected void sendToProducer(MessageProducer producer,
             Destination producerDestination, Message message) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
         producer.send(producerDestination, message);
     }
 
     @Override
     protected Session createReceiveSession(Connection receiveConnection) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1885
         return receiveConnection.createSession(true, Session.SESSION_TRANSACTED);
     }
 
@@ -92,6 +97,7 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
             LOG.info("Failed to commit message receipt: " + message, e);
             try {
                 receiveSession.rollback();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
             } catch (JMSException ignored) {
             }
 

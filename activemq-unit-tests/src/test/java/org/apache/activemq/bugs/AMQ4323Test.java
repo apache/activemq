@@ -83,6 +83,7 @@ public class AMQ4323Test {
         adapter.setCheckpointInterval(500);
         adapter.setCleanupInterval(500);
         adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
 
         if (!deleteAllOnStart) {
             adapter.setForceRecoverIndex(true);
@@ -119,6 +120,7 @@ public class AMQ4323Test {
         startBroker(true);
         int fileCount = getFileCount(kahaDbDir);
         assertEquals(4, fileCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
 
         Connection connection = new ActiveMQConnectionFactory(
                 broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
@@ -129,6 +131,7 @@ public class AMQ4323Test {
         ProducerThread producer = new ProducerThread(producerSess, destination) {
             @Override
             protected Message createMessage(int i) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 return session.createTextMessage(payload + "::" + i);
             }
         };
@@ -151,6 +154,7 @@ public class AMQ4323Test {
             public boolean isSatisified() throws Exception {
                 int fileCount = getFileCount(kahaDbDir);
                 LOG.info("current filecount:" + fileCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
                 return 4 == fileCount;
             }
         }));

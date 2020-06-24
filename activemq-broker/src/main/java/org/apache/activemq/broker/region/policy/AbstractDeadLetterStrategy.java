@@ -36,6 +36,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
 
     @Override
     public void rollback(Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3405
         if (message != null && this.enableAudit) {
             messageAudit.rollback(message);
         }
@@ -93,6 +94,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     }
 
     public boolean isEnableAudit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2584
         return enableAudit;
     }
 
@@ -101,6 +103,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     }
 
     public long getExpiration() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5614
         return expiration;
     }
 
@@ -109,6 +112,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     }
 
     public int getMaxProducersToAudit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6702
         return messageAudit.getMaximumNumberOfProducersToTrack();
     }
 

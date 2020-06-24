@@ -68,6 +68,7 @@ public class JmsClientProperties extends AbstractObjectProperties {
     }
     
     public void setCommitAfterXMsgs(int commitAfterXMsg) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
     	this.commitAfterXMsgs = commitAfterXMsg;
     }
     

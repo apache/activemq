@@ -41,6 +41,7 @@ public class FilePendingSubscriberMessageStoragePolicy implements PendingSubscri
      *      org.apache.activemq.kaha.Store, int)
      */
     public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker, String name, int maxBatchSize,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
             Subscription subs) {
         return new FilePendingMessageCursor(broker, "PendingCursor:" + name, AbstractPendingMessageCursor
                 .isPrioritizedMessageSubscriber(broker, subs));

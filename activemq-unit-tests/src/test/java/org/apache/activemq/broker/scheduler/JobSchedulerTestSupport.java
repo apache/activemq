@@ -41,6 +41,7 @@ public class JobSchedulerTestSupport {
 
     @Rule public TestName name = new TestName();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7196
     enum RestartType {
         NORMAL,
         FULL_RECOVERY
@@ -88,6 +89,7 @@ public class JobSchedulerTestSupport {
     }
 
     protected boolean isPersistent() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5271
         return true;
     }
 
@@ -110,6 +112,7 @@ public class JobSchedulerTestSupport {
         }
 
         BrokerService answer = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5271
         answer.setPersistent(isPersistent());
         answer.setDeleteAllMessagesOnStartup(true);
         answer.setDataDirectory("target");
@@ -121,6 +124,7 @@ public class JobSchedulerTestSupport {
 
     protected void restartBroker(RestartType restartType) throws Exception {
         tearDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7196
 
         if (restartType == RestartType.FULL_RECOVERY)  {
             File dir = broker.getSchedulerDirectoryFile();

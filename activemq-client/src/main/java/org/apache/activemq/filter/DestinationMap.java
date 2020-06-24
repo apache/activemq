@@ -60,6 +60,7 @@ public class DestinationMap {
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     public Set get(ActiveMQDestination key) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
         synchronized (this) {
             return unsynchronizedGet(key);
         }
@@ -74,6 +75,7 @@ public class DestinationMap {
                 ActiveMQDestination childDestination = destinations[i];
                 Object value = unsynchronizedGet(childDestination);
                 if (value instanceof Set) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4884
                     answer.addAll((Set) value);
                 } else if (value != null) {
                     answer.add(value);
@@ -85,6 +87,7 @@ public class DestinationMap {
     }
 
     public void put(ActiveMQDestination key, Object value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
         synchronized (this) {
             unsynchronizedPut(key, value);
         }
@@ -108,6 +111,7 @@ public class DestinationMap {
      * Removes the value from the associated destination
      */
     public void remove(ActiveMQDestination key, Object value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
         synchronized (this) {
             unsynchronizedRemove(key, value);
         }
@@ -144,6 +148,7 @@ public class DestinationMap {
     }
 
     public DestinationMapNode getTempQueueRootNode() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2697
         return tempQueueRootNode;
     }
 
@@ -163,6 +168,7 @@ public class DestinationMap {
         for (Object element : entries) {
             Class<? extends DestinationMapEntry> type = getEntryClass();
             if (type.isInstance(element)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4884
                 DestinationMapEntry entry = (DestinationMapEntry) element;
                 put(entry.getDestination(), entry.getValue());
             } else {
@@ -184,6 +190,7 @@ public class DestinationMap {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected Set findWildcardMatches(ActiveMQDestination key) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5644
        return findWildcardMatches(key, true);
     }
 
@@ -201,6 +208,7 @@ public class DestinationMap {
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     public Set removeAll(ActiveMQDestination key) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-808
         Set rc = new HashSet();
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
@@ -224,6 +232,7 @@ public class DestinationMap {
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     public DestinationMapEntry chooseValue(final ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6901
         Set<DestinationMapEntry> set = get(destination);
         if (set == null || set.isEmpty()) {
             return null;
@@ -250,6 +259,7 @@ public class DestinationMap {
     //Used to filter out any child/unmatching entries
     private boolean isMatchOrParent(final ActiveMQDestination destination, final DestinationMapEntry entry) {
         //If destination not set then do not filter out
+//IC see: https://issues.apache.org/jira/browse/AMQ-6901
         if (entry.getDestination() == null) {
             return true;
         }
@@ -261,7 +271,9 @@ public class DestinationMap {
      * Returns the root node for the given destination type
      */
     protected DestinationMapNode getRootNode(ActiveMQDestination key) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4884
         if (key.isTemporary()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2697
             if (key.isQueue()) {
                 return tempQueueRootNode;
             } else {
@@ -277,6 +289,7 @@ public class DestinationMap {
     }
 
     public void reset() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3341
         queueRootNode = new DestinationMapNode(null);
         tempQueueRootNode = new DestinationMapNode(null);
         topicRootNode = new DestinationMapNode(null);
@@ -288,7 +301,9 @@ public class DestinationMap {
     }
 
     public static Set union(Set existing, Set candidates) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4884
         if (candidates != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
             if (existing != null) {
                 for (Iterator<Object> iterator = existing.iterator(); iterator.hasNext(); ) {
                     Object toMatch = iterator.next();
@@ -299,6 +314,7 @@ public class DestinationMap {
             } else {
                 existing = candidates;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4884
         } else if (existing != null) {
             existing.clear();
         }

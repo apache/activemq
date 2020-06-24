@@ -33,6 +33,7 @@ public class AmqpHeader {
     }
 
     public AmqpHeader(Buffer buffer) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5475
         this(buffer, true);
     }
 
@@ -77,6 +78,7 @@ public class AmqpHeader {
     }
 
     public void setBuffer(Buffer value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5475
         setBuffer(value, true);
     }
 

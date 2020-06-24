@@ -46,6 +46,7 @@ class ConnectionAudit {
                 if (destination.isQueue()) {
                     ActiveMQMessageAudit audit = destinations.get(destination);
                     if (audit == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2160
                         audit = new ActiveMQMessageAudit(auditDepth, auditMaximumProducerNumber);
                         destinations.put(destination, audit);
                     }
@@ -54,6 +55,7 @@ class ConnectionAudit {
                 }
                 ActiveMQMessageAudit audit = dispatchers.get(dispatcher);
                 if (audit == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2160
                     audit = new ActiveMQMessageAudit(auditDepth, auditMaximumProducerNumber);
                     dispatchers.put(dispatcher, audit);
                 }
@@ -71,6 +73,8 @@ class ConnectionAudit {
                 if (destination.isQueue()) {
                     ActiveMQMessageAudit audit = destinations.get(destination);
                     if (audit != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
                         audit.rollback(message);
                     }
                 } else {
@@ -98,6 +102,7 @@ class ConnectionAudit {
     }
 
 	public int getAuditDepth() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2160
 		return auditDepth;
 	}
 

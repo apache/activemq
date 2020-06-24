@@ -62,6 +62,7 @@ public class AutoNioTransportFactory extends NIOTransportFactory implements Brok
             protected TcpTransport createTransport(Socket socket, WireFormat format, TcpTransportFactory detectedTransportFactory, InitBuffer initBuffer) throws IOException {
                 TcpTransport nioTransport = null;
                 if (detectedTransportFactory.getClass().equals(NIOTransportFactory.class)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6505
                     nioTransport = new AutoNIOTransport(format, socket, initBuffer);
                 } else {
                     nioTransport = detectedTransportFactory.createTransport(

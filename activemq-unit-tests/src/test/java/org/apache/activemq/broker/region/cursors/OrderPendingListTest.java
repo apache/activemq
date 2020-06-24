@@ -272,6 +272,7 @@ public class OrderPendingListTest {
     @Test
     public void testInsertAtHead() throws Exception {
         OrderedPendingList underTest = new OrderedPendingList();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6286
 
         TestPendingList source = new TestPendingList();
         source.addMessageLast(new TestMessageReference(1));
@@ -390,6 +391,7 @@ public class OrderPendingListTest {
 
         @Override
         public MessageReference get(MessageId messageId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
             for(MessageReference messageReference : theList) {
                 if (messageReference.getMessageId().equals(messageId)) {
                     return messageReference;
@@ -501,6 +503,7 @@ public class OrderPendingListTest {
 
         @Override
         public boolean canProcessAsExpired() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6361
             return false;
         }
     }

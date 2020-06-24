@@ -111,6 +111,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             this.transactionId = transactionId;
         }
     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
     class PreviouslyDelivered {
         org.apache.activemq.command.Message message;
         boolean redelivered;
@@ -159,6 +160,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private MessageTransformer transformer;
     private volatile boolean clearDeliveredList;
     AtomicInteger inProgressClearRequiredFlag = new AtomicInteger(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
 
     private MessageAck pendingAck;
     private long lastDeliveredSequenceId = -1;
@@ -207,16 +209,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             String connectionID = session.connection.getConnectionInfo().getConnectionId().getValue();
 
             if (physicalName.indexOf(connectionID) < 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
                 throw new InvalidDestinationException("Cannot use a Temporary destination from another Connection");
             }
 
             if (session.connection.isDeleted(dest)) {
                 throw new InvalidDestinationException("Cannot use a Temporary destination that has been deleted");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1103
             if (prefetch < 0) {
                 throw new JMSException("Cannot have a prefetch size less than zero");
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2790
         if (session.connection.isMessagePrioritySupported()) {
             this.unconsumedMessages = new SimplePriorityMessageDispatchChannel();
         }else {
@@ -224,14 +229,18 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
 
         this.session = session;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3224
         this.redeliveryPolicy = session.connection.getRedeliveryPolicyMap().getEntryFor(dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6125
         if (this.redeliveryPolicy == null) {
             this.redeliveryPolicy = new RedeliveryPolicy();
         }
         setTransformer(session.getTransformer());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1053
 
         this.info = new ConsumerInfo(consumerId);
         this.info.setExclusive(this.session.connection.isExclusiveConsumer());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         this.info.setClientId(this.session.connection.getClientID());
         this.info.setSubscriptionName(name);
         this.info.setPrefetchSize(prefetch);
@@ -241,12 +250,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.info.setDispatchAsync(dispatchAsync);
         this.info.setRetroactive(this.session.connection.isUseRetroactiveConsumer());
         this.info.setSelector(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1097
 
         // Allows the options on the destination to configure the consumerInfo
         if (dest.getOptions() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
             Map<String, Object> options = IntrospectionSupport.extractProperties(
                 new HashMap<String, Object>(dest.getOptions()), "consumer.");
             IntrospectionSupport.setProperties(this.info, options);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
             if (options.size() > 0) {
                 String msg = "There are " + options.size()
                     + " consumer options that couldn't be set on the consumer."
@@ -262,8 +274,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.info.setBrowser(browser);
         if (selector != null && selector.trim().length() != 0) {
             // Validate the selector
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
             SelectorParser.parse(selector);
             this.info.setSelector(selector);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1097
             this.selector = selector;
         } else if (info.getSelector() != null) {
             // Validate the selector
@@ -276,17 +290,22 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.stats = new JMSConsumerStatsImpl(session.getSessionStats(), dest);
         this.optimizeAcknowledge = session.connection.isOptimizeAcknowledge() && session.isAutoAcknowledge()
                                    && !info.isBrowser();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3332
         if (this.optimizeAcknowledge) {
             this.optimizeAcknowledgeTimeOut = session.connection.getOptimizeAcknowledgeTimeOut();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
             setOptimizedAckScheduledAckInterval(session.connection.getOptimizedAckScheduledAckInterval());
         }
 
         this.info.setOptimizedAcknowledge(this.optimizeAcknowledge);
         this.failoverRedeliveryWaitPeriod = session.connection.getConsumerFailoverRedeliveryWaitPeriod();
         this.nonBlockingRedelivery = session.connection.isNonBlockingRedelivery();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5476
+//IC see: https://issues.apache.org/jira/browse/AMQ-2790
         this.transactedIndividualAck = session.connection.isTransactedIndividualAck()
                         || this.nonBlockingRedelivery
                         || session.connection.isMessagePrioritySupported();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5406
         this.consumerExpiryCheckEnabled = session.connection.isConsumerExpiryCheckEnabled();
         if (messageListener != null) {
             setMessageListener(messageListener);
@@ -322,6 +341,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     public RedeliveryPolicy getRedeliveryPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-286
         return redeliveryPolicy;
     }
 
@@ -333,6 +353,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     public MessageTransformer getTransformer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1053
         return transformer;
     }
 
@@ -443,7 +464,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
         if (info.getPrefetchSize() == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
             throw new JMSException("Illegal prefetch size of zero. This setting is not supported for asynchronous consumers please set a value of at least 1");
         }
         if (listener != null) {
@@ -501,6 +524,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     if (timeout > 0 && !unconsumedMessages.isClosed()) {
                         timeout = Math.max(deadline - System.currentTimeMillis(), 0);
                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2195
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
                         if (failureError != null) {
                             throw JMSExceptionSupport.create(failureError);
                         } else {
@@ -516,15 +541,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     if (timeout > 0) {
                         timeout = Math.max(deadline - System.currentTimeMillis(), 0);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5914
                     sendPullCommand(timeout);
                 } else if (redeliveryExceeded(md)) {
                     LOG.debug("{} received with excessive redelivered: {}", getConsumerId(), md);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
                     posionAck(md, "Dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5907
                     if (timeout > 0) {
                         timeout = Math.max(deadline - System.currentTimeMillis(), 0);
                     }
                     sendPullCommand(timeout);
                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                     if (LOG.isTraceEnabled()) {
                         LOG.trace(getConsumerId() + " received message: " + md);
                     }
@@ -532,16 +561,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
         } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
             Thread.currentThread().interrupt();
             throw JMSExceptionSupport.create(e);
         }
     }
 
     private boolean consumeExpiredMessage(MessageDispatch dispatch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6336
         return isConsumerExpiryCheckEnabled() && dispatch.getMessage().isExpired();
     }
 
     private void posionAck(MessageDispatch md, String cause) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5146
         MessageAck posionAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
         posionAck.setFirstMessageId(md.getMessage().getMessageId());
         posionAck.setPoisonCause(new Throwable(cause));
@@ -550,8 +582,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     private boolean redeliveryExceeded(MessageDispatch md) {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5146
+//IC see: https://issues.apache.org/jira/browse/AMQ-5156
             return session.getTransacted()
                     && redeliveryPolicy != null
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
                     && redeliveryPolicy.isPreDispatchCheck()
                     && redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
                     && md.getRedeliveryCounter() > redeliveryPolicy.getMaximumRedeliveries()
@@ -579,6 +614,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         checkClosed();
         checkMessageListener();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
         sendPullCommand(0);
         MessageDispatch md = dequeue(-1);
         if (md == null) {
@@ -599,34 +635,44 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      */
     private ActiveMQMessage createActiveMQMessage(final MessageDispatch md) throws JMSException {
         ActiveMQMessage m = (ActiveMQMessage)md.getMessage().copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1744
         if (m.getDataStructureType()==CommandTypes.ACTIVEMQ_BLOB_MESSAGE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
             ((ActiveMQBlobMessage)m).setBlobDownloader(new BlobDownloader(session.getBlobTransferPolicy()));
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         if (m.getDataStructureType() == CommandTypes.ACTIVEMQ_OBJECT_MESSAGE) {
             ((ActiveMQObjectMessage)m).setTrustAllPackages(session.getConnection().isTrustAllPackages());
             ((ActiveMQObjectMessage)m).setTrustedPackages(session.getConnection().getTrustedPackages());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1053
         if (transformer != null) {
             Message transformedMessage = transformer.consumerTransform(session, this, m);
             if (transformedMessage != null) {
                 m = ActiveMQMessageTransformation.transformMessage(transformedMessage, session.connection);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1732
         if (session.isClientAcknowledge()) {
             m.setAcknowledgeCallback(new Callback() {
                 @Override
                 public void execute() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6454
                     checkClosed();
                     session.checkClosed();
                     session.acknowledge();
                 }
             });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
         } else if (session.isIndividualAcknowledge()) {
             m.setAcknowledgeCallback(new Callback() {
                 @Override
                 public void execute() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6454
                     checkClosed();
                     session.checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
                     acknowledge(md);
                 }
             });
@@ -656,6 +702,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             return this.receive();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
         sendPullCommand(timeout);
         while (timeout > 0) {
 
@@ -690,6 +737,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         checkClosed();
         checkMessageListener();
         sendPullCommand(-1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
 
         MessageDispatch md;
         if (info.getPrefetchSize() == 0) {
@@ -728,6 +777,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void close() throws JMSException {
         if (!unconsumedMessages.isClosed()) {
             if (!deliveredMessages.isEmpty() && session.getTransactionContext().isInTransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
                 session.getTransactionContext().addSynchronization(new Synchronization() {
                     @Override
                     public void afterCommit() throws Exception {
@@ -747,6 +797,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     void doClose() throws JMSException {
         dispose();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         RemoveInfo removeCommand = info.createRemoveCommand();
         LOG.debug("remove: {}, lastDeliveredSequenceId: {}", getConsumerId(), lastDeliveredSequenceId);
         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
@@ -754,12 +805,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     void inProgressClearRequired() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
         inProgressClearRequiredFlag.incrementAndGet();
         // deal with delivered messages async to avoid lock contention with in progress acks
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
         clearDeliveredList = true;
         // force a rollback if we will be acking in a transaction after/during failover
         // bc acks are async they may not get there reliably on reconnect and the consumer
         // may not be aware of the reconnect in a timely fashion if in onMessage
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
         if (!deliveredMessages.isEmpty() && session.getTransactionContext().isInTransaction()) {
             session.getTransactionContext().setRollbackOnly(true);
         }
@@ -780,11 +834,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     // allow dispatch on this connection to resume
                     session.connection.transportInterruptionProcessingComplete();
                     inProgressClearRequiredFlag.set(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
 
                     // Wake up any blockers and allow them to recheck state.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3932
                     unconsumedMessages.getMutex().notifyAll();
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
             clearDeliveredList();
         }
     }
@@ -792,16 +849,24 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     void deliverAcks() {
         MessageAck ack = null;
         if (deliveryingAcknowledgements.compareAndSet(false, true)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
+//IC see: https://issues.apache.org/jira/browse/AMQ-5426
             synchronized(deliveredMessages) {
                 if (isAutoAcknowledgeEach()) {
                     ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
                     if (ack != null) {
                         deliveredMessages.clear();
                         ackCounter = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1951
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5426
                         ack = pendingAck;
                         pendingAck = null;
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2004
+//IC see: https://issues.apache.org/jira/browse/AMQ-5426
                 } else if (pendingAck != null && pendingAck.isStandardAck()) {
                     ack = pendingAck;
                     pendingAck = null;
@@ -817,6 +882,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     @Override
                     public void run() {
                         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
                             session.sendAck(ackToSend,true);
                         } catch (JMSException e) {
                             LOG.error(getConsumerId() + " failed to deliver acknowledgements", e);
@@ -836,6 +902,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
             // Do we have any acks we need to send out before closing?
             // Ack any delivered messages now.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
             if (!session.getTransacted()) {
                 deliverAcks();
                 if (isAutoAcknowledgeBatch()) {
@@ -843,17 +910,21 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
             if (executorService != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
                 ThreadPoolUtils.shutdownGraceful(executorService, 60000L);
                 executorService = null;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
             if (optimizedAckTask != null) {
                 this.session.connection.getScheduler().cancel(optimizedAckTask);
                 optimizedAckTask = null;
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5893
             if (session.isClientAcknowledge() || session.isIndividualAcknowledge()) {
                 if (!this.info.isBrowser()) {
                     // rollback duplicates that aren't acknowledged
+//IC see: https://issues.apache.org/jira/browse/AMQ-2100
                     List<MessageDispatch> tmp = null;
                     synchronized (this.deliveredMessages) {
                         tmp = new ArrayList<MessageDispatch>(this.deliveredMessages);
@@ -864,17 +935,23 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     tmp.clear();
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2032
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
+//IC see: https://issues.apache.org/jira/browse/AMQ-2515
             if (!session.isTransacted()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1631
                 synchronized(deliveredMessages) {
                     deliveredMessages.clear();
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2572
             unconsumedMessages.close();
             this.session.removeConsumer(this);
             List<MessageDispatch> list = unconsumedMessages.removeAll();
             if (!this.info.isBrowser()) {
                 for (MessageDispatch old : list) {
                     // ensure we don't filter this as a duplicate
+//IC see: https://issues.apache.org/jira/browse/AMQ-6245
                     if (old.getMessage() != null) {
                         LOG.debug("on close, rollback duplicate: {}", old.getMessage().getMessageId());
                     }
@@ -882,6 +959,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
         if (previouslyDeliveredMessages != null) {
             for (PreviouslyDelivered previouslyDelivered : previouslyDeliveredMessages.values()) {
                 session.connection.rollbackDuplicate(this, previouslyDelivered.message);
@@ -904,10 +982,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * broker to pull a message we are about to receive
      */
     protected void sendPullCommand(long timeout) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
         clearDeliveredList();
         if (info.getCurrentPrefetchSize() == 0 && unconsumedMessages.isEmpty()) {
             MessagePull messagePull = new MessagePull();
             messagePull.configure(info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
             messagePull.setTimeout(timeout);
             session.asyncSendPacket(messagePull);
         }
@@ -931,12 +1011,16 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     private void beforeMessageIsConsumed(MessageDispatch md) throws JMSException {
         md.setDeliverySequenceId(session.getNextDeliveryId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         lastDeliveredSequenceId = md.getMessage().getMessageId().getBrokerSequenceId();
         if (!isAutoAcknowledgeBatch()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1556
             synchronized(deliveredMessages) {
                 deliveredMessages.addFirst(md);
             }
             if (session.getTransacted()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
                 if (transactedIndividualAck) {
                     immediateIndividualTransactedAck(md);
                 } else {
@@ -952,6 +1036,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         registerSync();
         MessageAck ack = new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
         ack.setTransactionId(session.getTransactionContext().getTransactionId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         session.sendAck(ack);
     }
 
@@ -960,6 +1047,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             return;
         }
         if (messageExpired) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5089
             acknowledge(md, MessageAck.EXPIRED_ACK_TYPE);
             stats.getExpiredMessageCount().increment();
         } else {
@@ -967,6 +1055,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (session.getTransacted()) {
                 // Do nothing.
             } else if (isAutoAcknowledgeEach()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2128
                 if (deliveryingAcknowledgements.compareAndSet(false, true)) {
                     synchronized (deliveredMessages) {
                         if (!deliveredMessages.isEmpty()) {
@@ -976,6 +1065,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 // AMQ-3956 evaluate both expired and normal msgs as
                                 // otherwise consumer may get stalled
                                 if (ackCounter + deliveredCounter >= (info.getPrefetchSize() * .65) || (optimizeAcknowledgeTimeOut > 0 && System.currentTimeMillis() >= (optimizeAckTimestamp + optimizeAcknowledgeTimeOut))) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
                                     MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
                                     if (ack != null) {
                                         deliveredMessages.clear();
@@ -989,12 +1079,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                     // we won't sent standard acks with every msg just
                                     // because the deliveredCounter just below
                                     // 0.5 * prefetch as used in ackLater()
+//IC see: https://issues.apache.org/jira/browse/AMQ-5426
                                     if (pendingAck != null && deliveredCounter > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
                                         session.sendAck(pendingAck);
                                         pendingAck = null;
                                         deliveredCounter = 0;
                                     }
                                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2128
                             } else {
                                 MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
                                 if (ack!=null) {
@@ -1008,8 +1101,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             } else if (isAutoAcknowledgeBatch()) {
                 ackLater(md, MessageAck.STANDARD_ACK_TYPE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1732
             } else if (session.isClientAcknowledge()||session.isIndividualAcknowledge()) {
                 boolean messageUnackedByConsumer = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2489
                 synchronized (deliveredMessages) {
                     messageUnackedByConsumer = deliveredMessages.contains(md);
                 }
@@ -1031,6 +1126,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @return <code>null</code> if nothing to ack.
      */
     private MessageAck makeAckForAllDeliveredMessages(byte type) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
         synchronized (deliveredMessages) {
             if (deliveredMessages.isEmpty()) {
                 return null;
@@ -1048,12 +1144,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         // Don't acknowledge now, but we may need to let the broker know the
         // consumer got the message to expand the pre-fetch window
         if (session.getTransacted()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
             registerSync();
         }
 
         deliveredCounter++;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5426
         synchronized(deliveredMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5426
             MessageAck oldPendingAck = pendingAck;
             pendingAck = new MessageAck(md, ackType, deliveredCounter);
             pendingAck.setTransactionId(session.getTransactionContext().getTransactionId());
@@ -1077,6 +1176,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 LOG.debug("ackLater: sending: {}", pendingAck);
                 session.sendAck(pendingAck);
                 pendingAck=null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2262
+//IC see: https://issues.apache.org/jira/browse/AMQ-2265
                 deliveredCounter = 0;
                 additionalWindowSize = 0;
             }
@@ -1084,6 +1185,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     private void registerSync() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         session.doStartTransaction();
         if (!synchronizationRegistered) {
             synchronizationRegistered = true;
@@ -1124,12 +1226,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @throws JMSException
      */
     public void acknowledge() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
         clearDeliveredList();
         waitForRedeliveries();
         synchronized(deliveredMessages) {
             // Acknowledge all messages so far.
             MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
             if (ack == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
                 return; // no msgs
             }
 
@@ -1139,13 +1244,17 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 ack.setTransactionId(session.getTransactionContext().getTransactionId());
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1959
             pendingAck = null;
             session.sendAck(ack);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
 
             // Adjust the counters
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             deliveredCounter = Math.max(0, deliveredCounter - deliveredMessages.size());
             additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
             if (!session.getTransacted()) {
                 deliveredMessages.clear();
             }
@@ -1184,10 +1293,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * called with deliveredMessages locked
      */
     private void rollbackOnFailedRecoveryRedelivery() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
         if (previouslyDeliveredMessages != null) {
             // if any previously delivered messages was not re-delivered, transaction is invalid and must rollback
             // as messages have been dispatched else where.
             int numberNotReplayed = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
             for (PreviouslyDelivered entry: previouslyDeliveredMessages.values()) {
                 if (!entry.redelivered) {
                     numberNotReplayed++;
@@ -1206,6 +1318,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     void acknowledge(MessageDispatch md) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4083
         acknowledge(md, MessageAck.INDIVIDUAL_ACK_TYPE);
     }
 
@@ -1214,6 +1327,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (ack.isExpiredAck()) {
             ack.setFirstMessageId(ack.getLastMessageId());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
         session.sendAck(ack);
         synchronized(deliveredMessages){
             deliveredMessages.remove(md);
@@ -1229,6 +1345,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     public void rollback() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
         clearDeliveredList();
         synchronized (unconsumedMessages.getMutex()) {
             if (optimizeAcknowledge) {
@@ -1254,6 +1371,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 MessageDispatch lastMd = deliveredMessages.getFirst();
                 final int currentRedeliveryCount = lastMd.getMessage().getRedeliveryCounter();
                 if (currentRedeliveryCount > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1847
                     redeliveryDelay = redeliveryPolicy.getNextRedeliveryDelay(redeliveryDelay);
                 } else {
                     redeliveryDelay = redeliveryPolicy.getInitialRedeliveryDelay();
@@ -1262,6 +1380,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
                 for (Iterator<MessageDispatch> iter = deliveredMessages.iterator(); iter.hasNext();) {
                     MessageDispatch md = iter.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-519
                     md.getMessage().onMessageRolledBack();
                 }
 
@@ -1272,14 +1391,18 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     // Acknowledge the last message.
 
                     MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
                     ack.setFirstMessageId(firstMsgId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
                     ack.setPoisonCause(new Throwable("Delivery[" + lastMd.getMessage().getRedeliveryCounter()  + "] exceeds redelivery policy limit:" + redeliveryPolicy
                             + ", cause:" + lastMd.getRollbackCause(), lastMd.getRollbackCause()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
                     session.sendAck(ack,true);
                     // Adjust the window size.
                     additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());
                     redeliveryDelay = 0;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4464
                     deliveredCounter -= deliveredMessages.size();
                     deliveredMessages.clear();
 
@@ -1289,14 +1412,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     if (currentRedeliveryCount > 0) {
                         MessageAck ack = new MessageAck(lastMd, MessageAck.REDELIVERED_ACK_TYPE, deliveredMessages.size());
                         ack.setFirstMessageId(firstMsgId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
                         session.sendAck(ack,true);
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
                     final LinkedList<MessageDispatch> pendingSessionRedelivery =
                             new LinkedList<MessageDispatch>(deliveredMessages);
 
                     captureDeliveredMessagesForDuplicateSuppressionWithRequireRedelivery(false);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-460
+//IC see: https://issues.apache.org/jira/browse/AMQ-4464
+//IC see: https://issues.apache.org/jira/browse/AMQ-4464
                     deliveredCounter -= deliveredMessages.size();
                     deliveredMessages.clear();
 
@@ -1306,11 +1434,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             Collections.reverse(pendingSessionRedelivery);
 
                             // Start up the delivery again a little later.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3714
+//IC see: https://issues.apache.org/jira/browse/AMQ-3714
                             session.getScheduler().executeAfterDelay(new Runnable() {
                                 @Override
                                 public void run() {
                                     try {
                                         if (!unconsumedMessages.isClosed()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
                                             for(MessageDispatch dispatch : pendingSessionRedelivery) {
                                                 session.dispatch(dispatch);
                                             }
@@ -1321,6 +1452,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 }
                             }, redeliveryDelay);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
                         } else {
                             // stop the delivery of messages.
                             unconsumedMessages.stop();
@@ -1360,6 +1492,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         }
                     } else {
                         for (MessageDispatch md : pendingSessionRedelivery) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2751
                             session.connection.rollbackDuplicate(this, md.getMessage());
                         }
                     }
@@ -1375,6 +1508,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      */
     private void rollbackPreviouslyDeliveredAndNotRedelivered() {
         if (previouslyDeliveredMessages != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
             for (PreviouslyDelivered entry: previouslyDeliveredMessages.values()) {
                 if (!entry.redelivered) {
                     LOG.trace("rollback non redelivered: {}", entry.message.getMessageId());
@@ -1414,14 +1548,18 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void dispatch(MessageDispatch md) {
         MessageListener listener = this.messageListener.get();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2693
             clearMessagesInProgress();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
             clearDeliveredList();
             synchronized (unconsumedMessages.getMutex()) {
                 if (!unconsumedMessages.isClosed()) {
                     // deliverySequenceId non zero means previously queued dispatch
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
                     if (this.info.isBrowser() || md.getDeliverySequenceId() != 0l || !session.connection.isDuplicate(this, md.getMessage())) {
                         if (listener != null && unconsumedMessages.isRunning()) {
                             if (redeliveryExceeded(md)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
                                 posionAck(md, "listener dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
                                 return;
                             }
@@ -1435,6 +1573,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 afterMessageIsConsumed(md, expired);
                             } catch (RuntimeException e) {
                                 LOG.error("{} Exception while processing message: {}", getConsumerId(), md.getMessage().getMessageId(), e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6042
                                 md.setRollbackCause(e);
                                 if (isAutoAcknowledgeBatch() || isAutoAcknowledgeEach() || session.isIndividualAcknowledge()) {
                                     // schedual redelivery and possible dlq processing
@@ -1445,7 +1584,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 }
                             }
                         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
                             md.setDeliverySequenceId(-1); // skip duplicate check on subsequent queued delivery
+//IC see: https://issues.apache.org/jira/browse/AMQ-6336
                             if (md.getMessage() == null) {
                                 // End of browse or pull request timeout.
                                 unconsumedMessages.enqueue(md);
@@ -1469,12 +1610,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         }
                     } else {
                         // deal with duplicate delivery
+//IC see: https://issues.apache.org/jira/browse/AMQ-5279
                         ConsumerId consumerWithPendingTransaction;
                         if (redeliveryExpectedInCurrentTransaction(md, true)) {
                             LOG.debug("{} tracking transacted redelivery {}", getConsumerId(), md.getMessage());
                             if (transactedIndividualAck) {
                                 immediateIndividualTransactedAck(md);
                             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3539
                                 session.sendAck(new MessageAck(md, MessageAck.DELIVERED_ACK_TYPE, 1));
                             }
                         } else if ((consumerWithPendingTransaction = redeliveryPendingInCompetingTransaction(md)) != null) {
@@ -1493,14 +1636,18 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 Thread.yield();
             }
         } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
             session.connection.onClientInternalException(e);
         }
     }
 
     private boolean redeliveryExpectedInCurrentTransaction(MessageDispatch md, boolean markReceipt) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5279
         if (session.isTransacted()) {
             synchronized (deliveredMessages) {
                 if (previouslyDeliveredMessages != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
                     PreviouslyDelivered entry;
                     if ((entry = previouslyDeliveredMessages.get(md.getMessage().getMessageId())) != null) {
                         if (markReceipt) {
@@ -1528,10 +1675,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     // async (on next call) clear or track delivered as they may be flagged as duplicates if they arrive again
     private void clearDeliveredList() {
         if (clearDeliveredList) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
             synchronized (deliveredMessages) {
                 if (clearDeliveredList) {
                     if (!deliveredMessages.isEmpty()) {
                         if (session.isTransacted()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
                             captureDeliveredMessagesForDuplicateSuppression();
                         } else {
                             if (session.isClientAcknowledge()) {
@@ -1548,6 +1697,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             pendingAck = null;
                         }
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
                     clearDeliveredList = false;
                 }
             }
@@ -1556,6 +1706,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     // called with deliveredMessages locked
     private void captureDeliveredMessagesForDuplicateSuppression() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
         captureDeliveredMessagesForDuplicateSuppressionWithRequireRedelivery (true);
     }
 
@@ -1574,6 +1725,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     public void start() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
         if (unconsumedMessages.isClosed()) {
             return;
         }
@@ -1605,6 +1758,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (listener != null) {
             MessageDispatch md = unconsumedMessages.dequeueNoWait();
             if (md != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-906
                 dispatch(md);
                 return true;
             }
@@ -1613,14 +1767,18 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     public boolean isInUse(ActiveMQTempDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1176
         return info.getDestination().equals(destination);
     }
 
     public long getLastDeliveredSequenceId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         return lastDeliveredSequenceId;
     }
 
     public IOException getFailureError() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2195
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
         return failureError;
     }
 
@@ -1632,6 +1790,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @return the optimizedAckScheduledAckInterval
      */
     public long getOptimizedAckScheduledAckInterval() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
         return optimizedAckScheduledAckInterval;
     }
 
@@ -1678,10 +1837,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     public boolean hasMessageListener() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
         return messageListener.get() != null;
     }
 
     public boolean isConsumerExpiryCheckEnabled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5406
         return consumerExpiryCheckEnabled;
     }
 

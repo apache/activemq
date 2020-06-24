@@ -150,6 +150,7 @@ public class AMQ4222Test extends TestSupport {
         // still have a reference in his producerBrokerExchange.. this will keep the destination
         // from being reclaimed by GC if there is never another send that producer makes...
         // let's see if that reference is there...
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
         final TransportConnector connector = VMTransportFactory.CONNECTORS.get("localhost");
         assertNotNull(connector);
         assertTrue(Wait.waitFor(new Wait.Condition() {

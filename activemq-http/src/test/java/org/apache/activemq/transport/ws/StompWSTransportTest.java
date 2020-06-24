@@ -54,9 +54,11 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         wsStompConnection = new StompWSConnection();
 
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6073
         ClientUpgradeRequest request = new ClientUpgradeRequest();
         request.setSubProtocols("v11.stomp");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
         wsClient = new WebSocketClient(new SslContextFactory.Client(true));
         wsClient.start();
 
@@ -93,6 +95,7 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         assertNotNull(incoming);
         assertTrue(incoming.startsWith("CONNECTED"));
         assertEquals("v11.stomp", wsStompConnection.getConnection().getUpgradeResponse().getAcceptedSubProtocol());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6073
 
         assertTrue("Connection should close", Wait.waitFor(new Wait.Condition() {
 
@@ -304,6 +307,7 @@ public class StompWSTransportTest extends WSTransportTestSupport {
 
     @Test(timeout = 60000)
     public void testEscapedHeaders() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6699
         String connectFrame = "STOMP\n" +
                               "login:system\n" +
                               "passcode:manager\n" +

@@ -66,6 +66,8 @@ public class CursorQueueStoreTest extends CursorSupport {
     }
     
     public static Test suite() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1902
+//IC see: https://issues.apache.org/jira/browse/AMQ-1866
         return suite(CursorQueueStoreTest.class);
     }
 

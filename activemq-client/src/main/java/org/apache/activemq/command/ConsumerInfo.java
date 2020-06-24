@@ -97,6 +97,7 @@ public class ConsumerInfo extends BaseCommand implements TransientInitializer {
         info.browser = browser;
         info.dispatchAsync = dispatchAsync;
         info.selector = selector;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         info.clientId = clientId;
         info.subscriptionName = subscriptionName;
         info.noLocal = noLocal;
@@ -228,6 +229,7 @@ public class ConsumerInfo extends BaseCommand implements TransientInitializer {
      * @openwire:property version=10
      */
     public String getClientId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         return clientId;
     }
 
@@ -441,6 +443,7 @@ public class ConsumerInfo extends BaseCommand implements TransientInitializer {
 
     @Override
     public int hashCode() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4853
         return (consumerId == null) ? 0 : consumerId.hashCode();
     }
 
@@ -475,6 +478,7 @@ public class ConsumerInfo extends BaseCommand implements TransientInitializer {
      * @openwire:property version=4
      */
     public ConsumerId[] getNetworkConsumerPath() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2030
         ConsumerId[] result = null;
         if (networkConsumerIds != null) {
             result = networkConsumerIds.toArray(new ConsumerId[0]);
@@ -491,6 +495,7 @@ public class ConsumerInfo extends BaseCommand implements TransientInitializer {
     }
 
     public void setLastDeliveredSequenceId(long lastDeliveredSequenceId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         this.lastDeliveredSequenceId  = lastDeliveredSequenceId;
     }
 
@@ -499,6 +504,8 @@ public class ConsumerInfo extends BaseCommand implements TransientInitializer {
     }
 
     public void incrementAssignedGroupCount(final ActiveMQDestination dest) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6016
+//IC see: https://issues.apache.org/jira/browse/AMQ-2106
         AtomicLong value = assignedGroupCount.get(dest);
         if (value == null) {
             value = new AtomicLong(0);
@@ -529,6 +536,7 @@ public class ConsumerInfo extends BaseCommand implements TransientInitializer {
 
     @Override
     public void initTransients() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6016
         assignedGroupCount = new ConcurrentHashMap<>();
         lastDeliveredSequenceId = RemoveInfo.LAST_DELIVERED_UNSET;
     }

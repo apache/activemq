@@ -25,8 +25,10 @@ import org.springframework.context.ApplicationContextAware;
 
 public class SpringBrokerContext implements BrokerContext, ApplicationContextAware {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2702
     ApplicationContext applicationContext;
     String configurationUrl;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
@@ -45,6 +47,7 @@ public class SpringBrokerContext implements BrokerContext, ApplicationContextAwa
     }
 
     public void setConfigurationUrl(String configurationUrl) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         this.configurationUrl = configurationUrl;
     }
 

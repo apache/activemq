@@ -109,6 +109,7 @@ public class NIOAsyncSendWithPFCTest extends TestCase {
 
 
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6614
                 sendMessages(1, DESTINATION_TWO, false);
             } catch (Exception ex) {
                 LOG.error("Ex on send  new connection", ex);
@@ -149,6 +150,7 @@ public class NIOAsyncSendWithPFCTest extends TestCase {
             //wait till producer follow control kicks in
             waitForProducerFlowControl(broker, queueView);
             assertTrue("Producer view blocked", getProducerView(broker, DESTINATION_ONE).isProducerBlocked());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6614
 
             try {
                 Session producerSession = exisitngConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -169,6 +171,7 @@ public class NIOAsyncSendWithPFCTest extends TestCase {
 
     public void testSyncSendPFCExistingConnection() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6614
         BrokerService broker = createBroker();
         broker.waitUntilStarted();
 
@@ -240,6 +243,7 @@ public class NIOAsyncSendWithPFCTest extends TestCase {
 
 
         ActiveMQConnection connection = (ActiveMQConnection) connectionFactory.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6614
         if (sync) {
             connection.setUseAsyncSend(false);
             connection.setAlwaysSyncSend(true);
@@ -265,6 +269,7 @@ public class NIOAsyncSendWithPFCTest extends TestCase {
             LOG.info(" Finished after producing : " + numberOfMessageSent);
             return numberOfMessageSent;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6614
         } catch (JMSException expected) {
             LOG.debug("Exception received producing ", expected);
         } finally {
@@ -309,6 +314,7 @@ public class NIOAsyncSendWithPFCTest extends TestCase {
     }
 
     private ProducerViewMBean getProducerView(BrokerService broker, String qName) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6614
         ObjectName[] qProducers = broker.getAdminView().getQueueProducers();
         for (ObjectName name : qProducers) {
             ProducerViewMBean proxy = (ProducerViewMBean) broker.getManagementContext()

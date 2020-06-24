@@ -17,5 +17,6 @@
 package org.apache.activemq.tool;
 
 public enum ClientRunBasis {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
     count, time;
 }

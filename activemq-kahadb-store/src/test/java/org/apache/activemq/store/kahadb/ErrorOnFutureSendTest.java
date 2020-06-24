@@ -133,6 +133,7 @@ public class ErrorOnFutureSendTest {
     @Test(timeout = 30000)
     public void testSuccessiveFailedSendsDoesNotConsumeMemInError() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
         adapter.setTransactionIdTransformer(new TransactionIdTransformer() {
             @Override
             public TransactionId transform(TransactionId txid) {

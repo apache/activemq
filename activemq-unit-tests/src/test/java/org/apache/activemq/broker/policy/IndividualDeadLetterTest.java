@@ -44,11 +44,13 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
         BrokerService broker = super.createBroker();
 
         PolicyEntry policy = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1796
         DeadLetterStrategy strategy = new IndividualDeadLetterStrategy();
         strategy.setProcessNonPersistent(true);
         policy.setDeadLetterStrategy(strategy);
 
         PolicyMap pMap = new PolicyMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4483
         pMap.put(new ActiveMQQueue(getDestinationString()), policy);
         pMap.put(new ActiveMQTopic(getDestinationString()), policy);
 
@@ -64,6 +66,7 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
     }
 
     public void testDLQBrowsing() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2553
         super.topic = false;
         deliveryMode = DeliveryMode.PERSISTENT;
         durableSubscriber = false;

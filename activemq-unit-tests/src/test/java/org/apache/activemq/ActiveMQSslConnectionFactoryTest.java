@@ -63,9 +63,11 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         broker = createBroker("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
 
         // This should create the connection.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQSslConnectionFactory cf = getFactory("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3785
         connection.start();
         connection.stop();
         brokerStop();
@@ -76,6 +78,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         broker = createBroker("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
 
         // This should create the connection.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQSslConnectionFactory cf = getFactory("failover:(tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true)");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
@@ -97,6 +100,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         connection = (ActiveMQConnection)cf.createConnection();
         LOG.info("Created client connection");
         assertNotNull(connection);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3785
         connection.start();
         connection.stop();
         brokerStop();
@@ -122,10 +126,13 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testFailoverSslConnectionWithKeyAndTrustManagers() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3989
         String sslUri = "ssl://localhost:61611";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQSslConnectionFactory cf = getFactory("failover:(" + sslUri + ")?maxReconnectAttempts=4");
         cf.setKeyAndTrustManagers(getKeyManager(), getTrustManager(), new SecureRandom());
         connection = (ActiveMQConnection)cf.createConnection();
@@ -144,6 +151,8 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         assertNotNull(broker);
 
         // This should FAIL to connect, due to wrong password.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQSslConnectionFactory cf = getFactory(sslUri);
         cf.setTrustStore("server.keystore");
         cf.setTrustStorePassword("wrongPassword");
@@ -166,6 +175,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         assertNotNull(broker);
 
         // This should FAIL to connect, due to wrong password.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQSslConnectionFactory cf = getFactory(sslUri);
         cf.setTrustStore("dummy.keystore");
         cf.setTrustStorePassword("password");
@@ -185,6 +195,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         // Start up a broker with a tcp connector.
         BrokerService service = new BrokerService();
         service.setPersistent(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3785
         service.setUseJmx(false);
         service.addConnector(uri);
         service.start();
@@ -214,6 +225,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
     }
 
     protected ActiveMQSslConnectionFactory getFactory(String uri) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         return new ActiveMQSslConnectionFactory(uri);
     }
 

@@ -33,6 +33,7 @@ public class JDBCNegativeQueueTest extends NegativeQueueTest {
     DataSource dataSource;
     
     protected void configureBroker(BrokerService answer) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2563
         super.configureBroker(answer);
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
         answer.setPersistenceAdapter(jdbc);

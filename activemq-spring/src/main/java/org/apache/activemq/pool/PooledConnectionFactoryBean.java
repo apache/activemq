@@ -102,6 +102,8 @@ public class PooledConnectionFactoryBean implements FactoryBean {
      */
     @PostConstruct
     private void postConstruct() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             afterPropertiesSet();
         } catch (Exception ex) {
@@ -122,6 +124,7 @@ public class PooledConnectionFactoryBean implements FactoryBean {
                 f.setName(resourceName);
                 f.setTransactionManager((TransactionManager) transactionManager);
                 f.setMaxConnections(maxConnections);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4360
                 f.setMaximumActiveSessionPerConnection(maximumActive);
                 f.setConnectionFactory(connectionFactory);
                 this.pooledConnectionFactory = f;
@@ -135,6 +138,7 @@ public class PooledConnectionFactoryBean implements FactoryBean {
                 XaPooledConnectionFactory f = new XaPooledConnectionFactory();
                 f.setTransactionManager((TransactionManager) transactionManager);
                 f.setMaxConnections(maxConnections);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4360
                 f.setMaximumActiveSessionPerConnection(maximumActive);
                 f.setConnectionFactory(connectionFactory);
                 this.pooledConnectionFactory = f;
@@ -147,6 +151,7 @@ public class PooledConnectionFactoryBean implements FactoryBean {
                 LOGGER.debug("Trying to build a PooledConnectionFactory");
                 PooledConnectionFactory f = new PooledConnectionFactory();
                 f.setMaxConnections(maxConnections);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4360
                 f.setMaximumActiveSessionPerConnection(maximumActive);
                 f.setConnectionFactory(connectionFactory);
                 this.pooledConnectionFactory = f;
@@ -166,6 +171,8 @@ public class PooledConnectionFactoryBean implements FactoryBean {
      */
     @PreDestroy
     private void preDestroy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             destroy();
         } catch (Exception ex) {
@@ -179,6 +186,7 @@ public class PooledConnectionFactoryBean implements FactoryBean {
      * @org.apache.xbean.DestroyMethod
      */
     public void destroy() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1938
         if (pooledConnectionFactory != null) {
             pooledConnectionFactory.stop();
             pooledConnectionFactory = null;
@@ -188,9 +196,11 @@ public class PooledConnectionFactoryBean implements FactoryBean {
     @Override
     public Object getObject() throws Exception {
         // in case spring-dm calls getObject before this bean has been initialized
+//IC see: https://issues.apache.org/jira/browse/AMQ-2960
         if (pooledConnectionFactory == null) {
             afterPropertiesSet();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2702
         return pooledConnectionFactory;
     }
 

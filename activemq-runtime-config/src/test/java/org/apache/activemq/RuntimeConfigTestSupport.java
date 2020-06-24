@@ -46,6 +46,7 @@ public class RuntimeConfigTestSupport {
           LOG.info("{} being run...", description.getMethodName());
         }
     };
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
     public void startBroker(String configFileName) throws Exception {
         brokerService = createBroker(configFileName);
@@ -72,6 +73,7 @@ public class RuntimeConfigTestSupport {
         FileInputStream modifications = new FileInputStream(new File(resource.getFile(), newConfigName + ".xml"));
         modifications.getChannel().transferTo(0, Long.MAX_VALUE, current.getChannel());
         current.flush();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         current.getChannel().force(true);
         current.close();
         modifications.close();
@@ -86,6 +88,7 @@ public class RuntimeConfigTestSupport {
     @After
     public void stopBroker() throws Exception {
         brokerService.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         brokerService.waitUntilStopped();
     }
 }

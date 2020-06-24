@@ -91,6 +91,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
         broker.setPersistenceAdapter(jdbc);
 
         broker.setIoExceptionHandler(new LeaseLockerIOExceptionHandler());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5174
 
         transportUrl = broker.addConnector(transportUrl).getPublishableConnectString();
         return broker;
@@ -277,6 +278,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
         public TestTransactionContext(
                 JDBCPersistenceAdapter jdbcPersistenceAdapter)
                 throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
             super(jdbcPersistenceAdapter, -1, -1);
         }
 

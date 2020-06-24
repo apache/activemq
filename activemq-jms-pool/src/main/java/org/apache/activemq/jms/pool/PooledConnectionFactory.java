@@ -88,9 +88,12 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
 
     public void initConnectionsPool() {
         if (this.connectionsPool == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5990
             final GenericKeyedObjectPoolConfig poolConfig = new GenericKeyedObjectPoolConfig();
             poolConfig.setJmxEnabled(false);
             this.connectionsPool = new GenericKeyedObjectPool<ConnectionKey, ConnectionPool>(
+//IC see: https://issues.apache.org/jira/browse/AMQ-5721
+//IC see: https://issues.apache.org/jira/browse/AMQ-5636
                 new KeyedPooledObjectFactory<ConnectionKey, ConnectionPool>() {
                     @Override
                     public PooledObject<ConnectionPool> makeObject(ConnectionKey connectionKey) throws Exception {
@@ -101,16 +104,21 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
                         connection.setExpiryTimeout(getExpiryTimeout());
                         connection.setMaximumActiveSessionPerConnection(getMaximumActiveSessionPerConnection());
                         connection.setBlockIfSessionPoolIsFull(isBlockIfSessionPoolIsFull());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5076
                         if (isBlockIfSessionPoolIsFull() && getBlockIfSessionPoolIsFullTimeout() > 0) {
                             connection.setBlockIfSessionPoolIsFullTimeout(getBlockIfSessionPoolIsFullTimeout());
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4968
                         connection.setUseAnonymousProducers(isUseAnonymousProducers());
                         connection.setReconnectOnException(isReconnectOnException());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5534
 
                         LOG.trace("Created new connection: {}", connection);
 
                         PooledConnectionFactory.this.mostRecentlyCreated.set(connection);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5721
+//IC see: https://issues.apache.org/jira/browse/AMQ-5636
                         return new DefaultPooledObject<ConnectionPool>(connection);
                     }
 
@@ -145,13 +153,18 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
                     }
 
                 }, poolConfig);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5990
 
             // Set max wait time to control borrow from pool.
             this.connectionsPool.setMaxWaitMillis(getConnectionTimeout());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7131
 
             // Set max idle (not max active) since our connections always idle in the pool.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5721
+//IC see: https://issues.apache.org/jira/browse/AMQ-5636
             this.connectionsPool.setMaxIdlePerKey(1);
             this.connectionsPool.setLifo(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5226
 
             // We always want our validate method to control when idle objects are evicted.
             this.connectionsPool.setTestOnBorrow(true);
@@ -186,6 +199,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
 
     @Override
     public QueueConnection createQueueConnection() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
         return (QueueConnection) createConnection();
     }
 
@@ -224,6 +238,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
         if (getConnectionsPool().getNumIdle(key) < getMaxConnections()) {
             try {
                 connectionsPool.addObject(key);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5226
                 connection = mostRecentlyCreated.getAndSet(null);
                 connection.incrementReferenceCount();
             } catch (Exception e) {
@@ -237,6 +252,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
                 // under lock to prevent another thread from triggering an expiration check and
                 // pulling the rug out from under us.
                 while (connection == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7131
                     try {
                         connection = connectionsPool.borrowObject(key);
                     } catch (NoSuchElementException ex) {
@@ -283,6 +299,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
     }
 
     protected Connection createConnection(ConnectionKey key) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
         if (connectionFactory instanceof ConnectionFactory) {
             if (key.getUserName() == null && key.getPassword() == null) {
                 return ((ConnectionFactory) connectionFactory).createConnection();
@@ -300,6 +317,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
         if (isCreateConnectionOnStartup()) {
             try {
                 // warm the pool by creating a connection during startup
+//IC see: https://issues.apache.org/jira/browse/AMQ-5258
                 createConnection().close();
             } catch (JMSException e) {
                 LOG.warn("Create pooled connection during start failed. This exception will be ignored.", e);
@@ -310,10 +328,13 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
     public void stop() {
         if (stopped.compareAndSet(false, true)) {
             LOG.debug("Stopping the PooledConnectionFactory, number of connections in cache: {}",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5510
+//IC see: https://issues.apache.org/jira/browse/AMQ-5534
                       connectionsPool != null ? connectionsPool.getNumActive() : 0);
             try {
                 if (connectionsPool != null) {
                     connectionsPool.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6350
                     connectionsPool = null;
                 }
             } catch (Exception e) {
@@ -390,6 +411,8 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      * @return the maxConnections that will be created for this pool.
      */
     public int getMaxConnections() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5721
+//IC see: https://issues.apache.org/jira/browse/AMQ-5636
         return getConnectionsPool().getMaxIdlePerKey();
     }
 
@@ -401,6 +424,8 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      * @param maxConnections the maxConnections to set
      */
     public void setMaxConnections(int maxConnections) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5721
+//IC see: https://issues.apache.org/jira/browse/AMQ-5636
         getConnectionsPool().setMaxIdlePerKey(maxConnections);
         getConnectionsPool().setMaxTotalPerKey(maxConnections);
     }
@@ -440,6 +465,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      * @return connection timeout value (milliseconds)
      */
     public int getConnectionTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7131
         return connectionTimeout;
     }
 
@@ -502,6 +528,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      * @return true if a PooledSession will use only a single anonymous message producer instance.
      */
     public boolean isUseAnonymousProducers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4968
         return this.useAnonymousProducers;
     }
 
@@ -574,6 +601,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      * @see #setBlockIfSessionPoolIsFull(boolean)
      */
     public long getBlockIfSessionPoolIsFullTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5076
         return blockIfSessionPoolIsFullTimeout;
     }
 
@@ -599,6 +627,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      * @return true if the underlying connection will be renewed on JMSException, false otherwise
      */
     public boolean isReconnectOnException() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5534
         return reconnectOnException;
     }
 
@@ -622,6 +651,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      *        a properties object that should be filled in with this objects property values.
      */
     protected void populateProperties(Properties props) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5268
         props.setProperty("maximumActiveSessionPerConnection", Integer.toString(getMaximumActiveSessionPerConnection()));
         props.setProperty("maxConnections", Integer.toString(getMaxConnections()));
         props.setProperty("idleTimeout", Integer.toString(getIdleTimeout()));
@@ -630,6 +660,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
         props.setProperty("createConnectionOnStartup", Boolean.toString(isCreateConnectionOnStartup()));
         props.setProperty("useAnonymousProducers", Boolean.toString(isUseAnonymousProducers()));
         props.setProperty("blockIfSessionPoolIsFullTimeout", Long.toString(getBlockIfSessionPoolIsFullTimeout()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5534
         props.setProperty("reconnectOnException", Boolean.toString(isReconnectOnException()));
     }
 }

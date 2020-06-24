@@ -46,6 +46,7 @@ import java.util.TreeMap;
  */
 public class JDBCMessageStore extends AbstractMessageStore {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
     class Duration {
         static final int LIMIT = 100;
         final long start = System.currentTimeMillis();
@@ -73,17 +74,22 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected final LinkedList<Long> pendingAdditions = new LinkedList<Long>();
     protected final TreeMap<Long, Message> rolledBackAcks = new TreeMap<Long, Message>();
     final long[] perPriorityLastRecovered = new long[10];
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
 
     public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1842
         super(destination);
         this.persistenceAdapter = persistenceAdapter;
         this.adapter = adapter;
         this.wireFormat = wireFormat;
         this.audit = audit;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2519
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
         if (destination.isQueue() && persistenceAdapter.getBrokerService().shouldRecordVirtualDestination(destination)) {
             recordDestinationCreation(destination);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         resetBatching();
     }
 
@@ -115,10 +121,12 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
         // if xaXid present - this is a prepare - so we don't yet have an outcome
         final XATransactionId xaXid =  context != null ? context.getXid() : null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5567
 
         // Serialize the Message..
         byte data[];
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
             ByteSequence packet = wireFormat.marshal(message);
             data = ByteSequenceData.toByteArray(packet);
         } catch (IOException e) {
@@ -130,8 +138,11 @@ public class JDBCMessageStore extends AbstractMessageStore {
         long sequenceId;
         synchronized (pendingAdditions) {
             sequenceId = persistenceAdapter.getNextSequenceId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             final long sequence = sequenceId;
             message.getMessageId().setEntryLocator(sequence);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5567
 
             if (xaXid == null) {
                 pendingAdditions.add(sequence);
@@ -186,6 +197,8 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     @Override
     public void updateMessage(Message message) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             adapter.doUpdateMessage(c, destination, message.getMessageId(), ByteSequenceData.toByteArray(wireFormat.marshal(message)));
@@ -254,9 +267,11 @@ public class JDBCMessageStore extends AbstractMessageStore {
     @Override
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7425
     	long seq = (ack.getLastMessageId().getFutureOrSequenceLong() != null && ((Long) ack.getLastMessageId().getFutureOrSequenceLong() != 0)) ?
                 (Long) ack.getLastMessageId().getFutureOrSequenceLong() :
                 persistenceAdapter.getStoreSequenceIdForMessageId(context, ack.getLastMessageId(), destination)[0];
+//IC see: https://issues.apache.org/jira/browse/AMQ-5384
 
         // Get a connection and remove the message from the DB
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
@@ -279,9 +294,12 @@ public class JDBCMessageStore extends AbstractMessageStore {
             adapter.doRecover(c, destination, new JDBCMessageRecoveryListener() {
                 @Override
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6067
                     if (listener.hasSpace()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                         Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1080
                         return listener.recoverMessage(msg);
                     } else {
                         if (LOG.isTraceEnabled()) {
@@ -293,6 +311,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
                 @Override
                 public boolean recoverMessageReference(String reference) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7394
                     if (listener.hasSpace()) {
                         return listener.recoverMessageReference(new MessageId(reference));
                     } else {
@@ -361,18 +380,29 @@ public class JDBCMessageStore extends AbstractMessageStore {
             }
 
             maxReturned -= recoverRolledBackAcks(maxReturned, listener);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
             adapter.doRecoverNextMessages(c, destination, perPriorityLastRecovered, minPendingSequeunceId(),
                     maxReturned, isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
 
                 @Override
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7394
                     if (listener.canRecoveryNextMessage()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
                         Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                         msg.getMessageId().setFutureOrSequenceLong(sequenceId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5277
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
                         msg.getMessageId().setEntryLocator(sequenceId);
                         listener.recoverMessage(msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
                         trackLastRecovered(sequenceId, msg.getPriority());
                         return true;
                     } else {
@@ -399,6 +429,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     }
 
     public void trackRollbackAck(Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
         synchronized (rolledBackAcks) {
             rolledBackAcks.put((Long)message.getMessageId().getEntryLocator(), message);
         }
@@ -434,6 +465,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     }
 
     private void trackLastRecovered(long sequenceId, int priority) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         perPriorityLastRecovered[isPrioritizedMessages() ? priority : 0] = sequenceId;
     }
 
@@ -445,6 +477,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         if (LOG.isTraceEnabled()) {
             LOG.trace(this + " resetBatching. last recovered: " + Arrays.toString(perPriorityLastRecovered));
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         setLastRecovered(-1);
     }
 
@@ -461,6 +494,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
             LOG.trace(this + " setBatch: last recovered: " + Arrays.toString(perPriorityLastRecovered));
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5384
             long[] storedValues = persistenceAdapter.getStoreSequenceIdForMessageId(null, messageId, destination);
             setLastRecovered(storedValues[0]);
         } catch (IOException ignoredAsAlreadyLogged) {
@@ -474,11 +508,13 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     @Override
     public void setPrioritizedMessages(boolean prioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
         super.setPrioritizedMessages(prioritizedMessages);
     }
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         return destination.getPhysicalName() + ",pendingSize:" + pendingAdditions.size();
     }
 

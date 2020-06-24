@@ -103,6 +103,7 @@ public class AMQ2910Test extends JmsMultipleClientsTestSupport {
 
         executor.shutdown();
         assertTrue("consumers completed", executor.awaitTermination(30, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2910
 
         allMessagesList.setMaximumDuration(90*1000);
         final int numExpected = maxConcurrency * msgCount;

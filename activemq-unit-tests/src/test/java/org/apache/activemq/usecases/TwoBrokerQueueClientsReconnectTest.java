@@ -128,6 +128,10 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     public void doOneClientReceivesOnlyAfterReconnect() throws Exception {
         // allow immediate replay back to origin
         applyRateLimitNetworkFilter(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
 
         // Bridge brokers
         bridgeBrokers(broker1, broker2);
@@ -187,6 +191,8 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     public void doTwoClientsReceiveOneClientDisconnects() throws Exception {
         // ensure all message do not flow across the network too quickly
         applyRateLimitNetworkFilter(0.8 * MESSAGE_COUNT);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
 
         // Bridge brokers
         bridgeBrokers(broker1, broker2);
@@ -243,6 +249,8 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     public void doTwoClientsReceiveOneClientReconnects() throws Exception {
         // ensure all message do not flow across the network too quickly
         applyRateLimitNetworkFilter(0.2 * MESSAGE_COUNT);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
 
         // Bridge brokers
         bridgeBrokers(broker1, broker2);
@@ -271,6 +279,8 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         LOG.info("msgsClient1=" + msgsClient1);
         LOG.info("msgsClient2=" + msgsClient2);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         Thread.sleep(1000);
         LOG.info("Disconnect the first client");
         client1.close();
@@ -302,6 +312,8 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     }
 
     private void applyRateLimitNetworkFilter(double rateLimit) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         ConditionalNetworkBridgeFilterFactory filterFactory = new ConditionalNetworkBridgeFilterFactory();
         filterFactory.setReplayWhenNoConsumers(true);
         filterFactory.setRateLimit((int) rateLimit);
@@ -351,6 +363,8 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
 
         // Let each client receive 30% more of the total messages - 60% total
         LOG.info("Serially create another two clients for each broker and consume in turn");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         client1 = createConsumer(broker1, dest);
         msgsClient1 += receiveExactMessages(client1, (int)(MESSAGE_COUNT * 0.30));
         client1.close();
@@ -369,11 +383,13 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
 
     @SuppressWarnings("unchecked")
     public void testDuplicateSend() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
         broker1 = "BrokerA";
         broker2 = "BrokerB";
 
         // enable producer audit for the network connector, off by default b/c of interference with composite
         // dests and virtual topics
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
         brokers.get(broker2).broker.getTransportConnectors().get(0).setAuditNetworkProducers(true);
         bridgeBrokers(broker1, broker2);
 
@@ -447,6 +463,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
 
     @SuppressWarnings("unchecked")
     public void testDuplicateSendWithCursorAudit() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6406
         broker1 = "BrokerA";
         broker2 = "BrokerB";
 
@@ -491,6 +508,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         startAllBrokers();
 
         waitForBridgeFormation();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
 
         // Create queue
         Destination dest = createDestination("TEST.FOO", false);
@@ -523,6 +541,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
 
     @SuppressWarnings("unchecked")
     public void testDuplicateSendWithNoAuditEnqueueCountStat() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3473
         broker1 = "BrokerA";
         broker2 = "BrokerB";
 
@@ -536,6 +555,8 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         brokerService.setDeleteAllMessagesOnStartup(true);
         // disable concurrent dispatch otherwise store duplicate suppression will be skipped b/c cursor audit is already
         // disabled so verification of stats will fail - ie: duplicate will be dispatched
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         ((KahaDBPersistenceAdapter)brokerService.getPersistenceAdapter()).setConcurrentStoreAndDispatchQueues(false);
         brokerService.setPlugins(new BrokerPlugin[]{
                 new BrokerPluginSupport() {
@@ -606,6 +627,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
 
     @SuppressWarnings("unchecked")
     public void testDuplicateSendWithNoAuditEnqueueCountStatConcurrentStoreAndDispatch() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6406
         broker1 = "BrokerA";
         broker2 = "BrokerB";
 
@@ -730,6 +752,8 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         Message msg;
         int i;
         for (i = 0; i < msgCount; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
             msg = consumer.receive(4000);
             if (msg == null) {
                 LOG.error("Consumer failed to receive exactly " + msgCount + " messages. Actual messages received is: " + i);
@@ -764,8 +788,11 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
 
     @Override
     protected void configureBroker(BrokerService broker) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6406
         defaultEntry.setExpireMessagesPeriod(0);
         defaultEntry.setEnableAudit(false);
         policyMap.setDefaultEntry(defaultEntry);
@@ -784,6 +811,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6406
         createBroker(new URI("broker:(tcp://localhost:0)/BrokerA?persistent=false&useJmx=true"));
         createBroker(new URI("broker:(tcp://localhost:0)/BrokerB?persistent=false&useJmx=true"));
 
@@ -800,6 +828,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         factoryA.setPrefetchPolicy(policy);
         factoryB.setPrefetchPolicy(policy);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6406
         factoryA.setWatchTopicAdvisories(false);
         factoryB.setWatchTopicAdvisories(false);
         msgsClient1 = 0;

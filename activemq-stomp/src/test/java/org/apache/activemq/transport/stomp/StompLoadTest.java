@@ -86,6 +86,7 @@ public class StompLoadTest extends StompTestSupport {
     public void testStompUnloadLoad() throws Exception {
 
         final List<StompConnection> taskConnections = new ArrayList<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         for (int i = 0; i < TASK_COUNT; ++i) {
             executor.execute(new Runnable() {
@@ -106,6 +107,7 @@ public class StompLoadTest extends StompTestSupport {
                     }
 
                     taskConnections.add(connection);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
                     try {
 
@@ -124,6 +126,7 @@ public class StompLoadTest extends StompTestSupport {
                         TimeUnit.SECONDS.sleep(3);
                         started.countDown();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
                         while (receiveCount.get() != TASK_COUNT * MSG_COUNT) {
                             // Read Timeout ends this task, we override the default here since there
                             // are so many threads running and we don't know how slow the test box is.
@@ -175,6 +178,7 @@ public class StompLoadTest extends StompTestSupport {
 
         LOG.info("Test Completed and all messages received, shutting down.");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         for (StompConnection taskConnection : taskConnections) {
             try {
                 taskConnection.disconnect();

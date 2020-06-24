@@ -72,6 +72,7 @@ class DataFileAppender implements FileAppender {
 
         public WriteBatch(DataFile dataFile,int offset) {
             this.dataFile = dataFile;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
             this.offset = offset;
             this.dataFile.incrementLength(Journal.BATCH_CONTROL_RECORD_SIZE);
             this.size=Journal.BATCH_CONTROL_RECORD_SIZE;
@@ -79,12 +80,14 @@ class DataFileAppender implements FileAppender {
         }
 
         public WriteBatch(DataFile dataFile, int offset, Journal.WriteCommand write) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
             this(dataFile, offset);
             append(write);
         }
 
         public boolean canAppend(Journal.WriteCommand write) {
             int newSize = size + write.location.getSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
             if (newSize >= maxWriteBatchSize || offset+newSize > journal.getMaxFileLength() ) {
                 return false;
             }
@@ -96,6 +99,7 @@ class DataFileAppender implements FileAppender {
             write.location.setDataFileId(dataFile.getDataFileId());
             write.location.setOffset(offset+size);
             int s = write.location.getSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
             size += s;
             dataFile.incrementLength(s);
             journal.addToTotalLength(s);
@@ -109,7 +113,9 @@ class DataFileAppender implements FileAppender {
         this.journal = dataManager;
         this.inflightWrites = this.journal.getInflightWrites();
         this.maxWriteBatchSize = this.journal.getWriteBatchSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         this.syncOnComplete = this.journal.isEnableAsyncDiskSync();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         this.periodicSync = JournalDiskSyncStrategy.PERIODIC.equals(
                 this.journal.getJournalDiskSyncStrategy());
     }
@@ -127,6 +133,7 @@ class DataFileAppender implements FileAppender {
         Journal.WriteCommand write = new Journal.WriteCommand(location, data, sync);
 
         WriteBatch batch = enqueue(write);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6815
         location.setBatch(batch);
         if (sync) {
             try {
@@ -134,6 +141,8 @@ class DataFileAppender implements FileAppender {
             } catch (InterruptedException e) {
                 throw new InterruptedIOException();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
             IOException exception = batch.exception.get();
             if (exception != null) {
                 throw exception;
@@ -154,6 +163,7 @@ class DataFileAppender implements FileAppender {
 
         Journal.WriteCommand write = new Journal.WriteCommand(location, data, onComplete);
         location.setBatch(enqueue(write));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6815
 
         return location;
     }
@@ -161,6 +171,7 @@ class DataFileAppender implements FileAppender {
     private WriteBatch enqueue(Journal.WriteCommand write) throws IOException {
         synchronized (enqueueMutex) {
             if (shutdown) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
                 throw new IOException("Async Writer Thread Shutdown");
             }
 
@@ -179,10 +190,14 @@ class DataFileAppender implements FileAppender {
             }
 
             while ( true ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
                 if (nextWriteBatch == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
                     DataFile file = journal.getCurrentDataFile(write.location.getSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
                     nextWriteBatch = newWriteBatch(write, file);
                     enqueueMutex.notifyAll();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2143
                     break;
                 } else {
                     // Append to current batch if possible..
@@ -196,6 +211,7 @@ class DataFileAppender implements FileAppender {
                                 final long start = System.currentTimeMillis();
                                 enqueueMutex.wait();
                                 if (maxStat > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
                                     logger.info("Waiting for write to finish with full batch... millis: " +
                                                 (System.currentTimeMillis() - start));
                                }
@@ -204,6 +220,7 @@ class DataFileAppender implements FileAppender {
                             throw new InterruptedIOException();
                         }
                         if (shutdown) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
                             throw new IOException("Async Writer Thread Shutdown");
                         }
                     }
@@ -217,6 +234,7 @@ class DataFileAppender implements FileAppender {
     }
 
     protected WriteBatch newWriteBatch(Journal.WriteCommand write, DataFile file) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         return new WriteBatch(file, file.getLength(), write);
     }
 
@@ -253,9 +271,12 @@ class DataFileAppender implements FileAppender {
      */
     protected void processQueue() {
         DataFile dataFile = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3725
         RecoverableRandomAccessFile file = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
         WriteBatch wb = null;
         try (DataByteArrayOutputStream buff = new DataByteArrayOutputStream(maxWriteBatchSize);) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
 
             while (true) {
 
@@ -263,6 +284,7 @@ class DataFileAppender implements FileAppender {
                 synchronized (enqueueMutex) {
                     while (true) {
                         if (nextWriteBatch != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
                             wb = nextWriteBatch;
                             nextWriteBatch = null;
                             break;
@@ -277,8 +299,10 @@ class DataFileAppender implements FileAppender {
 
                 if (dataFile != wb.dataFile) {
                     if (file != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
                         if (periodicSync) {
                             if (logger.isTraceEnabled()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6606
                                 logger.trace("Syncing file {} on rotate", dataFile.getFile().getName());
                             }
                             file.sync();
@@ -286,6 +310,7 @@ class DataFileAppender implements FileAppender {
                         dataFile.closeRandomAccessFile(file);
                     }
                     dataFile = wb.dataFile;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
                     file = dataFile.appendRandomAccessFile();
                 }
 
@@ -297,6 +322,7 @@ class DataFileAppender implements FileAppender {
 
                 boolean forceToDisk = false;
                 while (write != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
                     forceToDisk |= write.sync | (syncOnComplete && write.onComplete != null);
                     buff.writeInt(write.location.getSize());
                     buff.writeByte(write.location.getType());
@@ -306,6 +332,7 @@ class DataFileAppender implements FileAppender {
 
                 // append 'unset', zero length next batch so read can always find eof
                 buff.write(Journal.EOF_RECORD);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
 
                 ByteSequence sequence = buff.toByteSequence();
 
@@ -314,6 +341,7 @@ class DataFileAppender implements FileAppender {
                 buff.skip(RECORD_HEAD_SPACE + Journal.BATCH_CONTROL_RECORD_MAGIC.length);
                 buff.writeInt(sequence.getLength() - Journal.BATCH_CONTROL_RECORD_SIZE - Journal.EOF_RECORD.length);
                 if( journal.isChecksum() ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
                     Checksum checksum = new Adler32();
                     checksum.update(sequence.getData(), sequence.getOffset()+Journal.BATCH_CONTROL_RECORD_SIZE, sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE-Journal.EOF_RECORD.length);
                     buff.writeLong(checksum.getValue());
@@ -329,6 +357,7 @@ class DataFileAppender implements FileAppender {
                         for (;statIdx > 0;) {
                             all+= stats[--statIdx];
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
                         logger.info("Ave writeSize: " + all/maxStat);
                     }
                 }
@@ -340,20 +369,25 @@ class DataFileAppender implements FileAppender {
                 }
 
                 if (forceToDisk) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
                     file.sync();
                 }
 
                 Journal.WriteCommand lastWrite = wb.writes.getTail();
                 journal.setLastAppendLocation(lastWrite.location);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
                 signalDone(wb);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6606
         } catch (Throwable error) {
             logger.warn("Journal failed while writing at: " + wb.dataFile.getDataFileId() + ":" + wb.offset, error);
             synchronized (enqueueMutex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
                 shutdown = true;
                 running = false;
                 signalError(wb, error);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6606
                 if (nextWriteBatch != null) {
                     signalError(nextWriteBatch, error);
                     nextWriteBatch = null;
@@ -363,6 +397,7 @@ class DataFileAppender implements FileAppender {
         } finally {
             try {
                 if (file != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
                     if (periodicSync) {
                         if (logger.isTraceEnabled()) {
                             logger.trace("Syning file {} on close", dataFile.getFile().getName());
@@ -374,6 +409,7 @@ class DataFileAppender implements FileAppender {
             } catch (Throwable ignore) {
             }
             shutdownDone.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
             running = false;
         }
     }
@@ -382,15 +418,18 @@ class DataFileAppender implements FileAppender {
         // Now that the data is on disk, remove the writes from the in
         // flight
         // cache.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         Journal.WriteCommand write = wb.writes.getHead();
         while (write != null) {
             if (!write.sync) {
                 inflightWrites.remove(new Journal.WriteKey(write.location));
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6606
             if (write.onComplete != null && wb.exception.get() == null) {
                 try {
                     write.onComplete.run();
                 } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
                     logger.info("Add exception was raised while executing the run command for onComplete", e);
                 }
             }
@@ -402,10 +441,12 @@ class DataFileAppender implements FileAppender {
     }
 
     protected void signalError(WriteBatch wb, Throwable t) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6606
         if (wb != null) {
             if (t instanceof IOException) {
                 wb.exception.set((IOException) t);
                 // revert sync batch increment such that next write is contiguous
+//IC see: https://issues.apache.org/jira/browse/AMQ-6606
                 if (syncBatch(wb.writes)) {
                     wb.dataFile.decrementLength(wb.size);
                 }

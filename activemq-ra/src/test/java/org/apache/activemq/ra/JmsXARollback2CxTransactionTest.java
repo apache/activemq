@@ -59,6 +59,7 @@ public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
     @Override
     protected void setUp() throws Exception {
         LOG.info("Starting ----------------------------> {}", this.getName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
         super.setUp();
     }
@@ -90,6 +91,7 @@ public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
 
     public void testReconnectWithClientId() throws Exception {
         for (index = 0; index< 20; index ++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2346
             reconnect();
         }
     }

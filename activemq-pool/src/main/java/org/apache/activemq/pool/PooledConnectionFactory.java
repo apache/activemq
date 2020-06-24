@@ -46,6 +46,7 @@ public class PooledConnectionFactory extends org.apache.activemq.jms.pool.Pooled
     private static final transient Logger LOG = LoggerFactory.getLogger(org.apache.activemq.jms.pool.PooledConnectionFactory.class);
 
     public PooledConnectionFactory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         super();
     }
 
@@ -68,6 +69,7 @@ public class PooledConnectionFactory extends org.apache.activemq.jms.pool.Pooled
     @Override
     protected void populateProperties(Properties props) {
         ((ActiveMQConnectionFactory)getConnectionFactory()).populateProperties(props);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5268
         super.populateProperties(props);
     }
 
@@ -111,6 +113,7 @@ public class PooledConnectionFactory extends org.apache.activemq.jms.pool.Pooled
                         synchronized (this) {
                             setHasExpired(true);
                             // only log if not stopped
+//IC see: https://issues.apache.org/jira/browse/AMQ-5312
                             if (!stopped.get()) {
                                 LOG.info("Expiring connection " + connection + " on IOException: " + error.getMessage());
                                 // log stacktrace at debug level

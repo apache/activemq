@@ -25,5 +25,6 @@ import java.lang.annotation.Target;
 @Retention(value=RetentionPolicy.RUNTIME)
 @Target({CONSTRUCTOR, METHOD, PARAMETER, TYPE, FIELD})
 public @interface MBeanInfo {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
     String value();
 }

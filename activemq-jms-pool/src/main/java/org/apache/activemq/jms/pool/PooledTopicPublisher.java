@@ -33,11 +33,13 @@ public class PooledTopicPublisher extends PooledProducer implements TopicPublish
 
     @Override
     public Topic getTopic() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
         return (Topic) getDestination();
     }
 
     @Override
     public void publish(Message message) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1161
         getTopicPublisher().publish((Topic) getDestination(), message);
     }
 
@@ -57,6 +59,7 @@ public class PooledTopicPublisher extends PooledProducer implements TopicPublish
     }
 
     protected TopicPublisher getTopicPublisher() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         return (TopicPublisher) getMessageProducer();
     }
 }

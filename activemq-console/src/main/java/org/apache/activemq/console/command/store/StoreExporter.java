@@ -183,6 +183,7 @@ public class StoreExporter {
                     // TODO: use a real JSON encoder like jackson.
                     HashMap<String, Object> jsonMap = new HashMap<String, Object>();
                     jsonMap.put("@class", "dsub_destination");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4855
                     jsonMap.put("name", sub.getClientId() + ":" + sub.getSubscriptionName());
                     HashMap<String, Object> jsonTopic = new HashMap<String, Object>();
                     jsonTopic.put("name", dest.getTopicName());
@@ -190,6 +191,7 @@ public class StoreExporter {
                     if (sub.getSelector() != null) {
                         jsonMap.put("selector", sub.getSelector());
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
                     jsonMap.put("noLocal", sub.isNoLocal());
                     String json = mapper.writeValueAsString(jsonMap);
                     System.out.println(json);
@@ -198,6 +200,7 @@ public class StoreExporter {
                     manager.store_queue(destRecord);
 
                     final long seqKeyCounter[] = new long[]{0};
+//IC see: https://issues.apache.org/jira/browse/AMQ-4855
                     topic.recoverSubscription(sub.getClientId(), sub.getSubscriptionName(), new MessageRecoveryListener() {
                         @Override
                         public boolean hasSpace() {

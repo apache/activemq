@@ -204,6 +204,7 @@ public class FailoverDuplicateTest extends TestSupport {
 
         // verify stats
         assertEquals("expect all messages are dequeued with one duplicate to dlq", totalSent + 2, ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getEnqueues().getCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
 
         Wait.waitFor(new Wait.Condition() {
             @Override
@@ -213,6 +214,7 @@ public class FailoverDuplicateTest extends TestSupport {
             }
         });
         assertEquals("dequeue correct, including duplicate dispatch poisoned", totalSent  + 1, ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getDequeues().getCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
 
         // ensure no dangling messages with fresh broker etc
         broker.stop();

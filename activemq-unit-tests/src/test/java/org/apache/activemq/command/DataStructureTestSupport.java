@@ -151,6 +151,7 @@ public abstract class DataStructureTestSupport extends CombinationTestSupport {
     }
 
     protected Object marshalAndUnmarshall(Object original, WireFormat wireFormat) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
         ByteSequence packet = wireFormat.marshal(original);
         return wireFormat.unmarshal(packet);
     }

@@ -47,6 +47,7 @@ public class NetworkReconnectSslNioTest {
         remote.setSslContext(sslContext);
         remote.setUseJmx(false);
         remote.setPersistent(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         final TransportConnector transportConnector = remote.addConnector("nio+ssl://0.0.0.0:0");
         remote.start();
 

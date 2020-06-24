@@ -113,6 +113,7 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
     }
 
     public void reconnect(URI uri) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         throw new IOException("Not supported");
     }
 

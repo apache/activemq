@@ -106,6 +106,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         info.setBrokerInTime(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setBrokerOutTime(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setJMSXGroupFirstForConsumer(bs.readBoolean());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4092
 
         info.afterUnmarshall(wireFormat);
 
@@ -149,6 +150,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         rc+=tightMarshalLong1(wireFormat, info.getBrokerInTime(), bs);
         rc+=tightMarshalLong1(wireFormat, info.getBrokerOutTime(), bs);
         bs.writeBoolean(info.isJMSXGroupFirstForConsumer());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4092
 
         return rc + 9;
     }
@@ -194,6 +196,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         tightMarshalLong2(wireFormat, info.getBrokerInTime(), dataOut, bs);
         tightMarshalLong2(wireFormat, info.getBrokerOutTime(), dataOut, bs);
         bs.readBoolean();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4092
 
         info.afterMarshall(wireFormat);
 
@@ -265,6 +268,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         info.setBrokerInTime(looseUnmarshalLong(wireFormat, dataIn));
         info.setBrokerOutTime(looseUnmarshalLong(wireFormat, dataIn));
         info.setJMSXGroupFirstForConsumer(dataIn.readBoolean());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4092
 
         info.afterUnmarshall(wireFormat);
 
@@ -311,6 +315,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         looseMarshalLong(wireFormat, info.getBrokerInTime(), dataOut);
         looseMarshalLong(wireFormat, info.getBrokerOutTime(), dataOut);
         dataOut.writeBoolean(info.isJMSXGroupFirstForConsumer());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4092
 
     }
 }

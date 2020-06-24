@@ -41,6 +41,7 @@ public class PooledProducer implements MessageProducer {
         this.messageProducer = messageProducer;
         this.destination = destination;
         this.anonymous = messageProducer.getDestination() == null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4968
 
         this.deliveryMode = messageProducer.getDeliveryMode();
         this.disableMessageID = messageProducer.getDisableMessageID();
@@ -51,6 +52,7 @@ public class PooledProducer implements MessageProducer {
 
     @Override
     public void close() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4968
         if (!anonymous) {
             this.messageProducer.close();
         }
@@ -75,6 +77,7 @@ public class PooledProducer implements MessageProducer {
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
 
         if (destination == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4968
             if (messageProducer.getDestination() == null) {
                 throw new UnsupportedOperationException("A destination must be specified.");
             }
@@ -82,10 +85,12 @@ public class PooledProducer implements MessageProducer {
         }
 
         MessageProducer messageProducer = getMessageProducer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
 
         // just in case let only one thread send at once
         synchronized (messageProducer) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4991
             if (anonymous && this.destination != null && !this.destination.equals(destination)) {
                 throw new UnsupportedOperationException("This producer can only send messages to: " + this.destination);
             }
@@ -158,6 +163,7 @@ public class PooledProducer implements MessageProducer {
     }
 
     protected boolean isAnonymous() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4968
         return anonymous;
     }
 

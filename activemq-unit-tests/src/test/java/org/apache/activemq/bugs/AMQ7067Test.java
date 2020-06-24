@@ -133,6 +133,7 @@ public class AMQ7067Test {
 
         ((org.apache.activemq.broker.region.Queue) broker.getRegionBroker().getDestinationMap().get(queue)).purge();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -170,6 +171,7 @@ public class AMQ7067Test {
 
 
         setupXAConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
 
         Queue holdKahaDb = xaSession.createQueue("holdKahaDb");
 
@@ -230,6 +232,7 @@ public class AMQ7067Test {
 
     @Test
     public void testXACommitWithAckCompactionDoesNotLooseOutcomeOnFullRecovery() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         doTestXACompletionWithAckCompactionDoesNotLooseOutcomeOnFullRecovery(true);
     }
 
@@ -355,6 +358,7 @@ public class AMQ7067Test {
 
         ((org.apache.activemq.broker.region.Queue) broker.getRegionBroker().getDestinationMap().get(queue)).purge();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -445,6 +449,7 @@ public class AMQ7067Test {
 
         System.out.println(String.format("QueueSize %s: %d", holdKahaDb.getQueueName(), getQueueSize(holdKahaDb.getQueueName())));
         purgeQueue(queue.getQueueName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -484,6 +489,8 @@ public class AMQ7067Test {
         final Connection connection = ACTIVE_MQ_NON_XA_CONNECTION_FACTORY.createConnection();
         connection.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Queue holdKahaDb = session.createQueue("holdKahaDb");
         MessageProducer holdKahaDbProducer = session.createProducer(holdKahaDb);
@@ -497,6 +504,7 @@ public class AMQ7067Test {
         System.out.println(String.format("QueueSize %s: %d", holdKahaDb.getQueueName(), getQueueSize(holdKahaDb.getQueueName())));
         purgeQueue(queue.getQueueName());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -553,6 +561,7 @@ public class AMQ7067Test {
     }
 
     protected static void produce(Connection connection, Queue queue, int messageCount, int messageSize) throws JMSException, IOException, XAException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         MessageProducer producer = session.createProducer(queue);
 

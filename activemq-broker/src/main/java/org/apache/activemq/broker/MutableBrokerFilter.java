@@ -30,6 +30,7 @@ public class MutableBrokerFilter extends BrokerFilter {
     protected AtomicReference<Broker> next = new AtomicReference<Broker>();
 
     public MutableBrokerFilter(Broker next) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6497
     	super(null); // prevent future code from using the inherited 'next'
         this.next.set(next);
     }

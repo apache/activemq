@@ -48,6 +48,7 @@ public class PriorityNetworkDispatchPolicy extends SimpleDispatchPolicy {
                 ConsumerInfo info = sub.getConsumerInfo();
                 if (info.isNetworkSubscription()) {    
                     boolean highestPrioritySub = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3071
                     for (Iterator<Subscription> it =  duplicateFreeSubs.iterator(); it.hasNext(); ) {
                         Subscription candidate = it.next();
                         if (matches(candidate, info)) {
@@ -57,6 +58,7 @@ public class PriorityNetworkDispatchPolicy extends SimpleDispatchPolicy {
                                 // higher priority matching sub exists
                                 highestPrioritySub = false;
                                 LOG.debug("ignoring lower priority: {} [{}, {}] in favour of: {} [{}, {}]",
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                                         new Object[]{ candidate,
                                                 candidate.getConsumerInfo().getNetworkConsumerIds(),
                                                 candidate.getConsumerInfo().getNetworkConsumerIds(),

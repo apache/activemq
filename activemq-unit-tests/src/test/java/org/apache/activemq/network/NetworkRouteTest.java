@@ -207,6 +207,7 @@ public class NetworkRouteTest {
         localBroker.oneway(remoteBrokerInfo);
         EasyMock.expect(localBroker.request(EasyMock.isA(Object.class)))
                 .andReturn(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6322
         EasyMock.expect(remoteBroker.narrow(TcpTransport.class)).andReturn(null);
         localBroker.oneway(EasyMock.isA(Object.class));
         ExpectationWaiter localInitWaiter = ExpectationWaiter.waiterForLastVoidCall();
@@ -235,6 +236,7 @@ public class NetworkRouteTest {
         msgDispatch = new MessageDispatch();
         msgDispatch.setMessage(msg);
         msgDispatch.setDestination(msg.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5639
 
         ConsumerInfo path1 = new ConsumerInfo();
         path1.setDestination(msg.getDestination());

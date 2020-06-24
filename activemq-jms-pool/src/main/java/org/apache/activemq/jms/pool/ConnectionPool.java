@@ -64,9 +64,13 @@ public class ConnectionPool implements ExceptionListener {
     private ExceptionListener parentExceptionListener;
 
     public ConnectionPool(Connection connection) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5990
         final GenericKeyedObjectPoolConfig poolConfig = new GenericKeyedObjectPoolConfig();
         poolConfig.setJmxEnabled(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         this.connection = wrap(connection);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5510
+//IC see: https://issues.apache.org/jira/browse/AMQ-5534
         try {
             this.connection.setExceptionListener(this);
         } catch (JMSException ex) {
@@ -75,6 +79,8 @@ public class ConnectionPool implements ExceptionListener {
 
         // Create our internal Pool of session instances.
         this.sessionPool = new GenericKeyedObjectPool<SessionKey, SessionHolder>(
+//IC see: https://issues.apache.org/jira/browse/AMQ-5721
+//IC see: https://issues.apache.org/jira/browse/AMQ-5636
             new KeyedPooledObjectFactory<SessionKey, SessionHolder>() {
                 @Override
                 public PooledObject<SessionHolder> makeObject(SessionKey sessionKey) throws Exception {
@@ -84,6 +90,8 @@ public class ConnectionPool implements ExceptionListener {
 
                 @Override
                 public void destroyObject(SessionKey sessionKey, PooledObject<SessionHolder> pooledObject) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5510
+//IC see: https://issues.apache.org/jira/browse/AMQ-5534
                     pooledObject.getObject().close();
                 }
 
@@ -99,12 +107,14 @@ public class ConnectionPool implements ExceptionListener {
                 @Override
                 public void passivateObject(SessionKey sessionKey, PooledObject<SessionHolder> pooledObject) throws Exception {
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5990
             }, poolConfig
         );
     }
 
     // useful when external failure needs to force expiry
     public void setHasExpired(boolean val) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         hasExpired = val;
     }
 
@@ -121,10 +131,13 @@ public class ConnectionPool implements ExceptionListener {
 
     public void start() throws JMSException {
         if (started.compareAndSet(false, true)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2677
+//IC see: https://issues.apache.org/jira/browse/AMQ-3506
             try {
                 connection.start();
             } catch (JMSException e) {
                 started.set(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6290
                 if (isReconnectOnException()) {
                     close();
                 }
@@ -141,6 +154,7 @@ public class ConnectionPool implements ExceptionListener {
         SessionKey key = new SessionKey(transacted, ackMode);
         PooledSession session;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5015
             session = new PooledSession(key, sessionPool.borrowObject(key), sessionPool, key.isTransacted(), useAnonymousProducers);
             session.addSessionEventListener(new PooledSessionEventListener() {
 
@@ -156,9 +170,12 @@ public class ConnectionPool implements ExceptionListener {
                 public void onSessionClosed(PooledSession session) {
                     ConnectionPool.this.loanedSessions.remove(session);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3506
             });
+//IC see: https://issues.apache.org/jira/browse/AMQ-2643
             this.loanedSessions.add(session);
         } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
             IllegalStateException illegalStateException = new IllegalStateException(e.toString());
             illegalStateException.initCause(e);
             throw illegalStateException;
@@ -189,12 +206,14 @@ public class ConnectionPool implements ExceptionListener {
 
     public synchronized void decrementReferenceCount() {
         referenceCount--;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1084
         lastUsed = System.currentTimeMillis();
         if (referenceCount == 0) {
             // Loaned sessions are those that are active in the sessionPool and
             // have not been closed by the client before closing the connection.
             // These need to be closed so that all session's reflect the fact
             // that the parent Connection is closed.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2643
             for (PooledSession session : this.loanedSessions) {
                 try {
                     session.close();
@@ -204,7 +223,9 @@ public class ConnectionPool implements ExceptionListener {
             this.loanedSessions.clear();
 
             unWrap(getConnection());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4366
             expiredCheck();
         }
     }
@@ -226,9 +247,11 @@ public class ConnectionPool implements ExceptionListener {
             return true;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         if (hasExpired) {
             if (referenceCount == 0) {
                 close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
                 expired = true;
             }
         }
@@ -261,10 +284,12 @@ public class ConnectionPool implements ExceptionListener {
     }
 
     public void setExpiryTimeout(long expiryTimeout) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4019
         this.expiryTimeout = expiryTimeout;
     }
 
     public long getExpiryTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2376
         return expiryTimeout;
     }
 
@@ -277,6 +302,7 @@ public class ConnectionPool implements ExceptionListener {
     }
 
     public boolean isUseAnonymousProducers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4968
         return this.useAnonymousProducers;
     }
 
@@ -315,6 +341,8 @@ public class ConnectionPool implements ExceptionListener {
      * 		Indicates whether blocking should be used to wait for more space to create a session.
      */
     public void setBlockIfSessionPoolIsFull(boolean block) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5721
+//IC see: https://issues.apache.org/jira/browse/AMQ-5636
         this.sessionPool.setBlockWhenExhausted(block);
     }
 
@@ -329,6 +357,8 @@ public class ConnectionPool implements ExceptionListener {
      * @see #setBlockIfSessionPoolIsFull(boolean)
      */
     public long getBlockIfSessionPoolIsFullTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5721
+//IC see: https://issues.apache.org/jira/browse/AMQ-5636
         return this.sessionPool.getMaxWaitMillis();
     }
 
@@ -347,6 +377,8 @@ public class ConnectionPool implements ExceptionListener {
      *                                        then use this setting to configure how long to block before retry
      */
     public void setBlockIfSessionPoolIsFullTimeout(long blockIfSessionPoolIsFullTimeout) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5721
+//IC see: https://issues.apache.org/jira/browse/AMQ-5636
         this.sessionPool.setMaxWaitMillis(blockIfSessionPoolIsFullTimeout);
     }
 
@@ -367,6 +399,8 @@ public class ConnectionPool implements ExceptionListener {
         this.reconnectOnException = reconnectOnException;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5510
+//IC see: https://issues.apache.org/jira/browse/AMQ-5534
     ExceptionListener getParentExceptionListener() {
         return parentExceptionListener;
     }
@@ -387,6 +421,7 @@ public class ConnectionPool implements ExceptionListener {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4003
         return "ConnectionPool[" + connection + "]";
     }
 }

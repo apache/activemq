@@ -29,6 +29,7 @@ public class NetworkDestinationView implements NetworkDestinationViewMBean {
     private long lastTime = -1;
 
     public NetworkDestinationView(NetworkBridgeView networkBridgeView, String name){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
        this.networkBridgeView = networkBridgeView;
        this.name=name;
     }
@@ -74,10 +75,12 @@ public class NetworkDestinationView implements NetworkDestinationViewMBean {
     }
 
     public long getLastAccessTime(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         return timeStatistic.getLastSampleTime();
     }
 
     public void close(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         networkBridgeView.removeNetworkDestinationView(this);
     }
 

@@ -228,6 +228,7 @@ public class AMQ3405Test extends TestSupport {
     }
 
     private QueueViewMBean getProxyToDLQ() throws MalformedObjectNameException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName queueViewMBeanName = new ObjectName(
             "org.apache.activemq:type=Broker,brokerName=localhost," +
             "destinationType=Queue,destinationName=ActiveMQ.DLQ");

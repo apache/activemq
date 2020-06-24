@@ -84,6 +84,7 @@ public class JobSchedulerStoreUsageTest extends EmbeddedBrokerTestSupport {
 
         assertEquals(7 * 1024, broker.getAdminView().getJobSchedulerStoreLimit());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         assertTrue("Usage exhausted", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {

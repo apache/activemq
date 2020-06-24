@@ -32,6 +32,7 @@ public class RangeStatisticImpl extends StatisticImpl {
     }
 
     public void reset() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1946
         if (isDoReset()) {
             super.reset();
             current = 0;

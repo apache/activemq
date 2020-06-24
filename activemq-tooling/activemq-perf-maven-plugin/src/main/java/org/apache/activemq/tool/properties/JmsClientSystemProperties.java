@@ -75,6 +75,7 @@ public class JmsClientSystemProperties extends AbstractObjectProperties {
     }
 
     public Set<String> getSamplersSet() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
         Set<String> samplersSet = new HashSet<>();
         for (String sampler : samplers.split(",")) {
             samplersSet.add(sampler.trim());

@@ -140,6 +140,7 @@ public interface Mechanism extends Comparable<Mechanism> {
      * @return the currently set Authentication ID.
      */
     String getAuthzid();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
 
     /**
      * Sets an Authentication ID that some mechanism can use during the

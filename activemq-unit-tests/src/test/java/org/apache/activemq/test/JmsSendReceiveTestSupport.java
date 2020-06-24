@@ -67,6 +67,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         messages.clear();
         String temp = System.getProperty("messageCount");
 
@@ -107,8 +108,10 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
      */
     public void testSendReceive() throws Exception {
         Thread.sleep(100);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         sendMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3716
 
         assertMessagesAreReceived();
         LOG.info("" + data.length + " messages(s) received, closing down connections");
@@ -116,20 +119,26 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
 
     protected void sendMessages() throws Exception {
         for (int i = 0; i < data.length; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-757
             Message message = createMessage(i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-715
             configureMessage(message);
             if (verbose) {
                 LOG.info("About to send a message: " + message + " with text: " + data[i]);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2224
+//IC see: https://issues.apache.org/jira/browse/AMQ-2221
             sendMessage(i, message);
         }
     }
 
     protected void sendMessage(int index, Message message) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         producer.send(producerDestination, message);
     }
 
     protected Message createMessage(int index) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-757
         Message message = session.createTextMessage(data[index]);
         return message;
     }
@@ -171,6 +180,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
         }
 
         assertEquals("Invalid number of messages received", data.length, receivedMessages.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2359
 
         for (int i = 0; i < data.length; i++) {
             Message received = receivedMessages.get(i);

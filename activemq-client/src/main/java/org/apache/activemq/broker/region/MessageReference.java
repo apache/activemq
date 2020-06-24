@@ -31,6 +31,7 @@ public interface MessageReference {
     
     MessageId getMessageId();
     Message getMessageHardRef();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
     Message getMessage();
     boolean isPersistent();
     

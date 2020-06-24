@@ -52,6 +52,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
     protected final AtomicBoolean taskStarted = new AtomicBoolean(false);
     protected final Map<Subscription, SlowConsumerEntry> slowConsumers =
         new ConcurrentHashMap<Subscription, SlowConsumerEntry>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
 
     private long maxSlowCount = -1;
     private long maxSlowDuration = 30*1000;
@@ -61,6 +62,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
 
     @Override
     public void setBrokerService(Broker broker) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
        this.scheduler = broker.getScheduler();
        this.broker = broker;
     }
@@ -95,6 +97,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
 
         HashMap<Subscription, SlowConsumerEntry> toAbort = new HashMap<Subscription, SlowConsumerEntry>();
         for (Entry<Subscription, SlowConsumerEntry> entry : slowConsumers.entrySet()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5371
             Subscription subscription = entry.getKey();
             if (isIgnoreNetworkSubscriptions() && subscription.getConsumerInfo().isNetworkSubscription()) {
                 if (slowConsumers.remove(subscription) != null) {
@@ -104,6 +107,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
             }
 
             if (entry.getKey().isSlowConsumer()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
                 if (maxSlowDuration > 0 && (entry.getValue().markCount * checkPeriod >= maxSlowDuration)
                         || maxSlowCount > 0 && entry.getValue().slowCount >= maxSlowCount) {
                     toAbort.put(entry.getKey(), entry.getValue());
@@ -121,6 +125,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
     protected void abortSubscription(Map<Subscription, SlowConsumerEntry> toAbort, boolean abortSubscriberConnection) {
 
         Map<Connection, List<Subscription>> abortMap = new HashMap<Connection, List<Subscription>>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
 
         for (final Entry<Subscription, SlowConsumerEntry> entry : toAbort.entrySet()) {
             ConnectionContext connectionContext = entry.getValue().context;
@@ -174,6 +179,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
             } else {
                 // just abort each consumer
                 for (Subscription subscription : subscriptions) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5114
                     final Subscription subToClose = subscription;
                     LOG.info("aborting slow consumer: {} for destination:{}",
                              subscription.getConsumerInfo().getConsumerId(),
@@ -220,6 +226,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
         if (sub != null) {
             SlowConsumerEntry entry = slowConsumers.remove(sub);
             if (entry != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
                 Map<Subscription, SlowConsumerEntry> toAbort = new HashMap<Subscription, SlowConsumerEntry>();
                 toAbort.put(sub, entry);
                 abortSubscription(toAbort, abortSubscriberConnection);
@@ -286,6 +293,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
      *         for slow consumers.
      */
     public boolean isIgnoreNetworkSubscriptions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5371
         return ignoreNetworkConsumers;
     }
 
@@ -308,6 +316,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
     }
 
     public void setName(String name) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
         this.name = name;
     }
 

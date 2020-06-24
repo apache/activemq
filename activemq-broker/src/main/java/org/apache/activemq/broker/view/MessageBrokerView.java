@@ -58,6 +58,7 @@ public class MessageBrokerView  {
      * @param brokerName
      */
     public MessageBrokerView(String brokerName){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4714
         this.brokerService = BrokerRegistry.getInstance().lookup(brokerName);
         if (brokerService == null){
             throw new NullPointerException("BrokerService is null");
@@ -198,6 +199,7 @@ public class MessageBrokerView  {
     public Set<ActiveMQTempQueue> getTempQueues(){
         Set<ActiveMQTempQueue> result = new HashSet<ActiveMQTempQueue>();
         for (ActiveMQDestination destination:getDestinations()){
+//IC see: https://issues.apache.org/jira/browse/AMQ-5680
             if (destination.isQueue() && destination.isTemporary()){
                 result.add((ActiveMQTempQueue) destination);
             }

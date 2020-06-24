@@ -103,6 +103,7 @@ public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
     @Test(timeout = 60 * 1000)
     public void testOneProducerTwoMatchingConsumersOneNotMatchingConsumer() throws Exception {
         // Create consumer that won't consume any message
+//IC see: https://issues.apache.org/jira/browse/AMQ-1006
         createMessageConsumer(createConnectionFactory().createConnection(), createDestination(), "JMSPriority<1");
         super.testOneProducerTwoConsumersSmallMessagesLargePrefetch();
         assertMessagesDividedAmongConsumers();

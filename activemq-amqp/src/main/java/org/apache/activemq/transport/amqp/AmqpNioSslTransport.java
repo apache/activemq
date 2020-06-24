@@ -40,6 +40,7 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
 
     public AmqpNioSslTransport(WireFormat wireFormat, Socket socket) throws IOException {
         super(wireFormat, socket, null, null, null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
 
         frameReader.setWireFormat((AmqpWireFormat) wireFormat);
     }
@@ -61,6 +62,7 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
 
     @Override
     protected void processCommand(ByteBuffer plain) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5475
         frameReader.parse(plain);
     }
 
@@ -70,9 +72,11 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
 
     @Override
     protected void doInit() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         if (initBuffer != null) {
             nextFrameSize = -1;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
         super.doInit();
     }
 

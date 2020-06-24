@@ -41,6 +41,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
     public synchronized void setTransportListener(TransportListener channelListener) {
         this.transportListener = channelListener;
         if (channelListener == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1026
             getNext().setTransportListener(null);
         } else {
             getNext().setTransportListener(this);
@@ -60,6 +61,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
         if (transportListener == null) {
             throw new IOException("The command listener has not been set.");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1026
         getNext().start();
     }
 
@@ -93,6 +95,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1026
         return getNext().toString();
     }
 
@@ -154,6 +157,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
 
     @Override
     public boolean isDisposed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return getNext().isDisposed();
     }
 
@@ -169,6 +173,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
 
     @Override
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         return getNext().getReceiveCounter();
     }
 

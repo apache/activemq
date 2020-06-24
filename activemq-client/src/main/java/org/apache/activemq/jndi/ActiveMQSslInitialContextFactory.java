@@ -32,6 +32,7 @@ public class ActiveMQSslInitialContextFactory extends ActiveMQInitialContextFact
      */
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory(Hashtable environment) throws URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQConnectionFactory answer = needsXA(environment) ? new ActiveMQXASslConnectionFactory() : new ActiveMQSslConnectionFactory();
         Properties properties = new Properties();
         properties.putAll(environment);

@@ -45,6 +45,7 @@ public class KahaDBDeleteLockTest {
     @Before
     public void createMaster() throws Exception{
         master = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
         master.setDeleteAllMessagesOnStartup(true);
         master.setBrokerName("Master");
         master.setDataDirectoryFile(testDataDir);
@@ -53,6 +54,7 @@ public class KahaDBDeleteLockTest {
         masterPersistenceAdapter.setLockKeepAlivePeriod(500);
 
         // ensure broker creates the file
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
         File lockFile = new File(kahaDataDir, "lock");
         if (lockFile.exists()) {
             lockFile.delete();
@@ -67,6 +69,7 @@ public class KahaDBDeleteLockTest {
     public void stopBrokerJustInCase() throws Exception {
         if (master != null) {
             master.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
             master.waitUntilStopped();
         }
     }
@@ -103,6 +106,7 @@ public class KahaDBDeleteLockTest {
     public void testModifyLockFile() throws Exception {
         assertTrue(master.isStarted());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
         final File lockFile = new File(kahaDataDir, "lock");
         assertTrue("lock file exists via modification time", Wait.waitFor(new Wait.Condition() {
             @Override
@@ -113,6 +117,7 @@ public class KahaDBDeleteLockTest {
         }));
 
         // ensure modification will be seen, second granularity on some nix
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
         TimeUnit.SECONDS.sleep(2);
         RandomAccessFile file = new RandomAccessFile(lockFile, "rw");
         file.write(4);
@@ -125,6 +130,7 @@ public class KahaDBDeleteLockTest {
                 return master.isStopped();
             }
         }, 10000));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
 
     }
 }

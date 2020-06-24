@@ -238,6 +238,7 @@ public class CompressionOverNetworkTest {
                 if (bridges.length > 0) {
                     LOG.info(brokerService + " bridges "  + Arrays.toString(bridges));
                     DemandForwardingBridgeSupport demandForwardingBridgeSupport = (DemandForwardingBridgeSupport) bridges[0];
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
                     ConcurrentMap<ConsumerId, DemandSubscription> forwardingBridges = demandForwardingBridgeSupport.getLocalSubscriptionMap();
                     LOG.info(brokerService + " bridge "  + demandForwardingBridgeSupport + ", localSubs: " + forwardingBridges);
                     if (!forwardingBridges.isEmpty()) {

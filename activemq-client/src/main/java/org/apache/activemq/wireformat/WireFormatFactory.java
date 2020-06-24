@@ -17,5 +17,6 @@
 package org.apache.activemq.wireformat;
 
 public interface WireFormatFactory {
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
     WireFormat createWireFormat();    
 }

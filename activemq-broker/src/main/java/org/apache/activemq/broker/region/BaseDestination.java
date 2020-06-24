@@ -131,7 +131,9 @@ public abstract class BaseDestination implements Destination {
         this.systemUsage = new SystemUsage(brokerService.getProducerSystemUsage(), destination.toString());
         this.memoryUsage = this.systemUsage.getMemoryUsage();
         this.memoryUsage.setUsagePortion(1.0f);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1656
         this.regionBroker = brokerService.getRegionBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
         this.scheduler = brokerService.getBroker().getScheduler();
     }
 
@@ -153,6 +155,8 @@ public abstract class BaseDestination implements Destination {
      */
     @Override
     public boolean isProducerFlowControl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
         return producerFlowControl;
     }
 
@@ -166,6 +170,8 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public boolean isAlwaysRetroactive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2911
+//IC see: https://issues.apache.org/jira/browse/AMQ-3157
         return alwaysRetroactive;
     }
 
@@ -248,6 +254,7 @@ public abstract class BaseDestination implements Destination {
     @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationStatistics.getProducers().increment();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2821
         this.lastActiveTime=0l;
     }
 
@@ -265,22 +272,27 @@ public abstract class BaseDestination implements Destination {
     @Override
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception{
         destinationStatistics.getConsumers().decrement();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
         this.lastActiveTime=0l;
     }
 
 
     @Override
     public final MemoryUsage getMemoryUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1553
         return memoryUsage;
     }
 
     @Override
     public void setMemoryUsage(MemoryUsage memoryUsage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4121
+//IC see: https://issues.apache.org/jira/browse/AMQ-5253
         this.memoryUsage = memoryUsage;
     }
 
     @Override
     public TempUsage getTempUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7085
         return systemUsage.getTempUsage();
     }
 
@@ -307,6 +319,7 @@ public abstract class BaseDestination implements Destination {
     @Override
     public boolean isActive() {
         boolean isActive = destinationStatistics.getConsumers().getCount() > 0 ||
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
                            destinationStatistics.getProducers().getCount() > 0;
         if (isActive && isGcWithNetworkConsumers() && destinationStatistics.getConsumers().getCount() > 0) {
             isActive = hasRegularConsumers(getConsumers());
@@ -326,6 +339,9 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public int getMaxBrowsePageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
+//IC see: https://issues.apache.org/jira/browse/AMQ-1914
+//IC see: https://issues.apache.org/jira/browse/AMQ-6215
         return this.maxBrowsePageSize;
     }
 
@@ -335,6 +351,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     public int getMaxExpirePageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         return this.maxExpirePageSize;
     }
 
@@ -381,6 +398,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     protected long getDestinationSequenceId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1656
         return regionBroker.getBrokerSequenceId();
     }
 
@@ -388,6 +406,9 @@ public abstract class BaseDestination implements Destination {
      * @return the advisoryForSlowConsumers
      */
     public boolean isAdvisoryForSlowConsumers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
         return advisoryForSlowConsumers;
     }
 
@@ -459,6 +480,7 @@ public abstract class BaseDestination implements Destination {
      * @return the advisdoryForFastProducers
      */
     public boolean isAdvisoryForFastProducers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
         return advisoryForFastProducers;
     }
 
@@ -470,6 +492,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     public boolean isSendAdvisoryIfNoConsumers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2120
         return sendAdvisoryIfNoConsumers;
     }
 
@@ -478,6 +501,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     public boolean isIncludeBodyForAdvisory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
         return includeBodyForAdvisory;
     }
 
@@ -490,6 +514,7 @@ public abstract class BaseDestination implements Destination {
      */
     @Override
     public DeadLetterStrategy getDeadLetterStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1796
         return deadLetterStrategy;
     }
 
@@ -504,6 +529,7 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public int getCursorMemoryHighWaterMark() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
         return this.cursorMemoryHighWaterMark;
     }
 
@@ -533,6 +559,7 @@ public abstract class BaseDestination implements Destination {
      */
     @Override
     public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6188
         this.lastActiveTime = 0L;
         if (advisoryForDelivery) {
             broker.messageDelivered(context, messageReference);
@@ -549,6 +576,7 @@ public abstract class BaseDestination implements Destination {
     @Override
     public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         if (advisoryForDiscardingMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
             broker.messageDiscarded(context, sub, messageReference);
         }
     }
@@ -561,9 +589,11 @@ public abstract class BaseDestination implements Destination {
      */
     @Override
     public void slowConsumer(ConnectionContext context, Subscription subs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1842
         if (advisoryForSlowConsumers) {
             broker.slowConsumer(context, this, subs);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
         if (slowConsumerStrategy != null) {
             slowConsumerStrategy.slowConsumer(context, subs);
         }
@@ -577,6 +607,7 @@ public abstract class BaseDestination implements Destination {
      */
     @Override
     public void fastProducer(ConnectionContext context, ProducerInfo producerInfo) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
         if (advisoryForFastProducers) {
             broker.fastProducer(context, producerInfo, getActiveMQDestination());
         }
@@ -598,11 +629,14 @@ public abstract class BaseDestination implements Destination {
     @Override
     public void dispose(ConnectionContext context) throws IOException {
         if (this.store != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2209
             this.store.removeAllMessages(context);
             this.store.dispose(context);
         }
         this.destinationStatistics.setParent(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1790
         this.memoryUsage.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2524
         this.disposed = true;
     }
 
@@ -616,7 +650,9 @@ public abstract class BaseDestination implements Destination {
      * some way - such as to send to a dead letter queue or something..
      */
     protected void onMessageWithNoConsumers(ConnectionContext context, Message msg) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2443
         if (!msg.isPersistent()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2120
             if (isSendAdvisoryIfNoConsumers()) {
                 // allow messages with no consumers to be dispatched to a dead
                 // letter queue
@@ -675,14 +711,18 @@ public abstract class BaseDestination implements Destination {
     }
 
     protected final void waitForSpace(ConnectionContext context,ProducerBrokerExchange producerBrokerExchange, Usage<?> usage, String warning) throws IOException, InterruptedException, ResourceAllocationException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
         waitForSpace(context, producerBrokerExchange, usage, 100, warning);
     }
 
     protected final void waitForSpace(ConnectionContext context, ProducerBrokerExchange producerBrokerExchange, Usage<?> usage, int highWaterMark, String warning) throws IOException, InterruptedException, ResourceAllocationException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3551
         if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6854
             if (isFlowControlLogRequired()) {
                 getLog().info("sendFailIfNoSpace, forcing exception on send, usage: {}: {}", usage, warning);
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                 getLog().debug("sendFailIfNoSpace, forcing exception on send, usage: {}: {}", usage, warning);
             }
             throw new ResourceAllocationException(warning);
@@ -698,6 +738,7 @@ public abstract class BaseDestination implements Destination {
             }
         } else {
             long start = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
             producerBrokerExchange.blockingOnFlowControl(true);
             destinationStatistics.getBlockedSends().increment();
             while (!usage.waitForSpace(1000, highWaterMark)) {
@@ -706,11 +747,13 @@ public abstract class BaseDestination implements Destination {
                 }
 
                 if (isFlowControlLogRequired()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4261
                     getLog().warn("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((System.currentTimeMillis() - start) / 1000))});
                 } else {
                     getLog().debug("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((System.currentTimeMillis() - start) / 1000))});
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
             long finish = System.currentTimeMillis();
             long totalTimeBlocked = finish - start;
             destinationStatistics.getBlockedTime().addTime(totalTimeBlocked);
@@ -721,6 +764,7 @@ public abstract class BaseDestination implements Destination {
 
     protected boolean isFlowControlLogRequired() {
         boolean answer = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3233
         if (blockedProducerWarningInterval > 0) {
             long now = System.currentTimeMillis();
             if (lastBlockedProducerWarnTime + blockedProducerWarningInterval <= now) {
@@ -734,22 +778,26 @@ public abstract class BaseDestination implements Destination {
     protected abstract Logger getLog();
 
     public void setSlowConsumerStrategy(SlowConsumerStrategy slowConsumerStrategy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
         this.slowConsumerStrategy = slowConsumerStrategy;
     }
 
     @Override
     public SlowConsumerStrategy getSlowConsumerStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
         return this.slowConsumerStrategy;
     }
 
 
     @Override
     public boolean isPrioritizedMessages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         return this.prioritizedMessages;
     }
 
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         this.prioritizedMessages = prioritizedMessages;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
         if (store != null) {
             store.setPrioritizedMessages(prioritizedMessages);
         }
@@ -760,6 +808,7 @@ public abstract class BaseDestination implements Destination {
      */
     @Override
     public long getInactiveTimeoutBeforeGC() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5253
         return this.inactiveTimeoutBeforeGC;
     }
 
@@ -774,6 +823,7 @@ public abstract class BaseDestination implements Destination {
      * @return the gcIfInactive
      */
     public boolean isGcIfInactive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2821
         return this.gcIfInactive;
     }
 
@@ -789,6 +839,8 @@ public abstract class BaseDestination implements Destination {
      * @param gcWithNetworkConsumers
      */
     public void setGcWithNetworkConsumers(boolean gcWithNetworkConsumers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         this.gcWithNetworkConsumers = gcWithNetworkConsumers;
     }
 
@@ -807,6 +859,7 @@ public abstract class BaseDestination implements Destination {
     @Override
     public boolean canGC() {
         boolean result = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
         final long currentLastActiveTime = this.lastActiveTime;
         if (isGcIfInactive() && currentLastActiveTime != 0l && destinationStatistics.messages.getCount() == 0L ) {
             if ((System.currentTimeMillis() - currentLastActiveTime) >= getInactiveTimeoutBeforeGC()) {
@@ -826,6 +879,7 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public boolean isDoOptimzeMessageStorage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
         return doOptimzeMessageStorage;
     }
 
@@ -835,6 +889,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     public int getOptimizeMessageStoreInFlightLimit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
         return optimizeMessageStoreInFlightLimit;
     }
 
@@ -848,6 +903,8 @@ public abstract class BaseDestination implements Destination {
 
     protected boolean hasRegularConsumers(List<Subscription> consumers) {
         boolean hasRegularConsumers = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         for (Subscription subscription: consumers) {
             if (!subscription.getConsumerInfo().isNetworkSubscription()) {
                 hasRegularConsumers = true;
@@ -858,6 +915,8 @@ public abstract class BaseDestination implements Destination {
     }
 
     public ConnectionContext createConnectionContext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
         ConnectionContext answer = new ConnectionContext();
         answer.setBroker(this.broker);
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
@@ -869,6 +928,8 @@ public abstract class BaseDestination implements Destination {
         // the original ack may be a ranged ack, but we are trying to delete
         // a specific
         // message store here so we need to convert to a non ranged ack.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         if (ack.getMessageCount() > 0) {
             // Dup the ack
             MessageAck a = new MessageAck();
@@ -878,18 +939,21 @@ public abstract class BaseDestination implements Destination {
             ack.setMessageCount(1);
         }
         // always use node messageId so we can access entry/data Location
+//IC see: https://issues.apache.org/jira/browse/AMQ-5277
         ack.setFirstMessageId(node.getMessageId());
         ack.setLastMessageId(node.getMessageId());
         return ack;
     }
 
     protected boolean isDLQ() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4483
         return destination.isDLQ();
     }
 
     @Override
     public void duplicateFromStore(Message message, Subscription subscription) {
         ConnectionContext connectionContext = createConnectionContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7062
         getLog().warn("{}{}, redirecting {} for dlq processing", DUPLICATE_FROM_STORE_MSG_PREFIX, destination, message.getMessageId());
         Throwable cause = new Throwable(DUPLICATE_FROM_STORE_MSG_PREFIX + destination);
         message.setRegionDestination(this);
@@ -904,6 +968,8 @@ public abstract class BaseDestination implements Destination {
     }
 
     public void setPersistJMSRedelivered(boolean persistJMSRedelivered) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         this.persistJMSRedelivered = persistJMSRedelivered;
     }
 
@@ -912,6 +978,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     public SystemUsage getSystemUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
         return systemUsage;
     }
 }

@@ -28,6 +28,7 @@ public class MQTTWSSTransportTest extends MQTTWSTransportTest {
 
     @Parameters(name="{0}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
         return Arrays.asList(new Object[][] {
             {"complete-frames", false},
             {"partial-frames", false}

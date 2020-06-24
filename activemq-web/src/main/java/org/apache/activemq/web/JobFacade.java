@@ -36,6 +36,7 @@ public class JobFacade {
     }
     
     public long getDelay() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         Long result = (Long) data.get("delay");
         if (result != null) {
             return result.longValue();

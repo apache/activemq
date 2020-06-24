@@ -117,6 +117,7 @@ public class AmqpAndMqttTest {
     public Connection createAmqpConnection() throws Exception {
 
         String amqpURI = "amqp://localhost:" + amqpConnector.getConnectUri().getPort();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
 
         final JmsConnectionFactory factory = new JmsConnectionFactory(amqpURI);
 

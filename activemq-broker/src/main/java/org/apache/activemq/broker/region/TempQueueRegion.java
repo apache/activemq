@@ -37,6 +37,7 @@ public class TempQueueRegion extends AbstractTempRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
         if (info.isBrowser()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1672
             return new QueueBrowserSubscription(broker,usageManager,context, info);
         } else {
             return new QueueSubscription(broker,usageManager,context, info);
@@ -53,6 +54,7 @@ public class TempQueueRegion extends AbstractTempRegion {
         // there is still an active sub. Temp destination may be removed
         // while a network sub is still active which is valid.
         if (timeout == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1176
             timeout = 1;
         }
 

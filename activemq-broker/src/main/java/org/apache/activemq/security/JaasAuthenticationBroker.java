@@ -63,7 +63,9 @@ public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
             // Set the TCCL since it seems JAAS needs it to find the login module classes.
             ClassLoader original = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(JaasAuthenticationBroker.class.getClassLoader());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6787
             SecurityContext securityContext = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5470
             try {
                 securityContext = authenticate(info.getUserName(), info.getPassword(), null);
                 context.setSecurityContext(securityContext);

@@ -63,9 +63,11 @@ public final class IntrospectionSupport {
             Class<?> type = method.getReturnType();
             Class<?> params[] = method.getParameterTypes();
             if ((name.startsWith("is") || name.startsWith("get")) && params.length == 0 && type != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
 
                 try {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3797
                     Object value = method.invoke(target);
                     if (value == null) {
                         continue;
@@ -76,6 +78,7 @@ public final class IntrospectionSupport {
                         continue;
                     }
                     if (name.startsWith("get")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4012
                         name = name.substring(3, 4).toLowerCase(Locale.ENGLISH)
                                 + name.substring(4);
                     } else {
@@ -85,6 +88,7 @@ public final class IntrospectionSupport {
                     props.put(optionPrefix + name, strValue);
                     rc = true;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4428
                 } catch (Exception ignore) {
                 }
             }
@@ -166,6 +170,7 @@ public final class IntrospectionSupport {
     public static boolean setProperty(Object target, String name, Object value) {
         try {
             Class<?> clazz = target.getClass();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2384
             if (target instanceof SSLServerSocket) {
                 // overcome illegal access issues with internal implementation class
                 clazz = SSLServerSocket.class;
@@ -181,12 +186,14 @@ public final class IntrospectionSupport {
             // If the type is null or it matches the needed type, just use the
             // value directly
             if (value == null || value.getClass() == setter.getParameterTypes()[0]) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3797
                 setter.invoke(target, value);
             } else {
                 // We need to convert it
                 setter.invoke(target, convert(value, setter.getParameterTypes()[0]));
             }
             return true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4428
         } catch (Exception e) {
             LOG.error(String.format("Could not set property %s on %s", name, target), e);
             return false;
@@ -194,6 +201,7 @@ public final class IntrospectionSupport {
     }
 
     private static Object convert(Object value, Class to) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
         if (value == null) {
             // lets avoid NullPointerException when converting to boolean for null values
             if (boolean.class.isAssignableFrom(to)) {
@@ -210,6 +218,7 @@ public final class IntrospectionSupport {
 
         // special for String[] as we do not want to use a PropertyEditor for that
         if (to.isAssignableFrom(String[].class)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3797
             return StringArrayConverter.convertToStringArray(value);
         }
 
@@ -242,6 +251,7 @@ public final class IntrospectionSupport {
 
         // special for String[] as we do not want to use a PropertyEditor for that
         if (String[].class.isInstance(value)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3797
             String[] array = (String[]) value;
             return StringArrayConverter.convertToString(array);
         }
@@ -266,6 +276,7 @@ public final class IntrospectionSupport {
 
     public static Method findSetterMethod(Class clazz, String name) {
         // Build the method name.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2608
         name = "set" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         Method[] methods = clazz.getMethods();
         for (Method method : methods) {
@@ -279,6 +290,7 @@ public final class IntrospectionSupport {
 
     public static Method findGetterMethod(Class clazz, String name) {
         // Build the method name.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6435
         name = "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         Method[] methods = clazz.getMethods();
         for (Method method : methods) {
@@ -291,6 +303,7 @@ public final class IntrospectionSupport {
     }
 
     public static String toString(Object target) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1978
         return toString(target, Object.class, null);
     }
 
@@ -313,6 +326,8 @@ public final class IntrospectionSupport {
         Set<Entry<String, Object>> entrySet = map.entrySet();
         boolean first = true;
         for (Map.Entry<String,Object> entry : entrySet) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2499
+//IC see: https://issues.apache.org/jira/browse/AMQ-2499
             Object value = entry.getValue();
             Object key = entry.getKey();
             if (first) {
@@ -333,6 +348,7 @@ public final class IntrospectionSupport {
         if (value instanceof ActiveMQDestination) {
             ActiveMQDestination destination = (ActiveMQDestination)value;
             buffer.append(destination.getQualifiedName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4012
         } else if (key.toString().toLowerCase(Locale.ENGLISH).contains("password")){
             buffer.append("*****");
         } else {
@@ -368,6 +384,7 @@ public final class IntrospectionSupport {
                 if (o != null && o.getClass().isArray()) {
                     try {
                         o = Arrays.asList((Object[])o);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4428
                     } catch (Exception e) {
                     }
                 }

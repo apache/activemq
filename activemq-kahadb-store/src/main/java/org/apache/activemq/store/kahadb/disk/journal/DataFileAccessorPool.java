@@ -67,6 +67,7 @@ public class DataFileAccessorPool {
         }
 
         public synchronized boolean isUsed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6372
             return openCounter > 0;
         }
 
@@ -89,6 +90,7 @@ public class DataFileAccessorPool {
     }
 
     public synchronized int size() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6372
         return pools.size();
     }
 
@@ -144,6 +146,8 @@ public class DataFileAccessorPool {
             return;
         }
         closed = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
         for (Pool pool : pools.values()) {
             pool.dispose();
         }

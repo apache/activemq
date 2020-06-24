@@ -38,6 +38,8 @@ public class EmbeddedActiveMQ
  
                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
                 BrokerService brokerService = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                 Connection connection = null;
  
                 logger.info("Start...");
@@ -49,6 +51,8 @@ public class EmbeddedActiveMQ
                         logger.info("Broker '" + brokerService.getBrokerName() + "' is starting........");
                         brokerService.start();
                         ConnectionFactory fac = new ActiveMQConnectionFactory("vm://TestMQ");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                         connection = fac.createConnection();
                         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                         Destination queue = session.createQueue("TEST.QUEUE");
@@ -72,6 +76,8 @@ public class EmbeddedActiveMQ
                         {
                                 br.close();
                                 logger.info("Broker '" + brokerService.getBrokerName() + "' is stopping........");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                                 connection.close();
                                 brokerService.stop(); 
                                 sleep(8);
@@ -87,6 +93,8 @@ public class EmbeddedActiveMQ
                 logger.info("Waiting for list theads is greater then 1 ...");
                 int numTh = ThreadExplorer.active();
  
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                 while (numTh > 2)
                 {
                         sleep(3);

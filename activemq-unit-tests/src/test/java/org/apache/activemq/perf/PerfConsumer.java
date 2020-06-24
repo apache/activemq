@@ -96,6 +96,7 @@ public class PerfConsumer implements MessageListener {
             if (enableAudit && this.audit.isDuplicate(msg)){
                 LOG.error("Duplicate Message!" + msg);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
             lastMsgId=msg.getJMSMessageID();
         } catch (JMSException e1) {
             e1.printStackTrace();

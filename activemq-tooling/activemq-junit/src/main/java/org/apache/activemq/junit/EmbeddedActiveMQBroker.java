@@ -56,6 +56,7 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
 
     BrokerService brokerService;
     InternalClient internalClient;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6428
 
     /**
      * Create an embedded ActiveMQ broker using defaults
@@ -67,6 +68,7 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
      */
     public EmbeddedActiveMQBroker() {
         brokerService = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6629
         brokerService.setUseJmx(true);
         brokerService.getManagementContext().setCreateConnector(false);
         brokerService.setUseShutdownHook(false);
@@ -97,6 +99,7 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
     }
 
     public static void setMessageProperties(Message message, Map<String, Object> properties) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6428
         if (properties != null && properties.size() > 0) {
             for (Map.Entry<String, Object> property : properties.entrySet()) {
                 try {
@@ -143,6 +146,7 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
      * be stopped manually to support advanced testing scenarios.
      */
     public void stop() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6428
         if (internalClient != null) {
             internalClient.stop();
             internalClient = null;
@@ -193,6 +197,7 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
      */
     public ActiveMQConnectionFactory createConnectionFactory() {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6428
         connectionFactory.setBrokerURL(getVmURL());
         return connectionFactory;
     }
@@ -230,6 +235,7 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
      * @return the VM URL for the embedded broker
      */
     public String getVmURL() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6428
         return getVmURL(true);
     }
 
@@ -423,6 +429,7 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
         }
 
         // TODO: Figure out how to do this for Topics
+//IC see: https://issues.apache.org/jira/browse/AMQ-6428
         Destination destination = getDestination(destinationName);
         if (destination == null) {
             throw new RuntimeException("Failed to find destination: " + destinationName);
@@ -476,6 +483,7 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
     }
 
     public BytesMessage createBytesMessage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6428
         return internalClient.createBytesMessage();
     }
 

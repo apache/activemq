@@ -76,6 +76,7 @@ public class AMQ5486Test {
     public void testFailureOnSelectorThreadPoolExhaustion() throws Exception {
         final ConnectionFactory cf = createConnectionFactory();
         final CountDownLatch startupLatch = new CountDownLatch(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5486
         final List<Exception> exceptions = Collections.synchronizedList(new LinkedList<Exception>());
         for(int i = 0; i < maxConnections; i++) {
             executor.submit(new Runnable() {
@@ -113,6 +114,7 @@ public class AMQ5486Test {
             })
         );
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5486
         assertTrue("Expected some connections, provided not all errored out",
                 Wait.waitFor(new Wait.Condition() {
                     @Override
@@ -142,6 +144,7 @@ public class AMQ5486Test {
             JmsUtils.closeConnection(connection);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5486
         connections.clear();
         service.stop();
         service.waitUntilStopped();

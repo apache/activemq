@@ -60,6 +60,7 @@ public final class ActiveMQMessageTransformation {
      * @throws JMSException if an error occurs
      */
     public static ActiveMQDestination transformDestination(Destination destination) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5954
         return ActiveMQDestination.transform(destination);
     }
 
@@ -141,7 +142,9 @@ public final class ActiveMQMessageTransformation {
                 msg.setConnection(connection);
                 msg.setText(textMsg.getText());
                 activeMessage = msg;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1744
             } else if (message instanceof BlobMessage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5954
                 BlobMessage blobMessage = (BlobMessage)message;
                 ActiveMQBlobMessage msg = new ActiveMQBlobMessage();
                 msg.setConnection(connection);
@@ -174,6 +177,7 @@ public final class ActiveMQMessageTransformation {
      * @throws JMSException
      */
     public static void copyProperties(Message fromMessage, Message toMessage) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         toMessage.setJMSMessageID(fromMessage.getJMSMessageID());
         toMessage.setJMSCorrelationID(fromMessage.getJMSCorrelationID());
         toMessage.setJMSReplyTo(transformDestination(fromMessage.getJMSReplyTo()));

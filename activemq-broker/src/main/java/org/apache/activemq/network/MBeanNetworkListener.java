@@ -41,6 +41,7 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
 
     public MBeanNetworkListener(BrokerService brokerService, NetworkBridgeConfiguration networkBridgeConfiguration, ObjectName connectorName) {
         this.brokerService = brokerService;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         this.networkBridgeConfiguration = networkBridgeConfiguration;
         this.connectorName = connectorName;
     }
@@ -60,6 +61,7 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
             ObjectName objectName = createNetworkBridgeObjectName(bridge);
             AnnotatedMBean.registerMBean(brokerService.getManagementContext(), view, objectName);
             bridge.setMbeanObjectName(objectName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
             MBeanBridgeDestination mBeanBridgeDestination = new MBeanBridgeDestination(brokerService,networkBridgeConfiguration,bridge,view);
             destinationObjectNameMap.put(bridge,mBeanBridgeDestination);
             mBeanBridgeDestination.start();
@@ -75,12 +77,15 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
             return;
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3523
             ObjectName objectName = bridge.getMbeanObjectName();
             if (objectName != null) {
                 brokerService.getManagementContext().unregisterMBean(objectName);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
             MBeanBridgeDestination mBeanBridgeDestination = destinationObjectNameMap.remove(bridge);
             if (mBeanBridgeDestination != null){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
                 mBeanBridgeDestination.stop();
             }
         } catch (Throwable e) {
@@ -102,6 +107,7 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
 
     @Override
     public void onOutboundMessage(NetworkBridge bridge,Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         MBeanBridgeDestination mBeanBridgeDestination = destinationObjectNameMap.get(bridge);
         if (mBeanBridgeDestination != null){
             mBeanBridgeDestination.onOutboundMessage(message);

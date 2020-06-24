@@ -24,6 +24,7 @@ public class FailoverUriTest extends TransportUriTest {
 
     @Override
     public void initCombosForTestUriOptionsWork() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4725
         addCombinationValues("prefix", new Object[]{"failover:(", "failover://("});
         addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"
                 , "?wireFormat.tightEncodingEnabled=false)?jms.useAsyncSend=true&jms.copyMessageOnSend=false"

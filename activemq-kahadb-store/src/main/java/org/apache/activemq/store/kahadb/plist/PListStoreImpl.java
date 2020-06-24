@@ -68,6 +68,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     MetaData metaData = new MetaData(this);
     final MetaDataMarshaller metaDataMarshaller = new MetaDataMarshaller(this);
     Map<String, PListImpl> persistentLists = new HashMap<String, PListImpl>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2910
     final Object indexLock = new Object();
     private Scheduler scheduler;
     private long cleanupInterval = 30000;
@@ -83,10 +84,12 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3310
         this.scheduler = brokerService.getScheduler();
     }
 
     public int getIndexPageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         return indexPageSize;
     }
 
@@ -111,6 +114,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     }
 
     public boolean getIndexEnablePageCaching() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         return indexEnablePageCaching;
     }
 
@@ -194,6 +198,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     }
 
     public Journal getJournal() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3780
         return this.journal;
     }
 
@@ -208,6 +213,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     }
 
     public File getIndexDirectory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6403
         return indexDirectory != null ? indexDirectory : directory;
     }
 
@@ -217,6 +223,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
 
     @Override
     public long size() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2626
         synchronized (this) {
             if (!initialized) {
                 return 0;
@@ -244,6 +251,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                     getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                         @Override
                         public void execute(Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
                             pl.setHeadPageId(tx.allocate().getPageId());
                             pl.load(tx);
                             metaData.lists.put(tx, name, pl);
@@ -276,6 +284,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                     getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                         @Override
                         public void execute(Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
                             metaData.lists.remove(tx, name);
                             pl.destroy();
                         }
@@ -290,10 +299,13 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
         if (isStarted()) {
             if (this.initialized == false) {
                 if (this.directory == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6436
                     this.directory = getDefaultDirectory();
                 }
                 IOHelper.mkdirs(this.directory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6005
                 IOHelper.deleteChildren(this.directory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6403
                 if (this.indexDirectory != null) {
                     IOHelper.mkdirs(this.indexDirectory);
                     IOHelper.deleteChildren(this.indexDirectory);
@@ -305,7 +317,9 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                 this.journal.setWriteBatchSize(getJournalMaxWriteBatchSize());
                 this.journal.start();
                 this.pageFile = new PageFile(getIndexDirectory(), "tmpDB");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
                 this.pageFile.setEnablePageCaching(getIndexEnablePageCaching());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
                 this.pageFile.setPageSize(getIndexPageSize());
                 this.pageFile.setWriteBatchSize(getIndexWriteBatchSize());
                 this.pageFile.setPageCacheSize(getIndexCacheSize());
@@ -333,6 +347,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                 });
                 this.pageFile.flush();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3310
                 if (cleanupInterval > 0) {
                     if (scheduler == null) {
                         scheduler = new Scheduler(PListStoreImpl.class.getSimpleName());
@@ -340,6 +355,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                     }
                     scheduler.executePeriodically(this, cleanupInterval);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3490
                 this.initialized = true;
                 LOG.info(this + " initialized");
             }
@@ -347,6 +363,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     }
 
     protected File getDefaultDirectory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6436
         return new File(IOHelper.getDefaultDataDirectory() + File.pathSeparator + "delayedDB");
     }
 
@@ -358,6 +375,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
 
     @Override
     protected synchronized void doStart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3490
         if (!lazyInit) {
             intialize();
         } else {
@@ -373,6 +391,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
 
     @Override
     protected synchronized void doStop(ServiceStopper stopper) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3310
         if (scheduler != null) {
             if (PListStoreImpl.class.getSimpleName().equals(scheduler.getName())) {
                 scheduler.stop();
@@ -380,6 +399,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
             }
         }
         for (PListImpl pl : this.persistentLists.values()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
             pl.unload(null);
         }
         if (this.pageFile != null) {
@@ -400,9 +420,11 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     @Override
     public void run() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3780
             if (isStopping()) {
                 return;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
             final int lastJournalFileId = journal.getLastAppendLocation().getDataFileId();
             final Set<Integer> candidates = journal.getFileMap().keySet();
             LOG.trace("Full gc candidate set:" + candidates);
@@ -434,6 +456,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
     ByteSequence getPayload(Location location) throws IllegalStateException, IOException {
         ByteSequence result = null;
         result = this.journal.read(location);
@@ -508,6 +531,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     }
 
     public long getCleanupInterval() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3310
         return cleanupInterval;
     }
 
@@ -516,6 +540,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     }
 
     public boolean isLazyInit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3490
         return lazyInit;
     }
 
@@ -526,6 +551,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     @Override
     public String toString() {
         String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
+//IC see: https://issues.apache.org/jira/browse/AMQ-6403
         if (indexDirectory != null) {
             path += "|" + indexDirectory.getAbsolutePath();
         }

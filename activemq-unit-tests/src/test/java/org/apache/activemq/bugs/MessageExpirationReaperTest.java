@@ -53,9 +53,11 @@ public class MessageExpirationReaperTest {
         createBroker();
 
         connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
 
         factory = createConnectionFactory();
         connection = (ActiveMQConnection) factory.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4516
         connection.setClientID("test-connection");
         connection.start();
     }
@@ -68,6 +70,7 @@ public class MessageExpirationReaperTest {
 
     protected void createBroker() throws Exception {
         broker = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setBrokerName(brokerName);
         broker.addConnector(brokerUrl);
@@ -121,6 +124,7 @@ public class MessageExpirationReaperTest {
 
         // Let the messages expire
         Thread.sleep(2000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
 
         // Simply browse the queue
         Session browserSession = createSession();
@@ -135,6 +139,7 @@ public class MessageExpirationReaperTest {
     @Test
     public void testExpiredMessagesOnTopic() throws Exception{
         Session session = createSession();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4516
 
         // use a zero prefetch so messages don't go inflight
         ActiveMQTopic destination = new ActiveMQTopic(destinationName + "?consumer.prefetchSize=0");
@@ -175,6 +180,7 @@ public class MessageExpirationReaperTest {
         String domain = "org.apache.activemq";
         ObjectName name;
         if (destination.isQueue()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             name = new ObjectName(domain + ":type=Broker,brokerName=" + brokerName + ",destinationType=Queue,destinationName=" + destinationName);
         } else {
             name = new ObjectName(domain + ":type=Broker,brokerName=" + brokerName + ",destinationType=Topic,destinationName=" + destinationName);

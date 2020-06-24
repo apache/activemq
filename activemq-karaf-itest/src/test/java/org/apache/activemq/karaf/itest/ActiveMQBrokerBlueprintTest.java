@@ -36,6 +36,7 @@ public class ActiveMQBrokerBlueprintTest extends AbstractFeatureTest {
         {
          composite(super.configure("activemq", "activemq-blueprint")),
          replaceConfigurationFile("deploy/activemq-blueprint.xml", 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
                                   new File(RESOURCE_BASE + "activemq-blueprint.xml"))
         };
     }

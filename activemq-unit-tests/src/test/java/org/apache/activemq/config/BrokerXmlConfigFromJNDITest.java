@@ -32,6 +32,7 @@ public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConne
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         assertBaseDirectoryContainsSpaces();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2555
 
         // we could put these properties into a jndi.properties
         // on the classpath instead

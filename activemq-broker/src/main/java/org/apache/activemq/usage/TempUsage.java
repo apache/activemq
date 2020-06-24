@@ -38,6 +38,10 @@ public class TempUsage extends PercentLimitUsage<TempUsage> {
     public TempUsage(String name, PListStore store) {
         super(null, name, 1.0f);
         this.store = store;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5964
+//IC see: https://issues.apache.org/jira/browse/AMQ-5965
+//IC see: https://issues.apache.org/jira/browse/AMQ-5969
         updateLimitBasedOnPercent();
     }
 
@@ -49,6 +53,7 @@ public class TempUsage extends PercentLimitUsage<TempUsage> {
 
     @Override
     public int getPercentUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6459
         if (store != null) {
             usageLock.writeLock().lock();
             try {
@@ -86,6 +91,7 @@ public class TempUsage extends PercentLimitUsage<TempUsage> {
     protected void updateLimitBasedOnPercent() {
         usageLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6441
             percentLimitFromFile(store != null ? store.getDirectory() : null);
         } finally {
             usageLock.writeLock().unlock();

@@ -106,6 +106,7 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
             in.setSslContext(context);
         }
         //We need to set the transport options on the init transport so that the SSL options are set
+//IC see: https://issues.apache.org/jira/browse/AMQ-6418
         if (transportOptions != null) {
             //Clone the map because we will need to set the options later on the actual transport
             IntrospectionSupport.setProperties(in, new HashMap<>(transportOptions));
@@ -113,9 +114,11 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
 
         //Attempt to read enough bytes to detect the protocol until the timeout period
         //is reached
+//IC see: https://issues.apache.org/jira/browse/AMQ-6535
         Future<?> future = protocolDetectionExecutor.submit(new Runnable() {
             @Override
             public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6698
                 try {
                     in.start();
                 } catch (Exception e) {
@@ -151,6 +154,7 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
         }
         in.stop();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6505
         InitBuffer initBuffer = new InitBuffer(in.getReadSize().get(), ByteBuffer.allocate(in.getReadData().length));
         initBuffer.buffer.put(in.getReadData());
 
@@ -162,6 +166,7 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
 
         WireFormat format = protocolInfo.detectedWireFormatFactory.createWireFormat();
         Transport transport = createTransport(socket, format, in.getSslSession(), initBuffer, in.getInputBuffer(), protocolInfo.detectedTransportFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6698
 
         return new TransportInfo(format, transport, protocolInfo.detectedTransportFactory);
     }

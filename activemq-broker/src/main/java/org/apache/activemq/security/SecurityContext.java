@@ -36,11 +36,13 @@ public abstract class SecurityContext {
     public static final SecurityContext BROKER_SECURITY_CONTEXT = new SecurityContext("ActiveMQBroker") {
         @Override
         public boolean isBrokerContext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1157
             return true;
         }
 
         @Override
         public Set<Principal> getPrincipals() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
             return Collections.emptySet();
         }
     };
@@ -54,7 +56,9 @@ public abstract class SecurityContext {
     }
 
     public boolean isInOneOf(Set<?> allowedPrincipals) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
         Iterator<?> allowedIter = allowedPrincipals.iterator();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2508
         HashSet<?> userPrincipals = new HashSet<Object>(getPrincipals());
         while (allowedIter.hasNext()) {
             Iterator<?> userIter = userPrincipals.iterator();
@@ -78,6 +82,7 @@ public abstract class SecurityContext {
     }
 
     public boolean isBrokerContext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1157
         return false;
     }
 }

@@ -137,6 +137,7 @@ public class ThreadExplorer
             if (thread != null)
             {
                 out.append("* [" + thread.getName() + "] " + (thread.isDaemon() ? "(Daemon)" : "")
+//IC see: https://issues.apache.org/jira/browse/AMQ-6494
                         + " Group: " + (thread.getThreadGroup() != null ? thread.getThreadGroup().getName() : "") + "\n");
             }
             else

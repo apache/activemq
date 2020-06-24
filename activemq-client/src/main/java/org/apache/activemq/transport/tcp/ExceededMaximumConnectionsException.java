@@ -30,6 +30,7 @@ public class ExceededMaximumConnectionsException extends Exception {
     private static final long serialVersionUID = -1166885550766355524L;
 
     public ExceededMaximumConnectionsException(String message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
         super(message);
     }
 }

@@ -92,6 +92,7 @@ public class DataFileAppenderNoSpaceNoBatchTest {
     @Test
     public void testSingleNoSpaceNextWriteSameBatch() throws Exception {
         final List<Long> seekPositions = Collections.synchronizedList(new ArrayList<Long>());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
 
         final DataFile currentDataFile = new DataFile(dataFileDir.newFile(), 0) {
             public RecoverableRandomAccessFile appendRandomAccessFile() throws IOException {
@@ -131,6 +132,7 @@ public class DataFileAppenderNoSpaceNoBatchTest {
     @Test(timeout = 10000)
     public void testNoSpaceNextWriteSameBatchAsync() throws Exception {
         final List<Long> seekPositions = Collections.synchronizedList(new ArrayList<Long>());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6606
 
         final DataFile currentDataFile = new DataFile(dataFileDir.newFile(), 0) {
             public RecoverableRandomAccessFile appendRandomAccessFile() throws IOException {
@@ -168,11 +170,13 @@ public class DataFileAppenderNoSpaceNoBatchTest {
         ConcurrentLinkedQueue<Location> locations = new ConcurrentLinkedQueue<Location>();
         HashSet<CountDownLatch> latches = new HashSet<CountDownLatch>();
         for (int i = 0; i <= 20; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
             try {
                 Location location = underTest.storeItem(byteSequence, (byte) 1, false);
                 locations.add(location);
                 latches.add(location.getLatch());
             } catch (IOException expected) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
                 underTest.shutdown = false;
             }
         }
@@ -182,7 +186,9 @@ public class DataFileAppenderNoSpaceNoBatchTest {
         }
 
         boolean someExceptions = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6815
         for (Location location: locations) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6815
             someExceptions |= (location.getException().get() != null);
         }
         assertTrue(someExceptions);

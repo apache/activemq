@@ -48,6 +48,7 @@ public abstract class ActiveMQTempDestination extends ActiveMQDestination {
     }
 
     public void delete() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3038
         if (connection != null) {
             connection.deleteTempDestination(this);
         }
@@ -88,6 +89,7 @@ public abstract class ActiveMQTempDestination extends ActiveMQDestination {
     }
 
     public void setConnectionId(String connectionId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-487
         this.connectionId = connectionId;
     }
 

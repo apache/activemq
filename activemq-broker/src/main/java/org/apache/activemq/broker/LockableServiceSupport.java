@@ -56,11 +56,13 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
     }
 
     public boolean isUseLock() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4729
         return this.useLock;
     }
 
     @Override
     public void setStopOnError(boolean stopOnError) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
         this.stopOnError = stopOnError;
     }
 
@@ -71,6 +73,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
     @Override
     public void setLocker(Locker locker) throws IOException {
         this.locker = locker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         locker.setLockable(this);
         if (this instanceof PersistenceAdapter) {
             this.locker.configure((PersistenceAdapter)this);
@@ -79,6 +82,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
 
     public Locker getLocker() throws IOException {
         if (this.locker == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
             setLocker(createDefaultLocker());
         }
         return this.locker;
@@ -91,6 +95,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
 
     @Override
     public long getLockKeepAlivePeriod() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4122
         return lockKeepAlivePeriod;
     }
 
@@ -138,7 +143,9 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
                     stop = true;
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
         } catch (SuppressReplyException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
             if (stopOnError) {
                 stop = true;
             }
@@ -158,6 +165,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
         // we can no longer keep the lock so lets fail
         LOG.error("{}, no longer able to keep the exclusive lock so giving up being a master", brokerService.getBrokerName());
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4526
             if( brokerService.isRestartAllowed() ) {
                 brokerService.requestRestart();
             }
@@ -190,6 +198,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
     }
 
     public BrokerService getBrokerService() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         return this.brokerService;
     }
 }

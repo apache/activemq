@@ -35,6 +35,7 @@ public class AmqpWireFormatTest {
         wireFormat.setAllowNonSaslConnections(false);
 
         AmqpHeader nonSaslHeader = new AmqpHeader();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
         assertFalse(wireFormat.isHeaderValid(nonSaslHeader, false));
         AmqpHeader saslHeader = new AmqpHeader();
         saslHeader.setProtocolId(3);
@@ -46,6 +47,7 @@ public class AmqpWireFormatTest {
         wireFormat.setAllowNonSaslConnections(true);
 
         AmqpHeader nonSaslHeader = new AmqpHeader();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
         assertTrue(wireFormat.isHeaderValid(nonSaslHeader, false));
         AmqpHeader saslHeader = new AmqpHeader();
         saslHeader.setProtocolId(3);

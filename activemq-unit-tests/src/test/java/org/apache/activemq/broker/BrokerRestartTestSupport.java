@@ -27,6 +27,8 @@ public class BrokerRestartTestSupport extends BrokerTestSupport {
     @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         File dir = broker.getBrokerDataDirectory();
         if (dir != null) {
             IOHelper.deleteChildren(dir);
@@ -42,11 +44,13 @@ public class BrokerRestartTestSupport extends BrokerTestSupport {
      */
     protected BrokerService createRestartedBroker() throws Exception {
         BrokerService broker = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         configureBroker(broker);
         return broker;
     }
 
     protected void configureBroker(BrokerService broker) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3357
          broker.setDestinationPolicy(policyMap);
     }
 
@@ -58,12 +62,15 @@ public class BrokerRestartTestSupport extends BrokerTestSupport {
      * @throws URISyntaxException
      */
     protected void restartBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7015
         stopBroker();
         broker.start();
     }
 
     protected void stopBroker() throws Exception {
         broker.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         broker.waitUntilStopped();
         broker = createRestartedBroker();
     }

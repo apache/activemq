@@ -49,12 +49,14 @@ public class XBeanConfigTest extends TestCase {
         // Validate the system properties are being evaluated in xbean.
         assertEquals("testbroker", brokerService.getBrokerName());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         Topic topic = (Topic)broker.addDestination(context, new ActiveMQTopic("FOO.BAR"),true);
         DispatchPolicy dispatchPolicy = topic.getDispatchPolicy();
         assertTrue("dispatchPolicy should be RoundRobinDispatchPolicy: " + dispatchPolicy, dispatchPolicy instanceof RoundRobinDispatchPolicy);
 
         SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = topic.getSubscriptionRecoveryPolicy();
         subscriptionRecoveryPolicy = ((RetainedMessageSubscriptionRecoveryPolicy)subscriptionRecoveryPolicy).getWrapped();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
 
         assertTrue("subscriptionRecoveryPolicy should be LastImageSubscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy,
                    subscriptionRecoveryPolicy instanceof LastImageSubscriptionRecoveryPolicy);
@@ -63,14 +65,17 @@ public class XBeanConfigTest extends TestCase {
         LOG.info("dispatchPolicy: " + dispatchPolicy);
         LOG.info("subscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         topic = (Topic)broker.addDestination(context, new ActiveMQTopic("ORDERS.BOOKS"),true);
         dispatchPolicy = topic.getDispatchPolicy();
         assertTrue("dispatchPolicy should be StrictOrderDispatchPolicy: " + dispatchPolicy, dispatchPolicy instanceof StrictOrderDispatchPolicy);
 
         subscriptionRecoveryPolicy = topic.getSubscriptionRecoveryPolicy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         subscriptionRecoveryPolicy = ((RetainedMessageSubscriptionRecoveryPolicy)subscriptionRecoveryPolicy).getWrapped();
         assertTrue("subscriptionRecoveryPolicy should be TimedSubscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy,
                    subscriptionRecoveryPolicy instanceof TimedSubscriptionRecoveryPolicy);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4855
         TimedSubscriptionRecoveryPolicy timedSubscriptionPolicy = (TimedSubscriptionRecoveryPolicy)subscriptionRecoveryPolicy;
         assertEquals("getRecoverDuration()", 60000, timedSubscriptionPolicy.getRecoverDuration());
 

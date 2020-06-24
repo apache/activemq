@@ -113,8 +113,10 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
     private final EncoderImpl encoder = new EncoderImpl(decoder);
     {
         AMQPDefinedTypes.registerAllTypes(decoder, encoder);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         utf8BufferEncoding = new UTF8BufferType(encoder, decoder);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
 
         encoder.register(utf8BufferEncoding);
     }
@@ -146,6 +148,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             if (header == null) {
                 header = new Header();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
             header.setPriority(UnsignedByte.valueOf(priority));
         }
         String type = message.getType();
@@ -169,6 +172,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             }
             properties.setTo(destination.getQualifiedName());
             if (maMap == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
                 maMap = new HashMap<>();
             }
             maMap.put(JMS_DEST_TYPE_MSG_ANNOTATION, destinationType(destination));
@@ -180,6 +184,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             }
             properties.setReplyTo(replyTo.getQualifiedName());
             if (maMap == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
                 maMap = new HashMap<>();
             }
             maMap.put(JMS_REPLY_TO_TYPE_MSG_ANNOTATION, destinationType(replyTo));
@@ -226,6 +231,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             if (header == null) {
                 header = new Header();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             header.setDeliveryCount(UnsignedInteger.valueOf(deliveryCount));
         }
         String userId = message.getUserID();
@@ -247,6 +253,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             if (properties == null) {
                 properties = new Properties();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             properties.setGroupSequence(UnsignedInteger.valueOf(groupSequence));
         }
 
@@ -283,6 +290,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                     continue;
                 } else if (key.startsWith(MESSAGE_ANNOTATION_PREFIX, JMS_AMQP_PREFIX_LENGTH)) {
                     if (maMap == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
                         maMap = new HashMap<>();
                     }
                     String name = key.substring(JMS_AMQP_MESSAGE_ANNOTATION_PREFIX.length());
@@ -314,6 +322,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                     continue;
                 } else if (key.startsWith(DELIVERY_ANNOTATION_PREFIX, JMS_AMQP_PREFIX_LENGTH)) {
                     if (daMap == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
                         daMap = new HashMap<>();
                     }
                     String name = key.substring(JMS_AMQP_DELIVERY_ANNOTATION_PREFIX.length());
@@ -324,9 +333,11 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                         footerMap = new HashMap<>();
                     }
                     String name = key.substring(JMS_AMQP_FOOTER_PREFIX.length());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7274
                     footerMap.put(Symbol.valueOf(name), value);
                     continue;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             } else if (key.startsWith(AMQ_SCHEDULED_MESSAGE_PREFIX )) {
                 // strip off the scheduled message properties
                 continue;
@@ -335,11 +346,13 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             // The property didn't map into any other slot so we store it in the
             // Application Properties section of the message.
             if (apMap == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
                 apMap = new HashMap<>();
             }
             apMap.put(key, value);
 
             int messageType = message.getDataStructureType();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7068
             if (messageType == CommandTypes.ACTIVEMQ_MESSAGE) {
                 // Type of command to recognize advisory message
                 Object data = message.getDataStructure();
@@ -379,6 +392,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
 
     private Section convertBody(ActiveMQMessage message) throws JMSException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6374
         Section body = null;
         short orignalEncoding = AMQP_UNKNOWN;
 
@@ -390,6 +404,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
 
         int messageType = message.getDataStructureType();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7068
         if (messageType == CommandTypes.ACTIVEMQ_MESSAGE) {
         	Object data = message.getDataStructure();
             if (data instanceof ConnectionInfo) {
@@ -441,6 +456,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                     body = new Data(payload);
                     break;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
         } else if (messageType == CommandTypes.ACTIVEMQ_TEXT_MESSAGE) {
             switch (orignalEncoding) {
                 case AMQP_NULL:
@@ -454,9 +470,11 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                     body = new AmqpValue(((TextMessage) message).getText());
                     break;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
         } else if (messageType == CommandTypes.ACTIVEMQ_MAP_MESSAGE) {
             body = new AmqpValue(getMapFromMessageBody((ActiveMQMapMessage) message));
         } else if (messageType == CommandTypes.ACTIVEMQ_STREAM_MESSAGE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
             ArrayList<Object> list = new ArrayList<>();
             final ActiveMQStreamMessage m = (ActiveMQStreamMessage) message;
             try {
@@ -476,6 +494,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                     body = new AmqpValue(list);
                     break;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
         } else if (messageType == CommandTypes.ACTIVEMQ_OBJECT_MESSAGE) {
             Binary payload = getBinaryFromMessageBody((ActiveMQObjectMessage) message);
 
@@ -497,6 +516,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             // For a non-AMQP message we tag the outbound content type as containing
             // a serialized Java object so that an AMQP client has a hint as to what
             // we are sending it.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             if (!message.propertyExists(JMS_AMQP_CONTENT_TYPE)) {
                 message.setReadOnlyProperties(false);
                 message.setStringProperty(JMS_AMQP_CONTENT_TYPE, SERIALIZED_JAVA_OBJECT_CONTENT_TYPE);
@@ -508,6 +528,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
     }
 
     private static byte destinationType(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
         if (destination.isQueue()) {
             if (destination.isTemporary()) {
                 return TEMP_QUEUE_TYPE;
@@ -526,6 +547,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
     }
 
     private static Object getOriginalMessageId(ActiveMQMessage message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         Object result;
         MessageId messageId = message.getMessageId();
         if (messageId.getTextView() != null) {

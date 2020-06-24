@@ -34,6 +34,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class AMQ3411Test extends TestCase {
 	@SuppressWarnings("unused")
 	private static final Logger LOG = LoggerFactory
+//IC see: https://issues.apache.org/jira/browse/AMQ-4333
 			.getLogger(AMQ3411Test.class);
 	private static final Collection<String> DEFAULT_OPTIONS = Arrays
 			.asList(new String[] { "--amqurl", "tcp://localhost:61616", });

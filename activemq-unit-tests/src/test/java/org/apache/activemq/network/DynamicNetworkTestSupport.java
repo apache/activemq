@@ -68,6 +68,7 @@ public abstract class DynamicNetworkTestSupport {
     public TemporaryFolder tempFolder = new TemporaryFolder(new File("target"));
 
     protected void doTearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         stopLocalBroker();
         stopRemoteBroker();
     }
@@ -94,6 +95,7 @@ public abstract class DynamicNetworkTestSupport {
 
 
     protected void assertBridgeStarted() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
         assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -113,6 +115,8 @@ public abstract class DynamicNetworkTestSupport {
     }
 
     protected void waitForConsumerCount(final DestinationStatistics destinationStatistics, final int count) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -148,12 +152,15 @@ public abstract class DynamicNetworkTestSupport {
         assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
                 return count == getNCDurableSubs(brokerService, dest).size();
             }
         }, 10000, 500));
     }
 
     protected void assertConsumersCount(final BrokerService brokerService,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
             final ActiveMQTopic dest, final int count) throws Exception {
         assertTrue(Wait.waitFor(new Condition() {
             @Override
@@ -187,6 +194,8 @@ public abstract class DynamicNetworkTestSupport {
     protected List<DurableTopicSubscription> getNCDurableSubs(final BrokerService brokerService,
             final ActiveMQTopic dest) throws Exception {
         List<DurableTopicSubscription> subs = new ArrayList<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         Destination d = brokerService.getDestination(dest);
         Topic destination = null;
         if (d instanceof DestinationFilter){
@@ -209,6 +218,8 @@ public abstract class DynamicNetworkTestSupport {
     }
 
     protected void removeSubscription(final BrokerService brokerService, final ActiveMQTopic topic,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
             final String subName) throws Exception {
         final RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
         info.setClientId(clientId);
@@ -232,6 +243,7 @@ public abstract class DynamicNetworkTestSupport {
     }
 
     protected void assertSubscriptionMapCounts(NetworkBridge networkBridge, final int count) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7238
         assertNotNull(networkBridge);
         DemandForwardingBridgeSupport bridge = (DemandForwardingBridgeSupport) networkBridge;
         assertEquals(count, bridge.subscriptionMapByLocalId.size());

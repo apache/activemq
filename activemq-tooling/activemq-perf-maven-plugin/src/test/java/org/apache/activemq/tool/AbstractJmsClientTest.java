@@ -102,6 +102,7 @@ public class AbstractJmsClientTest {
 
     @Test
     public void testCreateDestination_tempQueue() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5436
         assertDestinationType(TEMP_QUEUE_TYPE,
                 asAmqDest(jmsClient.createDestination("temp-queue://dest")));
     }
@@ -197,6 +198,7 @@ public class AbstractJmsClientTest {
     }
 
     private void assertDestinationType(byte destinationType, ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5436
         assertEquals(destinationType, destination.getDestinationType());
     }
 

@@ -59,12 +59,15 @@ public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport
     @Test(timeout = 60000)
     public void testApp() throws Exception {
         // Initialize JMS connection
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
             "vm://broker1?marshal=false&broker.useJmx=false&broker.persistent=false");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(3);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4004
         cf.setMaximumActiveSessionPerConnection(1);
         cf.setBlockIfSessionPoolIsFull(true);
         conn = cf.createConnection();
@@ -75,6 +78,7 @@ public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.submit(new TestRunner2());
         Future<Boolean> result2 = executor.submit(new TestRunner2());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4437
 
         // sleep to allow threads to run
         Thread.sleep(sleepTimeout);
@@ -103,6 +107,7 @@ public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport
         public Boolean call() {
 
             Session one = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
             // wait at most 5 seconds for the call to createSession
             try {

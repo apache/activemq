@@ -31,12 +31,15 @@ public class FailoverRedeliveryTransactionTest extends FailoverTransactionTest {
     @Override
     public void configureConnectionFactory(ActiveMQConnectionFactory factory) {
         super.configureConnectionFactory(factory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         factory.setTransactedIndividualAck(true);
     }
 
     @Override
     public BrokerService createBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
         BrokerService brokerService = super.createBroker(deleteAllMessagesOnStartup, bindAddress);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setPersistJMSRedelivered(true);

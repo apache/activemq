@@ -31,12 +31,14 @@ public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
     private StoreUsage usage;
 
     public FilteredKahaDBPersistenceAdapter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3639
         super();
     }
 
     public FilteredKahaDBPersistenceAdapter(FilteredKahaDBPersistenceAdapter template, ActiveMQDestination destination, PersistenceAdapter adapter) {
         setDestination(destination);
         persistenceAdapter  = adapter;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
         if (template.getUsage() != null) {
             usage = template.getUsage().copy();
         }
@@ -51,6 +53,7 @@ public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
     }
 
     public boolean isPerDestination() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3639
         return perDestination;
     }
 
@@ -60,6 +63,7 @@ public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5972
         return "FilteredKahaDBPersistenceAdapter [" + destination + "]";
     }
 
@@ -72,6 +76,7 @@ public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
     }
 
     public void setUsage(StoreUsage usage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
         this.usage = usage;
     }
 

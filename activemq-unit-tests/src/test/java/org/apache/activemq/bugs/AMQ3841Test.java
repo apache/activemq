@@ -86,6 +86,7 @@ public class AMQ3841Test {
         prepareBrokerWithMultiStore(false);
         broker.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3841
         broker.getAdminView().addQueue(destinationName);
         assertNotNull(broker.getDestination(new ActiveMQQueue(destinationName)));
 

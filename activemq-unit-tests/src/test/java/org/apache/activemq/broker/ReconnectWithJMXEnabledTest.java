@@ -46,6 +46,7 @@ public class ReconnectWithJMXEnabledTest extends EmbeddedBrokerTestSupport {
         broker = createBroker();
         startBroker();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         connectionFactory = createConnectionFactory();
         connection = connectionFactory.createConnection();
         useConnection(connection);
@@ -87,6 +88,7 @@ public class ReconnectWithJMXEnabledTest extends EmbeddedBrokerTestSupport {
         Message message = session.createTextMessage("Hello World");
         producer.send(message);
         Thread.sleep(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         consumer.close();
     }
 }

@@ -48,6 +48,7 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
     }
     
     public SubscriptionRecoveryPolicy copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-714
         FixedSizedSubscriptionRecoveryPolicy rc = new FixedSizedSubscriptionRecoveryPolicy();
         rc.setMaximumSize(maximumSize);
         rc.setUseSharedBuffer(useSharedBuffer);

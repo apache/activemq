@@ -102,6 +102,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         }
 
         switch (defaultType) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5211
             case QUEUE_TYPE:
                 return new ActiveMQQueue(name);
             case TOPIC_TYPE:
@@ -120,6 +121,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
             return null;
         }
         if (dest instanceof ActiveMQDestination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5211
             return (ActiveMQDestination) dest;
         }
 
@@ -130,11 +132,13 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
                 return new ActiveMQQueue(queueName);
             } else if (queueName == null && topicName != null) {
                 return new ActiveMQTopic(topicName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3401
             } else {
                 return unresolvableDestinationTransformer.transform(dest);
             }
         }
         if (dest instanceof TemporaryQueue) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5211
             return new ActiveMQTempQueue(((TemporaryQueue) dest).getQueueName());
         }
         if (dest instanceof TemporaryTopic) {
@@ -153,6 +157,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         if (destination == destination2) {
             return 0;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5972
         if (destination == null || destination2 instanceof AnyDestination) {
             return -1;
         } else if (destination2 == null || destination instanceof AnyDestination) {
@@ -188,6 +193,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     @Override
     public int compareTo(Object that) {
         if (that instanceof ActiveMQDestination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5211
             return compare(this, (ActiveMQDestination) that);
         }
         if (that == null) {
@@ -217,6 +223,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
                 sb.append(COMPOSITE_SEPERATOR);
             }
             if (getDestinationType() == destinations[i].getDestinationType()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-494
                 sb.append(destinations[i].getPhysicalName());
             } else {
                 sb.append(destinations[i].getQualifiedName());
@@ -242,8 +249,10 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     }
 
     public void setPhysicalName(String physicalName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3586
         physicalName = physicalName.trim();
         final int length = physicalName.length();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5211
 
         if (physicalName.isEmpty()) {
             throw new IllegalArgumentException("Invalid destination name: a non-empty name is required");
@@ -281,6 +290,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         this.hashValue = 0;
         if (composite) {
             // Check to see if it is a composite.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2323
             Set<String> l = new HashSet<String>();
             StringTokenizer iter = new StringTokenizer(physicalName, "" + COMPOSITE_SEPERATOR);
             while (iter.hasMoreTokens()) {
@@ -290,6 +300,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
                 }
                 l.add(name);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2323
             compositeDestinations = new ActiveMQDestination[l.size()];
             int counter = 0;
             for (String dest : l) {
@@ -309,6 +320,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         }
 
         List<String> l = new ArrayList<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5074
         StringBuilder level = new StringBuilder();
         final char separator = PATH_SEPERATOR.charAt(0);
         for (char c : physicalName.toCharArray()) {
@@ -349,6 +361,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
             return false;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5211
         ActiveMQDestination d = (ActiveMQDestination) o;
         return physicalName.equals(d.physicalName);
     }
@@ -376,6 +389,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     @SuppressWarnings("unchecked")
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         this.setPhysicalName(in.readUTF());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5211
         this.options = (Map<String, String>) in.readObject();
     }
 
@@ -422,6 +436,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     }
 
     public boolean isDLQ() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4483
         return options != null && options.containsKey(IS_DLQ);
     }
 
@@ -429,10 +444,12 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         if (options == null) {
             options = new HashMap<String, String>();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6691
         options.put(IS_DLQ, String.valueOf(val));
     }
 
     public static UnresolvedDestinationTransformer getUnresolvableDestinationTransformer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3401
         return unresolvableDestinationTransformer;
     }
 

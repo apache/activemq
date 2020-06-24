@@ -41,6 +41,7 @@ public class PreallocationJournalLatencyTest {
         TimeStatisticImpl chunked_zeros = executeTest(Journal.PreallocationStrategy.CHUNKED_ZEROS.name());
         //TimeStatisticImpl zeros = executeTest(Journal.PreallocationStrategy.ZEROS.name());
         TimeStatisticImpl kernel = executeTest(Journal.PreallocationStrategy.OS_KERNEL_COPY.name());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
 
         LOG.info("  sparse: " + sparse);
         LOG.info(" chunked: " + chunked_zeros);
@@ -53,6 +54,7 @@ public class PreallocationJournalLatencyTest {
         int randInt = rand.nextInt(100);
         File dataDirectory = new File("./target/activemq-data/kahadb" + randInt);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         final KahaDBStore store = new KahaDBStore();
         store.setCheckpointInterval(5000);
         store.setJournalMaxFileLength(32*1204*1024);
@@ -72,6 +74,7 @@ public class PreallocationJournalLatencyTest {
 
         final Journal journal = store.getJournal();
         ByteSequence byteSequence = new ByteSequence(new byte[16*1024]);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
 
         TimeStatisticImpl timeStatistic = new TimeStatisticImpl("append", "duration");
         for (int i=0;i<5000; i++) {

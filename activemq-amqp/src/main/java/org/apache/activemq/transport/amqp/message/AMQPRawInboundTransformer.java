@@ -29,6 +29,7 @@ public class AMQPRawInboundTransformer extends InboundTransformer {
 
     @Override
     public String getTransformerName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5795
         return TRANSFORMER_RAW;
     }
 
@@ -39,6 +40,7 @@ public class AMQPRawInboundTransformer extends InboundTransformer {
 
     @Override
     protected ActiveMQMessage doTransform(EncodedMessage amqpMessage) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         ActiveMQBytesMessage result = new ActiveMQBytesMessage();
         result.setContent(new ByteSequence(amqpMessage.getArray(), amqpMessage.getArrayOffset(), amqpMessage.getLength()));
 

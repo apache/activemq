@@ -40,6 +40,7 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
     private final SubQueueSelectorCacheBroker selectorCachePlugin;
 
     public SelectorAwareVirtualTopicInterceptor(Destination next, VirtualTopic virtualTopic) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
         super(next, virtualTopic);
         selectorCachePlugin = (SubQueueSelectorCacheBroker)
                 ((Topic)next).createConnectionContext().getBroker().getAdaptor(SubQueueSelectorCacheBroker.class);
@@ -64,6 +65,7 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
                     break;
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4899
             if (matches == false) {
                 matches = tryMatchingCachedSubs(broker, dest, msgContext);
             }
@@ -78,7 +80,9 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
 
         if (selectorCachePlugin != null) {
             final Set<String> selectors = selectorCachePlugin.getSelector(dest.getActiveMQDestination().getQualifiedName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5933
             if (selectors != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4899
                 for (String selector : selectors) {
                     try {
                         final BooleanExpression expression = getExpression(selector);

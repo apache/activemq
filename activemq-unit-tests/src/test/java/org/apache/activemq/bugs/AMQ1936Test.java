@@ -149,6 +149,7 @@ public class AMQ1936Test extends TestCase {
     }
 
     public void testForDuplicateMessages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
         final ConcurrentMap<String, String> messages = new ConcurrentHashMap<String, String>();
         final Object lock = new Object();
         final CountDownLatch duplicateSignal = new CountDownLatch(1);
@@ -206,6 +207,7 @@ public class AMQ1936Test extends TestCase {
             }
         }, TimeUnit.MINUTES.toMillis(7));
         if (!ok) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2183
             AutoFailTestSupport.dumpAllThreads("--STUCK?--");
         }
         assertEquals("Number of messages received does not match the number sent", TEST_MESSAGE_COUNT, messages.size());

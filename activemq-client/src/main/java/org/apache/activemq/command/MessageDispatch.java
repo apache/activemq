@@ -122,6 +122,7 @@ public class MessageDispatch extends BaseCommand {
     }
 
     public Throwable getRollbackCause() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
         return rollbackCause;
     }
 

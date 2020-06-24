@@ -113,6 +113,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         reader.close();
 
         assertTrue("did not get expected size. ", Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -288,6 +289,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
 
     @Test
     public void testRestartAsync() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
         testRestart(false);
     }
 
@@ -299,9 +301,11 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
     public void testRestart(final boolean sync) throws Exception {
         if (sync) {
             // ldap connection can be slow to close
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
             map.setRefreshInterval(1000);
         }
         map.query();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
 
         Set<?> failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
         assertEquals("set size: " + failedACLs, 0, failedACLs.size());
@@ -313,9 +317,11 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
 
         // wait for the context to be closed
         // as we can't rely on ldar server isStarted()
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
                 if (sync) {
                     return !map.isContextAlive();
                 } else {
@@ -342,6 +348,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         reader.close();
 
         assertTrue("did not get expected size. ", Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
 
             @Override
             public boolean isSatisified() throws Exception {

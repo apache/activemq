@@ -30,6 +30,7 @@ public class SybaseJDBCAdapter extends ImageBasedJDBCAdaptor {
         statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " IN EXCLUSIVE MODE");
 
         statements.setLongDataType("DECIMAL");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2291
         statements.setSequenceDataType("DECIMAL");
         super.setStatements(statements);
     }

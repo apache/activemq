@@ -32,6 +32,7 @@ public class ClientFuture implements AsyncResult {
     private volatile Throwable error;
 
     public ClientFuture() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
         this(null);
     }
 
@@ -46,6 +47,7 @@ public class ClientFuture implements AsyncResult {
 
     @Override
     public void onFailure(Throwable result) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
         if (completer.compareAndSet(false, true)) {
             error = result;
             if (synchronization != null) {

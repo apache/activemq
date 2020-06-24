@@ -54,6 +54,7 @@ import junit.framework.TestCase;
 public class PurgeCommandTest extends TestCase {
     private static final Logger LOG = LoggerFactory
             .getLogger(PurgeCommandTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4333
 
     protected static final int MESSAGE_COUNT = 10;
     protected static final String PROPERTY_NAME = "XTestProperty";
@@ -70,6 +71,7 @@ public class PurgeCommandTest extends TestCase {
     // complex message selector query using XTestProperty and JMSPriority
     protected static final String MSG_SEL_COMPLEX = PROPERTY_NAME + "='" +
             "1:1" + "' AND JMSPriority>3";
+//IC see: https://issues.apache.org/jira/browse/AMQ-6325
 
     // complex message selector query using XTestProperty AND JMSPriority
     // but in SQL-92 syntax
@@ -156,6 +158,7 @@ public class PurgeCommandTest extends TestCase {
     @SuppressWarnings("unchecked")
     public void purgeAllMessages() throws IOException, Exception {
             List<ObjectInstance> queueList = JmxMBeansUtil.queryMBeans(
+//IC see: https://issues.apache.org/jira/browse/AMQ-4333
                     createJmxConnection(), "type=Broker,brokerName=localbroker,destinationType=Queue,destinationName=*");
             for (ObjectInstance oi : queueList) {
                 ObjectName queueName = oi.getObjectName();
@@ -227,6 +230,7 @@ public class PurgeCommandTest extends TestCase {
             List<String> tokens = Arrays.asList(new String[] { "*" });
             for (String token : tokens) {
                 List<ObjectInstance> queueList = JmxMBeansUtil.queryMBeans(
+//IC see: https://issues.apache.org/jira/browse/AMQ-4333
                         createJmxConnection(), "type=Broker,brokerName=localbroker,destinationType=Queue,destinationName="
                                 + token);
 

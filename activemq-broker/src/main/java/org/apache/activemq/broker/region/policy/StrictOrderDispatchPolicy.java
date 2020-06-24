@@ -51,6 +51,7 @@ public class StrictOrderDispatchPolicy implements DispatchPolicy {
 
                 // Only dispatch to interested subscriptions
                 if (!sub.matches(node, msgContext)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2870
                     sub.unmatched(node);
                     continue;
                 }

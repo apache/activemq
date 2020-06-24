@@ -32,6 +32,7 @@ public class PlainMechanism extends AbstractMechanism {
 
     @Override
     public String getName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         return MECH_NAME;
     }
 
@@ -54,12 +55,14 @@ public class PlainMechanism extends AbstractMechanism {
             password = "";
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         byte[] authzidBytes = authzid.getBytes();
         byte[] usernameBytes = username.getBytes();
         byte[] passwordBytes = password.getBytes();
         byte[] data = new byte[authzidBytes.length + 1 + usernameBytes.length + 1 + passwordBytes.length];
         System.arraycopy(authzidBytes, 0, data, 0, authzidBytes.length);
         System.arraycopy(usernameBytes, 0, data, 1 + authzidBytes.length, usernameBytes.length);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         System.arraycopy(passwordBytes, 0, data, 2 + authzidBytes.length + usernameBytes.length, passwordBytes.length);
         return data;
     }
@@ -71,6 +74,7 @@ public class PlainMechanism extends AbstractMechanism {
 
     @Override
     public boolean isApplicable(String username, String password) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         return username != null && username.length() > 0 && password != null && password.length() > 0;
     }
 }

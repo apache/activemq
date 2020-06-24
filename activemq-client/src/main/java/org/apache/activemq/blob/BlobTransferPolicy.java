@@ -42,6 +42,7 @@ public class BlobTransferPolicy {
         that.defaultUploadUrl = this.defaultUploadUrl;
         that.brokerUploadUrl = this.brokerUploadUrl;
         that.uploadUrl = this.uploadUrl;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4002
         that.bufferSize = this.bufferSize;
         that.uploadStrategy = this.uploadStrategy;
         that.downloadStrategy = this.downloadStrategy;
@@ -98,6 +99,7 @@ public class BlobTransferPolicy {
     }
 
     public BlobDownloadStrategy getDownloadStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1744
         if(downloadStrategy == null) {
             downloadStrategy = createDownloadStrategy();
         }
@@ -129,12 +131,14 @@ public class BlobTransferPolicy {
      * @return
      */
     protected BlobUploadStrategy createUploadStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1744
     	BlobUploadStrategy strategy;
     	try {
             URL url = new URL(getUploadUrl());
 
             if(url.getProtocol().equalsIgnoreCase("FTP")) {
                 strategy = new FTPBlobUploadStrategy(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3017
             } else if (url.getProtocol().equalsIgnoreCase("FILE")) {
                 strategy = new FileSystemBlobStrategy(this);
             } else {
@@ -160,7 +164,9 @@ public class BlobTransferPolicy {
             URL url = new URL(getUploadUrl());
             
             if(url.getProtocol().equalsIgnoreCase("FTP")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
                 strategy = new FTPBlobDownloadStrategy(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3017
             } else if (url.getProtocol().equalsIgnoreCase("FILE")) {
                 strategy = new FileSystemBlobStrategy(this);
             } else {

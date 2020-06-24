@@ -48,16 +48,20 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     private final LinkedList<MessageId> pendingCachedIds = new LinkedList<>();
     private static int SYNC_ADD = 0;
     private static int ASYNC_ADD = 1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
     final MessageId[] lastCachedIds = new MessageId[2];
     protected boolean hadSpace = false;
 
 
 
     protected AbstractStoreCursor(Destination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         super((destination != null ? destination.isPrioritizedMessages():false));
         this.regionDestination=destination;
         if (this.prioritizedMessages) {
             this.batchList= new PrioritizedPendingList();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
         } else {
             this.batchList = new OrderedPendingList();
         }
@@ -67,8 +71,11 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     @Override
     public final synchronized void start() throws Exception{
         if (!isStarted()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
             super.start();
             resetBatch();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
             resetSize();
             setCacheEnabled(size==0&&useCache);
         }
@@ -80,6 +87,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public void rebase() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
         MessageId lastAdded = lastCachedIds[SYNC_ADD];
         if (lastAdded != null) {
             try {
@@ -106,7 +114,10 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
         boolean recovered = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5454
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
         message.setRegionDestination(regionDestination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
         if (recordUniqueId(message.getMessageId())) {
             if (!cached) {
                 if( message.getMemoryUsage()==null ) {
@@ -114,12 +125,16 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 }
             }
             message.incrementReferenceCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
             batchList.addMessageLast(message);
             clearIterator(true);
             recovered = true;
         } else if (!cached) {
             // a duplicate from the store (!cached) - needs to be removed/acked - otherwise it will get re dispatched on restart
+//IC see: https://issues.apache.org/jira/browse/AMQ-6562
             if (duplicateFromStoreExcepted(message)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("{} store replayed pending message due to concurrentStoreAndDispatchQueues {} seq: {}", this, message.getMessageId(), message.getMessageId().getFutureOrSequenceLong());
                 }
@@ -129,7 +144,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             }
         } else {
             LOG.warn("{} - cursor got duplicate send {} seq: {}", this, message.getMessageId(), message.getMessageId().getFutureOrSequenceLong());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6406
             if (gotToTheStore(message)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
                 duplicate(message);
             }
         }
@@ -139,6 +156,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected boolean duplicateFromStoreExcepted(Message message) {
         // expected for messages pending acks with kahadb.concurrentStoreAndDispatchQueues=true for
         // which this existing unused flag has been repurposed
+//IC see: https://issues.apache.org/jira/browse/AMQ-6562
         return message.isRecievedByDFBridge();
     }
 
@@ -148,6 +166,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             // if the index suppressed it (original still present), or whether it was stored and needs to be removed
             Object possibleFuture = message.getMessageId().getFutureOrSequenceLong();
             if (possibleFuture instanceof Future) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7030
                 try {
                     ((Future) possibleFuture).get();
                 } catch (Exception okToErrorOrCancelStoreOp) {}
@@ -182,7 +201,10 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 throw new RuntimeException(e);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1971
+//IC see: https://issues.apache.org/jira/browse/AMQ-1971
         clearIterator(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1984
         size();
     }
 
@@ -202,6 +224,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     private synchronized void ensureIterator() {
         if(this.iterator==null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
             this.iterator=this.batchList.iterator();
         }
     }
@@ -221,6 +244,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 throw new RuntimeException(e);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1971
         ensureIterator();
         return this.iterator.hasNext();
     }
@@ -228,11 +252,14 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public final synchronized MessageReference next() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2487
         MessageReference result = null;
         if (!this.batchList.isEmpty()&&this.iterator.hasNext()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
             result = this.iterator.next();
         }
         last = result;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         if (result != null) {
             result.incrementReferenceCount();
         }
@@ -245,6 +272,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         if (hasSpace()) {
             if (isCacheEnabled()) {
                 if (recoverMessage(node.getMessage(),true)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                     trackLastCached(node);
                 } else {
                     dealWithDuplicates();
@@ -260,6 +289,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 LOG.trace("{} - disabling cache on add {} {}", this, node.getMessageId(), node.getMessageId().getFutureOrSequenceLong());
             }
             syncWithStore(node.getMessage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
             setCacheEnabled(false);
         }
         size++;
@@ -268,6 +298,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public synchronized boolean isCacheEnabled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6667
         return super.isCacheEnabled() || enableCacheNow();
     }
 
@@ -290,10 +321,13 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     @Override
     public boolean canRecoveryNextMessage() {
         // Should be safe to recovery messages if the overall memory usage if < 90%
+//IC see: https://issues.apache.org/jira/browse/AMQ-7126
         return parentHasSpace(90);
     }
 
     private void syncWithStore(Message currentAdd) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         pruneLastCached();
         for (ListIterator<MessageId> it = pendingCachedIds.listIterator(pendingCachedIds.size()); it.hasPrevious(); ) {
             MessageId lastPending = it.previous();
@@ -306,6 +340,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 try {
                     future.get(5, TimeUnit.SECONDS);
                     setLastCachedId(ASYNC_ADD, lastPending);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
                 } catch (CancellationException ok) {
                     continue;
                 } catch (TimeoutException potentialDeadlock) {
@@ -341,6 +377,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     private void trackLastCached(MessageReference node) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
         if (isAsync(node.getMessage())) {
             pruneLastCached();
             pendingCachedIds.add(node.getMessageId());
@@ -350,6 +388,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     private static final boolean isAsync(Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
         return message.isRecievedByDFBridge() || message.getMessageId().getFutureOrSequenceLong() instanceof Future;
     }
 
@@ -359,6 +399,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             final Object futureOrLong = candidate.getFutureOrSequenceLong();
             if (futureOrLong instanceof Future) {
                 Future future = (Future) futureOrLong;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
                 if (future.isDone()) {
                     if (future.isCancelled()) {
                         it.remove();
@@ -373,6 +414,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                             LOG.debug("{} unexpected exception verifying exception state of future", this, unexpected);
                         }
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 } else {
                     // we don't want to wait for work to complete
                     break;
@@ -394,6 +437,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     private void setLastCachedId(final int index, MessageId candidate) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5668
         MessageId lastCacheId = lastCachedIds[index];
         if (lastCacheId == null) {
             lastCachedIds[index] = candidate;
@@ -405,6 +449,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             } else if (candidateOrSequenceLong != null &&
                     Long.compare(((Long) candidateOrSequenceLong), ((Long) lastCacheFutureOrSequenceLong)) > 0) {
                 lastCachedIds[index] = candidate;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             } else if (LOG.isTraceEnabled()) {
                 LOG.trace("no set last cached[" + index + "] current:" + lastCacheFutureOrSequenceLong + " <= than candidate: " + candidateOrSequenceLong+ ", " + this);
             }
@@ -424,9 +469,12 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     @Override
     public final synchronized void remove() {
         size--;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
+//IC see: https://issues.apache.org/jira/browse/AMQ-1914
         if (iterator!=null) {
             iterator.remove();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2487
         if (last != null) {
             last.decrementReferenceCount();
         }
@@ -435,6 +483,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public final synchronized void remove(MessageReference node) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3532
         if (batchList.remove(node) != null) {
             size--;
             setCacheEnabled(false);
@@ -444,19 +493,25 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public final synchronized void clear() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1962
         gc();
     }
 
 
     @Override
     public synchronized void gc() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         for (MessageReference msg : batchList) {
             rollback(msg.getMessageId());
             msg.decrementReferenceCount();
         }
         batchList.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1971
         clearIterator(false);
         batchResetNeeded = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
         setCacheEnabled(false);
     }
 
@@ -466,11 +521,15 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             LOG.trace("{} fillBatch", this);
         }
         if (batchResetNeeded) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
             resetSize();
             setMaxBatchSize(Math.min(regionDestination.getMaxPageSize(), size));
             resetBatch();
             this.batchResetNeeded = false;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         if (this.batchList.isEmpty() && this.size >0) {
             try {
                 doFillBatch();
@@ -485,6 +544,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     @Override
     public final synchronized boolean isEmpty() {
         // negative means more messages added to store through queue.send since last reset
+//IC see: https://issues.apache.org/jira/browse/AMQ-1984
         return size == 0;
     }
 
@@ -497,7 +557,10 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public final synchronized int size() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1984
         if (size < 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
             this.size = getStoreSize();
         }
         return size;
@@ -510,8 +573,12 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         return super.toString() + ":" + regionDestination.getActiveMQDestination().getPhysicalName() + ",batchResetNeeded=" + batchResetNeeded
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
                     + ",size=" + this.size + ",cacheEnabled=" + cacheEnabled
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                     + ",maxBatchSize:" + maxBatchSize + ",hasSpace:" + hasSpace() + ",pendingCachedIds.size:" + pendingCachedIds.size()
                     + ",lastSyncCachedId:" + lastCachedIds[SYNC_ADD] + ",lastSyncCachedId-seq:" + (lastCachedIds[SYNC_ADD] != null ? lastCachedIds[SYNC_ADD].getFutureOrSequenceLong() : "null")
                     + ",lastAsyncCachedId:" + lastCachedIds[ASYNC_ADD] + ",lastAsyncCachedId-seq:" + (lastCachedIds[ASYNC_ADD] != null ? lastCachedIds[ASYNC_ADD].getFutureOrSequenceLong() : "null");
@@ -528,6 +595,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected abstract boolean isStoreEmpty();
 
     public Subscription getSubscription() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
         return null;
     }
 }

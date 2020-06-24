@@ -45,6 +45,7 @@ public class DiscardingDLQBroker extends BrokerFilter {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext ctx, MessageReference msgRef, Subscription subscription, Throwable poisonCause) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
         log.trace("Discarding DLQ BrokerFilter[pass through] - skipping message: {}", (msgRef != null ? msgRef.getMessage() : null));
         boolean dropped = true;
         Message msg = null;
@@ -54,6 +55,7 @@ public class DiscardingDLQBroker extends BrokerFilter {
         dest = msg.getDestination();
         destName = dest.getPhysicalName();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4517
         if (dest == null || destName == null) {
             // do nothing, no need to forward it
             skipMessage("NULL DESTINATION", msgRef);
@@ -71,11 +73,14 @@ public class DiscardingDLQBroker extends BrokerFilter {
             skipMessage("dropOnly", msgRef);
         } else {
             dropped = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
             return next.sendToDeadLetterQueue(ctx, msgRef, subscription, poisonCause);
         }
 
         if (dropped && getReportInterval() > 0) {
             if ((++dropCount) % getReportInterval() == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                 log.info("Total of {} messages were discarded, since their destination was the dead letter queue", dropCount);
             }
         }
@@ -93,6 +98,7 @@ public class DiscardingDLQBroker extends BrokerFilter {
     }
 
     private void skipMessage(String prefix, MessageReference msgRef) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
         log.debug("Discarding DLQ BrokerFilter[{}] - skipping message: {}", prefix, (msgRef != null ? msgRef.getMessage() : null));
     }
 

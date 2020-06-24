@@ -36,6 +36,7 @@ public class DurableSubscriptionInflightMessageSizeTest extends AbstractInflight
 
     public DurableSubscriptionInflightMessageSizeTest(int ackType, boolean optimizeAcknowledge,
             boolean useTopicSubscriptionInflightStats) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         super(ackType, optimizeAcknowledge, useTopicSubscriptionInflightStats);
     }
 

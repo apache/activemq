@@ -60,6 +60,8 @@ public class AMQ5212Test {
 
     @Parameterized.Parameters(name = "concurrentStoreAndDispatch={0}")
     public static Iterable<Object[]> getTestParameters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         return Arrays.asList(new Object[][]{{Boolean.TRUE}, {Boolean.FALSE}});
     }
 
@@ -73,9 +75,12 @@ public class AMQ5212Test {
         if (deleteAllMessages) {
             brokerService.deleteAllMessages();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         ((KahaDBPersistenceAdapter)brokerService.getPersistenceAdapter()).setConcurrentStoreAndDispatchQueues(concurrentStoreAndDispatchQ);
         brokerService.addConnector("tcp://localhost:0");
         brokerService.setAdvisorySupport(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         brokerService.getManagementContext().setCreateConnector(false);
         brokerService.start();
     }
@@ -140,6 +145,8 @@ public class AMQ5212Test {
         executorService.shutdown();
         executorService.awaitTermination(5, TimeUnit.MINUTES);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -233,6 +240,7 @@ public class AMQ5212Test {
     @Test
     public void verifyProducerAudit() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6413
         MutableBrokerFilter filter = (MutableBrokerFilter)brokerService.getBroker().getAdaptor(MutableBrokerFilter.class);
         filter.setNext(new MutableBrokerFilter(filter.getNext()) {
             @Override

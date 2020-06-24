@@ -56,15 +56,18 @@ public class JMSClientTestSupport extends AmqpTestSupport {
      * @return the URI to connect to on the Broker for AMQP.
      */
     protected URI getBrokerURI() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         return amqpURI;
     }
 
     protected URI getAmqpURI() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         return getAmqpURI("");
     }
 
     protected URI getAmqpURI(String uriOptions) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         String clientScheme;
         boolean useSSL = false;
 
@@ -129,6 +132,7 @@ public class JMSClientTestSupport extends AmqpTestSupport {
     }
 
     protected Connection createConnection() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         return createConnection(name.toString(), false);
     }
 

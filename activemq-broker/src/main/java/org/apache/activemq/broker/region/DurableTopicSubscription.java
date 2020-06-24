@@ -63,24 +63,29 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     private final HashSet<MessageId> ackedAndPrepared = new HashSet<MessageId>();
 
     public DurableTopicSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
+//IC see: https://issues.apache.org/jira/browse/AMQ-4062
             throws JMSException {
         super(broker, usageManager, context, info);
         this.pending = new StoreDurableSubscriberCursor(broker, context.getClientId(), info.getSubscriptionName(), info.getPrefetchSize(), this);
         this.pending.setSystemUsage(usageManager);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
         this.pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
     }
 
     public final boolean isActive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         return active.get();
     }
 
     public final long getOfflineTimestamp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3408
         return offlineTimestamp.get();
     }
 
     public void setOfflineTimestamp(long timestamp) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4149
         offlineTimestamp.set(timestamp);
     }
 
@@ -100,6 +105,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     @Override
     public void unmatched(MessageReference node) throws IOException {
         MessageAck ack = new MessageAck();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         ack.setAckType(MessageAck.UNMATCHED_ACK_TYPE);
         ack.setMessageID(node.getMessageId());
         Destination regionDestination = (Destination) node.getRegionDestination();
@@ -113,7 +120,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     public void add(ConnectionContext context, Destination destination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3442
         if (!destinations.contains(destination)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2665
             super.add(context, destination);
         }
         // do it just once per destination
@@ -125,6 +134,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         if (active.get() || keepDurableSubsActive) {
             Topic topic = (Topic) destination;
             topic.activate(context, this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
             getSubscriptionStatistics().getEnqueues().add(pending.size());
         } else if (destination.getMessageStore() != null) {
             TopicMessageStore store = (TopicMessageStore) destination.getMessageStore();
@@ -141,10 +151,12 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     // used by RetaineMessageSubscriptionRecoveryPolicy
     public boolean isEmpty(Topic topic) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         return pending.isEmpty(topic);
     }
 
     public void activate(SystemUsage memoryManager, ConnectionContext context, ConsumerInfo info, RegionBroker regionBroker) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         if (!active.get()) {
             this.context = context;
             this.info = info;
@@ -153,11 +165,14 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             if (!keepDurableSubsActive) {
                 for (Destination destination : durableDestinations.values()) {
                     Topic topic = (Topic) destination;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2663
                     add(context, topic);
                     topic.activate(context, this);
                 }
 
                 // On Activation we should update the configuration based on our new consumer info.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4062
+//IC see: https://issues.apache.org/jira/browse/AMQ-4062
                 ActiveMQDestination dest = this.info.getDestination();
                 if (dest != null && regionBroker.getDestinationPolicy() != null) {
                     PolicyEntry entry = regionBroker.getDestinationPolicy().getEntryFor(dest);
@@ -167,23 +182,32 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
             synchronized (pendingLock) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4656
                 if (!((AbstractPendingMessageCursor) pending).isStarted() || !keepDurableSubsActive) {
                     pending.setSystemUsage(memoryManager);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
                     pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
                     pending.setMaxAuditDepth(getMaxAuditDepth());
                     pending.setMaxProducersToAudit(getMaxProducersToAudit());
+//IC see: https://issues.apache.org/jira/browse/AMQ-845
                     pending.start();
                 }
                 // use recovery policy every time sub is activated for retroactive topics and consumers
+//IC see: https://issues.apache.org/jira/browse/AMQ-4062
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
                 for (Destination destination : durableDestinations.values()) {
                     Topic topic = (Topic) destination;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
                     if (topic.isAlwaysRetroactive() || info.isRetroactive()) {
                         topic.recoverRetroactiveMessages(context, this);
                     }
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             this.active.set(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3408
             this.offlineTimestamp.set(-1);
             dispatchPending();
             this.usageManager.getMemoryUsage().addUsageListener(this);
@@ -192,8 +216,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     public void deactivate(boolean keepDurableSubsActive, long lastDeliveredSequenceId) throws Exception {
         LOG.debug("Deactivating keepActive={}, {}", keepDurableSubsActive, this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         active.set(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4814
         this.keepDurableSubsActive = keepDurableSubsActive;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3408
         offlineTimestamp.set(System.currentTimeMillis());
         usageManager.getMemoryUsage().removeUsageListener(this);
 
@@ -201,11 +228,13 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         List<MessageReference> savedDispateched = null;
 
         synchronized (pendingLock) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4656
             if (!keepDurableSubsActive) {
                 pending.stop();
             }
 
             synchronized (dispatchLock) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4062
                 for (Destination destination : durableDestinations.values()) {
                     Topic topic = (Topic) destination;
                     if (!keepDurableSubsActive) {
@@ -218,11 +247,14 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 // Before we add these back to pending they need to be in producer order not
                 // dispatch order so we can add them to the front of the pending list.
                 Collections.reverse(dispatched);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3871
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
                 for (final MessageReference node : dispatched) {
                     // Mark the dispatched messages as redelivered for next time.
                     if (lastDeliveredSequenceId == RemoveInfo.LAST_DELIVERED_UNKNOWN || lastDeliveredSequenceId == 0 ||
                             (lastDeliveredSequenceId > 0 && node.getMessageId().getBrokerSequenceId() <= lastDeliveredSequenceId)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5513
                         Integer count = redeliveredMessages.get(node.getMessageId());
                         if (count != null) {
                             redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
@@ -231,6 +263,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                         }
                     }
                     if (keepDurableSubsActive && pending.isTransient()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-845
                         pending.addMessageFirst(node);
                         pending.rollback(node.getMessageId());
                     }
@@ -241,9 +274,12 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 if (!topicsToDeactivate.isEmpty()) {
                     savedDispateched = new ArrayList<MessageReference>(dispatched);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
                 dispatched.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
                 getSubscriptionStatistics().getInflightMessageSize().reset();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1449
             if (!keepDurableSubsActive && pending.isTransient()) {
                 try {
                     pending.reset();
@@ -266,7 +302,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     @Override
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
         MessageDispatch md = super.createMessageDispatch(node, message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
         if (node != QueueMessageReference.NULL_MESSAGE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6014
             node.incrementReferenceCount();
             Integer count = redeliveredMessages.get(node.getMessageId());
             if (count != null) {
@@ -278,6 +316,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     public void add(MessageReference node) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         if (!active.get() && !keepDurableSubsActive) {
             return;
         }
@@ -292,18 +331,23 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void removePending(MessageReference node) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
         pending.remove(node);
     }
 
     @Override
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4062
         synchronized (pending) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             pending.addRecoveredMessage(message);
         }
     }
 
     @Override
     public int getPendingQueueSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         if (active.get() || keepDurableSubsActive) {
             return super.getPendingQueueSize();
         }
@@ -313,7 +357,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     public void setSelector(String selector) throws InvalidSelectorException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5996
         if (active.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-625
             throw new UnsupportedOperationException("You cannot dynamically change the selector for durable topic subscriptions");
         } else {
             super.setSelector(getSelector());
@@ -322,21 +368,25 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     protected boolean canDispatch(MessageReference node) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4413
         return true;  // let them go, our dispatchPending gates the active / inactive state.
     }
 
     @Override
     protected boolean trackedInPendingTransaction(MessageReference node) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
         return !ackedAndPrepared.isEmpty() && ackedAndPrepared.contains(node.getMessageId());
     }
 
     @Override
     protected void acknowledge(ConnectionContext context, MessageAck ack, final MessageReference node) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
         this.setTimeOfLastMessageAck(System.currentTimeMillis());
         Destination regionDestination = (Destination) node.getRegionDestination();
         regionDestination.acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());
         node.decrementReferenceCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
         if (context.isInTransaction() && context.getTransaction().getTransactionId().isXATransaction()) {
             context.getTransaction().addSynchronization(new Synchronization() {
 
@@ -352,6 +402,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 public void afterCommit() throws Exception {
                     synchronized (pendingLock) {
                         // may be in the cursor post activate/load from the store
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
                         pending.remove(node);
                         ackedAndPrepared.remove(node.getMessageId());
                     }
@@ -366,7 +417,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 }
             });
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5831
         ((Destination)node.getRegionDestination()).getDestinationStatistics().getDequeues().increment();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6381
         if (info.isNetworkSubscription()) {
             ((Destination)node.getRegionDestination()).getDestinationStatistics().getForwards().add(ack.getMessageCount());
         }
@@ -375,6 +428,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     @Override
     public synchronized String toString() {
         return "DurableTopicSubscription-" + getSubscriptionKey() + ", id=" + info.getConsumerId() + ", active=" + isActive() + ", destinations="
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
                 + durableDestinations.size() + ", total=" + getSubscriptionStatistics().getEnqueues().getCount() + ", pending=" + getPendingQueueSize() + ", dispatched=" + getSubscriptionStatistics().getDispatched().getCount()
                 + ", inflight=" + dispatched.size() + ", prefetchExtension=" + getPrefetchExtension();
     }
@@ -400,13 +454,17 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 pending.clear();
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4062
         synchronized (dispatchLock) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3732
             for (MessageReference node : dispatched) {
                 node.decrementReferenceCount();
             }
             dispatched.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
             ackedAndPrepared.clear();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
         setSlowConsumer(false);
     }
 
@@ -423,10 +481,12 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     protected boolean isDropped(MessageReference node) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4062
         return false;
     }
 
     public boolean isKeepDurableSubsActive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3196
         return keepDurableSubsActive;
     }
 }

@@ -53,7 +53,9 @@ public class ReloadableProperties {
             try {
                 load(key.file(), props);
                 invertedProps = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6214
                 invertedValueProps = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7230
                 regexpProps = null;
                 if (key.isDebug()) {
                     LOG.debug("Load of: " + key);
@@ -73,6 +75,7 @@ public class ReloadableProperties {
         if (invertedProps == null) {
             invertedProps = new HashMap<>(props.size());
             for (Map.Entry<Object, Object> val : props.entrySet()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7230
                 String str = (String) val.getValue();
                 if (!looksLikeRegexp(str)) {
                     invertedProps.put(str, (String) val.getKey());
@@ -83,6 +86,7 @@ public class ReloadableProperties {
     }
 
     public synchronized Map<String, Set<String>> invertedPropertiesValuesMap() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5876
         if (invertedValueProps == null) {
             invertedValueProps = new HashMap<>(props.size());
             for (Map.Entry<Object, Object> val : props.entrySet()) {
@@ -101,6 +105,7 @@ public class ReloadableProperties {
     }
 
     public synchronized Map<String, Pattern> regexpPropertiesMap() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7230
         if (regexpProps == null) {
             regexpProps = new HashMap<>(props.size());
             for (Map.Entry<Object, Object> val : props.entrySet()) {
@@ -124,6 +129,7 @@ public class ReloadableProperties {
             props.load(in);
             if (key.isDecrypt()) {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
                     EncryptionSupport.decrypt(this.props, key.getAlgorithm());
                 } catch (NoClassDefFoundError e) {
                     // this Happens whe jasypt is not on the classpath..
@@ -143,6 +149,7 @@ public class ReloadableProperties {
 
     private boolean looksLikeRegexp(String str) {
         int len = str.length();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7230
         return len > 2 && str.charAt(0) == '/' && str.charAt(len - 1) == '/';
     }
 

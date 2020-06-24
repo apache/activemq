@@ -47,6 +47,7 @@ public class JmsProducerProperties extends JmsClientProperties {
     protected boolean createNewMsg;
 
     public JmsProducerProperties() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
         this.headerMap = new HashMap<String, Object>();
     }
 
@@ -99,6 +100,8 @@ public class JmsProducerProperties extends JmsClientProperties {
     }
 
     public void setSendDelay(long delay) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
         this.sendDelay = delay;
     }
 
@@ -122,6 +125,7 @@ public class JmsProducerProperties extends JmsClientProperties {
     public void setHeader(String encodedHeader) {
 
         // remove any trailing ':' characters
+//IC see: https://issues.apache.org/jira/browse/AMQ-3280
         if (encodedHeader.endsWith(":")) {
             encodedHeader = encodedHeader.substring(0, encodedHeader.length()-1);
         }
@@ -157,6 +161,7 @@ public class JmsProducerProperties extends JmsClientProperties {
 
     public void setMsgFileName(String file) {
         LOG.info("\"producer.msgFileName\" specified. " +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3492
                 "Will ignore setting \"producer.messageSize\".");
         this.msgFileName = file;
     }

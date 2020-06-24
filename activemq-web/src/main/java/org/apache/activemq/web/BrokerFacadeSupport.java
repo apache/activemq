@@ -71,6 +71,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         if (broker == null) {
             return Collections.EMPTY_LIST;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5104
         ObjectName[] topics = broker.getTopics();
         return getManagedObjects(topics, TopicViewMBean.class);
     }
@@ -101,6 +102,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         if (broker == null) {
             return Collections.EMPTY_LIST;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5104
         ObjectName[] subscribers = broker.getDurableTopicSubscribers();
         return getManagedObjects(subscribers, DurableSubscriptionViewMBean.class);
     }
@@ -111,6 +113,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         if (broker == null) {
             return Collections.EMPTY_LIST;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5104
         ObjectName[] subscribers = broker.getInactiveDurableTopicSubscribers();
         return getManagedObjects(subscribers, DurableSubscriptionViewMBean.class);
     }
@@ -149,6 +152,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         List<T> answer = new ArrayList<T>();
         for (int i = 0; i < names.length; i++) {
             ObjectName name = names[i];
+//IC see: https://issues.apache.org/jira/browse/AMQ-2570
             T value = (T) newProxyInstance(name, type, true);
             if (value != null) {
                 answer.add(value);
@@ -162,7 +166,10 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<ConnectionViewMBean> getConnections() throws Exception {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=clientConnectors,connectorName=*,connectionName=*");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2570
+//IC see: https://issues.apache.org/jira/browse/AMQ-2570
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ConnectionViewMBean.class);
     }
@@ -172,6 +179,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<String> getConnections(String connectorName) throws Exception {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+//IC see: https://issues.apache.org/jira/browse/AMQ-4393
             + ",connector=clientConnectors,connectorName=" + connectorName + ",connectionViewType=clientId" + ",connectionName=*");        Set<ObjectName> queryResult = queryNames(query, null);
         Collection<String> result = new ArrayList<String>(queryResult.size());
         for (ObjectName on : queryResult) {
@@ -186,8 +194,10 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public ConnectionViewMBean getConnection(String connectionName) throws Exception {
         connectionName = StringUtils.replace(connectionName, ":", "_");
         String brokerName = getBrokerName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
                 + ",connector=clientConnectors,*,connectionName=" + connectionName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2570
         Set<ObjectName> queryResult = queryNames(query, null);
         if (queryResult.size() == 0)
             return null;
@@ -200,7 +210,9 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     @SuppressWarnings("unchecked")
     public Collection<String> getConnectors() throws Exception {
         String brokerName = getBrokerName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=clientConnectors,connectorName=*");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2570
         Set<ObjectName> queryResult = queryNames(query, null);
         Collection<String> result = new ArrayList<String>(queryResult.size());
         for (ObjectName on : queryResult)
@@ -213,6 +225,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         String brokerName = getBrokerName();
         ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
                 + ",connector=clientConnectors,connectorName=" + name);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2570
         return (ConnectorViewMBean) newProxyInstance(objectName, ConnectorViewMBean.class, true);
     }
 
@@ -220,6 +233,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     @SuppressWarnings("unchecked")
     public Collection<NetworkConnectorViewMBean> getNetworkConnectors() throws Exception {
         String brokerName = getBrokerName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=networkConnectors,networkConnectorName=*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
@@ -228,7 +242,9 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
 
     @Override
     public Collection<NetworkBridgeViewMBean> getNetworkBridges() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3108
         String brokerName = getBrokerName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7112
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=*,networkConnectorName=*,networkBridge=*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
@@ -240,6 +256,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<SubscriptionViewMBean> getQueueConsumers(String queueName) throws Exception {
         String brokerName = getBrokerName();
         queueName = StringUtils.replace(queueName, "\"", "_");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
                 + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Consumer,*");
         Set<ObjectName> queryResult = queryNames(query, null);
@@ -249,7 +266,9 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     @Override
     @SuppressWarnings("unchecked")
     public Collection<ProducerViewMBean> getQueueProducers(String queueName) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2429
         String brokerName = getBrokerName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2613
         queueName = StringUtils.replace(queueName, "\"", "_");
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
                 + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Producer,*");
@@ -273,8 +292,11 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<SubscriptionViewMBean> getConsumersOnConnection(String connectionName) throws Exception {
         connectionName = StringUtils.replace(connectionName, ":", "_");
         String brokerName = getBrokerName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
                 + ",*,endpoint=Consumer,clientId=" + connectionName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2570
+//IC see: https://issues.apache.org/jira/browse/AMQ-2570
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
     }
@@ -301,6 +323,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
 
     @Override
     public boolean isJobSchedulerStarted() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3088
         try {
             JobSchedulerViewMBean jobScheduler = getJobScheduler();
             return true;

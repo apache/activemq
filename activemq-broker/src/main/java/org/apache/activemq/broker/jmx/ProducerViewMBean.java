@@ -41,6 +41,7 @@ public interface ProducerViewMBean {
      */
     @MBeanInfo("ID of the Producer.")
     String getProducerId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
 
     /**
      * @return the destination name
@@ -88,12 +89,14 @@ public interface ProducerViewMBean {
      */
     @MBeanInfo("User Name used to authorize creation of this Producer")
     String getUserName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
 
     @MBeanInfo("is the producer blocked for Flow Control")
     boolean isProducerBlocked();
 
     @MBeanInfo("total time (ms) Producer Blocked For Flow Control")
     long getTotalTimeBlocked();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
 
     @MBeanInfo("percentage of sends Producer Blocked for Flow Control")
     int getPercentageBlocked();
@@ -103,6 +106,7 @@ public interface ProducerViewMBean {
 
     @MBeanInfo("Resets statistics.")
     void resetStatistics();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4916
 
     @MBeanInfo("Messages dispatched by Producer")
     long getSentCount();

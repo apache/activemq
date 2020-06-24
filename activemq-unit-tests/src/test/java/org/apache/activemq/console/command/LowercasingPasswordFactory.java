@@ -19,6 +19,7 @@ package org.apache.activemq.console.command;
 public class LowercasingPasswordFactory implements PasswordFactory {
 	@Override
 	public String getPassword(String password) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
 		return password.toLowerCase();
 	}
 

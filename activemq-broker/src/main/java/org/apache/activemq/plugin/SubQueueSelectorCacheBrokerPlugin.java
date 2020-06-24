@@ -43,6 +43,7 @@ public class SubQueueSelectorCacheBrokerPlugin implements BrokerPlugin {
 
     @Override
     public Broker installPlugin(Broker broker) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
         SubQueueSelectorCacheBroker rc = new SubQueueSelectorCacheBroker(broker, persistFile);
         rc.setSingleSelectorPerDestination(singleSelectorPerDestination);
         rc.setPersistInterval(persistInterval);
@@ -62,6 +63,7 @@ public class SubQueueSelectorCacheBrokerPlugin implements BrokerPlugin {
     }
 
     public boolean isSingleSelectorPerDestination() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
         return singleSelectorPerDestination;
     }
 

@@ -58,6 +58,7 @@ public class AMQ7118Test {
     public void setup() throws Exception {
         deleteData(new File("target/data"));
         createBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7118
         ACTIVE_MQ_CONNECTION_FACTORY.setConnectionIDPrefix("bla");
     }
 
@@ -133,6 +134,7 @@ public class AMQ7118Test {
         LOG.info("All messages Consumed.");
 
         //Clean up the log files and be sure its stable
+//IC see: https://issues.apache.org/jira/browse/AMQ-7118
         checkFiles(true, 2, "db-30.log");
         checkFiles(true, 3, "db-31.log");
         checkFiles(true, 2, "db-31.log");

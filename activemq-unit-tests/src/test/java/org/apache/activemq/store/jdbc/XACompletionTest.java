@@ -84,6 +84,7 @@ public class XACompletionTest extends TestSupport {
 
     @Parameterized.Parameters(name = "store={0}")
     public static Iterable<Object[]> getTestParameters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         return Arrays.asList(new Object[][]{{TestSupport.PersistenceAdapterChoice.KahaDB}, {PersistenceAdapterChoice.JDBC}});
     }
 
@@ -302,6 +303,7 @@ public class XACompletionTest extends TestSupport {
         assertNotNull("message gone", browsed);
 
         LOG.info("Try receive... after");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         for (int i = 0; i < 10; i++) {
             Message message = regularReceive("TEST");
             assertNotNull("message gone", message);
@@ -354,6 +356,7 @@ public class XACompletionTest extends TestSupport {
 
         LOG.info("after close");
         dumpMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
 
         assertEquals("drain", 5, drainUnack(5, "TEST"));
 
@@ -392,6 +395,7 @@ public class XACompletionTest extends TestSupport {
 
 
         LOG.info("Try receive... after rollback");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         for (int i = 0; i < 10; i++) {
             Message message = regularReceive("TEST");
             assertNotNull("message gone: " + i, message);
@@ -411,6 +415,7 @@ public class XACompletionTest extends TestSupport {
     @Test
     public void testConsumeAfterAckPreparedRolledbackTopic() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
         factory = new ActiveMQXAConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=0");
         factory.setWatchTopicAdvisories(false);
 
@@ -559,6 +564,7 @@ public class XACompletionTest extends TestSupport {
 
         LOG.info("at end...");
         dumpMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
 
     }
 
@@ -659,6 +665,7 @@ public class XACompletionTest extends TestSupport {
 
         ActiveMQConnectionFactory receiveFactory = new ActiveMQConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=0");
         receiveFactory.setWatchTopicAdvisories(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
 
         // recover/rollback the second tx
         ActiveMQXAConnectionFactory activeMQXAConnectionFactory = new ActiveMQXAConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=0");
@@ -670,6 +677,7 @@ public class XACompletionTest extends TestSupport {
         xids = xaResource.recover(XAResource.TMSTARTRSCAN);
         xaResource.recover(XAResource.TMNOFLAGS);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         for (int i = 0; i < xids.length; i++) {
             xaResource.rollback(xids[i]);
         }
@@ -809,6 +817,8 @@ public class XACompletionTest extends TestSupport {
     @Test
     public void testMoveInTwoBranchesPreparedAckRecoveryRestartRollback() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
+//IC see: https://issues.apache.org/jira/browse/AMQ-5567
         factory = new ActiveMQXAConnectionFactory(
                 connectionUri + "?jms.prefetchPolicy.all=0&jms.redeliveryPolicy.maximumRedeliveries=" + messagesExpected);
 
@@ -958,6 +968,9 @@ public class XACompletionTest extends TestSupport {
 
         final Xid tid = createXid();
         byte[] branch = tid.getBranchQualifier();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         final byte[] branch2 = Arrays.copyOf(branch, branch.length);
         branch2[0] = '!';
 
@@ -1057,6 +1070,7 @@ public class XACompletionTest extends TestSupport {
 
     private Message regularReceive(String qName) throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         factory.setWatchTopicAdvisories(false);
         return regularReceiveWith(factory, qName);
     }
@@ -1077,6 +1091,8 @@ public class XACompletionTest extends TestSupport {
     private int drainUnack(int limit, String qName) throws Exception {
         int drained = 0;
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=" + limit);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         factory.setWatchTopicAdvisories(false);
         javax.jms.Connection connection = factory.createConnection();
         try {
@@ -1115,6 +1131,7 @@ public class XACompletionTest extends TestSupport {
     }
 
     protected void sendMessages(int messagesExpected) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
         sendMessagesTo(messagesExpected, new ActiveMQQueue("TEST"));
     }
 
@@ -1136,6 +1153,7 @@ public class XACompletionTest extends TestSupport {
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         for (int i = 0; i < messagesExpected; i++) {
             LOG.debug("Sending message " + (i + 1) + " of " + messagesExpected);
             producer.send(session.createTextMessage("test message " + (i + 1)));
@@ -1153,6 +1171,7 @@ public class XACompletionTest extends TestSupport {
         PreparedStatement statement = conn.prepareStatement("SELECT ID, MSG, XID FROM ACTIVEMQ_MSGS");
         ResultSet result = statement.executeQuery();
         LOG.info("Messages in broker db...");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         while (result.next()) {
             long id = result.getLong(1);
             org.apache.activemq.command.Message message = (org.apache.activemq.command.Message) wireFormat.unmarshal(new ByteSequence(result.getBytes(2)));
@@ -1161,6 +1180,7 @@ public class XACompletionTest extends TestSupport {
         }
         statement.close();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
         statement = conn.prepareStatement("SELECT LAST_ACKED_ID, CLIENT_ID, SUB_NAME, PRIORITY, XID FROM ACTIVEMQ_ACKS");
         result = statement.executeQuery();
         LOG.info("Messages in ACKS table db...");
@@ -1199,12 +1219,14 @@ public class XACompletionTest extends TestSupport {
         connectionUri = broker.addConnector("tcp://localhost:0").getPublishableConnectString();
 
         // ensure we run through a destination filter
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         final String id = "a";
         AuthorizationPlugin authorizationPlugin = new AuthorizationPlugin();
         SimpleAuthorizationMap map = new SimpleAuthorizationMap();
         DestinationMap destinationMap = new DestinationMap();
         GroupPrincipal anaGroup = new GroupPrincipal(id);
         destinationMap.put(new AnyDestination(new ActiveMQDestination[]{new ActiveMQQueue(">")}), anaGroup);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
         destinationMap.put(new AnyDestination(new ActiveMQDestination[]{new ActiveMQTopic(">")}), anaGroup);
         map.setWriteACLs(destinationMap);
         map.setAdminACLs(destinationMap);

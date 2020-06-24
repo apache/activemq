@@ -88,6 +88,7 @@ public class DestinationFacade {
     }
 
     public void setJMSDestination(String destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1540
         if (destination != null) {
             destination = destination.trim();
         }
@@ -103,11 +104,13 @@ public class DestinationFacade {
     }
 
     protected ActiveMQDestination createDestination() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1197
         byte destinationType = isQueue() ? ActiveMQDestination.QUEUE_TYPE : ActiveMQDestination.TOPIC_TYPE;
         return ActiveMQDestination.createDestination(getValidDestination(), destinationType);
     }
 
     protected String getValidDestination() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1899
         if (jmsDestination == null || jmsDestination.isEmpty()) {
             throw new IllegalArgumentException("No JMSDestination parameter specified");
         }
@@ -115,6 +118,7 @@ public class DestinationFacade {
     }
 
     protected QueueViewMBean getQueueView() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1326
         String name = getPhysicalDestinationName();
         return getBrokerFacade().getQueue(name);
     }
@@ -129,14 +133,18 @@ public class DestinationFacade {
     }
 
     protected ModelAndView redirectToDestinationView() {        
+//IC see: https://issues.apache.org/jira/browse/AMQ-4174
         return new ModelAndView("redirect:browse.jsp?JMSDestination=" + jmsDestination);
     }
 
     protected String getPhysicalDestinationName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1197
         return createDestination().getPhysicalName();
     }
 
     public String[] getSupportedHttpMethods() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2613
+//IC see: https://issues.apache.org/jira/browse/AMQ-1899
         return new String[]{"GET", "POST"};
     }
 }

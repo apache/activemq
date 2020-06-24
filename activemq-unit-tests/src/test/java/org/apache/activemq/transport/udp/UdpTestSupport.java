@@ -182,6 +182,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
     protected void tearDown() throws Exception {
         if (producer != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5372
             try {
                 producer.stop();
             } catch (Exception e) {

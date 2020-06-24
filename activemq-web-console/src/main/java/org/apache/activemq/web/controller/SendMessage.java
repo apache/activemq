@@ -63,6 +63,7 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     protected void sendMessages(HttpServletRequest request, WebClient client, ActiveMQDestination dest)
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
             throws JMSException {
         if (jmsMessageCount <= 1) {
             jmsMessageCount = 1;
@@ -86,6 +87,7 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     public void setJMSCorrelationID(String correlationID) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1540
         if (correlationID != null) {
             correlationID = correlationID.trim();
         }
@@ -97,6 +99,7 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     public void setJMSReplyTo(String replyTo) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1540
         if (replyTo != null) {
             replyTo = replyTo.trim();
         }
@@ -108,6 +111,7 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     public void setJMSType(String type) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1540
         if (type != null) {
             type = type.trim();
         }
@@ -159,6 +163,7 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     public void setJMSMessageCountHeader(String messageCountHeader) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1540
         if (messageCountHeader != null) {
             messageCountHeader = messageCountHeader.trim();
         }
@@ -187,9 +192,12 @@ public class SendMessage extends DestinationFacade implements Controller {
         Map map = request.getParameterMap();
         if (map != null) {
             for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
                 Map.Entry entry = (Map.Entry) iter.next();
                 String name = (String) entry.getKey();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2613
                 if (name.equals("secret")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1540
                     continue;
                 }
                 Object value = entry.getValue();
@@ -246,6 +254,8 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     public String[] getSupportedHttpMethods() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2613
+//IC see: https://issues.apache.org/jira/browse/AMQ-1540
         return new String[]{"POST"};
     }
 }

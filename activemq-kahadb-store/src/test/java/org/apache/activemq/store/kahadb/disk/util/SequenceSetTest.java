@@ -87,6 +87,7 @@ public class SequenceSetTest {
 
     @Test
     public void testAddValuesToTail() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7055
         SequenceSet set = new SequenceSet();
         set.add(new Sequence(0, 10));
         set.add(new Sequence(21, 42));
@@ -140,6 +141,7 @@ public class SequenceSetTest {
         assertEquals(3, set.size());
         assertEquals(97, set.rangeSize());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
         SequenceSet toRemove = new SequenceSet();
         toRemove.add(new Sequence(0, 100));
 
@@ -183,6 +185,7 @@ public class SequenceSetTest {
     @Test
     public void testIteratorEmptySequenceSet() {
         SequenceSet set = new SequenceSet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
 
         Iterator<Long> iterator = set.iterator();
         while(iterator.hasNext()) {

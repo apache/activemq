@@ -64,6 +64,7 @@ public class StompWireFormat implements WireFormat {
         DataOutputStream dos = new DataOutputStream(baos);
         marshal(command, dos);
         dos.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
         return baos.toByteSequence();
     }
 
@@ -89,6 +90,7 @@ public class StompWireFormat implements WireFormat {
         // Add a newline to separate the headers from the content.
         buffer.append(Stomp.NEWLINE);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6699
         return buffer;
     }
 
@@ -138,6 +140,7 @@ public class StompWireFormat implements WireFormat {
             byte[] data = NO_DATA;
             String contentLength = headers.get(Stomp.Headers.CONTENT_LENGTH);
             if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLength != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
 
                 // Bless the client, he's telling us how much data to read in.
                 int length = parseContentLength(contentLength, frameSize);
@@ -154,9 +157,12 @@ public class StompWireFormat implements WireFormat {
                 // We don't know how much to read.. data ends when we hit a 0
                 byte b;
                 ByteArrayOutputStream baos = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
                 while ((b = in.readByte()) != 0) {
                     if (baos == null) {
                         baos = new ByteArrayOutputStream();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5573
                     } else if (baos.size() > getMaxDataLength()) {
                         throw new ProtocolException("The maximum data length was exceeded", true);
                     } else {
@@ -178,12 +184,14 @@ public class StompWireFormat implements WireFormat {
 
         } catch (ProtocolException e) {
             return new StompFrameError(e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
         } finally {
             frameSize.set(0);
         }
     }
 
     private String readLine(DataInput in, int maxLength, String errorMessage) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         ByteSequence sequence = readHeaderLine(in, maxLength, errorMessage);
         return new String(sequence.getData(), sequence.getOffset(), sequence.getLength(), "UTF-8").trim();
     }
@@ -193,12 +201,15 @@ public class StompWireFormat implements WireFormat {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(maxLength);
         while ((b = in.readByte()) != '\n') {
             if (baos.size() > maxLength) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
                 baos.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-649
                 throw new ProtocolException(errorMessage, true);
             }
             baos.write(b);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         baos.close();
         ByteSequence line = baos.toByteSequence();
 
@@ -214,6 +225,7 @@ public class StompWireFormat implements WireFormat {
 
     protected String parseAction(DataInput in, AtomicLong frameSize) throws IOException {
         String action = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2822
 
         // skip white space to next real action line
         while (true) {
@@ -227,15 +239,21 @@ public class StompWireFormat implements WireFormat {
                 }
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
         frameSize.addAndGet(action.length());
         return action;
     }
 
     protected HashMap<String, String> parseHeaders(DataInput in, AtomicLong frameSize) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6699
         HashMap<String, String> headers = new HashMap<>(25);
         while (true) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             ByteSequence line = readHeaderLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
             if (line != null && line.length > 1) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3729
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
 
                 if (headers.size() > MAX_HEADERS) {
                     throw new ProtocolException("The maximum number of headers was exceeded", true);
@@ -259,13 +277,18 @@ public class StompWireFormat implements WireFormat {
 
                     ByteSequence nameSeq = stream.toByteSequence();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3913
                     String name = new String(nameSeq.getData(), nameSeq.getOffset(), nameSeq.getLength(), "UTF-8");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                     String value = decodeHeader(headerLine);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                     if (stompVersion.equals(Stomp.V1_0)) {
                         value = value.trim();
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3929
                     if (!headers.containsKey(name)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
                         headers.put(name, value);
                     }
 
@@ -289,10 +312,12 @@ public class StompWireFormat implements WireFormat {
             throw new ProtocolException("Specified content-length is not a valid integer", true);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5573
         if (length > getMaxDataLength()) {
             throw new ProtocolException("The maximum data length was exceeded", true);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
         if (frameSize.addAndGet(length) > getMaxFrameSize()) {
             throw new ProtocolException("The maximum frame size was exceeded", true);
         }
@@ -301,7 +326,9 @@ public class StompWireFormat implements WireFormat {
     }
 
     private String encodeHeader(String header) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         String result = header;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         if (!stompVersion.equals(Stomp.V1_0)) {
             byte[] utf8buf = header.getBytes("UTF-8");
             ByteArrayOutputStream stream = new ByteArrayOutputStream(utf8buf.length);
@@ -320,7 +347,9 @@ public class StompWireFormat implements WireFormat {
                     stream.write(val);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3501
             result =  new String(stream.toByteArray(), "UTF-8");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5573
             stream.close();
         }
 
@@ -361,6 +390,7 @@ public class StompWireFormat implements WireFormat {
         }
 
         decoded.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5573
 
         return new String(decoded.toByteArray(), "UTF-8");
     }
@@ -376,6 +406,7 @@ public class StompWireFormat implements WireFormat {
     }
 
     public String getStompVersion() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         return stompVersion;
     }
 
@@ -384,6 +415,7 @@ public class StompWireFormat implements WireFormat {
     }
 
     public void setMaxDataLength(int maxDataLength) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5573
         this.maxDataLength = maxDataLength;
     }
 
@@ -392,6 +424,7 @@ public class StompWireFormat implements WireFormat {
     }
 
     public long getMaxFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
         return maxFrameSize;
     }
 
@@ -400,6 +433,7 @@ public class StompWireFormat implements WireFormat {
     }
 
     public long getConnectionAttemptTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         return connectionAttemptTimeout;
     }
 

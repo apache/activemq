@@ -253,6 +253,7 @@ public class StartBrokerMojo extends AbstractMojo {
         }
 
         addActiveMQSystemProperties();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5499
 
         getLog().info("Loading broker configUri: " + configUri);
         if (this.xBeanFileResolver.isXBeanFile(configUri)) {
@@ -294,6 +295,7 @@ public class StartBrokerMojo extends AbstractMojo {
      */
     protected void  registerTransportConnectorUris () {
         Properties props = project.getProperties();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5499
 
         //
         // Loop through all of the connectors, adding each.

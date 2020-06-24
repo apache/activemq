@@ -39,6 +39,7 @@ public class AMQ1687Test extends EmbeddedBrokerTestSupport {
     @Override
     protected ConnectionFactory createConnectionFactory() throws Exception {
         //prefetch change is not required, but test will not fail w/o it, only spew errors in the AMQ log.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         return new ActiveMQConnectionFactory(
                 broker.getTransportConnectors().get(0).getPublishableConnectString() +"?jms.prefetchPolicy.all=5");
     }
@@ -92,6 +93,7 @@ public class AMQ1687Test extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         this.bindAddress="tcp://localhost:0";
         super.setUp();
     }

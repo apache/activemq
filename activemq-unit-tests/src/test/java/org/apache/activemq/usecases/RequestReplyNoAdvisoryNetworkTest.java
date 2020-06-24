@@ -53,6 +53,8 @@ import org.slf4j.LoggerFactory;
 public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(RequestReplyNoAdvisoryNetworkTest.class);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
     Vector<BrokerService> brokers = new Vector<BrokerService>();
     BrokerService a, b;
     ActiveMQQueue sendQ = new ActiveMQQueue("sendQ");
@@ -71,6 +73,8 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
                 " http://activemq.apache.org/schema/core" +
                 " http://activemq.apache.org/schema/core/activemq-core.xsd\">" +
                 "  <broker xmlns=\"http://activemq.apache.org/schema/core\" id=\"broker\"" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                 "    allowTempAutoCreationOnSend=\"true\" schedulePeriodForDestinationPurge=\"1000\"" +
                 "    brokerName=\"%HOST%\" persistent=\"false\" advisorySupport=\"false\" useJmx=\"false\" >" +
                 "   <destinationPolicy>" +
@@ -122,6 +126,8 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         });
         a = new XBeanBrokerFactory().createBroker(new URI("xbean:" + localProtocolScheme + ":A"));
         b = new XBeanBrokerFactory().createBroker(new URI("xbean:" + localProtocolScheme + ":B"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         brokers.add(a);
         brokers.add(b);
 
@@ -134,6 +140,8 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
     }
 
     public void testNonAdvisoryNetworkRequestReplyWithPIM() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         a = configureBroker("A");
         b = configureBroker("B");
         BrokerService hub = configureBroker("M");
@@ -176,6 +184,8 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         MessageConsumer consumer = consumerSession.createConsumer(sendQ);
         TextMessage received = (TextMessage) consumer.receive(receiveTimeout);
         assertNotNull("got request from sender ok", received);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
 
         LOG.info("got request, sending reply");
 
@@ -194,6 +204,8 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
 
         LOG.info("checking for dangling temp destinations");
         // ensure all temp dests get cleaned up on all brokers
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         for (BrokerService brokerService : brokers) {
             final RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
             assertTrue("all temps are gone on " + regionBroker.getBrokerName(), Wait.waitFor(new Wait.Condition(){
@@ -229,6 +241,8 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         b = configureBroker("B");
         bridge(a, b);
         bridge(b, a);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         startBrokers();
     }
 
@@ -262,13 +276,20 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         broker.setAdvisorySupport(false);
         broker.setPersistent(false);
         broker.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3609
         broker.setSchedulePeriodForDestinationPurge(1000);
         broker.setAllowTempAutoCreationOnSend(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
 
         PolicyMap map = new PolicyMap();
         PolicyEntry tempReplyQPolicy = new PolicyEntry();
         tempReplyQPolicy.setOptimizedDispatch(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         tempReplyQPolicy.setGcInactiveDestinations(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         tempReplyQPolicy.setGcWithNetworkConsumers(true);
         tempReplyQPolicy.setInactiveTimoutBeforeGC(1000);
         map.put(replyQWildcard, tempReplyQPolicy);

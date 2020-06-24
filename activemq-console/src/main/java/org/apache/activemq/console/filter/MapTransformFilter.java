@@ -265,6 +265,7 @@ public class MapTransformFilter extends ResultTransformFilter {
         if (msg.getJMSType() != null) {
             props.put(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSType", msg.getJMSType());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6645
         if (msg.getOriginalDestination() != null) {
             props.put(AmqMessagesUtil.JMS_MESSAGE_CUSTOM_PREFIX + "OriginalDestination", msg.getOriginalDestination().getPhysicalName());
         }
@@ -336,6 +337,7 @@ public class MapTransformFilter extends ResultTransformFilter {
 
 	@SuppressWarnings("unchecked")
 	protected String getDisplayString(Object obj) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3512
 		if (null == obj)
 			return "null";
 		

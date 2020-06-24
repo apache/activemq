@@ -58,6 +58,7 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
     }
 
     protected Session getConnection() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6073
         return connection;
     }
 
@@ -70,6 +71,7 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
 
     public synchronized void sendFrame(StompFrame frame) throws Exception {
         checkConnected();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6699
         connection.getRemote().sendString(wireFormat.marshalToString(frame));
     }
 

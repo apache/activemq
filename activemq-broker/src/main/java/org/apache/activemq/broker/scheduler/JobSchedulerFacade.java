@@ -31,6 +31,7 @@ public class JobSchedulerFacade implements JobScheduler {
 
     private final SchedulerBroker broker;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4683
     JobSchedulerFacade(SchedulerBroker broker) {
         this.broker = broker;
     }

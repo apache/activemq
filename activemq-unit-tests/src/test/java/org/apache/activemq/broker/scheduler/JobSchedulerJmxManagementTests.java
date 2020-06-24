@@ -56,6 +56,7 @@ public class JobSchedulerJmxManagementTests extends JobSchedulerTestSupport {
         JobSchedulerViewMBean view = getJobSchedulerMBean();
         assertNotNull(view);
         assertTrue(view.getAllJobs().isEmpty());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7458
         scheduleMessage(60000, 0, 0);
         assertFalse(view.getAllJobs().isEmpty());
         assertEquals(1, view.getAllJobs().size());
@@ -85,6 +86,7 @@ public class JobSchedulerJmxManagementTests extends JobSchedulerTestSupport {
         JobSchedulerViewMBean view = getJobSchedulerMBean();
         assertNotNull(view);
         assertTrue(view.getAllJobs().isEmpty());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7458
         scheduleMessage(60000, 0, 0);
         assertFalse(view.getAllJobs().isEmpty());
         String now = JobSupport.getDateTime(System.currentTimeMillis());
@@ -98,6 +100,8 @@ public class JobSchedulerJmxManagementTests extends JobSchedulerTestSupport {
         JobSchedulerViewMBean view = getJobSchedulerMBean();
         assertNotNull(view);
         assertTrue(view.getAllJobs().isEmpty());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7458
+//IC see: https://issues.apache.org/jira/browse/AMQ-7458
         scheduleMessage(60000, 0, 0);
         assertFalse(view.getAllJobs().isEmpty());
         long before = System.currentTimeMillis() + 57 * 1000;

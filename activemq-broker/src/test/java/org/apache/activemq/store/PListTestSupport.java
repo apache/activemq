@@ -513,6 +513,7 @@ public abstract class PListTestSupport {
 
     enum TaskType {CREATE, DELETE, ADD, REMOVE, ITERATE, ITERATE_REMOVE}
     ConcurrentMap<String, Object> entries = new ConcurrentHashMap<String, Object>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
 
     class Job implements Runnable {
 
@@ -650,6 +651,7 @@ public abstract class PListTestSupport {
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6436
         File directory = tempFolder.newFolder();
         startStore(directory);
     }

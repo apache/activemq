@@ -46,6 +46,7 @@ public class CompositeDestinationFilter extends DestinationFilter {
     }
 
     public boolean isWildcard() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         for (DestinationFilter filter : filters) {
             if (filter.isWildcard()) {
                 return true;

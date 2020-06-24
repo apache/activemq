@@ -40,6 +40,7 @@ public class DeleteMessage extends DestinationFacade implements Controller {
 
     public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
         if (messageId != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1326
             QueueViewMBean queueView = getQueueView();
             if (queueView != null) {
                 log.info("Removing message " + getJMSDestination() + "(" + messageId + ")");
@@ -48,6 +49,7 @@ public class DeleteMessage extends DestinationFacade implements Controller {
             	log.warn("No queue named: " + getPhysicalDestinationName());
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4174
         return redirectToDestinationView();
     }
 

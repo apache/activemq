@@ -39,6 +39,7 @@ public class StubTransport extends TransportSupport {
 
     @Override
     public void oneway(Object command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         receiveCounter++;
         queue.add(command);
     }
@@ -54,11 +55,14 @@ public class StubTransport extends TransportSupport {
 
     @Override
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         return receiveCounter;
     }
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-753
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return null;
     }
 

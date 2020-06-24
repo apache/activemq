@@ -156,6 +156,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         public void read(DataInput is) throws IOException {
             state = is.readInt();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
             destinations = new BTreeIndex<>(pageFile, is.readLong());
             if (is.readBoolean()) {
                 lastUpdate = LocationMarshaller.INSTANCE.readPayload(is);
@@ -167,6 +168,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             } else {
                 firstInProgressTransactionLocation = null;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
             try {
                 if (is.readBoolean()) {
                     producerSequenceIdTrackerLocation = LocationMarshaller.INSTANCE.readPayload(is);
@@ -176,10 +180,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             } catch (EOFException expectedOnUpgrade) {
             }
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
                 version = is.readInt();
             } catch (EOFException expectedOnUpgrade) {
                 version = 1;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
             if (version >= 5 && is.readBoolean()) {
                 ackMessageFileMapLocation = LocationMarshaller.INSTANCE.readPayload(is);
             } else {
@@ -187,7 +195,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
             try {
                 openwireVersion = is.readInt();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             } catch (EOFException expectedOnUpgrade) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
                 openwireVersion = OpenWireFormat.DEFAULT_LEGACY_VERSION;
             }
 
@@ -212,6 +222,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 os.writeBoolean(false);
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
             if (producerSequenceIdTrackerLocation != null) {
                 os.writeBoolean(true);
                 LocationMarshaller.INSTANCE.writePayload(producerSequenceIdTrackerLocation, os);
@@ -219,12 +232,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 os.writeBoolean(false);
             }
             os.writeInt(VERSION);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
             if (ackMessageFileMapLocation != null) {
                 os.writeBoolean(true);
                 LocationMarshaller.INSTANCE.writePayload(ackMessageFileMapLocation, os);
             } else {
                 os.writeBoolean(false);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
             os.writeInt(this.openwireVersion);
         }
     }
@@ -232,6 +248,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     class MetadataMarshaller extends VariableMarshaller<Metadata> {
         @Override
         public Metadata readPayload(DataInput dataIn) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5166
             Metadata rc = createMetadata();
             rc.read(dataIn);
             return rc;
@@ -244,6 +261,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public enum PurgeRecoveredXATransactionStrategy {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7015
         NEVER,
         COMMIT,
         ROLLBACK;
@@ -315,6 +333,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public void allowIOResumption() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
         if (pageFile != null) {
             pageFile.allowIOResumption();
         }
@@ -324,6 +343,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private void loadPageFile() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3342
         this.indexLock.writeLock().lock();
         try {
             final PageFile pageFile = getPageFile();
@@ -339,6 +359,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         metadata.page = page;
                         metadata.state = CLOSED_STATE;
                         metadata.destinations = new BTreeIndex<>(pageFile, tx.allocate().getPageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
 
                         tx.store(metadata.page, metadataMarshaller, true);
                     } else {
@@ -362,6 +383,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         StoredDestination sd = loadStoredDestination(tx, entry.getKey(), entry.getValue().subscriptions!=null);
                         storedDestinations.put(entry.getKey(), sd);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4907
                         if (checkForCorruptJournalFiles) {
                             // sanity check the index also
                             if (!entry.getValue().locationIndex.isEmpty(tx)) {
@@ -373,6 +395,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     }
                 }
             });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3342
             pageFile.flush();
         } finally {
             this.indexLock.writeLock().unlock();
@@ -380,11 +403,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private void startCheckpoint() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         if (checkpointInterval == 0 && cleanupInterval == 0) {
             LOG.info("periodic checkpoint/cleanup disabled, will occur on clean " + (getCleanupOnStop() ? "shutdown/" : "") + "restart");
             return;
         }
         synchronized (schedulerLock) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6285
             if (scheduler == null || scheduler.isShutdown()) {
                 scheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
 
@@ -400,6 +425,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 });
 
                 // Short intervals for check-point and cleanups
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
                 long delay;
                 if (journal.isJournalDiskSyncPeriodic()) {
                     delay = Math.min(journalDiskSyncInterval > 0 ? journalDiskSyncInterval : checkpointInterval, 500);
@@ -425,8 +451,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 // Decide on cleanup vs full checkpoint here.
                 if (opened.get()) {
                     long now = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
                     if (journal.isJournalDiskSyncPeriodic() &&
                             journalDiskSyncInterval > 0 && (now - lastSync >= journalDiskSyncInterval)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
                         Location currentUpdate = lastAsyncJournalUpdate.get();
                         if (currentUpdate != null && !currentUpdate.equals(lastAsyncUpdate)) {
                             lastAsyncUpdate = currentUpdate;
@@ -457,10 +485,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public void open() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         if( opened.compareAndSet(false, true) ) {
             getJournal().start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3634
             try {
                 loadPageFile();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3634
             } catch (Throwable t) {
                 LOG.warn("Index corrupted. Recovering the index through journal replay. Cause:" + t);
                 if (LOG.isDebugEnabled()) {
@@ -475,14 +506,18 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 } else {
                     pageFile.delete();
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5166
                 metadata = createMetadata();
                 //The metadata was recreated after a detect corruption so we need to
                 //reconfigure anything that was configured on the old metadata on startup
                 configureMetadata();
                 pageFile = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                 loadPageFile();
             }
             recover();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6358
             startCheckpoint();
         }
     }
@@ -490,9 +525,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     public void load() throws IOException {
         this.indexLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
             IOHelper.mkdirs(directory);
             if (deleteAllMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
                 getJournal().setCheckForCorruptionOnStartup(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                 getJournal().start();
                 getJournal().delete();
                 getJournal().close();
@@ -504,26 +543,35 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             open();
             store(new KahaTraceCommand().setMessage("LOADED " + new Date()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         } finally {
             this.indexLock.writeLock().unlock();
         }
     }
 
     public void close() throws IOException, InterruptedException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
         if (opened.compareAndSet(true, false)) {
             checkpointLock.writeLock().lock();
             try {
                 if (metadata.page != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7086
                     checkpointUpdate(getCleanupOnStop());
                 }
                 pageFile.unload();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5166
                 metadata = createMetadata();
             } finally {
                 checkpointLock.writeLock().unlock();
             }
             journal.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6285
+//IC see: https://issues.apache.org/jira/browse/AMQ-6285
             synchronized(schedulerLock) {
                 if (scheduler != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
+//IC see: https://issues.apache.org/jira/browse/AMQ-6285
                     ThreadPoolUtils.shutdownGraceful(scheduler, -1);
                     scheduler = null;
                 }
@@ -537,10 +585,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     public void unload() throws IOException, InterruptedException {
         this.indexLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2285
             if( pageFile != null && pageFile.isLoaded() ) {
                 metadata.state = CLOSED_STATE;
                 metadata.firstInProgressTransactionLocation = getInProgressTxLocationRange()[0];
+//IC see: https://issues.apache.org/jira/browse/AMQ-4172
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3634
+//IC see: https://issues.apache.org/jira/browse/AMQ-3634
                 if (metadata.page != null) {
                     pageFile.tx().execute(new Transaction.Closure<IOException>() {
                         @Override
@@ -550,15 +602,19 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     });
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         } finally {
             this.indexLock.writeLock().unlock();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2153
         close();
     }
 
     // public for testing
     @SuppressWarnings("rawtypes")
     public Location[] getInProgressTxLocationRange() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4172
         Location[] range = new Location[]{null, null};
         synchronized (inflightTransactions) {
             if (!inflightTransactions.isEmpty()) {
@@ -582,6 +638,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     @SuppressWarnings("rawtypes")
     private void trackMaxAndMin(Location[] range, List<Operation> ops) {
         Location t = ops.get(0).getLocation();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         if (range[0] == null || t.compareTo(range[0]) <= 0) {
             range[0] = t;
         }
@@ -600,6 +657,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             int remove;
         }
         HashMap<KahaDestination, opCount> destinationOpCount = new HashMap<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
 
         @SuppressWarnings("rawtypes")
         public void track(Operation operation) {
@@ -608,6 +666,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
             KahaDestination destination;
             boolean isAdd = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             if (operation instanceof AddOperation) {
                 AddOperation add = (AddOperation) operation;
                 destination = add.getCommand().getDestination();
@@ -642,6 +702,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     @SuppressWarnings("rawtypes")
     public String getTransactions() {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
         ArrayList<TranInfo> infos = new ArrayList<>();
         synchronized (inflightTransactions) {
             if (!inflightTransactions.isEmpty()) {
@@ -671,6 +732,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public String getPreparedTransaction(TransactionId transactionId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7488
         String result = "";
         synchronized (preparedTransactions) {
             List<Operation> operations = preparedTransactions.get(transactionId);
@@ -698,8 +760,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         this.indexLock.writeLock().lock();
         try {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             long start = System.currentTimeMillis();
             boolean requiresJournalReplay = recoverProducerAudit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6277
             requiresJournalReplay |= recoverAckMessageFileMap();
             Location lastIndoubtPosition = getRecoveryPosition();
             Location recoveryPosition = requiresJournalReplay ? journal.getNextLocation(null) : lastIndoubtPosition;
@@ -708,6 +772,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 int dataFileRotationTracker = recoveryPosition.getDataFileId();
                 LOG.info("Recovering from the journal @" + recoveryPosition);
                 while (recoveryPosition != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5703
                     try {
                         JournalCommand<?> message = load(recoveryPosition);
                         metadata.lastUpdate = recoveryPosition;
@@ -724,6 +789,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     }
                     recoveryPosition = journal.getNextLocation(recoveryPosition);
                     // hold on to the minimum number of open files during recovery
+//IC see: https://issues.apache.org/jira/browse/AMQ-6372
                     if (recoveryPosition != null && dataFileRotationTracker != recoveryPosition.getDataFileId()) {
                         dataFileRotationTracker = recoveryPosition.getDataFileId();
                         journal.cleanup();
@@ -732,6 +798,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         LOG.info("@" + recoveryPosition + ", " + redoCounter + " entries recovered ..");
                     }
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                 if (LOG.isInfoEnabled()) {
                     long end = System.currentTimeMillis();
                     LOG.info("Recovery replayed " + redoCounter + " operations from the journal in " + ((end - start) / 1000.0f) + " seconds.");
@@ -747,23 +814,28 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             });
 
             // rollback any recovered inflight local transactions, and discard any inflight XA transactions.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
             Set<TransactionId> toRollback = new HashSet<>();
             Set<TransactionId> toDiscard = new HashSet<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2736
             synchronized (inflightTransactions) {
                 for (Iterator<TransactionId> it = inflightTransactions.keySet().iterator(); it.hasNext(); ) {
                     TransactionId id = it.next();
                     if (id.isLocalTransaction()) {
                         toRollback.add(id);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3342
                     } else {
                         toDiscard.add(id);
                     }
                 }
                 for (TransactionId tx: toRollback) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("rolling back recovered indoubt local transaction " + tx);
                     }
                     store(new KahaRollbackCommand().setTransactionInfo(TransactionIdConversion.convertToLocal(tx)), false, null, null);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4548
                 for (TransactionId tx: toDiscard) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("discarding recovered in-flight XA transaction " + tx);
@@ -772,7 +844,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4488
             synchronized (preparedTransactions) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7015
                 Set<TransactionId> txIds = new LinkedHashSet<TransactionId>(preparedTransactions.keySet());
                 for (TransactionId txId : txIds) {
                     switch (purgeRecoveredXATransactionStrategy){
@@ -802,6 +876,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private Location minimum(Location x,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6277
+//IC see: https://issues.apache.org/jira/browse/AMQ-6285
                              Location y) {
         Location min = null;
         if (x != null) {
@@ -822,13 +898,18 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         boolean requiresReplay = true;
         if (metadata.producerSequenceIdTrackerLocation != null) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6378
+//IC see: https://issues.apache.org/jira/browse/AMQ-6376
                 KahaProducerAuditCommand audit = (KahaProducerAuditCommand) load(metadata.producerSequenceIdTrackerLocation);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7438
                 ObjectInputStream objectIn = new MessageDatabaseObjectInputStream(audit.getAudit().newInput());
                 int maxNumProducers = getMaxFailoverProducersToTrack();
                 int maxAuditDepth = getFailoverProducersAuditDepth();
                 metadata.producerSequenceIdTracker = (ActiveMQMessageAuditNoSync) objectIn.readObject();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5166
                 metadata.producerSequenceIdTracker.setAuditDepth(maxAuditDepth);
                 metadata.producerSequenceIdTracker.setMaximumNumberOfProducersToTrack(maxNumProducers);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6277
                 requiresReplay = false;
             } catch (Exception e) {
                 LOG.warn("Cannot recover message audit", e);
@@ -843,9 +924,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         boolean requiresReplay = true;
         if (metadata.ackMessageFileMapLocation != null) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6378
+//IC see: https://issues.apache.org/jira/browse/AMQ-6376
                 KahaAckMessageFileMapCommand audit = (KahaAckMessageFileMapCommand) load(metadata.ackMessageFileMapLocation);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7438
                 ObjectInputStream objectIn = new MessageDatabaseObjectInputStream(audit.getAckMessageFileMap().newInput());
                 metadata.ackMessageFileMap = (Map<Integer, Set<Integer>>) objectIn.readObject();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7118
                 metadata.ackMessageFileMapDirtyFlag.lazySet(true);
                 requiresReplay = false;
             } catch (Exception e) {
@@ -862,11 +947,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         // in that case we need to removed references to messages that are not in the journal
         final Location lastAppendLocation = journal.getLastAppendLocation();
         long undoCounter=0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
 
         // Go through all the destinations to see if they have messages past the lastAppendLocation
         for (String key : storedDestinations.keySet()) {
             StoredDestination sd = storedDestinations.get(key);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
             final ArrayList<Long> matches = new ArrayList<>();
             // Find all the Locations that are >= than the last Append Location.
             sd.locationIndex.visit(tx, new BTreeVisitor.GTEVisitor<Location, Long>(lastAppendLocation) {
@@ -878,20 +965,25 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             for (Long sequenceId : matches) {
                 MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6063
                 if (keys != null) {
                     sd.locationIndex.remove(tx, keys.location);
                     sd.messageIdIndex.remove(tx, keys.messageId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3422
                     metadata.producerSequenceIdTracker.rollback(keys.messageId);
                     undoCounter++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
                     decrementAndSubSizeToStoreStat(tx, key, sd, keys.location.getSize());
                     // TODO: do we need to modify the ack positions for the pub sub case?
                 }
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         if (undoCounter > 0) {
             // The rolledback operations are basically in flight journal writes.  To avoid getting
             // these the end user should do sync writes to the journal.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             if (LOG.isInfoEnabled()) {
                 long end = System.currentTimeMillis();
                 LOG.info("Rolled back " + undoCounter + " messages from the index in " + ((end - start) / 1000.0f) + " seconds.");
@@ -904,6 +996,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         // Lets be extra paranoid here and verify that all the datafiles being referenced
         // by the indexes still exists.
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2338
+//IC see: https://issues.apache.org/jira/browse/AMQ-2337
         final SequenceSet ss = new SequenceSet();
         for (StoredDestination sd : storedDestinations.values()) {
             // Use a visitor to cut down the number of pages that we load
@@ -912,6 +1006,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
                 @Override
                 public boolean isInterestedInKeysBetween(Location first, Location second) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                     if( first==null ) {
                         return !ss.contains(0, second.getDataFileId());
                     } else if( second==null ) {
@@ -925,6 +1020,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 public void visit(List<Location> keys, List<Long> values) {
                     for (Location l : keys) {
                         int fileId = l.getDataFileId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                         if( last != fileId ) {
                             ss.add(fileId);
                             last = fileId;
@@ -934,11 +1030,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             });
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
         HashSet<Integer> missingJournalFiles = new HashSet<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         while (!ss.isEmpty()) {
             missingJournalFiles.add((int) ss.removeFirst());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6083
         for (Entry<Integer, Set<Integer>> entry : metadata.ackMessageFileMap.entrySet()) {
             missingJournalFiles.add(entry.getKey());
             for (Integer i : entry.getValue()) {
@@ -952,6 +1051,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             LOG.warn("Some journal files are missing: " + missingJournalFiles);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
         ArrayList<BTreeVisitor.Predicate<Location>> knownCorruption = new ArrayList<>();
         ArrayList<BTreeVisitor.Predicate<Location>> missingPredicates = new ArrayList<>();
         for (Integer missing : missingJournalFiles) {
@@ -967,6 +1067,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 Sequence seq = dataFile.getCorruptedBlocks().getHead();
                 while (seq != null) {
                     BTreeVisitor.BetweenVisitor<Location, Long> visitor =
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
                         new BTreeVisitor.BetweenVisitor<>(new Location(id, (int) seq.getFirst()), new Location(id, (int) seq.getLast() + 1));
                     missingPredicates.add(visitor);
                     knownCorruption.add(visitor);
@@ -976,8 +1077,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         if (!missingPredicates.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5703
             for (Entry<String, StoredDestination> sdEntry : storedDestinations.entrySet()) {
                 final StoredDestination sd = sdEntry.getValue();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
                 final LinkedHashMap<Long, Location> matches = new LinkedHashMap<>();
                 sd.locationIndex.visit(tx, new BTreeVisitor.OrVisitor<Location, Long>(missingPredicates) {
                     @Override
@@ -988,22 +1091,26 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
                 // If some message references are affected by the missing data files...
                 if (!matches.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
 
                     // We either 'gracefully' recover dropping the missing messages or
                     // we error out.
                     if( ignoreMissingJournalfiles ) {
                         // Update the index to remove the references to the missing data
+//IC see: https://issues.apache.org/jira/browse/AMQ-6522
                         for (Long sequenceId : matches.keySet()) {
                             MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
                             sd.locationIndex.remove(tx, keys.location);
                             sd.messageIdIndex.remove(tx, keys.messageId);
                             LOG.info("[" + sdEntry.getKey() + "] dropped: " + keys.messageId + " at corrupt location: " + keys.location);
                             undoCounter++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
                             decrementAndSubSizeToStoreStat(tx, sdEntry.getKey(), sdEntry.getValue(), keys.location.getSize());
                             // TODO: do we need to modify the ack positions for the pub sub case?
                         }
                     } else {
                         LOG.error("[" + sdEntry.getKey() + "] references corrupt locations: " + matches);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6083
                         throw new IOException("Detected missing/corrupt journal files referenced by:[" + sdEntry.getKey() + "] " +matches.size()+" messages affected.");
                     }
                 }
@@ -1022,9 +1129,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         if (undoCounter > 0) {
             // The rolledback operations are basically in flight journal writes.  To avoid getting these the end user
             // should do sync writes to the journal.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             if (LOG.isInfoEnabled()) {
                 long end = System.currentTimeMillis();
                 LOG.info("Detected missing/corrupt journal files.  Dropped " + undoCounter + " messages from the index in " + ((end - start) / 1000.0f) + " seconds.");
@@ -1036,8 +1146,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private Location lastRecoveryPosition;
 
     public void incrementalRecover() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3342
         this.indexLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if( nextRecoveryPosition == null ) {
                 if( lastRecoveryPosition==null ) {
                     nextRecoveryPosition = getRecoveryPosition();
@@ -1048,10 +1160,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             while (nextRecoveryPosition != null) {
                 lastRecoveryPosition = nextRecoveryPosition;
                 metadata.lastUpdate = lastRecoveryPosition;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
                 JournalCommand<?> message = load(lastRecoveryPosition);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 process(message, lastRecoveryPosition, (IndexAware) null);
                 nextRecoveryPosition = journal.getNextLocation(lastRecoveryPosition);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         } finally {
             this.indexLock.writeLock().unlock();
         }
@@ -1064,6 +1182,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private Location getRecoveryPosition() throws IOException {
 
         if (!this.forceRecoverIndex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
 
             // If we need to recover the transactions..
             if (metadata.firstInProgressTransactionLocation != null) {
@@ -1071,8 +1190,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             // Perhaps there were no transactions...
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if( metadata.lastUpdate!=null) {
                 // Start replay at the record after the last one recorded in the index file.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6277
+//IC see: https://issues.apache.org/jira/browse/AMQ-6285
                 return getNextInitializedLocation(metadata.lastUpdate);
             }
         }
@@ -1082,6 +1204,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     private Location getNextInitializedLocation(Location location) throws IOException {
         Location mayNotBeInitialized = journal.getNextLocation(location);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         if (location.getSize() == NOT_SET && mayNotBeInitialized != null && mayNotBeInitialized.getSize() != NOT_SET) {
             // need to init size and type to skip
             return journal.getNextLocation(mayNotBeInitialized);
@@ -1091,6 +1214,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     protected void checkpointCleanup(final boolean cleanup) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3342
         long start;
         this.indexLock.writeLock().lock();
         try {
@@ -1112,6 +1236,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public ByteSequence toByteSequence(JournalCommand<?> data) throws IOException {
         int size = data.serializedSizeFramed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         DataByteArrayOutputStream os = new DataByteArrayOutputStream(size + 1);
         os.writeByte(data.type().getNumber());
         data.writeFramed(os);
@@ -1148,32 +1273,40 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             try {
 
                 long start = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
                 location = onJournalStoreComplete == null ? journal.write(sequence, sync) : journal.write(sequence, onJournalStoreComplete) ;
                 long start2 = System.currentTimeMillis();
                 //Track the last async update so we know if we need to sync at the next checkpoint
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
                 if (!sync && journal.isJournalDiskSyncPeriodic()) {
                     lastAsyncJournalUpdate.set(location);
                 }
                 process(data, location, before);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
 
                 long end = System.currentTimeMillis();
                 if (LOG_SLOW_ACCESS_TIME > 0 && end - start > LOG_SLOW_ACCESS_TIME) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                     if (LOG.isInfoEnabled()) {
                         LOG.info("Slow KahaDB access: Journal append took: "+(start2-start)+" ms, Index update took "+(end-start2)+" ms");
                     }
                 }
 
                 persistenceAdapterStatistics.addWriteTime(end - start);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7159
 
             } finally {
                 checkpointLock.readLock().unlock();
             }
 
             if (after != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
                 after.run();
             }
 
             return location;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3342
         } catch (IOException ioe) {
             LOG.error("KahaDB failed to store to Journal, command of type: " + data.type(), ioe);
             brokerService.handleIOException(ioe);
@@ -1189,26 +1322,36 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * @throws IOException
      */
     public JournalCommand<?> load(Location location) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         long start = System.currentTimeMillis();
         ByteSequence data = journal.read(location);
         long end = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             if (LOG.isInfoEnabled()) {
                 LOG.info("Slow KahaDB access: Journal read took: "+(end-start)+" ms");
             }
         }
 
         persistenceAdapterStatistics.addReadTime(end - start);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7159
 
         DataByteArrayInputStream is = new DataByteArrayInputStream(data);
         byte readByte = is.readByte();
         KahaEntryType type = KahaEntryType.valueOf(readByte);
         if( type == null ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
             try {
                 is.close();
             } catch (IOException e) {}
+//IC see: https://issues.apache.org/jira/browse/AMQ-6670
             throw new IOException("Could not load journal record, null type information from: " + readByte + " at location: "+location);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         JournalCommand<?> message = (JournalCommand<?>)type.createMessage();
         message.mergeFramed(is);
         return message;
@@ -1223,7 +1366,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     void process(JournalCommand<?> data, final Location location, final Location inDoubtlocation) throws IOException {
         if (inDoubtlocation != null && location.compareTo(inDoubtlocation) >= 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7308
             initMessageStore(data);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             process(data, location, (IndexAware) null);
         } else {
             // just recover producer audit
@@ -1237,6 +1383,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private void initMessageStore(JournalCommand<?> data) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7308
         data.visit(new Visitor() {
             @Override
             public void visit(KahaAddMessageCommand command) throws IOException {
@@ -1259,6 +1406,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // from the recovery method too so they need to be idempotent
     // /////////////////////////////////////////////////////////////////
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
     void process(JournalCommand<?> data, final Location location, final IndexAware onSequenceAssignedCallback) throws IOException {
         data.visit(new Visitor() {
             @Override
@@ -1278,6 +1427,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             @Override
             public void visit(KahaCommitCommand command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 process(command, location, onSequenceAssignedCallback);
             }
 
@@ -1303,6 +1454,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             @Override
             public void visit(KahaAckMessageFileMapCommand command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2868
+//IC see: https://issues.apache.org/jira/browse/AMQ-3470
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
                 processLocation(location);
             }
 
@@ -1318,6 +1473,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             @Override
             public void visit(KahaRewrittenDataFileCommand command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
                 process(command, location);
             }
         });
@@ -1326,6 +1484,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     @SuppressWarnings("rawtypes")
     protected void process(final KahaAddMessageCommand command, final Location location, final IndexAware runWithIndexLock) throws IOException {
         if (command.hasTransactionInfo()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             List<Operation> inflightTx = getInflightTx(command.getTransactionInfo());
             inflightTx.add(new AddOperation(command, location, runWithIndexLock));
         } else {
@@ -1348,6 +1508,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     protected void process(final KahaUpdateMessageCommand command, final Location location) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         this.indexLock.writeLock().lock();
         try {
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
@@ -1364,6 +1526,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     @SuppressWarnings("rawtypes")
     protected void process(final KahaRemoveMessageCommand command, final Location location) throws IOException {
         if (command.hasTransactionInfo()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
            List<Operation> inflightTx = getInflightTx(command.getTransactionInfo());
            inflightTx.add(new RemoveOperation(command, location));
         } else {
@@ -1375,6 +1539,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         updateIndex(tx, command, location);
                     }
                 });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             } finally {
                 this.indexLock.writeLock().unlock();
             }
@@ -1401,6 +1566,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
                 @Override
                 public void execute(Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
                     updateIndex(tx, command, location);
                 }
             });
@@ -1420,6 +1587,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     @SuppressWarnings("rawtypes")
     protected void process(KahaCommitCommand command, final Location location, final IndexAware before) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         TransactionId key = TransactionIdConversion.convert(command.getTransactionInfo());
         List<Operation> inflightTx;
         synchronized (inflightTransactions) {
@@ -1431,14 +1599,19 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (inflightTx == null) {
             // only non persistent messages in this tx
             if (before != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 before.sequenceAssignedWithIndexLocked(-1);
             }
             // Moving the checkpoint pointer as there is no persistent operations in this transaction to be replayed
+//IC see: https://issues.apache.org/jira/browse/AMQ-7219
             processLocation(location);
             return;
         }
 
         final List<Operation> messagingTx = inflightTx;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         indexLock.writeLock().lock();
         try {
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
@@ -1458,7 +1631,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     @SuppressWarnings("rawtypes")
     protected void process(KahaPrepareCommand command, Location location) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         TransactionId key = TransactionIdConversion.convert(command.getTransactionInfo());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         List<Operation> tx = null;
         synchronized (inflightTransactions) {
             tx = inflightTransactions.remove(key);
@@ -1480,6 +1655,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     @SuppressWarnings("rawtypes")
     protected void process(KahaRollbackCommand command, Location location)  throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         TransactionId key = TransactionIdConversion.convert(command.getTransactionInfo());
         List<Operation> updates = null;
         synchronized (inflightTransactions) {
@@ -1488,10 +1664,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 updates = preparedTransactions.remove(key);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         if (key.isXATransaction() && updates != null && !updates.isEmpty()) {
             indexLock.writeLock().lock();
             try {
                 for (Operation op : updates) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
                     recordAckMessageReferenceLocation(location, op.getLocation());
                 }
             } finally {
@@ -1502,9 +1680,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     protected void process(KahaRewrittenDataFileCommand command, Location location)  throws IOException {
         final TreeSet<Integer> completeFileSet = new TreeSet<>(journal.getFileMap().keySet());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
 
         // Mark the current journal file as a compacted file so that gc checks can skip
         // over logs that are smaller compaction type logs.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
+//IC see: https://issues.apache.org/jira/browse/AMQ-6303
         DataFile current = journal.getDataFileById(location.getDataFileId());
         current.setTypeCode(command.getRewriteType());
 
@@ -1521,7 +1702,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     protected final ReentrantReadWriteLock indexLock = new ReentrantReadWriteLock();
     private final HashSet<Integer> journalFilesBeingReplicated = new HashSet<>();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
     long updateIndex(Transaction tx, KahaAddMessageCommand command, Location location) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7308
         StoredDestination sd = getExistingStoredDestination(command.getDestination(), tx);
         if (sd == null) {
             // if the store no longer exists, skip
@@ -1535,26 +1719,33 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         // Add the message.
         int priority = command.getPrioritySupported() ? command.getPriority() : javax.jms.Message.DEFAULT_PRIORITY;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5960
         long id = sd.orderIndex.getNextMessageId();
         Long previous = sd.locationIndex.put(tx, location, id);
         if (previous == null) {
             previous = sd.messageIdIndex.put(tx, command.getMessageId(), id);
             if (previous == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
                 incrementAndAddSizeToStoreStat(tx, command.getDestination(), location.getSize());
                 sd.orderIndex.put(tx, priority, id, new MessageKeys(command.getMessageId(), location));
                 if (sd.subscriptions != null && !sd.subscriptions.isEmpty(tx)) {
                     addAckLocationForNewMessage(tx, command.getDestination(), sd, id);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5394
                 metadata.lastUpdate = location;
             } else {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5864
                 MessageKeys messageKeys = sd.orderIndex.get(tx, previous);
                 if (messageKeys != null && messageKeys.location.compareTo(location) < 0) {
                     // If the message ID is indexed, then the broker asked us to store a duplicate before the message was dispatched and acked, we ignore this add attempt
                     LOG.warn("Duplicate message add attempt rejected. Destination: {}://{}, Message id: {}", command.getDestination().getType(), command.getDestination().getName(), command.getMessageId());
                 }
                 sd.messageIdIndex.put(tx, command.getMessageId(), previous);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2584
                 sd.locationIndex.remove(tx, location);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 id = -1;
             }
         } else {
@@ -1563,12 +1754,19 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             // be wrong..
             sd.locationIndex.put(tx, location, previous);
             // ensure sequence is not broken
+//IC see: https://issues.apache.org/jira/browse/AMQ-5960
             sd.orderIndex.revertNextMessageId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5394
             metadata.lastUpdate = location;
         }
         // record this id in any event, initial send or recovery
         metadata.producerSequenceIdTracker.isDuplicate(command.getMessageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
        return id;
     }
 
@@ -1586,6 +1784,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
     void updateIndex(Transaction tx, KahaUpdateMessageCommand updateMessageCommand, Location location) throws IOException {
         KahaAddMessageCommand command = updateMessageCommand.getMessage();
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
@@ -1600,12 +1800,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             );
             sd.locationIndex.put(tx, location, id);
             incrementAndAddSizeToStoreStat(tx, command.getDestination(), location.getSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
 
             if (previousKeys != null) {
                 //Remove the existing from the size
                 decrementAndSubSizeToStoreStat(tx, command.getDestination(), previousKeys.location.getSize());
 
                 //update all the subscription metrics
+//IC see: https://issues.apache.org/jira/browse/AMQ-6642
                 if (enableSubscriptionStatistics && sd.ackPositions != null && location.getSize() != previousKeys.location.getSize()) {
                     Iterator<Entry<String, SequenceSet>> iter = sd.ackPositions.iterator(tx);
                     while (iter.hasNext()) {
@@ -1622,6 +1824,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     sd.locationIndex.remove(tx, previousKeys.location);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2868
+//IC see: https://issues.apache.org/jira/browse/AMQ-3470
+//IC see: https://issues.apache.org/jira/browse/AMQ-5394
             metadata.lastUpdate = location;
         } else {
             //Add the message if it can't be found
@@ -1629,6 +1834,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
     void updateIndex(Transaction tx, KahaRemoveMessageCommand command, Location ackLocation) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
         if (!command.hasSubscriptionKey()) {
@@ -1637,11 +1844,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             Long sequenceId = sd.messageIdIndex.remove(tx, command.getMessageId());
             if (sequenceId != null) {
                 MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2589
                 if (keys != null) {
                     sd.locationIndex.remove(tx, keys.location);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
                     decrementAndSubSizeToStoreStat(tx, command.getDestination(), keys.location.getSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
                     recordAckMessageReferenceLocation(ackLocation, keys.location);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5394
                     metadata.lastUpdate = ackLocation;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
                 }  else if (LOG.isDebugEnabled()) {
                     LOG.debug("message not found in order index: " + sequenceId  + " for: " + command.getMessageId());
                 }
@@ -1662,12 +1874,17 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     sd.subscriptionAcks.put(tx, subscriptionKey, new LastAck(sequence, priority));
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
                 MessageKeys keys = sd.orderIndex.get(tx, sequence);
                 if (keys != null) {
                     recordAckMessageReferenceLocation(ackLocation, keys.location);
                 }
                 // The following method handles deleting un-referenced messages.
                 removeAckLocation(command, tx, sd, subscriptionKey, sequence);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2868
+//IC see: https://issues.apache.org/jira/browse/AMQ-3470
+//IC see: https://issues.apache.org/jira/browse/AMQ-5394
                 metadata.lastUpdate = ackLocation;
             } else if (LOG.isDebugEnabled()) {
                 LOG.debug("on ack, no message sequence exists for id: " + command.getMessageId() + " and sub: " + command.getSubscriptionKey());
@@ -1677,12 +1894,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private void recordAckMessageReferenceLocation(Location ackLocation, Location messageLocation) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
         Set<Integer> referenceFileIds = metadata.ackMessageFileMap.get(Integer.valueOf(ackLocation.getDataFileId()));
         if (referenceFileIds == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
             referenceFileIds = new HashSet<>();
             referenceFileIds.add(messageLocation.getDataFileId());
             metadata.ackMessageFileMap.put(ackLocation.getDataFileId(), referenceFileIds);
             metadata.ackMessageFileMapDirtyFlag.lazySet(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7118
 
         } else {
             Integer id = Integer.valueOf(messageLocation.getDataFileId());
@@ -1692,9 +1913,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
     void updateIndex(Transaction tx, KahaRemoveDestinationCommand command, Location location) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
         sd.orderIndex.remove(tx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
 
         sd.locationIndex.clear(tx);
         sd.locationIndex.unload(tx);
@@ -1704,6 +1928,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         sd.messageIdIndex.unload(tx);
         tx.free(sd.messageIdIndex.getPageId());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
         tx.free(sd.messageStoreStatistics.getPageId());
         sd.messageStoreStatistics = null;
 
@@ -1719,7 +1944,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             sd.ackPositions.clear(tx);
             sd.ackPositions.unload(tx);
             tx.free(sd.ackPositions.getHeadPageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
             sd.subLocations.clear(tx);
             sd.subLocations.unload(tx);
             tx.free(sd.subLocations.getHeadPageId());
@@ -1732,12 +1960,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         storeCache.remove(key(command.getDestination()));
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
     void updateIndex(Transaction tx, KahaSubscriptionCommand command, Location location) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
         final String subscriptionKey = command.getSubscriptionKey();
 
         // If set then we are creating it.. otherwise we are destroying the sub
         if (command.hasSubscriptionInfo()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5994
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
             Location existing = sd.subLocations.get(tx, subscriptionKey);
             if (existing != null && existing.compareTo(location) == 0) {
                 // replay on recovery, ignore
@@ -1746,18 +1978,28 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             sd.subscriptions.put(tx, subscriptionKey, command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
             sd.subLocations.put(tx, subscriptionKey, location);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2755
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             long ackLocation=NOT_ACKED;
             if (!command.getRetroactive()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
                 ackLocation = sd.orderIndex.nextMessageId-1;
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
                 addAckLocationForRetroactiveSub(tx, sd, subscriptionKey);
             }
             sd.subscriptionAcks.put(tx, subscriptionKey, new LastAck(ackLocation));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             sd.subscriptionCache.add(subscriptionKey);
         } else {
             // delete the sub...
             sd.subscriptions.remove(tx, subscriptionKey);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
             sd.subLocations.remove(tx, subscriptionKey);
             sd.subscriptionAcks.remove(tx, subscriptionKey);
             sd.subscriptionCache.remove(subscriptionKey);
@@ -1769,6 +2011,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             if (sd.subscriptions.isEmpty(tx)) {
                 // remove the stored destination
+//IC see: https://issues.apache.org/jira/browse/AMQ-5783
                 KahaRemoveDestinationCommand removeDestinationCommand = new KahaRemoveDestinationCommand();
                 removeDestinationCommand.setDestination(command.getDestination());
                 updateIndex(tx, removeDestinationCommand, null);
@@ -1782,15 +2025,28 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         try {
             this.indexLock.writeLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6567
                 Set<Integer> filesToGc = pageFile.tx().execute(new Transaction.CallableClosure<Set<Integer>, IOException>() {
                     @Override
                     public Set<Integer> execute(Transaction tx) throws IOException {
                         return checkpointUpdate(tx, cleanup);
                     }
                 });
+//IC see: https://issues.apache.org/jira/browse/AMQ-6652
                 pageFile.flush();
                 // after the index update such that partial removal does not leave dangling references in the index.
                 journal.removeDataFiles(filesToGc);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             } finally {
                 this.indexLock.writeLock().unlock();
             }
@@ -1804,16 +2060,24 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * @param tx
      * @throws IOException
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-6567
     Set<Integer> checkpointUpdate(Transaction tx, boolean cleanup) throws IOException {
         MDC.put("activemq.persistenceDir", getDirectory().getName());
         LOG.debug("Checkpoint started.");
 
         // reflect last update exclusive of current checkpoint
         Location lastUpdate = metadata.lastUpdate;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4172
 
         metadata.state = OPEN_STATE;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         metadata.producerSequenceIdTrackerLocation = checkpointProducerAudit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7118
         if (metadata.ackMessageFileMapDirtyFlag.get() || (metadata.ackMessageFileMapLocation == null)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
             metadata.ackMessageFileMapLocation = checkpointAckMessageFileMap();
         }
         metadata.ackMessageFileMapDirtyFlag.lazySet(false);
@@ -1821,8 +2085,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         metadata.firstInProgressTransactionLocation = inProgressTxRange[0];
         tx.store(metadata.page, metadataMarshaller, true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6567
         final TreeSet<Integer> gcCandidateSet = new TreeSet<>();
         if (cleanup) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
 
             final TreeSet<Integer> completeFileSet = new TreeSet<>(journal.getFileMap().keySet());
             gcCandidateSet.addAll(completeFileSet);
@@ -1831,18 +2097,23 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 LOG.trace("Last update: " + lastUpdate + ", full gc candidates set: " + gcCandidateSet);
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4172
             if (lastUpdate != null) {
                 // we won't delete past the last update, ackCompaction journal can be a candidate in error
+//IC see: https://issues.apache.org/jira/browse/AMQ-6644
                 gcCandidateSet.removeAll(new TreeSet<Integer>(gcCandidateSet.tailSet(lastUpdate.getDataFileId())));
             }
 
             // Don't GC files under replication
+//IC see: https://issues.apache.org/jira/browse/AMQ-3342
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if( journalFilesBeingReplicated!=null ) {
                 gcCandidateSet.removeAll(journalFilesBeingReplicated);
             }
 
             if (metadata.producerSequenceIdTrackerLocation != null) {
                 int dataFileId = metadata.producerSequenceIdTrackerLocation.getDataFileId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4323
                 if (gcCandidateSet.contains(dataFileId) && gcCandidateSet.first() == dataFileId) {
                     // rewrite so we don't prevent gc
                     metadata.producerSequenceIdTracker.setModified(true);
@@ -1856,6 +2127,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
             if (metadata.ackMessageFileMapLocation != null) {
                 int dataFileId = metadata.ackMessageFileMapLocation.getDataFileId();
                 gcCandidateSet.remove(dataFileId);
@@ -1865,6 +2138,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             // Don't GC files referenced by in-progress tx
+//IC see: https://issues.apache.org/jira/browse/AMQ-4172
             if (inProgressTxRange[0] != null) {
                 for (int pendingTx=inProgressTxRange[0].getDataFileId(); pendingTx <= inProgressTxRange[1].getDataFileId(); pendingTx++) {
                     gcCandidateSet.remove(pendingTx);
@@ -1876,6 +2150,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             // Go through all the destinations to see if any of them can remove GC candidates.
             for (Entry<String, StoredDestination> entry : storedDestinations.entrySet()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                 if( gcCandidateSet.isEmpty() ) {
                     break;
                 }
@@ -1913,6 +2188,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     public void visit(List<Location> keys, List<Long> values) {
                         for (Location l : keys) {
                             int fileId = l.getDataFileId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                             if( last != fileId ) {
                                 gcCandidateSet.remove(fileId);
                                 last = fileId;
@@ -1922,6 +2198,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 });
 
                 // Durable Subscription
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
                 if (entry.getValue().subLocations != null) {
                     Iterator<Entry<String, Location>> iter = entry.getValue().subLocations.iterator(tx);
                     while (iter.hasNext()) {
@@ -1937,6 +2215,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
                             // When pending is size one that is the next message Id meaning there
                             // are no pending messages currently.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6131
                             if (pendingAcks == null || pendingAcks.isEmpty() ||
                                 (pendingAcks.size() == 1 && pendingAcks.getTail().range() == 1)) {
 
@@ -1967,6 +2246,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     }
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("gc candidates after dest:" + entry.getKey() + ", " + gcCandidateSet);
                 }
@@ -1979,12 +2259,17 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             boolean ackMessageFileMapMod = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
             Iterator<Integer> candidates = gcCandidateSet.iterator();
             while (candidates.hasNext()) {
                 Integer candidate = candidates.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
                 Set<Integer> referencedFileIds = metadata.ackMessageFileMap.get(candidate);
                 if (referencedFileIds != null) {
                     for (Integer referencedFileId : referencedFileIds) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2736
                         if (completeFileSet.contains(referencedFileId) && !gcCandidateSet.contains(referencedFileId)) {
                             // active file that is not targeted for deletion is referenced so don't delete
                             candidates.remove();
@@ -1992,9 +2277,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         }
                     }
                     if (gcCandidateSet.contains(candidate)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6083
                         ackMessageFileMapMod |= (metadata.ackMessageFileMap.remove(candidate) != null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7118
                         metadata.ackMessageFileMapDirtyFlag.lazySet(true);
                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("not removing data file: " + candidate
                                     + " as contained ack(s) refer to referenced file: " + referencedFileIds);
@@ -2005,16 +2293,20 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             if (!gcCandidateSet.isEmpty()) {
                 LOG.debug("Cleanup removing the data files: {}", gcCandidateSet);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6083
                 for (Integer candidate : gcCandidateSet) {
                     for (Set<Integer> ackFiles : metadata.ackMessageFileMap.values()) {
                         ackMessageFileMapMod |= ackFiles.remove(candidate);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7118
                         metadata.ackMessageFileMapDirtyFlag.lazySet(true);
                     }
                 }
                 if (ackMessageFileMapMod) {
                     checkpointUpdate(tx, false);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
             } else if (isEnableAckCompaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
                 if (++checkPointCyclesWithNoGC >= getCompactAcksAfterNoGC()) {
                     // First check length of journal to make sure it makes sense to even try.
                     //
@@ -2051,6 +2343,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         MDC.remove("activemq.persistenceDir");
 
         LOG.debug("Checkpoint done.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6567
         return gcCandidateSet;
     }
 
@@ -2061,6 +2354,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             int journalToAdvance = -1;
             Set<Integer> journalLogsReferenced = new HashSet<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
 
             //flag to know whether the ack forwarding completed without an exception
             boolean forwarded = false;
@@ -2081,8 +2375,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 //and only use the executor but this would need to be examined for any unintended
                 //consequences
                 checkpointLock.readLock().lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6288
 
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6288
 
                     // Lock index to capture the ackMessageFileMap data
                     indexLock.writeLock().lock();
@@ -2090,7 +2386,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     // Map keys might not be sorted, find the earliest log file to forward acks
                     // from and move only those, future cycles can chip away at more as needed.
                     // We won't move files that are themselves rewritten on a previous compaction.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
                     List<Integer> journalFileIds = new ArrayList<>(metadata.ackMessageFileMap.keySet());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
+//IC see: https://issues.apache.org/jira/browse/AMQ-6285
                     Collections.sort(journalFileIds);
                     for (Integer journalFileId : journalFileIds) {
                         DataFile current = journal.getDataFileById(journalFileId);
@@ -2101,6 +2400,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     }
 
                     // Check if we found one, or if we only found the current file being written to.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
                     if (journalToAdvance == -1 || blockedFromCompaction(journalToAdvance)) {
                         return;
                     }
@@ -2114,6 +2414,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 try {
                     // Background rewrite of the old acks
                     forwardAllAcks(journalToAdvance, journalLogsReferenced);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6288
                     forwarded = true;
                 } catch (IOException ioe) {
                     LOG.error("Forwarding of acks failed", ioe);
@@ -2133,6 +2434,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             } catch (IOException ioe) {
                 LOG.error("Checkpoint failed", ioe);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
                 brokerService.handleIOException(ioe);
             } catch (Throwable e) {
                 LOG.error("Checkpoint failed", e);
@@ -2144,6 +2446,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // called with the index lock held
     private boolean blockedFromCompaction(int journalToAdvance) {
         // don't forward the current data file
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         if (journalToAdvance == journal.getCurrentDataFileId()) {
             return true;
         }
@@ -2167,20 +2470,26 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         LOG.trace("Attempting to move all acks in journal:{} to the front. Referenced files:{}", journalToRead, journalLogsReferenced);
 
         DataFile forwardsFile = journal.reserveDataFile();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6303
         forwardsFile.setTypeCode(COMPACTED_JOURNAL_FILE);
         LOG.trace("Reserved file for forwarded acks: {}", forwardsFile);
 
         Map<Integer, Set<Integer>> updatedAckLocations = new HashMap<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
 
         try (TargetedDataFileAppender appender = new TargetedDataFileAppender(journal, forwardsFile);) {
             KahaRewrittenDataFileCommand compactionMarker = new KahaRewrittenDataFileCommand();
             compactionMarker.setSourceDataFileId(journalToRead);
             compactionMarker.setRewriteType(forwardsFile.getTypeCode());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6303
 
             ByteSequence payload = toByteSequence(compactionMarker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6292
             appender.storeItem(payload, Journal.USER_RECORD_TYPE, false);
             LOG.trace("Marked ack rewrites file as replacing file: {}", journalToRead);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6432
+//IC see: https://issues.apache.org/jira/browse/AMQ-6288
             final Location limit = new Location(journalToRead + 1, 0);
             Location nextLocation = getNextLocationForAckForward(new Location(journalToRead, 0), limit);
             while (nextLocation != null) {
@@ -2191,12 +2500,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     LOG.trace("Error loading command during ack forward: {}", nextLocation);
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
                 if (shouldForward(command)) {
                     payload = toByteSequence(command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6292
                     Location location = appender.storeItem(payload, Journal.USER_RECORD_TYPE, false);
                     updatedAckLocations.put(location.getDataFileId(), journalLogsReferenced);
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6432
+//IC see: https://issues.apache.org/jira/browse/AMQ-6288
                 nextLocation = getNextLocationForAckForward(nextLocation, limit);
             }
         }
@@ -2210,9 +2523,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         for (Entry<Integer, Set<Integer>> entry : updatedAckLocations.entrySet()) {
             Set<Integer> referenceFileIds = metadata.ackMessageFileMap.get(entry.getKey());
             if (referenceFileIds == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
                 referenceFileIds = new HashSet<>();
                 referenceFileIds.addAll(entry.getValue());
                 metadata.ackMessageFileMap.put(entry.getKey(), referenceFileIds);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7118
                 metadata.ackMessageFileMapDirtyFlag.lazySet(true);
             } else {
                 referenceFileIds.addAll(entry.getValue());
@@ -2223,6 +2538,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         // be removed on next GC.
         metadata.ackMessageFileMap.remove(journalToRead);
         metadata.ackMessageFileMapDirtyFlag.lazySet(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7118
 
         indexLock.writeLock().unlock();
 
@@ -2231,6 +2547,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     private boolean shouldForward(JournalCommand<?> command) {
         boolean result = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7067
         if (command != null) {
             if (command instanceof KahaRemoveMessageCommand) {
                 result = true;
@@ -2250,6 +2567,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         //Should not happen in the normal case
         Location location = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6432
+//IC see: https://issues.apache.org/jira/browse/AMQ-6288
             location = journal.getNextLocation(nextLocation, limit);
         } catch (IOException e) {
             LOG.warn("Failed to load next journal location after: {}, reason: {}", nextLocation, e);
@@ -2260,6 +2579,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return location;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
     final Runnable nullCompletionCallback = new Runnable() {
         @Override
         public void run() {
@@ -2267,7 +2587,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     };
 
     private Location checkpointProducerAudit() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
         if (metadata.producerSequenceIdTracker == null || metadata.producerSequenceIdTracker.modified()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oout = new ObjectOutputStream(baos);
             oout.writeObject(metadata.producerSequenceIdTracker);
@@ -2277,6 +2601,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             Location location = store(new KahaProducerAuditCommand().setAudit(new Buffer(baos.toByteArray())), nullCompletionCallback);
             try {
                 location.getLatch().await();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6815
                 if (location.getException().get() != null) {
                     throw location.getException().get();
                 }
@@ -2289,6 +2614,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private Location checkpointAckMessageFileMap() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oout = new ObjectOutputStream(baos);
         oout.writeObject(metadata.ackMessageFileMap);
@@ -2332,6 +2659,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         final Location location;
 
         public MessageKeys(String messageId, Location location) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             this.messageId=messageId;
             this.location=location;
         }
@@ -2420,6 +2748,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
     class StoredMessageStoreStatistics {
         private PageFile pageFile;
         private Page<MessageStoreStatistics> page;
@@ -2468,6 +2797,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
     class StoredDestination {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
 
         MessageOrderIndex orderIndex = new MessageOrderIndex();
         BTreeIndex<Location, Long> locationIndex;
@@ -2479,13 +2809,18 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         HashMap<String, MessageOrderCursor> subscriptionCursors;
         ListIndex<String, SequenceSet> ackPositions;
         ListIndex<String, Location> subLocations;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
 
         // Transient data used to track which Messages are no longer needed.
         final HashSet<String> subscriptionCache = new LinkedHashSet<>();
 
         StoredMessageStoreStatistics messageStoreStatistics;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
 
         public void trackPendingAdd(Long seq) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             orderIndex.trackPendingAdd(seq);
         }
 
@@ -2495,6 +2830,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
             return "nextSeq:" + orderIndex.nextMessageId + ",lastRet:" + orderIndex.cursor + ",pending:" + orderIndex.pendingAdditions.size();
         }
     }
@@ -2503,6 +2840,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         @Override
         public void writePayload(final MessageStoreStatistics object, final DataOutput dataOut) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
             dataOut.writeBoolean(null != object);
             if (object != null) {
                 dataOut.writeLong(object.getMessageCount().getCount());
@@ -2538,6 +2876,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         @Override
         public StoredDestination readPayload(final DataInput dataIn) throws IOException {
             final StoredDestination value = new StoredDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
             value.orderIndex.defaultPriorityIndex = new BTreeIndex<>(pageFile, dataIn.readLong());
             value.locationIndex = new BTreeIndex<>(pageFile, dataIn.readLong());
             value.messageIdIndex = new BTreeIndex<>(pageFile, dataIn.readLong());
@@ -2554,8 +2893,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         public void execute(Transaction tx) throws IOException {
                             LinkedHashMap<String, SequenceSet> temp = new LinkedHashMap<>();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
                             if (metadata.version >= 3) {
                                 // migrate
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                                 BTreeIndex<Long, HashSet<String>> oldAckPositions =
                                         new BTreeIndex<>(pageFile, dataIn.readLong());
                                 oldAckPositions.setKeyMarshaller(LongMarshaller.INSTANCE);
@@ -2582,7 +2923,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             }
                             // Now move the pending messages to ack data into the store backed
                             // structure.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
                             value.ackPositions = new ListIndex<>(pageFile, tx.allocate());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
                             value.ackPositions.setKeyMarshaller(StringMarshaller.INSTANCE);
                             value.ackPositions.setValueMarshaller(SequenceSet.Marshaller.INSTANCE);
                             value.ackPositions.load(tx);
@@ -2595,6 +2939,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
 
                 if (metadata.version >= 5) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
                     value.subLocations = new ListIndex<>(pageFile, dataIn.readLong());
                 } else {
                     // upgrade
@@ -2611,10 +2956,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             if (metadata.version >= 2) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
                 value.orderIndex.lowPriorityIndex = new BTreeIndex<>(pageFile, dataIn.readLong());
                 value.orderIndex.highPriorityIndex = new BTreeIndex<>(pageFile, dataIn.readLong());
             } else {
                 // upgrade
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                 pageFile.tx().execute(new Transaction.Closure<IOException>() {
                     @Override
                     public void execute(Transaction tx) throws IOException {
@@ -2631,6 +2979,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 });
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
             if (metadata.version >= 7) {
                 value.messageStoreStatistics = new StoredMessageStoreStatistics(pageFile, dataIn.readLong());
             } else {
@@ -2652,13 +3001,17 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 dataOut.writeBoolean(true);
                 dataOut.writeLong(value.subscriptions.getPageId());
                 dataOut.writeLong(value.subscriptionAcks.getPageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                 dataOut.writeLong(value.ackPositions.getHeadPageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
                 dataOut.writeLong(value.subLocations.getHeadPageId());
             } else {
                 dataOut.writeBoolean(false);
             }
             dataOut.writeLong(value.orderIndex.lowPriorityIndex.getPageId());
             dataOut.writeLong(value.orderIndex.highPriorityIndex.getPageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
             dataOut.writeLong(value.messageStoreStatistics.getPageId());
         }
     }
@@ -2669,6 +3022,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         @Override
         public KahaSubscriptionCommand readPayload(DataInput dataIn) throws IOException {
             KahaSubscriptionCommand rc = new KahaSubscriptionCommand();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             rc.mergeFramed((InputStream)dataIn);
             return rc;
         }
@@ -2694,6 +3048,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     protected MessageStoreStatistics getStoredMessageStoreStatistics(KahaDestination destination, Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
         StoredDestination sd = getStoredDestination(destination, tx);
         return  sd != null && sd.messageStoreStatistics != null ? sd.messageStoreStatistics.get(tx) : null;
     }
@@ -2720,7 +3075,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (rc == null) {
             // Brand new destination.. allocate indexes for it.
             rc = new StoredDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
             rc.orderIndex.allocate(tx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
             rc.locationIndex = new BTreeIndex<>(pageFile, tx.allocate());
             rc.messageIdIndex = new BTreeIndex<>(pageFile, tx.allocate());
 
@@ -2732,6 +3089,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             rc.messageStoreStatistics = new StoredMessageStoreStatistics(pageFile, tx.allocate());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
 
             metadata.destinations.put(tx, key, rc);
         }
@@ -2743,6 +3101,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         // Figure out the next key using the last entry in the destination.
         rc.orderIndex.configureLast(tx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
 
         rc.locationIndex.setKeyMarshaller(new LocationSizeMarshaller());
         rc.locationIndex.setValueMarshaller(LongMarshaller.INSTANCE);
@@ -2779,15 +3138,19 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             rc.subscriptionAcks.setValueMarshaller(new LastAckMarshaller());
             rc.subscriptionAcks.load(tx);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             rc.ackPositions.setKeyMarshaller(StringMarshaller.INSTANCE);
             rc.ackPositions.setValueMarshaller(SequenceSet.Marshaller.INSTANCE);
             rc.ackPositions.load(tx);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
             rc.subLocations.setKeyMarshaller(StringMarshaller.INSTANCE);
             rc.subLocations.setValueMarshaller(LocationMarshaller.INSTANCE);
             rc.subLocations.load(tx);
 
             rc.subscriptionCursors = new HashMap<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
 
             if (metadata.version < 3) {
 
@@ -2795,6 +3158,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 for (Iterator<Entry<String, LastAck>> iterator = rc.subscriptionAcks.iterator(tx); iterator.hasNext(); ) {
                     Entry<String, LastAck> entry = iterator.next();
                     for (Iterator<Entry<Long, MessageKeys>> orderIterator =
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                             rc.orderIndex.iterator(tx, new MessageOrderCursor(entry.getValue().lastAckedSequence)); orderIterator.hasNext(); ) {
                         Long sequence = orderIterator.next().getKey();
                         addAckLocation(tx, rc, sequence, entry.getKey());
@@ -2821,11 +3186,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             } else {
                 // update based on ackPositions for unmatched, last entry is always the next
+//IC see: https://issues.apache.org/jira/browse/AMQ-7091
                 Iterator<Entry<String, SequenceSet>> subscriptions = rc.ackPositions.iterator(tx);
                 while (subscriptions.hasNext()) {
                     Entry<String, SequenceSet> subscription = subscriptions.next();
                     SequenceSet pendingAcks = subscription.getValue();
                     if (pendingAcks != null && !pendingAcks.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5872
                         for (Long sequenceId : pendingAcks) {
                             rc.orderIndex.nextMessageId = Math.max(rc.orderIndex.nextMessageId, sequenceId);
                         }
@@ -2865,6 +3232,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * @param size
      */
     protected void incrementAndAddSizeToStoreStat(Transaction tx, KahaDestination kahaDestination, long size) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
         StoredDestination sd = getStoredDestination(kahaDestination, tx);
         incrementAndAddSizeToStoreStat(tx, key(kahaDestination), sd, size);
     }
@@ -2960,6 +3328,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     protected final ConcurrentMap<String, MessageStore> storeCache =
             new ConcurrentHashMap<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
 
     /**
      * Locate the storeMessageSize counter for this KahaDestination
@@ -3057,6 +3426,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (sequences == null) {
             sequences = new SequenceSet();
             sequences.add(messageSequence);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             sd.ackPositions.add(tx, subscriptionKey, sequences);
         } else {
             sequences.add(messageSequence);
@@ -3081,10 +3452,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private void addAckLocationForNewMessage(Transaction tx, KahaDestination kahaDest,
             StoredDestination sd, Long messageSequence) throws IOException {
         for(String subscriptionKey : sd.subscriptionCache) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             SequenceSet sequences = sd.ackPositions.get(tx, subscriptionKey);
             if (sequences == null) {
                 sequences = new SequenceSet();
                 sequences.add(new Sequence(messageSequence, messageSequence + 1));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                 sd.ackPositions.add(tx, subscriptionKey, sequences);
             } else {
                 sequences.add(new Sequence(messageSequence, messageSequence + 1));
@@ -3092,6 +3465,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             MessageKeys key = sd.orderIndex.get(tx, messageSequence);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7091
             incrementAndAddSizeToStoreStat(kahaDest, subscriptionKey, key.location.getSize());
         }
     }
@@ -3105,8 +3479,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             ArrayList<Long> unreferenced = new ArrayList<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
 
             for(Long sequenceId : sequences) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7091
                 if(!isSequenceReferenced(tx, sd, sequenceId)) {
                     unreferenced.add(sequenceId);
                 }
@@ -3114,8 +3490,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             for(Long sequenceId : unreferenced) {
                 // Find all the entries that need to get deleted.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
                 ArrayList<Entry<Long, MessageKeys>> deletes = new ArrayList<>();
                 sd.orderIndex.getDeleteList(tx, deletes, sequenceId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
 
                 // Do the actual deletes.
                 for (Entry<Long, MessageKeys> entry : deletes) {
@@ -3129,6 +3507,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private boolean isSequenceReferenced(final Transaction tx, final StoredDestination sd, final Long sequenceId) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7091
         for(String subscriptionKey : sd.subscriptionCache) {
             SequenceSet sequence = sd.ackPositions.get(tx, subscriptionKey);
             if (sequence != null && sequence.contains(sequenceId)) {
@@ -3164,10 +3543,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         key.location.getSize());
 
                 // Check if the message is reference by any other subscription.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7091
                 if (isSequenceReferenced(tx, sd, messageSequence)) {
                     return;
                 }
                 // Find all the entries that need to get deleted.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
                 ArrayList<Entry<Long, MessageKeys>> deletes = new ArrayList<>();
                 sd.orderIndex.getDeleteList(tx, deletes, messageSequence);
 
@@ -3176,6 +3557,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     sd.locationIndex.remove(tx, entry.getValue().location);
                     sd.messageIdIndex.remove(tx, entry.getValue().messageId);
                     sd.orderIndex.remove(tx, entry.getKey());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
                     decrementAndSubSizeToStoreStat(tx, command.getDestination(), entry.getValue().location.getSize());
                 }
             }
@@ -3187,6 +3570,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     protected SequenceSet getSequenceSet(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7129
         if (sd.ackPositions != null) {
             final SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
             return messageSequences;
@@ -3196,6 +3580,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     protected long getStoredMessageCount(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6642
         if (sd.ackPositions != null) {
             SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
             if (messageSequences != null) {
@@ -3220,6 +3605,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     protected Map<String, AtomicLong> getStoredMessageSize(Transaction tx, StoredDestination sd, List<String> subscriptionKeys) throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7136
         final Map<String, AtomicLong> subPendingMessageSizes = new HashMap<>();
         final Map<String, SequenceSet> messageSequencesMap = new HashMap<>();
 
@@ -3270,11 +3656,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             //grab the messages attached to this subscription
             SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7129
             if (messageSequences != null && !messageSequences.isEmpty()) {
                 final Sequence head = messageSequences.getHead();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7129
 
                 //get an iterator over the order index starting at the first unacked message
                 //and go over each message to add up the size
+//IC see: https://issues.apache.org/jira/browse/AMQ-6158
                 Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx,
                         new MessageOrderCursor(head.getFirst()));
 
@@ -3308,6 +3697,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     @SuppressWarnings("rawtypes")
     private List<Operation> getInflightTx(KahaTransactionInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         TransactionId key = TransactionIdConversion.convert(info);
         List<Operation> tx;
         synchronized (inflightTransactions) {
@@ -3322,9 +3712,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     @SuppressWarnings("unused")
     private TransactionId key(KahaTransactionInfo transactionInfo) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         return TransactionIdConversion.convert(transactionInfo);
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
     abstract class Operation <T extends JournalCommand<T>> {
         final T command;
         final Location location;
@@ -3339,12 +3731,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         public T getCommand() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
             return command;
         }
 
         abstract public void execute(Transaction tx) throws IOException;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
     class AddOperation extends Operation<KahaAddMessageCommand> {
         final IndexAware runWithIndexLock;
         public AddOperation(KahaAddMessageCommand command, Location location, IndexAware runWithIndexLock) {
@@ -3369,6 +3764,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         @Override
         public void execute(Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
             updateIndex(tx, command, location);
         }
     }
@@ -3378,14 +3775,19 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // /////////////////////////////////////////////////////////////////
 
     private PageFile createPageFile() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         if (indexDirectory == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5072
             indexDirectory = directory;
         }
         IOHelper.mkdirs(indexDirectory);
         PageFile index = new PageFile(indexDirectory, "db");
         index.setEnableWriteThread(isEnableIndexWriteAsync());
         index.setWriteBatchSize(getIndexWriteBatchSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2338
+//IC see: https://issues.apache.org/jira/browse/AMQ-2337
         index.setPageCacheSize(indexCacheSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3618
         index.setUseLFRUEviction(isUseIndexLFRUEviction());
         index.setLFUEvictionFactor(getIndexLFUEvictionFactor());
         index.setEnableDiskSyncs(isEnableIndexDiskSyncs());
@@ -3398,15 +3800,19 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         Journal manager = new Journal();
         manager.setDirectory(directory);
         manager.setMaxFileLength(getJournalMaxFileLength());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2405
         manager.setCheckForCorruptionOnStartup(checkForCorruptJournalFiles);
         manager.setChecksum(checksumJournalFiles || checkForCorruptJournalFiles);
         manager.setWriteBatchSize(getJournalMaxWriteBatchSize());
         manager.setArchiveDataLogs(isArchiveDataLogs());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3973
         manager.setSizeAccumulator(journalSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         manager.setEnableAsyncDiskSync(isEnableJournalDiskSyncs());
         manager.setPreallocationScope(Journal.PreallocationScope.valueOf(preallocationScope.trim().toUpperCase()));
         manager.setPreallocationStrategy(
                 Journal.PreallocationStrategy.valueOf(preallocationStrategy.trim().toUpperCase()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         manager.setJournalDiskSyncStrategy(journalDiskSyncStrategy);
         if (getDirectoryArchive() != null) {
             IOHelper.mkdirs(getDirectoryArchive());
@@ -3416,6 +3822,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private Metadata createMetadata() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5166
         Metadata md = new Metadata();
         md.producerSequenceIdTracker.setAuditDepth(getFailoverProducersAuditDepth());
         md.producerSequenceIdTracker.setMaximumNumberOfProducersToTrack(getMaxFailoverProducersToTrack());
@@ -3470,6 +3877,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     @Deprecated
     public boolean isEnableJournalDiskSyncs() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         return journalDiskSyncStrategy == JournalDiskSyncStrategy.ALWAYS;
     }
 
@@ -3480,6 +3888,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     @Deprecated
     public void setEnableJournalDiskSyncs(boolean syncWrites) {
         if (syncWrites) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
             journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS;
         } else {
             journalDiskSyncStrategy = JournalDiskSyncStrategy.NEVER;
@@ -3523,6 +3932,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public boolean getCleanupOnStop() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7086
         return cleanupOnStop;
     }
 
@@ -3539,6 +3949,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public void setMaxFailoverProducersToTrack(int maxFailoverProducersToTrack) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         this.metadata.producerSequenceIdTracker.setMaximumNumberOfProducersToTrack(maxFailoverProducersToTrack);
     }
 
@@ -3558,10 +3971,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (pageFile == null) {
             pageFile = createPageFile();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3342
         return pageFile;
     }
 
     public Journal getJournal() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         if (journal == null) {
             journal = createJournal();
         }
@@ -3569,6 +3984,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     protected Metadata getMetadata() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6378
+//IC see: https://issues.apache.org/jira/browse/AMQ-6376
         return metadata;
     }
 
@@ -3581,6 +3998,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public boolean isIgnoreMissingJournalfiles() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2338
+//IC see: https://issues.apache.org/jira/browse/AMQ-2337
         return ignoreMissingJournalfiles;
     }
 
@@ -3597,6 +4016,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public boolean isCheckForCorruptJournalFiles() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2405
         return checkForCorruptJournalFiles;
     }
 
@@ -3605,6 +4025,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public PurgeRecoveredXATransactionStrategy getPurgeRecoveredXATransactionStrategyEnum() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7015
         return purgeRecoveredXATransactionStrategy;
     }
 
@@ -3627,6 +4048,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3342
         this.brokerService = brokerService;
     }
 
@@ -3659,6 +4081,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public boolean isArchiveCorruptedIndex() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3634
         return archiveCorruptedIndex;
     }
 
@@ -3667,6 +4090,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public float getIndexLFUEvictionFactor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3618
         return indexLFUEvictionFactor;
     }
 
@@ -3707,6 +4131,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public PersistenceAdapterStatistics getPersistenceAdapterStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7159
         return this.persistenceAdapterStatistics;
     }
 
@@ -3714,6 +4139,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // Internal conversion methods.
     // /////////////////////////////////////////////////////////////////
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
     class MessageOrderCursor{
         long defaultCursorPosition;
         long lowPriorityCursorPosition;
@@ -3738,6 +4165,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         void reset() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             this.defaultCursorPosition=0;
             this.highPriorityCursorPosition=0;
             this.lowPriorityCursorPosition=0;
@@ -3757,6 +4185,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
            return "MessageOrderCursor:[def:" + defaultCursorPosition
                    + ", low:" + lowPriorityCursorPosition
                    + ", high:" +  highPriorityCursorPosition + "]";
@@ -3778,16 +4207,20 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         BTreeIndex<Long, MessageKeys> defaultPriorityIndex;
         BTreeIndex<Long, MessageKeys> lowPriorityIndex;
         BTreeIndex<Long, MessageKeys> highPriorityIndex;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
         final MessageOrderCursor cursor = new MessageOrderCursor();
         Long lastDefaultKey;
         Long lastHighKey;
         Long lastLowKey;
         byte lastGetPriority;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
         final List<Long> pendingAdditions = new LinkedList<>();
         final MessageKeysMarshaller messageKeysMarshaller = new MessageKeysMarshaller();
 
         MessageKeys remove(Transaction tx, Long key) throws IOException {
             MessageKeys result = defaultPriorityIndex.remove(tx, key);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if (result == null && highPriorityIndex!=null) {
                 result = highPriorityIndex.remove(tx, key);
                 if (result ==null && lowPriorityIndex!=null) {
@@ -3810,6 +4243,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         void allocate(Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6563
             defaultPriorityIndex = new BTreeIndex<>(pageFile, tx.allocate());
             if (metadata.version >= 2) {
                 lowPriorityIndex = new BTreeIndex<>(pageFile, tx.allocate());
@@ -3821,6 +4255,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             // Figure out the next key using the last entry in the destination.
             TreeSet<Long> orderedSet = new TreeSet<>();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5626
             addLast(orderedSet, highPriorityIndex, tx);
             addLast(orderedSet, defaultPriorityIndex, tx);
             addLast(orderedSet, lowPriorityIndex, tx);
@@ -3839,6 +4274,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
         void clear(Transaction tx) throws IOException {
             this.remove(tx);
             this.resetCursorPosition();
@@ -3874,6 +4310,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         void setBatch(Transaction tx, Long sequence) throws IOException {
             if (sequence != null) {
                 Long nextPosition = new Long(sequence.longValue() + 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
                 lastDefaultKey = sequence;
                 cursor.defaultCursorPosition = nextPosition.longValue();
                 lastHighKey = sequence;
@@ -3907,6 +4344,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         void stoppedIterating() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if (lastDefaultKey!=null) {
                 cursor.defaultCursorPosition=lastDefaultKey.longValue()+1;
             }
@@ -3923,6 +4361,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         void getDeleteList(Transaction tx, ArrayList<Entry<Long, MessageKeys>> deletes, Long sequenceId)
                 throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             if (defaultPriorityIndex.containsKey(tx, sequenceId)) {
                 getDeleteList(tx, deletes, defaultPriorityIndex, sequenceId);
             } else if (highPriorityIndex != null && highPriorityIndex.containsKey(tx, sequenceId)) {
@@ -3934,11 +4373,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         void getDeleteList(Transaction tx, ArrayList<Entry<Long, MessageKeys>> deletes,
                 BTreeIndex<Long, MessageKeys> index, Long sequenceId) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             Iterator<Entry<Long, MessageKeys>> iterator = index.iterator(tx, sequenceId, null);
             deletes.add(iterator.next());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5960
         long getNextMessageId() {
             return nextMessageId++;
         }
@@ -3973,7 +4417,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         Iterator<Entry<Long, MessageKeys>> iterator(Transaction tx) throws IOException{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             return new MessageOrderIterator(tx,cursor,this);
         }
 
@@ -3986,12 +4433,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         public boolean alreadyDispatched(Long sequence) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
             return (cursor.highPriorityCursorPosition > 0 && cursor.highPriorityCursorPosition >= sequence) ||
                     (cursor.defaultCursorPosition > 0 && cursor.defaultCursorPosition >= sequence) ||
                     (cursor.lowPriorityCursorPosition > 0 && cursor.lowPriorityCursorPosition >= sequence);
         }
 
         public void trackPendingAdd(Long seq) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             synchronized (pendingAdditions) {
                 pendingAdditions.add(seq);
             }
@@ -4132,10 +4583,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             byte[] data = new byte[dataLen];
             dataIn.readFully(data);
             ByteArrayInputStream bais = new ByteArrayInputStream(data);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7438
             ObjectInputStream oin = new MessageDatabaseObjectInputStream(bais);
             try {
                 return (HashSet<String>) oin.readObject();
             } catch (ClassNotFoundException cfe) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3342
                 IOException ioe = new IOException("Failed to read HashSet<String>: " + cfe);
                 ioe.initCause(cfe);
                 throw ioe;
@@ -4144,6 +4597,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public File getIndexDirectory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5072
         return indexDirectory;
     }
 
@@ -4156,6 +4610,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public String getPreallocationScope() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         return preallocationScope;
     }
 
@@ -4172,6 +4627,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public int getCompactAcksAfterNoGC() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         return compactAcksAfterNoGC;
     }
 
@@ -4216,6 +4672,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * @return enableAckCompaction
      */
     public boolean isEnableAckCompaction() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         return enableAckCompaction;
     }
 
@@ -4249,6 +4706,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private static class MessageDatabaseObjectInputStream extends ObjectInputStream {
 
         public MessageDatabaseObjectInputStream(InputStream is) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7438
             super(is);
         }
 

@@ -74,6 +74,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testSimpleSendOneReceiveOneToQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         doTestSimpleSendOneReceiveOne(Queue.class);
     }
 
@@ -91,6 +92,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
             address = "topic://" + getTestName();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
@@ -154,6 +156,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         AmqpReceiver receiver2 = session.createReceiver("queue://" + getTestName());
         receiver2.flow(200);
         for (int i = 0; i < MSG_COUNT; ++i) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5684
             received = receiver2.receive(5, TimeUnit.SECONDS);
             assertNotNull("Should have got a message", received);
             assertEquals("msg" + i, received.getMessageId());
@@ -165,6 +168,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testReceiveWithJMSSelectorFilter() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
@@ -193,6 +197,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         assertNull(receiver.receive(1, TimeUnit.SECONDS));
 
         receiver.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         connection.close();
     }
 
@@ -245,7 +250,9 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         LOG.info("Attempting to read remaining messages with receiver #1");
         receiver1.flow(MSG_COUNT - 4);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
         for (int i = 4; i < MSG_COUNT; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
             AmqpMessage message = receiver1.receive(10, TimeUnit.SECONDS);
             assertNotNull("Should have read a message", message);
             assertEquals("msg" + i, message.getMessageId());
@@ -255,6 +262,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         receiver1.close();
         receiver2.close();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         connection.close();
     }
 
@@ -263,6 +271,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
     public void testDispatchOrderWithPrefetchOfOne() throws Exception {
         final int MSG_COUNT = 20;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
@@ -312,6 +321,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         LOG.info("**** Receiver #1 granting creadit[{}] for its block of messages", splitCredit);
         receiver1.flow(splitCredit);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
         for (int i = 0; i < splitCredit; i++) {
             AmqpMessage message = receiver1.receive(10, TimeUnit.SECONDS);
             assertNotNull("Receiver #1 should have read a message", message);
@@ -323,6 +333,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         receiver2.flow(splitCredit);
         for (int i = 0; i < splitCredit; i++) {
             AmqpMessage message = receiver2.receive(10, TimeUnit.SECONDS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
             assertNotNull("Receiver #2 should have read message[" + i + "]", message);
             LOG.info("Receiver #2 read message: {}", message.getMessageId());
             message.accept();
@@ -336,6 +347,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testReceiveMessageAndRefillCreditBeforeAcceptOnQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
         doTestReceiveMessageAndRefillCreditBeforeAccept(Queue.class);
     }
 
@@ -395,6 +407,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     private void doTestReceiveMessageAndRefillCreditBeforeAcceptOnTopicAsync(Class<?> destType) throws Exception {
         final AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         final LinkedList<Throwable> errors = new LinkedList<>();
         final CountDownLatch receiverReady = new CountDownLatch(1);
         ExecutorService executorService = Executors.newCachedThreadPool();
@@ -465,7 +478,10 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testMessageDurabliltyFollowsSpec() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5828
+//IC see: https://issues.apache.org/jira/browse/AMQ-6486
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -508,6 +524,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testMessageWithNoHeaderNotMarkedDurable() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7189
         doMessageNotMarkedDurableTestImpl(false, false);
     }
 
@@ -529,6 +546,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         AmqpSender sender = session.createSender("queue://" + getTestName());
         AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7189
         Message protonMessage = Message.Factory.create();
         protonMessage.setMessageId("ID:Message:1");
         protonMessage.setBody(new AmqpValue("Test-Message -> non-durable"));
@@ -571,6 +589,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendMessageToQueueNoPrefixReceiveWithPrefix() throws Exception {
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -604,6 +623,12 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendMessageToQueueWithPrefixReceiveWithNoPrefix() throws Exception {
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -636,6 +661,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testReceiveMessageBeyondAckedAmountQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
         doTestReceiveMessageBeyondAckedAmount(Queue.class);
     }
 
@@ -649,6 +675,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         AmqpClient client = createAmqpClient();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -676,11 +703,13 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         }
 
         List<AmqpMessage> pendingAcks = new ArrayList<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
 
         for (int i = 0; i < MSG_COUNT; i++) {
             receiver.flow(1);
             AmqpMessage received = receiver.receive(5, TimeUnit.SECONDS);
             assertNotNull(received);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
             pendingAcks.add(received);
         }
 
@@ -710,8 +739,10 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testTwoPresettledReceiversReceiveAllMessages() throws Exception {
         final int MSG_COUNT = 100;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -731,6 +762,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         LOG.info("Attempting to read first two messages with receiver #1");
         receiver1.flow(2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         AmqpMessage message1 = receiver1.receive(10, TimeUnit.SECONDS);
         AmqpMessage message2 = receiver1.receive(10, TimeUnit.SECONDS);
         assertNotNull("Should have read message 1", message1);
@@ -742,6 +774,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         LOG.info("Attempting to read next two messages with receiver #2");
         receiver2.flow(2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         AmqpMessage message3 = receiver2.receive(10, TimeUnit.SECONDS);
         AmqpMessage message4 = receiver2.receive(10, TimeUnit.SECONDS);
         assertNotNull("Should have read message 3", message3);
@@ -775,6 +808,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         receiver2.flow(splitCredit);
         for (int i = 0; i < splitCredit; i++) {
             AmqpMessage message = receiver2.receive(10, TimeUnit.SECONDS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
             assertNotNull("Receiver #2 should have read a message[" + i + "]", message);
             LOG.info("Receiver #2 read message: {}", message.getMessageId());
             message.accept();
@@ -788,6 +822,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testSendReceiveLotsOfDurableMessagesOnQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         doTestSendReceiveLotsOfDurableMessages(Queue.class);
     }
 
@@ -801,6 +836,9 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         AmqpClient client = createAmqpClient();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -820,6 +858,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         AmqpSender sender = session.createSender(address);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
         final DestinationViewMBean destinationView;
         if (Queue.class.equals(destType)) {
             destinationView = getProxyToQueue(getTestName());
@@ -868,6 +907,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
    @Test(timeout = 60000)
    public void testSendAMQPMessageWithComplexAnnotationsReceiveAMQP() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7274
       String testQueueName = "ConnectionFrameSize";
       int nMsgs = 200;
 

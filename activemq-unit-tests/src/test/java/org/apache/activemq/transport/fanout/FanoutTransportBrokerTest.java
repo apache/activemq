@@ -57,6 +57,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
     public void initCombosForTestPublisherFansout() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
+//IC see: https://issues.apache.org/jira/browse/AMQ-1464
         addCombinationValues("destination", new Object[] {new ActiveMQTopic("TEST"), new ActiveMQQueue("TEST")});
     }
 
@@ -103,6 +104,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
     public void initCombosForTestPublisherWaitsForServerToBeUp() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
+//IC see: https://issues.apache.org/jira/browse/AMQ-1464
         addCombinationValues("destination", new Object[] {new ActiveMQTopic("TEST")});
     }
 
@@ -181,6 +183,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
         // This should reconnect, and resend
         assertTrue(publishDone.await(20, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1464
 
     }
 
@@ -193,6 +196,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
     }
 
     protected StubConnection createFanoutConnection() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1464
         URI fanoutURI = new URI("fanout://(static://(" + connector.getServer().getConnectURI() + "," + "mock://" + remoteConnector.getServer().getConnectURI() + "))?fanOutQueues=true");
         Transport transport = TransportFactory.connect(fanoutURI);
         StubConnection connection = new StubConnection(transport);

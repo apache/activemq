@@ -65,6 +65,8 @@ public final class JMSExceptionSupport {
         if (msg == null || msg.length() == 0) {
             msg = cause.toString();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4373
+//IC see: https://issues.apache.org/jira/browse/AMQ-4373
         JMSException exception;
         if (cause instanceof SecurityException) {
             exception = new JMSSecurityException(msg);

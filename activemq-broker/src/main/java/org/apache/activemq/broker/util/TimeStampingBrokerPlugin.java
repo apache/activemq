@@ -56,6 +56,7 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
     * no expiration date set (in Milliseconds).
     */
     long zeroExpirationOverride = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2221
 
     /**
     * variable which (when non-zero) is used to limit
@@ -93,10 +94,13 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
     }
 
     public void setFutureOnly(boolean futureOnly) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2441
+//IC see: https://issues.apache.org/jira/browse/AMQ-3541
         this.futureOnly = futureOnly;
     }
 
     public void setProcessNetworkMessages(Boolean processNetworkMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2752
         this.processNetworkMessages = processNetworkMessages;
     }
 
@@ -120,6 +124,7 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
             long expiration = timeToLive + newTimeStamp;
             // In the scenario that the Broker is behind the clients we never want to set the
             // Timestamp and Expiration in the past
+//IC see: https://issues.apache.org/jira/browse/AMQ-2441
             if(!futureOnly || (expiration > oldExpiration)) {
                 if (timeToLive > 0 && expiration > 0) {
                     message.setExpiration(expiration);
@@ -138,6 +143,7 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
         Destination regionDestination = (Destination) message.getRegionDestination();
         if (message != null && regionDestination != null) {
             deadLetterStrategy = regionDestination.getDeadLetterStrategy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4475
             if (deadLetterStrategy != null && message.getOriginalDestination() != null) {
                 // Cheap copy, since we only need two fields
                 tmp = new ActiveMQMessage();

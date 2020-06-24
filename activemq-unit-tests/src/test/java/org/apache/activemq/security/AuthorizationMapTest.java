@@ -45,6 +45,8 @@ public class AuthorizationMapTest extends TestCase {
     }
 
     public void testComposite() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
+//IC see: https://issues.apache.org/jira/browse/AMQ-5697
         AuthorizationMap map = createAuthorizationMap();
         addABEntry(map);
 
@@ -62,6 +64,7 @@ public class AuthorizationMapTest extends TestCase {
     }
 
     protected void addABEntry(AuthorizationMap map) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5697
         DefaultAuthorizationMap defaultMap = (DefaultAuthorizationMap) map;
         defaultMap.put(new ActiveMQQueue("QUEUEA"), createEntry("QUEUEA", "users", "users", "users"));
         defaultMap.put(new ActiveMQQueue("QUEUEB"), createEntry("QUEUEB", "users", "users", "users"));
@@ -70,6 +73,8 @@ public class AuthorizationMapTest extends TestCase {
     public void testAuthorizationMapWithTempDest() {
         AuthorizationMap map = createAuthorizationMapWithTempDest();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
         Set<?> readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR"));
         assertEquals("set size: " + readACLs, 2, readACLs.size());
         assertTrue("Contains users group", readACLs.contains(ADMINS));
@@ -83,6 +88,7 @@ public class AuthorizationMapTest extends TestCase {
 
     public void testWildcards() {
         AuthorizationMap map = createWildcardAuthorizationMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
 
         Set<?> readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR"));
         assertEquals("set size: " + readACLs, 1, readACLs.size());
@@ -106,12 +112,14 @@ public class AuthorizationMapTest extends TestCase {
 
     public void testWildcardSubscriptions() {
         final GroupPrincipal USERSA = new GroupPrincipal("usersA");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5644
 
         DefaultAuthorizationMap map = new DefaultAuthorizationMap();
         List<DestinationMapEntry> entries = new ArrayList<>();
         entries.add(createEntry("A", "usersA", null, null));
         map.setAuthorizationEntries(entries);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5644
         Set<?> readACLs = map.getReadACLs(new ActiveMQQueue(">"));
         assertEquals("set size: " + readACLs, 0, readACLs.size());
 
@@ -241,6 +249,7 @@ public class AuthorizationMapTest extends TestCase {
         List<DestinationMapEntry> entries = new ArrayList<DestinationMapEntry>();
 
         AuthorizationEntry entry = new AuthorizationEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-908
         entry.setGroupClass("org.apache.activemq.jaas.GroupPrincipal");
         entry.setQueue(">");
         try {
@@ -268,11 +277,14 @@ public class AuthorizationMapTest extends TestCase {
     @SuppressWarnings("rawtypes")
     protected AuthorizationMap createAuthorizationMapWithTempDest() {
         DefaultAuthorizationMap answer = new DefaultAuthorizationMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-795
 
         List<DestinationMapEntry> entries = new ArrayList<DestinationMapEntry>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
 
         AuthorizationEntry entry = new AuthorizationEntry();
         entry.setQueue(">");
+//IC see: https://issues.apache.org/jira/browse/AMQ-908
         try {
             entry.setRead("admins");
         } catch (Exception e) {
@@ -305,6 +317,7 @@ public class AuthorizationMapTest extends TestCase {
     }
 
     protected AuthorizationEntry createEntry(String queue, String read, String write, String admin) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5644
         AuthorizationEntry entry = new AuthorizationEntry();
         if (queue != null) {
             entry.setQueue(queue);

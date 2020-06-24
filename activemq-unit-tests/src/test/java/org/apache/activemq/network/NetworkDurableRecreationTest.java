@@ -123,6 +123,7 @@ public class NetworkDurableRecreationTest extends DynamicNetworkTestSupport {
 
         waitForConsumerCount(destinationStatistics, 1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7238
         final NetworkBridge bridge;
         if (publishBroker.getNetworkConnectors().size() > 0) {
             Wait.waitFor(() -> publishBroker.getNetworkConnectors().get(0).activeBridges().size() == 1, 10000, 500);
@@ -144,6 +145,7 @@ public class NetworkDurableRecreationTest extends DynamicNetworkTestSupport {
 
         //Should be 1 - 0 for the durable destination and one for the advisory destinations
         assertSubscriptionMapCounts(bridge, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7238
 
         //re-create consumer
         MessageConsumer bridgeConsumer2 = secondConsumerCreator.createConsumer();

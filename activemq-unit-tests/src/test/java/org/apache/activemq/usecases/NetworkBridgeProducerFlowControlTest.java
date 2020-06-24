@@ -247,6 +247,7 @@ public class NetworkBridgeProducerFlowControlTest extends
         if (networkIsAlwaysSendSync) {
             Assert
                     .assertTrue(fastConsumerTime.get() < slowConsumerTime.get() / 20);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5830
 
         } else {
             Assert.assertEquals(persistentTestMessages,
@@ -256,6 +257,8 @@ public class NetworkBridgeProducerFlowControlTest extends
 
     public void testSendFailIfNoSpaceDoesNotBlockQueueNetwork() throws Exception {
         // Consumer prefetch is disabled for broker1's consumers.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3551
+//IC see: https://issues.apache.org/jira/browse/AMQ-3551
         final ActiveMQQueue SLOW_SHARED_QUEUE = new ActiveMQQueue(
             NetworkBridgeProducerFlowControlTest.class.getSimpleName()
                     + ".slow.shared?consumer.prefetchSize=1");
@@ -390,6 +393,7 @@ public class NetworkBridgeProducerFlowControlTest extends
     }
 
     public void testSendFailIfNoSpaceReverseDoesNotBlockQueueNetwork() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5830
         final int NUM_MESSAGES = 100;
         final long TEST_MESSAGE_SIZE = 1024;
         final long SLOW_CONSUMER_DELAY_MILLIS = 100;

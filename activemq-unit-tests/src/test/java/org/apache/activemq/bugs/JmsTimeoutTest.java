@@ -48,6 +48,7 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
      * @throws Exception
      */
     public void testBlockedProducerConnectionTimeout() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         final ActiveMQConnection cx = (ActiveMQConnection)createConnection();
         final ActiveMQDestination queue = createDestination("testqueue");
 
@@ -67,6 +68,8 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
                         producer.send(message);
                     }
                     LOG.info("Done sending..");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2867
+//IC see: https://issues.apache.org/jira/browse/AMQ-2507
                 } catch (JMSException e) {
                     if (e.getCause() instanceof RequestTimedOutIOException) {
                         exceptionCount.incrementAndGet();
@@ -126,10 +129,13 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
         producerThread.join(30000);
         cx.close();
         // We should have a few timeout exceptions as memory store will fill up
+//IC see: https://issues.apache.org/jira/browse/AMQ-2507
         assertTrue("No exception from the broker", exceptionCount.get() > 0);
     }
 
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2867
+//IC see: https://issues.apache.org/jira/browse/AMQ-2507
         exceptionCount.set(0);
         bindAddress = "tcp://localhost:0";
         broker = createBroker();

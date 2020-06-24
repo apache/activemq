@@ -39,6 +39,7 @@ public class MessageQuery extends QueueBrowseQuery {
     private Message message;
 
     public MessageQuery(BrokerFacade brokerFacade) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6908
         super(brokerFacade);
     }
 
@@ -57,6 +58,7 @@ public class MessageQuery extends QueueBrowseQuery {
     public Message getMessage() throws JMSException {
         if (message == null) {
             if (id != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1898
                 QueueBrowser tempBrowser=getBrowser();
                 Enumeration iter = tempBrowser.getEnumeration();
                 while (iter.hasMoreElements()) {
@@ -66,6 +68,7 @@ public class MessageQuery extends QueueBrowseQuery {
                         break;
                     }
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1898
                 tempBrowser.close();
             }
 
@@ -81,6 +84,7 @@ public class MessageQuery extends QueueBrowseQuery {
         if (message instanceof ObjectMessage) {
             try {
                 return ((ObjectMessage) message).getObject();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6013
             } catch (Exception e) {
                 //message could not be parsed, make the reason available
                 return new String("Cannot display ObjectMessage body. Reason: " + e.getMessage());
@@ -89,6 +93,7 @@ public class MessageQuery extends QueueBrowseQuery {
         if (message instanceof MapMessage) {
             return createMapBody((MapMessage) message);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3173
         if (message instanceof BytesMessage) {
             BytesMessage msg = (BytesMessage) message;
             int len = (int) msg.getBodyLength();
@@ -113,10 +118,12 @@ public class MessageQuery extends QueueBrowseQuery {
     }
 
     public boolean isDLQ() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5662
     	return getQueueView().isDLQ();
     }
 
     public Map<String, Object> getPropertiesMap() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4110
         Map<String, Object> answer = new HashMap<String, Object>();
         Message aMessage = getMessage();
         Enumeration iter = aMessage.getPropertyNames();

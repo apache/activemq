@@ -39,6 +39,7 @@ public class DestinationPathSeparatorBroker extends BrokerPluginSupport {
     String pathSeparator = "/";
 
     protected ActiveMQDestination convertDestination(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3204
         if (destination != null && destination.getPhysicalName().contains(pathSeparator)) {
             List<String> l = new ArrayList<String>();
             StringTokenizer iter = new StringTokenizer(destination.getPhysicalName(), pathSeparator);
@@ -118,6 +119,7 @@ public class DestinationPathSeparatorBroker extends BrokerPluginSupport {
 
     @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3600
         control.setDestination(convertDestination(control.getDestination()));
         super.processConsumerControl(consumerExchange, control);
     }

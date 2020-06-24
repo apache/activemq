@@ -83,6 +83,9 @@ public class ByteArrayOutputStream extends OutputStream {
     public boolean endsWith(final byte[] array) {
         int i = 0;
         int start = size - array.length;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3729
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         if (start < 0) {
             return false;
         }

@@ -48,6 +48,7 @@ public class JAXBUtils {
     }
 
     public static void ensureAccessible(Method m) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7037
         if ((!Modifier.isPublic(m.getModifiers()) || !Modifier.isPublic(m.getDeclaringClass().getModifiers())) && !m.isAccessible()) {
             m.setAccessible(true);
         }
@@ -60,7 +61,9 @@ public class JAXBUtils {
             return new ActiveMQQueue();
         } else if (DtoAuthenticationUser.class.isAssignableFrom(elementContent.getClass())) {
             return new AuthenticationUser();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5895
         } else if (DtoFilteredDestination.class.isAssignableFrom(elementContent.getClass())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7037
             return new FilteredDestination();
         } else if (DtoSslContext.class.isAssignableFrom(elementContent.getClass())) {
             return new SpringSslContext();
@@ -73,6 +76,7 @@ public class JAXBUtils {
         Object result = parameterValues;
         if (Set.class.isAssignableFrom(aClass)) {
             result = new HashSet(parameterValues);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7037
         } else if (!Collection.class.isAssignableFrom(aClass)) {
             result = parameterValues.get(0);
         }

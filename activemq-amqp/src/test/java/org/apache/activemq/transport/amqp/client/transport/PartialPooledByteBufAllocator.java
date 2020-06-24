@@ -135,6 +135,7 @@ public class PartialPooledByteBufAllocator implements ByteBufAllocator {
 
     @Override
     public int calculateNewCapacity(int minNewCapacity, int maxCapacity) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6630
         return POOLED.calculateNewCapacity(minNewCapacity, maxCapacity);
     }
 }

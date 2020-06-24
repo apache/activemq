@@ -56,11 +56,13 @@ public class TransactionContext {
     public TransactionContext(JDBCPersistenceAdapter persistenceAdapter, int networkTimeout, int queryTimeout) throws IOException {
         this.persistenceAdapter = persistenceAdapter;
         this.dataSource = persistenceAdapter.getDataSource();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
         this.networkTimeout = networkTimeout;
         this.queryTimeout = queryTimeout;
     }
 
     public Connection getExclusiveConnection() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
         return lockAndWrapped(exclusiveConnectionLock.writeLock());
     }
 
@@ -73,18 +75,23 @@ public class TransactionContext {
             toLock.lock();
             try {
                 connection = dataSource.getConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
                 if (networkTimeout > 0) {
                     connection.setNetworkTimeout(Executors.newSingleThreadExecutor(), networkTimeout);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1492
                 if (persistenceAdapter.isChangeAutoCommitAllowed()) {
                     boolean autoCommit = !inTx;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4
                     if (connection.getAutoCommit() != autoCommit) {
                         LOG.trace("Setting auto commit to {} on connection {}", autoCommit, connection);
                         connection.setAutoCommit(autoCommit);
                     }
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
                 connection = new UnlockOnCloseConnection(connection, toLock);
             } catch (SQLException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-564
                 JDBCPersistenceAdapter.log("Could not get JDBC connection: ", e);
                 inTx = false;
                 try {
@@ -92,6 +99,7 @@ public class TransactionContext {
                 } catch (IllegalMonitorStateException oops) {
                     LOG.error("Thread does not hold the context lock on close of:"  + connection, oops);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
                 silentClose();
                 IOException ioe = IOExceptionSupport.create(e);
                 if (persistenceAdapter.getBrokerService() != null) {
@@ -101,10 +109,12 @@ public class TransactionContext {
             }
 
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2463
                 connection.setTransactionIsolation(transactionIsolation);
             } catch (Throwable e) {
                 // ignore
                 LOG.trace("Cannot set transaction isolation to " + transactionIsolation + " due " + e.getMessage()
+//IC see: https://issues.apache.org/jira/browse/AMQ-1063
                         + ". This exception is ignored.", e);
             }
         }
@@ -145,6 +155,7 @@ public class TransactionContext {
         } finally {
             try {
                 p.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
             } catch (Throwable ignored) {}
         }
     }
@@ -172,12 +183,14 @@ public class TransactionContext {
                     }
                 }
             } catch (SQLException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-564
                 JDBCPersistenceAdapter.log("Error while closing connection: ", e);
                 IOException ioe = IOExceptionSupport.create(e);
                 persistenceAdapter.getBrokerService().handleIOException(ioe);
                 throw ioe;
             } finally {
                 silentClose();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 for (Runnable completion: completions) {
                     completion.run();
                 }
@@ -191,6 +204,7 @@ public class TransactionContext {
             throw new IOException("Already started.");
         }
         inTx = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1063
         connection = getConnection();
     }
 
@@ -199,16 +213,20 @@ public class TransactionContext {
             throw new IOException("Not started.");
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
             final boolean needsCommit = !connection.getAutoCommit();
             executeBatch();
             if (needsCommit) {
                 connection.commit();
             }
         } catch (SQLException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-564
             JDBCPersistenceAdapter.log("Commit failed: ", e);
             try {
                 doRollback();
             } catch (Exception ignored) {}
+//IC see: https://issues.apache.org/jira/browse/AMQ-1780
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
             IOException ioe = IOExceptionSupport.create(e);
             persistenceAdapter.getBrokerService().handleIOException(ioe);
             throw ioe;
@@ -225,15 +243,19 @@ public class TransactionContext {
         try {
             doRollback();
         } catch (SQLException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-564
             JDBCPersistenceAdapter.log("Rollback failed: ", e);
             throw IOExceptionSupport.create(e);
         } finally {
             inTx = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1886
+//IC see: https://issues.apache.org/jira/browse/AMQ-1886
             close();
         }
     }
 
     private PreparedStatement silentClosePreparedStatement(PreparedStatement preparedStatement) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
         if (preparedStatement != null) {
             try {
                 preparedStatement.close();
@@ -250,6 +272,8 @@ public class TransactionContext {
 
     private void doRollback() throws SQLException {
         silentClosePreparedStatements();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         completions.clear();
         connection.rollback();
     }
@@ -279,14 +303,17 @@ public class TransactionContext {
     }
     
     public void setTransactionIsolation(int transactionIsolation) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2463
         this.transactionIsolation = transactionIsolation;
     }
 
     public void onCompletion(Runnable runnable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         completions.add(runnable);
     }
 
     final private class UnlockOnCloseConnection implements Connection {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
 
         private final Connection delegate;
         private final Lock lock;
@@ -308,6 +335,7 @@ public class TransactionContext {
         // simple delegate for the  rest of the impl..
         @Override
         public Statement createStatement() throws SQLException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
             Statement statement = delegate.createStatement();
             if (queryTimeout > 0) {
                 statement.setQueryTimeout(queryTimeout);
@@ -410,6 +438,7 @@ public class TransactionContext {
 
         @Override
         public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
             Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency);
             if (queryTimeout > 0) {
                 statement.setQueryTimeout(queryTimeout);
@@ -477,6 +506,7 @@ public class TransactionContext {
 
         @Override
         public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
             Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
             if (queryTimeout > 0) {
                 statement.setQueryTimeout(queryTimeout);

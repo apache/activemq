@@ -72,6 +72,7 @@ public class PeerTransportFactory extends TransportFactory {
                 broker = ID_GENERATOR.generateSanitizedId();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
             final Map<String, String> brokerOptions = new HashMap<String, String>(URISupport.parseParameters(location));
             if (!brokerOptions.containsKey("persistent")) {
                 brokerOptions.put("persistent", "false");
@@ -97,7 +98,9 @@ public class PeerTransportFactory extends TransportFactory {
                     BrokerService service = new BrokerService();
                     IntrospectionSupport.setProperties(service, brokerOptions);
                     service.setBrokerName(finalBroker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2999
                     TransportConnector c = service.addConnector("tcp://0.0.0.0:0");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1489
                     c.setDiscoveryUri(new URI("multicast://default?group=" + finalGroup));
                     service.addNetworkConnector("multicast://default?group=" + finalGroup);
                     return service;

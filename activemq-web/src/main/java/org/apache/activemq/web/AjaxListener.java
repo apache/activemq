@@ -53,6 +53,7 @@ public class AjaxListener implements MessageAvailableListener {
     }
 
     public LinkedList<UndeliveredAjaxMessage> getUndeliveredMessages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3123
         return undeliveredMessages;
     }
 
@@ -65,6 +66,7 @@ public class AjaxListener implements MessageAvailableListener {
                 Message message = consumer.receive(10);
                 LOG.debug("message is " + message);
                 if (message != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5182
                     if (!continuation.isResumed()) {
                         LOG.debug("Resuming suspended continuation {}", continuation);
                         continuation.setAttribute("undelivered_message", new UndeliveredAjaxMessage(message, consumer));
@@ -89,6 +91,7 @@ public class AjaxListener implements MessageAvailableListener {
         } else {
             try {
                 Message message = consumer.receive(10);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4589
                 bufferMessageForDelivery(message, consumer);
             } catch (Exception e) {
                 LOG.warn("Error receiving message " + e.getMessage() + ". This exception is ignored.", e);

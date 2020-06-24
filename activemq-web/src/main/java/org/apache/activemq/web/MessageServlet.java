@@ -83,10 +83,15 @@ public class MessageServlet extends MessageServletSupport {
         if (name != null) {
             maximumReadTimeout = asLong(name);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1955
+//IC see: https://issues.apache.org/jira/browse/AMQ-1453
+//IC see: https://issues.apache.org/jira/browse/AMQ-1960
         name = servletConfig.getInitParameter("replyTimeout");
         if (name != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3856
             requestTimeout = asLong(name);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3940
         name = servletConfig.getInitParameter("defaultContentType");
         if (name != null) {
             defaultContentType = name;
@@ -106,8 +111,10 @@ public class MessageServlet extends MessageServletSupport {
         // lets turn the HTTP post into a JMS Message
         try {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1933
             String action = request.getParameter("action");
             String clientId = request.getParameter("clientId");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7446
             if (clientId != null && "unsubscribe".equals(action)) {
                 LOG.info("Unsubscribing client " + clientId);
                 WebClient client = getWebClient(request);
@@ -117,6 +124,9 @@ public class MessageServlet extends MessageServletSupport {
             }
 
             WebClient client = getWebClient(request);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1955
+//IC see: https://issues.apache.org/jira/browse/AMQ-1453
+//IC see: https://issues.apache.org/jira/browse/AMQ-1960
 
             String text = getPostedMessageBody(request);
 
@@ -133,16 +143,19 @@ public class MessageServlet extends MessageServletSupport {
             boolean sync = isSync(request);
             TextMessage message = client.getSession().createTextMessage(text);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4059
             appendParametersToMessage(request, message);
             boolean persistent = isSendPersistent(request);
             int priority = getSendPriority(request);
             long timeToLive = getSendTimeToLive(request);
             client.send(destination, message, persistent, priority, timeToLive);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1227
 
             // lets return a unique URI for reliable messaging
             response.setHeader("messageID", message.getJMSMessageID());
             response.setStatus(HttpServletResponse.SC_OK);
             response.getWriter().write("Message sent");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4043
 
         } catch (JMSException e) {
             throw new ServletException("Could not post JMS message: " + e, e);
@@ -164,6 +177,8 @@ public class MessageServlet extends MessageServletSupport {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
         doMessages(request, response);
     }
 
@@ -177,8 +192,15 @@ public class MessageServlet extends MessageServletSupport {
      */
     protected void doMessages(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         MessageAvailableConsumer consumer = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4938
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1955
+//IC see: https://issues.apache.org/jira/browse/AMQ-1453
+//IC see: https://issues.apache.org/jira/browse/AMQ-1960
+//IC see: https://issues.apache.org/jira/browse/AMQ-1955
+//IC see: https://issues.apache.org/jira/browse/AMQ-1453
+//IC see: https://issues.apache.org/jira/browse/AMQ-1960
             WebClient client = getWebClient(request);
             Destination destination = getDestination(client, request);
             if (destination == null) {
@@ -189,6 +211,7 @@ public class MessageServlet extends MessageServletSupport {
 
             // Don't allow concurrent use of the consumer. Do make sure to allow
             // subsequent calls on continuation to use the consumer.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7446
             if (continuation.isInitial() && !activeConsumers.add(consumer)) {
                 throw new ServletException("Concurrent access to consumer is not supported");
             }
@@ -226,9 +249,12 @@ public class MessageServlet extends MessageServletSupport {
             if (message == null) {
                 handleContinuation(request, response, client, destination, consumer, deadline);
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
                 writeResponse(request, response, message);
                 closeConsumerOnOneShot(request, client, destination);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7446
                 activeConsumers.remove(consumer);
             }
         } catch (JMSException e) {
@@ -237,6 +263,7 @@ public class MessageServlet extends MessageServletSupport {
     }
 
     protected void handleContinuation(HttpServletRequest request, HttpServletResponse response, WebClient client, Destination destination,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5939
                                       MessageAvailableConsumer consumer, long deadline) {
         // Get an existing Continuation or create a new one if there are no events.
         Continuation continuation = ContinuationSupport.getContinuation(request);
@@ -251,12 +278,15 @@ public class MessageServlet extends MessageServletSupport {
                     ((Listener) obj).setContinuation(null);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             closeConsumerOnOneShot(request, client, destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7446
             activeConsumers.remove(consumer);
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2600
         continuation.setTimeout(timeout);
         continuation.suspend();
 
@@ -278,7 +308,9 @@ public class MessageServlet extends MessageServletSupport {
 
             // Set content type as in request. This should be done before calling getWriter by specification
             String type = getContentType(request);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7242
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5939
             if (type != null) {
                 response.setContentType(type);
             } else {
@@ -304,6 +336,7 @@ public class MessageServlet extends MessageServletSupport {
 
                 response.setStatus(HttpServletResponse.SC_OK);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
                 setResponseHeaders(response, message);
                 writeMessageResponse(writer, message);
                 writer.flush();
@@ -317,8 +350,10 @@ public class MessageServlet extends MessageServletSupport {
 
     protected void writeMessageResponse(PrintWriter writer, Message message) throws JMSException, IOException {
         if (message instanceof TextMessage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4938
             TextMessage textMsg = (TextMessage) message;
             String txt = textMsg.getText();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3856
             if (txt != null) {
                 if (txt.startsWith("<?")) {
                     txt = txt.substring(txt.indexOf("?>") + 2);
@@ -326,6 +361,7 @@ public class MessageServlet extends MessageServletSupport {
                 writer.print(txt);
             }
         } else if (message instanceof ObjectMessage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4938
             ObjectMessage objectMsg = (ObjectMessage) message;
             Object object = objectMsg.getObject();
             if (object != null) {
@@ -335,7 +371,9 @@ public class MessageServlet extends MessageServletSupport {
     }
 
     protected boolean isXmlContent(Message message) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4043
         if (message instanceof TextMessage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4938
             TextMessage textMsg = (TextMessage) message;
             String txt = textMsg.getText();
             if (txt != null) {
@@ -353,6 +391,7 @@ public class MessageServlet extends MessageServletSupport {
         String clientId = request.getParameter("clientId");
         if (clientId != null) {
             LOG.debug("Getting local client [" + clientId + "]");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7446
             return clients.computeIfAbsent(clientId, k -> new WebClient());
         } else {
             return WebClient.getWebClient(request);
@@ -362,8 +401,10 @@ public class MessageServlet extends MessageServletSupport {
     protected String getContentType(HttpServletRequest request) {
         String value = request.getParameter("xml");
         if (value != null && "true".equalsIgnoreCase(value)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4856
             return "application/xml";
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3940
         value = request.getParameter("json");
         if (value != null && "true".equalsIgnoreCase(value)) {
             return "application/json";
@@ -377,6 +418,7 @@ public class MessageServlet extends MessageServletSupport {
         response.setHeader("id", message.getJMSMessageID());
 
         // Return JMS properties as header values.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5939
         for (Enumeration names = message.getPropertyNames(); names.hasMoreElements(); ) {
             String name = (String) names.nextElement();
             response.setHeader(name, message.getObjectProperty(name).toString());
@@ -389,6 +431,7 @@ public class MessageServlet extends MessageServletSupport {
      */
     protected long getReadDeadline(HttpServletRequest request) {
         Long answer;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4938
 
         answer = (Long) request.getAttribute(readTimeoutRequestAtt);
 
@@ -442,9 +485,12 @@ public class MessageServlet extends MessageServletSupport {
             assert this.consumer == consumer;
 
             ((MessageAvailableConsumer) consumer).setAvailableListener(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4629
 
             synchronized (this.consumer) {
                 if (continuation != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3856
+//IC see: https://issues.apache.org/jira/browse/AMQ-4938
                     continuation.resume();
                 }
             }

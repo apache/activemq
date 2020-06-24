@@ -24,11 +24,13 @@ public class JMXAuditLogEntry extends AuditLogEntry {
     protected String target;
 
     public void complete() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6764
         setTimestamp(System.currentTimeMillis());
         state = 1;
     }
 
     public String getTarget() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7094
         return target;
     }
 

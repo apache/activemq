@@ -100,6 +100,7 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
 
     @Override
     public String getAdditionalConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         return "&transport.connectAttemptTimeout=1200";
     }
 
@@ -129,6 +130,7 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
                  return 1 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
              }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(250)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
 
         // and it should be closed due to inactivity
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
@@ -137,6 +139,7 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
                 return 0 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
 
         assertTrue("no exceptions", exceptions.isEmpty());
     }
@@ -146,6 +149,7 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
         int port = 0;
         switch (connectorScheme) {
             case "amqp":
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
                 port = this.amqpPort;
                 break;
             case "amqp+ssl":

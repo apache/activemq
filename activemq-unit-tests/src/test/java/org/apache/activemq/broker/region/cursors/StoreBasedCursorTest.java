@@ -41,6 +41,7 @@ import org.apache.activemq.usage.SystemUsage;
 public class StoreBasedCursorTest extends TestCase {
     protected String bindAddress = "tcp://localhost:60706";
     BrokerService broker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
     ActiveMQConnectionFactory factory;
     Connection connection;
     Session session;
@@ -70,6 +71,7 @@ public class StoreBasedCursorTest extends TestCase {
     protected void start() throws Exception {
         broker.start();
         factory = new ActiveMQConnectionFactory("vm://localhost?jms.alwaysSyncSend=true");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         factory.setWatchTopicAdvisories(false);
         connection = factory.createConnection();
         connection.start();

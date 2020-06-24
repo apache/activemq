@@ -207,6 +207,7 @@ public final class AmqpMessageSupport {
      */
     public static Binary getBinaryFromMessageBody(ActiveMQBytesMessage message) throws JMSException {
         Binary result = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         if (message.getContent() != null) {
             ByteSequence contents = message.getContent();
@@ -316,6 +317,7 @@ public final class AmqpMessageSupport {
      */
     public static Map<String, Object> getMapFromMessageBody(ActiveMQMapMessage message) throws JMSException {
         final HashMap<String, Object> map = new LinkedHashMap<String, Object>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         final Map<String, Object> contentMap = message.getContentMap();
         if (contentMap != null) {

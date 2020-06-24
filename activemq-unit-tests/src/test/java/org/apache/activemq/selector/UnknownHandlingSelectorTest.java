@@ -170,6 +170,8 @@ public class UnknownHandlingSelectorTest {
     protected void assertSelector(String text, boolean matches) throws JMSException {
         BooleanExpression selector = SelectorParser.parse(text);
         assertTrue("Created a valid selector", selector != null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
         NonCachedMessageEvaluationContext context = new NonCachedMessageEvaluationContext();
         context.setMessageReference((org.apache.activemq.command.Message)message);
         boolean value = selector.matches(context);

@@ -44,12 +44,14 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
     static final Logger LOG = LoggerFactory.getLogger(PListImpl.class);
     final PListStoreImpl store;
     private String name;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2910
     Object indexLock;
     private final SizeStatisticImpl messageSize;
 
     PListImpl(PListStoreImpl store) {
         this.store = store;
         this.indexLock = store.getIndexLock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         setPageFile(store.getPageFile());
         setKeyMarshaller(StringMarshaller.INSTANCE);
         setValueMarshaller(LocationMarshaller.INSTANCE);
@@ -68,6 +70,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
     }
 
     void read(DataInput in) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         setHeadPageId(in.readLong());
     }
 
@@ -88,6 +91,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
     class Locator {
         final String id;
 
@@ -111,6 +115,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
                 }
             });
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         return new Locator(id);
     }
 
@@ -125,6 +130,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
                 }
             });
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         return new Locator(id);
     }
 
@@ -138,6 +144,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
 
     public boolean remove(final String id) throws IOException {
         final AtomicBoolean result = new AtomicBoolean();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2910
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                 @Override
@@ -183,6 +190,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         }
         if (ref.get() != null) {
             ByteSequence bs = this.store.getPayload(ref.get().getValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
             result = new PListEntry(ref.get().getKey(), bs, new Locator(ref.get().getKey()));
         }
         return result;
@@ -191,6 +199,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
     public PListEntry getFirst() throws IOException {
         PListEntry result = null;
         final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2910
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                 @Override
@@ -201,6 +210,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         }
         if (ref.get() != null) {
             ByteSequence bs = this.store.getPayload(ref.get().getValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
             result = new PListEntry(ref.get().getKey(), bs, new Locator(ref.get().getKey()));
         }
         return result;
@@ -219,6 +229,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         }
         if (ref.get() != null) {
             ByteSequence bs = this.store.getPayload(ref.get().getValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
             result = new PListEntry(ref.get().getKey(), bs, new Locator(ref.get().getKey()));
         }
         return result;
@@ -240,6 +251,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
 
         PListIteratorImpl() throws IOException {
             tx = store.pageFile.tx();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
             synchronized (indexLock) {
                 this.iterator = iterator(tx);
             }
@@ -247,6 +259,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
 
         @Override
         public boolean hasNext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3982
             return iterator.hasNext();
         }
 
@@ -261,6 +274,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
                 e.initCause(unexpected);
                 throw e;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
             return new PListEntry(entry.getKey(), bs, new Locator(entry.getKey()));
         }
 
@@ -284,6 +298,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
 
         @Override
         public void release() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
             try {
                 tx.rollback();
             } catch (IOException unexpected) {
@@ -295,6 +310,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
     }
 
     public void claimFileLocations(final Set<Integer> candidates) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2910
         synchronized (indexLock) {
             if (loaded.get()) {
                 this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
@@ -360,6 +376,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         return name + "[headPageId=" + getHeadPageId()  + ",tailPageId=" + getTailPageId() + ", size=" + size() + "]";
     }
 }

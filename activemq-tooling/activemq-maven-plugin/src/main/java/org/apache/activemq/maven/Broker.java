@@ -123,6 +123,7 @@ public class Broker {
      * Return the broker service created.
      */
     public static BrokerService getBroker() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5499
         return broker;
     }
 

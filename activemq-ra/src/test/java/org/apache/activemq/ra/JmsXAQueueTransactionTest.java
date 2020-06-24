@@ -50,6 +50,7 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
 
     @Override
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
         super.setUp();
     }
@@ -120,6 +121,7 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
     }
 
     protected void abortTx() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7485
         xaResource.end(xid, XAResource.TMFAIL);
         xaResource.rollback(xid);
         xid = null;
@@ -144,6 +146,7 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
 
     public void testSendOnAbortedXATx() throws Exception {
         connection.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7485
 
         ConnectionFactory connectionFactory = newConnectionFactory();
         connection = connectionFactory.createConnection();

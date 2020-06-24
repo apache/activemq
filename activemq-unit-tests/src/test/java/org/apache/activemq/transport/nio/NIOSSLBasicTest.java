@@ -89,6 +89,7 @@ public class NIOSSLBasicTest {
 
     @Test
     public void basicConnector() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true");
         basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort() + "?socket.verifyHostName=false");
         stopBroker(broker);
@@ -96,6 +97,7 @@ public class NIOSSLBasicTest {
 
     @Test
     public void enabledCipherSuites() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7167
         BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true&transport.verifyHostName=false&transport.enabledCipherSuites=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256");
         basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort() + "?socket.verifyHostName=false");
         stopBroker(broker);
@@ -112,6 +114,7 @@ public class NIOSSLBasicTest {
     @Test(expected = Exception.class)
     public void verifyHostNameErrorClient() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7167
         final CountDownLatch gotLogMessage = new CountDownLatch(1);
         final AtomicBoolean gotRemoteAddressInLog = new AtomicBoolean();
         final DefaultTestAppender appender = new DefaultTestAppender() {
@@ -132,6 +135,7 @@ public class NIOSSLBasicTest {
         BrokerService broker = null;
         try {
             broker = createBroker("nio+ssl", getTransportType() + "://localhost:61616?transport.needClientAuth=true");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5407
             basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort());
         } finally {
             gotLogMessage.await(5, TimeUnit.SECONDS);
@@ -160,6 +164,7 @@ public class NIOSSLBasicTest {
     }
 
     protected String getTransportType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         return "nio+ssl";
     }
 }

@@ -46,6 +46,7 @@ public final class SelectorManager {
     private int maxChannelsPerWorker = -1;
 
     protected ExecutorService createDefaultExecutor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6184
         ThreadPoolExecutor rc = new ThreadPoolExecutor(getDefaultCorePoolSize(), getDefaultMaximumPoolSize(), getDefaultKeepAliveTime(), TimeUnit.SECONDS, newWorkQueue(),
             new ThreadFactory() {
 
@@ -54,10 +55,12 @@ public final class SelectorManager {
                 @Override
                 public Thread newThread(Runnable runnable) {
                     Thread t = new Thread(runnable, "ActiveMQ NIO Worker " + (i++));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6108
                     t.setDaemon(true);
                     return t;
                 }
             }, newRejectionHandler());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5486
 
         return rc;
     }
@@ -67,6 +70,7 @@ public final class SelectorManager {
     }
 
     private BlockingQueue<Runnable> newWorkQueue() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6184
         final int workQueueCapicity = getDefaultWorkQueueCapacity();
         return workQueueCapicity > 0 ? new LinkedBlockingQueue<Runnable>(workQueueCapicity) : new SynchronousQueue<Runnable>();
     }
@@ -80,18 +84,22 @@ public final class SelectorManager {
     }
 
     private static int getDefaultCorePoolSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6184
         return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.corePoolSize", 10);
     }
 
     private static int getDefaultMaximumPoolSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6184
         return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.maximumPoolSize", 1024);
     }
 
     private static int getDefaultKeepAliveTime() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4205
         return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.keepAliveTime", 30);
     }
 
     private static int getDefaultMaxChannelsPerWorker() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6184
         return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.maxChannelsPerWorker", 1024);
     }
 
@@ -107,6 +115,7 @@ public final class SelectorManager {
 
     public synchronized SelectorSelection register(AbstractSelectableChannel selectableChannel, Listener listener) throws IOException {
         SelectorSelection selection = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5269
         while (selection == null) {
             if (freeWorkers.size() > 0) {
                 SelectorWorker worker = freeWorkers.getFirst();
@@ -136,6 +145,7 @@ public final class SelectorManager {
     }
 
     public synchronized void onWorkerNotFullEvent(SelectorWorker worker) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2440
         freeWorkers.addFirst(worker);
     }
 
@@ -148,6 +158,7 @@ public final class SelectorManager {
     }
 
     public int getMaxChannelsPerWorker() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6184
         return maxChannelsPerWorker >= 0 ? maxChannelsPerWorker : getDefaultMaxChannelsPerWorker();
     }
 

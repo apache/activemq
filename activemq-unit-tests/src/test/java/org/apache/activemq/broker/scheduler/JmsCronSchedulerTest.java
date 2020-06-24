@@ -62,6 +62,7 @@ public class JmsCronSchedulerTest extends JobSchedulerTestSupport {
             @Override
             public void onMessage(Message message) {
                 count.incrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5113
                 latch.countDown();
                 assertTrue(message instanceof TextMessage);
                 TextMessage tm = (TextMessage) message;
@@ -99,6 +100,8 @@ public class JmsCronSchedulerTest extends JobSchedulerTestSupport {
     @Test
     public void testCronScheduleWithTtlSet() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3278
+//IC see: https://issues.apache.org/jira/browse/AMQ-3271
         Connection connection = createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(destination);

@@ -40,6 +40,7 @@ public class JmxCreateNCTest {
     public void testBridgeRegistration() throws Exception {
 
         System.setProperty("org.apache.activemq.audit", "all");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7094
 
         BrokerService broker = new BrokerService();
         broker.setBrokerName(BROKER_NAME);

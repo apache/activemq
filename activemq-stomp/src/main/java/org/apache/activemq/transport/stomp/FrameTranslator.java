@@ -41,6 +41,7 @@ public interface FrameTranslator {
     String convertDestination(ProtocolConverter converter, Destination d);
 
     ActiveMQDestination convertDestination(ProtocolConverter converter, String name, boolean forceFallback) throws ProtocolException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3496
 
     /**
      * Helper class which holds commonly needed functions used when implementing
@@ -75,14 +76,17 @@ public interface FrameTranslator {
                 headers.put(Stomp.Headers.Message.TYPE, message.getJMSType());
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
             if (message.getUserID() != null) {
                 headers.put(Stomp.Headers.Message.USERID, message.getUserID());
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3146
             if (message.getOriginalDestination() != null) {
                 headers.put(Stomp.Headers.Message.ORIGINAL_DESTINATION, ft.convertDestination(converter, message.getOriginalDestination()));
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3475
             if (message.isPersistent()) {
                 headers.put(Stomp.Headers.Message.PERSISTENT, Stomp.TRUE);
             }
@@ -100,6 +104,7 @@ public interface FrameTranslator {
             final Map<String, String> headers = new HashMap<String, String>(command.getHeaders());
             final String destination = headers.remove(Stomp.Headers.Send.DESTINATION);
             msg.setDestination(ft.convertDestination(converter, destination, true));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3496
 
             // the standard JMS headers
             msg.setJMSCorrelationID(headers.remove(Stomp.Headers.Send.CORRELATION_ID));
@@ -109,6 +114,7 @@ public interface FrameTranslator {
                 msg.setJMSExpiration(Long.parseLong((String)o));
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4468
             o = headers.remove(Stomp.Headers.Message.TIMESTAMP);
             if (o != null) {
                 msg.setJMSTimestamp(Long.parseLong((String)o));
@@ -119,6 +125,7 @@ public interface FrameTranslator {
             o = headers.remove(Stomp.Headers.Send.PRIORITY);
             if (o != null) {
                 msg.setJMSPriority(Integer.parseInt((String)o));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3006
             } else {
                 msg.setJMSPriority(javax.jms.Message.DEFAULT_PRIORITY);
             }
@@ -130,6 +137,7 @@ public interface FrameTranslator {
 
             o = headers.remove(Stomp.Headers.Send.REPLY_TO);
             if (o != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3496
                 try {
                     ActiveMQDestination dest = ft.convertDestination(converter, (String)o, false);
                     msg.setJMSReplyTo(dest);
@@ -145,6 +153,7 @@ public interface FrameTranslator {
 
             // STOMP specific headers
             headers.remove(Stomp.Headers.RECEIPT_REQUESTED);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2817
 
             // Since we take the rest of the header and put them in properties which could then
             // be sent back to a STOMP consumer we need to sanitize anything which could be in

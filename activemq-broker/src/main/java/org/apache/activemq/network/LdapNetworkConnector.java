@@ -212,6 +212,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
             env.put(Context.SECURITY_AUTHENTICATION, "none");
         } else {
             LOG.debug("    login credentials [{}:******]", user);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5345
             if (user != null && !"".equals(user)) {
                 env.put(Context.SECURITY_PRINCIPAL, user);
             } else {
@@ -314,6 +315,8 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         connector.setDynamicOnly(isDynamicOnly());
         connector.setDecreaseNetworkConsumerPriority(isDecreaseNetworkConsumerPriority());
         connector.setNetworkTTL(getNetworkTTL());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         connector.setConsumerTTL(getConsumerTTL());
         connector.setMessageTTL(getMessageTTL());
         connector.setConduitSubscriptions(isConduitSubscriptions());

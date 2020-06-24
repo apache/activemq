@@ -121,7 +121,11 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     public static void initContext(ServletContext context) {
         initConnectionFactory(context);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1955
+//IC see: https://issues.apache.org/jira/browse/AMQ-1453
+//IC see: https://issues.apache.org/jira/browse/AMQ-1960
         context.setAttribute("webClients", new HashMap<String, WebClient>());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1547
         if (selectorName == null) {
             selectorName = context.getInitParameter(SELECTOR_NAME);
         }
@@ -139,6 +143,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     }
 
     public String getUsername() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3924
         return username;
     }
 
@@ -172,6 +177,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     public synchronized void close() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1933
             if (consumers != null) {
                 closeConsumers();
             }
@@ -218,6 +224,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
                 try {
                     Destination destination = destinationName.startsWith("topic://") ? (Destination)getSession().createTopic(destinationName) : (Destination)getSession().createQueue(destinationName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1547
                     consumers.put(destination, getConsumer(destination, null, true));
                 } catch (JMSException e) {
                     LOG.debug("Caought Exception ", e);
@@ -254,9 +261,12 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     public Connection getConnection() throws JMSException {
         if (connection == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4110
             if (username != null && password != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3924
                 connection = factory.createConnection(username, password);
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1241
                 connection = factory.createConnection();
             }
             connection.start();
@@ -266,6 +276,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     protected static synchronized void initConnectionFactory(ServletContext servletContext) {
         if (factory == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5654
             factory = (ActiveMQConnectionFactory)servletContext.getAttribute(CONNECTION_FACTORY_ATTRIBUTE);
         }
         if (factory == null) {
@@ -274,6 +285,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
             if (brokerURL == null) {
                 LOG.debug("Couldn't find " + BROKER_URL_INIT_PARAM + " param, trying to find a broker embedded in a local VM");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4418
                 BrokerService broker = BrokerRegistry.getInstance().findFirst();
                 if (broker == null) {
                     throw new IllegalStateException("missing brokerURL (specified via " + BROKER_URL_INIT_PARAM + " init-Param) or embedded broker");
@@ -283,6 +295,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
             }
 
             LOG.debug("Using broker URL: " + brokerURL);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5654
             String username = getInitParameter(servletContext, USERNAME_INIT_PARAM);
             String password = getInitParameter(servletContext, PASSWORD_INIT_PARAM);
             ActiveMQConnectionFactory amqfactory = new ActiveMQConnectionFactory(username, password, brokerURL);
@@ -306,6 +319,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     }
 
     private static String getInitParameter(ServletContext servletContext, String initParam) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5654
         String result = servletContext.getInitParameter(initParam);
         if(result != null && result.startsWith("${") && result.endsWith("}"))
         {
@@ -327,6 +341,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     }
 
     public synchronized MessageConsumer getConsumer(Destination destination, String selector) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1547
         return getConsumer(destination, selector, true);
     }
 
@@ -356,6 +371,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     }
 
     protected Session createSession() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1241
         return getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
@@ -379,8 +395,10 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     protected static WebClient createWebClient(HttpServletRequest request) {
         WebClient client = new WebClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3924
 
         String auth = request.getHeader("Authorization");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5654
         if (factory.getUserName() == null && factory.getPassword() == null && auth != null) {
             String[] tokens = auth.split(" ");
             if (tokens.length == 2) {

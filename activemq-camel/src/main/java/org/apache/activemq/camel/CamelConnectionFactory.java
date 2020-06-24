@@ -45,6 +45,7 @@ public class CamelConnectionFactory extends ActiveMQConnectionFactory implements
     // Implementation methods
     //-----------------------------------------------------------------------
     protected CamelConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
         CamelConnection connection = new CamelConnection(transport, getClientIdGenerator(), getConnectionIdGenerator(), stats);
         CamelContext context = getCamelContext();
         if (context != null) {

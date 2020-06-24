@@ -135,6 +135,7 @@ public class DestinationMapTest extends TestCase {
         assertMapValue(">", allValues);
         assertMapValue("TEST.>", allValues);
         assertMapValue("*.>", allValues);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4884
         assertMapValue("TEST.*.>", allValues);
         assertMapValue("TEST.*.*.>", v2,v3);
 
@@ -192,6 +193,7 @@ public class DestinationMapTest extends TestCase {
     }
 
     public void testDoubleWildcardDoesNotMatchLongerPattern() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1068
         put("TEST.*", v1);
         put("TEST.BAR.D3", v2);
 
@@ -231,6 +233,7 @@ public class DestinationMapTest extends TestCase {
     }
 
     public void testMQTTMappedWildcards() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5074
         put("TopicA", v1);
         put(".TopicA", v2);
         put("TopicA.", v3);
@@ -319,6 +322,7 @@ public class DestinationMapTest extends TestCase {
 
     public void testAddAndRemove() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-808
         put("FOO.A", v1);
         assertMapValue("FOO.>", v1);
 
@@ -331,6 +335,7 @@ public class DestinationMapTest extends TestCase {
     }
 
     public void testRemoveWildcard() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5594
         put("FOO.A", v1);
         put("FOO.>", v2);
 
@@ -338,6 +343,7 @@ public class DestinationMapTest extends TestCase {
 
         assertMapValue("FOO.A", null);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5594
         put("FOO.A", v1);
         put("FOO.>", v2);
 

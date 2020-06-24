@@ -30,6 +30,7 @@ public class JournalDurableSubscriptionTest extends DurableSubscriptionTestSuppo
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {
         File dataDir = new File("target/test-data/durableJournal");
         JournalPersistenceAdapterFactory factory = new JournalPersistenceAdapterFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-825
         factory.setDataDirectoryFile(dataDir);
         factory.setUseJournal(true);
         factory.setJournalLogFileSize(1024 * 64);

@@ -89,6 +89,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     protected int authMode = Session.AUTO_ACKNOWLEDGE;
     protected static final int MESSAGE_COUNT = 2*BaseDestination.MAX_PAGE_SIZE;
     final static String QUEUE_WITH_OPTIONS = "QueueWithOptions";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4162
 
     /**
      * When you run this test case from the command line it will pause before
@@ -101,29 +102,37 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testConnectors() throws Exception{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         assertEquals("openwire URL port doesn't equal bind Address",
+//IC see: https://issues.apache.org/jira/browse/AMQ-3918
                      new URI(broker.getTransportConnectorByType("tcp")).getPort(),
                      new URI(this.broker.getTransportConnectors().get(0).getPublishableConnectString()).getPort());
     }
 
     public void testMBeans() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         connection = connectionFactory.createConnection();
         useConnection(connection);
 
         // test all the various MBeans now we have a producer, consumer and
         // messages on a queue
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         assertSendViaMBean();
         assertSendCsnvViaMBean();
         assertQueueBrowseWorks();
         assertCreateAndDestroyDurableSubscriptions();
+//IC see: https://issues.apache.org/jira/browse/AMQ-928
         assertConsumerCounts();
         assertProducerCounts();
     }
 
     public void testMoveMessages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
         connection = connectionFactory.createConnection();
         useConnection(connection);
 
@@ -149,6 +158,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
 
         assertTrue("dest has some memory usage", queue.getMemoryPercentUsage() > 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2487
 
         echo("About to move " + messageCount + " messages");
 
@@ -163,12 +173,16 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         int actualCount = compdatalist.length;
         echo("Current queue size: " + actualCount);
         assertEquals("Should now have empty queue but was", initialQueueSize - messageCount, actualCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
+//IC see: https://issues.apache.org/jira/browse/AMQ-1914
 
         echo("Now browsing the second queue");
 
         queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + newDestination );
         QueueViewMBean queueNew = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2487
         long newQueuesize = queueNew.getQueueSize();
         echo("Second queue size: " + newQueuesize);
         assertEquals("Unexpected number of messages ",messageCount, newQueuesize);
@@ -176,13 +190,17 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         // check memory usage migration
         assertTrue("new dest has some memory usage", queueNew.getMemoryPercentUsage() > 0);
         assertEquals("old dest has no memory usage", 0, queue.getMemoryPercentUsage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3149
+//IC see: https://issues.apache.org/jira/browse/AMQ-3145
         assertTrue("use cache", queueNew.isUseCache());
         assertTrue("cache enabled", queueNew.isCacheEnabled());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
         assertEquals("no forwards", 0, queueNew.getForwardCount());
     }
 
     public void testMoveFromDLQImmediateDLQ() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6847
         RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
         redeliveryPolicy.setMaximumRedeliveries(0);
         ((ActiveMQConnectionFactory)connectionFactory).setRedeliveryPolicy(redeliveryPolicy);
@@ -206,6 +224,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             }});
 
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6847
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
         QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
@@ -257,6 +276,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         echo("Now browsing the second queue");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + newDestination );
         QueueViewMBean queueNew = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
@@ -277,6 +297,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testMoveCopyToSameDestFails() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6690
         connection = connectionFactory.createConnection();
         useConnection(connection);
 
@@ -304,9 +325,11 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testRemoveMessages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
         broker.addQueue(getDestinationString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3193
 
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
 
@@ -337,6 +360,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testRemoveQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4711
         String queueName = "TEST";
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
@@ -369,12 +393,15 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         connection = connectionFactory.createConnection();
         useConnection(connection);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
         QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         long initialQueueSize = queue.getQueueSize();
         echo("current queue size: " + initialQueueSize);
         assertTrue("dest has some memory usage", queue.getMemoryPercentUsage() > 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2487
 
         // lets create a duff consumer which keeps rolling back...
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
@@ -391,8 +418,10 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         // now lets get the dead letter queue
         Thread.sleep(1000);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName dlqQueueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME );
         QueueViewMBean dlq = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, dlqQueueViewMBeanName, QueueViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         long initialDlqSize = dlq.getQueueSize();
         CompositeData[] compdatalist = dlq.browse();
@@ -413,6 +442,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
 
         int dlqMemUsage = dlq.getMemoryPercentUsage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2487
         assertTrue("dlq has some memory usage", dlqMemUsage > 0);
         assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
 
@@ -444,14 +474,19 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         useConnection(connection);
 
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString() );
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
         String newDestination = getSecondDestinationString();
         queue.moveMatchingMessagesTo("counter > 2", newDestination);
 
         queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + newDestination);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
         QueueViewMBean queueNew = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
         int movedSize = MESSAGE_COUNT-3;
         assertEquals("Unexpected number of messages ",movedSize,queueNew.getQueueSize());
@@ -472,17 +507,22 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         useConnection(connection);
 
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
         String newDestination = getSecondDestinationString();
         long queueSize = queue.getQueueSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         assertTrue(queueSize > 0);
         queue.copyMatchingMessagesTo("counter > 2", newDestination);
 
         queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + newDestination);
 
         QueueViewMBean queueTwo = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
 
         LOG.info("Queue: " + queueViewMBeanName + " now has: " + queueTwo.getQueueSize() + " message(s)");
         assertEquals("Expected messages in a queue: " + queueViewMBeanName, MESSAGE_COUNT-3, queueTwo.getQueueSize());
@@ -525,6 +565,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testCopyPurgeCopyBack() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6703
         connection = connectionFactory.createConnection();
         final int numMessages = 100;
         useConnection(connection, numMessages);
@@ -563,9 +604,11 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testCreateDestinationWithSpacesAtEnds() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4330
         assertTrue("broker is not a slave", !broker.isSlave());
         // create 2 topics
         broker.addTopic(getDestinationString() + "1 ");
@@ -616,11 +659,13 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         QueueViewMBean proxy = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
         proxy.purge();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
 
         int count = 5;
         for (int i = 0; i < count; i++) {
             String body = "message:" + i;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
             Map<String, Object> headers = new HashMap<String, Object>();
             headers.put("JMSCorrelationID", "MyCorrId");
             headers.put("JMSDeliveryMode", Boolean.FALSE);
@@ -655,11 +700,13 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
                 echo("Columns: " + cdata.getCompositeType().keySet());
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
             assertComplexData(i, cdata, "JMSCorrelationID", "MyCorrId");
             assertComplexData(i, cdata, "JMSPriority", i + 1);
             assertComplexData(i, cdata, "JMSType", "MyType");
             assertComplexData(i, cdata, "JMSCorrelationID", "MyCorrId");
             assertComplexData(i, cdata, "JMSDeliveryMode", "NON-PERSISTENT");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
             String expected = "{MyStringHeader=StringHeader" + i + ", MyHeader=" + i + "}";
             // The order of the properties is different when using the ibm jdk.
             if (System.getProperty("java.vendor").equals("IBM Corporation")) {
@@ -683,11 +730,13 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
                 assertEquals("stringProperties.MyHeader", "StringHeader" + i, stringProperties.get("MyStringHeader"));
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
             Map properties = CompositeDataHelper.getMessageUserProperties(cdata);
             assertEquals("properties size()", 2, properties.size());
             assertEquals("properties.MyHeader", allStrings ? "" + i : i, properties.get("MyHeader"));
             assertEquals("properties.MyHeader", "StringHeader" + i, properties.get("MyStringHeader"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
             assertComplexData(i, cdata, "JMSXGroupSeq", 1234);
             assertComplexData(i, cdata, "JMSXGroupID", "MyGroupID");
             assertComplexData(i, cdata, "Text", "message:" + i);
@@ -697,8 +746,11 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     protected void assertSendCsnvViaMBean() throws Exception {
         String queueName = getDestinationString() + ".SendMBBean";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         echo("Create QueueView MBean...");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
         broker.addQueue(queueName);
 
@@ -741,6 +793,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         echo("Create QueueView MBean...");
         QueueViewMBean proxy = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         long concount = proxy.getConsumerCount();
         echo("Consumer Count :" + concount);
@@ -769,6 +822,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue("Table should not be empty!", table.size() > 0);
 
         assertEquals("Queue size", MESSAGE_COUNT, proxy.getQueueSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1678
 
         String messageID = messageIDs[0];
         String newDestinationName = "queue://dummy.test.cheese";
@@ -791,6 +845,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         echo("Create QueueView MBean...");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         broker.addTopic(getDestinationString());
 
@@ -801,6 +856,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName name1 = broker.createDurableSubscriber(clientID, "subscriber1", topicName, selector);
         broker.createDurableSubscriber(clientID, "subscriber2", topicName, selector);
         assertEquals("Durable subscriber count", 2, broker.getInactiveDurableTopicSubscribers().length);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3013
 
         assertNotNull("Should have created an mbean name for the durable subscriber!", name1);
 
@@ -808,6 +864,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         // now lets try destroy it
         broker.destroyDurableSubscriber(clientID, "subscriber1");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3013
         assertEquals("Durable subscriber count", 1, broker.getInactiveDurableTopicSubscribers().length);
     }
 
@@ -822,6 +879,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         ObjectName topicObjName1 = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=" + getDestinationString() + "1");
         ObjectName topicObjName2 = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=" + getDestinationString() + "2");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
         TopicViewMBean topic1 = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName1, TopicViewMBean.class, true);
         TopicViewMBean topic2 = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName2, TopicViewMBean.class, true);
 
@@ -864,9 +922,17 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void assertProducerCounts() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-984
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
+//IC see: https://issues.apache.org/jira/browse/AMQ-4330
+//IC see: https://issues.apache.org/jira/browse/AMQ-4330
         assertTrue("broker is not a slave", !broker.isSlave());
         // create 2 topics
         broker.addTopic(getDestinationString() + "1");
@@ -874,6 +940,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         ObjectName topicObjName1 = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=" + getDestinationString() + "1");
         ObjectName topicObjName2 = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=" + getDestinationString() + "2");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
         TopicViewMBean topic1 = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName1, TopicViewMBean.class, true);
         TopicViewMBean topic2 = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName2, TopicViewMBean.class, true);
 
@@ -928,7 +995,9 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("topic1 Producer count", 0, topic1.getProducerCount());
         assertEquals("topic2 Producer count", 0, topic2.getProducerCount());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         MessageProducer producer4 = session.createProducer(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         Thread.sleep(500);
         assertEquals(1, broker.getDynamicDestinationProducers().length);
         producer4.close();
@@ -955,6 +1024,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     protected ObjectName assertNotRegisteredObjectName(String name) throws MalformedObjectNameException, NullPointerException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3586
         ObjectName objectName = new ObjectName(name);
         if (mbeanServer.isRegistered(objectName)) {
             fail("Found the MBean!: " + objectName);
@@ -966,12 +1036,16 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     @Override
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         bindAddress = "tcp://localhost:0";
         useTopic = false;
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ManagementContext managementContext = broker.getManagementContext();
         mbeanServer = managementContext.getMBeanServer();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6208
         broker.getTransportConnectorByScheme("tcp").setUpdateClusterClientsOnRemove(true);
     }
 
@@ -996,17 +1070,20 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     @Override
     protected ConnectionFactory createConnectionFactory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
     }
 
     @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
         answer.setPersistent(false);
         answer.setDeleteAllMessagesOnStartup(true);
         answer.setUseJmx(true);
 
         // apply memory limit so that %usage is visible
+//IC see: https://issues.apache.org/jira/browse/AMQ-2487
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setMemoryLimit(1024*1024*4);
@@ -1015,6 +1092,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         // allow options to be visible via jmx
         answer.setDestinations(new ActiveMQDestination[]{new ActiveMQQueue(QUEUE_WITH_OPTIONS + "?topQueue=true&hasOptions=2")});
+//IC see: https://issues.apache.org/jira/browse/AMQ-4162
 
         answer.addConnector(bindAddress);
         return answer;
@@ -1026,6 +1104,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         Session session = connection.createSession(transacted, authMode);
         destination = createDestination();
         MessageProducer producer = session.createProducer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5229
         for (int i = 0; i < numToSend; i++) {
             Message message = session.createTextMessage("Message: " + i);
             message.setIntProperty("counter", i);
@@ -1039,6 +1118,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void useConnection(Connection connection) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5229
         useConnection(connection, MESSAGE_COUNT);
     }
 
@@ -1061,15 +1141,20 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void useConnectionWithByteMessage(Connection connection) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3180
         connection.setClientID(clientID);
         connection.start();
         ActiveMQSession session = (ActiveMQSession) connection.createSession(transacted, authMode);
         destination = createDestination();
         MessageProducer producer = session.createProducer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1678
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             BytesMessage message = session.createBytesMessage();
             message.writeBytes(("Message: " + i).getBytes());
+//IC see: https://issues.apache.org/jira/browse/AMQ-896
+//IC see: https://issues.apache.org/jira/browse/AMQ-837
             message.setIntProperty("counter", i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
             message.setJMSCorrelationID("MyCorrelationID");
             message.setJMSReplyTo(new ActiveMQQueue("MyReplyTo"));
             message.setJMSType("MyType");
@@ -1084,14 +1169,17 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     protected String getSecondDestinationString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
         return "test.new.destination." + getClass() + "." + getName();
     }
 
     public void testDynamicProducerView() throws Exception {
         connection = connectionFactory.createConnection();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         assertEquals(0, broker.getDynamicDestinationProducers().length);
 
@@ -1109,6 +1197,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         ObjectName viewName = broker.getDynamicDestinationProducers()[0];
         assertNotNull(viewName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
         ProducerViewMBean view = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, viewName, ProducerViewMBean.class, true);
         assertNotNull(view);
 
@@ -1142,6 +1231,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     public void testTempQueueJMXDelete() throws Exception {
         connection = connectionFactory.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3041
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
 
         connection.setClientID(clientID);
         connection.start();
@@ -1149,6 +1240,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ActiveMQTempQueue tQueue = (ActiveMQTempQueue) session.createTemporaryQueue();
         Thread.sleep(1000);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType="
                 + JMXSupport.encodeObjectNamePart(tQueue.getDestinationTypeAsString())
                 + ",destinationName=" + JMXSupport.encodeObjectNamePart(tQueue.getPhysicalName()));
@@ -1175,6 +1267,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         useConnectionWithBlobMessage(connection);
 
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
@@ -1201,10 +1294,13 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     public void testDestinationOptionsAreVisible() throws Exception {
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + QUEUE_WITH_OPTIONS );
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         assertEquals("name match", QUEUE_WITH_OPTIONS, queue.getName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4162
 
         String options = queue.getOptions();
         LOG.info("Got options: " + options);
@@ -1220,6 +1316,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     public void testSubscriptionViewToConnectionMBean() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1907
         connection = connectionFactory.createConnection("admin", "admin");
         connection.setClientID("MBeanTest");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -1238,6 +1335,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         LOG.info("Looking for Subscription: " + subscriptionName);
 
         SubscriptionViewMBean subscriberView =
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             MBeanServerInvocationHandler.newProxyInstance(
                     mbeanServer, subscriptionName, SubscriptionViewMBean.class, true);
         assertNotNull(subscriberView);
@@ -1246,14 +1344,18 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         LOG.info("Looking for Connection: " + connectionName);
         assertNotNull(connectionName);
         ConnectionViewMBean connectionView =
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             MBeanServerInvocationHandler.newProxyInstance(
                     mbeanServer, connectionName, ConnectionViewMBean.class, true);
         assertNotNull(connectionView);
 
         // Our consumer plus one advisory consumer.
         assertEquals(2, connectionView.getConsumers().length);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1905
 
         assertEquals("client id match", "MBeanTest", connectionView.getClientId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         // Check that the subscription view we found earlier is in this list.
         boolean found = false;
@@ -1280,6 +1382,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     public void testCreateAndUnsubscribeDurableSubscriptions() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3802
         connection = connectionFactory.createConnection("admin", "admin");
         connection.setClientID("MBeanTest");
 
@@ -1287,9 +1390,12 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         String topicName = getDestinationString() + ".DurableTopic";
         Topic topic = session.createTopic(topicName);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         echo("Create QueueView MBean...");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         assertEquals("Durable subscriber count", 0, broker.getDurableTopicSubscribers().length);
         assertEquals("Durable subscriber count", 0, broker.getInactiveDurableTopicSubscribers().length);
@@ -1322,6 +1428,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testUserNamePopulated() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         doTestUserNameInMBeans(true);
     }
 
@@ -1338,13 +1445,18 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination queue = session.createQueue(getDestinationString() + ".Queue");
         Topic topic = session.createTopic(getDestinationString() + ".Topic");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1905
         MessageProducer producer = session.createProducer(queue);
         MessageConsumer queueConsumer = session.createConsumer(queue);
         MessageConsumer topicConsumer = session.createConsumer(topic);
         MessageConsumer durable = session.createDurableSubscriber(topic, "Durable");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         Thread.sleep(100);
 
@@ -1353,6 +1465,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue(broker.getQueueSubscribers().length == 1);
 
         ObjectName producerName = broker.getQueueProducers()[0];
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
         ProducerViewMBean producerView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, producerName, ProducerViewMBean.class, true);
         assertNotNull(producerView);
 
@@ -1372,6 +1485,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
 
         for (ObjectName name : broker.getQueueSubscribers()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
             SubscriptionViewMBean subscriberView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true);
             if (expect) {
                 assertEquals("admin", subscriberView.getUserName());
@@ -1388,6 +1503,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             if (name.toString().endsWith("connectionName=MBeanTest")) {
 
                 ConnectionViewMBean connectionView =
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
                     MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, ConnectionViewMBean.class, true);
                 assertNotNull(connectionView);
 
@@ -1406,12 +1522,15 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testMoveMessagesToRetainOrder() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3846
         connection = connectionFactory.createConnection();
         useConnection(connection);
 
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         String newDestination = getSecondDestinationString();
         queue.moveMatchingMessagesTo("", newDestination);
@@ -1446,6 +1565,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     public void testConnectionCounts() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
@@ -1465,6 +1585,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         useConnection(connection);
 
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
@@ -1476,6 +1597,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
         int movedSize = MESSAGE_COUNT;
         assertEquals("Unexpected number of messages ",movedSize,queue.getQueueSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1678
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = session.createQueue(newDestination);
@@ -1506,6 +1628,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
 
         QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         String queueName = getDestinationString();
         queue.removeMatchingMessages("counter < 10");
@@ -1532,10 +1655,13 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         queue.removeMatchingMessages("");
 
         assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2487
+//IC see: https://issues.apache.org/jira/browse/AMQ-2487
         assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
     }
 
     public void testBrowseBytesMessages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3180
         connection = connectionFactory.createConnection();
         useConnectionWithByteMessage(connection);
 
@@ -1580,6 +1706,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testBrowseOrder() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5457
         connection = connectionFactory.createConnection();
         ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
         prefetchPolicy.setAll(20);
@@ -1589,6 +1716,9 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
 
         QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
         CompositeData[] compdatalist = queue.browse();
         int initialQueueSize = compdatalist.length;
@@ -1601,6 +1731,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             assertNotNull("Should have a message ID for message " + i, messageID);
 
             @SuppressWarnings("unchecked")
+//IC see: https://issues.apache.org/jira/browse/AMQ-6102
             Map<Object, Object> intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
             assertTrue("not empty", intProperties.size() > 0);
             assertEquals("counter in order", i, intProperties.get("counter"));
@@ -1629,6 +1760,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             CompositeData cdata = compdatalist[i];
 
             @SuppressWarnings("unchecked")
+//IC see: https://issues.apache.org/jira/browse/AMQ-6102
             Map<Object, Object> intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
             assertTrue("not empty", intProperties.size() > 0);
             assertEquals("counter in order", i + 5, intProperties.get("counter"));
@@ -1638,9 +1770,11 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     public void testAddRemoveConnectorBrokerView() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5317
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean brokerView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6102
         Map<String, String> connectors = brokerView.getTransportConnectors();
         LOG.info("Connectors: " + connectors);
         assertEquals("one connector", 1, connectors.size());
@@ -1667,10 +1801,12 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testConnectorView() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4818
         ConnectorViewMBean connector = getProxyToConnectionView("tcp");
         assertNotNull(connector);
 
         assertFalse(connector.isRebalanceClusterClients());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6208
         assertTrue(connector.isUpdateClusterClientsOnRemove());
         assertFalse(connector.isUpdateClusterClients());
         assertFalse(connector.isAllowLinkStealingEnabled());
@@ -1699,6 +1835,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName query = new ObjectName(domain + ":type=Broker,brokerName=localhost,endpoint=dynamicProducer,*");
         Set<ObjectInstance> mbeans = mbeanServer.queryMBeans(query, null);
         assertEquals(mbeans.size(), 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
         producer.close();
     }
 
@@ -1711,15 +1848,21 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName query = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test.topic,endpoint=Consumer,consumerId=Durable(*),*");
         Set<ObjectInstance> mbeans = mbeanServer.queryMBeans(query, null);
         assertEquals(mbeans.size(), 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
         sub.close();
     }
 
     public void testQueuePauseResume() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5229
         connection = connectionFactory.createConnection();
         final int numToSend = 20;
         final int numToConsume = 5;
         useConnection(connection, numToSend);
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         final QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
@@ -1781,6 +1924,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testTopicView() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5831
         connection = connectionFactory.createConnection();
         connection.setClientID("test");
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -1847,6 +1991,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6102
         for (SubscriptionViewMBean subscriberView : subscriberViews) {
             assertEquals(1, subscriberView.getEnqueueCounter());
             assertEquals(1, subscriberView.getDispatchedCounter());
@@ -1905,6 +2050,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         ObjectName topicObjName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test.topic");
         final TopicViewMBean topicView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName, TopicViewMBean.class, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6102
         ArrayList<SubscriptionViewMBean> subscriberViews = new ArrayList<SubscriptionViewMBean>();
         for (ObjectName name : topicView.getSubscriptions()) {
             subscriberViews.add(MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true));
@@ -1945,6 +2091,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testSubscriptionViewProperties() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6183
         connection = createConnection();
         connection.start();
 

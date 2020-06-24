@@ -26,6 +26,7 @@ import org.apache.activemq.broker.BrokerService;
 public class XBeanStartFalseTest extends TestCase {
     
     public void testStartFalse() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2203
         BrokerService broker = BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/xbean/activemq2.xml"));
         assertFalse("Broker is started", broker.isStarted());
     }

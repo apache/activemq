@@ -58,6 +58,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
 
     public void initCombosForTestSendOnAReceiveOnBWithTransportDisconnect() {
         addCombinationValues( "useDuplexNetworkBridge", new Object[]{ Boolean.TRUE, Boolean.FALSE} );
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
         addCombinationValues( "simulateStalledNetwork", new Object[]{ Boolean.TRUE } );
     }
 
@@ -88,6 +89,9 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
 
     @SuppressWarnings("unchecked")
     public void testNoStuckConnectionsWithTransportDisconnect() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
         inactiveDuration=60000l;
         useDuplexNetworkBridge = true;
 
@@ -140,6 +144,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
                     public boolean isSatisified() throws Exception {
                         long numVmConnections = VMTransportFactory.SERVERS.get(HUB).getConnectionCount();
                         LOG.info("Num VM connetions:" + numVmConnections);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
                         return numVmConnections == 2;
                     }});
         if (!allGood) {
@@ -177,6 +182,9 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
     @Override
     public void setUp() throws Exception {
         networkDownTimeStart = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
         inactiveDuration = 1000;
         useSocketProxy = true;
         super.setAutoFail(true);
@@ -188,6 +196,9 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
 
     @Override
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
         super.tearDown();
         if (socketProxy != null) {
             socketProxy.close();
@@ -202,6 +213,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
     protected void onSend(int i, TextMessage msg) {
         sleep(50);
         if (i == 50 || i == 150) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
             if (simulateStalledNetwork) {
                 socketProxy.pause();
             } else {
@@ -211,6 +223,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
         } else if (networkDownTimeStart > 0) {
              // restart after NETWORK_DOWN_TIME seconds
              if (networkDownTimeStart + NETWORK_DOWN_TIME < System.currentTimeMillis()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
                  if (simulateStalledNetwork) {
                      socketProxy.goOn();
                  } else {
@@ -238,6 +251,9 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
         URI remoteURI;
         if (!transportConnectors.isEmpty()) {
             remoteURI = transportConnectors.get(0).getConnectUri();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
             if (useSocketProxy) {
                 socketProxy = new SocketProxy(remoteURI);
                 remoteURI = socketProxy.getUrl();

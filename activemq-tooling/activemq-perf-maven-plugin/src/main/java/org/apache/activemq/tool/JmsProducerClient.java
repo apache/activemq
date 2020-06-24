@@ -56,6 +56,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     public void sendMessages() throws JMSException {
         // Send a specific number of messages
         if (client.getSendType().equalsIgnoreCase(JmsProducerProperties.COUNT_BASED_SENDING)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
             long sendCount = client.getSendCount();
             sendCountBasedMessages(sendCount);
         // Send messages for a specific duration
@@ -90,8 +91,10 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         }
         try {
             getConnection().start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3492
             if (client.getMsgFileName() != null) {
                 LOG.info("Starting to publish " +
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
                     messageCount +
                     " messages from file " +
                     client.getMsgFileName()
@@ -167,6 +170,8 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         // Avoided putting the condition inside the loop to prevent effect on performance
 
         Destination[] dest = createDestinations(destCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5306
+//IC see: https://issues.apache.org/jira/browse/AMQ-5306
 
         // Create a producer, if none is created.
         if (getJmsProducer() == null) {
@@ -179,8 +184,10 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
 
         try {
             getConnection().start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3492
             if (client.getMsgFileName() != null) {
                 LOG.info("Starting to publish messages from file " +
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
                         client.getMsgFileName() +
                         " for " +
                         duration +
@@ -228,7 +235,11 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                         for (int j = 0; j < dest.length; j++) {
                             getJmsProducer().send(dest[j], createJmsTextMessage("Text Message [" + count++ + "]"));
                             incThroughput();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
                             sleep();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
                             commitTxIfNecessary();
                         }
                     }
@@ -239,7 +250,19 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
 
                         getJmsProducer().send(createJmsTextMessage("Text Message [" + count++ + "]"));
                         incThroughput();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
                         sleep();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
                         commitTxIfNecessary();
                     }
                 }
@@ -285,6 +308,8 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     }
 
     public TextMessage createJmsTextMessage() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3492
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
         if (client.getMsgFileName() != null) {
             return loadJmsMessage();
         } else {
@@ -296,6 +321,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         jmsTextMessage = getSession().createTextMessage(buildText("", size));
 
         // support for adding message headers
+//IC see: https://issues.apache.org/jira/browse/AMQ-3280
         Set<String> headerKeys = this.client.getHeaderKeys();
         for (String key : headerKeys) {
             jmsTextMessage.setObjectProperty(key, this.client.getHeaderValue(key));
@@ -325,6 +351,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
 
     @Override
     protected Destination createTemporaryDestination(String destName) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5436
         String simpleName = getSimpleName(destName);
         byte destinationType = getDestinationType(destName);
 
@@ -348,7 +375,9 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     }
 
     protected void sleep() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
         if (client.getSendDelay() > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
             try {
                 LOG.trace("Sleeping for " + client.getSendDelay() + " milliseconds");
                 Thread.sleep(client.getSendDelay());
@@ -362,6 +391,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
      * loads the message to be sent from the specified TextFile
      */
     protected TextMessage loadJmsMessage() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3492
         try {
             // couple of sanity checks upfront
             if (client.getMsgFileName() == null) {
@@ -377,6 +407,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
 
             // try to load file
             StringBuffer payload = new StringBuffer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
             try(FileReader fr = new FileReader(f);
                 BufferedReader br = new BufferedReader(fr)) {
                 String tmp = null;

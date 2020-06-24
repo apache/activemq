@@ -51,6 +51,7 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
 
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4133
         return new NIOSSLTransportServer(context, this, location, serverSocketFactory);
     }
 
@@ -103,11 +104,13 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
             }
         }
         SocketFactory socketFactory = createSocketFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4133
         return new SslTransport(wf, (SSLSocketFactory) socketFactory, location, localLocation, false);
     }
 
     @Override
     public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer)
             throws IOException {
         return new NIOSSLTransport(wireFormat, socket, engine, initBuffer, inputBuffer);
@@ -122,6 +125,7 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
      */
     @Override
     protected SocketFactory createSocketFactory() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4133
         if (SslContext.getCurrentSslContext() != null) {
             SslContext ctx = SslContext.getCurrentSslContext();
             try {

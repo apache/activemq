@@ -81,6 +81,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
     @Override
     protected void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6577
         if (null != producer) {
             producer.close();
         }
@@ -106,6 +107,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
     public void testClientAckInflight_onTopic_withPrefetchExtension() throws Exception {
         usePrefetchExtension = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
         doTestClientAckInflight_onTopic_checkPrefetchExtension();
     }
 
@@ -157,6 +159,8 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
 
     public void testReceiveTimeoutRespectedWithExpiryProcessing() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6979
+//IC see: https://issues.apache.org/jira/browse/AMQ-5129
         final ActiveMQDestination destination = new ActiveMQQueue("test");
         broker = new BrokerService();
         broker.setBrokerName("localhost");
@@ -292,6 +296,8 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
                 DestinationStatistics view = getDestinationStatistics(broker, destination);
                 LOG.info("Stats: size: " + view.getMessages().getCount() + ", enqueues: "
                         + view.getEnqueues().getCount() + ", dequeues: "
@@ -304,6 +310,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         view = getDestinationStatistics(broker, destination);
         assertEquals("Expect empty queue, QueueSize: ", 0, view.getMessages().getCount());
         assertEquals("all dequeues were expired", view.getDequeues().getCount(), view.getExpired().getCount());
@@ -312,12 +319,15 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
     private DestinationStatistics verifyMessageExpirationOnDestination(ActiveMQDestination destination, final int numMessagesToSend) throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUri);
         connection = factory.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2262
+//IC see: https://issues.apache.org/jira/browse/AMQ-2265
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         producer = session.createProducer(destination);
         producer.setTimeToLive(100);
         consumer = session.createConsumer(destination);
         connection.start();
         final AtomicLong received = new AtomicLong();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
 
         Thread consumerThread = new Thread("Consumer Thread") {
             @Override
@@ -326,6 +336,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
                 try {
                     long end = System.currentTimeMillis();
                     while (end - start < 3000) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
                         if (consumer.receive(1000) != null) {
                             received.incrementAndGet();
                         }
@@ -360,6 +371,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         producingThread.join();
 
         final DestinationStatistics view = getDestinationStatistics(broker, destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
 
         // wait for all to inflight to expire
         assertTrue("all inflight messages expired ", Wait.waitFor(new Wait.Condition() {
@@ -399,6 +411,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
                 return view.getMessages().getCount() == 0;
             }
         }));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6577
         return view;
     }
 
@@ -406,6 +419,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         final long expiredBeforeEnqueue = numMessagesToSend - view.getEnqueues().getCount();
         final long totalExpiredCount = view.getExpired().getCount() + expiredBeforeEnqueue;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         final DestinationStatistics dlqView = getDestinationStatistics(broker, dlqDestination);
         LOG.info("DLQ stats: size= " + dlqView.getMessages().getCount() + ", enqueues: " + dlqView.getDequeues().getCount() + ", dequeues: " + dlqView.getDequeues().getCount()
                 + ", dispatched: " + dlqView.getDispatched().getCount() + ", inflight: " + dlqView.getInflight().getCount() + ", expiries: " + dlqView.getExpired().getCount());
@@ -421,6 +435,8 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         // memory check
         assertEquals("memory usage is back to duck egg", 0, getDestination(broker, destination).getMemoryUsage().getPercentUsage());
         assertTrue("memory usage is increased ", 0 < getDestination(broker, dlqDestination).getMemoryUsage().getUsage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5274
+//IC see: https://issues.apache.org/jira/browse/AMQ-2876
 
         // verify DLQ
         MessageConsumer dlqConsumer = createDlqConsumer(connection);
@@ -467,7 +483,9 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
             defaultPolicy.setPendingQueuePolicy(new VMPendingQueueMessageStoragePolicy());
         }
         defaultPolicy.setExpireMessagesPeriod(expireMessagesPeriod);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         defaultPolicy.setMaxExpirePageSize(1200);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6577
         defaultPolicy.setUsePrefetchExtension(usePrefetchExtension);
         PolicyMap policyMap = new PolicyMap();
         policyMap.setDefaultEntry(defaultPolicy);

@@ -104,6 +104,7 @@ public class ActiveMQReplyToHeaderUsingConverterTest extends CamelTestSupport {
         return new RouteBuilder() {
             public void configure() throws Exception {
                 from("activemq:test.a").to("activemq:test.b?preserveMessageQos=true");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2182
 
                 from("activemq:test.b").to("mock:result");
             }

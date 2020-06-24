@@ -85,6 +85,7 @@ public abstract class AbstractVmConcurrentDispatchTest {
             boolean useTopic) {
         this.messageType = messageType;
         this.reduceMemoryFootPrint = reduceMemoryFootPrint;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6323
         this.useTopic = useTopic;
     }
 
@@ -114,6 +115,7 @@ public abstract class AbstractVmConcurrentDispatchTest {
         defaultPolicy.setReduceMemoryFootprint(reduceMemoryFootPrint);
         policyMap.setDefaultEntry(defaultPolicy);
         broker.setDestinationPolicy(policyMap);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6256
         broker.setDataDirectoryFile(dataFileDir.getRoot());
         configurePersistenceAdapter(broker);
         broker.start();
@@ -135,6 +137,7 @@ public abstract class AbstractVmConcurrentDispatchTest {
 
     @Test(timeout=180000)
     public void testMessagesAreValid() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6323
         if (this.useTopic) {
             Assume.assumeTrue(reduceMemoryFootPrint);
         }
@@ -175,6 +178,7 @@ public abstract class AbstractVmConcurrentDispatchTest {
     public class HelloWorldProducer implements Runnable {
 
         final boolean useTopic;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6323
 
         public HelloWorldProducer(boolean useTopic) {
             this.useTopic = useTopic;
@@ -193,6 +197,7 @@ public abstract class AbstractVmConcurrentDispatchTest {
 
                 //If using topics, just test a generic topic name
                 //If useTopic is false then we are testing virtual topics/queue consumes
+//IC see: https://issues.apache.org/jira/browse/AMQ-6323
                 Destination destination = useTopic ? session.createTopic(testTopicName) :
                     session.createTopic("VirtualTopic.AMQ6218Test");
 
@@ -236,6 +241,7 @@ public abstract class AbstractVmConcurrentDispatchTest {
 
     public class HelloWorldConsumer implements Runnable, ExceptionListener {
         final boolean useTopic;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6323
 
         public HelloWorldConsumer(boolean useTopic) {
             this.useTopic = useTopic;

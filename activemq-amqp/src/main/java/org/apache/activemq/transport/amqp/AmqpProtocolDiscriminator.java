@@ -37,6 +37,7 @@ public class AmqpProtocolDiscriminator implements AmqpProtocolConverter {
     interface Discriminator {
         boolean matches(AmqpHeader header);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         AmqpProtocolConverter create(AmqpTransport transport, BrokerService brokerService);
     }
 
@@ -46,6 +47,7 @@ public class AmqpProtocolDiscriminator implements AmqpProtocolConverter {
 
             @Override
             public AmqpProtocolConverter create(AmqpTransport transport, BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
                 return new AmqpConnection(transport, brokerService);
             }
 
@@ -64,6 +66,7 @@ public class AmqpProtocolDiscriminator implements AmqpProtocolConverter {
     }
 
     final private ArrayList<Command> pendingCommands = new ArrayList<Command>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5256
 
     public AmqpProtocolDiscriminator(AmqpTransport transport, BrokerService brokerService) {
         this.transport = transport;
@@ -87,6 +90,7 @@ public class AmqpProtocolDiscriminator implements AmqpProtocolConverter {
                 match = DISCRIMINATORS.get(0);
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
             AmqpProtocolConverter next = match.create(transport, brokerService);
             transport.setProtocolConverter(next);
             for (Command send : pendingCommands) {
@@ -101,6 +105,7 @@ public class AmqpProtocolDiscriminator implements AmqpProtocolConverter {
 
     @Override
     public void onAMQPException(IOException error) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6010
         transport.sendToActiveMQ(error);
     }
 
@@ -115,6 +120,7 @@ public class AmqpProtocolDiscriminator implements AmqpProtocolConverter {
 
     @Override
     public long keepAlive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
         return 0;
     }
 }

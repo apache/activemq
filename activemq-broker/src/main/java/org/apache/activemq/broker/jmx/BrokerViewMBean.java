@@ -39,24 +39,29 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("The name of the broker.")
     String getBrokerName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1311
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
 
     /**
      * @return The name of the broker.
      */
     @MBeanInfo("The version of the broker.")
     String getBrokerVersion();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2705
 
     /**
      * @return Uptime of the broker.
      */
     @MBeanInfo("Uptime of the broker.")
     String getUptime();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4015
 
     /**
      * @return Uptime of the broker in milliseconds.
      */
     @MBeanInfo("Uptime of the broker in milliseconds.")
     long getUptimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5505
 
     /**
      * @return The current number of active connections on this Broker.
@@ -67,6 +72,7 @@ public interface BrokerViewMBean extends Service {
      * @return The total number of connections serviced since this Broker was started.
      */
     long getTotalConnectionsCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
 
     /**
      * The Broker will flush it's caches so that the garbage collector can
@@ -100,12 +106,14 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo("Number of message producers active on destinations on the broker.")
     long getTotalProducerCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
 
     @MBeanInfo("Number of unacknowledged messages on the broker.")
     long getTotalMessageCount();
 
     @MBeanInfo("Average message size on this broker")
     long getAverageMessageSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4831
 
     @MBeanInfo("Max message size on this broker")
     public long getMaxMessageSize();
@@ -120,6 +128,7 @@ public interface BrokerViewMBean extends Service {
     long getMemoryLimit();
 
     void setMemoryLimit(@MBeanInfo("bytes") long limit);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     @MBeanInfo("Percent of store limit used.")
     int getStorePercentUsage();
@@ -134,6 +143,7 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo("Disk limit, in bytes, used for non-persistent messages and temporary data before producers are blocked.")
     long getTempLimit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1562
 
     void setTempLimit(@MBeanInfo("bytes") long limit);
 
@@ -142,6 +152,7 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo("Disk limit, in bytes, used for scheduled messages before producers are blocked.")
     long getJobSchedulerStoreLimit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
 
     void setJobSchedulerStoreLimit(@MBeanInfo("bytes") long limit);
 
@@ -159,6 +170,7 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("Shuts down the JVM.")
     void terminateJVM(@MBeanInfo("exitCode") int exitCode);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * Stop the broker and all it's components.
@@ -172,9 +184,12 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("Restart the broker and all its components.")
     void restart() throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4526
 
     @MBeanInfo("Poll for queues matching queueName are empty before stopping")
     void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2071
+//IC see: https://issues.apache.org/jira/browse/AMQ-2070
 
     @MBeanInfo("Topics (broadcasted 'queues'); generally system information.")
     ObjectName[] getTopics();
@@ -187,6 +202,7 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("Query queues")
     String queryQueues(String filter, int page, int pageSize) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6435
 
     /**
      * Topic Query API, take a look at {@link DestinationsViewFilter} for more information
@@ -255,6 +271,7 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("Adds a Topic destination to the broker.")
     void addTopic(@MBeanInfo("name") String name) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * Adds a Queue destination to the broker.
@@ -264,6 +281,7 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("Adds a Queue destination to the broker.")
     void addQueue(@MBeanInfo("name") String name) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * Removes a Topic destination from the broker.
@@ -273,6 +291,7 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("Removes a Topic destination from the broker.")
     void removeTopic(@MBeanInfo("name") String name) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * Removes a Queue destination from the broker.
@@ -282,6 +301,7 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("Removes a Queue destination from the broker.")
     void removeQueue(@MBeanInfo("name") String name) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * Creates a new durable topic subscriber
@@ -294,6 +314,7 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo(value="Creates a new durable topic subscriber.")
     ObjectName createDurableSubscriber(@MBeanInfo("clientId") String clientId, @MBeanInfo("subscriberName") String subscriberName, @MBeanInfo("topicName") String topicName, @MBeanInfo("selector") String selector) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * Destroys a durable subscriber
@@ -303,6 +324,7 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo(value="Destroys a durable subscriber.")
     void destroyDurableSubscriber(@MBeanInfo("clientId") String clientId, @MBeanInfo("subscriberName") String subscriberName) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * Reloads log4j.properties from the classpath.

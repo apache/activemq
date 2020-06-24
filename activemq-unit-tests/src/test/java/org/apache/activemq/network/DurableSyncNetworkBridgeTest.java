@@ -101,6 +101,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
     public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
         System.setProperty("javax.net.ssl.trustStore", TRUST_KEYSTORE);
         System.setProperty("javax.net.ssl.trustStorePassword", PASSWORD);
         System.setProperty("javax.net.ssl.trustStoreType", KEYSTORE_TYPE);
@@ -116,10 +117,12 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
         includedTopics = "include.test.>";
         staticIncludeTopics = "include.static.test";
         dynamicOnly = false;
         forceDurable = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
         useVirtualDestSubs = false;
         remoteBrokerWireFormatVersion = CommandTypes.PROTOCOL_VERSION;
         doSetUp(true, true, tempFolder.newFolder(), tempFolder.newFolder());
@@ -181,6 +184,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         doTearDown();
         restartBroker(broker1, false);
         restartBroker(broker2, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
 
         //Send some messages to the NC sub and make sure it can still be deleted
         MessageProducer prod = session2.createProducer(topic);
@@ -226,6 +230,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         restartBroker(broker2, true);
         assertNCDurableSubsCount(broker2, topic, 1);
         restartBroker(broker1, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
         assertBridgeStarted();
         assertNCDurableSubsCount(broker2, topic, 0);
 
@@ -298,6 +303,10 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     @Test
     public void testAddAndRemoveSubscriptionWithBridgeOfflineMultiTopics() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         final ActiveMQTopic topic = new ActiveMQTopic(testTopicName);
         final ActiveMQTopic topic2 = new ActiveMQTopic(testTopicName2);
         MessageConsumer sub1 = session1.createDurableSubscriber(topic, subName);
@@ -320,11 +329,16 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         //before sync, the old NC should exist
         restartBroker(broker2, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         assertNCDurableSubsCount(broker2, topic, 1);
         assertNCDurableSubsCount(broker2, topic2, 0);
 
         //After sync, remove old NC and create one for topic 2
         restartBroker(broker1, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
         assertBridgeStarted();
         assertNCDurableSubsCount(broker2, topic, 0);
         assertNCDurableSubsCount(broker2, topic2, 1);
@@ -332,6 +346,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     @Test
     public void testAddSubscriptionsWithBridgeOffline() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         final ActiveMQTopic topic = new ActiveMQTopic(testTopicName);
         final ActiveMQTopic topic2 = new ActiveMQTopic(testTopicName2);
         final ActiveMQTopic excludeTopic = new ActiveMQTopic(excludeTopicName);
@@ -352,6 +367,8 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         restartBrokers(true);
         assertBridgeStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         assertNCDurableSubsCount(broker2, topic, 1);
         assertNCDurableSubsCount(broker2, topic2, 1);
         assertNCDurableSubsCount(broker2, excludeTopic, 0);
@@ -360,6 +377,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     @Test
     public void testSyncLoadTest() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         String subName = this.subName;
         //Create 1000 subs
         for (int i = 0; i < 100; i++) {
@@ -461,22 +479,42 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertSubscriptionsCount(broker1, topic, 1);
 
         restartBrokers(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         assertNCDurableSubsCount(broker2, topic, 0);
         //bring online again
         session1.createDurableSubscriber(topic, subName);
         assertNCDurableSubsCount(broker2, topic, 1);
         assertBridgeStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
 
     }
 
     @Test
     public void testAddAndRemoveSubscriptionsWithBridgeOffline() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         final ActiveMQTopic topic = new ActiveMQTopic(testTopicName);
         final ActiveMQTopic excludeTopic = new ActiveMQTopic(excludeTopicName);
 
         session1.createDurableSubscriber(topic, subName).close();
         assertSubscriptionsCount(broker1, topic, 1);
         assertNCDurableSubsCount(broker2, topic, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
 
         doTearDown();
         restartBroker(broker1, false);
@@ -502,6 +540,10 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         assertSubscriptionsCount(broker1, topic, 0);
         assertNCDurableSubsCount(broker2, topic, 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
 
         doTearDown();
         restartBrokers(false);
@@ -522,6 +564,13 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //the consumer advisory
         restartBrokers(true);
         assertBridgeStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
 
         //Re-create
         session1.createDurableSubscriber(topic, subName);
@@ -530,6 +579,8 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         session1.createDurableSubscriber(excludeTopic, "sub-exclude");
 
         Thread.sleep(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         assertNCDurableSubsCount(broker2, topic, 1);
         assertNCDurableSubsCount(broker2, excludeTopic, 0);
 
@@ -539,12 +590,19 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
     @Test
     public void testAddOnlineSubscriptionsTwoBridges() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6538
         final ActiveMQTopic topic = new ActiveMQTopic(testTopicName);
         final ActiveMQTopic excludeTopic = new ActiveMQTopic(excludeTopicName);
         final ActiveMQTopic topic2 = new ActiveMQTopic("include.new.topic");
 
         assertSubscriptionsCount(broker1, topic, 0);
         assertNCDurableSubsCount(broker2, topic, 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
 
         //create durable that shouldn't be propagated
         session1.createDurableSubscriber(excludeTopic, "sub-exclude");
@@ -578,6 +636,10 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         //Make sure NC durables exist for both bridges
         assertNCDurableSubsCount(broker2, topic2, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         assertNCDurableSubsCount(broker2, topic, 1);
         assertNCDurableSubsCount(broker2, excludeTopic, 0);
 
@@ -590,6 +652,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testVirtualDestSubForceDurableSync() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
         Assume.assumeTrue(flow == FLOW.FORWARD);
         forceDurable = true;
         useVirtualDestSubs = true;
@@ -714,7 +777,10 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     protected void doSetUp(boolean deleteAllMessages, boolean startNetworkConnector, File localDataDir,
             File remoteDataDir) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         included = new ActiveMQTopic(testTopicName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         doSetUpRemoteBroker(deleteAllMessages, remoteDataDir, 0);
         doSetUpLocalBroker(deleteAllMessages, startNetworkConnector, localDataDir);
         //Give time for advisories to propagate
@@ -728,6 +794,8 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     protected void restartRemoteBroker() throws Exception {
         int port = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         if (remoteBroker != null) {
             List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
             port = transportConnectors.get(0).getConnectUri().getPort();
@@ -750,12 +818,14 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         localConnection.setClientID("clientId");
         localConnection.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         if (startNetworkConnector) {
             Wait.waitFor(new Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
                     return localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
             }, 5000, 500);
         }
         localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -765,11 +835,14 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
             session1 = localSession;
         } else {
             broker2 = localBroker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
             session2 = localSession;
         }
     }
 
     protected void doSetUpRemoteBroker(boolean deleteAllMessages, File dataDir, int port) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         remoteBroker = createRemoteBroker(dataDir, port);
         remoteBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         remoteBroker.start();
@@ -783,7 +856,9 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         if (flow.equals(FLOW.FORWARD)) {
             broker2 = remoteBroker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
             session2 = remoteSession;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
             remoteRuntimeBroker = (JavaRuntimeConfigurationBroker)
                     remoteBroker.getBroker().getAdaptor(JavaRuntimeConfigurationBroker.class);
         } else {
@@ -797,11 +872,13 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         BrokerService brokerService = new BrokerService();
         brokerService.setMonitorConnectionSplits(true);
         brokerService.setBrokerName("localBroker");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         brokerService.setDataDirectoryFile(dataDir);
         KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
         adapter.setDirectory(dataDir);
         adapter.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.PERIODIC.name());
         brokerService.setPersistenceAdapter(adapter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
         brokerService.setUseVirtualDestSubs(useVirtualDestSubs);
         brokerService.setUseVirtualDestSubsOnCreation(useVirtualDestSubs);
 
@@ -811,6 +888,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         //Use auto+nio+ssl to test out the transport works with bridging
         brokerService.addConnector("auto+nio+ssl://localhost:0");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
 
         return brokerService;
     }
@@ -827,6 +905,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         connector.setDuplex(true);
         connector.setStaticBridge(false);
         connector.setSyncDurableSubs(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
         connector.setUseVirtualDestSubs(useVirtualDestSubs);
         connector.setStaticallyIncludedDestinations(
                 Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(staticIncludeTopics + "?forceDurable=" + forceDurable)));
@@ -844,10 +923,12 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         brokerService.setBrokerName("remoteBroker");
         brokerService.setUseJmx(false);
         brokerService.setDataDirectoryFile(dataDir);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
         adapter.setDirectory(dataDir);
         adapter.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.PERIODIC.name());
         brokerService.setPersistenceAdapter(adapter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
         brokerService.setUseVirtualDestSubs(useVirtualDestSubs);
         brokerService.setUseVirtualDestSubsOnCreation(useVirtualDestSubs);
 
@@ -860,6 +941,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //Need a larger cache size in order to handle all of the durables
         //Use auto+nio+ssl to test out the transport works with bridging
         brokerService.addConnector("auto+nio+ssl://localhost:" + port + "?wireFormat.cacheSize=2048&wireFormat.version=" + remoteBrokerWireFormatVersion);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
 
         return brokerService;
     }

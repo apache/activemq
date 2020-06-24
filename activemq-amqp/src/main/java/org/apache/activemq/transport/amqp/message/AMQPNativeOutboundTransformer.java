@@ -33,6 +33,7 @@ public class AMQPNativeOutboundTransformer implements OutboundTransformer {
 
     @Override
     public EncodedMessage transform(ActiveMQMessage message) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         if (message == null || !(message instanceof ActiveMQBytesMessage)) {
             return null;
         }
@@ -41,6 +42,7 @@ public class AMQPNativeOutboundTransformer implements OutboundTransformer {
     }
 
     static EncodedMessage transform(OutboundTransformer options, ActiveMQBytesMessage message) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
         final long messageFormat;
         if (message.propertyExists(JMS_AMQP_MESSAGE_FORMAT)) {
             try {
@@ -73,6 +75,10 @@ public class AMQPNativeOutboundTransformer implements OutboundTransformer {
             // Update the DeliveryCount header...
             // The AMQP delivery-count field only includes prior failed delivery attempts,
             // whereas JMSXDeliveryCount includes the first/current delivery attempt. Subtract 1.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5413
+//IC see: https://issues.apache.org/jira/browse/AMQ-5433
+//IC see: https://issues.apache.org/jira/browse/AMQ-5647
+//IC see: https://issues.apache.org/jira/browse/AMQ-5684
             if (amqp.getHeader() == null) {
                 amqp.setHeader(new Header());
             }

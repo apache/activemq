@@ -86,6 +86,7 @@ public class ProtocolConverter {
 
     static {
         String version = "5.6.0";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try(InputStream in = ProtocolConverter.class.getResourceAsStream("/org/apache/activemq/version.txt")) {
             if (in != null) {
                 try(InputStreamReader isr = new InputStreamReader(in);
@@ -152,6 +153,7 @@ public class ProtocolConverter {
             return new ResponseHandler() {
                 @Override
                 public void onResponse(ProtocolConverter converter, Response response) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1272
                     if (response.isException()) {
                         // Generally a command can fail.. but that does not invalidate the connection.
                         // We report back the failure but we don't close the connection.
@@ -174,8 +176,11 @@ public class ProtocolConverter {
         command.setCommandId(generateCommandId());
         if (handler != null) {
             command.setResponseRequired(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
             resposeHandlers.put(Integer.valueOf(command.getCommandId()), handler);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2617
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
         stompTransport.sendToActiveMQ(command);
     }
 
@@ -184,13 +189,16 @@ public class ProtocolConverter {
     }
 
     protected FrameTranslator findTranslator(String header) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5220
         return findTranslator(header, null, false);
     }
 
     protected FrameTranslator findTranslator(String header, ActiveMQDestination destination, boolean advisory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-943
         FrameTranslator translator = frameTranslator;
         try {
             if (header != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7467
                translator=jmsFrameTranslators.get(header);
             	if(translator==null) {
             		LOG.info("Creating a new FrameTranslator to convert "+header);
@@ -210,9 +218,11 @@ public class ProtocolConverter {
         } catch (Exception ignore) {
             // if anything goes wrong use the default translator
 			LOG.debug("Failed in getting a FrameTranslator to convert ", ignore);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7467
            	translator = frameTranslator;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2702
         if (translator instanceof BrokerContextAware) {
             ((BrokerContextAware)translator).setBrokerContext(brokerContext);
         }
@@ -237,6 +247,7 @@ public class ProtocolConverter {
                 onStompSend(command);
             } else if (action.startsWith(Stomp.Commands.ACK)) {
                 onStompAck(command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             } else if (action.startsWith(Stomp.Commands.NACK)) {
                 onStompNack(command);
             } else if (action.startsWith(Stomp.Commands.BEGIN)) {
@@ -245,33 +256,42 @@ public class ProtocolConverter {
                 onStompCommit(command);
             } else if (action.startsWith(Stomp.Commands.ABORT)) {
                 onStompAbort(command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7012
             } else if (action.startsWith(Stomp.Commands.SUBSCRIBE_PREFIX)) {
                 onStompSubscribe(command);
             } else if (action.startsWith(Stomp.Commands.UNSUBSCRIBE_PREFIX)) {
                 onStompUnsubscribe(command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             } else if (action.startsWith(Stomp.Commands.CONNECT) ||
                        action.startsWith(Stomp.Commands.STOMP)) {
                 onStompConnect(command);
             } else if (action.startsWith(Stomp.Commands.DISCONNECT)) {
                 onStompDisconnect(command);
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6168
                 throw new ProtocolException("Unknown STOMP action: " + action, true);
             }
 
         } catch (ProtocolException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1272
             handleException(e, command);
             // Some protocol errors can cause the connection to get closed.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             if (e.isFatal()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2617
                getStompTransport().onException(e);
             }
         }
     }
 
     protected void handleException(Throwable exception, StompFrame command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6169
         if (command == null) {
             LOG.warn("Exception occurred while processing a command: {}", exception.toString());
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7347
             if (exception instanceof JMSException) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7347
                 JMSException jmsException = (JMSException) exception;
                 if (jmsException.getLinkedException() != null) {
                     LOG.warn("Exception occurred for client {} ({}) processing: {} -> {} ({})", connectionInfo.getClientId(), connectionInfo.getClientIp(), safeGetAction(command), exception.toString(), jmsException.getLinkedException().toString());
@@ -294,6 +314,7 @@ public class ProtocolConverter {
         // Let the stomp client know about any protocol errors.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter stream = new PrintWriter(new OutputStreamWriter(baos, "UTF-8"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7209
         if (exception instanceof SecurityException || exception.getCause() instanceof SecurityException) {
             stream.write(exception.getLocalizedMessage());
         } else {
@@ -301,11 +322,14 @@ public class ProtocolConverter {
         }
         stream.close();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7006
         HashMap<String, String> headers = new HashMap<>();
         headers.put(Stomp.Headers.Error.MESSAGE, exception.getMessage());
         headers.put(Stomp.Headers.CONTENT_TYPE, "text/plain");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
 
         if (command != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2254
             final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
             if (receiptId != null) {
                 headers.put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
@@ -320,6 +344,7 @@ public class ProtocolConverter {
         checkConnected();
 
         Map<String, String> headers = command.getHeaders();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         String destination = headers.get(Stomp.Headers.Send.DESTINATION);
         if (destination == null) {
             throw new ProtocolException("SEND received without a Destination specified!");
@@ -327,6 +352,7 @@ public class ProtocolConverter {
 
         String stompTx = headers.get(Stomp.Headers.TRANSACTION);
         headers.remove("transaction");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1989
 
         ActiveMQMessage message = convertMessage(command);
 
@@ -343,14 +369,18 @@ public class ProtocolConverter {
         }
 
         message.onSend();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6206
         message.beforeMarshall(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
         sendToActiveMQ(message, createResponseHandler(command));
     }
 
     protected void onStompNack(StompFrame command) throws ProtocolException {
 
         checkConnected();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3670
         if (this.version.equals(Stomp.V1_0)) {
             throw new ProtocolException("NACK received but connection is in v1.0 mode.");
         }
@@ -358,6 +388,7 @@ public class ProtocolConverter {
         Map<String, String> headers = command.getHeaders();
 
         String subscriptionId = headers.get(Stomp.Headers.Ack.SUBSCRIPTION);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
         if (subscriptionId == null && !this.version.equals(Stomp.V1_2)) {
             throw new ProtocolException("NACK received without a subscription id for acknowledge!");
         }
@@ -383,7 +414,9 @@ public class ProtocolConverter {
 
         boolean nacked = false;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
         if (ackId != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
             StompAckEntry pendingAck = this.pendingAcks.get(ackId);
             if (pendingAck != null) {
                 messageId = pendingAck.getMessageId().toString();
@@ -414,6 +447,7 @@ public class ProtocolConverter {
 
         Map<String, String> headers = command.getHeaders();
         String messageId = headers.get(Stomp.Headers.Ack.MESSAGE_ID);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
         if (messageId == null && !(this.version.equals(Stomp.V1_2))) {
             throw new ProtocolException("ACK received without a message-id to acknowledge!");
         }
@@ -440,6 +474,7 @@ public class ProtocolConverter {
         boolean acked = false;
 
         if (ackId != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
             StompAckEntry pendingAck = this.pendingAcks.get(ackId);
             if (pendingAck != null) {
                 messageId = pendingAck.getMessageId().toString();
@@ -451,6 +486,7 @@ public class ProtocolConverter {
             }
 
         } else if (subscriptionId != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             StompSubscription sub = this.subscriptions.get(subscriptionId);
             if (sub != null) {
                 MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
@@ -464,8 +500,12 @@ public class ProtocolConverter {
             // could have been sent to 2 different subscriptions on the same Stomp connection.
             // For example, when 2 subs are created on the same topic.
             for (StompSubscription sub : subscriptionsByConsumerId.values()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1807
                 MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
                 if (ack != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
                     sendToActiveMQ(ack, createResponseHandler(command));
                     acked = true;
                     break;
@@ -490,6 +530,7 @@ public class ProtocolConverter {
         }
 
         if (transactions.get(stompTx) != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5078
             throw new ProtocolException("The transaction was already started: " + stompTx);
         }
 
@@ -501,6 +542,7 @@ public class ProtocolConverter {
         tx.setTransactionId(activemqTx);
         tx.setType(TransactionInfo.BEGIN);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
         sendToActiveMQ(tx, createResponseHandler(command));
     }
 
@@ -519,6 +561,7 @@ public class ProtocolConverter {
             throw new ProtocolException("Invalid transaction id: " + stompTx);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         for (StompSubscription sub : subscriptionsByConsumerId.values()) {
             sub.onStompCommit(activemqTx);
         }
@@ -528,6 +571,7 @@ public class ProtocolConverter {
         tx.setTransactionId(activemqTx);
         tx.setType(TransactionInfo.COMMIT_ONE_PHASE);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
         sendToActiveMQ(tx, createResponseHandler(command));
     }
 
@@ -544,8 +588,11 @@ public class ProtocolConverter {
         if (activemqTx == null) {
             throw new ProtocolException("Invalid transaction id: " + stompTx);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         for (StompSubscription sub : subscriptionsByConsumerId.values()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2449
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2254
                 sub.onStompAbort(activemqTx);
             } catch (Exception e) {
                 throw new ProtocolException("Transaction abort failed", false, e);
@@ -557,6 +604,7 @@ public class ProtocolConverter {
         tx.setTransactionId(activemqTx);
         tx.setType(TransactionInfo.ROLLBACK);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
         sendToActiveMQ(tx, createResponseHandler(command));
     }
 
@@ -568,16 +616,20 @@ public class ProtocolConverter {
         String subscriptionId = headers.get(Stomp.Headers.Subscribe.ID);
         String destination = headers.get(Stomp.Headers.Subscribe.DESTINATION);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5622
         if (!this.version.equals(Stomp.V1_0) && subscriptionId == null) {
             throw new ProtocolException("SUBSCRIBE received without a subscription id!");
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7125
         if (destination == null || "".equals(destination)) {
             throw new ProtocolException("Invalid empty or 'null' Destination header");
         }
 
         final ActiveMQDestination actualDest = translator.convertDestination(this, destination, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3895
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2254
         if (actualDest == null) {
             throw new ProtocolException("Invalid 'null' Destination.");
         }
@@ -590,9 +642,11 @@ public class ProtocolConverter {
                         ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH : ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH);
         consumerInfo.setDispatchAsync(true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         String browser = headers.get(Stomp.Headers.Subscribe.BROWSER);
         if (browser != null && browser.equals(Stomp.TRUE)) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4686
             if (this.version.equals(Stomp.V1_0)) {
                 throw new ProtocolException("Queue Browser feature only valid for Stomp v1.1+ clients!");
             }
@@ -602,6 +656,7 @@ public class ProtocolConverter {
         }
 
         String selector = headers.remove(Stomp.Headers.Subscribe.SELECTOR);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
         if (selector != null) {
             consumerInfo.setSelector("convert_string_expressions:" + selector);
         }
@@ -612,11 +667,14 @@ public class ProtocolConverter {
             throw new ProtocolException("Invalid Subscription: cannot durably subscribe to a Queue destination!");
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6030
         consumerInfo.setDestination(actualDest);
         consumerInfo.setDispatchAsync(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7011
 
         StompSubscription stompSubscription;
         if (!consumerInfo.isBrowser()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
             stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo, headers.get(Stomp.Headers.TRANSFORMATION), pendingAcksTracker);
         } else {
             stompSubscription = new StompQueueBrowserSubscription(this, subscriptionId, consumerInfo, headers.get(Stomp.Headers.TRANSFORMATION), pendingAcksTracker);
@@ -626,6 +684,7 @@ public class ProtocolConverter {
         String ackMode = headers.get(Stomp.Headers.Subscribe.ACK_MODE);
         if (Stomp.Headers.Subscribe.AckModeValues.CLIENT.equals(ackMode)) {
             stompSubscription.setAckMode(StompSubscription.CLIENT_ACK);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1874
         } else if (Stomp.Headers.Subscribe.AckModeValues.INDIVIDUAL.equals(ackMode)) {
             stompSubscription.setAckMode(StompSubscription.INDIVIDUAL_ACK);
         } else {
@@ -634,10 +693,12 @@ public class ProtocolConverter {
 
         subscriptionsByConsumerId.put(id, stompSubscription);
         // Stomp v1.0 doesn't need to set this header so we avoid an NPE if not set.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         if (subscriptionId != null) {
             subscriptions.put(subscriptionId, stompSubscription);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3895
         final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
         if (receiptId != null && consumerInfo.getPrefetchSize() > 0) {
 
@@ -663,6 +724,7 @@ public class ProtocolConverter {
                         sc.setHeaders(new HashMap<String, String>(1));
                         sc.getHeaders().put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
                         stompTransport.sendToStomp(sc);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2617
 
                         ConsumerControl control = new ConsumerControl();
                         control.setPrefetch(prefetch);
@@ -687,10 +749,12 @@ public class ProtocolConverter {
         ActiveMQDestination destination = null;
         Object o = headers.get(Stomp.Headers.Unsubscribe.DESTINATION);
         if (o != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3496
             destination = findTranslator(command.getHeaders().get(Stomp.Headers.TRANSFORMATION)).convertDestination(this, (String)o, true);
         }
 
         String subscriptionId = headers.get(Stomp.Headers.Unsubscribe.ID);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5622
         if (!this.version.equals(Stomp.V1_0) && subscriptionId == null) {
             throw new ProtocolException("UNSUBSCRIBE received without a subscription id!");
         }
@@ -700,8 +764,12 @@ public class ProtocolConverter {
         }
 
         // check if it is a durable subscription
+//IC see: https://issues.apache.org/jira/browse/AMQ-1890
+//IC see: https://issues.apache.org/jira/browse/AMQ-2254
         String durable = command.getHeaders().get("activemq.subscriptionName");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3917
         String clientId = durable;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5622
         if (!this.version.equals(Stomp.V1_0)) {
             clientId = connectionInfo.getClientId();
         }
@@ -711,10 +779,12 @@ public class ProtocolConverter {
             info.setClientId(clientId);
             info.setSubscriptionName(durable);
             info.setConnectionId(connectionId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
             sendToActiveMQ(info, createResponseHandler(command));
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         if (subscriptionId != null) {
             StompSubscription sub = this.subscriptions.remove(subscriptionId);
             if (sub != null) {
@@ -727,7 +797,10 @@ public class ProtocolConverter {
             for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
                 StompSubscription sub = iter.next();
                 if (destination != null && destination.equals(sub.getDestination())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
                     sendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1077
                     iter.remove();
                     return;
                 }
@@ -742,6 +815,7 @@ public class ProtocolConverter {
     protected void onStompConnect(final StompFrame command) throws ProtocolException {
 
         if (connected.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5078
             throw new ProtocolException("Already connected.");
         }
 
@@ -754,12 +828,15 @@ public class ProtocolConverter {
         String heartBeat = headers.get(Stomp.Headers.Connect.HEART_BEAT);
 
         if (heartBeat == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3603
             heartBeat = defaultHeartBeat;
         }
 
         this.version = StompCodec.detectVersion(headers);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
 
         configureInactivityMonitor(heartBeat.trim());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3927
 
         IntrospectionSupport.setProperties(connectionInfo, headers, "activemq.");
         connectionInfo.setConnectionId(connectionId);
@@ -773,15 +850,19 @@ public class ProtocolConverter {
         connectionInfo.setUserName(login);
         connectionInfo.setPassword(passcode);
         connectionInfo.setTransportContext(command.getTransportContext());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4126
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
             @Override
             public void onResponse(ProtocolConverter converter, Response response) throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1272
                 if (response.isException()) {
                     // If the connection attempt fails we close the socket.
                     Throwable exception = ((ExceptionResponse)response).getException();
                     handleException(exception, command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2617
                     getStompTransport().onException(IOExceptionSupport.create(exception));
                     return;
                 }
@@ -798,11 +879,13 @@ public class ProtocolConverter {
                             // If the connection attempt fails we close the socket.
                             Throwable exception = ((ExceptionResponse)response).getException();
                             handleException(exception, command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2617
                             getStompTransport().onException(IOExceptionSupport.create(exception));
                         }
 
                         connected.set(true);
                         HashMap<String, String> responseHeaders = new HashMap<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7006
 
                         responseHeaders.put(Stomp.Headers.Connected.SESSION, connectionInfo.getClientId());
                         String requestId = headers.get(Stomp.Headers.Connect.REQUEST_ID);
@@ -816,16 +899,19 @@ public class ProtocolConverter {
                             responseHeaders.put(Stomp.Headers.Response.RECEIPT_ID, requestId);
                         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
                         responseHeaders.put(Stomp.Headers.Connected.VERSION, version);
                         responseHeaders.put(Stomp.Headers.Connected.HEART_BEAT,
                                             String.format("%d,%d", hbWriteInterval, hbReadInterval));
                         responseHeaders.put(Stomp.Headers.Connected.SERVER, "ActiveMQ/"+BROKER_VERSION);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-649
                         StompFrame sc = new StompFrame();
                         sc.setAction(Stomp.Responses.CONNECTED);
                         sc.setHeaders(responseHeaders);
                         sendToStomp(sc);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                         StompWireFormat format = stompTransport.getWireFormat();
                         if (format != null) {
                             format.setStompVersion(version);
@@ -837,8 +923,10 @@ public class ProtocolConverter {
     }
 
     protected void onStompDisconnect(StompFrame command) throws ProtocolException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4100
         if (connected.get()) {
             LOG.trace("Connection closed with {} pending ACKs still being tracked.", pendingAcks.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
             sendToActiveMQ(connectionInfo.createRemoveCommand(), createResponseHandler(command));
             sendToActiveMQ(new ShutdownInfo(), createResponseHandler(command));
             connected.set(false);
@@ -863,6 +951,7 @@ public class ProtocolConverter {
             ResponseHandler rh = resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
             if (rh != null) {
                 rh.onResponse(this, response);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1272
             } else {
                 // Pass down any unexpected errors. Should this close the connection?
                 if (response.isException()) {
@@ -874,10 +963,13 @@ public class ProtocolConverter {
             MessageDispatch md = (MessageDispatch)command;
             StompSubscription sub = subscriptionsByConsumerId.get(md.getConsumerId());
             if (sub != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
                 sub.onMessageDispatch(md);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         } else if (command.getDataStructureType() == CommandTypes.KEEP_ALIVE_INFO) {
             stompTransport.sendToStomp(ping);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1272
         } else if (command.getDataStructureType() == ConnectionError.DATA_STRUCTURE_TYPE) {
             // Pass down any unexpected async errors. Should this close the connection?
             Throwable exception = ((ConnectionError)command).getException();
@@ -891,9 +983,11 @@ public class ProtocolConverter {
     }
 
     public StompFrame convertMessage(ActiveMQMessage message, boolean ignoreTransformation) throws IOException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
         if (ignoreTransformation == true) {
             return frameTranslator.convertMessage(this, message);
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5220
             FrameTranslator translator = findTranslator(
                 message.getStringProperty(Stomp.Headers.TRANSFORMATION), message.getDestination(), message.isAdvisory());
             return translator.convertMessage(this, message);
@@ -901,17 +995,21 @@ public class ProtocolConverter {
     }
 
     public StompTransport getStompTransport() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2617
         return stompTransport;
     }
 
     public ActiveMQDestination createTempDestination(String name, boolean topic) {
         ActiveMQDestination rc = tempDestinations.get(name);
         if( rc == null ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3543
             if (topic) {
                 rc = new ActiveMQTempTopic(connectionId, tempDestinationGenerator.getNextSequenceId());
             } else {
                 rc = new ActiveMQTempQueue(connectionId, tempDestinationGenerator.getNextSequenceId());
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
             sendToActiveMQ(new DestinationInfo(connectionId, DestinationInfo.ADD_OPERATION_TYPE, rc), null);
             tempDestinations.put(name, rc);
             tempDestinationAmqToStompMap.put(rc.getQualifiedName(), name);
@@ -924,6 +1022,7 @@ public class ProtocolConverter {
     }
 
     public String getDefaultHeartBeat() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3603
         return defaultHeartBeat;
     }
 
@@ -935,6 +1034,7 @@ public class ProtocolConverter {
      * @return the hbGracePeriodMultiplier
      */
     public float getHbGracePeriodMultiplier() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4674
         return hbGracePeriodMultiplier;
     }
 
@@ -954,6 +1054,7 @@ public class ProtocolConverter {
         } else {
 
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4674
                 hbReadInterval = (Long.parseLong(keepAliveOpts[0]));
                 hbWriteInterval = Long.parseLong(keepAliveOpts[1]);
             } catch(NumberFormatException e) {
@@ -962,7 +1063,9 @@ public class ProtocolConverter {
 
             try {
                 StompInactivityMonitor monitor = this.stompTransport.getInactivityMonitor();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4674
                 monitor.setReadCheckTime((long) (hbReadInterval * hbGracePeriodMultiplier));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3603
                 monitor.setInitialDelayTime(Math.min(hbReadInterval, hbWriteInterval));
                 monitor.setWriteCheckTime(hbWriteInterval);
                 monitor.startMonitoring();
@@ -978,6 +1081,7 @@ public class ProtocolConverter {
     }
 
     protected void sendReceipt(StompFrame command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
         final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
         if (receiptId != null) {
             StompFrame sc = new StompFrame();
@@ -1002,7 +1106,9 @@ public class ProtocolConverter {
      * @return the command action or a safe string to use in logging.
      */
     protected Object safeGetAction(StompFrame command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6169
         String result = "<Unknown>";
+//IC see: https://issues.apache.org/jira/browse/AMQ-6169
         if (command != null && command.getAction() != null) {
             String action = command.getAction().trim();
 
@@ -1021,6 +1127,7 @@ public class ProtocolConverter {
                     case Stomp.Commands.DISCONNECT:
                         result = action;
                         break;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7012
                     case Stomp.Commands.SUBSCRIBE_PREFIX:
                         result = Stomp.Commands.SUBSCRIBE;
                     case Stomp.Commands.UNSUBSCRIBE_PREFIX:
@@ -1035,6 +1142,7 @@ public class ProtocolConverter {
     }
 
     boolean isStomp10() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
         return version.equals(Stomp.V1_0);
     }
 

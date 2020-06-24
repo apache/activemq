@@ -80,6 +80,7 @@ public class MirroredQueueTest extends EmbeddedBrokerTestSupport {
             connection = createConnection();
         }
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1919
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue tempQueue = session.createTemporaryQueue();
         RegionBroker rb = (RegionBroker) broker.getBroker().getAdaptor(

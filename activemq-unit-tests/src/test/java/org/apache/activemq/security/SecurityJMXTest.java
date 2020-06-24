@@ -57,16 +57,19 @@ public class SecurityJMXTest extends TestCase {
 
     @Override
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         broker = createBroker();
         broker.waitUntilStarted();
     }
 
     @Override
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2516
         broker.stop();
     }
 
     public void testDeniedViaStompNoStackTrace() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5892
         final AtomicBoolean gotExpected = new AtomicBoolean(false);
         final AtomicReference<Object> stackTrace = new AtomicReference<Object>();
 
@@ -126,6 +129,7 @@ public class SecurityJMXTest extends TestCase {
                 "destinationType=Queue,destinationName=TEST.Q");
         QueueViewMBean queueMbean = MBeanServerInvocationHandler.newProxyInstance(connection, name, QueueViewMBean.class, true);
         HashMap<String, String> headers = new HashMap<String, String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4522
         headers.put("timeToLive", Long.toString(2000));
         headers.put("JMSDeliveryMode", Integer.toString(DeliveryMode.PERSISTENT));
         queueMbean.sendTextMessage(headers, "test", "system", "manager");

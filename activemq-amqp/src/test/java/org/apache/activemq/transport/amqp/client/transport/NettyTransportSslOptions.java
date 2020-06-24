@@ -263,6 +263,7 @@ public class NettyTransportSslOptions extends NettyTransportOptions {
 
     @Override
     public boolean isSSL() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return true;
     }
 

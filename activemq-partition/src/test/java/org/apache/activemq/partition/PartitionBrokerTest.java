@@ -58,6 +58,7 @@ public class PartitionBrokerTest {
     @Test(timeout = 1000*60*60)
     public void testNonFailoverClientHasNoPartitionEffect() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         partitioning.byClientId = new HashMap<String, Target>();
         partitioning.byClientId.put("client1", new Target("broker1"));
         createBrokerCluster(2);
@@ -111,6 +112,7 @@ public class PartitionBrokerTest {
         createBrokerCluster(2);
 
         Connection connection2 = createConnectionTo("broker2");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
 
         within(5, TimeUnit.SECONDS, new Task() {
             public void run() throws Exception {
@@ -119,6 +121,7 @@ public class PartitionBrokerTest {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session2.createConsumer(session2.createQueue("foo"));
 
@@ -129,6 +132,7 @@ public class PartitionBrokerTest {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         Connection connection1 = createConnectionTo("broker2");
         Session session1 = connection1.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session1.createProducer(session1.createQueue("foo"));
@@ -181,6 +185,7 @@ public class PartitionBrokerTest {
     }
 
     protected Connection createConnectionTo(String brokerId) throws IOException, URISyntaxException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
         return createConnectionToUrl("failover://(" + getConnectURL(brokerId) + ")?randomize=false");
     }
 
@@ -210,6 +215,7 @@ public class PartitionBrokerTest {
             BrokerService broker = createBroker(brokerId);
             broker.setPersistent(false);
             broker.addConnector("tcp://localhost:0").setName("tcp");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
             addPartitionBrokerPlugin(broker);
             broker.start();
             broker.waitUntilStarted();

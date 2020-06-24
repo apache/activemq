@@ -55,10 +55,13 @@ public class CloseRollbackRedeliveryQueueTest extends EmbeddedBrokerTestSupport 
         session.commit();
         assertNotNull(message);
         assertEquals("redelivered message", id, message.getJMSMessageID());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         assertEquals(2, message.getLongProperty("JMSXDeliveryCount"));
     }
     
     public void testVerifyConsumerAndSessionCloseRedeliveryWithFailoverTransport() throws Throwable {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         MessageConsumer consumer = session.createConsumer(destination);
 
@@ -75,6 +78,8 @@ public class CloseRollbackRedeliveryQueueTest extends EmbeddedBrokerTestSupport 
         session.commit();
         assertNotNull(message);
         assertEquals("redelivered message", id, message.getJMSMessageID());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         assertEquals(2, message.getLongProperty("JMSXDeliveryCount"));
     }
 
@@ -94,6 +99,8 @@ public class CloseRollbackRedeliveryQueueTest extends EmbeddedBrokerTestSupport 
         session.commit();
         assertNotNull(message);
         assertEquals("redelivered message", id, message.getJMSMessageID());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         assertEquals(2, message.getLongProperty("JMSXDeliveryCount"));
     }
     

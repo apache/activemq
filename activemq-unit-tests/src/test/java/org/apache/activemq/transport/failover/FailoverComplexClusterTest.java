@@ -57,6 +57,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         createClients();
         Thread.sleep(2000);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
         runTests(false, null, null, null);
     }
 
@@ -132,7 +133,9 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
         createClients();
         Thread.sleep(2000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3685
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
         runTests(true, null, null, null);
     }
 
@@ -157,6 +160,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         assertClientsConnectedToTwoBrokers();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
         createBrokerA(false, null, null, null);
         getBroker(BROKER_A_NAME).waitUntilStarted();
 
@@ -174,6 +178,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         initSingleTcBroker("", null, null);
 
         Thread.sleep(2000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
         setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false&initialReconnectDelay=500&randomize=false");
         createClients(100);
         Thread.sleep(5000);
@@ -190,6 +195,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     public void testThreeBrokerClusterDestinationFilter() throws Exception {
 
         initSingleTcBroker("", null, null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
 
         Thread.sleep(2000);
         setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
@@ -200,6 +206,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
     public void testFailOverWithUpdateClientsOnRemove() throws Exception{
         // Broker A
+//IC see: https://issues.apache.org/jira/browse/AMQ-4505
         addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
         TransportConnector connectorA = getBroker(BROKER_A_NAME).addConnector(BROKER_A_CLIENT_TC_ADDRESS);
         connectorA.setName("openwire");
@@ -228,6 +235,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         Thread.sleep(5000);
 
         // We stop broker A.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5515
         logger.info("Stopping broker A whose address is: {}", BROKER_A_CLIENT_TC_ADDRESS);
         getBroker(BROKER_A_NAME).stop();
         getBroker(BROKER_A_NAME).waitUntilStopped();
@@ -239,6 +247,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
     public void testStaticInfoAvailableAfterPattialUpdate() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
         addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
         TransportConnector connectorA = getBroker(BROKER_A_NAME).addConnector(BROKER_A_CLIENT_TC_ADDRESS);
         connectorA.setName("openwire");
@@ -299,6 +308,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         assertClientsConnectedToTwoBrokers();
 
         LOG.info("Recreating BrokerC after stop");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
         createBrokerC(multi, tcParams, clusterFilter, destinationFilter);
         getBroker(BROKER_C_NAME).waitUntilStarted();
 
@@ -338,7 +348,9 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     @Override
     protected void tearDown() throws Exception {
         shutdownClients();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3685
         Thread.sleep(2000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
         destroyBrokerCluster();
     }
 
@@ -357,6 +369,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     }
 
     private void createBrokerA(boolean multi, String params, String clusterFilter, String destinationFilter) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4505
         final String tcParams = (params == null)?"":params;
         if (getBroker(BROKER_A_NAME) == null) {
             addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
@@ -374,6 +387,8 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     }
 
     private void createBrokerB(boolean multi, String params, String clusterFilter, String destinationFilter) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
+//IC see: https://issues.apache.org/jira/browse/AMQ-4505
         final String tcParams = (params == null)?"":params;
         if (getBroker(BROKER_B_NAME) == null) {
             addBroker(BROKER_B_NAME, createBroker(BROKER_B_NAME));
@@ -391,6 +406,8 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     }
 
     private void createBrokerC(boolean multi, String params, String clusterFilter, String destinationFilter) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
+//IC see: https://issues.apache.org/jira/browse/AMQ-4505
         final String tcParams = (params == null)?"":params;
         if (getBroker(BROKER_C_NAME) == null) {
             addBroker(BROKER_C_NAME, createBroker(BROKER_C_NAME));

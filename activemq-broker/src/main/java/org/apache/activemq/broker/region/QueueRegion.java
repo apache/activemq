@@ -49,6 +49,7 @@ public class QueueRegion extends AbstractRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info)
         throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1846
         ActiveMQDestination destination = info.getDestination();
         PolicyEntry entry = null;
         if (destination != null && broker.getDestinationPolicy() != null) {

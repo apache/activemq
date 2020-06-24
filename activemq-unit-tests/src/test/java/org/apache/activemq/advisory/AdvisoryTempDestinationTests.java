@@ -88,6 +88,8 @@ public class AdvisoryTempDestinationTests {
         MessageConsumer consumer = s.createConsumer(queue);
         assertNotNull(consumer);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         Topic advisoryTopic = AdvisorySupport.getSlowConsumerAdvisoryTopic((ActiveMQDestination) queue);
         s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
@@ -167,12 +169,14 @@ public class AdvisoryTempDestinationTests {
             producer.send(m);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         Message msg = advisoryConsumer.receive(EXPIRE_MESSAGE_PERIOD);
         assertNotNull(msg);
     }
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         broker = createBroker();
         connectionURI = broker.getTransportConnectors().get(0).getPublishableConnectString();
         ConnectionFactory factory = createConnectionFactory();
@@ -189,6 +193,7 @@ public class AdvisoryTempDestinationTests {
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(connectionURI);
         return cf;
     }
@@ -216,13 +221,16 @@ public class AdvisoryTempDestinationTests {
         pMap.setPolicyEntries(policyEntries);
 
         answer.setDestinationPolicy(pMap);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         answer.addConnector("tcp://0.0.0.0:0");
         answer.setDeleteAllMessagesOnStartup(true);
     }
 
     private PolicyEntry createPolicyEntry(ConstantPendingMessageLimitStrategy strategy) {
         PolicyEntry policy = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         policy.setExpireMessagesPeriod(EXPIRE_MESSAGE_PERIOD);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
         policy.setAdvisoryForFastProducers(true);
         policy.setAdvisoryForConsumed(true);
         policy.setAdvisoryForDelivery(true);

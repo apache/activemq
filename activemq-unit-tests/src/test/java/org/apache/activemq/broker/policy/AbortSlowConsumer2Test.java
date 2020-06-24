@@ -31,6 +31,8 @@ public class AbortSlowConsumer2Test extends AbortSlowConsumerBase {
 
     @Parameterized.Parameters(name = "isTopic({0})")
     public static Collection<Object[]> getTestParameters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
         return Arrays.asList(new Object[][]{{Boolean.TRUE}});
     }
 

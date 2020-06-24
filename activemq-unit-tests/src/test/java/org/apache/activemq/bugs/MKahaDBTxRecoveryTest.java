@@ -199,6 +199,7 @@ public class MKahaDBTxRecoveryTest {
     @Test
     public void testManualRecoveryOnCorruptTxStore() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7488
         prepareBrokerWithMultiStore(true);
         ((MultiKahaDBPersistenceAdapter)broker.getPersistenceAdapter()).setCheckForCorruption(true);
         broker.start();
@@ -524,6 +525,7 @@ public class MKahaDBTxRecoveryTest {
         multiKahaDBPersistenceAdapter.setFilteredPersistenceAdapters(adapters);
         multiKahaDBPersistenceAdapter.setJournalMaxFileLength(4*1024);
         multiKahaDBPersistenceAdapter.setJournalCleanupInterval(10);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
 
         broker = createBroker(multiKahaDBPersistenceAdapter);
     }

@@ -99,6 +99,7 @@ public class AMQ2364Test {
         ConnectionStateTracker stateTracker = (ConnectionStateTracker) stateTrackerField.get(failoverTrans);
         Field statesField = ConnectionStateTracker.class.getDeclaredField("connectionStates");
         statesField.setAccessible(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
         ConcurrentMap<ConnectionId, ConnectionState> states =
                 (ConcurrentHashMap<ConnectionId, ConnectionState>) statesField.get(stateTracker);
 

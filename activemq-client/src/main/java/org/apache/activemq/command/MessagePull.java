@@ -53,6 +53,7 @@ public class MessagePull extends BaseCommand implements TransientInitializer {
      * Configures a message pull from the consumer information
      */
     public void configure(ConsumerInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
         setConsumerId(info.getConsumerId());
         setDestination(info.getDestination());
     }
@@ -97,6 +98,7 @@ public class MessagePull extends BaseCommand implements TransientInitializer {
      * @openwire:property version=3
      */
     public String getCorrelationId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1196
         return correlationId;
     }
 
@@ -120,6 +122,7 @@ public class MessagePull extends BaseCommand implements TransientInitializer {
     }
 
     public void setTracked(boolean tracked) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4977
         this.tracked = tracked;
     }
 
@@ -128,6 +131,10 @@ public class MessagePull extends BaseCommand implements TransientInitializer {
     }
 
     public int getQuantity() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5413
+//IC see: https://issues.apache.org/jira/browse/AMQ-5433
+//IC see: https://issues.apache.org/jira/browse/AMQ-5647
+//IC see: https://issues.apache.org/jira/browse/AMQ-5684
         return quantity;
     }
 
@@ -145,6 +152,7 @@ public class MessagePull extends BaseCommand implements TransientInitializer {
 
     @Override
     public void initTransients() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6823
         quantity = 1;
         alwaysSignalDone = false;
         tracked = false;

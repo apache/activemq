@@ -50,6 +50,7 @@ public class SubscriptionInfoTest extends DataFileGeneratorTestSupport {
         info.setDestination(createActiveMQDestination("Destination:2"));
         info.setSelector("Selector:3");
         info.setSubscriptionName("SubcriptionName:4");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1356
         info.setSubscribedDestination(createActiveMQDestination("SubscribedDestination:5"));
     }
 }

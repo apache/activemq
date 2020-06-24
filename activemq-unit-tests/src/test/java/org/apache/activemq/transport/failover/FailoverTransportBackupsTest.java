@@ -113,6 +113,7 @@ public class FailoverTransportBackupsTest {
             }
         }));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6124
         assertEquals("conected to..", "1", currentBrokerInfo.getBrokerName());
         broker1.stop();
 
@@ -127,6 +128,7 @@ public class FailoverTransportBackupsTest {
         assertTrue("Incorrect number of Transport interruptions", transportInterruptions >= 1);
         assertTrue("Incorrect number of Transport resumptions", transportResumptions >= 1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6124
         assertEquals("conected to..", "2", currentBrokerInfo.getBrokerName());
         broker2.stop();
 
@@ -141,6 +143,7 @@ public class FailoverTransportBackupsTest {
         assertTrue("Incorrect number of Transport interruptions", transportInterruptions >= 2);
         assertTrue("Incorrect number of Transport resumptions", transportResumptions >= 2);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6124
         assertEquals("conected to..", "3", currentBrokerInfo.getBrokerName());
     }
 
@@ -189,6 +192,7 @@ public class FailoverTransportBackupsTest {
         return bs;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6124
     BrokerInfo currentBrokerInfo;
     protected Transport createTransport(int backups) throws Exception {
         String connectionUri = "failover://("+
@@ -206,6 +210,7 @@ public class FailoverTransportBackupsTest {
             @Override
             public void onCommand(Object command) {
                 LOG.debug("Test Transport Listener received Command: " + command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6124
                 if (command instanceof BrokerInfo) {
                     currentBrokerInfo = (BrokerInfo) command;
                     LOG.info("BrokerInfo: " + currentBrokerInfo);

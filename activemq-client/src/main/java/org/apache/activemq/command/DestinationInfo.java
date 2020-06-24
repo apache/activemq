@@ -127,6 +127,8 @@ public class DestinationInfo extends BaseCommand {
     }
 
     public DestinationInfo copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         DestinationInfo result = new DestinationInfo();
         super.copy(result);
         result.connectionId = connectionId;

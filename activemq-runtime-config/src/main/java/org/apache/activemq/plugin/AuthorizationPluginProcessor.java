@@ -57,6 +57,7 @@ public class AuthorizationPluginProcessor extends DefaultConfigurationProcessor 
                     }
                 }
                 xBeanAuthorizationMap.setAuthorizationEntries(entries);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6471
                 xBeanAuthorizationMap.setGroupClass(dtoMap.getAuthorizationMap().getGroupClass());
                 try {
                     xBeanAuthorizationMap.afterPropertiesSet();

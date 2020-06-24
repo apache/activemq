@@ -75,6 +75,7 @@ public abstract class AbstractInflightMessageSizeTest {
     @Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
                 {ActiveMQSession.SESSION_TRANSACTED, true, true},
                 {ActiveMQSession.AUTO_ACKNOWLEDGE, true, true},
                 {ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE, true, true},
@@ -106,6 +107,7 @@ public abstract class AbstractInflightMessageSizeTest {
         brokerService.setDeleteAllMessagesOnStartup(true);
         TransportConnector tcp = brokerService
                 .addConnector("tcp://localhost:0");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         PolicyEntry policy = new PolicyEntry();
         policy.setUseTopicSubscriptionInflightStats(useTopicSubscriptionInflightStats);
         PolicyMap pMap = new PolicyMap();
@@ -182,6 +184,7 @@ public abstract class AbstractInflightMessageSizeTest {
     @Test(timeout=60000)
     public void testInflightMessageSizePrefetchFilled() throws Exception {
         Assume.assumeTrue(useTopicSubscriptionInflightStats);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
 
         final long size = sendMessages(prefetch);
 
@@ -220,6 +223,7 @@ public abstract class AbstractInflightMessageSizeTest {
     @Test(timeout=60000)
     public void testInflightMessageSizePrefetchNotFilled() throws Exception {
         Assume.assumeTrue(useTopicSubscriptionInflightStats);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
 
         final long size = sendMessages(prefetch - 10);
 
@@ -257,6 +261,8 @@ public abstract class AbstractInflightMessageSizeTest {
      */
     @Test(timeout=60000)
     public void testInflightMessageSizeRollback() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         Assume.assumeTrue(useTopicSubscriptionInflightStats);
         Assume.assumeTrue(ackType == ActiveMQSession.SESSION_TRANSACTED);
 

@@ -63,6 +63,7 @@ public class BrokerComponent extends UriEndpointComponent implements EndpointCom
         }
 
         ActiveMQDestination destination = ActiveMQDestination.createDestination(remaining, destinationType);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5657
         BrokerEndpoint brokerEndpoint = new BrokerEndpoint(uri, this, remaining, destination, brokerConfiguration);
         setProperties(brokerEndpoint, parameters);
         return brokerEndpoint;

@@ -96,6 +96,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     transient MessageDestination regionDestination;
     transient MemoryUsage memoryUsage;
     transient AtomicBoolean processAsExpired = new AtomicBoolean(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6361
 
     private BrokerId[] brokerPath;
     private BrokerId[] cluster;
@@ -124,6 +125,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public boolean isMarshalled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6811
         return isContentMarshalled() && isPropertiesMarshalled();
     }
 
@@ -178,9 +180,12 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         copy.regionDestination = regionDestination;
         copy.brokerInTime = brokerInTime;
         copy.brokerOutTime = brokerOutTime;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         copy.memoryUsage=this.memoryUsage;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1661
         copy.brokerPath = brokerPath;
         copy.jmsXGroupFirstForConsumer = jmsXGroupFirstForConsumer;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4092
 
         // lets not copy the following fields
         // copy.targetConsumerId = targetConsumerId;
@@ -201,6 +206,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             }
             properties = unmarsallProperties(marshalledProperties);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         Object result = properties.get(name);
         if (result instanceof UTF8Buffer) {
             result = result.toString();
@@ -231,6 +237,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public void removeProperty(String name) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         lazyCreateProperties();
         properties.remove(name);
     }
@@ -243,6 +250,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
                 properties = unmarsallProperties(marshalledProperties);
                 marshalledProperties = null;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5119
         } else {
             marshalledProperties = null;
         }
@@ -515,6 +523,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     @Override
 	public boolean isExpired() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         long expireTime = getExpiration();
         return expireTime > 0 && System.currentTimeMillis() > expireTime;
     }
@@ -652,6 +661,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     public void setRegionDestination(MessageDestination destination) {
         this.regionDestination = destination;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         if(this.memoryUsage==null) {
             this.memoryUsage=destination.getMemoryUsage();
         }
@@ -685,6 +695,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             size = getSize();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         if (rc == 1 && getMemoryUsage() != null) {
             getMemoryUsage().increaseUsage(size);
             //System.err.println("INCREASE USAGE " + System.identityHashCode(getMemoryUsage()) + " PERCENT = " + getMemoryUsage().getPercentUsage());
@@ -704,6 +715,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             size = getSize();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         if (rc == 0 && getMemoryUsage() != null) {
             getMemoryUsage().decreaseUsage(size);
             //Thread.dumpStack();
@@ -756,6 +768,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public void onMessageRolledBack() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-519
         incrementRedeliveryCounter();
     }
 
@@ -820,6 +833,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
      * @openwire:property version=10
      */
     public boolean isJMSXGroupFirstForConsumer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4092
         return jmsXGroupFirstForConsumer;
     }
 
@@ -828,6 +842,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public void compress() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         if (!isCompressed()) {
             storeContent();
             if (!isCompressed() && getContent() != null) {
@@ -848,6 +863,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1978
         return toString(null);
     }
 
@@ -862,6 +878,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     @Override
     public boolean canProcessAsExpired() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6361
         return processAsExpired.compareAndSet(false, true);
     }
 }

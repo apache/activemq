@@ -56,7 +56,9 @@ public class TempQueue extends Queue{
     
     @Override
     public void initialize() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         this.messages=new VMPendingMessageCursor(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
         this.messages.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.systemUsage = brokerService.getSystemUsage();
         memoryUsage.setParent(systemUsage.getMemoryUsage());           
@@ -87,7 +89,9 @@ public class TempQueue extends Queue{
             LOG.info("{} on dispose, purge of {} pending messages: {}", new Object[]{ getActiveMQDestination().getQualifiedName(), this.destinationStatistics.getMessages().getCount(), messages });
             // we may want to capture these message ids in an advisory
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2616
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
             purge();
         } catch (Exception e) {
             LOG.warn("Caught an exception purging Queue: {}", destination, e);

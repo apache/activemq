@@ -76,6 +76,7 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4144
                 return message.isPersistent() ? "PERSISTENT" : "NON_PERSISTENT";
             }
         });
@@ -100,6 +101,7 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
                 return Long.valueOf(message.getTimestamp());
             }
         });
@@ -139,6 +141,7 @@ public class PropertyExpression implements Expression {
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXUserID", new SubExpression() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4542
 
             @Override
             public Object evaluate(Message message) {
@@ -171,6 +174,7 @@ public class PropertyExpression implements Expression {
                 if (txId == null) {
                     return null;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4554
                 return txId.toString();
             }
         });
@@ -178,6 +182,7 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-567
                 return Long.valueOf(message.getBrokerInTime());
             }
         });
@@ -189,6 +194,7 @@ public class PropertyExpression implements Expression {
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSActiveMQBrokerPath", new SubExpression() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4539
 
             @Override
             public Object evaluate(Message message) {
@@ -196,6 +202,7 @@ public class PropertyExpression implements Expression {
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXGroupFirstForConsumer", new SubExpression() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4092
 
             @Override
             public Object evaluate(Message message) {
@@ -273,6 +280,7 @@ public class PropertyExpression implements Expression {
         if (o == null || !this.getClass().equals(o.getClass())) {
             return false;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4554
         return name.equals(((PropertyExpression) o).name);
     }
 }

@@ -32,6 +32,7 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
 
     public void testDownload() throws Exception {
         setConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2732
 
         // create file
         File uploadFile = new File(ftpHomeDirFile, "test.txt");

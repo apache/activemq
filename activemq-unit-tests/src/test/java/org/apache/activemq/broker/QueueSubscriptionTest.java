@@ -41,6 +41,8 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
     @After
     @Override
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4286
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
         super.tearDown();
     }
 
@@ -126,6 +128,11 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         assertDestinationMemoryUsageGoesToZero();
     }
 
@@ -140,6 +147,8 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         assertDestinationMemoryUsageGoesToZero();
     }
 
@@ -154,6 +163,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         assertDestinationMemoryUsageGoesToZero();
     }
 

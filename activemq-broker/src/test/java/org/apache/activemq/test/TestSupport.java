@@ -176,6 +176,7 @@ public abstract class TestSupport extends TestCase {
      * Test if base directory contains spaces
      */
     protected void assertBaseDirectoryContainsSpaces() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2555
     	assertFalse("Base directory cannot contain spaces.", new File(System.getProperty("basedir", ".")).getAbsoluteFile().toString().contains(" "));
     }
 

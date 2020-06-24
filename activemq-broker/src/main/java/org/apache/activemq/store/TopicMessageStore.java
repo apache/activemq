@@ -43,6 +43,8 @@ public interface TopicMessageStore extends MessageStore {
      * @throws IOException
      */
     void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId, MessageAck ack) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
 
     /**
      * @param clientId
@@ -153,5 +155,6 @@ public interface TopicMessageStore extends MessageStore {
      *
      * @throws IOException
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-4885
     void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException;
 }

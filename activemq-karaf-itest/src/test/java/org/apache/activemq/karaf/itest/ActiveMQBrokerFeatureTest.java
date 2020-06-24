@@ -43,8 +43,10 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
 
     @Configuration
     public static Option[] configure() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         return new Option[] //
         {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
          configure("connector", "activemq-broker"), //
          // To access web console
          //mavenBundle("commons-codec", "commons-codec").versionAsInProject(),
@@ -60,6 +62,7 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
 
     @Test(timeout=5 * 60 * 1000)
     public void test() throws Throwable {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         assertBrokerStarted();
         JMSTester jms = new JMSTester();
         jms.produceAndConsume(sessionFactory);

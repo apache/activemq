@@ -87,6 +87,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                     continue;
                 }
                 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
                 receiveCounter++;
                 from = headerMarshaller.createEndpoint(readBuffer, address);
 
@@ -256,6 +257,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
     }
 
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         return receiveCounter;
     }
 

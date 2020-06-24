@@ -265,10 +265,12 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     public String getHost() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5050
         UTF8Buffer buff = (UTF8Buffer) getProperty("Host");
         if( buff == null ) {
             return null;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5707
         return buff.toString();
     }
 
@@ -281,6 +283,7 @@ public class WireFormatInfo implements Command, MarshallAware {
      */
     public long getMaxInactivityDuration() throws IOException {
         Long l = (Long)getProperty("MaxInactivityDuration");
+//IC see: https://issues.apache.org/jira/browse/AMQ-643
         return l == null ? 0 : l.longValue();
     }
 
@@ -298,6 +301,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     public long getMaxFrameSize() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
         Long l = (Long)getProperty("MaxFrameSize");
         return l == null ? 0 : l.longValue();
     }
@@ -322,6 +326,7 @@ public class WireFormatInfo implements Command, MarshallAware {
      * @throws IOException
      */
     public String getProviderName() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6379
         Object o = getProperty("ProviderName");
         return o == null ? null : o.toString();
     }
@@ -444,6 +449,8 @@ public class WireFormatInfo implements Command, MarshallAware {
 
     @Override
     public boolean isConsumerControl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
+//IC see: https://issues.apache.org/jira/browse/AMQ-5707
         return false;
     }
 

@@ -50,6 +50,7 @@ public class AMQ3779Test {
     @Before
     public void setUp() throws Exception {
         ok.set(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         appender = new DefaultTestAppender() {
             @Override
@@ -58,6 +59,7 @@ public class AMQ3779Test {
                     ok.set(true);
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6389
                 if (event.getMessage().toString().contains("Sending") && event.getMessage().toString().contains("size = 0")) {
                     gotZeroSize.set(true);
                 }
@@ -65,6 +67,7 @@ public class AMQ3779Test {
         };
 
         Logger.getRootLogger().addAppender(appender);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         try {
             brokerService = new BrokerService();
@@ -107,6 +110,7 @@ public class AMQ3779Test {
 
         assertTrue("got expected log message", ok.get());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6389
         assertFalse("did not get zero size in send message", gotZeroSize.get());
     }
 }

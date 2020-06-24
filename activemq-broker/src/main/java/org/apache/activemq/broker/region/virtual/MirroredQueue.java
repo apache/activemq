@@ -42,6 +42,7 @@ public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware
 
     public Destination intercept(final Destination destination) {
         if (destination.getActiveMQDestination().isQueue()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1654
             if (!destination.getActiveMQDestination().isTemporary() || brokerService.isUseTempMirroredQueues()) {
                 try {
                     final Destination mirrorDestination = getMirrorDestination(destination);
@@ -55,6 +56,7 @@ public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware
                                     message = message.copy();
                                 }
                                 message.setDestination(destination.getActiveMQDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3669
                                 message.setMemoryUsage(null); // set this to null so that it will use the queue memoryUsage instance instead of the topic.
                                 super.send(context, message);
                             }
@@ -71,6 +73,7 @@ public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware
     
 
     public void remove(Destination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1672
         if (brokerService == null) {
             throw new IllegalArgumentException("No brokerService injected!");
         }

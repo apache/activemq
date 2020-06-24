@@ -93,6 +93,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
      *        The unique ID assigned to this sender.
      */
     public AmqpSender(AmqpSession session, String address, String senderId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         this(session, address, senderId, null, null);
     }
 
@@ -112,6 +113,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
      */
     public AmqpSender(AmqpSession session, String address, String senderId, SenderSettleMode senderMode, ReceiverSettleMode receiverMode) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         if (address != null && address.isEmpty()) {
             throw new IllegalArgumentException("Address cannot be empty.");
         }
@@ -120,6 +122,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
         this.address = address;
         this.senderId = senderId;
         this.userSpecifiedTarget = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         this.userSpecifiedSenderSettlementMode = senderMode;
         this.userSpecifiedReceiverSettlementMode = receiverMode;
     }
@@ -144,6 +147,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
         this.userSpecifiedTarget = target;
         this.address = target.getAddress();
         this.senderId = senderId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         this.userSpecifiedSenderSettlementMode = null;
         this.userSpecifiedReceiverSettlementMode = null;
     }
@@ -181,6 +185,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             public void run() {
                 try {
                     doSend(message, sendRequest, txId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
                     session.pumpToProtonTransport(sendRequest);
                 } catch (Exception e) {
                     sendRequest.onFailure(e);
@@ -211,6 +216,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
                 public void run() {
                     checkClosed();
                     close(request);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
                     session.pumpToProtonTransport(request);
                 }
             });
@@ -230,6 +236,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
      * @return an unmodifiable view of the underlying Sender instance.
      */
     public Sender getSender() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6672
         return UnmodifiableProxy.senderProxy(getEndpoint());
     }
 
@@ -277,6 +284,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
     }
 
     public void setDesiredCapabilities(Symbol[] desiredCapabilities) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
         if (getEndpoint() != null) {
             throw new IllegalStateException("Endpoint already established");
         }
@@ -311,11 +319,13 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
     @Override
     protected void doOpen() {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5699
         Symbol[] outcomes = new Symbol[]{ Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL };
         Source source = new Source();
         source.setAddress(senderId);
         source.setOutcomes(outcomes);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         Target target = userSpecifiedTarget;
         if (target == null) {
             target = new Target();
@@ -328,6 +338,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
         sender.setSource(source);
         sender.setTarget(target);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         if (userSpecifiedSenderSettlementMode != null) {
             sender.setSenderSettleMode(userSpecifiedSenderSettlementMode);
             if (SenderSettleMode.SETTLED.equals(userSpecifiedSenderSettlementMode)) {
@@ -347,6 +358,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             sender.setReceiverSettleMode(ReceiverSettleMode.FIRST);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
         sender.setDesiredCapabilities(desiredCapabilities);
         sender.setOfferedCapabilities(offeredCapabilities);
         sender.setProperties(properties);
@@ -395,6 +407,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
     }
 
     protected void doDeliveryUpdateInspection(Delivery delivery) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6485
         try {
             getStateInspector().inspectDeliveryUpdate(getSender(), delivery);
         } catch (Throwable error) {
@@ -458,6 +471,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             try {
                 encodedSize = message.encode(encodeBuffer, 0, encodeBuffer.length);
                 break;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7065
             } catch (BufferOverflowException | IndexOutOfBoundsException e) {
                 encodeBuffer = new byte[encodeBuffer.length * 2];
             }
@@ -481,6 +495,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
     @Override
     public void processDeliveryUpdates(AmqpConnection connection) throws IOException {
         List<Delivery> toRemove = new ArrayList<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
 
         for (Delivery delivery : pending) {
             DeliveryState state = delivery.getRemoteState();
@@ -489,6 +504,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             }
 
             doDeliveryUpdateInspection(delivery);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6485
 
             Outcome outcome = null;
             if (state instanceof TransactionalState) {
@@ -498,11 +514,13 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
                 outcome = (Outcome) state;
             } else {
                 LOG.warn("Message send updated with unsupported state: {}", state);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5723
                 outcome = null;
             }
 
             AsyncResult request = (AsyncResult) delivery.getContext();
             Exception deliveryError = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
 
             if (outcome instanceof Accepted) {
                 LOG.trace("Outcome of delivery was accepted: {}", delivery);

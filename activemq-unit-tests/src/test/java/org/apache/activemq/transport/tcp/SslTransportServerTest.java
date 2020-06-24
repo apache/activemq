@@ -52,6 +52,7 @@ public class SslTransportServerTest extends TestCase {
 
     public void testWantAndNeedClientAuthSetters() throws IOException {
         for (int i = 0; i < 4; ++i) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1659
             String options = "";
             singleTest(i, options);
             }

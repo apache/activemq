@@ -66,10 +66,12 @@ public abstract class AbstractFeatureTest {
     BundleContext bundleContext;
 
     @Inject
+//IC see: https://issues.apache.org/jira/browse/AMQ-4341
     FeaturesService featuresService;
     
     @Inject
     SessionFactory sessionFactory;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
 
     @Before
     public void setUp() throws Exception {
@@ -93,6 +95,7 @@ public abstract class AbstractFeatureTest {
      * @throws Exception
      */
     public void installAndAssertFeature(final String feature) throws Throwable {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         featuresService.installFeature(feature);
     }
 
@@ -108,6 +111,7 @@ public abstract class AbstractFeatureTest {
     
     public Bundle getBundle(String symName) {
         for (Bundle bundle: bundleContext.getBundles()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
             if (bundle.getSymbolicName().contains(symName)) {
                 return bundle;
             }
@@ -116,6 +120,7 @@ public abstract class AbstractFeatureTest {
     }
 
     protected String executeCommand(String command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
 		return KarafShellHelper.executeCommand(sessionFactory, command);
 	}
 
@@ -141,6 +146,7 @@ public abstract class AbstractFeatureTest {
     }
 
     public static Option configure(String... features) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7076
         String karafVersion = MavenUtils.getArtifactVersion("org.apache.karaf", "apache-karaf");
         MavenUrlReference karafUrl = maven().groupId("org.apache.karaf").artifactId("apache-karaf")
             .type("tar.gz").versionAsInProject();
@@ -152,9 +158,11 @@ public abstract class AbstractFeatureTest {
          karafDistributionConfiguration().frameworkUrl(karafUrl).karafVersion(KARAF_MAJOR_VERSION)
              .name("Apache Karaf").unpackDirectory(new File("target/paxexam/unpack/")),
          keepRuntimeFolder(), //
+//IC see: https://issues.apache.org/jira/browse/AMQ-7076
          logLevel(LogLevelOption.LogLevel.INFO), //
          editConfigurationFilePut("etc/org.ops4j.pax.url.mvn.cfg", "org.ops4j.pax.url.mvn.repositories", "https://repo1.maven.org/maven2@id=central"),
          editConfigurationFilePut("etc/config.properties", "karaf.startlevel.bundle", "50"),
+//IC see: https://issues.apache.org/jira/browse/AMQ-7076
          editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories",
                  "mvn:org.apache.karaf.features/spring-legacy/" + karafVersion + "/xml/features"),
          // debugConfiguration("5005", true),
@@ -184,6 +192,7 @@ public abstract class AbstractFeatureTest {
     }
     
     public static void withinReason(Runnable runable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         long max = System.currentTimeMillis() + ASSERTION_TIMEOUT;
         while (true) {
             try {
@@ -191,6 +200,7 @@ public abstract class AbstractFeatureTest {
                 return;
             } catch (Throwable t) {
                 if (System.currentTimeMillis() < max) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
                     try {
 						TimeUnit.SECONDS.sleep(1);
 					} catch (InterruptedException e) {
@@ -206,6 +216,7 @@ public abstract class AbstractFeatureTest {
     
     @SuppressWarnings("resource")
     public static void copyFile(File from, File to) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         if (!to.exists()) {
             System.err.println("Creating new file for: "+ to);
             to.createNewFile();

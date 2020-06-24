@@ -60,6 +60,7 @@ public class SimpleNetworkTest extends BaseNetworkTest {
     @Override
     protected void doSetUp(boolean deleteAllMessages) throws Exception {
         super.doSetUp(deleteAllMessages);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6861
 
         included = new ActiveMQTopic("include.test.bar");
         excluded = new ActiveMQTopic("exclude.test.bar");
@@ -83,6 +84,7 @@ public class SimpleNetworkTest extends BaseNetworkTest {
             Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
             Message msg = consumer1.receive(3000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
             assertNotNull("not null? message: " + i, msg);
             ActiveMQMessage amqMessage = (ActiveMQMessage) msg;
             assertTrue(amqMessage.isCompressed());
@@ -116,6 +118,8 @@ public class SimpleNetworkTest extends BaseNetworkTest {
 
         TopicRequestor requestor = new TopicRequestor((TopicSession)localSession, included);
         // allow for consumer infos to perculate arround
+//IC see: https://issues.apache.org/jira/browse/AMQ-2527
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         Thread.sleep(5000);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             TextMessage msg = localSession.createTextMessage("test msg: " + i);
@@ -124,6 +128,7 @@ public class SimpleNetworkTest extends BaseNetworkTest {
             LOG.info(result.getText());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
         assertNetworkBridgeStatistics(MESSAGE_COUNT, MESSAGE_COUNT);
     }
 
@@ -141,6 +146,7 @@ public class SimpleNetworkTest extends BaseNetworkTest {
         assertNull(excludedConsumer.receive(1000));
         assertNotNull(includedConsumer.receive(1000));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
         assertNetworkBridgeStatistics(1, 0);
     }
 
@@ -156,6 +162,8 @@ public class SimpleNetworkTest extends BaseNetworkTest {
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2527
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
             assertNotNull(consumer1.receive(1000));
             assertNotNull(consumer2.receive(1000));
         }
@@ -164,7 +172,10 @@ public class SimpleNetworkTest extends BaseNetworkTest {
         assertNull(consumer2.receive(1000));
 
         assertNetworkBridgeStatistics(MESSAGE_COUNT, 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
         assertNotNull(localBroker.getManagementContext().getObjectInstance(
                 localBroker.createNetworkConnectorObjectName(localBroker.getNetworkConnectors().get(0))));
     }
@@ -177,6 +188,7 @@ public class SimpleNetworkTest extends BaseNetworkTest {
                 if (bridges.length > 0) {
                     LOG.info(brokerService + " bridges "  + Arrays.toString(bridges));
                     DemandForwardingBridgeSupport demandForwardingBridgeSupport = (DemandForwardingBridgeSupport) bridges[0];
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
                     ConcurrentMap<ConsumerId, DemandSubscription> forwardingBridges = demandForwardingBridgeSupport.getLocalSubscriptionMap();
                     LOG.info(brokerService + " bridge "  + demandForwardingBridgeSupport + ", localSubs: " + forwardingBridges);
                     if (!forwardingBridges.isEmpty()) {
@@ -304,6 +316,7 @@ public class SimpleNetworkTest extends BaseNetworkTest {
         Thread.sleep(1000);
 
         //Make sure stats are set
+//IC see: https://issues.apache.org/jira/browse/AMQ-6381
         assertEquals(MESSAGE_COUNT,
                 localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount());
 
@@ -312,6 +325,7 @@ public class SimpleNetworkTest extends BaseNetworkTest {
         doSetUp(false);
         remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
             assertNotNull("message count: " + i, remoteConsumer.receive(2500));
         }
     }
@@ -356,6 +370,7 @@ public class SimpleNetworkTest extends BaseNetworkTest {
 
     protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
         final NetworkBridge localBridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
         final NetworkBridge remoteBridge = remoteBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
 

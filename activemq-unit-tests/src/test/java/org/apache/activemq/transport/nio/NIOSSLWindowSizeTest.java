@@ -59,6 +59,7 @@ public class NIOSSLWindowSizeTest extends TestCase {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         TransportConnector connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true");
         broker.start();
         broker.waitUntilStarted();
@@ -102,6 +103,7 @@ public class NIOSSLWindowSizeTest extends TestCase {
         	prod.close();
         }        
     	MessageConsumer cons = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
     	try 
     	{
     		cons = session.createConsumer(dest);

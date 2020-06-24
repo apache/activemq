@@ -183,6 +183,8 @@ public class AMQ2801Test
 
             LOG.info(sub.getSubscriptionName() + ": pending = " + sub.getPendingQueueSize() + ", dispatched: " + sub.getDispatchedQueueSize());
             if(sub.getSubscriptionName().equals(SUBSCRIPTION1)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
                 assertEquals("Incorrect number of pending messages", MSG_COUNT, sub.getPendingQueueSize() + sub.getDispatchedQueueSize());
             } else {
                 assertEquals("Incorrect number of pending messages", 0, sub.getPendingQueueSize());

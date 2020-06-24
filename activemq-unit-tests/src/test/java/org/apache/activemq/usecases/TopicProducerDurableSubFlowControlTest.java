@@ -173,6 +173,7 @@ public class TopicProducerDurableSubFlowControlTest extends TestCase implements 
 
             }
         }, 10 * 60 * 1000));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6014
 
         for (DurableSubscriptionViewMBean sub : subViews) {
             LOG.info("name: " + sub.getSubscriptionName());

@@ -115,6 +115,7 @@ public abstract class AbstractJmsClient {
     }
 
     public Destination[] createDestinations(int destCount) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5306
         final String destName = getClient().getDestName();
         ArrayList<Destination> destinations = new ArrayList<>();
         if (destName.contains(DESTINATION_SEPARATOR)) {
@@ -164,16 +165,19 @@ public abstract class AbstractJmsClient {
     }
 
     private String withDestinationSuffix(String name, int destIndex, int destCount) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5301
         return (destCount == 1) ? name : name + "." + destIndex;
     }
 
     protected Destination createCompositeDestination(String destName, int destCount) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5306
         return createCompositeDestination(getDestinationType(destName), destName, destCount);
     }
 
     protected Destination createCompositeDestination(byte destinationType, String destName, int destCount) throws JMSException {
         String simpleName = getSimpleName(destName);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5301
         String compDestName = "";
         for (int i = 0; i < destCount; i++) {
             if (i > 0) {
@@ -183,6 +187,7 @@ public abstract class AbstractJmsClient {
         }
 
         LOG.info("Creating composite destination: {}", compDestName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5436
         Destination destination;
         Session session = getSession();
         if (destinationType == ActiveMQDestination.TOPIC_TYPE) {
@@ -198,6 +203,7 @@ public abstract class AbstractJmsClient {
     }
 
     private String[] mapToSimpleNames(String[] destNames) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5306
         assert (destNames != null);
         String[] simpleNames = new String[destNames.length];
         for (int i = 0; i < destNames.length; i++) {
@@ -212,6 +218,7 @@ public abstract class AbstractJmsClient {
             simpleName = destName.substring(QUEUE_SCHEME.length());
         } else if (destName.startsWith(TOPIC_SCHEME)) {
             simpleName = destName.substring(TOPIC_SCHEME.length());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5436
         } else if (destName.startsWith(TEMP_QUEUE_SCHEME)) {
             simpleName = destName.substring(TEMP_QUEUE_SCHEME.length());
         } else if (destName.startsWith(TEMP_TOPIC_SCHEME)) {
@@ -238,6 +245,7 @@ public abstract class AbstractJmsClient {
     protected Destination createDestination(String destName) throws JMSException {
         String simpleName = getSimpleName(destName);
         byte destinationType = getDestinationType(destName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5436
 
         if (destinationType == ActiveMQDestination.QUEUE_TYPE) {
             LOG.info("Creating queue: {}", destName);
@@ -278,7 +286,9 @@ public abstract class AbstractJmsClient {
      */
     public boolean commitTxIfNecessary() throws JMSException {
         internalTxCounter++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
         if (getClient().isSessTransacted()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5301
             if ((internalTxCounter % getClient().getCommitAfterXMsgs()) == 0) {
                 LOG.debug("Committing transaction.");
                 internalTxCounter = 0;

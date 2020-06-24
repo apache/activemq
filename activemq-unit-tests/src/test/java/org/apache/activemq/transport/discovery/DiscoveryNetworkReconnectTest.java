@@ -51,11 +51,14 @@ import org.slf4j.LoggerFactory;
 public class DiscoveryNetworkReconnectTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscoveryNetworkReconnectTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3523
     final int maxReconnects = 2;
     final String groupName = "GroupID-" + "DiscoveryNetworkReconnectTest";
     final String discoveryAddress = "multicast://default?group=" + groupName + "&initialReconnectDelay=1000";
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
     final Semaphore mbeanRegistered = new Semaphore(0);
     final Semaphore mbeanUnregistered = new Semaphore(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
     BrokerService brokerA, brokerB;
     Mockery context;
     ManagementContext managementContext;
@@ -75,6 +78,7 @@ public class DiscoveryNetworkReconnectTest {
             ObjectName mine = (ObjectName) name;
             LOG.info("Match: " + mine + " vs: " + other);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             if (!"networkConnectors".equals(other.getKeyProperty("connector"))) {
                 return false;
             }
@@ -104,6 +108,7 @@ public class DiscoveryNetworkReconnectTest {
         managementContext = context.mock(ManagementContext.class);
 
         context.checking(new Expectations(){{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             allowing(managementContext).getJmxDomainName(); will (returnValue("Test"));
             allowing(managementContext).setBrokerName("BrokerNC");
             allowing(managementContext).start();
@@ -119,6 +124,7 @@ public class DiscoveryNetworkReconnectTest {
             allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC"))));
             allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
+//IC see: https://issues.apache.org/jira/browse/AMQ-5213
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Log4JConfiguration"))));
             allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.Connection"))));
@@ -128,11 +134,14 @@ public class DiscoveryNetworkReconnectTest {
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.MasterBroker"))));
             allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=jobScheduler,jobSchedulerName=JMS"))));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
             allowing(managementContext).getObjectInstance(with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC"))));
 
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
             atLeast(maxReconnects - 1).of (managementContext).registerMBean(with(any(Object.class)), with(new NetworkBridgeObjectNameMatcher<ObjectName>(
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
                         new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC,networkBridge=localhost/127.0.0.1_"
                             + proxy.getUrl().getPort())))); will(new CustomAction("signal register network mbean") {
                                 @Override
@@ -142,6 +151,7 @@ public class DiscoveryNetworkReconnectTest {
                                     return new ObjectInstance((ObjectName)invocation.getParameter(1), "discription");
                                 }
                             });
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
             atLeast(maxReconnects - 1).of (managementContext).unregisterMBean(with(new NetworkBridgeObjectNameMatcher<ObjectName>(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC,networkBridge=localhost/127.0.0.1_"
                             + proxy.getUrl().getPort())))); will(new CustomAction("signal unregister network mbean") {
@@ -153,6 +163,7 @@ public class DiscoveryNetworkReconnectTest {
                                 }
                             });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             allowing(managementContext).unregisterMBean(with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC"))));
             allowing(managementContext).unregisterMBean(with(equal(
@@ -160,6 +171,7 @@ public class DiscoveryNetworkReconnectTest {
             allowing(managementContext).unregisterMBean(with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC"))));
             allowing(managementContext).unregisterMBean(with(equal(
+//IC see: https://issues.apache.org/jira/browse/AMQ-5213
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Log4JConfiguration"))));
             allowing(managementContext).unregisterMBean(with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.Connection"))));
@@ -181,17 +193,20 @@ public class DiscoveryNetworkReconnectTest {
         brokerA.waitUntilStopped();
         brokerB.stop();
         brokerB.waitUntilStopped();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
         proxy.close();
     }
 
     private void configure(BrokerService broker) {
         broker.setPersistent(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         broker.setUseJmx(true);
     }
 
     @Test
     public void testMulicastReconnect() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         brokerB.addNetworkConnector(discoveryAddress + "&discovered.trace=true&discovered.wireFormat.maxInactivityDuration=1000&discovered.wireFormat.maxInactivityDurationInitalDelay=1000");
         brokerB.start();
         brokerB.waitUntilStarted();
@@ -206,6 +221,7 @@ public class DiscoveryNetworkReconnectTest {
 
     @Test
     public void testSimpleReconnect() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         brokerB.addNetworkConnector("simple://(" + proxy.getUrl()
                 + ")?useExponentialBackOff=false&initialReconnectDelay=500&discovered.wireFormat.maxInactivityDuration=1000&discovered.wireFormat.maxInactivityDurationInitalDelay=1000");
         brokerB.start();
@@ -220,6 +236,7 @@ public class DiscoveryNetworkReconnectTest {
             assertTrue("we got a network connection in a timely manner", Wait.waitFor(new Wait.Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
                    return proxy.connections.size() >= 1;
                 }
             }));

@@ -31,6 +31,7 @@ public class PurgeCommand extends AbstractJmxCommand {
 
     protected String[] helpFile = new String[] {
         "Task Usage: Main purge [browse-options] <destinations>",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5740
         "Description: Delete selected destination's messages that matches the message selector.",
         "",
         "Purge Options:",
@@ -38,6 +39,7 @@ public class PurgeCommand extends AbstractJmxCommand {
         "                                  the messages selector format.",
         "    --reset                       After the purge operation, reset the destination statistics.",
         "    --jmxurl <url>                Set the JMX URL to connect to.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-2975
         "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",
         "    --jmxuser <user>              Set the JMX user used for authenticating.",
         "    --jmxpassword <password>      Set the JMX password used for authenticating.",
@@ -83,6 +85,7 @@ public class PurgeCommand extends AbstractJmxCommand {
     @Override
     protected void runTask(List<String> tokens) throws Exception {
         // If there is no queue name specified, let's select all
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
         if (tokens.isEmpty()) {
             tokens.add("*");
         }
@@ -90,6 +93,7 @@ public class PurgeCommand extends AbstractJmxCommand {
         // Iterate through the queue names
         for (Iterator<String> i = tokens.iterator(); i.hasNext(); ) {
             List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + i.next());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4333
 
             for (Iterator j = queueList.iterator(); j.hasNext(); ) {
                 ObjectName queueName = ((ObjectInstance) j.next()).getObjectName();
@@ -97,6 +101,7 @@ public class PurgeCommand extends AbstractJmxCommand {
                     purgeQueue(queueName);
                 } else {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5740
                     QueueViewMBean proxy = MBeanServerInvocationHandler.
                             newProxyInstance(createJmxConnection(),
                                     queueName,
@@ -138,8 +143,10 @@ public class PurgeCommand extends AbstractJmxCommand {
      * @throws Exception
      */
     public void purgeQueue(ObjectName queue) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         context.printInfo("Purging all messages in queue: " + queue.getKeyProperty("destinationName"));
         createJmxConnection().invoke(queue, "purge", new Object[] {}, new String[] {});
+//IC see: https://issues.apache.org/jira/browse/AMQ-5740
         if (resetStatistics) {
             createJmxConnection().invoke(queue, "resetStatistics", new Object[] {}, new String[] {});
         }
@@ -173,7 +180,10 @@ public class PurgeCommand extends AbstractJmxCommand {
 
             // If no message selector is specified, or next token is a new
             // option
+//IC see: https://issues.apache.org/jira/browse/AMQ-5740
             if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
@@ -229,6 +239,7 @@ public class PurgeCommand extends AbstractJmxCommand {
      */
     @Override
     protected void printHelp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         context.printHelp(helpFile);
     }
 

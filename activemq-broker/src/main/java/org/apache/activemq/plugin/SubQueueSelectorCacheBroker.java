@@ -94,6 +94,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
         persistThread = new Thread(this, SELECTOR_CACHE_PERSIST_THREAD_NAME);
         persistThread.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
         enableJmx();
     }
 
@@ -118,6 +119,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
             persistThread.interrupt();
             persistThread.join();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
         unregisterMBeans();
     }
 
@@ -136,6 +138,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
 		// don't track selectors for advisory topics, temp destinations or console
 		// related consumers
+//IC see: https://issues.apache.org/jira/browse/AMQ-7312
 		if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()
 				&& !info.isBrowser()) {
             String destinationName = info.getDestination().getQualifiedName();
@@ -145,6 +148,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
             if (!(ignoreWildcardSelectors && hasWildcards(selector))) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4899
                 Set<String> selectors = subSelectorCache.get(destinationName);
                 if (selectors == null) {
                     selectors = Collections.synchronizedSet(new HashSet<String>());
@@ -171,11 +175,13 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     }
 
     static boolean hasWildcards(String selector) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6036
         return WildcardFinder.hasWildcards(selector);
     }
 
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6210
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()) {
             if (singleSelectorPerDestination) {
                 String destinationName = info.getDestination().getQualifiedName();
@@ -194,12 +200,16 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     private void readCache() {
         if (persistFile != null && persistFile.exists()) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6210
                 try (FileInputStream fis = new FileInputStream(persistFile);) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7438
                     ObjectInputStream in = new SubSelectorClassObjectInputStream(fis);
                     try {
                         LOG.debug("Reading selector cache....");
                         subSelectorCache = (ConcurrentHashMap<String, Set<String>>) in.readObject();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4899
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7404
                         if (LOG.isDebugEnabled()) {
                             final StringBuilder sb = new StringBuilder();
                             sb.append("Selector cache data loaded from: ").append(persistFile.getAbsolutePath()).append("\n");
@@ -264,6 +274,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     public void run() {
         while (running) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
                 Thread.sleep(persistInterval);
             } catch (InterruptedException ex) {
             }
@@ -336,6 +347,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         }
 
         private static boolean hasLikeOperator(final Matcher matcher) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6036
             return matcher.find();
         }
 
@@ -351,6 +363,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
         private static boolean hasWildcardInCurrentMatch(final Matcher matcher) {
             String wildcards = "[_%]";
+//IC see: https://issues.apache.org/jira/browse/AMQ-6036
             if (getEscape(matcher) != null) {
                 wildcards = "(^|[^" + getEscape(matcher) + "])" + wildcards;
             }
@@ -361,6 +374,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
             Matcher matcher = LIKE_PATTERN.matcher(selector);
 
             while(hasLikeOperator(matcher)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6210
                 if (hasWildcardInCurrentMatch(matcher)) {
                     return true;
                 }
@@ -372,6 +386,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     private static class SubSelectorClassObjectInputStream extends ObjectInputStream {
 
         public SubSelectorClassObjectInputStream(InputStream is) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7438
             super(is);
         }
 

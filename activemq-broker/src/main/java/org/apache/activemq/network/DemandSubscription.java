@@ -53,11 +53,14 @@ public class DemandSubscription {
         remoteInfo = info;
         localInfo = info.copy();
         localInfo.setNetworkSubscription(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
         remoteSubsIds.add(info.getConsumerId());
     }
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         return "DemandSub{" + localInfo.getConsumerId() + ",remotes:" + remoteSubsIds + "}";
     }
 
@@ -82,6 +85,7 @@ public class DemandSubscription {
     }
 
     public Set<SubscriptionInfo> getDurableRemoteSubs() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         return durableRemoteSubs;
     }
 
@@ -110,6 +114,8 @@ public class DemandSubscription {
     }
 
     public boolean addForcedDurableConsumer(ConsumerId id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         return forcedDurableConsumers.add(id);
     }
 
@@ -141,6 +147,7 @@ public class DemandSubscription {
 
     public void decrementOutstandingResponses() {
         if (dispatched.decrementAndGet() == 0 && activeWaiter.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
             synchronized (activeWaiter) {
                 activeWaiter.notifyAll();
             }
@@ -157,6 +164,8 @@ public class DemandSubscription {
     }
 
     public NetworkBridgeFilter getNetworkBridgeFilter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         return networkBridgeFilter;
     }
 
@@ -165,6 +174,7 @@ public class DemandSubscription {
     }
 
     public SubscriptionInfo getLocalDurableSubscriber() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         return localDurableSubscriber;
     }
 
@@ -173,6 +183,7 @@ public class DemandSubscription {
     }
 
     public boolean isStaticallyIncluded() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         return staticallyIncluded;
     }
 

@@ -139,6 +139,7 @@ public class ProducerInfo extends BaseCommand {
     }
 
     public long getSentCount(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4927
         return sentCount.get();
     }
 

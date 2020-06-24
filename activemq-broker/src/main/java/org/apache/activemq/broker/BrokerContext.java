@@ -28,6 +28,7 @@ public interface BrokerContext {
     Object getBean(String name);
     
     Map getBeansOfType(Class type);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
     String getConfigurationUrl();
 }

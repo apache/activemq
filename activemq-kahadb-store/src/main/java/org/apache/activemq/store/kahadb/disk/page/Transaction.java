@@ -190,6 +190,7 @@ public class Transaction implements Iterable<Page> {
     public <T> void free(Page<T> page, int count) throws IOException {
         pageFile.assertLoaded();
         long offsetPage = page.getPageId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
         while (count-- > 0) {
             if (page == null) {
                 page = load(offsetPage, null);
@@ -229,6 +230,7 @@ public class Transaction implements Iterable<Page> {
             page.makeFree(getWriteTransactionId());
             // ensure free page is visible while write is pending
             pageFile.addToCache(page.copy());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
 
             DataByteArrayOutputStream out = new DataByteArrayOutputStream(pageFile.getPageSize());
             page.write(out);
@@ -293,6 +295,7 @@ public class Transaction implements Iterable<Page> {
                     // If overflow is allowed
                     if (overflow) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3466
                         do {
                             Page next;
                             if (current.getType() == Page.PAGE_PART_TYPE) {
@@ -317,6 +320,7 @@ public class Transaction implements Iterable<Page> {
 
                             // make the new link visible
                             pageFile.addToCache(current);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4094
 
                             // Reset for the next page chunk
                             pos = 0;
@@ -348,6 +352,7 @@ public class Transaction implements Iterable<Page> {
 
                 // make visible as end page
                 pageFile.addToCache(current);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4118
 
                 // Write the header..
                 pos = 0;
@@ -471,6 +476,7 @@ public class Transaction implements Iterable<Page> {
                 }
 
                 if (page.getType() == Page.PAGE_FREE_TYPE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
                     throw new EOFException("Chunk stream does not exist, page: " + page.getPageId() + " is marked free");
                 }
 
@@ -643,6 +649,7 @@ public class Transaction implements Iterable<Page> {
                     free(lastPage);
                     lastPage = null;
                 } catch (IOException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3292
                     throw new RuntimeException(e);
                 }
             }
@@ -661,6 +668,7 @@ public class Transaction implements Iterable<Page> {
         if( writeTransactionId!=-1 ) {
             if (tmpFile != null) {
                 LOG.debug("Committing transaction {}: Size {} kb", writeTransactionId, tmpFile.length() / (1024));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7143
                 pageFile.removeTmpFile(getTempFile(), tmpFile);
                 tmpFile = null;
                 txFile = null;
@@ -685,10 +693,15 @@ public class Transaction implements Iterable<Page> {
      */
     public void rollback() throws IOException {
         if( writeTransactionId!=-1 ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3374
+//IC see: https://issues.apache.org/jira/browse/AMQ-3443
             if (tmpFile != null) {
                 tmpFile.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7143
                 getTempFile().delete();
                 tmpFile = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3374
+//IC see: https://issues.apache.org/jira/browse/AMQ-3374
                 txFile = null;
             }
             // Release the pages that were allocated in the transaction...
@@ -698,6 +711,8 @@ public class Transaction implements Iterable<Page> {
             allocateList.clear();
             writes.clear();
             writeTransactionId = -1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7084
+//IC see: https://issues.apache.org/jira/browse/AMQ-7084
         } else {
             freePages(allocateList);
         }
@@ -734,6 +749,7 @@ public class Transaction implements Iterable<Page> {
             if (tmpFile == null) {
                 tmpFile = new RandomAccessFile(getTempFile(), "rw");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3466
             long location = nextLocation;
             tmpFile.seek(nextLocation);
             tmpFile.write(data);

@@ -34,6 +34,7 @@ public class AuditFilter implements Filter {
 
     public void init(FilterConfig filterConfig) throws ServletException {
         audit = "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.audit"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3100
         if (audit) {
             auditLog = AuditLogService.getAuditLog();
         }
@@ -46,6 +47,7 @@ public class AuditFilter implements Filter {
         if (audit && request instanceof HttpServletRequest) {
 
             HttpServletRequest http = (HttpServletRequest)request;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3100
             AuditLogEntry entry = new HttpAuditLogEntry();
             if (http.getRemoteUser() != null) {
                 entry.setUser(http.getRemoteUser());

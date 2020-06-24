@@ -48,6 +48,7 @@ public class JDBCNetworkBrokerDetachTest extends NetworkBrokerDetachTest {
             throw e;
         }
         broker.setPersistenceAdapter(jdbc);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
         broker.setUseVirtualTopics(false);
     }
 

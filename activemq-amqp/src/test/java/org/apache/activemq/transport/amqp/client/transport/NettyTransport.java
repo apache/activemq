@@ -28,6 +28,7 @@ import io.netty.buffer.ByteBuf;
 public interface NettyTransport {
 
     void connect() throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
 
     boolean isConnected();
 
@@ -50,6 +51,7 @@ public interface NettyTransport {
     Principal getLocalPrincipal();
 
     void setMaxFrameSize(int maxFrameSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6675
 
     int getMaxFrameSize();
 

@@ -46,11 +46,13 @@ public class FTPBlobUploadStrategyTest extends FTPTestSupport {
         message.onSend();
         assertEquals(ftpUrl + "ID_testmessage", message.getURL().toString());
         File uploaded = new File(ftpHomeDirFile, "ID_testmessage");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2732
         assertTrue("File doesn't exists", uploaded.exists());
     }
 
     public void testWriteDenied() throws Exception {
         userNamePass = "guest";
+//IC see: https://issues.apache.org/jira/browse/AMQ-2732
         setConnection();
         File file = File.createTempFile("amq-data-file-", ".dat");
         // lets write some data

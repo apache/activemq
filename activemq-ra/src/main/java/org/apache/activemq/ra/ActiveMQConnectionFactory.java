@@ -52,6 +52,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
      * @param connectionRequestInfo
      */
     public ActiveMQConnectionFactory(
+//IC see: https://issues.apache.org/jira/browse/AMQ-765
             ActiveMQManagedConnectionFactory factory, 
             ConnectionManager manager, 
             ActiveMQConnectionRequestInfo connectionRequestInfo) {
@@ -85,6 +86,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
      */
     private Connection createConnection(ActiveMQConnectionRequestInfo connectionRequestInfo) throws JMSException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-765
             if (connectionRequestInfo.isUseInboundSessionEnabled()) {
                 return new InboundConnectionProxy();
             }
@@ -99,6 +101,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
                 throw (JMSException)e.getCause();
             }
             LOG.debug("Connection could not be created:", e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
             JMSException jmsException = new JMSException(e.getMessage());
             jmsException.setLinkedException(e);
             throw jmsException;

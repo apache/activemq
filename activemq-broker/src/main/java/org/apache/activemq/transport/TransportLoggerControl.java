@@ -36,6 +36,7 @@ public class TransportLoggerControl implements TransportLoggerControlMBean {
 
     // doc comment inherited from TransportLoggerControlMBean
     public void disableAllTransportLoggers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
         TransportLoggerView.disableAllTransportLoggers();
     }
 

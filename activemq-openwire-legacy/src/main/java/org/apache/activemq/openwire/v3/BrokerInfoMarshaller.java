@@ -90,6 +90,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         info.setConnectionId(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setBrokerUploadUrl(tightUnmarshalString(dataIn, bs));
         info.setNetworkProperties(tightUnmarshalString(dataIn, bs));
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
 
     }
 
@@ -113,6 +114,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalLong1(wireFormat, info.getConnectionId(), bs);
         rc += tightMarshalString1(info.getBrokerUploadUrl(), bs);
         rc += tightMarshalString1(info.getNetworkProperties(), bs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
 
         return rc + 0;
     }
@@ -141,6 +143,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         tightMarshalLong2(wireFormat, info.getConnectionId(), dataOut, bs);
         tightMarshalString2(info.getBrokerUploadUrl(), dataOut, bs);
         tightMarshalString2(info.getNetworkProperties(), dataOut, bs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
 
     }
 
@@ -178,6 +181,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         info.setConnectionId(looseUnmarshalLong(wireFormat, dataIn));
         info.setBrokerUploadUrl(looseUnmarshalString(dataIn));
         info.setNetworkProperties(looseUnmarshalString(dataIn));
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
 
     }
 
@@ -201,6 +205,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         looseMarshalLong(wireFormat, info.getConnectionId(), dataOut);
         looseMarshalString(info.getBrokerUploadUrl(), dataOut);
         looseMarshalString(info.getNetworkProperties(), dataOut);
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
 
     }
 }

@@ -59,6 +59,7 @@ public class OrderedPendingList implements PendingList {
     public PendingNode addMessageLast(MessageReference message) {
         PendingNode node = new PendingNode(this, message);
         if (root == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3871
             root = node;
         } else {
             tail.linkAfter(node);
@@ -162,6 +163,7 @@ public class OrderedPendingList implements PendingList {
     @Override
     public boolean contains(MessageReference message) {
         if (message != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6066
             return this.map.containsKey(message.getMessageId());
         }
         return false;
@@ -183,6 +185,7 @@ public class OrderedPendingList implements PendingList {
 
     @Override
     public void addAll(PendingList pendingList) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3871
         if (pendingList != null) {
             for(MessageReference messageReference : pendingList) {
                 addMessageLast(messageReference);
@@ -192,6 +195,7 @@ public class OrderedPendingList implements PendingList {
 
     @Override
     public MessageReference get(MessageId messageId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
         PendingNode node = map.get(messageId);
         if (node != null) {
             return node.getMessage();
@@ -200,6 +204,7 @@ public class OrderedPendingList implements PendingList {
     }
 
     public void insertAtHead(List<MessageReference> list) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6286
         if (list != null && !list.isEmpty()) {
             PendingNode newHead = null;
             PendingNode appendNode = null;

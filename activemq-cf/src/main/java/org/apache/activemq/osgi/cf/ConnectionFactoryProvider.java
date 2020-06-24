@@ -33,6 +33,7 @@ import org.osgi.service.component.annotations.Deactivate;
 
 @Component //
 ( //
+//IC see: https://issues.apache.org/jira/browse/AMQ-6542
     name = "org.apache.activemq", //
     immediate = true, //
     configurationPolicy = ConfigurationPolicy.REQUIRE //

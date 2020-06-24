@@ -58,6 +58,7 @@ public class FailoverTransportTest {
     @Ignore("Test fails on windows")
     public void testReconnectUnlimited() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2730
         Transport transport = TransportFactory.connect(
                 new URI("failover://(tcp://0.0.0.0:61616)?useExponentialBackOff=false&reconnectDelay=0&initialReconnectDelay=0"));
 

@@ -98,6 +98,7 @@ public class OpenTypeSupportTest {
     }
 
     private String extractText(CompositeData message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3889
         Byte content[] = (Byte[]) message.get(CompositeDataConstants.BODY_PREVIEW);
         byte out[] = new byte[content.length];
         for (int i = 0; i < content.length; i++) {
@@ -107,6 +108,7 @@ public class OpenTypeSupportTest {
     }
 
     private QueueViewMBean getProxyToQueueViewMBean() throws MalformedObjectNameException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         final ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + queue.getQueueName());
         QueueViewMBean proxy = (QueueViewMBean)
             brokerService.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);

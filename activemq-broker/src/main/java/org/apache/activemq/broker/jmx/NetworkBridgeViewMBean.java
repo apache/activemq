@@ -27,6 +27,7 @@ public interface NetworkBridgeViewMBean extends Service {
     String getRemoteBrokerName();
 
     String getRemoteBrokerId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4825
 
     String getLocalBrokerName();
 
@@ -35,9 +36,11 @@ public interface NetworkBridgeViewMBean extends Service {
     long getDequeueCounter();
 
     long getReceivedCounter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
 
     boolean isCreatedByDuplex();
 
     void resetStats();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
 
 }

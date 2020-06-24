@@ -38,6 +38,7 @@ public class SubscriptionInfo implements DataStructure {
     public SubscriptionInfo() {}
 
     public SubscriptionInfo(String clientId, String subscriptionName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         this.clientId = clientId;
         this.subscriptionName = subscriptionName;
     }
@@ -87,6 +88,7 @@ public class SubscriptionInfo implements DataStructure {
      * @openwire:property version=1
      */
     public String getSubcriptionName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1305
         return subscriptionName;
     }
 
@@ -163,6 +165,7 @@ public class SubscriptionInfo implements DataStructure {
      * @openwire:property version=11
      */
     public boolean isNoLocal() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         return noLocal;
     }
 

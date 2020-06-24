@@ -92,6 +92,8 @@ public class MessageAck extends BaseCommand {
     }
 
     public MessageAck(Message message, byte ackType, int messageCount) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         this.ackType = ackType;
         this.destination = message.getDestination();
         this.lastMessageId = message.getMessageId();
@@ -129,18 +131,23 @@ public class MessageAck extends BaseCommand {
     }
     
     public boolean isRedeliveredAck() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1038
         return ackType == REDELIVERED_ACK_TYPE;
     }
     
     public boolean isIndividualAck() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1736
         return ackType == INDIVIDUAL_ACK_TYPE;
     }
 
     public boolean isUnmatchedAck() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         return ackType == UNMATCHED_ACK_TYPE;
     }
 
     public boolean isExpiredAck() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5089
         return ackType == EXPIRED_ACK_TYPE;
     }
 
@@ -234,6 +241,7 @@ public class MessageAck extends BaseCommand {
      * @openwire:property version=7
      */
     public Throwable getPoisonCause() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
         return poisonCause;
     }
 

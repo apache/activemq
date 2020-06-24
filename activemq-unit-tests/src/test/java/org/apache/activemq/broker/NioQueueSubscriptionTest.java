@@ -80,6 +80,7 @@ public class NioQueueSubscriptionTest extends QueueSubscriptionTest {
     @Ignore("See AMQ-4286")
     @Test(timeout = 60 * 1000)
     public void testLotsOfConcurrentConnections() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2277
         ExecutorService executor = Executors.newCachedThreadPool();
         final ConnectionFactory factory = createConnectionFactory();
         int connectionCount = 400;

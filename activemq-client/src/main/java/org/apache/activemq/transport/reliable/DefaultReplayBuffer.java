@@ -50,6 +50,7 @@ public class DefaultReplayBuffer implements ReplayBuffer {
             int max = size - 1;
             while (map.size() >= max) {
                 // lets find things to evict
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
                 Object evictedBuffer = map.remove(Integer.valueOf(++lowestCommandId));
                 onEvictedBuffer(lowestCommandId, evictedBuffer);
             }
@@ -71,6 +72,7 @@ public class DefaultReplayBuffer implements ReplayBuffer {
         for (int i = fromCommandId; i <= toCommandId; i++) {
             Object buffer = null;
             synchronized (lock) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
                 buffer = map.get(Integer.valueOf(i));
             }
             replayer.sendBuffer(i, buffer);

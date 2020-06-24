@@ -56,6 +56,7 @@ public class ConnectionControlTest extends BaseCommandTestSupport {
         info.setFaultTolerant(true);
         info.setResume(false);
         info.setSuspend(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         info.setConnectedBrokers("ConnectedBrokers:1");
         info.setReconnectTo("ReconnectTo:2");
         info.setRebalanceConnection(false);

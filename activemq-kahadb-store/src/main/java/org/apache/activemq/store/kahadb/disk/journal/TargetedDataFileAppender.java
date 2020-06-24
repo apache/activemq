@@ -227,6 +227,7 @@ public class TargetedDataFileAppender implements FileAppender {
             }
 
             // append 'unset' next batch (5 bytes) so read can always find eof
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
             buff.write(Journal.EOF_RECORD);
             ByteSequence sequence = buff.toByteSequence();
 

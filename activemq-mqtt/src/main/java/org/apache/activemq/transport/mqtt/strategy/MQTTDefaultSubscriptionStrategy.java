@@ -42,6 +42,7 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
     @Override
     public void onConnect(CONNECT connect) throws MQTTProtocolException {
         List<SubscriptionInfo> subs = lookupSubscription(protocol.getClientId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
 
         if (connect.cleanSession()) {
             deleteDurableSubs(subs);
@@ -54,8 +55,10 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
     public byte onSubscribe(String topicName, QoS requestedQoS) throws MQTTProtocolException {
         ActiveMQDestination destination = new ActiveMQTopic(MQTTProtocolSupport.convertMQTTToActiveMQ(topicName));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
         consumerInfo.setDestination(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5530
         consumerInfo.setPrefetchSize(ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH);
         consumerInfo.setRetroactive(true);
         consumerInfo.setDispatchAsync(true);
@@ -69,6 +72,7 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
             consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         return doSubscribe(consumerInfo, topicName, requestedQoS);
     }
 
@@ -79,6 +83,7 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
 
         // check whether the Topic has been recovered in restoreDurableSubs
         // mark subscription available for recovery for duplicate subscription
+//IC see: https://issues.apache.org/jira/browse/AMQ-5303
         if (restoredDurableSubs.remove(destination.getPhysicalName())) {
             return;
         }
@@ -88,6 +93,7 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
 
     @Override
     public void onUnSubscribe(String topicName) throws MQTTProtocolException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         MQTTSubscription subscription = mqttSubscriptionByTopic.remove(topicName);
         if (subscription != null) {
             doUnSubscribe(subscription);
@@ -96,6 +102,7 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
             if (subscription.getConsumerInfo().getSubscriptionName() != null) {
                 // also remove it from restored durable subscriptions set
                 restoredDurableSubs.remove(MQTTProtocolSupport.convertMQTTToActiveMQ(subscription.getTopicName()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5303
 
                 RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
                 rsi.setConnectionId(protocol.getConnectionId());

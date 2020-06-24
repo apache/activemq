@@ -57,6 +57,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     public AmqpSession(AmqpConnection connection, String sessionId) {
         this.connection = connection;
         this.sessionId = sessionId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
         this.txContext = new AmqpTransactionContext(this);
     }
 
@@ -91,6 +92,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the sender.
      */
     public AmqpSender createSender() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
         return createSender(null, false, null, null, null);
     }
 
@@ -105,6 +107,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the sender.
      */
     public AmqpSender createSender(final String address) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
         return createSender(address, false, null, null, null);
     }
 
@@ -156,6 +159,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      */
     public AmqpSender createSender(final String address, final SenderSettleMode senderMode, ReceiverSettleMode receiverMode) throws Exception {
         checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
 
         final AmqpSender sender = new AmqpSender(AmqpSession.this, address, getNextSenderId(), senderMode, receiverMode);
         final ClientFuture request = new ClientFuture();
@@ -198,6 +202,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
         checkClosed();
 
         final AmqpSender sender = new AmqpSender(AmqpSession.this, address, getNextSenderId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5723
         sender.setPresettle(presettle);
         sender.setDesiredCapabilities(desiredCapabilities);
         sender.setOfferedCapabilities(offeredCapabilities);
@@ -232,6 +237,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the receiver.
      */
     public AmqpSender createSender(Target target) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6479
         return createSender(target, getNextSenderId());
     }
 
@@ -248,6 +254,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the receiver.
      */
     public AmqpSender createSender(Target target, String senderId) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
         return createSender(target, senderId, null, null, null);
     }
 
@@ -271,8 +278,10 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      */
     public AmqpSender createSender(Target target, String senderId, Symbol[] desiredCapabilities, Symbol[] offeredCapabilities, Map<Symbol, Object> properties) throws Exception {
         checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
 
         final AmqpSender sender = new AmqpSender(AmqpSession.this, target, senderId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
         sender.setDesiredCapabilities(desiredCapabilities);
         sender.setOfferedCapabilities(offeredCapabilities);
         sender.setProperties(properties);
@@ -284,6 +293,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
             @Override
             public void run() {
                 checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
                 sender.setStateInspector(getStateInspector());
                 sender.open(request);
                 pumpToProtonTransport(request);
@@ -306,6 +316,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the receiver.
      */
     public AmqpReceiver createReceiver(String address) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         return createReceiver(address, null, false);
     }
 
@@ -340,6 +351,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the receiver.
      */
     public AmqpReceiver createReceiver(String address, String selector, boolean noLocal) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         return createReceiver(address, selector, noLocal, false);
     }
 
@@ -403,6 +415,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      */
     public AmqpReceiver createReceiver(String address, SenderSettleMode senderMode, ReceiverSettleMode receiverMode) throws Exception {
         checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
 
         final ClientFuture request = new ClientFuture();
         final AmqpReceiver receiver = new AmqpReceiver(AmqpSession.this, address, getNextReceiverId(), senderMode, receiverMode);
@@ -434,6 +447,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the receiver.
      */
     public AmqpReceiver createReceiver(Source source) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6479
         return createReceiver(source, getNextReceiverId());
     }
 
@@ -451,6 +465,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      */
     public AmqpReceiver createReceiver(Source source, String receiverId) throws Exception {
         checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
 
         final ClientFuture request = new ClientFuture();
         final AmqpReceiver receiver = new AmqpReceiver(AmqpSession.this, source, getNextReceiverId());
@@ -484,6 +499,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the receiver.
      */
     public AmqpReceiver createDurableReceiver(String address, String subscriptionName) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         return createDurableReceiver(address, subscriptionName, null, false);
     }
 
@@ -523,6 +539,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      */
     public AmqpReceiver createDurableReceiver(String address, String subscriptionName, String selector, boolean noLocal) throws Exception {
         checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
 
         if (subscriptionName == null || subscriptionName.isEmpty()) {
             throw new IllegalArgumentException("subscription name must not be null or empty.");
@@ -564,6 +581,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      */
     public AmqpReceiver lookupSubscription(String subscriptionName) throws Exception {
         checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
 
         if (subscriptionName == null || subscriptionName.isEmpty()) {
             throw new IllegalArgumentException("subscription name must not be null or empty.");
@@ -580,6 +598,12 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
                 pumpToProtonTransport(request);
             }
         });
@@ -597,10 +621,12 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     }
 
     public Session getSession() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6672
         return UnmodifiableProxy.sessionProxy(getEndpoint());
     }
 
     public boolean isInTransaction() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
         return txContext.isInTransaction();
     }
 
@@ -662,12 +688,14 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
         return connection.getProtonConnection();
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
     void pumpToProtonTransport(AsyncResult request) {
         connection.pumpToProtonTransport(request);
     }
 
     public AmqpTransactionId getTransactionId() {
         if (txContext != null && txContext.isInTransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
             return txContext.getTransactionId();
         }
 
@@ -682,6 +710,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
 
     @Override
     protected void doOpen() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         getEndpoint().setIncomingCapacity(Integer.MAX_VALUE);
         super.doOpen();
     }
@@ -713,6 +742,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     }
 
     private void checkClosed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5795
         if (isClosed() || connection.isClosed()) {
             throw new IllegalStateException("Session is already closed");
         }

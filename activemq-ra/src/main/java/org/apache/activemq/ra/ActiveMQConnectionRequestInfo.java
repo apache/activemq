@@ -51,6 +51,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
 
     public ActiveMQConnectionRequestInfo copy() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
             ActiveMQConnectionRequestInfo answer = (ActiveMQConnectionRequestInfo) clone();
             if (redeliveryPolicy != null) {
                 answer.redeliveryPolicy = redeliveryPolicy.copy();
@@ -85,6 +86,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         if (prefetchPolicy != null) {
             factory.setPrefetchPolicy(prefetchPolicy);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5782
         if (factory instanceof ActiveMQSslConnectionFactory) {
             String trustStore = defaultValue(activationSpec == null ? null : activationSpec.getTrustStore(), getTrustStore());
             String trustStorePassword = defaultValue(activationSpec == null ? null : activationSpec.getTrustStorePassword(), getTrustStorePassword());
@@ -127,6 +129,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         if (useInboundSession != null) {
             rc ^= useInboundSession.hashCode();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
         if (useSessionArgs != null) {
             rc ^= useSessionArgs.hashCode();
         }
@@ -147,13 +150,16 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         if (!getClass().equals(o.getClass())) {
             return false;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         ActiveMQConnectionRequestInfo i = (ActiveMQConnectionRequestInfo) o;
+//IC see: https://issues.apache.org/jira/browse/AMQ-467
         if (notEqual(serverUrl, i.serverUrl)) {
             return false;
         }
         if (notEqual(useInboundSession, i.useInboundSession)) {
             return false;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
         if (notEqual(useSessionArgs, i.useSessionArgs)) {
             return false;
         }
@@ -225,6 +231,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public String getTrustStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5782
         return trustStore;
     }
 
@@ -267,6 +274,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     @Override
     public String toString() {
         return new StringBuffer("ActiveMQConnectionRequestInfo{ userName = '").append(userName).append("' ").append(", serverUrl = '").append(serverUrl)
+//IC see: https://issues.apache.org/jira/browse/AMQ-5790
+//IC see: https://issues.apache.org/jira/browse/AMQ-4486
             .append("' ").append(", clientid = '").append(clientid).append("' ")
             .append(", useSessionArgs = '").append(useSessionArgs).append("' ").append(", useInboundSession = '").append(useInboundSession).append("'  }")
             .toString();
@@ -285,6 +294,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public Double getRedeliveryBackOffMultiplier() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-910
         return Double.valueOf(redeliveryPolicy().getBackOffMultiplier());
     }
 
@@ -293,6 +303,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public Long getMaximumRedeliveryDelay() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3205
         return Long.valueOf(redeliveryPolicy().getMaximumRedeliveryDelay());
     }
 
@@ -306,6 +317,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
 
     public void setRedeliveryBackOffMultiplier(Double value) {
         if (value != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2889
             redeliveryPolicy().setBackOffMultiplier(value);
         }
     }
@@ -317,6 +329,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public void setMaximumRedeliveryDelay(Long value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3205
         if (value != null) {
             redeliveryPolicy().setMaximumRedeliveryDelay(value.longValue());
         }
@@ -335,15 +348,18 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public Integer getDurableTopicPrefetch() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         return Integer.valueOf(prefetchPolicy().getDurableTopicPrefetch());
     }
 
     public Integer getOptimizeDurableTopicPrefetch() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3986
         return Integer.valueOf(prefetchPolicy().getOptimizeDurableTopicPrefetch());
     }
 
     @Deprecated
     public Integer getInputStreamPrefetch() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         return 0;
     }
 
@@ -372,6 +388,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public void setOptimizeDurableTopicPrefetch(Integer optimizeDurableTopicPrefetch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3986
         if (optimizeDurableTopicPrefetch != null) {
             prefetchPolicy().setOptimizeDurableTopicPrefetch(optimizeDurableTopicPrefetch.intValue());
         }
@@ -418,6 +435,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public boolean isUseSessionArgs() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
         return useSessionArgs != null ? useSessionArgs.booleanValue() : false;
     }
 
@@ -430,6 +448,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     protected String defaultValue(String value, String defaultValue) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5782
         if (value != null) {
             return value;
         }

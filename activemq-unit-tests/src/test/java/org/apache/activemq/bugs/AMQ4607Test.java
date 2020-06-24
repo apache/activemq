@@ -179,6 +179,7 @@ public class AMQ4607Test extends JmsMultipleBrokersTestSupport implements Uncaug
     }
 
     public void testMigratingConsumerSelectorAwareTrue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6907
         bridge("Broker0", "Broker1");
         if (!duplex) bridge("Broker1", "Broker0");
 

@@ -53,8 +53,10 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
     @Override
     public void setStatements(Statements statements) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         String addMessageStatement = "INSERT INTO "
             + statements.getFullMessageTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
             + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, PRIORITY, MSG, XID) VALUES (?, ?, ?, ?, ?, ?, empty_blob(), empty_blob())";
         statements.setAddMessageStatement(addMessageStatement);
 
@@ -85,6 +87,7 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             s.close();
 
             // Select the blob record so that we can update it.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
             updateBlob(c.getConnection(), statements.getFindMessageByIdStatement(), sequence, data);
             if (xid != null) {
                 byte[] xidVal = xid.getEncodedXidBytes();
@@ -111,6 +114,7 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
 
             // Update the blob
             Blob blob = rs.getBlob(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3289
             blob.truncate(0);
             blob.setBytes(1, data);
             rs.updateBlob(1, blob);
@@ -137,6 +141,7 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             }
             Blob blob = rs.getBlob(1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
             try(InputStream is = blob.getBinaryStream();
                 ByteArrayOutputStream os = new ByteArrayOutputStream((int)blob.length())) {
                 int ch;

@@ -80,6 +80,7 @@ public class ActiveMQNIOPlusSSLAdmin extends ActiveMQAdmin {
         try {
             LOG.debug("Creating a connection factory using port {}", port);
             final JmsConnectionFactory factory = new JmsConnectionFactory("amqps://localhost:" + port);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
 
             SpringSslContext sslContext = (SpringSslContext) broker.getSslContext();
 

@@ -30,6 +30,7 @@ public class SslTransportBrokerTest extends TransportBrokerTestSupport {
     public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
 
     protected String getBindLocation() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3300
         return "ssl://localhost:0?transport.soWriteTimeout=20000";
     }
 
@@ -39,6 +40,7 @@ public class SslTransportBrokerTest extends TransportBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1665
         System.setProperty("javax.net.ssl.trustStore", TRUST_KEYSTORE);
         System.setProperty("javax.net.ssl.trustStorePassword", PASSWORD);
         System.setProperty("javax.net.ssl.trustStoreType", KEYSTORE_TYPE);        

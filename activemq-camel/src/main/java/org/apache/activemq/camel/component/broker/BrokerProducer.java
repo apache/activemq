@@ -69,6 +69,7 @@ public class BrokerProducer extends DefaultAsyncProducer {
     }
 
     private ActiveMQMessage getMessage(Exchange exchange) throws IllegalStateException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5903
         Message camelMessage = getMessageFromExchange(exchange);
         checkOriginalMessage(camelMessage);
         ActiveMQMessage result = (ActiveMQMessage) ((JmsMessage) camelMessage).getJmsMessage();

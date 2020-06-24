@@ -66,6 +66,7 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
         return Arrays.asList(new Object[][] {
                 {"mqtt", false},
                 {"mqtt+ssl", true},
+//IC see: https://issues.apache.org/jira/browse/AMQ-5307
                 {"mqtt+nio", false},
                 {"mqtt+nio+ssl", true}
             });
@@ -104,6 +105,7 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
                     try {
                         connAck.decode(frame);
                         LOG.info("{}", connAck);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5288
                         assertEquals(CONNACK.Code.CONNECTION_REFUSED_NOT_AUTHORIZED, connAck.code());
                     } catch (ProtocolException e) {
                         failed.set(true);
@@ -139,6 +141,7 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
         mqtt.setClientId("foo");
         mqtt.setKeepAlive((short) 2);
         mqtt.setVersion("3.1.1");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5734
 
         BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
@@ -166,9 +169,11 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
 
         //delete retained message
         connection.publish(ANONYMOUS, "".getBytes(), QoS.AT_MOST_ONCE, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5734
 
         // that delete retained message gets dispatched! Wonder if that is expected?
         // guess it is simpler if it is - it shows up on the assertNull:196 below on occasion
+//IC see: https://issues.apache.org/jira/browse/AMQ-5734
         msg = connection.receive(1000, TimeUnit.MILLISECONDS);
         assertNotNull(msg);
         assertEquals(ANONYMOUS, new String(msg.getTopic()));
@@ -200,6 +205,7 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
     public void testPublishWhenNotAuthorizedDoesNotStall() throws Exception {
 
         getProxyToBroker().addTopic("USERS.foo");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5834
 
         MQTT mqtt = null;
         BlockingConnection connection = null;
@@ -258,6 +264,7 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testWildcardRetainedSubscriptionLocked() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5734
         MQTT mqttPub = createMQTTConnection("pub", true);
         mqttPub.setUserName("admin");
         mqttPub.setPassword("admin");
@@ -282,6 +289,7 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
     @Test(timeout = 60 * 1000)
     public void testInvalidClientIdGetCorrectErrorCode() throws Exception {
         MQTT mqttPub = createMQTTConnection("invalid", true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5288
 
         final AtomicInteger errorCode = new AtomicInteger();
 

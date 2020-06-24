@@ -37,5 +37,6 @@ public interface ResponseHandler {
      * @throws IOException if an error occurs while processing the response.
      */
     void onResponse(AmqpProtocolConverter converter, Response response) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
 
 }

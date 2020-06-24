@@ -70,6 +70,7 @@ public class AMQ5567Test extends BrokerRestartTestSupport {
 
     @Override
     protected void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         super.tearDown();
         IOHelper.delete(new File(DATA_FOLDER));
     }
@@ -81,6 +82,7 @@ public class AMQ5567Test extends BrokerRestartTestSupport {
                 new JDBCPersistenceAdapter()
         };
         for (PersistenceAdapter adapter : persistenceAdapters) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
             adapter.setDirectory(new File(DATA_FOLDER));
         }
         addCombinationValues("persistenceAdapter", persistenceAdapters);

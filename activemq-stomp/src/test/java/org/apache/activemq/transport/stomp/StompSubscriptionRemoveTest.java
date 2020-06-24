@@ -42,6 +42,7 @@ public class StompSubscriptionRemoveTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testRemoveSubscriber() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         stompConnect();
         Connection connection = cf.createConnection("system", "manager");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -77,6 +78,7 @@ public class StompSubscriptionRemoveTest extends StompTestSupport {
         }
 
         stompDisconnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         Thread.sleep(1000);
         stompConnect();
 
@@ -119,6 +121,7 @@ public class StompSubscriptionRemoveTest extends StompTestSupport {
 
     // These two methods could move to a utility class
     protected String getCommand(String frame) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
         return frame.substring(0, frame.indexOf('\n') + 1).trim();
     }
 

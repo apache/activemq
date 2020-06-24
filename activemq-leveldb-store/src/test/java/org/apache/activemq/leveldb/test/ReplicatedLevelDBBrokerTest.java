@@ -95,6 +95,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
     }
 
     protected Thread startFailoverClient(String name, final Client client) throws IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4923
         String url = "failover://(tcp://localhost:"+port+")?maxReconnectDelay=500&nested.wireFormat.maxInactivityDuration=1000";
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
         Thread rc = new Thread(name) {
@@ -373,6 +374,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
 
     private ArrayList<String> browseMessagesViaJMS(BrokerService brokerService) throws Exception {
         ArrayList<String> rc = new ArrayList<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4923
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:"+ connectPort(brokerService));
         Connection connection = factory.createConnection();
         try {
@@ -391,6 +393,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
     }
 
     private int connectPort(BrokerService brokerService) throws IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4923
         TransportConnector connector = brokerService.getTransportConnectors().get(0);
         return connector.getConnectUri().getPort();
     }
@@ -416,6 +419,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
     }
 
     private BrokerService createBrokerNode(String id) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4923
         return createBrokerNode(id, 0);
     }
 
@@ -450,6 +454,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
         store.setReplicas(3);
         store.setSync("quorum_disk");
         store.setZkAddress("localhost:" + connector.getLocalPort());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5506
         store.setZkSessionTimeout("15s");
         store.setHostname("localhost");
         store.setBind("tcp://0.0.0.0:0");

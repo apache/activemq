@@ -29,6 +29,7 @@ public class MQTTWireFormatFactory implements WireFormatFactory {
     @Override
     public WireFormat createWireFormat() {
         MQTTWireFormat wireFormat = new MQTTWireFormat();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
 
         wireFormat.setMaxFrameSize(getMaxFrameSize());
 

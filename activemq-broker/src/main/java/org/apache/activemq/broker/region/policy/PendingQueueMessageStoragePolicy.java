@@ -35,5 +35,6 @@ public interface PendingQueueMessageStoragePolicy {
      * @param queue
      * @return the cursor
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-1562
     PendingMessageCursor getQueuePendingMessageCursor(Broker broker,Queue queue);
 }

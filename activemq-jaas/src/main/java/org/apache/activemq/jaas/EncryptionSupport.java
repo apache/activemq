@@ -30,6 +30,7 @@ import java.util.Properties;
 public class EncryptionSupport {
 
     static public void decrypt(Properties props, String algorithm) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
         StandardPBEStringEncryptor encryptor = createEncryptor(algorithm);
         for (Object k : new ArrayList(props.keySet())) {
             String key = (String) k;
@@ -44,6 +45,7 @@ public class EncryptionSupport {
     public static StandardPBEStringEncryptor createEncryptor(String algorithm) {
         StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
         EnvironmentStringPBEConfig config = new EnvironmentStringPBEConfig();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
         if (algorithm != null) {
             encryptor.setAlgorithm(algorithm);
             // From Jasypt: for PBE-AES-based algorithms, the IV generator is MANDATORY"

@@ -55,6 +55,7 @@ public class MQTTAutoSslAuthTest extends MQTTTestSupport  {
      */
     public MQTTAutoSslAuthTest(String protocol) {
         this.protocol = protocol;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         protocolConfig = "transport.needClientAuth=true";
     }
 

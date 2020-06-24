@@ -35,6 +35,7 @@ public class AMQ4893Test {
 
     @Test
     public void testPropertiesInt() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4893
         ActiveMQObjectMessage message = new ActiveMQObjectMessage();
         message.setIntProperty("TestProp", 333);
         fakeUnmarshal(message);

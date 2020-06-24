@@ -59,6 +59,7 @@ public class JMSParallelConnectTest extends AmqpTestSupport {
                 public void run() {
 
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
                         Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "admin", "password");
                         connection.start();
                         connection.close();
@@ -83,6 +84,7 @@ public class JMSParallelConnectTest extends AmqpTestSupport {
                 public void run() {
 
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
                         Connection connection = JMSClientContext.INSTANCE.createConnection(amqpNioURI, "admin", "password");
                         connection.start();
                         connection.close();
@@ -107,6 +109,7 @@ public class JMSParallelConnectTest extends AmqpTestSupport {
                 public void run() {
 
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
                         Connection connection = JMSClientContext.INSTANCE.createConnection(amqpSslURI, "admin", "password");
                         connection.start();
                         connection.close();
@@ -131,6 +134,7 @@ public class JMSParallelConnectTest extends AmqpTestSupport {
                 public void run() {
 
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
                         Connection connection = JMSClientContext.INSTANCE.createConnection(amqpNioPlusSslURI, "admin", "password");
                         connection.start();
                         connection.close();

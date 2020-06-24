@@ -195,6 +195,7 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         xmlFileWriter.println("<property name='performanceData'>");
         xmlFileWriter.println("<list>");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try (FileInputStream fileInputStream = new FileInputStream(tempLogFile);
              InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
              BufferedReader reader = new BufferedReader(inputStreamReader)) {

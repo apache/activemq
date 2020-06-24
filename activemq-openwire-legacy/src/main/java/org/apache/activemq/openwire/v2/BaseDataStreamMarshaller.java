@@ -227,6 +227,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
 
     private Throwable createThrowable(String className, String message) {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1515
             Class clazz = Class.forName(className, false, BaseDataStreamMarshaller.class.getClassLoader());
             Constructor constructor = clazz.getConstructor(new Class[] {String.class});
             return (Throwable)constructor.newInstance(new Object[] {message});

@@ -34,11 +34,13 @@ import org.apache.commons.net.ftp.FTPClient;
 public class FTPBlobUploadStrategy extends FTPStrategy implements BlobUploadStrategy {
 
     public FTPBlobUploadStrategy(BlobTransferPolicy transferPolicy) throws MalformedURLException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         super(transferPolicy);
     }
 
     @Override
     public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try(FileInputStream fis = new FileInputStream(file)) {
             return uploadStream(message, fis);
         }
@@ -62,6 +64,7 @@ public class FTPBlobUploadStrategy extends FTPStrategy implements BlobUploadStra
                 url = this.url.toString();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2732
             if (!ftp.storeFile(filename, in)) {
                 throw new JMSException("FTP store failed: " + ftp.getReplyString());
             }

@@ -87,6 +87,8 @@ public class AmqpSlowReceiverTest extends AmqpClientTestSupport {
         strategy.setMaxSlowDuration(60*1000); // so jmx does the abort
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
         final AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
@@ -106,6 +108,8 @@ public class AmqpSlowReceiverTest extends AmqpClientTestSupport {
                 brokerService.getManagementContext().newProxyInstance(slowConsumerPolicyMBeanName, AbortSlowConsumerStrategyViewMBean.class, true);
 
         TimeUnit.SECONDS.sleep(6);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
 
         TabularData slowOnes = abortPolicy.getSlowConsumers();
         assertEquals("one slow consumers", 1, slowOnes.size());
@@ -148,6 +152,8 @@ public class AmqpSlowReceiverTest extends AmqpClientTestSupport {
 
     @Override
     protected void performAdditionalConfiguration(BrokerService brokerService) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
         strategy = new AbortSlowAckConsumerStrategy();
         strategy.setAbortConnection(false);
         strategy.setCheckPeriod(DEFAULT_CHECK_PERIOD);

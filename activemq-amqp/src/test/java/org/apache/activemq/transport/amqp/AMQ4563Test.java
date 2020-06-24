@@ -49,6 +49,7 @@ public class AMQ4563Test extends AmqpTestSupport {
 
         Connection connection = createAMQConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         Queue queue = session.createQueue(name.getMethodName());
         MessageProducer producer = session.createProducer(queue);
         TextMessage message = null;
@@ -79,6 +80,7 @@ public class AMQ4563Test extends AmqpTestSupport {
         Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         Queue queue = session.createQueue(name.getMethodName());
         MessageProducer p = session.createProducer(queue);
         TextMessage message = session.createTextMessage();
@@ -101,6 +103,7 @@ public class AMQ4563Test extends AmqpTestSupport {
 
         Connection connection = createAMQConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         Destination destination = session.createQueue(name.getMethodName());
         MessageProducer p = session.createProducer(destination);
         TextMessage message = session.createTextMessage();
@@ -122,9 +125,12 @@ public class AMQ4563Test extends AmqpTestSupport {
         ActiveMQAdmin.enableJMSFrameTracing();
         assertTrue(brokerService.isPersistent());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         Queue queue = session.createQueue(name.getMethodName());
         MessageProducer p = session.createProducer(queue);
         TextMessage message = null;
@@ -143,6 +149,7 @@ public class AMQ4563Test extends AmqpTestSupport {
 
         // This time there should be no messages on this queue
         restartBroker(connection, session);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         QueueViewMBean queueView = getProxyToQueue(name.getMethodName());
         assertEquals(0, queueView.getQueueSize());
     }
@@ -152,6 +159,7 @@ public class AMQ4563Test extends AmqpTestSupport {
     }
 
     private int readAllMessages(String queueName, String selector) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI);
         connection.start();
 
@@ -159,6 +167,7 @@ public class AMQ4563Test extends AmqpTestSupport {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Queue queue = session.createQueue(queueName);
             int messagesReceived = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
             MessageConsumer consumer;
             if( selector==null ) {
                 consumer = session.createConsumer(queue);
@@ -166,6 +175,7 @@ public class AMQ4563Test extends AmqpTestSupport {
                 consumer = session.createConsumer(queue, selector);
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
             try {
                 // Try to get out quickly if there are no messages on the broker side
                 QueueViewMBean queueView = getProxyToQueue(queue.getQueueName());
@@ -196,12 +206,14 @@ public class AMQ4563Test extends AmqpTestSupport {
     private void restartBroker(Connection connection, Session session) throws Exception {
         session.close();
         connection.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         restartBroker();
     }
 
     private Connection createAMQConnection() throws JMSException {
         LOG.debug(">>> In createConnection using port {}", openwirePort);
         final ConnectionFactory factory = new ActiveMQConnectionFactory("admin", "password", openwireURI);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         final Connection connection = factory.createConnection();
         connection.setExceptionListener(new ExceptionListener() {
             @Override

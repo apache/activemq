@@ -411,6 +411,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
             // Repackage the message contents prior to send now that all updates are complete.
             messageSend.beforeMarshall(wireFormat);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6032
 
             final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
             producerExchange.setConnectionContext(context);
@@ -424,9 +425,12 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
     protected synchronized JobScheduler getInternalScheduler() throws Exception {
         if (this.started.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3024
             if (this.scheduler == null && store != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
                 this.scheduler = store.getJobScheduler("JMS");
                 this.scheduler.addListener(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4683
                 this.scheduler.startDispatching();
             }
             return this.scheduler;
@@ -436,16 +440,20 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
     protected void sendScheduledJob(ConnectionContext context, Job job, ActiveMQDestination replyTo) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2941
         org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getPayload());
         try {
             Message msg = (Message) this.wireFormat.unmarshal(packet);
             msg.setOriginalTransactionId(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3278
+//IC see: https://issues.apache.org/jira/browse/AMQ-3271
             msg.setPersistent(false);
             msg.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
             msg.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
 
             // Preserve original destination
             msg.setOriginalDestination(msg.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6808
 
             msg.setDestination(replyTo);
             msg.setResponseRequired(false);
@@ -471,6 +479,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     }
 
     public int getMaxRepeatAllowed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7458
         return maxRepeatAllowed;
     }
 

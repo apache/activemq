@@ -70,6 +70,7 @@ final class DataFileAccessor {
             throw new IOException("Invalid location: " + location);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
         Journal.WriteCommand asyncWrite = inflightWrites.get(new Journal.WriteKey(location));
         if (asyncWrite != null) {
             return asyncWrite.data;
@@ -84,6 +85,7 @@ final class DataFileAccessor {
             } else {
                 file.seek(location.getOffset() + Journal.RECORD_HEAD_SPACE);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6815
             if ((long)location.getOffset() + location.getSize() > dataFile.length) {
                 throw new IOException("Invalid location size: " + location + ", size: " + location.getSize());
             }
@@ -92,6 +94,8 @@ final class DataFileAccessor {
             return new ByteSequence(data, 0, data.length);
 
         } catch (RuntimeException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6378
+//IC see: https://issues.apache.org/jira/browse/AMQ-6376
             throw new IOException("Invalid location: " + location + " : " + e, e);
         }
     }
@@ -107,6 +111,7 @@ final class DataFileAccessor {
     }
 
     public void readLocationDetails(Location location) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
         Journal.WriteCommand asyncWrite = inflightWrites.get(new Journal.WriteKey(location));
         if (asyncWrite != null) {
             location.setSize(asyncWrite.location.getSize());
@@ -125,11 +130,13 @@ final class DataFileAccessor {
         int size = Math.min(data.getLength(), location.getSize());
         file.write(data.getData(), data.getOffset(), size);
         if (sync) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
             file.sync();
         }
     }
 
     public RecoverableRandomAccessFile getRaf() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         return file;
     }
 }

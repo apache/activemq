@@ -38,6 +38,8 @@ public class UserIDBroker extends BrokerFilter {
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
         String userID = context.getUserName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3182
+//IC see: https://issues.apache.org/jira/browse/AMQ-3183
         if (isUseAuthenticatePrincipal()) {
             SecurityContext securityContext = context.getSecurityContext();
             if (securityContext != null) {

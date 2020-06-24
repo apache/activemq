@@ -67,6 +67,7 @@ public class AMQ2983Test {
             // ensure save memory publishing, use the right lock
             indexLock.readLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                 return getJournal().getFileMap().size();
             } finally {
                 indexLock.readLock().unlock();

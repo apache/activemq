@@ -53,6 +53,7 @@ public class JmsProducerSystem extends AbstractJmsClientSystem {
 
     @Override
     protected ClientRunBasis getClientRunBasis() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
         assert (producer != null);
         return ClientRunBasis.valueOf(producer.getSendType().toLowerCase());
     }

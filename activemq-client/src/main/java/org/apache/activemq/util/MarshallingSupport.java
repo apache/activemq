@@ -71,6 +71,7 @@ public final class MarshallingSupport {
     }
 
     public static Map<String, Object> unmarshalPrimitiveMap(DataInputStream in, boolean force) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         return unmarshalPrimitiveMap(in, Integer.MAX_VALUE, force);
     }
 
@@ -95,6 +96,7 @@ public final class MarshallingSupport {
             Map<String, Object> rc = new HashMap<String, Object>(size);
             for (int i = 0; i < size; i++) {
                 String name = in.readUTF();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
                 rc.put(name, unmarshalPrimitive(in, force));
             }
             return rc;
@@ -103,6 +105,7 @@ public final class MarshallingSupport {
 
     public static void marshalPrimitiveList(List<Object> list, DataOutputStream out) throws IOException {
         out.writeInt(list.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         for (Object element : list) {
             marshalPrimitive(out, element);
         }
@@ -123,6 +126,7 @@ public final class MarshallingSupport {
 
     public static void marshalPrimitive(DataOutputStream out, Object value) throws IOException {
         if (value == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             marshalNull(out);
         } else if (value.getClass() == Boolean.class) {
             marshalBoolean(out, ((Boolean)value).booleanValue());
@@ -144,6 +148,7 @@ public final class MarshallingSupport {
             marshalByteArray(out, (byte[])value);
         } else if (value.getClass() == String.class) {
             marshalString(out, (String)value);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         } else  if (value.getClass() == UTF8Buffer.class) {
             marshalString(out, value.toString());
         } else if (value instanceof Map) {
@@ -158,6 +163,7 @@ public final class MarshallingSupport {
     }
 
     public static Object unmarshalPrimitive(DataInputStream in) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         return unmarshalPrimitive(in, false);
     }
 
@@ -166,6 +172,7 @@ public final class MarshallingSupport {
         byte type = in.readByte();
         switch (type) {
         case BYTE_TYPE:
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
             value = Byte.valueOf(in.readByte());
             break;
         case BOOLEAN_TYPE:
@@ -193,6 +200,7 @@ public final class MarshallingSupport {
             value = new byte[in.readInt()];
             in.readFully((byte[])value);
             break;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         case STRING_TYPE:
             if (force) {
                 value = in.readUTF();
@@ -209,6 +217,7 @@ public final class MarshallingSupport {
             break;
         }
         case MAP_TYPE:
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
             value = unmarshalPrimitiveMap(in, true);
             break;
         case LIST_TYPE:
@@ -224,12 +233,14 @@ public final class MarshallingSupport {
     }
 
     public static UTF8Buffer readUTF(DataInputStream in, int length) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         byte data[] = new byte[length];
         in.readFully(data);
         return new UTF8Buffer(data);
     }
 
     public static void marshalNull(DataOutputStream out) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
         out.writeByte(NULL);
     }
 
@@ -296,6 +307,7 @@ public final class MarshallingSupport {
 
     public static void writeUTF8(DataOutput dataOut, String text) throws IOException {
         if (text != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6651
             long utfCount = countUTFBytes(text);
             dataOut.writeInt((int)utfCount);
 
@@ -398,6 +410,7 @@ public final class MarshallingSupport {
             DataByteArrayOutputStream dataOut = new DataByteArrayOutputStream();
             props.store(dataOut, "");
             result = new String(dataOut.getData(), 0, dataOut.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
             dataOut.close();
         }
         return result;
@@ -408,12 +421,14 @@ public final class MarshallingSupport {
         if (str != null && str.length() > 0) {
             DataByteArrayInputStream dataIn = new DataByteArrayInputStream(str.getBytes());
             result.load(dataIn);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
             dataIn.close();
         }
         return result;
     }
 
     public static String truncate64(String text) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
         if (text.length() > 63) {
             text = text.substring(0, 45) + "..." + text.substring(text.length() - 12);
         }

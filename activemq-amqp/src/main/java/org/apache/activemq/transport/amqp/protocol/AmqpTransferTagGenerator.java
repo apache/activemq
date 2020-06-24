@@ -33,6 +33,7 @@ public final class AmqpTransferTagGenerator {
     private int maxPoolSize = DEFAULT_TAG_POOL_SIZE;
 
     public AmqpTransferTagGenerator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6804
         this(true);
     }
 
@@ -51,6 +52,7 @@ public final class AmqpTransferTagGenerator {
      */
     public byte[] getNextTag() {
         byte[] tagBytes = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6804
 
         if (tagPool != null) {
             tagBytes = tagPool.pollFirst();
@@ -79,6 +81,7 @@ public final class AmqpTransferTagGenerator {
      */
     public void returnTag(byte[] data) {
         if (tagPool != null && tagPool.size() < maxPoolSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6804
             tagPool.offerLast(data);
         }
     }
@@ -107,6 +110,7 @@ public final class AmqpTransferTagGenerator {
      * @return true if the generator is using a pool of tags to reduce allocations.
      */
     public boolean isPooling() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6804
         return tagPool != null;
     }
 

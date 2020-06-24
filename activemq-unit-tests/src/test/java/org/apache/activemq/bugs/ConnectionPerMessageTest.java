@@ -47,6 +47,7 @@ public class ConnectionPerMessageTest extends EmbeddedBrokerTestSupport {
 		normalFactory.setBrokerURL(bindAddress);
 		for (int i = 0; i < COUNT; i++) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
 			if (i % 100 == 0) {
 				LOG.info(new Integer(i).toString());
 			}
@@ -86,6 +87,7 @@ public class ConnectionPerMessageTest extends EmbeddedBrokerTestSupport {
 
 	protected BrokerService createBroker() throws Exception {
 		BrokerService answer = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
         answer.setDeleteAllMessagesOnStartup(true);
 		answer.setUseJmx(false);
 		answer.setPersistent(isPersistent());

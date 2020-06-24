@@ -77,19 +77,26 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setBrokerName("priorityTest");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         broker.setAdvisorySupport(false);
         adapter = createPersistenceAdapter(true);
         broker.setPersistenceAdapter(adapter);
         PolicyEntry policy = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
         policy.setPrioritizedMessages(prioritizeMessages);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
         policy.setUseCache(useCache);
         policy.setExpireMessagesPeriod(expireMessagePeriod);
         StorePendingDurableSubscriberMessageStoragePolicy durableSubPending =
                 new StorePendingDurableSubscriberMessageStoragePolicy();
         durableSubPending.setImmediatePriorityDispatch(immediatePriorityDispatch);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
         durableSubPending.setUseCache(useCache);
         policy.setPendingDurableSubscriberPolicy(durableSubPending);
         PolicyMap policyMap = new PolicyMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         policyMap.put(new ActiveMQQueue("TEST"), policy);
         policyMap.put(new ActiveMQTopic("TEST"), policy);
 
@@ -100,6 +107,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         ignoreExpired.setDeadLetterStrategy(ignoreExpiredStrategy);
         policyMap.put(new ActiveMQTopic("TEST_CLEANUP_NO_PRIORITY"), ignoreExpired);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         PolicyEntry noCachePolicy = new PolicyEntry();
         noCachePolicy.setUseCache(false);
         noCachePolicy.setPrioritizedMessages(true);
@@ -110,11 +118,15 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         broker.waitUntilStarted();
 
         factory = new ActiveMQConnectionFactory("vm://priorityTest");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6151
         factory.setMessagePrioritySupported(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
         prefetch.setAll(prefetchVal);
         factory.setPrefetchPolicy(prefetch);
         factory.setWatchTopicAdvisories(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         factory.setDispatchAsync(dispatchAsync);
         conn = factory.createConnection();
         conn.setClientID("priority");
@@ -124,6 +136,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
     @Override
     protected void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
         try {
             sess.close();
             conn.close();
@@ -167,6 +181,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         int priority;
         int messageCount;
         ActiveMQDestination dest;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
 
         public ProducerThread(ActiveMQDestination dest, int messageCount, int priority) {
             this.messageCount = messageCount;
@@ -179,6 +195,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             try {
                 MessageProducer producer = sess.createProducer(dest);
                 producer.setPriority(priority);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3596
                 producer.setDeliveryMode(deliveryMode);
                 for (int i = 0; i < messageCount; i++) {
                     producer.send(sess.createTextMessage("message priority: " + priority));
@@ -200,6 +217,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
     public void initCombosForTestQueues() {
         addCombinationValues("useCache", new Object[] {new Boolean(true), new Boolean(false)});
+//IC see: https://issues.apache.org/jira/browse/AMQ-3596
         addCombinationValues("deliveryMode", new Object[] {new Integer(DeliveryMode.NON_PERSISTENT), new Integer(DeliveryMode.PERSISTENT)});
     }
 
@@ -217,6 +235,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
         MessageConsumer queueConsumer = sess.createConsumer(queue);
         for (int i = 0; i < MSG_NUM * 2; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             Message msg = queueConsumer.receive(5000);
             LOG.debug("received i=" + i + ", " + (msg!=null? msg.getJMSMessageID() : null));
             assertNotNull("Message " + i + " was null", msg);
@@ -225,6 +245,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     }
 
     protected Message createMessage(int priority) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
         final String text = "priority " + priority;
         Message msg = sess.createTextMessage(text);
         LOG.info("Sending  " + text);
@@ -232,6 +254,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     }
 
     public void initCombosForTestDurableSubs() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         addCombinationValues("prefetchVal", new Object[] {new Integer(1000), new Integer(MSG_NUM/4)});
     }
 
@@ -251,6 +274,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
         sub = sess.createDurableSubscriber(topic, "priority");
         for (int i = 0; i < MSG_NUM * 2; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             Message msg = sub.receive(5000);
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < MSG_NUM ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
@@ -258,6 +282,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
 
         // verify that same broker/store can deal with non priority dest also
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         topic = (ActiveMQTopic)sess.createTopic("HAS_NO_PRIORITY");
         sub = sess.createDurableSubscriber(topic, "no_priority");
         sub.close();
@@ -283,6 +308,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     public void initCombosForTestDurableSubsReconnect() {
         addCombinationValues("prefetchVal", new Object[] {new Integer(1000), new Integer(MSG_NUM/2)});
         // REVISIT = is dispatchAsync = true a problem or is it just the test?
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
         addCombinationValues("dispatchAsync", new Object[] {Boolean.FALSE});
         addCombinationValues("useCache", new Object[] {Boolean.TRUE, Boolean.FALSE});
     }
@@ -306,8 +333,12 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         final int closeFrequency = MSG_NUM/4;
         sub = sess.createDurableSubscriber(topic, subName);
         for (int i = 0; i < MSG_NUM * 2; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
             Message msg = sub.receive(15000);
             LOG.debug("received i=" + i + ", " + (msg!=null? msg.getJMSMessageID() : null));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < MSG_NUM ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
             if (i>0 && i%closeFrequency==0) {
@@ -396,6 +427,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
 
     public void initCombosForTestHighPriorityDeliveryInterleaved() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
         addCombinationValues("useCache", new Object[] {Boolean.TRUE, Boolean.FALSE});
     }
 
@@ -523,6 +555,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         factory.setPrefetchPolicy(prefetch);
         conn.close();
         conn = factory.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
         conn.setClientID("priority");
         conn.start();
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -575,6 +609,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     }
 
     public void testQueueBacklog() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         final int backlog = 1800;
         ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST");
 
@@ -596,6 +631,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             assertEquals("Message " + i + " has wrong priority", i < 10 ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         final DestinationStatistics destinationStatistics = ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics();
         assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
@@ -616,6 +652,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
     public void testLowThenHighBatch() throws Exception {
         ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST_LOW_THEN_HIGH_10");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
 
         ProducerThread producerThread = new ProducerThread(queue, 10, LOW_PRI);
         producerThread.run();
@@ -639,6 +676,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         }
         queueConsumer.close();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         producerThread.priority = LOW_PRI;
         producerThread.run();
         producerThread.priority = MED_PRI;
@@ -670,6 +708,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     }
 
     public void testInterleaveHiNewConsumerGetsHi() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6151
         ActiveMQQueue queue = (ActiveMQQueue) sess.createQueue("TEST");
         doTestInterleaveHiNewConsumerGetsHi(queue);
     }
@@ -721,9 +760,11 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
     public void initCombosForTestEveryXHi() {
         // the cache limits the priority ordering to available memory
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         addCombinationValues("useCache", new Object[] {Boolean.FALSE, Boolean.TRUE});
         // expiry processing can fill the cursor with a snapshot of the producer
         // priority, before producers are complete
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         addCombinationValues("expireMessagePeriod", new Object[] {new Integer(0)});
     }
 
@@ -743,6 +784,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             public void onMessage(Message message) {
                 received.incrementAndGet();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
                 if (received.get() < 20) {
                     try {
                         TimeUnit.MILLISECONDS.sleep(100);
@@ -783,6 +825,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         }, 10000));
 
         // do it again!
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         received.set(0);
         destinationStatistics.reset();
         for (int i = 0; i < numMessages; i++) {

@@ -169,6 +169,7 @@ public class Producer extends BenchmarkSupport {
             buffer.append(line);
             buffer.append(File.separator);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
         in.close();
         return buffer.toString();
     }

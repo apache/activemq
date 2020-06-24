@@ -52,6 +52,7 @@ public class ListenerTest {
         Thread.sleep(3000);
 
         LOG.info("messages received= " + listener.messages.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2973
         Assert.assertEquals(msgNum, listener.messages.size());
     }
 
@@ -68,6 +69,7 @@ public class ListenerTest {
         });
 
         LOG.info("messages received= " + listener.messages.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2973
         Assert.assertEquals(6 * msgNum, listener.messages.size());
     }
 

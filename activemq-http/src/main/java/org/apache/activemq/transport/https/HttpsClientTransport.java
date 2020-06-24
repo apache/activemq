@@ -43,6 +43,7 @@ public class HttpsClientTransport extends HttpClientTransport {
 
     public HttpsClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7406
         try {
             sslSocketFactory = createSocketFactory();
         } catch (IOException e) {
@@ -59,9 +60,11 @@ public class HttpsClientTransport extends HttpClientTransport {
 
         RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7406
             HostnameVerifier hostnameVerifier = verifyHostName ? new DefaultHostnameVerifier() : new NoopHostnameVerifier();
             SSLConnectionSocketFactory sslConnectionFactory = new SSLConnectionSocketFactory(sslSocketFactory, hostnameVerifier);
             registryBuilder.register("https", sslConnectionFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7476
             registryBuilder.register("http", PlainConnectionSocketFactory.INSTANCE);
             return registryBuilder.build();
         } catch (Exception e) {
@@ -77,6 +80,7 @@ public class HttpsClientTransport extends HttpClientTransport {
      * @throws IOException
      */
     protected javax.net.ssl.SSLSocketFactory createSocketFactory() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5295
         if (SslContext.getCurrentSslContext() != null) {
             SslContext ctx = SslContext.getCurrentSslContext();
             try {
@@ -92,10 +96,12 @@ public class HttpsClientTransport extends HttpClientTransport {
 
     @Override
     protected String getSystemPropertyPrefix() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6556
         return "https.";
     }
 
     public Boolean getVerifyHostName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7406
         return verifyHostName;
     }
 

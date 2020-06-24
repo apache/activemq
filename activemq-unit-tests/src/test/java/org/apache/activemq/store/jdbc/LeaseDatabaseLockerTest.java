@@ -72,8 +72,10 @@ public class LeaseDatabaseLockerTest {
     public void testLockInterleave() throws Exception {
 
         LeaseDatabaseLocker lockerA = new LeaseDatabaseLocker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4122
         lockerA.setLeaseHolderId("First");
         jdbc.setLocker(lockerA);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
 
         final LeaseDatabaseLocker lockerB = new LeaseDatabaseLocker();
         lockerB.setLeaseHolderId("Second");
@@ -86,6 +88,7 @@ public class LeaseDatabaseLockerTest {
         printLockTable(connection);
 
         assertTrue("First has lock", lockerA.keepAlive());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4122
 
         final CountDownLatch lockerBStarting = new CountDownLatch(1);
         ExecutorService executor = Executors.newCachedThreadPool();
@@ -104,6 +107,7 @@ public class LeaseDatabaseLockerTest {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4122
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -130,6 +134,7 @@ public class LeaseDatabaseLockerTest {
     public void testLockAcquireRace() throws Exception {
 
         // build a fake lock
+//IC see: https://issues.apache.org/jira/browse/AMQ-4122
         final String fakeId = "Anon";
         final Connection connection = dataSource.getConnection();
         printLockTable(connection);
@@ -146,6 +151,7 @@ public class LeaseDatabaseLockerTest {
         final LeaseDatabaseLocker lockerA = new LeaseDatabaseLocker();
         lockerA.setLeaseHolderId("A");
         jdbc.setLocker(lockerA);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
 
         final LeaseDatabaseLocker lockerB = new LeaseDatabaseLocker();
         lockerB.setLeaseHolderId("B");
@@ -215,6 +221,7 @@ public class LeaseDatabaseLockerTest {
 
     @Test
     public void testDiffOffsetAhead() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4645
         LeaseDatabaseLocker underTest = new LeaseDatabaseLocker();
         assertTrue("when ahead of db adjustment is negative", callDiffOffset(underTest, System.currentTimeMillis() - 60000) < 0);
     }
@@ -260,11 +267,13 @@ public class LeaseDatabaseLockerTest {
             will(returnValue(timestamp));
             allowing(timestamp).getTime();
             will(returnValue(dbTime));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7403
             allowing(resultSet).close();
             allowing(preparedStatement).close();
         }});
 
         underTest.configure(jdbcPersistenceAdapter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         underTest.setLockable(jdbcPersistenceAdapter);
         return underTest.determineTimeDifference(connection);
     }

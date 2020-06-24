@@ -84,6 +84,8 @@ public class MessageDatabaseTest {
     @Test
     public void testRecoverCheckOnBatchBoundary() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6831
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         KahaDBStore kaha = new KahaDBStore();
         kaha.setDirectory(new File(temporaryFolder.getRoot(), "kaha2"));
         kaha.setCheckpointInterval(0l); // disable periodic checkpoint

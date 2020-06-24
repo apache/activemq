@@ -38,6 +38,7 @@ public class AMQ5136Test {
     public void startBroker() throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         brokerService.setUseJmx(false);
         brokerService.start();
     }

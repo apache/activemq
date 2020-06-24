@@ -35,6 +35,7 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
     protected String MASTER_URL = "tcp://localhost:62001";
     protected String SLAVE_URL  = "tcp://localhost:62002";
     File sharedDbDirFile;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4842
 
     @Override
     protected void setUp() throws Exception {
@@ -46,6 +47,8 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
 
     @Override
     protected void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5164
+//IC see: https://issues.apache.org/jira/browse/AMQ-4842
         super.tearDown();
         DataSourceServiceSupport.shutdownDefaultDataSource(((SyncCreateDataSource)sharedDs).getDelegate());
     }
@@ -59,15 +62,18 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
         master.setPersistent(true);
         master.setDeleteAllMessagesOnStartup(true);
         KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) master.getPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4842
         kahaDBPersistenceAdapter.setDirectory(sharedDbDirFile);
         LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
         leaseDatabaseLocker.setCreateTablesOnStartup(true);
         leaseDatabaseLocker.setDataSource(getExistingDataSource());
         leaseDatabaseLocker.setStatements(new Statements());
         kahaDBPersistenceAdapter.setLocker(leaseDatabaseLocker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         configureLocker(kahaDBPersistenceAdapter);
         configureBroker(master);
         master.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4842
         master.waitUntilStarted();
     }
 
@@ -92,11 +98,13 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
                     broker.setUseJmx(false);
                     broker.setPersistent(true);
                     KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4842
                     kahaDBPersistenceAdapter.setDirectory(sharedDbDirFile);
                     LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
                     leaseDatabaseLocker.setDataSource(getExistingDataSource());
                     leaseDatabaseLocker.setStatements(new Statements());
                     kahaDBPersistenceAdapter.setLocker(leaseDatabaseLocker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
                     configureLocker(kahaDBPersistenceAdapter);
                     configureBroker(broker);
                     slave.set(broker);

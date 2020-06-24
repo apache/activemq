@@ -53,6 +53,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
     public static final Logger LOG = LoggerFactory.getLogger(RuntimeConfigurationBroker.class);
     public static final String objectNamePropsAppendage = ",service=RuntimeConfiguration,name=Plugin";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
     PropertiesPlaceHolderUtil placeHolderUtil = null;
     private long checkPeriod;
     private long lastModified = -1;
@@ -68,9 +69,11 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
     public void start() throws Exception {
         super.start();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
             BrokerContext brokerContext = next.getBrokerService().getBrokerContext();
             if (brokerContext != null) {
                 configToMonitor = Utils.resourceFromString(brokerContext.getConfigurationUrl());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
                 info("Configuration " + configToMonitor);
             } else {
                 LOG.error("Null BrokerContext; impossible to determine configuration url resource from broker, updates cannot be tracked");
@@ -81,11 +84,13 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
         currentConfiguration = loadConfiguration(configToMonitor);
         monitorModification(configToMonitor);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         registerMbean();
     }
 
     @Override
     protected void registerMbean() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         if (getBrokerService().isUseJmx()) {
             ManagementContext managementContext = getBrokerService().getManagementContext();
             try {
@@ -99,6 +104,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
     @Override
     protected void unregisterMbean() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         if (objectName != null) {
             try {
                 getBrokerService().getManagementContext().unregisterMBean(objectName);
@@ -109,6 +115,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
     public String updateNow() {
         LOG.info("Manual configuration update triggered");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         infoString = "";
         applyModifications(configToMonitor);
         String result = infoString;
@@ -131,6 +138,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
         };
         if (lastModified > 0 && checkPeriod > 0) {
             this.getBrokerService().getScheduler().executePeriodically(monitorTask, checkPeriod);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
             info("Monitoring for updates (every " + checkPeriod + "millis) : " + configToMonitor + ", lastUpdate: " + new Date(lastModified));
         }
     }
@@ -138,6 +146,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
 
     private void applyModifications(Resource configToMonitor) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         DtoBroker changed = loadConfiguration(configToMonitor);
         if (changed != null && !currentConfiguration.equals(changed)) {
             LOG.info("change in " + configToMonitor + " at: " + new Date(lastModified));
@@ -152,10 +161,13 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
     private void processSelectiveChanges(DtoBroker currentConfiguration, DtoBroker modifiedConfiguration) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         for (Class upDatable : new Class[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
                 DtoBroker.DestinationPolicy.class,
                 DtoBroker.NetworkConnectors.class,
                 DtoBroker.DestinationInterceptors.class,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5305
                 DtoBroker.Plugins.class,
                 DtoBroker.Destinations.class}) {
             processChanges(currentConfiguration, modifiedConfiguration, upDatable);
@@ -170,12 +182,14 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
 
     private DtoBroker loadConfiguration(Resource configToMonitor) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         DtoBroker jaxbConfig = null;
         if (configToMonitor != null) {
             try {
                 JAXBContext context = JAXBContext.newInstance(DtoBroker.class);
                 Unmarshaller unMarshaller = context.createUnmarshaller();
                 unMarshaller.setSchema(getSchema());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
                 // skip beans and pull out the broker node to validate
                 DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -186,9 +200,11 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
                 DocumentBuilder db = dbf.newDocumentBuilder();
                 Document doc = db.parse(configToMonitor.getInputStream());
                 Node brokerRootNode = doc.getElementsByTagNameNS("*","broker").item(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4820
 
                 if (brokerRootNode != null) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
                     JAXBElement<DtoBroker> brokerJAXBElement =
                             unMarshaller.unmarshal(brokerRootNode, DtoBroker.class);
                     jaxbConfig = brokerJAXBElement.getValue();
@@ -197,12 +213,14 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
                     lastModified = configToMonitor.lastModified();
 
                     loadPropertiesPlaceHolderSupport(doc);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
                 } else {
                     info("Failed to find 'broker' element by tag in: " + configToMonitor);
                 }
 
             } catch (IOException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
                 info("Failed to access: " + configToMonitor, e);
             } catch (JAXBException e) {
                 info("Failed to parse: " + configToMonitor, e);
@@ -210,6 +228,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
                 info("Failed to document parse: " + configToMonitor, e);
             } catch (SAXException e) {
                 info("Failed to find broker element in: " + configToMonitor, e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4820
             } catch (Exception e) {
                 info("Unexpected exception during load of: " + configToMonitor, e);
             }
@@ -219,9 +238,11 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
     private void loadPropertiesPlaceHolderSupport(Document doc) {
         BrokerContext brokerContext = getBrokerService().getBrokerContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         if (brokerContext != null) {
             Properties initialProperties = new Properties(System.getProperties());
             placeHolderUtil = new PropertiesPlaceHolderUtil(initialProperties);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5305
             placeHolderUtil.mergeProperties(doc, initialProperties, brokerContext);
         }
     }
@@ -233,6 +254,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
             ArrayList<StreamSource> schemas = new ArrayList<StreamSource>();
             schemas.add(new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4905
             schemas.add(new StreamSource(getClass().getResource("/org/springframework/beans/factory/xml/spring-beans-3.0.xsd").toExternalForm()));
             schema = schemaFactory.newSchema(schemas.toArray(new Source[]{}));
         }
@@ -252,6 +274,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
     }
 
     public void setCheckPeriod(long checkPeriod) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         this.checkPeriod = checkPeriod;
     }
 

@@ -63,12 +63,15 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
         BrokerService answer = new BrokerService();
         answer.setPersistent(true);
         answer.setDeleteAllMessagesOnStartup(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4798
         answer.getSystemUsage().getMemoryUsage().setLimit(1024 * 1024 * 64);
         answer.getSystemUsage().getTempUsage().setLimit(1024 * 1024 * 64);
         answer.getSystemUsage().getStoreUsage().setLimit(1024 * 1024 * 64);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5594
         answer.getSystemUsage().getJobSchedulerUsage().setLimit(1024 * 1024 * 64);
         answer.setUseJmx(true);
         answer.setSchedulerSupport(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5140
 
         // allow options to be visible via jmx
 
@@ -105,6 +108,7 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
 
         assertEquals(2, list.size());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6252
         String healthStatus = health.healthStatus();
         String currentStatus = health.getCurrentStatus();
 

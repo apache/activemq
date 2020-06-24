@@ -49,6 +49,7 @@ public class AbortSlowAckConsumerStrategyView extends AbortSlowConsumerStrategyV
 
     @Override
     public boolean isIgnoreNetworkConsumers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
         return this.strategy.isIgnoreNetworkSubscriptions();
     }
 

@@ -45,16 +45,21 @@ public class FailoverClusterTest extends TestCase {
     private final List<ActiveMQConnection> connections = new ArrayList<ActiveMQConnection>();
 
     protected String getBindAddress() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         return BROKER_BIND_ADDRESS;
     }
 
     public void testClusterConnectedAfterClients() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         createClients();
         if (brokerB == null) {
             brokerB = createBrokerB(getBindAddress());
         }
         Thread.sleep(3000);
         Set<String> set = new HashSet<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         for (ActiveMQConnection c : connections) {
             set.add(c.getTransportChannel().getRemoteAddress());
         }
@@ -62,11 +67,15 @@ public class FailoverClusterTest extends TestCase {
     }
 
     public void testClusterURIOptionsStrip() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3124
         createClients();
         if (brokerB == null) {
             // add in server side only url param, should not be propagated
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             brokerB = createBrokerB(getBindAddress() + "?transport.closeAsync=false");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         Thread.sleep(3000);
         Set<String> set = new HashSet<String>();
         for (ActiveMQConnection c : connections) {
@@ -78,6 +87,7 @@ public class FailoverClusterTest extends TestCase {
     public void testClusterConnectedBeforeClients() throws Exception {
 
         if (brokerB == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             brokerB = createBrokerB(getBindAddress());
         }
         Thread.sleep(5000);
@@ -96,6 +106,7 @@ public class FailoverClusterTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         if (brokerA == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             brokerA = createBrokerA(getBindAddress() + "?transport.closeAsync=false");
             clientUrl = "failover://(" + brokerA.getTransportConnectors().get(0).getPublishableConnectString() + ")";
         }
@@ -119,6 +130,8 @@ public class FailoverClusterTest extends TestCase {
     protected BrokerService createBrokerA(String uri) throws Exception {
         BrokerService answer = new BrokerService();
         answer.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         configureConsumerBroker(answer, uri);
         answer.start();
         return answer;
@@ -135,7 +148,11 @@ public class FailoverClusterTest extends TestCase {
 
     protected BrokerService createBrokerB(String uri) throws Exception {
         BrokerService answer = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3124
+//IC see: https://issues.apache.org/jira/browse/AMQ-3124
         answer.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         configureNetwork(answer, uri);
         answer.start();
         return answer;

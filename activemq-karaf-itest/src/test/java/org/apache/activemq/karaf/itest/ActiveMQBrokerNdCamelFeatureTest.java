@@ -35,6 +35,7 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractFeatureTest {
 
     @Configuration
     public static Option[] configure() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         return new Option[] //
         {
          composite(configure("activemq", "activemq-camel")),
@@ -48,6 +49,7 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractFeatureTest {
     public void test() throws Throwable {
         System.err.println(executeCommand("feature:list -i").trim());
         assertFeatureInstalled("activemq");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         assertBrokerStarted();
         withinReason(new Runnable() {
             public void run() {

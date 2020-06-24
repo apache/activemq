@@ -50,10 +50,12 @@ class JobLocation {
     public void readExternal(DataInput in) throws IOException {
         this.jobId = in.readUTF();
         this.repeat = in.readInt();
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         this.startTime = in.readLong();
         this.delay = in.readLong();
         this.nextTime = in.readLong();
         this.period = in.readLong();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         this.cronEntry = in.readUTF();
         this.location.readExternal(in);
         if (in.readBoolean()) {
@@ -65,10 +67,12 @@ class JobLocation {
     public void writeExternal(DataOutput out) throws IOException {
         out.writeUTF(this.jobId);
         out.writeInt(this.repeat);
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         out.writeLong(this.startTime);
         out.writeLong(this.delay);
         out.writeLong(this.nextTime);
         out.writeLong(this.period);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         if (this.cronEntry == null) {
             this.cronEntry = "";
         }
@@ -116,6 +120,7 @@ class JobLocation {
      * @return the start
      */
     public long getStartTime() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         return this.startTime;
     }
 
@@ -176,6 +181,7 @@ class JobLocation {
      * @return if this JobLocation represents a cron entry.
      */
     public boolean isCron() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         return getCronEntry() != null && getCronEntry().length() > 0;
     }
 
@@ -206,6 +212,7 @@ class JobLocation {
      *          Job.
      */
     public Location getLastUpdate() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         return this.lastUpdate;
     }
 
@@ -273,6 +280,7 @@ class JobLocation {
 
     @Override
     public int hashCode() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4073
         final int prime = 31;
         int result = 1;
         result = prime * result + ((cronEntry == null) ? 0 : cronEntry.hashCode());
@@ -283,6 +291,7 @@ class JobLocation {
         result = prime * result + (int) (period ^ (period >>> 32));
         result = prime * result + repeat;
         result = prime * result + (int) (startTime ^ (startTime >>> 32));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         result = prime * result + (rescheduledCount ^ (rescheduledCount >>> 32));
         return result;
     }
@@ -342,6 +351,7 @@ class JobLocation {
         if (startTime != other.startTime) {
             return false;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         if (rescheduledCount != other.rescheduledCount) {
             return false;
         }

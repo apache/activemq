@@ -68,6 +68,7 @@ public class SslTransport extends TcpTransport {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public SslTransport(WireFormat wireFormat, SSLSocketFactory socketFactory, URI remoteLocation, URI localLocation, boolean needClientAuth) throws IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
+//IC see: https://issues.apache.org/jira/browse/AMQ-960
         if (this.socket != null) {
             ((SSLSocket)this.socket).setNeedClientAuth(needClientAuth);
 
@@ -76,6 +77,7 @@ public class SslTransport extends TcpTransport {
 
             // On java 1.7 it seems like it can only be configured via reflection.
             // TODO: find out if this will work on java 1.8
+//IC see: https://issues.apache.org/jira/browse/AMQ-4672
             HashMap props = new HashMap();
             props.put("host", remoteLocation.getHost());
             IntrospectionSupport.setProperties(this.socket, props);
@@ -149,6 +151,7 @@ public class SslTransport extends TcpTransport {
     }
 
     public SslTransport(WireFormat format, SSLSocket socket,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             InitBuffer initBuffer) throws IOException {
         super(format, socket, initBuffer);
     }
@@ -166,6 +169,7 @@ public class SslTransport extends TcpTransport {
         // now.
         if (command instanceof ConnectionInfo) {
             ConnectionInfo connectionInfo = (ConnectionInfo)command;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2449
             connectionInfo.setTransportContext(getPeerCertificates());
         }
         super.doConsume(command);
@@ -189,6 +193,7 @@ public class SslTransport extends TcpTransport {
         try {
             clientCertChain = (X509Certificate[])sslSession.getPeerCertificates();
         } catch (SSLPeerUnverifiedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
             clientCertChain = null;
         }
 

@@ -44,6 +44,7 @@ public class SessionPool {
         }
 
         synchronized (this) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4359
             try {
                 connection = getConnectionFactory().createConnection();
                 connection.start();
@@ -100,6 +101,7 @@ public class SessionPool {
     }
 
     public void returnSession(Session session) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3430
         if (session != null && !((ActiveMQSession) session).isClosed()) {
             synchronized (sessions) {
                 LOG.trace("Returning session to the pool.");

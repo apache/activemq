@@ -112,6 +112,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             executor.shutdownNow();
 
             assertEquals(NUM_MESSAGE_TO_SEND, messageCount.get());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4437
 
         } finally {
             container1.stop();
@@ -159,6 +160,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             assertTrue(doneLatch.await(20, TimeUnit.SECONDS));
             executor.shutdownNow();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4437
             assertEquals(MAX_PRODUCERS * NUM_MESSAGE_TO_SEND, messageCount.get());
         } finally {
 
@@ -211,6 +213,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             assertTrue(doneLatch.await(20, TimeUnit.SECONDS));
             executor.shutdownNow();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4437
             assertEquals(MAX_PRODUCERS * NUM_MESSAGE_TO_SEND, messageCount.get());
         } finally {
             container1.stop();

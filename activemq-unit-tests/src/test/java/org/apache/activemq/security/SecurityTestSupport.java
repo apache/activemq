@@ -42,6 +42,7 @@ public class SecurityTestSupport extends JmsTestSupport {
      * Overrides to set the JMSXUserID flag to true.
      */
     protected BrokerService createBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-940
         BrokerService broker = super.createBroker();
         broker.setPopulateJMSXUserID(true);
         return broker;
@@ -81,6 +82,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     }
 
     public void testUserReceiveSucceeds() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-940
         Message m = doReceive(false);
         assertEquals("system", ((ActiveMQMessage)m).getUserID());
         assertEquals("system", m.getStringProperty("JMSXUserID"));
@@ -95,6 +97,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     }
 
     public void testUserSendSucceeds() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-940
         Message m = doSend(false);
         assertEquals("user", ((ActiveMQMessage)m).getUserID());
         assertEquals("user", m.getStringProperty("JMSXUserID"));
@@ -144,6 +147,7 @@ public class SecurityTestSupport extends JmsTestSupport {
             assertEquals("0", ((TextMessage)m).getText());
             assertNull(consumer.receiveNoWait());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-940
         return m;
     }
 
@@ -162,6 +166,7 @@ public class SecurityTestSupport extends JmsTestSupport {
             }
         } catch (JMSException e) {
             if (fail && e.getCause() instanceof SecurityException) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-940
                 return null;
             }
             throw e;
@@ -177,6 +182,7 @@ public class SecurityTestSupport extends JmsTestSupport {
         assertEquals("0", ((TextMessage)m).getText());
         assertNull(consumer.receiveNoWait());
         return m;
+//IC see: https://issues.apache.org/jira/browse/AMQ-940
 
     }
 
@@ -186,6 +192,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestUserReceiveFails() {
         addCombinationValues("userName", new Object[] {"user"});
         addCombinationValues("password", new Object[] {"password"});
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("USERS.BY_PASS, TEST"), new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR")});
     }
 
@@ -221,6 +228,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestGuestReceiveFails() {
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("GUESTS.BY_PASS,TEST"), new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("USERS.FOO"), new ActiveMQTopic("USERS.FOO") });
     }
 
@@ -240,6 +248,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestUserSendFails() {
         addCombinationValues("userName", new Object[] {"user"});
         addCombinationValues("password", new Object[] {"password"});
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("USERS.BY_PASS,TEST"), new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST")});
     }
 
@@ -249,6 +258,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestGuestSendFails() {
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("GUESTS.BY_PASS,TEST"), new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("USERS.FOO"), new ActiveMQTopic("USERS.FOO")});
     }
 

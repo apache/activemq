@@ -64,8 +64,10 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
 
     @Override
     public void onConnect(CONNECT connect) throws MQTTProtocolException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
         List<ActiveMQQueue> queues = lookupQueues(protocol.getClientId());
         List<SubscriptionInfo> subs = lookupSubscription(protocol.getClientId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5303
 
         // When clean session is true we must purge all of the client's old Queue subscriptions
         // and any durable subscriptions created on the VirtualTopic instance as well.
@@ -84,6 +86,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
         ActiveMQDestination destination = null;
         int prefetch = ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH;
         ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6002
         String converted = convertMQTTToActiveMQ(topicName);
         if (!protocol.isCleanSession() && protocol.getClientId() != null && requestedQoS.ordinal() >= QoS.AT_LEAST_ONCE.ordinal()) {
 
@@ -125,6 +128,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
 
         // check whether the Queue has been recovered in restoreDurableQueue
         // mark subscription available for recovery for duplicate subscription
+//IC see: https://issues.apache.org/jira/browse/AMQ-5303
         if (destination.isQueue() && restoredQueues.remove(destination)) {
             return;
         }
@@ -138,6 +142,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
         if (mqttSubscription.getDestination().isTopic()) {
             super.onReSubscribe(mqttSubscription);
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
             doUnSubscribe(mqttSubscription);
             ConsumerInfo consumerInfo = mqttSubscription.getConsumerInfo();
             consumerInfo.setConsumerId(getNextConsumerId());
@@ -162,6 +167,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
                         // ignore failures..
                     }
                 });
+//IC see: https://issues.apache.org/jira/browse/AMQ-5303
             } else if (subscription.getConsumerInfo().getSubscriptionName() != null) {
                 // also remove it from restored durable subscriptions set
                 restoredDurableSubs.remove(MQTTProtocolSupport.convertMQTTToActiveMQ(subscription.getTopicName()));
@@ -182,6 +188,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
 
     @Override
     public ActiveMQDestination onSend(String topicName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6253
         ActiveMQTopic topic = new ActiveMQTopic(topicName);
         if (topic.isComposite()) {
            ActiveMQDestination[] composites = topic.getCompositeDestinations();
@@ -206,9 +213,11 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
 
     @Override
     public String onSend(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5365
         String destinationName = destination.getPhysicalName();
         int position = destinationName.indexOf(VIRTUALTOPIC_PREFIX);
         if (position >= 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5303
             destinationName = destinationName.substring(position + VIRTUALTOPIC_PREFIX.length()).substring(0);
         }
         return destinationName;
@@ -256,8 +265,10 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
                 QoS qoS = QoS.valueOf(qosString);
                 LOG.trace("Restoring queue subscription: {}:{}", topicName, qoS);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
                 ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
                 consumerInfo.setDestination(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5530
                 consumerInfo.setPrefetchSize(ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH);
                 if (protocol.getActiveMQSubscriptionPrefetch() > 0) {
                     consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
@@ -275,6 +286,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
     List<ActiveMQQueue> lookupQueues(String clientId) throws MQTTProtocolException {
         List<ActiveMQQueue> result = new ArrayList<ActiveMQQueue>();
         RegionBroker regionBroker;
@@ -288,6 +300,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
         final QueueRegion queueRegion = (QueueRegion) regionBroker.getQueueRegion();
         for (ActiveMQDestination destination : queueRegion.getDestinationMap().keySet()) {
             if (destination.isQueue() && !destination.isTemporary()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5983
                 if (destination.getPhysicalName().startsWith("Consumer." + clientId + ":")) {
                     LOG.debug("Recovered client sub: {} on connect", destination.getPhysicalName());
                     result.add((ActiveMQQueue) destination);

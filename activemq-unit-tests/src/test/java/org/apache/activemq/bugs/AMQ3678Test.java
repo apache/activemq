@@ -56,6 +56,7 @@ public class AMQ3678Test implements MessageListener {
 
     @Test(timeout = 60000)
     public void countConsumers() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionURI);
         factory.setAlwaysSyncSend(true);
         factory.setDispatchAsync(false);
@@ -68,6 +69,7 @@ public class AMQ3678Test implements MessageListener {
         consumerConnection.setClientID("subscriber1");
         Session consumerMQSession = consumerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         ActiveMQTopicSubscriber activeConsumer = (ActiveMQTopicSubscriber) consumerMQSession.createDurableSubscriber(destination,
             "myTopic?consumer.prefetchSize=1");
 
@@ -90,6 +92,7 @@ public class AMQ3678Test implements MessageListener {
                         try {
                             broker.getAdminView().removeTopic(destination.getTopicName());
                         } catch (Exception e1) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
                             fail("Unable to remove destination:" + destination.getPhysicalName());
                         }
                     }
@@ -129,6 +132,7 @@ public class AMQ3678Test implements MessageListener {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         broker.getManagementContext().setCreateConnector(false);
         broker.setAdvisorySupport(false);
 

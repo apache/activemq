@@ -19,6 +19,7 @@ package org.apache.activemq.transport;
 import java.net.URI;
 
 public interface CompositeTransport extends Transport {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
     void add(boolean rebalance,URI[] uris);
     void remove(boolean rebalance,URI[] uris);
 }

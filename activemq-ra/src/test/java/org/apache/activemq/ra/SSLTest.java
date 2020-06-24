@@ -104,6 +104,7 @@ public class SSLTest {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setUseJmx(false);
         broker.setBrokerName("BROKER");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         broker.setDataDirectory(KAHADB_DIRECTORY);
         KeyManager[] km = getKeyManager();
         TrustManager[] tm = getTrustManager();
@@ -515,6 +516,7 @@ public class SSLTest {
             sslSocket.setEnabledCipherSuites(enabledSuites);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         sslSocket.setSoTimeout(5000);
         sslSocket.getSession();
         sslSocket.startHandshake();

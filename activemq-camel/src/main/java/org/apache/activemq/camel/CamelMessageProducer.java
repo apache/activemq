@@ -81,6 +81,7 @@ public class CamelMessageProducer extends ActiveMQMessageProducerSupport {
 
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         CamelDestination camelDestination = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2130
         if (ObjectHelper.equal(destination, this.destination)) {
             camelDestination = this.destination;
         } else {
@@ -88,6 +89,7 @@ public class CamelMessageProducer extends ActiveMQMessageProducerSupport {
             throw new IllegalArgumentException("Invalid destination setting: " + destination + " when expected: " + this.destination);
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2348
 			Exchange exchange = endpoint.createExchange(ExchangePattern.InOnly);
 			exchange.setIn(new JmsMessage(message, camelDestination.getBinding()));
             producer.process(exchange);

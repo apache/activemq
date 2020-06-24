@@ -84,6 +84,7 @@ public class AMQ2764Test {
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
         final int expectedMessagesReceived = 1000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         for (int i = 1; i <= expectedMessagesReceived; i++) {
             Message message = session.createMessage();
@@ -124,6 +125,7 @@ public class AMQ2764Test {
         int actualMessagesReceived = doSendMessage(expectedMessagesReceived, consumer, producerConnectionFactory);
         assertEquals("Didn't receive the right amount of messages directly connected", expectedMessagesReceived, actualMessagesReceived);
         assertNull("Had extra messages", consumer.receiveNoWait());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         actualMessagesReceived = doSendMessage(expectedMessagesReceived, consumer, secondProducerConnectionFactory);
         assertEquals("Didn't receive the right amount of messages via network", expectedMessagesReceived, actualMessagesReceived);
@@ -143,6 +145,7 @@ public class AMQ2764Test {
         actualMessagesReceived = doSendMessage(expectedMessagesReceived, consumer, secondProducerConnectionFactory);
         assertEquals("Didn't receive the right amount of messages via network after restart", expectedMessagesReceived, actualMessagesReceived);
         assertNull("Had extra messages", consumer.receiveNoWait());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         stopBrokerOne();
         stopBrokerTwo();
@@ -150,6 +153,7 @@ public class AMQ2764Test {
 
     protected int doSendMessage(int expectedMessagesReceived, MessageConsumer consumer, ActiveMQConnectionFactory connectionFactory) throws Exception {
         int messagesReceived = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         for (int i = 0; i < expectedMessagesReceived; i++) {
             sendMessage(connectionFactory);
             Message message = consumer.receive(5000);
@@ -186,6 +190,7 @@ public class AMQ2764Test {
     }
 
     protected ActiveMQConnectionFactory createBrokerOneConnectionFactory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         return new ActiveMQConnectionFactory("vm://broker1?create=false");
     }
 
@@ -210,6 +215,7 @@ public class AMQ2764Test {
     @After
     public void tearDown() throws Exception {
         disposeConsumerConnections();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         Thread.sleep(10);
         try {
             stopBrokerOne();
@@ -224,6 +230,7 @@ public class AMQ2764Test {
     }
 
     protected String getTestName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         return name.getMethodName();
     }
 
@@ -297,6 +304,7 @@ public class AMQ2764Test {
     }
 
     protected void waitForConsumerToArrive(AtomicInteger consumerCounter) throws InterruptedException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         for (int i = 0; i < 200; i++) {
             if (consumerCounter.get() > 0) {
                 return;

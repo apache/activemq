@@ -129,6 +129,7 @@ public class DestinationsViewFilter implements Serializable {
      * @throws IOException
      */
     String filter(int page, int pageSize) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7151
         final ObjectMapper mapper = new ObjectMapper();
         final Predicate<DestinationView> predicate = getPredicate();
         final Map<ObjectName, DestinationView> filteredDestinations = new HashMap<>(destinations);
@@ -148,6 +149,7 @@ public class DestinationsViewFilter implements Serializable {
         int start = (page - 1) * pageSize;
         int end = Math.min(page * pageSize, destinations.size());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7151
         final List<Map.Entry<ObjectName, DestinationView>> sortedCopy = new ArrayList<>(destinations.entrySet());
         sortedCopy.sort(getComparator());
         return sortedCopy.subList(start, end).stream().collect(
@@ -183,6 +185,7 @@ public class DestinationsViewFilter implements Serializable {
         };
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7151
     Comparator<Map.Entry<ObjectName, DestinationView>> getComparator() {
         return new Comparator<Map.Entry<ObjectName, DestinationView>>() {
 

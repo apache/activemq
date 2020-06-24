@@ -39,6 +39,9 @@ public class StompConnection {
     }
 
     public void open(Socket socket) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         stompSocket = socket;
     }
 
@@ -57,10 +60,12 @@ public class StompConnection {
     }
 
     public void sendFrame(String frame, byte[] data) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2822
         byte[] bytes = frame.getBytes("UTF-8");
         OutputStream outputStream = stompSocket.getOutputStream();
         outputStream.write(bytes);
         outputStream.write(data);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
         outputStream.flush();
     }
 
@@ -69,9 +74,12 @@ public class StompConnection {
     }
 
     public StompFrame receive(long timeOut) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         stompSocket.setSoTimeout((int)timeOut);
         InputStream is = stompSocket.getInputStream();
         StompWireFormat wf = new StompWireFormat();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         wf.setStompVersion(version);
         DataInputStream dis = new DataInputStream(is);
         return (StompFrame)wf.unmarshal(dis);
@@ -91,6 +99,7 @@ public class StompConnection {
                 throw new IOException("socket closed.");
             } else if (c == 0) {
                 c = is.read();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2737
                 if (c == '\n') {
                     // end of frame
                     return stringFromBuffer(inputBuffer);
@@ -105,6 +114,9 @@ public class StompConnection {
     }
 
     private String stringFromBuffer(ByteArrayOutputStream inputBuffer) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         byte[] ba = inputBuffer.toByteArray();
         inputBuffer.reset();
         return new String(ba, "UTF-8");
@@ -125,6 +137,7 @@ public class StompConnection {
     public void connect(String username, String password, String client) throws Exception {
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("login", username);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1989
         headers.put("passcode", password);
         if (client != null) {
             headers.put("client-id", client);
@@ -136,6 +149,7 @@ public class StompConnection {
         StompFrame frame = new StompFrame("CONNECT", headers);
         sendFrame(frame.format());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1807
         StompFrame connect = receive();
         if (!connect.getAction().equals(Stomp.Responses.CONNECTED)) {
             throw new Exception ("Not connected: " + connect.getBody());
@@ -155,6 +169,7 @@ public class StompConnection {
     }
 
     public void send(String destination, String message) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1989
         send(destination, message, null, null);
     }
 
@@ -261,6 +276,7 @@ public class StompConnection {
     }
 
     public String getVersion() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         return version;
     }
 

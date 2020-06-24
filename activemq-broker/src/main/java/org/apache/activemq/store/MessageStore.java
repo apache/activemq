@@ -51,6 +51,7 @@ public interface MessageStore extends Service {
      * @throws IOException
      */
     void addMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
 
     /**
      * Adds a message to the message store
@@ -62,6 +63,7 @@ public interface MessageStore extends Service {
      * @throws IOException
      */
     ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
 
     /**
      * Adds a message to the message store
@@ -74,6 +76,7 @@ public interface MessageStore extends Service {
      * @throws IOException
      */
     ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
 
     /**
      * Adds a message to the message store
@@ -97,6 +100,7 @@ public interface MessageStore extends Service {
      * @throws IOException
      */
     ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
 
     /**
      * Looks up a message using either the String messageID or the
@@ -150,6 +154,7 @@ public interface MessageStore extends Service {
      *                destination's memory usage.
      */
     void setMemoryUsage(MemoryUsage memoryUsage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4885
 
     /**
      * @return the number of messages ready to deliver
@@ -179,6 +184,7 @@ public interface MessageStore extends Service {
     void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception;
 
     void dispose(ConnectionContext context);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1842
 
     /**
      * allow caching cursors to set the current batch offset when cache is exhausted
@@ -207,6 +213,10 @@ public interface MessageStore extends Service {
     public boolean isPrioritizedMessages();
 
     void updateMessage(Message message) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
     void registerIndexListener(IndexListener indexListener);
 }

@@ -168,6 +168,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
     }
 
     protected void assertEnumerationEqual(String message, Set<Object> comparedObjects, Enumeration<?> expected, Enumeration<?> actual) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1981
         while (expected.hasMoreElements()) {
             Object expectedElem = expected.nextElement();
             Object actualElem = actual.nextElement();
@@ -263,6 +264,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         OpenWireFormat wf = new OpenWireFormat();
         wf.setCacheEnabled(true);
         wf.setStackTraceEnabled(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
         wf.setVersion(OpenWireFormat.DEFAULT_WIRE_VERSION);
         return wf;
     }
@@ -324,6 +326,8 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
     }
 
     protected BooleanExpression createBooleanExpression(String string) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         return new NetworkBridgeFilter(null, new BrokerId(string), 10, 10);
     }
 

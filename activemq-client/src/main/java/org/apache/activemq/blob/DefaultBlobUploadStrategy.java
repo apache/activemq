@@ -36,10 +36,12 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 public class DefaultBlobUploadStrategy extends DefaultStrategy implements BlobUploadStrategy {
 
     public DefaultBlobUploadStrategy(BlobTransferPolicy transferPolicy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         super(transferPolicy);
     }
 
     public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try(FileInputStream fis = new FileInputStream(file)) {
             return uploadStream(message, fis);
         }
@@ -47,6 +49,7 @@ public class DefaultBlobUploadStrategy extends DefaultStrategy implements BlobUp
 
     public URL uploadStream(ActiveMQBlobMessage message, InputStream fis) throws JMSException, IOException {
         URL url = createMessageURL(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
 
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
         connection.setRequestMethod("PUT");
@@ -57,12 +60,14 @@ public class DefaultBlobUploadStrategy extends DefaultStrategy implements BlobUp
         // (chunked mode not supported before JRE 1.5)
         connection.setChunkedStreamingMode(transferPolicy.getBufferSize());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try(OutputStream os = connection.getOutputStream()) {
             byte[] buf = new byte[transferPolicy.getBufferSize()];
             for (int c = fis.read(buf); c != -1; c = fis.read(buf)) {
                 os.write(buf, 0, c);
                 os.flush();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6646
         } catch (IOException error) {
             throw new IOException("PUT failed to: " + url, error);
         }

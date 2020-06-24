@@ -36,5 +36,6 @@ public interface PendingSubscriberMessageStoragePolicy {
      * @param maxBatchSize
      * @return the Pending Message cursor
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
     PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String name,int maxBatchSize,Subscription subs);
 }

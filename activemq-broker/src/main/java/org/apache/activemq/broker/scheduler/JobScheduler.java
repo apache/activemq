@@ -27,6 +27,7 @@ public interface JobScheduler {
      * @throws Exception
      */
     String getName() throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4683
 
     /**
      * Starts dispatch of scheduled Jobs to registered listeners.
@@ -54,6 +55,7 @@ public interface JobScheduler {
      * @throws Exception
      */
     void addListener(JobListener listener) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
 
     /**
      * remove a JobListener that was previously registered.  If the given listener is not in

@@ -48,6 +48,7 @@ public class MQTTVirtualTopicSubscriptionsTest extends MQTTTest {
     @Override
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         protocolConfig = "transport.subscriptionStrategy=mqtt-virtual-topic-subscriptions";
         super.setUp();
     }
@@ -72,6 +73,7 @@ public class MQTTVirtualTopicSubscriptionsTest extends MQTTTest {
 
     @Test(timeout = 60 * 1000)
     public void testSubscribeOnVirtualTopicAsDurable() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5303
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("VirtualTopicSubscriber");
         mqtt.setKeepAlive((short) 2);
@@ -167,6 +169,7 @@ public class MQTTVirtualTopicSubscriptionsTest extends MQTTTest {
 
     @Test(timeout = 60 * 1000)
     public void testRetainMessageDurability() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6575
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("sub");
 

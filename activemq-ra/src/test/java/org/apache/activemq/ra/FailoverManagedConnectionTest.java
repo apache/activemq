@@ -58,6 +58,7 @@ public class FailoverManagedConnectionTest {
 
     @After
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         stopBroker();
     }
 

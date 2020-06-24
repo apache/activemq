@@ -85,6 +85,7 @@ public class MQTTWireFormat implements WireFormat {
     public Object unmarshal(DataInput dataIn) throws IOException {
         byte header = dataIn.readByte();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
         byte digit;
         int multiplier = 1;
         int length = 0;
@@ -96,6 +97,7 @@ public class MQTTWireFormat implements WireFormat {
         while ((digit & 0x80) != 0);
 
         if (length >= 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5781
             if (length > getMaxFrameSize()) {
                 throw new IOException("The maximum message length was exceeded");
             }
@@ -132,6 +134,7 @@ public class MQTTWireFormat implements WireFormat {
      * @return the maximum number of bytes a single MQTT message frame is allowed to be.
      */
     public int getMaxFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5781
         return maxFrameSize;
     }
 
@@ -150,6 +153,7 @@ public class MQTTWireFormat implements WireFormat {
      * @return the timeout value used to fail a connection if no CONNECT frame read.
      */
     public long getConnectAttemptTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5856
         return connectAttemptTimeout;
     }
 

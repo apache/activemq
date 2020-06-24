@@ -65,6 +65,8 @@ public class ResourceLoadingSslContext extends SslContext {
      */
     @PostConstruct
     private void postConstruct() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             afterPropertiesSet();
         } catch (Exception ex) {

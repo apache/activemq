@@ -68,6 +68,7 @@ public class ConnectorXBeanConfigTest extends TestCase {
         // redundant start is now ignored
         brokerService.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6392
         assertTrue("mapped address in published address", brokerService.getTransportConnectorByScheme("tcp").getPublishableConnectString().contains("Mapped"));
     }
 
@@ -86,6 +87,7 @@ public class ConnectorXBeanConfigTest extends TestCase {
         conn.start();
         Destination dest = new ActiveMQQueue("test");
         MessageConsumer consumer = sess.createConsumer(dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5070
         MessageProducer producer = sess.createProducer(dest);
         producer.send(sess.createTextMessage("test"));
         TextMessage msg = (TextMessage)consumer.receive(1000);

@@ -52,6 +52,7 @@ public class DurableSubscriptionRemoveOfflineTest extends EmbeddedBrokerTestSupp
     }
 
     protected BrokerService restartBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4149
         broker.stop();
         broker.waitUntilStopped();
         broker = null;
@@ -84,6 +85,7 @@ public class DurableSubscriptionRemoveOfflineTest extends EmbeddedBrokerTestSupp
     }
 
     public void testRemoveAfterRestart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4149
         Connection connection = createConnection();
         connection.setClientID("cliID");
         connection.start();
@@ -100,6 +102,7 @@ public class DurableSubscriptionRemoveOfflineTest extends EmbeddedBrokerTestSupp
 
         assertTrue(broker.getAdminView().getInactiveDurableTopicSubscribers().length == 1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4149
         assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {

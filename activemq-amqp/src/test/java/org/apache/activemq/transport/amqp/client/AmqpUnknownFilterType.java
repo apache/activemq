@@ -39,6 +39,7 @@ public class AmqpUnknownFilterType implements DescribedType {
 
     @Override
     public Object getDescriptor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
         return UNKNOWN_FILTER_CODE;
     }
 

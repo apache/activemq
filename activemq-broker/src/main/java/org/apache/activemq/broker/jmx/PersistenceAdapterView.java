@@ -63,6 +63,7 @@ public class PersistenceAdapterView implements PersistenceAdapterViewMBean {
 
     @Override
     public String getStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7159
         return serializePersistenceAdapterStatistics();
     }
 
@@ -90,6 +91,7 @@ public class PersistenceAdapterView implements PersistenceAdapterViewMBean {
     }
 
     private String serializePersistenceAdapterStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7159
         if (persistenceAdapterStatistics != null) {
             try {
                 Map<String, Object> result = new HashMap<String, Object>();
@@ -128,6 +130,7 @@ public class PersistenceAdapterView implements PersistenceAdapterViewMBean {
     }
 
     public void setPersistenceAdapterStatistics(PersistenceAdapterStatistics persistenceAdapterStatistics) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7159
         this.persistenceAdapterStatistics = persistenceAdapterStatistics;
     }
 }

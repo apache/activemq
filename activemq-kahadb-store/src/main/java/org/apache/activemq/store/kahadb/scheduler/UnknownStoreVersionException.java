@@ -25,6 +25,7 @@ public class UnknownStoreVersionException extends IOException {
     private final String token;
 
     public UnknownStoreVersionException(Throwable cause) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         super(cause);
         this.token = "";
     }

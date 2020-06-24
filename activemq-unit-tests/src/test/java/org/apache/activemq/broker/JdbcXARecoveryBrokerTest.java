@@ -49,6 +49,7 @@ public class JdbcXARecoveryBrokerTest extends XARecoveryBrokerTest {
     protected void configureBroker(BrokerService broker) throws Exception {
         super.configureBroker(broker);
         broker.setAdvisorySupport(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
 
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
         jdbc.setDataSource(dataSource);

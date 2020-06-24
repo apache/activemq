@@ -38,6 +38,7 @@ public class SelectorWorker implements Runnable {
     final int id = NEXT_ID.getAndIncrement();
     private final int maxChannelsPerWorker;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2440
     final AtomicInteger retainCounter = new AtomicInteger(1);
     private final ConcurrentLinkedQueue<Runnable> ioTasks = new ConcurrentLinkedQueue<Runnable>();
 
@@ -58,12 +59,14 @@ public class SelectorWorker implements Runnable {
         int use = retainCounter.decrementAndGet();
         if (use == 0) {
             manager.onWorkerEmptyEvent(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2440
         } else if (use == maxChannelsPerWorker - 1) {
             manager.onWorkerNotFullEvent(this);
         }
     }
 
     boolean isReleased() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6108
         return retainCounter.get() == 0;
     }
 
@@ -92,6 +95,8 @@ public class SelectorWorker implements Runnable {
             while (!isReleased()) {
 
                 processIoTasks();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2440
+//IC see: https://issues.apache.org/jira/browse/AMQ-6108
 
                 int count = selector.select(10);
 
@@ -133,6 +138,8 @@ public class SelectorWorker implements Runnable {
                     }
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2440
+//IC see: https://issues.apache.org/jira/browse/AMQ-6108
         } catch (Throwable e) {
             // Notify all the selections that the error occurred.
             Set<SelectionKey> keys = selector.keys();
@@ -142,6 +149,7 @@ public class SelectorWorker implements Runnable {
                 s.onError(e);
             }
         } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2440
             try {
                 manager.onWorkerEmptyEvent(this);
                 selector.close();

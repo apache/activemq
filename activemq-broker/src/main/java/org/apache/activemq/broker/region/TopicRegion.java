@@ -67,6 +67,7 @@ public class TopicRegion extends AbstractRegion {
     public TopicRegion(RegionBroker broker, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                        DestinationFactory destinationFactory) {
         super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3408
         if (broker.getBrokerService().getOfflineDurableSubscriberTaskSchedule() != -1 && broker.getBrokerService().getOfflineDurableSubscriberTimeout() != -1) {
             this.cleanupTimer = new Timer("ActiveMQ Durable Subscriber Cleanup Timer", true);
             this.cleanupTask = new TimerTask() {
@@ -92,6 +93,7 @@ public class TopicRegion extends AbstractRegion {
         for (Map.Entry<SubscriptionKey, DurableTopicSubscription> entry : durableSubscriptions.entrySet()) {
             DurableTopicSubscription sub = entry.getValue();
             if (!sub.isActive()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4149
                 long offline = sub.getOfflineTimestamp();
                 if (offline != -1 && now - offline >= broker.getBrokerService().getOfflineDurableSubscriberTimeout()) {
                     LOG.info("Destroying durable subscriber due to inactivity: {}", sub);
@@ -114,12 +116,14 @@ public class TopicRegion extends AbstractRegion {
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5630
             if (broker.getBrokerService().isRejectDurableConsumers()) {
                 throw new JMSException("Durable Consumers are not allowed");
             }
             ActiveMQDestination destination = info.getDestination();
             if (!destination.isPattern()) {
                 // Make sure the destination is created.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                 lookup(context, destination,true);
             }
             String clientId = context.getClientId();
@@ -128,6 +132,7 @@ public class TopicRegion extends AbstractRegion {
             DurableTopicSubscription sub = durableSubscriptions.get(key);
             if (sub != null) {
                 // throw this exception only if link stealing is off
+//IC see: https://issues.apache.org/jira/browse/AMQ-5473
                 if (!context.isAllowLinkStealing() && sub.isActive()) {
                     throw new JMSException("Durable consumer is in use for client: " + clientId +
                                            " and subscriptionName: " + subscriptionName);
@@ -136,6 +141,7 @@ public class TopicRegion extends AbstractRegion {
                 if (hasDurableSubChanged(info, sub.getConsumerInfo())) {
                     // Remove the consumer first then add it.
                     durableSubscriptions.remove(key);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
                     destinationsLock.readLock().lock();
                     try {
                         for (Destination dest : destinations.values()) {
@@ -160,14 +166,17 @@ public class TopicRegion extends AbstractRegion {
                     // this is set in the activate() call below, but
                     // that call is a NOP if it is already active.
                     // hence need to set here and deactivate it first
+//IC see: https://issues.apache.org/jira/browse/AMQ-5473
                     if ((sub.context != context) || (sub.info != info)) {
                         sub.info = info;
                         sub.context = context;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5513
                         sub.deactivate(keepDurableSubsActive, info.getLastDeliveredSequenceId());
                     }
                     //If NoLocal we need to update the NoLocal selector with the new connectionId
                     //Simply setting the selector with the current one will trigger a
                     //refresh of of the connectionId for the NoLocal expression
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
                     if (info.isNoLocal()) {
                         sub.setSelector(sub.getSelector());
                     }
@@ -182,6 +191,7 @@ public class TopicRegion extends AbstractRegion {
                                            " subscriberName: " + key.getSubscriptionName());
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4062
             sub.activate(usageManager, context, info, broker);
             return sub;
         } else {
@@ -198,7 +208,9 @@ public class TopicRegion extends AbstractRegion {
                 // deactivate only if given context is same
                 // as what is in the sub. otherwise, during linksteal
                 // sub will get new context, but will be removed here
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
                 if (sub.getContext() == context) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5513
                     sub.deactivate(keepDurableSubsActive, info.getLastDeliveredSequenceId());
                 }
             }
@@ -212,6 +224,7 @@ public class TopicRegion extends AbstractRegion {
         SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubscriptionName());
         DurableTopicSubscription sub = durableSubscriptions.get(key);
         if (sub == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5719
             throw new InvalidDestinationException("No durable subscription exists for clientID: " +
                                                   info.getClientId() + " and subscriptionName: " +
                                                   info.getSubscriptionName());
@@ -219,15 +232,19 @@ public class TopicRegion extends AbstractRegion {
         if (sub.isActive()) {
             throw new JMSException("Durable consumer is in use");
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3674
             durableSubscriptions.remove(key);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         destinationsLock.readLock().lock();
         try {
             for (Destination dest : destinations.values()) {
                 if (dest instanceof Topic){
                     Topic topic = (Topic)dest;
                     topic.deleteSubscription(context, key);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4571
+//IC see: https://issues.apache.org/jira/browse/AMQ-4356
                 } else if (dest instanceof DestinationFilter) {
                     DestinationFilter filter = (DestinationFilter) dest;
                     filter.deleteSubscription(context, key);
@@ -237,7 +254,9 @@ public class TopicRegion extends AbstractRegion {
             destinationsLock.readLock().unlock();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3675
         if (subscriptions.get(sub.getConsumerInfo().getConsumerId()) != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3013
             super.removeConsumer(context, sub.getConsumerInfo());
         } else {
             // try destroying inactive subscriptions
@@ -247,6 +266,7 @@ public class TopicRegion extends AbstractRegion {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         return "TopicRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + usageManager.getMemoryUsage().getPercentUsage() + "%";
     }
 
@@ -275,6 +295,7 @@ public class TopicRegion extends AbstractRegion {
                     c.setClientId(key.getClientId());
                     c.setConnectionId(consumerInfo.getConsumerId().getParentId().getParentId());
                     sub = (DurableTopicSubscription)createSubscription(c, consumerInfo);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4149
                     sub.setOfflineTimestamp(System.currentTimeMillis());
                 }
 
@@ -290,6 +311,7 @@ public class TopicRegion extends AbstractRegion {
             // Now perhaps there other durable subscriptions (via wild card)
             // that would match this destination..
             durableSubscriptions.values();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
             for (DurableTopicSubscription sub : durableSubscriptions.values()) {
                 // Skip over subscriptions that we already added..
                 if (dupChecker.contains(sub)) {
@@ -308,9 +330,11 @@ public class TopicRegion extends AbstractRegion {
     public ConsumerInfo createInactiveConsumerInfo(SubscriptionInfo info) {
         ConsumerInfo rc = new ConsumerInfo();
         rc.setSelector(info.getSelector());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1305
         rc.setSubscriptionName(info.getSubscriptionName());
         rc.setDestination(info.getSubscribedDestination());
         rc.setConsumerId(createConsumerId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         rc.setNoLocal(info.isNoLocal());
         return rc;
     }
@@ -323,6 +347,8 @@ public class TopicRegion extends AbstractRegion {
         if (broker.getDestinationPolicy() != null) {
             PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
             if (entry != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                 entry.configure(broker,topic);
             }
         }
@@ -342,6 +368,8 @@ public class TopicRegion extends AbstractRegion {
             if (sub == null) {
 
                 sub = new DurableTopicSubscription(broker, usageManager, context, info, keepDurableSubsActive);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
+//IC see: https://issues.apache.org/jira/browse/AMQ-1672
 
                 if (destination != null && broker.getDestinationPolicy() != null) {
                     PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
@@ -351,6 +379,7 @@ public class TopicRegion extends AbstractRegion {
                 }
                 durableSubscriptions.put(key, sub);
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5719
                 throw new JMSException("Durable subscription is already active for clientID: " +
                                        context.getClientId() + " and subscriptionName: " +
                                        info.getSubscriptionName());
@@ -358,6 +387,8 @@ public class TopicRegion extends AbstractRegion {
             return sub;
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
+//IC see: https://issues.apache.org/jira/browse/AMQ-1672
             TopicSubscription answer = new TopicSubscription(broker, context, info, usageManager);
             // lets configure the subscription depending on the destination
             if (destination != null && broker.getDestinationPolicy() != null) {
@@ -384,6 +415,7 @@ public class TopicRegion extends AbstractRegion {
             return true;
         }
         //Not all persistence adapters store the noLocal value for a subscription
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
         PersistenceAdapter adapter = broker.getBrokerService().getPersistenceAdapter();
         if (adapter instanceof NoLocalSubscriptionAware) {
             if (info1.isNoLocal() ^ info2.isNoLocal()) {
@@ -406,6 +438,7 @@ public class TopicRegion extends AbstractRegion {
     }
 
     public DurableTopicSubscription lookupSubscription(String subscriptionName, String clientId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5597
         SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
         if (durableSubscriptions.containsKey(key)) {
             return durableSubscriptions.get(key);
@@ -416,6 +449,7 @@ public class TopicRegion extends AbstractRegion {
 
     public List<DurableTopicSubscription> lookupSubscriptions(String clientId) {
         List<DurableTopicSubscription> result = new ArrayList<DurableTopicSubscription>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
 
         for (Map.Entry<SubscriptionKey, DurableTopicSubscription> subscriptionEntry : durableSubscriptions.entrySet()) {
             if (subscriptionEntry.getKey().getClientId().equals(clientId)) {
@@ -427,6 +461,7 @@ public class TopicRegion extends AbstractRegion {
     }
 
     public boolean isKeepDurableSubsActive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-669
         return keepDurableSubsActive;
     }
 
@@ -435,10 +470,12 @@ public class TopicRegion extends AbstractRegion {
     }
 
     public boolean durableSubscriptionExists(SubscriptionKey key) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2691
         return this.durableSubscriptions.containsKey(key);
     }
 
     public DurableTopicSubscription getDurableSubscription(SubscriptionKey key) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         return durableSubscriptions.get(key);
     }
 

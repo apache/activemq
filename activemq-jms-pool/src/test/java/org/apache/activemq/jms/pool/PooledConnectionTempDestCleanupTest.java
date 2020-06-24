@@ -69,6 +69,7 @@ public class PooledConnectionTempDestCleanupTest extends JmsPoolTestSupport {
     @Before
     public void setUp() throws java.lang.Exception {
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         brokerService = new BrokerService();
         configureBroker(brokerService);
@@ -77,6 +78,7 @@ public class PooledConnectionTempDestCleanupTest extends JmsPoolTestSupport {
 
         // Create the ActiveMQConnectionFactory and the PooledConnectionFactory.
         directConnFact = new ActiveMQConnectionFactory(getBrokerConnectionURI());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         pooledConnFact = new PooledConnectionFactory();
         pooledConnFact.setConnectionFactory(directConnFact);
 
@@ -112,6 +114,7 @@ public class PooledConnectionTempDestCleanupTest extends JmsPoolTestSupport {
         } catch (JMSException jms_exc) {
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         super.tearDown();
     }
 
@@ -230,6 +233,7 @@ public class PooledConnectionTempDestCleanupTest extends JmsPoolTestSupport {
     }
 
     private boolean destinationExists(Destination dest) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         RegionBroker rb = (RegionBroker) brokerService.getBroker().getAdaptor(RegionBroker.class);
         return rb.getTopicRegion().getDestinationMap().containsKey(dest) || rb.getQueueRegion().getDestinationMap().containsKey(dest)
                 || rb.getTempTopicRegion().getDestinationMap().containsKey(dest) || rb.getTempQueueRegion().getDestinationMap().containsKey(dest);

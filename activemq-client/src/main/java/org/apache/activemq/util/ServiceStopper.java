@@ -89,6 +89,7 @@ public class ServiceStopper {
     }
 
     protected void logError(Object service, Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3177
         Logger log = LoggerFactory.getLogger(service.getClass());
         log.error("Could not stop service: " + service + ". Reason: " + e, e);
     }

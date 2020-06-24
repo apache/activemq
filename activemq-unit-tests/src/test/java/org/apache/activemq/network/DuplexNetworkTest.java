@@ -42,12 +42,14 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
     protected BrokerService createRemoteBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("remoteBroker");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         broker.addConnector("tcp://localhost:61617?transport.connectAttemptTimeout=2000");
         return broker;
     }
 
     @Test
     public void testTempQueues() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2706
         TemporaryQueue temp = localSession.createTemporaryQueue();
         MessageProducer producer = localSession.createProducer(temp);
         producer.send(localSession.createTextMessage("test"));
@@ -55,6 +57,7 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
         assertEquals("Destination not created", 1, remoteBroker.getAdminView().getTemporaryQueues().length);
         temp.delete();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
         assertTrue("Destination not deleted", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -67,6 +70,7 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
     public void testStaysUp() throws Exception {
         int bridgeIdentity = getBridgeId();
         LOG.info("Bridges: " + bridgeIdentity);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         TimeUnit.SECONDS.sleep(5);
         assertEquals("Same bridges", bridgeIdentity, getBridgeId());
     }
@@ -90,6 +94,7 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
     protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {
 
         final NetworkBridge localBridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
 
         assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override

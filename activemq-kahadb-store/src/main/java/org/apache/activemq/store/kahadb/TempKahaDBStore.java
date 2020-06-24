@@ -93,6 +93,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             }
             @Override
             public void prepare(TransactionId txid) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
                 processPrepare(txid);
             }
             @Override
@@ -151,6 +152,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         public void addMessage(ConnectionContext context, Message message) throws IOException {
             KahaAddMessageCommand command = new KahaAddMessageCommand();
             command.setDestination(dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
             command.setMessageId(message.getMessageId().toProducerKey());
             processAdd(command, message.getTransactionId(), wireFormat.marshal(message));
         }
@@ -195,6 +197,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             }
 
             Message msg = (Message)wireFormat.unmarshal( data );
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
             return msg;
         }
 
@@ -250,6 +253,8 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         @Override
         public void setBatch(MessageId identity) throws IOException {
             final String key = identity.toProducerKey();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
 
             // Hopefully one day the page file supports concurrent read operations... but for now we must
             // externally synchronize...
@@ -309,10 +314,13 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
 
         @Override
         public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                                 MessageId messageId, MessageAck ack) throws IOException {
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
             command.setDestination(dest);
             command.setSubscriptionKey(subscriptionKey(clientId, subscriptionName));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
             command.setMessageId(messageId.toProducerKey());
             // We are not passed a transaction info.. so we can't participate in a transaction.
             // Looks like a design issue with the TopicMessageStore interface.  Also we can't recover the original ack
@@ -466,6 +474,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                             }
                         }
                         if( entry!=null ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
                             sd.subscriptionCursors.put(subscriptionKey, entry.getKey() + 1);
                         }
                     }
@@ -637,6 +646,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             return new ActiveMQTempQueue(name);
         case TEMP_TOPIC:
             return new ActiveMQTempTopic(name);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         default:
             throw new IllegalArgumentException("Not in the valid destination format");
         }
@@ -644,11 +654,15 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
 
     @Override
     public long getLastProducerSequenceId(ProducerId id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         return -1;
     }
 
     @Override
     public void allowIOResumption() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
         if (pageFile != null) {
             pageFile.allowIOResumption();
         }
@@ -656,6 +670,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         this.brokerService = brokerService;
     }
 
@@ -668,6 +683,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
     }
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         throw new UnsupportedOperationException();
     }
 }

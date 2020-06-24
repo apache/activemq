@@ -40,6 +40,7 @@ public class MemoryUsageConcurrencyTest {
     @Test
     public void testCycle() throws Exception {
         Random r = new Random(0xb4a14);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         for (int i = 0; i < 30000; i++) {
             checkPercentage(i, i, r.nextInt(100) + 10, i % 2 == 0, i % 5 == 0);
         }

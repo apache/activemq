@@ -77,6 +77,7 @@ public class ManagementContext implements Service {
 
     static {
         String option = Boolean.FALSE.toString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         try {
             option = System.getProperty("org.apache.activemq.broker.jmx.createConnector", "false");
         } catch (Exception ex) {
@@ -128,8 +129,10 @@ public class ManagementContext implements Service {
         if (started.compareAndSet(false, true)) {
 
             populateMBeanSuppressionMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5656
 
             // fallback and use localhost
+//IC see: https://issues.apache.org/jira/browse/AMQ-4033
             if (connectorHost == null) {
                 connectorHost = "localhost";
             }
@@ -151,6 +154,7 @@ public class ManagementContext implements Service {
                     @Override
                     public void run() {
                         // ensure we use MDC logging with the broker name, so people can see the logs if MDC was in use
+//IC see: https://issues.apache.org/jira/browse/AMQ-4008
                         if (brokerName != null) {
                             MDC.put("activemq.broker", brokerName);
                         }
@@ -166,6 +170,7 @@ public class ManagementContext implements Service {
                                     if (brokerName != null) {
                                         MDC.put("activemq.broker", brokerName);
                                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
                                     connectorStarted.countDown();
                                 }
                                 LOG.info("JMX consoles can connect to {}", connectorServer.getAddress());
@@ -188,6 +193,7 @@ public class ManagementContext implements Service {
         if (suppressMBean != null) {
             suppressMBeanList = new LinkedList<>();
             for (String pair : suppressMBean.split(",")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5656
                 suppressMBeanList.add(new ObjectName(jmxDomainName + ":*," + pair));
             }
         }
@@ -200,6 +206,7 @@ public class ManagementContext implements Service {
 
             // unregister the mbeans we have registered
             if (mbeanServer != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3807
                 for (Map.Entry<ObjectName, ObjectName> entry : registeredMBeanNames.entrySet()) {
                     ObjectName actualName = entry.getValue();
                     if (actualName != null && beanServer.isRegistered(actualName)) {
@@ -214,8 +221,10 @@ public class ManagementContext implements Service {
             connectorServer = null;
             if (server != null) {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
                     if (connectorStarted.await(10, TimeUnit.SECONDS)) {
                         LOG.debug("Stopping jmx connector");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4008
                         server.stop();
                     }
                 } catch (IOException e) {
@@ -223,6 +232,7 @@ public class ManagementContext implements Service {
                 }
                 // stop naming service mbean
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4029
                     if (namingServiceObjectName != null && getMBeanServer().isRegistered(namingServiceObjectName)) {
                         LOG.debug("Stopping MBean {}", namingServiceObjectName);
                         getMBeanServer().invoke(namingServiceObjectName, "stop", null, null);
@@ -237,16 +247,19 @@ public class ManagementContext implements Service {
 
             if (locallyCreateMBeanServer && beanServer != null) {
                 // check to see if the factory knows about this server
+//IC see: https://issues.apache.org/jira/browse/AMQ-4238
                 List<MBeanServer> list = MBeanServerFactory.findMBeanServer(null);
                 if (list != null && !list.isEmpty() && list.contains(beanServer)) {
                     LOG.debug("Releasing MBeanServer {}", beanServer);
                     MBeanServerFactory.releaseMBeanServer(beanServer);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2245
             beanServer = null;
         }
 
         // Un-export JMX RMI registry, if it was created
+//IC see: https://issues.apache.org/jira/browse/AMQ-4238
         if (registry != null) {
             try {
                 UnicastRemoteObject.unexportObject(registry, true);
@@ -264,6 +277,7 @@ public class ManagementContext implements Service {
      * if the broker name was not set.
      */
     public String getBrokerName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4008
         return brokerName;
     }
 
@@ -342,6 +356,7 @@ public class ManagementContext implements Service {
     }
 
     public boolean isConnectorStarted() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
         return connectorStarted.getCount() == 0 || (connectorServer != null && connectorServer.isActive());
     }
 
@@ -419,9 +434,11 @@ public class ManagementContext implements Service {
     }
 
     public ObjectInstance registerMBean(Object bean, ObjectName name) throws Exception{
+//IC see: https://issues.apache.org/jira/browse/AMQ-5656
         ObjectInstance result = null;
         if (isAllowedToRegister(name)) {
             result = getMBeanServer().registerMBean(bean, name);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3807
             this.registeredMBeanNames.put(name, result.getObjectName());
         }
         return result;
@@ -430,6 +447,7 @@ public class ManagementContext implements Service {
     protected boolean isAllowedToRegister(ObjectName name) {
         boolean result = true;
         if (suppressMBean != null && suppressMBeanList != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5656
             for (ObjectName attr : suppressMBeanList) {
                 if (attr.apply(name)) {
                     result = false;
@@ -441,6 +459,7 @@ public class ManagementContext implements Service {
     }
 
     public Set<ObjectName> queryNames(ObjectName name, QueryExp query) throws Exception{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4238
         if (name != null) {
             ObjectName actualName = this.registeredMBeanNames.get(name);
             if (actualName != null) {
@@ -461,6 +480,7 @@ public class ManagementContext implements Service {
      * @throws JMException
      */
     public void unregisterMBean(ObjectName name) throws JMException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3807
         ObjectName actualName = this.registeredMBeanNames.get(name);
         if (beanServer != null && actualName != null && beanServer.isRegistered(actualName) && this.registeredMBeanNames.remove(name) != null) {
             LOG.debug("Unregistering MBean {}", actualName);
@@ -478,6 +498,7 @@ public class ManagementContext implements Service {
                 }
                 if (result == null) {
                     // lets piggy back on another MBeanServer - we could be in an appserver!
+//IC see: https://issues.apache.org/jira/browse/AMQ-4238
                     List<MBeanServer> list = MBeanServerFactory.findMBeanServer(null);
                     if (list != null && list.size() > 0) {
                         result = list.get(0);
@@ -498,6 +519,7 @@ public class ManagementContext implements Service {
 
     public MBeanServer findTigerMBeanServer() {
         String name = "java.lang.management.ManagementFactory";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4238
         Class<?> type = loadClass(name, ManagementContext.class.getClassLoader());
         if (type != null) {
             try {
@@ -505,6 +527,7 @@ public class ManagementContext implements Service {
                 if (method != null) {
                     Object answer = method.invoke(null, new Object[0]);
                     if (answer instanceof MBeanServer) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2085
                         if (createConnector) {
                             createConnector((MBeanServer)answer);
                         }
@@ -568,6 +591,7 @@ public class ManagementContext implements Service {
 
             // Do not use the createMBean as the mx4j jar may not be in the
             // same class loader than the server
+//IC see: https://issues.apache.org/jira/browse/AMQ-4238
             Class<?> cl = Class.forName("mx4j.tools.naming.NamingService");
             mbeanServer.registerMBean(cl.newInstance(), namingServiceObjectName);
 
@@ -576,6 +600,7 @@ public class ManagementContext implements Service {
             mbeanServer.setAttribute(namingServiceObjectName, attr);
         } catch(ClassNotFoundException e) {
             LOG.debug("Probably not using JRE 1.4: {}", e.getLocalizedMessage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4008
         } catch (Throwable e) {
             LOG.debug("Failed to create local registry. This exception will be ignored.", e);
         }
@@ -592,6 +617,7 @@ public class ManagementContext implements Service {
         final String serviceURL = "service:jmx:rmi://" + rmiServer + "/jndi/rmi://" +getConnectorHost()+":" + connectorPort + connectorPath;
         final JMXServiceURL url = new JMXServiceURL(serviceURL);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7490
         connectorServer = new RMIConnectorServer(url, environment, server, ManagementFactory.getPlatformMBeanServer());
         LOG.debug("Created JMXConnectorServer {}", connectorServer);
     }
@@ -648,6 +674,7 @@ public class ManagementContext implements Service {
      * @return the connectorHost
      */
     public String getConnectorHost() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2328
         return this.connectorHost;
     }
 
@@ -668,6 +695,7 @@ public class ManagementContext implements Service {
     }
 
     public boolean isAllowRemoteAddressInMBeanNames() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
         return allowRemoteAddressInMBeanNames;
     }
 
@@ -683,6 +711,7 @@ public class ManagementContext implements Service {
      * @param commaListOfAttributeKeyValuePairs  the comma separated list of attribute key=value pairs to match.
      */
     public void setSuppressMBean(String commaListOfAttributeKeyValuePairs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5656
         this.suppressMBean = commaListOfAttributeKeyValuePairs;
     }
 

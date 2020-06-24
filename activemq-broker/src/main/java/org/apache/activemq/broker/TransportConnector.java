@@ -52,6 +52,7 @@ import org.slf4j.LoggerFactory;
 public class TransportConnector implements Connector, BrokerServiceAware {
 
     final Logger LOG = LoggerFactory.getLogger(TransportConnector.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3177
 
     protected final CopyOnWriteArrayList<TransportConnection> connections = new CopyOnWriteArrayList<TransportConnection>();
     protected TransportStatusDetector statusDector;
@@ -79,6 +80,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean warnOnRemoteClose = false;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
 
     public TransportConnector() {
     }
@@ -116,15 +118,24 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setName(getName());
         rc.setTaskRunnerFactory(getTaskRunnerFactory());
         rc.setUri(getUri());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         rc.setBrokerService(brokerService);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         rc.setUpdateClusterClients(isUpdateClusterClients());
         rc.setRebalanceClusterClients(isRebalanceClusterClients());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3125
         rc.setUpdateClusterFilter(getUpdateClusterFilter());
         rc.setUpdateClusterClientsOnRemove(isUpdateClusterClientsOnRemove());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
         rc.setAuditNetworkProducers(isAuditNetworkProducers());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
         rc.setMaximumConsumersAllowedPerConnection(getMaximumConsumersAllowedPerConnection());
         rc.setMaximumProducersAllowedPerConnection(getMaximumProducersAllowedPerConnection());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3757
+//IC see: https://issues.apache.org/jira/browse/AMQ-3707
+//IC see: https://issues.apache.org/jira/browse/AMQ-4024
         rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7057
         rc.setWarnOnRemoteClose(isWarnOnRemoteClose());
         return rc;
     }
@@ -188,6 +199,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-591
         return messageAuthorizationPolicy;
     }
 
@@ -206,16 +218,20 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         brokerInfo.setBrokerId(broker.getBrokerId());
         brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
         brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3685
         brokerInfo.setBrokerURL(broker.getBrokerService().getDefaultSocketURIString());
         getServer().setAcceptListener(new TransportAcceptListener() {
             @Override
             public void onAccept(final Transport transport) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7167
                 final String remoteHost = transport.getRemoteAddress();
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                     brokerService.getTaskRunnerFactory().execute(new Runnable() {
                         @Override
                         public void run() {
                             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5070
                                 if (!brokerService.isStopping()) {
                                     Connection connection = createConnection(transport);
                                     connection.start();
@@ -253,10 +269,12 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
         DiscoveryAgent da = getDiscoveryAgent();
         if (da != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2283
             da.registerService(getPublishableConnectString());
             da.start();
         }
         if (enableStatusMonitor) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-872
             this.statusDector = new TransportStatusDetector(this);
             this.statusDector.start();
         }
@@ -265,6 +283,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     static Throwable getRootCause(final Throwable throwable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7301
         final List<Throwable> list = getThrowableList(throwable);
         return list.isEmpty() ? null : list.get(list.size() - 1);
     }
@@ -301,9 +320,11 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             this.statusDector.stop();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4066
         for (TransportConnection connection : connections) {
             ss.stop(connection);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3599
         server = null;
         ss.throwFirstException();
         LOG.info("Connector {} stopped", getName());
@@ -315,8 +336,10 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         // prefer to use task runner from broker service as stop task runner, as we can then
         // tie it to the lifecycle of the broker service
         TransportConnection answer = new TransportConnection(this, transport, broker, disableAsyncDispatch ? null
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                 : taskRunnerFactory, brokerService.getTaskRunnerFactory());
         boolean statEnabled = this.getStatistics().isEnabled();
+//IC see: https://issues.apache.org/jira/browse/AMQ-894
         answer.getStatistics().setEnabled(statEnabled);
         answer.setMessageAuthorizationPolicy(messageAuthorizationPolicy);
         return answer;
@@ -344,6 +367,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         if (discoveryUri != null) {
             DiscoveryAgent agent = DiscoveryAgentFactory.createDiscoveryAgent(discoveryUri);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4066
             if (agent != null && agent instanceof BrokerServiceAware) {
                 ((BrokerServiceAware) agent).setBrokerService(brokerService);
             }
@@ -366,6 +390,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public URI getConnectUri() throws IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3918
         if (server != null) {
             return server.getConnectURI();
         } else {
@@ -417,6 +442,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 }
 
                 if (rebalance) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
                     String shuffle = peerBrokers.removeFirst();
                     peerBrokers.addLast(shuffle);
                 }
@@ -429,6 +455,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public void addPeerBroker(BrokerInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
         if (isMatchesClusterFilter(info.getBrokerName())) {
             synchronized (peerBrokers) {
                 getPeerBrokers().addLast(info.getBrokerURL());
@@ -457,6 +484,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             ConnectionControl control = getConnectionControl();
             for (Connection c : this.connections) {
                 c.updateClient(control);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
                 if (isRebalanceClusterClients()) {
                     control = getConnectionControl();
                 }
@@ -470,6 +498,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         if (filter != null) {
             filter = filter.trim();
             if (filter.length() > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6880
                 result = false;
                 StringTokenizer tokenizer = new StringTokenizer(filter, ",");
                 while (!result && tokenizer.hasMoreTokens()) {
@@ -518,6 +547,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
      */
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         this.brokerService = brokerService;
     }
 
@@ -526,6 +557,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public BrokerService getBrokerService() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-596
         return brokerService;
     }
 
@@ -534,6 +566,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
      */
     @Override
     public boolean isUpdateClusterClients() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return this.updateClusterClients;
     }
 
@@ -599,10 +632,12 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     @Override
     public boolean isAllowLinkStealing() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         return server.isAllowLinkStealing();
     }
 
     public boolean isAuditNetworkProducers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
         return auditNetworkProducers;
     }
 
@@ -616,6 +651,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public int getMaximumProducersAllowedPerConnection() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
         return maximumProducersAllowedPerConnection;
     }
 
@@ -638,6 +674,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
      * @return the publishedAddressPolicy
      */
     public PublishedAddressPolicy getPublishedAddressPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3757
+//IC see: https://issues.apache.org/jira/browse/AMQ-3707
+//IC see: https://issues.apache.org/jira/browse/AMQ-4024
         return publishedAddressPolicy;
     }
 
@@ -652,6 +691,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public boolean isWarnOnRemoteClose() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7057
         return warnOnRemoteClose;
     }
 

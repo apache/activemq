@@ -85,6 +85,7 @@ public class ConnectTest {
                 return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
         assertTrue("no exceptions", exceptions.isEmpty());
     }
@@ -92,6 +93,7 @@ public class ConnectTest {
     @Test(timeout = 60000)
     public void testJaasDualStopWithOpenConnection() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3599
         brokerService.setPlugins(new BrokerPlugin[]{new JaasDualAuthenticationPlugin()});
         brokerService.addConnector("stomp://0.0.0.0:0?transport.closeAsync=false");
         brokerService.start();
@@ -122,6 +124,7 @@ public class ConnectTest {
                 return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
         assertTrue("connected on time", doneConnect.await(5, TimeUnit.SECONDS));
         brokerService.stop();
@@ -141,6 +144,7 @@ public class ConnectTest {
 
         brokerService.addConnector("stomp://0.0.0.0:0?transport.defaultHeartBeat=1000,0&transport.useKeepAlive=false");
         brokerService.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3603
 
         Thread t1 = new Thread() {
             StompConnection connection = new StompConnection();
@@ -162,6 +166,7 @@ public class ConnectTest {
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
              @Override
              public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
                  return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
              }
          }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
@@ -173,6 +178,7 @@ public class ConnectTest {
                 return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
         assertTrue("no exceptions", exceptions.isEmpty());
     }

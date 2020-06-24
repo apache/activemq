@@ -83,6 +83,8 @@ public class NetworkBridgeFilterMarshaller extends BaseDataStreamMarshaller {
         int rc = super.tightMarshal1(wireFormat, o, bs);
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getNetworkBrokerId(), bs);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         return rc + 8;
     }
 
@@ -98,6 +100,8 @@ public class NetworkBridgeFilterMarshaller extends BaseDataStreamMarshaller {
 
         NetworkBridgeFilter info = (NetworkBridgeFilter)o;
         tightMarshalCachedObject2(wireFormat, (DataStructure)info.getNetworkBrokerId(), dataOut, bs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         dataOut.writeInt(info.getMessageTTL());
         dataOut.writeInt(info.getConsumerTTL());
 
@@ -115,6 +119,10 @@ public class NetworkBridgeFilterMarshaller extends BaseDataStreamMarshaller {
 
         NetworkBridgeFilter info = (NetworkBridgeFilter)o;
         info.setNetworkBrokerId((org.apache.activemq.command.BrokerId) looseUnmarsalCachedObject(wireFormat, dataIn));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         info.setMessageTTL(dataIn.readInt());
         info.setConsumerTTL(dataIn.readInt());
 
@@ -130,6 +138,8 @@ public class NetworkBridgeFilterMarshaller extends BaseDataStreamMarshaller {
 
         super.looseMarshal(wireFormat, o, dataOut);
         looseMarshalCachedObject(wireFormat, (DataStructure)info.getNetworkBrokerId(), dataOut);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         dataOut.writeInt(info.getMessageTTL());
         dataOut.writeInt(info.getConsumerTTL());
 

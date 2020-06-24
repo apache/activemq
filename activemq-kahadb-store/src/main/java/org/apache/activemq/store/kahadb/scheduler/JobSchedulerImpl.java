@@ -87,6 +87,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
     @Override
     public void schedule(final String jobId, final ByteSequence payload, final long delay) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         doSchedule(jobId, payload, "", 0, delay, 0);
     }
 
@@ -199,6 +200,9 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
     @Override
     public List<Job> getAllJobs(final long start, final long finish) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
         final List<Job> result = new ArrayList<>();
         this.store.readLockIndex();
         try {
@@ -210,6 +214,9 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                         Map.Entry<Long, List<JobLocation>> next = iter.next();
                         if (next != null && next.getKey().longValue() <= finish) {
                             for (JobLocation jl : next.getValue()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
                                 ByteSequence bs = getPayload(jl.getLocation());
                                 Job job = new JobImpl(jl, bs);
                                 result.add(job);
@@ -230,6 +237,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         long startTime = System.currentTimeMillis();
         // round startTime - so we can schedule more jobs at the same time
         startTime = ((startTime + 500) / 500) * 500;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
 
         long time = 0;
         if (cronEntry != null && cronEntry.length() > 0) {
@@ -251,6 +259,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
             time += period;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         KahaAddScheduledJobCommand newJob = new KahaAddScheduledJobCommand();
         newJob.setScheduler(name);
         newJob.setJobId(jobId);
@@ -330,12 +339,14 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
             values = this.index.remove(tx, nextExecutionTime);
         }
         if (values == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
             values = new ArrayList<>();
         }
 
         // There can never be more than one instance of the same JobId scheduled at any
         // given time, when it happens its probably the result of index recovery and this
         // method must be idempotent so check for it first.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         if (!values.contains(jobLocation)) {
             values.add(jobLocation);
 
@@ -408,6 +419,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 target = this.index.remove(tx, command.getNextExecutionTime());
             }
             if (target == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
                 target = new ArrayList<>();
             }
             target.add(result);
@@ -509,6 +521,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
             // recent update command.  If the remove and the add that created the job are in
             // the same file we don't need to track it and just let a normal GC of the logs
             // remove it when the log is unreferenced.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6152
             if (removed.getLocation().getDataFileId() != location.getDataFileId()) {
                 this.store.referenceRemovedLocation(tx, location, removed);
             }
@@ -569,6 +582,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
      * @throws IOException if an error occurs during the remove operation.
      */
     protected void removeInRange(Transaction tx, long start, long finish, Location location) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
         List<Long> keys = new ArrayList<>();
         for (Iterator<Map.Entry<Long, List<JobLocation>>> i = this.index.iterator(tx, start); i.hasNext();) {
             Map.Entry<Long, List<JobLocation>> entry = i.next();
@@ -579,9 +593,11 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7221
         List<Integer> removedJobFileIds = new ArrayList<>();
         HashMap<Integer, Integer> decrementJournalCount = new HashMap<>();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         for (Long executionTime : keys) {
             List<JobLocation> values = this.index.remove(tx, executionTime);
             if (location != null) {
@@ -590,6 +606,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
                     // Remove the references for add and reschedule commands for this job
                     // so that those logs can be GC'd when free.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7221
                     decrementJournalCount.compute(job.getLocation().getDataFileId(), (key, value) -> value == null ? 1 : value + 1);
                     if (job.getLastUpdate() != null) {
                         decrementJournalCount.compute(job.getLastUpdate().getDataFileId(), (key, value) -> value == null ? 1 : value + 1);
@@ -600,7 +617,9 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                     // recent update command.  If the remove and the add that created the job are in
                     // the same file we don't need to track it and just let a normal GC of the logs
                     // remove it when the log is unreferenced.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6152
                     if (job.getLocation().getDataFileId() != location.getDataFileId()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7221
                         removedJobFileIds.add(job.getLocation().getDataFileId());
                     }
                 }
@@ -675,6 +694,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
      */
     protected Iterator<JobLocation> getAllScheduledJobs(Transaction tx) throws IOException {
         return new Iterator<JobLocation>() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7196
 
             final Iterator<Map.Entry<Long, List<JobLocation>>> mapIterator = index.iterator(tx);
             Iterator<JobLocation> iterator;
@@ -721,11 +741,13 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         return "JobScheduler: " + this.name;
     }
 
     protected void mainLoop() {
         while (this.running.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
             this.scheduleTime.clearNewJob();
             try {
                 long currentTime = System.currentTimeMillis();
@@ -734,6 +756,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 // needed before firing the job event.
                 Map.Entry<Long, List<JobLocation>> first = getNextToSchedule();
                 if (first != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
                     List<JobLocation> list = new ArrayList<>(first.getValue());
                     List<JobLocation> toRemove = new ArrayList<>(list.size());
                     final long executionTime = first.getKey();
@@ -782,6 +805,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                                         this.scheduleTime.setWaitTime(waitTime);
                                     }
                                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
                                     toRemove.add(job);
                                 }
                             }
@@ -793,8 +817,10 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
                         // If there is a job that should fire before the currently set wait time
                         // we need to reset wait time otherwise we'll miss it.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3000
                         Map.Entry<Long, List<JobLocation>> nextUp = getNextToSchedule();
                         if (nextUp != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4683
                             final long timeUntilNextScheduled = nextUp.getKey() - currentTime;
                             if (timeUntilNextScheduled < this.scheduleTime.getWaitTime()) {
                                 this.scheduleTime.setWaitTime(timeUntilNextScheduled);
@@ -817,6 +843,8 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
     void fireJob(JobLocation job) throws IllegalStateException, IOException {
         LOG.debug("Firing: {}", job);
         ByteSequence bs = this.store.getPayload(job.getLocation());
@@ -827,6 +855,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
     @Override
     public void startDispatching() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4683
         if (!this.running.get()) {
             return;
         }
@@ -841,10 +870,12 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
     @Override
     public void stopDispatching() throws Exception {
         if (started.compareAndSet(true, false)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
             this.scheduleTime.wakeup();
             Thread t = this.thread;
             this.thread = null;
             if (t != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
                 t.join(3000);
             }
         }
@@ -862,9 +893,11 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
     }
 
     private ByteSequence getPayload(Location location) throws IllegalStateException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         return this.store.getPayload(location);
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
     long calculateNextExecutionTime(final JobLocation job, long currentTime, int repeat) throws MessageFormatException {
         long result = currentTime;
         String cron = job.getCronEntry();
@@ -877,19 +910,23 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
     }
 
     void createIndexes(Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
         this.index = new BTreeIndex<>(this.store.getPageFile(), tx.allocate().getPageId());
     }
 
     void load(Transaction tx) throws IOException {
         this.index.setKeyMarshaller(LongMarshaller.INSTANCE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         this.index.setValueMarshaller(JobLocationsMarshaller.INSTANCE);
         this.index.load(tx);
     }
 
     void read(DataInput in) throws IOException {
         this.name = in.readUTF();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
         this.index = new BTreeIndex<>(this.store.getPageFile(), in.readLong());
         this.index.setKeyMarshaller(LongMarshaller.INSTANCE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         this.index.setValueMarshaller(JobLocationsMarshaller.INSTANCE);
     }
 
@@ -908,6 +945,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         /**
          * @return the waitTime
          */
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         long getWaitTime() {
             return this.waitTime;
         }

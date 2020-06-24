@@ -61,6 +61,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
     @Test(timeout = 60 * 1000)
     public void testConsumeAllMatchedMessages() throws Exception {
         // create durable subscription
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         Connection con = createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
@@ -154,6 +155,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         Connection con2 = createConnection("cliId2");
         Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer2 = session2.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
         DurableSubscriptionOfflineTestListener listener2 = new DurableSubscriptionOfflineTestListener();
         consumer2.setMessageListener(listener2);
 
@@ -198,6 +200,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
 
     @Test(timeout = 60 * 1000)
     public void testRemovedDurableSubDeletes() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
         String filter = "$a='A1' AND (($b=true AND $c=true) OR ($d='D1' OR $d='D2'))";
         // create durable subscription 1
         Connection con = createConnection("cliId1");
@@ -230,6 +233,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         con = createConnection("offCli2");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
         DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
         consumer.setMessageListener(listener);
         session.close();
@@ -314,6 +318,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
             boolean filter = (int) (Math.random() * 2) >= 1;
 
             sent++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
 
             Message message = session.createMessage();
             message.setStringProperty("filter", filter ? "true" : "false");
@@ -332,6 +337,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         con = createConnection("offCli2");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
         DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener("SubsId");
         consumer.setMessageListener(listener);
 
@@ -440,6 +446,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
             LOG.info("Iteration: " + i);
             doTestOrderOnActivateDeactivate();
             broker.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4656
             broker.waitUntilStopped();
             createBroker(true /*deleteAllMessages*/);
         }
@@ -460,6 +467,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         }
 
         final String url = "failover:(tcp://localhost:"
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
                 + (broker.getTransportConnectors().get(1).getConnectUri()).getPort()
                 + "?wireFormat.maxInactivityDuration=0)?"
                 + "jms.watchTopicAdvisories=false&"
@@ -637,6 +645,10 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         con = createConnection("cli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
         DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
         consumer.setMessageListener(listener);
         Thread.sleep(3 * 1000);
@@ -662,6 +674,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         sent = 0;
         for (int i = 0; i < 2; i++) {
             Message message = session.createMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             message.setStringProperty("filter", i==1 ? "true" : "false");
             producer.send(topic, message);
             sent++;
@@ -675,6 +688,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         con = createConnection("cli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4874
         listener = new DurableSubscriptionOfflineTestListener();
         consumer.setMessageListener(listener);
         Thread.sleep(3 * 1000);
@@ -767,6 +781,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
 
     @org.junit.Test(timeout = 640000)
     public void testInactiveSubscribeAfterBrokerRestart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7091
         final int messageCount = 20;
         Connection alwaysOnCon = createConnection("subs1");
         Connection tearDownFacCon = createConnection("subs2");

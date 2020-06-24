@@ -93,6 +93,7 @@ public class FailoverBackupLeakTest {
         }
 
         assertTrue(connectionProperties +  " broker1 connection count not zero: was["+getConnectionCount(s1)+"]", Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3939
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -101,6 +102,7 @@ public class FailoverBackupLeakTest {
         }));
 
         assertTrue(connectionProperties +  " broker2 connection count not zero: was["+getConnectionCount(s2)+"]", Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3939
 
             @Override
             public boolean isSatisified() throws Exception {

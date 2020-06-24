@@ -41,6 +41,8 @@ import org.springframework.jms.core.JmsTemplate;
  */
 public class ActiveMQComponent extends JmsComponent {
     private final CopyOnWriteArrayList<SingleConnectionFactory> singleConnectionFactoryList =
+//IC see: https://issues.apache.org/jira/browse/AMQ-2611
+//IC see: https://issues.apache.org/jira/browse/AMQ-7060
             new CopyOnWriteArrayList<SingleConnectionFactory>();
     private final CopyOnWriteArrayList<Service> pooledConnectionFactoryServiceList =
             new CopyOnWriteArrayList<Service>();
@@ -69,6 +71,7 @@ public class ActiveMQComponent extends JmsComponent {
      */
     public static ActiveMQComponent activeMQComponent(String brokerURL) {
         ActiveMQComponent answer = new ActiveMQComponent();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1768
         if (answer.getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration) answer.getConfiguration())
                     .setBrokerURL(brokerURL);
@@ -94,12 +97,14 @@ public class ActiveMQComponent extends JmsComponent {
      * <a href="http://activemq.apache.org/configuring-transports.html">ActiveMQ URI format</a>
      */
     public void setBrokerURL(String brokerURL) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1768
         if (getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration)getConfiguration()).setBrokerURL(brokerURL);
         }
     }
 
     public void setTrustAllPackages(boolean trustAllPackages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6166
         if (getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration)getConfiguration()).setTrustAllPackages(trustAllPackages);
         }
@@ -126,6 +131,7 @@ public class ActiveMQComponent extends JmsComponent {
      * The default value is true. Note that this requires an extra dependency on commons-pool2.
      */
     public void setUsePooledConnection(boolean usePooledConnection) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1768
         if (getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration)getConfiguration()).setUsePooledConnection(usePooledConnection);
         }
@@ -146,6 +152,7 @@ public class ActiveMQComponent extends JmsComponent {
     }
 
     protected void addPooledConnectionFactoryService(Service pooledConnectionFactoryService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2611
         pooledConnectionFactoryServiceList.add(pooledConnectionFactoryService);
     }
 
@@ -159,6 +166,7 @@ public class ActiveMQComponent extends JmsComponent {
         // support ActiveMQ destination options using the destination. prefix
         // http://activemq.apache.org/destination-options.html
         Map options = IntrospectionSupport.extractProperties(parameters, "destination.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3498
 
         String query;
         try {
@@ -180,6 +188,7 @@ public class ActiveMQComponent extends JmsComponent {
         super.doStart();
 
         if (isExposeAllQueues()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4574
             createDestinationSource();
             endpointLoader = new CamelEndpointLoader(getCamelContext(), source);
             endpointLoader.afterPropertiesSet();
@@ -220,6 +229,7 @@ public class ActiveMQComponent extends JmsComponent {
             connection.close();
             connection = null;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2611
         for (Service s : pooledConnectionFactoryServiceList) {
             s.stop();
         }

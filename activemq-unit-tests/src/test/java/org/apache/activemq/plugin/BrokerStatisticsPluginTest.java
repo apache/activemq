@@ -70,6 +70,7 @@ public class BrokerStatisticsPluginTest extends TestCase{
     }
 
     public void testBrokerStatsReset() throws Exception{
+//IC see: https://issues.apache.org/jira/browse/AMQ-3878
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue replyTo = session.createTemporaryQueue();
         MessageConsumer consumer = session.createConsumer(replyTo);
@@ -95,6 +96,7 @@ public class BrokerStatisticsPluginTest extends TestCase{
         assertNotNull(reply);
         assertTrue(reply.getMapNames().hasMoreElements());
         assertEquals(0, reply.getLong("enqueueCount"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5011
         assertTrue(reply.getJMSTimestamp() > 0);
         assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
     }
@@ -112,12 +114,14 @@ public class BrokerStatisticsPluginTest extends TestCase{
 
         msg.setJMSReplyTo(replyTo);
         producer.send(query,msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5165
         MapMessage reply = (MapMessage) consumer.receive(10 * 1000);
         assertNotNull(reply);
         assertTrue(reply.getMapNames().hasMoreElements());
         assertTrue(reply.getJMSTimestamp() > 0);
         assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
         assertTrue(reply.getLong("averageMessageSize") > 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6518
 
         /*
         for (Enumeration e = reply.getMapNames();e.hasMoreElements();) {
@@ -143,6 +147,8 @@ public class BrokerStatisticsPluginTest extends TestCase{
         MapMessage reply = (MapMessage) consumer.receive(10 * 1000);
         assertNotNull(reply);
         assertTrue(reply.getMapNames().hasMoreElements());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5011
+//IC see: https://issues.apache.org/jira/browse/AMQ-5011
         assertTrue(reply.getJMSTimestamp() > 0);
         assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
         /*
@@ -155,6 +161,7 @@ public class BrokerStatisticsPluginTest extends TestCase{
 
     @SuppressWarnings("unused")
     public void testSubscriptionStats() throws Exception{
+//IC see: https://issues.apache.org/jira/browse/AMQ-3820
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue replyTo = session.createTemporaryQueue();
         MessageConsumer consumer = session.createConsumer(replyTo);
@@ -168,9 +175,11 @@ public class BrokerStatisticsPluginTest extends TestCase{
 
         msg.setJMSReplyTo(replyTo);
         producer.send(query,msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5165
         MapMessage reply = (MapMessage) consumer.receive(10 * 1000);
         assertNotNull(reply);
         assertTrue(reply.getMapNames().hasMoreElements());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5011
         assertTrue(reply.getJMSTimestamp() > 0);
         assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
 

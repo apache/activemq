@@ -32,6 +32,7 @@ public class KahaDBDurableTopicTest extends SimpleDurableTopicTest {
     
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory(String uri) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         ActiveMQConnectionFactory result = new ActiveMQConnectionFactory(uri);
         //result.setDispatchAsync(false);
         return result;

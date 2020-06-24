@@ -203,6 +203,7 @@ public class NetworkLoadTest extends TestCase {
         TransportConnector transportConnector = new TransportConnector();
         transportConnector.setUri(new URI("tcp://localhost:"+(60000+brokerId)));
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-1489
         transportConnector.setDiscoveryUri(new URI("multicast://default?group="+groupId));        
         broker.addConnector(transportConnector);
                         

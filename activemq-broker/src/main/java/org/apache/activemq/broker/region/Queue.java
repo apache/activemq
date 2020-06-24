@@ -150,6 +150,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         @Override
         public void run() {
             expireMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6979
+//IC see: https://issues.apache.org/jira/browse/AMQ-5129
             expiryTaskInProgress.set(false);
         }
     };
@@ -168,10 +170,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     // gate on enabling cursor cache to ensure no outstanding sync
     // send before async sends resume
     public boolean singlePendingSend() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6667
         return pendingSends.get() <= 1;
     }
 
     class TimeoutMessage implements Delayed {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2507
 
         Message message;
         ConnectionContext context;
@@ -219,6 +223,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             if (messagesWaitingForSpace.remove(timeout.message.getMessageId()) != null) {
                                 ExceptionResponse response = new ExceptionResponse(
                                         new ResourceAllocationException(
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
                                                 "Usage Manager Memory Limit Wait Timeout. Stopping producer ("
                                                         + timeout.message.getProducerId()
                                                         + ") to prevent flooding "
@@ -245,9 +250,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         public int compare(Subscription s1, Subscription s2) {
             // We want the list sorted in descending order
             int val = s2.getConsumerInfo().getPriority() - s1.getConsumerInfo().getPriority();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2106
             if (val == 0 && messageGroupOwners != null) {
                 // then ascending order of assigned message groups to favour less loaded consumers
                 // Long.compare in jdk7
+//IC see: https://issues.apache.org/jira/browse/AMQ-6016
+//IC see: https://issues.apache.org/jira/browse/AMQ-2106
                 long x = s1.getConsumerInfo().getAssignedGroupCount(destination);
                 long y = s2.getConsumerInfo().getAssignedGroupCount(destination);
                 val = (x < y) ? -1 : ((x == y) ? 0 : 1);
@@ -261,6 +269,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         super(brokerService, store, destination, parentStats);
         this.taskFactory = taskFactory;
         this.dispatchSelector = new QueueDispatchSelector(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         if (store != null) {
             store.registerIndexListener(this);
         }
@@ -287,6 +297,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3637
     class BatchMessageRecoveryListener implements MessageRecoveryListener {
         final LinkedList<Message> toExpire = new LinkedList<Message>();
         final double totalMessageCount;
@@ -301,11 +312,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         @Override
         public boolean recoverMessage(Message message) {
             recoveredAccumulator++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
             if ((recoveredAccumulator % 10000) == 0) {
                 LOG.info("cursor for {} has recovered {} messages. {}% complete", new Object[]{ getActiveMQDestination().getQualifiedName(), recoveredAccumulator, new Integer((int) (recoveredAccumulator * 100 / totalMessageCount))});
             }
             // Message could have expired while it was being
             // loaded..
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
             message.setRegionDestination(Queue.this);
             if (message.isExpired() && broker.isExpired(message)) {
                 toExpire.add(message);
@@ -340,6 +353,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         @Override
         public boolean isDuplicate(MessageId id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             return false;
         }
 
@@ -365,6 +379,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     @Override
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         super.setPrioritizedMessages(prioritizedMessages);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
         dispatchPendingList.setPrioritizedMessages(prioritizedMessages);
     }
 
@@ -373,6 +388,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         if (this.messages == null) {
             if (destination.isTemporary() || broker == null || store == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
                 this.messages = new VMPendingMessageCursor(isPrioritizedMessages());
             } else {
                 this.messages = new StoreQueueCursor(broker, this);
@@ -397,13 +413,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         if (store != null) {
             // Restore the persistent messages.
             messages.setSystemUsage(systemUsage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
             messages.setEnableAudit(isEnableAudit());
             messages.setMaxAuditDepth(getMaxAuditDepth());
             messages.setMaxProducersToAudit(getMaxProducersToAudit());
             messages.setUseCache(isUseCache());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
             messages.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
             store.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3637
             final int messageCount = store.getMessageCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3806
             if (messageCount > 0 && messages.isRecoveryRequired()) {
                 BatchMessageRecoveryListener listener = new BatchMessageRecoveryListener(messageCount);
                 do {
@@ -412,17 +433,20 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                    listener.processExpired();
                } while (!listener.done());
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5640
                 destinationStatistics.getMessages().add(messageCount);
             }
         }
     }
 
     ConcurrentLinkedQueue<QueueBrowserSubscription> browserSubscriptions = new ConcurrentLinkedQueue<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7376
 
     @Override
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
         LOG.debug("{} add sub: {}, dequeues: {}, dispatched: {}, inflight: {}", new Object[]{ getActiveMQDestination().getQualifiedName(), sub, getDestinationStatistics().getDequeues().getCount(), getDestinationStatistics().getDispatched().getCount(), getDestinationStatistics().getInflight().getCount() });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2821
         super.addSubscription(context, sub);
         // synchronize with dispatch method so that no new messages are sent
         // while setting up a subscription. avoid out of order messages,
@@ -448,11 +472,14 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     }
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1560
                 addToConsumerList(sub);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2795
                 if (sub.getConsumerInfo().isExclusive() || isAllConsumersExclusiveByDefault()) {
                     Subscription exclusiveConsumer = dispatchSelector.getExclusiveConsumer();
                     if (exclusiveConsumer == null) {
                         exclusiveConsumer = sub;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3218
                     } else if (sub.getConsumerInfo().getPriority() == Byte.MAX_VALUE ||
                         sub.getConsumerInfo().getPriority() > exclusiveConsumer.getConsumerInfo().getPriority()) {
                         exclusiveConsumer = sub;
@@ -466,6 +493,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             if (sub instanceof QueueBrowserSubscription) {
                 // tee up for dispatch in next iterate
                 QueueBrowserSubscription browserSubscription = (QueueBrowserSubscription) sub;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7376
                 browserSubscription.incrementQueueRef();
                 browserSubscriptions.add(browserSubscription);
             }
@@ -487,6 +515,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     @Override
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId)
             throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
         super.removeSubscription(context, sub, lastDeliveredSequenceId);
         // synchronize with dispatch method so that no new messages are sent
         // while removing up a subscription.
@@ -495,14 +524,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             LOG.debug("{} remove sub: {}, lastDeliveredSeqId: {}, dequeues: {}, dispatched: {}, inflight: {}, groups: {}", new Object[]{
                     getActiveMQDestination().getQualifiedName(),
                     sub,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
                     lastDeliveredSequenceId,
                     getDestinationStatistics().getDequeues().getCount(),
                     getDestinationStatistics().getDispatched().getCount(),
                     getDestinationStatistics().getInflight().getCount(),
+//IC see: https://issues.apache.org/jira/browse/AMQ-6016
+//IC see: https://issues.apache.org/jira/browse/AMQ-2106
                     sub.getConsumerInfo().getAssignedGroupCount(destination)
             });
             consumersLock.writeLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1560
                 removeFromConsumerList(sub);
                 if (sub.getConsumerInfo().isExclusive()) {
                     Subscription exclusiveConsumer = dispatchSelector.getExclusiveConsumer();
@@ -518,9 +551,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         }
                         dispatchSelector.setExclusiveConsumer(exclusiveConsumer);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2795
                 } else if (isAllConsumersExclusiveByDefault()) {
                     Subscription exclusiveConsumer = null;
                     for (Subscription s : consumers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3312
                         if (exclusiveConsumer == null
                                 || s.getConsumerInfo().getPriority() > exclusiveConsumer
                                 .getConsumerInfo().getPriority()) {
@@ -531,16 +566,20 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 }
                 ConsumerId consumerId = sub.getConsumerInfo().getConsumerId();
                 getMessageGroupOwners().removeConsumer(consumerId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2128
 
                 // redeliver inflight messages
 
                 boolean markAsRedelivered = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
                 MessageReference lastDeliveredRef = null;
                 List<MessageReference> unAckedMessages = sub.remove(context, this);
 
                 // locate last redelivered in unconsumed list (list in delivery rather than seq order)
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
                 if (lastDeliveredSequenceId > RemoveInfo.LAST_DELIVERED_UNSET) {
                     for (MessageReference ref : unAckedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7314
                         if (ref.getMessageId().getBrokerSequenceId() == lastDeliveredSequenceId) {
                             lastDeliveredRef = ref;
                             markAsRedelivered = true;
@@ -550,6 +589,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     }
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6286
                 for (Iterator<MessageReference> unackedListIterator = unAckedMessages.iterator(); unackedListIterator.hasNext(); ) {
                     MessageReference ref = unackedListIterator.next();
                     // AMQ-5107: don't resend if the broker is shutting down
@@ -561,6 +601,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         qmr.unlock();
 
                         // have no delivery information
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
                         if (lastDeliveredSequenceId == RemoveInfo.LAST_DELIVERED_UNKNOWN) {
                             qmr.incrementRedeliveryCounter();
                         } else {
@@ -573,6 +614,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             }
                         }
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6286
                     if (qmr.isDropped()) {
                         unackedListIterator.remove();
                     }
@@ -580,18 +622,24 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 dispatchPendingList.addForRedelivery(unAckedMessages, strictOrderDispatch && consumers.isEmpty());
                 if (sub instanceof QueueBrowserSubscription) {
                     ((QueueBrowserSubscription)sub).decrementQueueRef();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7376
                     browserSubscriptions.remove(sub);
                 }
                 // AMQ-5107: don't resend if the broker is shutting down
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
                 if (dispatchPendingList.hasRedeliveries() && (! this.brokerService.isStopping())) {
                     doDispatch(new OrderedPendingList());
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
             } finally {
                 consumersLock.writeLock().unlock();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4165
+//IC see: https://issues.apache.org/jira/browse/AMQ-4165
             if (!this.optimizedDispatch) {
                 wakeup();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
         } finally {
             pagedInPendingDispatchLock.writeLock().unlock();
         }
@@ -610,6 +658,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
         message.setRegionDestination(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         ProducerState state = producerExchange.getProducerState();
         if (state == null) {
             LOG.warn("Send failed for: {}, missing producer state for: {}", message, producerExchange);
@@ -631,14 +681,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             isFull(context, memoryUsage);
             fastProducer(context, producerInfo);
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3233
                 if (isFlowControlLogRequired()) {
                     LOG.warn("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
                                 memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4261
                 } else {
                     LOG.debug("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
                             memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
                 }
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
                     ResourceAllocationException resourceAllocationException = sendMemAllocationException;
                     if (resourceAllocationException == null) {
                         synchronized (this) {
@@ -664,10 +717,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     synchronized (messagesWaitingForSpace) {
                      // Start flow control timeout task
                         // Prevent trying to start it multiple times
+//IC see: https://issues.apache.org/jira/browse/AMQ-2507
                         if (!flowControlTimeoutTask.isAlive()) {
                             flowControlTimeoutTask.setName(getName()+" Producer Flow Control Timeout Task");
                             flowControlTimeoutTask.start();
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2507
                         messagesWaitingForSpace.put(message.getMessageId(), new Runnable() {
                             @Override
                             public void run() {
@@ -675,18 +730,25 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                                 try {
                                     // While waiting for space to free up... the
                                     // transaction may be done
+//IC see: https://issues.apache.org/jira/browse/AMQ-6687
+//IC see: https://issues.apache.org/jira/browse/AMQ-4467
                                     if (message.isInTransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7234
                                         if (context.getTransaction() == null || context.getTransaction().getState() > IN_USE_STATE) {
                                             throw new JMSException("Send transaction completed while waiting for space");
                                         }
                                     }
 
                                     // the message may have expired.
+//IC see: https://issues.apache.org/jira/browse/AMQ-1796
                                     if (message.isExpired()) {
                                         LOG.error("message expired waiting for space");
                                         broker.messageExpired(context, message, null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
                                         destinationStatistics.getExpired().increment();
                                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2435
                                         doMessageSend(producerExchangeCopy, message);
                                     }
 
@@ -708,6 +770,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                                     } else {
                                         LOG.debug("unexpected exception on deferred send of: {}", message, e);
                                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6614
                                 } finally {
                                     getDestinationStatistics().getBlockedSends().decrement();
                                     producerExchangeCopy.blockingOnFlowControl(false);
@@ -717,6 +780,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                         getDestinationStatistics().getBlockedSends().increment();
                         producerExchange.blockingOnFlowControl(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3551
                         if (!context.isNetworkConnection() && systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
                             flowControlTimeoutMessages.add(new TimeoutMessage(message, context, systemUsage
                                     .getSendFailIfNoSpaceAfterTimeout()));
@@ -724,12 +788,14 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                         registerCallbackForNotFullNotification();
                         context.setDontSendReponse(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1056
                         return;
                     }
 
                 } else {
 
                     if (memoryUsage.isFull()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
                         waitForSpace(context, producerExchange, memoryUsage, "Usage Manager Memory Limit reached. Producer ("
                                 + message.getProducerId() + ") stopped to prevent flooding "
                                 + getActiveMQDestination().getQualifiedName() + "."
@@ -756,6 +822,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private void registerCallbackForNotFullNotification() {
         // If the usage manager is not full, then the task will not
         // get called..
+//IC see: https://issues.apache.org/jira/browse/AMQ-2523
         if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
             // so call it directly here.
             sendMessagesWaitingForSpaceTask.run();
@@ -766,15 +833,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     @Override
     public void onAdd(MessageContext messageContext) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         synchronized (indexOrderedCursorUpdates) {
             indexOrderedCursorUpdates.addLast(messageContext);
         }
     }
 
     public void rollbackPendingCursorAdditions(MessageId messageId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6891
         synchronized (indexOrderedCursorUpdates) {
             for (int i = indexOrderedCursorUpdates.size() - 1; i >= 0; i--) {
                 MessageContext mc = indexOrderedCursorUpdates.get(i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6891
                 if (mc.message.getMessageId().equals(messageId)) {
                     indexOrderedCursorUpdates.remove(mc);
                     if (mc.onCompletion != null) {
@@ -803,6 +874,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     candidate = indexOrderedCursorUpdates.peek();
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
             messagesLock.writeLock().lock();
             try {
                 for (MessageContext messageContext : orderedUpdates) {
@@ -821,6 +895,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             sendLock.unlock();
         }
         for (MessageContext messageContext : orderedUpdates) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             if (!messageContext.duplicate) {
                 messageSent(messageContext.context, messageContext.message);
             }
@@ -851,6 +926,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         @Override
         public void afterRollback() throws Exception {
             if (store != null && messageContext.message.isPersistent()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6891
                 rollbackPendingCursorAdditions(messageContext.message.getMessageId());
             }
             messageContext.message.decrementReferenceCount();
@@ -861,13 +937,21 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
         ListenableFuture<Object> result = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
         producerExchange.incrementSend();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6667
         pendingSends.incrementAndGet();
         do {
             checkUsage(context, producerExchange, message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1656
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
+//IC see: https://issues.apache.org/jira/browse/AMQ-6164
             message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3312
             if (store != null && message.isPersistent()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5863
                 message.getMessageId().setFutureOrSequenceLong(null);
                 try {
                     //AMQ-6133 - don't store async if using persistJMSRedelivered
@@ -875,7 +959,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     //condition if the original add is processed after the update, which can cause
                     //a duplicate message to be stored
                     if (messages.isCacheEnabled() && !isPersistJMSRedelivered()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
                         result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
                         result.addListener(new PendingMarshalUsageTracker(message));
                     } else {
                         store.addMessage(context, message);
@@ -884,7 +970,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     // we may have a store in inconsistent state, so reset the cursor
                     // before restarting normal broker operations
                     resetNeeded = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6667
                     pendingSends.decrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6891
                     rollbackPendingCursorAdditions(message.getMessageId());
                     throw e;
                 }
@@ -901,6 +989,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
         } while (started.get());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         if (result != null && message.isResponseRequired() && !result.isCancelled()) {
             try {
                 result.get();
@@ -914,13 +1003,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private boolean tryOrderedCursorAdd(Message message, ConnectionContext context) throws Exception {
         boolean result = true;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         if (context.isInTransaction()) {
             context.getTransaction().addSynchronization(new CursorAddSync(new MessageContext(context, message, null)));
         } else if (store != null && message.isPersistent()) {
             doPendingCursorAdditions();
         } else {
             // no ordering issue with non persistent messages
+//IC see: https://issues.apache.org/jira/browse/AMQ-5712
             result = tryCursorAdd(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6194
             messageSent(context, message);
         }
 
@@ -930,21 +1023,26 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private void checkUsage(ConnectionContext context,ProducerBrokerExchange producerBrokerExchange, Message message) throws ResourceAllocationException, IOException, InterruptedException {
         if (message.isPersistent()) {
             if (store != null && systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
                 final String logMessage = "Persistent store is Full, " + getStoreUsageHighWaterMark() + "% of "
                     + systemUsage.getStoreUsage().getLimit() + ". Stopping producer ("
                     + message.getProducerId() + ") to prevent flooding "
                     + getActiveMQDestination().getQualifiedName() + "."
                     + " See http://activemq.apache.org/producer-flow-control.html for more info";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
                 waitForSpace(context, producerBrokerExchange, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }
         } else if (messages.getSystemUsage() != null && systemUsage.getTempUsage().isFull()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
             final String logMessage = "Temp Store is Full ("
+//IC see: https://issues.apache.org/jira/browse/AMQ-3312
                     + systemUsage.getTempUsage().getPercentUsage() + "% of " + systemUsage.getTempUsage().getLimit()
                     +"). Stopping producer (" + message.getProducerId()
                 + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                 + " See http://activemq.apache.org/producer-flow-control.html for more info";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
             waitForSpace(context, producerBrokerExchange, messages.getSystemUsage().getTempUsage(), logMessage);
         }
     }
@@ -953,6 +1051,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         LOG.debug("{} expiring messages ..", getActiveMQDestination().getQualifiedName());
 
         // just track the insertion count
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
         List<Message> browsedMessages = new InsertionCountList<Message>();
         doBrowse(browsedMessages, this.getMaxExpirePageSize());
         asyncWakeup();
@@ -966,12 +1065,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     @Override
     public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node)
             throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
         messageConsumed(context, node);
         if (store != null && node.isPersistent()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
             store.removeAsyncMessage(context, convertToNonRangedAck(ack, node));
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-877
     Message loadMessage(MessageId messageId) throws IOException {
         Message msg = null;
         if (store != null) { // can be null for a temp q
@@ -1005,18 +1110,23 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     @Override
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4970
         if (started.compareAndSet(false, true)) {
             if (memoryUsage != null) {
                 memoryUsage.start();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3143
             if (systemUsage.getStoreUsage() != null) {
                 systemUsage.getStoreUsage().start();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7085
             if (systemUsage.getTempUsage() != null) {
                 systemUsage.getTempUsage().start();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             systemUsage.getMemoryUsage().addUsageListener(this);
             messages.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
             if (getExpireMessagesPeriod() > 0) {
                 scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
             }
@@ -1031,12 +1141,14 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 taskRunner.shutdown();
             }
             if (this.executor != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
                 ThreadPoolUtils.shutdownNow(executor);
                 executor = null;
             }
 
             scheduler.cancel(expireMessagesTask);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2507
             if (flowControlTimeoutTask.isAlive()) {
                 flowControlTimeoutTask.interrupt();
             }
@@ -1045,11 +1157,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 messages.stop();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
             for (MessageReference messageReference : pagedInMessages.values()) {
                 messageReference.decrementReferenceCount();
             }
             pagedInMessages.clear();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             systemUsage.getMemoryUsage().removeUsageListener(this);
             if (memoryUsage != null) {
                 memoryUsage.stop();
@@ -1072,7 +1186,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     public MessageGroupMap getMessageGroupOwners() {
         if (messageGroupOwners == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-769
             messageGroupOwners = getMessageGroupMapFactory().createMessageGroupMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5483
             messageGroupOwners.setDestination(this);
         }
         return messageGroupOwners;
@@ -1087,6 +1203,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     public MessageGroupMapFactory getMessageGroupMapFactory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-769
         return messageGroupMapFactory;
     }
 
@@ -1103,6 +1220,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     public boolean isUseConsumerPriority() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1560
         return useConsumerPriority;
     }
 
@@ -1143,6 +1261,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     public void setAllConsumersExclusiveByDefault(boolean allConsumersExclusiveByDefault) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2795
         this.allConsumersExclusiveByDefault = allConsumersExclusiveByDefault;
     }
 
@@ -1151,6 +1270,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     public boolean isResetNeeded() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4934
         return resetNeeded;
     }
 
@@ -1172,6 +1292,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         final ConnectionContext connectionContext = createConnectionContext();
         try {
             int maxPageInAttempts = 1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6215
             if (max > 0) {
                 messagesLock.readLock().lock();
                 try {
@@ -1183,11 +1304,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     pageInMessages(!memoryUsage.isFull(110), max);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
             doBrowseList(browseList, max, dispatchPendingList, pagedInPendingDispatchLock, connectionContext, "redeliveredWaitingDispatch+pagedInPendingDispatch");
             doBrowseList(browseList, max, pagedInMessages, pagedInMessagesLock, connectionContext, "pagedInMessages");
 
             // we need a store iterator to walk messages on disk, independent of the cursor which is tracking
             // the next message batch
+//IC see: https://issues.apache.org/jira/browse/AMQ-6004
         } catch (BrokerStoppedException ignored) {
         } catch (Exception e) {
             LOG.error("Problem retrieving message for browse", e);
@@ -1195,6 +1318,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     protected void doBrowseList(List<Message> browseList, int max, PendingList list, ReentrantReadWriteLock lock, ConnectionContext connectionContext, String name) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
         List<MessageReference> toExpire = new ArrayList<MessageReference>();
         lock.readLock().lock();
         try {
@@ -1203,8 +1327,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             lock.readLock().unlock();
         }
         for (MessageReference ref : toExpire) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
             if (broker.isExpired(ref)) {
                 LOG.debug("expiring from {}: {}", name, ref);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
                 messageExpired(connectionContext, ref);
             } else {
                 lock.writeLock().lock();
@@ -1227,14 +1354,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             pagedInMessagesLock.readLock().unlock();
         }
         int messagesInQueue = alreadyPagedIn;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
         messagesLock.readLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
             messagesInQueue += messages.size();
         } finally {
             messagesLock.readLock().unlock();
         }
 
         LOG.trace("max {}, alreadyPagedIn {}, messagesCount {}, memoryUsage {}%", new Object[]{max, alreadyPagedIn, messagesInQueue, memoryUsage.getPercentUsage()});
+//IC see: https://issues.apache.org/jira/browse/AMQ-6967
         return (alreadyPagedIn == 0 || (alreadyPagedIn < max)
                 && (alreadyPagedIn < messagesInQueue)
                 && messages.hasSpace());
@@ -1242,10 +1372,14 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     private void addAll(Collection<? extends MessageReference> refs, List<Message> l, int max,
             List<MessageReference> toExpire) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
         for (Iterator<? extends MessageReference> i = refs.iterator(); i.hasNext() && l.size() < max;) {
             QueueMessageReference ref = (QueueMessageReference) i.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5274
+//IC see: https://issues.apache.org/jira/browse/AMQ-2876
             if (ref.isExpired() && (ref.getLockOwner() == null)) {
                 toExpire.add(ref);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             } else if (!ref.isAcked() && l.contains(ref.getMessage()) == false) {
                 l.add(ref.getMessage());
             }
@@ -1255,7 +1389,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public QueueMessageReference getMessage(String id) {
         MessageId msgId = new MessageId(id);
         pagedInMessagesLock.readLock().lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
             QueueMessageReference ref = (QueueMessageReference)this.pagedInMessages.get(msgId);
             if (ref != null) {
                 return ref;
@@ -1268,6 +1404,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             try {
                 messages.reset();
                 while (messages.hasNext()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3193
                     MessageReference mr = messages.next();
                     QueueMessageReference qmr = createMessageReference(mr.getMessage());
                     qmr.decrementReferenceCount();
@@ -1280,18 +1417,23 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 messages.release();
             }
         }finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
             messagesLock.writeLock().unlock();
         }
         return null;
     }
 
     public void purge() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1553
         ConnectionContext c = createConnectionContext();
         List<MessageReference> list = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1940
         try {
             sendLock.lock();
             long originalMessageCount = this.destinationStatistics.getMessages().getCount();
             do {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6215
                 doPageIn(true, false, getMaxPageSize());  // signal no expiry processing needed.
                 pagedInMessagesLock.readLock().lock();
                 try {
@@ -1304,6 +1446,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     try {
                         QueueMessageReference r = (QueueMessageReference) ref;
                         removeMessage(c, r);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6703
                         messages.rollback(r.getMessageId());
                     } catch (IOException e) {
                     }
@@ -1324,6 +1467,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public void clearPendingMessages(int pendingAdditionsCount) {
         messagesLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             final ActiveMQMessage dummyPersistent = new ActiveMQMessage();
             dummyPersistent.setPersistent(true);
             for (int i=0; i<pendingAdditionsCount; i++) {
@@ -1334,6 +1478,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     LOG.debug("Unexpected exception on tracking pending message additions", ignored);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
             if (resetNeeded) {
                 messages.gc();
                 messages.reset();
@@ -1381,6 +1527,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      */
     public int removeMatchingMessages(MessageReferenceFilter filter, int maximumMessages) throws Exception {
         int movedCounter = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3846
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
         ConnectionContext context = createConnectionContext();
         do {
@@ -1448,6 +1595,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public int copyMatchingMessages(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest,
             int maximumMessages) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6690
         if (destination.equals(dest)) {
             return 0;
         }
@@ -1456,6 +1604,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         int count = 0;
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
         do {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7270
             doPageIn(true, false, (messages.isCacheEnabled() || !broker.getBrokerService().isPersistent()) ? messages.size() : getMaxBrowsePageSize());
             pagedInMessagesLock.readLock().lock();
             try {
@@ -1500,6 +1649,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      * @throws Exception
      */
     public boolean moveMessageTo(ConnectionContext context, QueueMessageReference m, ActiveMQDestination dest) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6847
         Set<Destination> destsToPause = regionBroker.getDestinations(dest);
         try {
             for (Destination d: destsToPause) {
@@ -1507,12 +1657,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     ((Queue)d).pauseDispatch();
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3193
             BrokerSupport.resend(context, m.getMessage(), dest);
             removeMessage(context, m);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
             messagesLock.writeLock().lock();
             try {
                 messages.rollback(m.getMessageId());
                 if (isDLQ()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3405
                     ActiveMQDestination originalDestination = m.getMessage().getOriginalDestination();
                     if (originalDestination != null) {
                         for (Destination destination : regionBroker.getDestinations(originalDestination)) {
@@ -1569,6 +1723,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter,
             ActiveMQDestination dest, int maximumMessages) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6690
         if (destination.equals(dest)) {
             return 0;
         }
@@ -1586,6 +1741,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
             List<MessageReference> list = new ArrayList<MessageReference>(set);
             for (MessageReference ref : list) {
                 if (filter.evaluate(context, ref)) {
@@ -1608,21 +1764,32 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         int restoredCounter = 0;
         // ensure we deal with a snapshot to avoid potential duplicates in the event of messages
         // getting immediate dlq'ed
+//IC see: https://issues.apache.org/jira/browse/AMQ-6847
         long numberOfRetryAttemptsToCheckAllMessagesOnce = this.destinationStatistics.getMessages().getCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3846
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2468
         do {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2468
+//IC see: https://issues.apache.org/jira/browse/AMQ-2468
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
             try {
                 if (!set.addAll(pagedInMessages.values())) {
                     // nothing new to check - mem constraint on page in
                     return restoredCounter;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
             List<MessageReference> list = new ArrayList<MessageReference>(set);
             for (MessageReference ref : list) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6847
                 numberOfRetryAttemptsToCheckAllMessagesOnce--;
                 if (ref.getMessage().getOriginalDestination() != null) {
 
@@ -1633,6 +1800,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     }
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6847
         } while (numberOfRetryAttemptsToCheckAllMessagesOnce > 0 && set.size() < this.destinationStatistics.getMessages().getCount());
         return restoredCounter;
     }
@@ -1643,6 +1811,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      */
     @Override
     public boolean iterate() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3219
         MDC.put("activemq.destination", getName());
         boolean pageInMoreMessages = false;
         synchronized (iteratingMutex) {
@@ -1651,9 +1820,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             // we set this state value to short-circuit wakeup in those cases to avoid that as it
             // could lead to errors.
             iterationRunning = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3700
 
             // do early to allow dispatch of these waiting messages
             synchronized (messagesWaitingForSpace) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2507
                 Iterator<Runnable> it = messagesWaitingForSpace.values().iterator();
                 while (it.hasNext()) {
                     if (!memoryUsage.isFull()) {
@@ -1693,13 +1864,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
             messagesLock.readLock().lock();
             try{
+//IC see: https://issues.apache.org/jira/browse/AMQ-2128
                 pageInMoreMessages |= !messages.isEmpty();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3700
             } finally {
                 messagesLock.readLock().unlock();
             }
 
             pagedInPendingDispatchLock.readLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
                 pageInMoreMessages |= !dispatchPendingList.isEmpty();
             } finally {
                 pagedInPendingDispatchLock.readLock().unlock();
@@ -1707,8 +1881,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
             boolean hasBrowsers = !browserSubscriptions.isEmpty();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
             if (pageInMoreMessages || hasBrowsers || !dispatchPendingList.hasRedeliveries()) {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6215
                     pageInMessages(hasBrowsers && getMaxBrowsePageSize() > 0, getMaxPageSize());
                 } catch (Throwable e) {
                     LOG.error("Failed to page in more queue messages ", e);
@@ -1716,6 +1892,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
 
             if (hasBrowsers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
                 PendingList messagesInMemory = isPrioritizedMessages() ?
                         new PrioritizedPendingList() : new OrderedPendingList();
                 pagedInMessagesLock.readLock().lock();
@@ -1725,6 +1902,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     pagedInMessagesLock.readLock().unlock();
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7376
                 Iterator<QueueBrowserSubscription> browsers = browserSubscriptions.iterator();
                 while (browsers.hasNext()) {
                     QueueBrowserSubscription browser = browsers.next();
@@ -1734,6 +1912,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                         LOG.debug("dispatch to browser: {}, already dispatched/paged count: {}", browser, messagesInMemory.size());
                         boolean added = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
                         for (MessageReference node : messagesInMemory) {
                             if (!((QueueMessageReference)node).isAcked() && !browser.isDuplicate(node.getMessageId()) && !browser.atMax()) {
                                 msgContext.setMessageReference(node);
@@ -1744,9 +1923,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             }
                         }
                         // are we done browsing? no new messages paged
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
                         if (!added || browser.atMax()) {
                             browser.decrementQueueRef();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7376
                             browsers.remove();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
                         } else {
                             wakeup();
                         }
@@ -1756,17 +1941,21 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2572
             if (pendingWakeups.get() > 0) {
                 pendingWakeups.decrementAndGet();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3219
             MDC.remove("activemq.destination");
             iterationRunning = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3700
 
             return pendingWakeups.get() > 0;
         }
     }
 
     public void pauseDispatch() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5229
         dispatchSelector.pause();
     }
 
@@ -1795,6 +1984,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     protected MessageReferenceFilter createSelectorFilter(String selector) throws InvalidSelectorException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2528
         if (selector == null || selector.isEmpty()) {
             return new MessageReferenceFilter() {
 
@@ -1806,6 +1996,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
 
         final BooleanExpression selectorExpression = SelectorParser.parse(selector);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
 
         return new MessageReferenceFilter() {
             @Override
@@ -1823,9 +2014,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     protected void removeMessage(ConnectionContext c, QueueMessageReference r) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1796
         removeMessage(c, null, r);
         pagedInPendingDispatchLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
             dispatchPendingList.remove(r);
         } finally {
             pagedInPendingDispatchLock.writeLock().unlock();
@@ -1845,7 +2038,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         LOG.trace("ack of {} with {}", reference.getMessageId(), ack);
         // This sends the ack the the journal..
         if (!ack.isInTransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1957
             acknowledge(context, sub, ack, reference);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
+//IC see: https://issues.apache.org/jira/browse/AMQ-1914
             dropMessage(reference);
         } else {
             try {
@@ -1867,6 +2063,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 });
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         if (ack.isPoisonAck() || (sub != null && sub.getConsumerInfo().isNetworkSubscription())) {
             // message gone to DLQ, is ok to allow redelivery
             messagesLock.writeLock().lock();
@@ -1875,6 +2073,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             } finally {
                 messagesLock.writeLock().unlock();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
             if (sub != null && sub.getConsumerInfo().isNetworkSubscription()) {
                 getDestinationStatistics().getForwards().increment();
             }
@@ -1885,11 +2084,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     private void dropMessage(QueueMessageReference reference) {
         //use dropIfLive so we only process the statistics at most one time
+//IC see: https://issues.apache.org/jira/browse/AMQ-6293
         if (reference.dropIfLive()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-6947
+//IC see: https://issues.apache.org/jira/browse/AMQ-6947
+//IC see: https://issues.apache.org/jira/browse/AMQ-6947
             getDestinationStatistics().getDequeues().increment();
             getDestinationStatistics().getMessages().decrement();
             pagedInMessagesLock.writeLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
                 pagedInMessages.remove(reference);
             } finally {
                 pagedInMessagesLock.writeLock().unlock();
@@ -1908,12 +2114,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         destinationStatistics.getExpired().increment();
         try {
             removeMessage(context, subs, (QueueMessageReference) reference);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4483
             messagesLock.writeLock().lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
             try {
                 messages.rollback(reference.getMessageId());
             } finally {
                 messagesLock.writeLock().unlock();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-511
         } catch (IOException e) {
             LOG.error("Failed to remove expired Message from the store ", e);
         }
@@ -1929,6 +2138,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     private final boolean tryCursorAdd(final Message msg) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5712
         messagesLock.writeLock().lock();
         try {
             return messages.tryAddMessageLast(msg, 50);
@@ -1937,14 +2147,22 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3312
     final void messageSent(final ConnectionContext context, final Message msg) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6667
         pendingSends.decrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1023
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4697
         destinationStatistics.getMessageSize().addSize(msg.getSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
         messageDelivered(context, msg);
         consumersLock.readLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2120
             if (consumers.isEmpty()) {
                 onMessageWithNoConsumers(context, msg);
             }
@@ -1952,13 +2170,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             consumersLock.readLock().unlock();
         }
         LOG.debug("{} Message {} sent to {}", new Object[]{ broker.getBrokerName(), msg.getMessageId(), this.destination });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         wakeup();
     }
 
     @Override
     public void wakeup() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4165
         if (optimizedDispatch && !iterationRunning) {
             iterate();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
             pendingWakeups.incrementAndGet();
         } else {
             asyncWakeup();
@@ -1975,6 +2198,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     private void doPageIn(boolean force) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6215
         doPageIn(force, true, getMaxPageSize());
     }
 
@@ -1982,6 +2206,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         PendingList newlyPaged = doPageInForDispatch(force, processExpired, maxPageSize);
         pagedInPendingDispatchLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
             if (dispatchPendingList.isEmpty()) {
                 dispatchPendingList.addAll(newlyPaged);
 
@@ -2002,7 +2227,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         PendingList resultList = null;
 
         int toPageIn = maxPageSize;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
         messagesLock.readLock().lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
         try {
             toPageIn = Math.min(toPageIn, messages.size());
         } finally {
@@ -2011,6 +2238,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         int pagedInPendingSize = 0;
         pagedInPendingDispatchLock.readLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
             pagedInPendingSize = dispatchPendingList.size();
         } finally {
             pagedInPendingDispatchLock.readLock().unlock();
@@ -2018,12 +2246,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         if (isLazyDispatch() && !force) {
             // Only page in the minimum number of messages which can be
             // dispatched immediately.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
             toPageIn = Math.min(toPageIn, getConsumerMessageCountBeforeFull());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-2481
+//IC see: https://issues.apache.org/jira/browse/AMQ-6215
         if (LOG.isDebugEnabled()) {
             LOG.debug("{} toPageIn: {}, force:{}, Inflight: {}, pagedInMessages.size {}, pagedInPendingDispatch.size {}, enqueueCount: {}, dequeueCount: {}, memUsage:{}, maxPageSize:{}",
                     new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                             this,
                             toPageIn,
                             force,
@@ -2044,15 +2277,21 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             try {
                 try {
                     messages.setMaxBatchSize(toPageIn);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
                     messages.reset();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6215
                     while (count < toPageIn && messages.hasNext()) {
                         MessageReference node = messages.next();
                         messages.remove();
 
                         QueueMessageReference ref = createMessageReference(node.getMessage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4518
                         if (processExpired && ref.isExpired()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2481
                             if (broker.isExpired(ref)) {
                                 messageExpired(createConnectionContext(), ref);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
                             } else {
                                 ref.decrementReferenceCount();
                             }
@@ -2068,20 +2307,25 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 messagesLock.writeLock().unlock();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6854
             if (count > 0) {
                 // Only add new messages, not already pagedIn to avoid multiple
                 // dispatch attempts
                 pagedInMessagesLock.writeLock().lock();
                 try {
                     if (isPrioritizedMessages()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3436
                         resultList = new PrioritizedPendingList();
                     } else {
                         resultList = new OrderedPendingList();
                     }
                     for (QueueMessageReference ref : result) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
                         if (!pagedInMessages.contains(ref)) {
                             pagedInMessages.addMessageLast(ref);
                             resultList.addMessageLast(ref);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
+//IC see: https://issues.apache.org/jira/browse/AMQ-4930
                         } else {
                             ref.decrementReferenceCount();
                             // store should have trapped duplicate in it's index, or cursor audit trapped insert
@@ -2102,6 +2346,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 } finally {
                     pagedInMessagesLock.writeLock().unlock();
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4261
             } else if (!messages.hasSpace()) {
                 if (isFlowControlLogRequired()) {
                     LOG.warn("{} cursor blocked, no space available to page in messages; usage: {}", this, this.systemUsage.getMemoryUsage());
@@ -2112,10 +2357,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
 
         // Avoid return null list, if condition is not validated
+//IC see: https://issues.apache.org/jira/browse/AMQ-6854
         return resultList != null ? resultList : new OrderedPendingList();
     }
 
     private final boolean haveRealConsumer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7376
         return consumers.size() - browserSubscriptions.size() > 0;
     }
 
@@ -2124,6 +2371,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         pagedInPendingDispatchLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6151
             if (isPrioritizedMessages() && !dispatchPendingList.isEmpty() && list != null && !list.isEmpty()) {
                 // merge all to select priority order
                 for (MessageReference qmr : list) {
@@ -2134,6 +2382,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 list = null;
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
             doActualDispatch(dispatchPendingList);
             // and now see if we can dispatch the new stuff.. and append to the pending
             // list anything that does not actually get dispatched.
@@ -2146,6 +2395,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             dispatchPendingList.addMessageLast(qmr);
                         }
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
                     doWakeUp = true;
                 }
             }
@@ -2166,14 +2417,20 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private PendingList doActualDispatch(PendingList list) throws Exception {
         List<Subscription> consumers;
         consumersLock.readLock().lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2719
+//IC see: https://issues.apache.org/jira/browse/AMQ-2106
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2128
+//IC see: https://issues.apache.org/jira/browse/AMQ-4165
             if (this.consumers.isEmpty()) {
                 // slave dispatch happens in processDispatchNotification
                 return list;
             }
             consumers = new ArrayList<Subscription>(this.consumers);
         } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2719
+//IC see: https://issues.apache.org/jira/browse/AMQ-2106
             consumersLock.readLock().unlock();
         }
 
@@ -2181,18 +2438,26 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         for (Iterator<MessageReference> iterator = list.iterator(); iterator.hasNext();) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4518
             MessageReference node = iterator.next();
             Subscription target = null;
             for (Subscription s : consumers) {
                 if (s instanceof QueueBrowserSubscription) {
                     continue;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1902
+//IC see: https://issues.apache.org/jira/browse/AMQ-1866
+//IC see: https://issues.apache.org/jira/browse/AMQ-1902
                 if (!fullConsumers.contains(s)) {
                     if (!s.isFull()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
                         if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s, (QueueMessageReference)node) && !((QueueMessageReference) node).isAcked() ) {
                             // Dispatch it.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2952
                             s.add(node);
                             LOG.trace("assigned {} to consumer {}", node.getMessageId(), s.getConsumerInfo().getConsumerId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4758
                             iterator.remove();
                             target = s;
                             break;
@@ -2206,6 +2471,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4758
             if (target == null && node.isDropped()) {
                 iterator.remove();
             }
@@ -2225,18 +2491,23 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         addToConsumerList(target);
                         consumers = new ArrayList<Subscription>(this.consumers);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
                 } finally {
                     consumersLock.writeLock().unlock();
                 }
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4758
         return list;
     }
 
     protected boolean assignMessageGroup(Subscription subscription, QueueMessageReference node) throws Exception {
         boolean result = true;
         // Keep message groups together.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2952
         String groupId = node.getGroupID();
         int sequence = node.getGroupSequence();
         if (groupId != null) {
@@ -2260,6 +2531,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         // A group sequence < 1 is an end of group signal.
                         if (sequence < 0) {
                             messageGroupOwners.removeGroup(groupId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6016
+//IC see: https://issues.apache.org/jira/browse/AMQ-2106
                             subscription.getConsumerInfo().decrementAssignedGroupCount(destination);
                         }
                     } else {
@@ -2275,11 +2548,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     protected void assignGroup(Subscription subs, MessageGroupMap messageGroupOwners, MessageReference n, String groupId) throws IOException {
         messageGroupOwners.put(groupId, subs.getConsumerInfo().getConsumerId());
         Message message = n.getMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4092
         message.setJMSXGroupFirstForConsumer(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6016
+//IC see: https://issues.apache.org/jira/browse/AMQ-2106
         subs.getConsumerInfo().incrementAssignedGroupCount(destination);
     }
 
     protected void pageInMessages(boolean force, int maxPageSize) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6215
         doDispatch(doPageInForDispatch(force, true, maxPageSize));
     }
 
@@ -2287,6 +2564,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         if (useConsumerPriority) {
             consumers.add(sub);
             Collections.sort(consumers, orderedCompare);
+//IC see: https://issues.apache.org/jira/browse/AMQ-511
         } else {
             consumers.add(sub);
         }
@@ -2299,8 +2577,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private int getConsumerMessageCountBeforeFull() throws Exception {
         int total = 0;
         consumersLock.readLock().lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
         try {
             for (Subscription s : consumers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6215
                 if (s.isBrowser()) {
                     continue;
                 }
@@ -2340,6 +2620,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         pagedInPendingDispatchLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
             for (MessageReference ref : dispatchPendingList) {
                 if (messageId.equals(ref.getMessageId())) {
                     message = (QueueMessageReference)ref;
@@ -2353,7 +2634,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         if (message == null) {
             pagedInMessagesLock.readLock().lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
                 message = (QueueMessageReference)pagedInMessages.get(messageId);
             } finally {
                 pagedInMessagesLock.readLock().unlock();
@@ -2363,6 +2647,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         if (message == null) {
             messagesLock.writeLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
                 try {
                     messages.setMaxBatchSize(getMaxPageSize());
                     messages.reset();
@@ -2393,6 +2678,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             throw new JMSException("Slave broker out of sync with master - Message: "
                     + messageDispatchNotification.getMessageId() + " on "
                     + messageDispatchNotification.getDestination() + " does not exist among pending("
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
                     + dispatchPendingList.size() + ") for subscription: "
                     + messageDispatchNotification.getConsumerId());
         }
@@ -2417,6 +2703,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     break;
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-511
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
         } finally {
             consumersLock.readLock().unlock();
         }
@@ -2426,6 +2714,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     @Override
     public void onUsageChanged(@SuppressWarnings("rawtypes") Usage usage, int oldPercentUsage, int newPercentUsage) {
         if (oldPercentUsage > newPercentUsage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-2468
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
             asyncWakeup();
         }
     }
@@ -2437,6 +2730,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     protected boolean isOptimizeStorage(){
         boolean result = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
         if (isDoOptimzeMessageStorage()){
             consumersLock.readLock().lock();
             try{
@@ -2451,12 +2745,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             result = false;
                             break;
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
                         if (s.getInFlightUsage() > getOptimizeMessageStoreInFlightLimit()){
                             result = false;
                             break;
                         }
                     }
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-511
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
             } finally {
                 consumersLock.readLock().unlock();
             }

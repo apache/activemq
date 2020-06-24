@@ -35,8 +35,10 @@ import org.apache.activemq.util.URISupport.CompositeData;
 public class DiscoveryTransportFactory extends FailoverTransportFactory {
         
     public Transport createTransport(CompositeData compositeData) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2849
         Map<String, String> parameters = new HashMap<String, String>(compositeData.getParameters());
         FailoverTransport failoverTransport = createTransport(parameters);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
         return createTransport(failoverTransport, compositeData, parameters);
     }
     
@@ -52,6 +54,7 @@ public class DiscoveryTransportFactory extends FailoverTransportFactory {
         DiscoveryTransport transport = new DiscoveryTransport(compositeTransport);
 
         IntrospectionSupport.setProperties(transport, parameters);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2283
         transport.setParameters(parameters);
         
         URI discoveryAgentURI = compositeData.getComponents()[0];

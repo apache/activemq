@@ -143,10 +143,12 @@ public class PartitionBroker extends BrokerFilter {
         String connectionString = getConnectionString(targetDTO.ids);
         if( connectionString==null ) {
             LOG.debug("Could not convert to partition targets to connection string: " + targetDTO.ids);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
             return;
         }
 
         LOG.info("Redirecting connection to: " + connectionString);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         TransportConnection connection = (TransportConnection)monitor.context.getConnection();
         ConnectionControl cc = new ConnectionControl();
         cc.setConnectedBrokers(connectionString);
@@ -157,6 +159,7 @@ public class PartitionBroker extends BrokerFilter {
     protected String getConnectionString(HashSet<String> ids) {
         StringBuilder rc = new StringBuilder();
         for (String id : ids) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
             String url = plugin.getBrokerURL(this, id);
             if( url!=null ) {
                 if( rc.length()!=0 ) {
@@ -165,6 +168,7 @@ public class PartitionBroker extends BrokerFilter {
                 rc.append(url);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         if( rc.length()==0 )
             return null;
         return rc.toString();
@@ -221,6 +225,7 @@ public class PartitionBroker extends BrokerFilter {
           ) {
 
             // Collect the destinations the connection is consuming from...
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
             HashSet<ActiveMQDestination> dests = new HashSet<ActiveMQDestination>();
             for (SessionState session : monitor.context.getConnectionState().getSessionStates()) {
                 for (ConsumerState consumer : session.getConsumerStates()) {
@@ -248,6 +253,7 @@ public class PartitionBroker extends BrokerFilter {
             }
 
             // The target with largest score wins..
+//IC see: https://issues.apache.org/jira/browse/AMQ-7407
             if (!targetScores.isEmpty()) {
                 Target bestTarget = null;
                 int bestScore = 0;
@@ -285,6 +291,7 @@ public class PartitionBroker extends BrokerFilter {
 
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         if( info.isFaultTolerant() ) {
             ConnectionMonitor monitor = new ConnectionMonitor(context);
             monitors.put(info.getConnectionId(), monitor);
@@ -323,6 +330,7 @@ public class PartitionBroker extends BrokerFilter {
 
     static class ConnectionMonitor {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         final ConnectionContext context;
         LRUCache<ActiveMQDestination, Traffic> trafficPerDestination =  new LRUCache<ActiveMQDestination, Traffic>();
 

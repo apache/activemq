@@ -37,6 +37,7 @@ public class DiscoveryRegistryServlet extends HttpServlet {
     private static final Logger LOG = LoggerFactory.getLogger(HTTPDiscoveryAgent.class);
     long maxKeepAge = 1000*60*60; // 1 hour.
     ConcurrentMap<String, ConcurrentMap<String, Long>> serviceGroups = new ConcurrentHashMap<String, ConcurrentMap<String, Long>>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -49,6 +50,7 @@ public class DiscoveryRegistryServlet extends HttpServlet {
     }
 
     private ConcurrentMap<String, Long> getServiceGroup(String group) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7440
         return serviceGroups.computeIfAbsent(group, k -> new ConcurrentHashMap<String, Long>());
     }
 
@@ -63,6 +65,7 @@ public class DiscoveryRegistryServlet extends HttpServlet {
 
             String group = req.getPathInfo();
             LOG.debug("group="+group);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
             ConcurrentMap<String, Long> services = getServiceGroup(group);
             PrintWriter writer = resp.getWriter();
 
@@ -96,6 +99,7 @@ public class DiscoveryRegistryServlet extends HttpServlet {
         String service = req.getHeader("service");
         LOG.debug("Unregistering: group="+group+", service="+service);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
         ConcurrentMap<String, Long> services = getServiceGroup(group);
         services.remove(service);
     }

@@ -40,6 +40,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
     public static final String VIEW_GROUP_BODY = "body:";
 
     protected String[] helpFile = new String[] {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
         "Task Usage: Main browse [browse-options] <destinations>",
         "Description: Display selected destination's messages.",
         "",
@@ -47,6 +48,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
         "    --amqurl <url>                Set the broker URL to connect to. Default tcp://localhost:61616",
         "    --msgsel <msgsel1,msglsel2>   Add to the search list messages matched by the query similar to",
         "                                  the messages selector format.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
         "    --factory <className>         Load className as the javax.jms.ConnectionFactory to use for creating connections.",
         "    --passwordFactory <className> Load className as the org.apache.activemq.console.command.PasswordFactory",
         "                                  for retrieving the password from a keystore.",
@@ -69,11 +71,13 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
         "    Main browse --amqurl tcp://localhost:61616 -Vheader --view custom:MyField queue:FOO.BAR",
         "        - Print the message header and the custom field 'MyField' of all messages in the queue FOO.BAR",
         "",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5796
         "    Main browse --amqurl tcp://localhost:61616 --msgsel \"JMSMessageID='*:10',JMSPriority>5\" FOO.BAR",
         "        - Print all the message fields that has a JMSMessageID in the header field that matches the",
         "          wildcard *:10, and has a JMSPriority field > 5 in the queue FOO.BAR",
         "        * To use wildcard queries, the field must be a string and the query enclosed in ''",
         "",
+//IC see: https://issues.apache.org/jira/browse/AMQ-3722
         "    Main browse --amqurl tcp://localhost:61616 --user someUser --password somePass FOO.BAR",
         "        - Print the message header, custom message header, and message body of all messages in the",
         "          queue FOO.BAR, using someUser as the user name, and somePass as the password",
@@ -117,6 +121,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
 
             // If no broker url specified
             if (getBrokerUrl() == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
                 setBrokerUrl(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
             }
 
@@ -140,6 +145,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
 
                 // Query for the messages to view
                 List addMsgs = AmqMessagesUtil.getMessages(getConnectionFactory(), dest, queryAddObjects);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
 
                 // Query for the messages to remove from view
                 if (querySubObjects.size() > 0) {
@@ -151,6 +157,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
                 context.printMessage(AmqMessagesUtil.filterMessagesView(addMsgs, groupViews, queryViews));
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
         } catch (Exception exception) {
             handleException(exception, getBrokerUrl().toString());
         }
@@ -184,6 +191,8 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
 
             // If no message selector is specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
@@ -198,6 +207,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
 
             // If no view specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new IllegalArgumentException("Attributes to view not specified"));
                 return;
             }
@@ -245,6 +255,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
 
                 // Unknown group view
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printInfo("Unknown group view: " + viewGroup + ". Ignoring group view option.");
             }
         } else {
@@ -257,6 +268,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         context.printHelp(helpFile);
     }
 

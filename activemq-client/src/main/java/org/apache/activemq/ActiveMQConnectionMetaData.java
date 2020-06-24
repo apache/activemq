@@ -60,6 +60,7 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
         PROVIDER_VERSION = version;
         PROVIDER_MAJOR_VERSION = major;
         PROVIDER_MINOR_VERSION = minor;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6379
         PLATFORM_DETAILS = ActiveMQConnectionMetaData.getPlatformDetails();
     }
 
@@ -144,6 +145,7 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
     @Override
     public Enumeration<String> getJMSXPropertyNames() {
         Vector<String> jmxProperties = new Vector<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4202
         jmxProperties.add("JMSXUserID");
         jmxProperties.add("JMSXGroupID");
         jmxProperties.add("JMSXGroupSeq");
@@ -158,7 +160,9 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
      * @return String containing the platform details
      */
     private static String getPlatformDetails() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6379
         String details = "java";
+//IC see: https://issues.apache.org/jira/browse/AMQ-6379
         try {
             StringBuilder platformInfo = new StringBuilder(128);
 

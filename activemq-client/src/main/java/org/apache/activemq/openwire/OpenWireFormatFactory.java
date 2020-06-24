@@ -61,12 +61,16 @@ public class OpenWireFormatFactory implements WireFormatFactory {
             info.setMaxInactivityDuration(maxInactivityDuration);
             info.setMaxInactivityDurationInitalDelay(maxInactivityDurationInitalDelay);
             info.setCacheSize(cacheSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
             info.setMaxFrameSize(maxFrameSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5050
             if( host!=null ) {
                 info.setHost(host);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6379
             info.setProviderName(providerName);
             info.setProviderVersion(providerVersion);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6871
             if (includePlatformDetails) {
                 platformDetails = ActiveMQConnectionMetaData.PLATFORM_DETAILS;
             }
@@ -77,7 +81,9 @@ public class OpenWireFormatFactory implements WireFormatFactory {
             throw ise;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
         OpenWireFormat f = new OpenWireFormat(version);
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
         f.setMaxFrameSize(maxFrameSize);
         f.setPreferedWireFormatInfo(info);
         return f;
@@ -132,6 +138,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     }
 
     public long getMaxInactivityDuration() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-643
         return maxInactivityDuration;
     }
 
@@ -157,6 +164,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     }
 
     public long getMaxFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
         return maxFrameSize;
     }
 
@@ -165,6 +173,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     }
 
     public String getHost() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5050
         return host;
     }
 
@@ -173,6 +182,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     }
 
     public String getProviderName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6379
         return providerName;
     }
 
@@ -197,6 +207,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     }
 
     public boolean isIncludePlatformDetails() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6871
         return includePlatformDetails;
     }
 

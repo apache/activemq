@@ -170,10 +170,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
      * @param stopTaskRunnerFactory - can <b>not</b> be null, used for stopping this connection.
      */
     public TransportConnection(TransportConnector connector, final Transport transport, Broker broker,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                                TaskRunnerFactory taskRunnerFactory, TaskRunnerFactory stopTaskRunnerFactory) {
         this.connector = connector;
         this.broker = broker;
         this.brokerService = broker.getBrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
 
         RegionBroker rb = (RegionBroker) broker.getAdaptor(RegionBroker.class);
         brokerConnectionStates = rb.getConnectionStates();
@@ -184,6 +186,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.taskRunnerFactory = taskRunnerFactory;
         this.stopTaskRunnerFactory = stopTaskRunnerFactory;
         this.transport = transport;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4896
         if( this.transport instanceof BrokerServiceAware ) {
             ((BrokerServiceAware)this.transport).setBrokerService(brokerService);
         }
@@ -193,12 +196,20 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 serviceLock.readLock().lock();
                 try {
                     if (!(o instanceof Command)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2092
                         throw new RuntimeException("Protocol violation - Command corrupted: " + o.toString());
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-976
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
                     Command command = (Command) o;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5070
+//IC see: https://issues.apache.org/jira/browse/AMQ-6494
                     if (!brokerService.isStopping()) {
                         Response response = service(command);
                         if (response != null && !brokerService.isStopping()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1172
+//IC see: https://issues.apache.org/jira/browse/AMQ-1174
+//IC see: https://issues.apache.org/jira/browse/AMQ-1175
                             dispatchSync(response);
                         }
                     } else {
@@ -235,13 +246,17 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public void serviceTransportException(IOException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
         if (!stopping.get() && status.get() != PENDING_STOP) {
             transportException.set(e);
             if (TRANSPORTLOG.isDebugEnabled()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3624
                 TRANSPORTLOG.debug(this + " failed: " + e, e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7057
             } else if (TRANSPORTLOG.isWarnEnabled() && !suppressed(e)) {
                 TRANSPORTLOG.warn(this + " failed: " + e);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5772
             stopAsync(e);
         }
     }
@@ -282,11 +297,16 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             // Handle the case where the broker is stopped
             // But the client is still connected.
             if (!stopping.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                 SERVICELOG.debug("Broker has been stopped.  Notifying client and closing his connection.");
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
                 dispatchSync(ce);
                 // Record the error that caused the transport to stop
+//IC see: https://issues.apache.org/jira/browse/AMQ-1172
+//IC see: https://issues.apache.org/jira/browse/AMQ-1174
+//IC see: https://issues.apache.org/jira/browse/AMQ-1175
+//IC see: https://issues.apache.org/jira/browse/AMQ-5772
                 transportException.set(e);
                 // Wait a little bit to try to get the output buffer to flush
                 // the exception notification to the client.
@@ -302,6 +322,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         } else if (!stopping.get() && !inServiceException) {
             inServiceException = true;
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5892
                 if (SERVICELOG.isDebugEnabled()) {
                     SERVICELOG.debug("Async error occurred: " + e, e);
                 } else {
@@ -309,7 +330,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
                 if (status.get() == PENDING_STOP) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3625
                     dispatchSync(ce);
                 } else {
                     dispatchAsync(ce);
@@ -322,22 +345,27 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public Response service(Command command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3219
         MDC.put("activemq.connector", connector.getUri().toString());
         Response response = null;
         boolean responseRequired = command.isResponseRequired();
         int commandId = command.getCommandId();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
             if (status.get() != PENDING_STOP) {
                 response = command.visit(this);
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5772
                 response = new ExceptionResponse(transportException.get());
             }
         } catch (Throwable e) {
             if (SERVICELOG.isDebugEnabled() && e.getClass() != BrokerStoppedException.class) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
                 SERVICELOG.debug("Error occured while processing " + (responseRequired ? "sync" : "async")
                         + " command: " + command + ", exception: " + e, e);
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
             if (e instanceof SuppressReplyException || (e.getCause() instanceof SuppressReplyException)) {
                 LOG.info("Suppressing reply to: " + command + " on: " + e + ", cause: " + e.getCause());
                 responseRequired = false;
@@ -345,11 +373,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
             if (responseRequired) {
                 if (e instanceof SecurityException || e.getCause() instanceof SecurityException) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5771
                     SERVICELOG.warn("Security Error occurred on connection to: {}, {}",
                             transport.getRemoteAddress(), e.getMessage());
                 }
                 response = new ExceptionResponse(e);
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
                 forceRollbackOnlyOnFailedAsyncTransactionOp(e, command);
                 serviceException(e);
             }
@@ -369,11 +399,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
             context = null;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3219
         MDC.remove("activemq.connector");
         return response;
     }
 
     private void forceRollbackOnlyOnFailedAsyncTransactionOp(Throwable e, Command command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
         if (brokerService.isRollbackOnlyOnAsyncException() && !(e instanceof IOException) && isInTransaction(command)) {
             Transaction transaction = getActiveTransaction(command);
             if (transaction != null && !transaction.isRollbackOnly()) {
@@ -459,7 +491,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     @Override
     public int getActiveTransactionCount() {
         int rc = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5054
         for (TransportConnectionState cs : connectionStateRegister.listConnectionStates()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6494
             rc += cs.getTransactionStates().size();
         }
         return rc;
@@ -502,7 +536,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
         if (transactionState == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2556
             throw new IllegalStateException("Cannot prepare a transaction that had not been started or previously returned XA_RDONLY: "
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
                     + info.getTransactionId());
         }
         // Avoid dups.
@@ -510,6 +546,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             transactionState.setPrepared(true);
             int result = broker.prepareTransaction(context, info.getTransactionId());
             transactionState.setPreparedResult(result);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2556
             if (result == XAResource.XA_RDONLY) {
                 // we are done, no further rollback or commit from TM
                 cs.removeTransactionState(info.getTransactionId());
@@ -569,6 +606,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public Response processMessage(Message messageSend) throws Exception {
         ProducerId producerId = messageSend.getProducerId();
         ProducerBrokerExchange producerExchange = getProducerBrokerExchange(producerId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         if (producerExchange.canDispatch(messageSend)) {
             broker.send(producerExchange, messageSend);
         }
@@ -578,6 +618,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     @Override
     public Response processMessageAck(MessageAck ack) throws Exception {
         ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(ack.getConsumerId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3605
         if (consumerExchange != null) {
             broker.acknowledge(consumerExchange, ack);
         } else if (ack.isInTransaction()) {
@@ -622,21 +663,25 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         SessionId sessionId = info.getProducerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3625
         if (cs == null) {
             throw new IllegalStateException("Cannot add a producer to a connection that had not been registered: "
                     + connectionId);
         }
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
             throw new IllegalStateException("Cannot add a producer to a session that had not been registered: "
                     + sessionId);
         }
         // Avoid replaying dup commands
         if (!ss.getProducerIds().contains(info.getProducerId())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
             ActiveMQDestination destination = info.getDestination();
             // Do not check for null here as it would cause the count of max producers to exclude
             // anonymous producers.  The isAdvisoryTopic method checks for null so it is safe to
             // call it from here with a null Destination value.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5649
             if (!AdvisorySupport.isAdvisoryTopic(destination)) {
                 if (getProducerCount(connectionId) >= connector.getMaximumProducersAllowedPerConnection()){
                     throw new IllegalStateException("Can't add producer on connection " + connectionId + ": at maximum limit: " + connector.getMaximumProducersAllowedPerConnection());
@@ -660,6 +705,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         TransportConnectionState cs = lookupConnectionState(connectionId);
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
             throw new IllegalStateException("Cannot remove a producer from a session that had not been registered: "
                     + sessionId);
         }
@@ -677,17 +723,20 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         SessionId sessionId = info.getConsumerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3625
         if (cs == null) {
             throw new IllegalStateException("Cannot add a consumer to a connection that had not been registered: "
                     + connectionId);
         }
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
             throw new IllegalStateException(broker.getBrokerName()
                     + " Cannot add a consumer to a session that had not been registered: " + sessionId);
         }
         // Avoid replaying dup commands
         if (!ss.getConsumerIds().contains(info.getConsumerId())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
             ActiveMQDestination destination = info.getDestination();
             if (destination != null && !AdvisorySupport.isAdvisoryTopic(destination)) {
                 if (getConsumerCount(connectionId) >= connector.getMaximumConsumersAllowedPerConnection()){
@@ -698,6 +747,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             broker.addConsumer(cs.getContext(), info);
             try {
                 ss.addConsumer(info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6275
                 addConsumerBrokerExchange(cs, info.getConsumerId());
             } catch (IllegalStateException e) {
                 broker.removeConsumer(cs.getContext(), info);
@@ -712,12 +762,15 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2540
+//IC see: https://issues.apache.org/jira/browse/AMQ-2473
         if (cs == null) {
             throw new IllegalStateException("Cannot remove a consumer from a connection that had not been registered: "
                     + connectionId);
         }
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
             throw new IllegalStateException("Cannot remove a consumer from a session that had not been registered: "
                     + sessionId);
         }
@@ -725,6 +778,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (consumerState == null) {
             throw new IllegalStateException("Cannot remove a consumer that had not been registered: " + id);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         ConsumerInfo info = consumerState.getInfo();
         info.setLastDeliveredSequenceId(lastDeliveredSequenceId);
         broker.removeConsumer(cs.getContext(), consumerState.getInfo());
@@ -737,6 +791,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         ConnectionId connectionId = info.getSessionId().getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
         // Avoid replaying dup commands
+//IC see: https://issues.apache.org/jira/browse/AMQ-3124
         if (cs != null && !cs.getSessionIds().contains(info.getSessionId())) {
             broker.addSession(cs.getContext(), info);
             try {
@@ -753,6 +808,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public Response processRemoveSession(SessionId id, long lastDeliveredSequenceId) throws Exception {
         ConnectionId connectionId = id.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2540
+//IC see: https://issues.apache.org/jira/browse/AMQ-2473
         if (cs == null) {
             throw new IllegalStateException("Cannot remove session from connection that had not been registered: " + connectionId);
         }
@@ -764,8 +821,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         // this down.
         session.shutdown();
         // Cascade the connection stop to the consumers and producers.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3625
         for (ConsumerId consumerId : session.getConsumerIds()) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
                 processRemoveConsumer(consumerId, lastDeliveredSequenceId);
             } catch (Throwable e) {
                 LOG.warn("Failed to remove consumer: {}", consumerId, e);
@@ -815,6 +874,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         registerConnectionState(info.getConnectionId(), state);
         LOG.debug("Setting up new connection id: {}, address: {}, info: {}", new Object[]{ info.getConnectionId(), getRemoteAddress(), info });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3294
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
         this.faultTolerantConnection = info.isFaultTolerant();
         // Setup the context.
         String clientId = info.getClientId();
@@ -822,6 +883,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         context.setBroker(broker);
         context.setClientId(clientId);
         context.setClientMaster(info.isClientMaster());
+//IC see: https://issues.apache.org/jira/browse/AMQ-775
         context.setConnection(this);
         context.setConnectionId(info.getConnectionId());
         context.setConnector(connector);
@@ -831,32 +893,45 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         context.setTransactions(new ConcurrentHashMap<TransactionId, Transaction>());
         context.setUserName(info.getUserName());
         context.setWireFormatInfo(wireFormatInfo);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         context.setReconnect(info.isFailoverReconnect());
         this.manageable = info.isManageable();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         context.setConnectionState(state);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1349
         state.setContext(context);
         state.setConnection(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
         if (info.getClientIp() == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
             info.setClientIp(getRemoteAddress());
         }
 
         try {
             broker.addConnection(context, info);
         } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3198
             synchronized (brokerConnectionStates) {
                 brokerConnectionStates.remove(info.getConnectionId());
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3198
             unregisterConnectionState(info.getConnectionId());
             LOG.warn("Failed to add Connection id={}, clientId={}, clientIP={} due to {}", info.getConnectionId(), clientId, info.getClientIp(), e.getLocalizedMessage());
             //AMQ-6561 - stop for all exceptions on addConnection
             // close this down - in case the peer of this transport doesn't play nice
+//IC see: https://issues.apache.org/jira/browse/AMQ-3625
             delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage(), e);
             throw e;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         if (info.isManageable()) {
             // send ConnectionCommand
             ConnectionControl command = this.connector.getConnectionControl();
             command.setFaultTolerant(broker.isFaultTolerantConfiguration());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
             if (info.isFailoverReconnect()) {
                 command.setRebalanceConnection(false);
             }
@@ -875,24 +950,30 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             // are shutting down.
             cs.shutdown();
             // Cascade the connection stop to the sessions.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3625
             for (SessionId sessionId : cs.getSessionIds()) {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
                     processRemoveSession(sessionId, lastDeliveredSequenceId);
                 } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                     SERVICELOG.warn("Failed to remove session {}", sessionId, e);
                 }
             }
             // Cascade the connection stop to temp destinations.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3625
             for (Iterator<DestinationInfo> iter = cs.getTempDestinations().iterator(); iter.hasNext(); ) {
                 DestinationInfo di = iter.next();
                 try {
                     broker.removeDestination(cs.getContext(), di.getDestination(), 0);
                 } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                     SERVICELOG.warn("Failed to remove tmp destination {}", di.getDestination(), e);
                 }
                 iter.remove();
             }
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5772
                 broker.removeConnection(cs.getContext(), cs.getInfo(), transportException.get());
             } catch (Throwable e) {
                 SERVICELOG.warn("Failed to remove connection {}", cs.getInfo(), e);
@@ -948,7 +1029,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
         } else {
             if (message.isMessageDispatch()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
                 MessageDispatch md = (MessageDispatch) message;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
                 TransmitCallback sub = md.getTransmitCallback();
                 broker.postProcessDispatch(md);
                 if (sub != null) {
@@ -963,6 +1046,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         try {
             if (!stopping.get()) {
                 if (messageDispatch != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5347
+//IC see: https://issues.apache.org/jira/browse/AMQ-2719
                     try {
                         broker.preProcessDispatch(messageDispatch);
                     } catch (RuntimeException convertToIO) {
@@ -971,15 +1056,19 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
                 dispatch(command);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
         } catch (IOException e) {
             if (messageDispatch != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
                 TransmitCallback sub = messageDispatch.getTransmitCallback();
                 broker.postProcessDispatch(messageDispatch);
                 if (sub != null) {
                     sub.onFailure();
                 }
                 messageDispatch = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
                 throw e;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
             } else {
                 if (TRANSPORTLOG.isDebugEnabled()) {
                     TRANSPORTLOG.debug("Unexpected exception on asyncDispatch, command of type: " + command.getDataStructureType(), e);
@@ -999,6 +1088,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     @Override
     public boolean iterate() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
             if (status.get() == PENDING_STOP || stopping.get()) {
                 if (dispatchStopped.compareAndSet(false, true)) {
                     if (transportException.get() == null) {
@@ -1013,6 +1103,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
             if (!dispatchStopped.get()) {
                 Command command = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
                 synchronized (dispatchQueue) {
                     if (dispatchQueue.isEmpty()) {
                         return false;
@@ -1027,6 +1118,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             if (dispatchStopped.compareAndSet(false, true)) {
                 dispatchStoppedLatch.countDown();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1026
             serviceExceptionAsync(e);
             return false;
         }
@@ -1055,8 +1147,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
         if (status.compareAndSet(NEW, STARTING)) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
                 synchronized (this) {
                     if (taskRunnerFactory != null) {
                         taskRunner = taskRunnerFactory.createTaskRunner(this, "ActiveMQ Connection Dispatcher: "
@@ -1064,9 +1158,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     } else {
                         taskRunner = null;
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
                     transport.start();
                     active = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                     BrokerInfo info = connector.getBrokerInfo().copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3178
                     if (connector.isUpdateClusterClients()) {
                         info.setPeerBrokerInfos(this.broker.getPeerBrokerInfos());
                     } else {
@@ -1105,9 +1202,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     public void delayedStop(final int waitTime, final String reason, Throwable cause) {
         if (waitTime > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
             status.compareAndSet(STARTING, PENDING_STOP);
             transportException.set(cause);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                 stopTaskRunnerFactory.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -1118,6 +1217,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                         } catch (InterruptedException e) {
                         }
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                 });
             } catch (Throwable t) {
                 LOG.warn("Cannot create stopAsync. This exception will be ignored.", t);
@@ -1126,12 +1226,15 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public void stopAsync(Throwable cause) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5772
+//IC see: https://issues.apache.org/jira/browse/AMQ-5772
         transportException.set(cause);
         stopAsync();
     }
 
     public void stopAsync() {
         // If we're in the middle of starting then go no further... for now.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
         if (status.compareAndSet(STARTING, PENDING_STOP)) {
             LOG.debug("stopAsync() called in the middle of start(). Delaying till start completes..");
             return;
@@ -1147,11 +1250,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
             }
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                 stopTaskRunnerFactory.execute(new Runnable() {
                     @Override
                     public void run() {
                         serviceLock.writeLock().lock();
                         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2071
+//IC see: https://issues.apache.org/jira/browse/AMQ-2070
                             doStop();
                         } catch (Throwable e) {
                             LOG.debug("Error occurred while shutting down a connection {}", this, e);
@@ -1160,6 +1266,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                             serviceLock.writeLock().unlock();
                         }
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                 });
             } catch (Throwable t) {
                 LOG.warn("Cannot create async transport stopper thread. This exception is ignored. Not waiting for stop to complete", t);
@@ -1170,6 +1277,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
         return "Transport Connection to: " + transport.getRemoteAddress();
     }
 
@@ -1178,6 +1286,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         connector.onStopped(this);
         try {
             synchronized (this) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
                 if (duplexBridge != null) {
                     duplexBridge.stop();
                 }
@@ -1198,12 +1307,24 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         active = false;
         // Run the MessageDispatch callbacks so that message references get
         // cleaned up.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
         synchronized (dispatchQueue) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3294
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
             for (Iterator<Command> iter = dispatchQueue.iterator(); iter.hasNext(); ) {
                 Command command = iter.next();
                 if (command.isMessageDispatch()) {
                     MessageDispatch md = (MessageDispatch) command;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
                     TransmitCallback sub = md.getTransmitCallback();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1160
+//IC see: https://issues.apache.org/jira/browse/AMQ-1072
+//IC see: https://issues.apache.org/jira/browse/AMQ-936
+//IC see: https://issues.apache.org/jira/browse/AMQ-567
+//IC see: https://issues.apache.org/jira/browse/AMQ-1160
+//IC see: https://issues.apache.org/jira/browse/AMQ-1072
+//IC see: https://issues.apache.org/jira/browse/AMQ-936
+//IC see: https://issues.apache.org/jira/browse/AMQ-567
                     broker.postProcessDispatch(md);
                     if (sub != null) {
                         sub.onFailure();
@@ -1222,6 +1343,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 cs.getContext().getStopping().set(true);
                 try {
                     LOG.debug("Cleaning up connection resources: {}", getRemoteAddress());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
                     processRemoveConnection(cs.getInfo().getConnectionId(), RemoveInfo.LAST_DELIVERED_UNKNOWN);
                 } catch (Throwable ignore) {
                     LOG.debug("Exception caught removing connection {}. This exception is ignored.", cs.getInfo().getConnectionId(), ignore);
@@ -1343,6 +1465,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
      * @return true if the Connection is starting
      */
     public boolean isStarting() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
         return status.get() == STARTING;
     }
 
@@ -1353,6 +1476,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public boolean isFaultTolerantConnection() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
+//IC see: https://issues.apache.org/jira/browse/AMQ-3294
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
         return this.faultTolerantConnection;
     }
 
@@ -1360,6 +1486,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
      * @return true if the Connection needs to stop
      */
     public boolean isPendingStop() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
         return status.get() == PENDING_STOP;
     }
 
@@ -1380,6 +1507,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 NetworkBridgeConfiguration config = getNetworkConfiguration(info);
                 if (config.isSyncDurableSubs() && protocolVersion.get() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
                     LOG.debug("SyncDurableSubs is enabled, Sending BrokerSubscriptionInfo");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
                     dispatchSync(NetworkBridgeUtils.getBrokerSubscriptionInfo(this.broker.getBrokerService(), config));
                 }
             } catch (Exception e) {
@@ -1393,6 +1521,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 NetworkBridgeConfiguration config = getNetworkConfiguration(info);
                 config.setBrokerName(broker.getBrokerName());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
                 if (config.isSyncDurableSubs() && protocolVersion.get() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
                     LOG.debug("SyncDurableSubs is enabled, Sending BrokerSubscriptionInfo");
                     dispatchSync(NetworkBridgeUtils.getBrokerSubscriptionInfo(this.broker.getBrokerService(), config));
@@ -1404,9 +1533,15 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 // It's possible in case of brief network fault to have this transport connector side of the connection always active
                 // and the duplex network connector side wanting to open a new one
                 // In this case, the old connection must be broken
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
+//IC see: https://issues.apache.org/jira/browse/AMQ-3074
                 String duplexNetworkConnectorId = config.getName() + "@" + info.getBrokerId();
                 CopyOnWriteArrayList<TransportConnection> connections = this.connector.getConnections();
                 synchronized (connections) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3294
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
                     for (Iterator<TransportConnection> iter = connections.iterator(); iter.hasNext(); ) {
                         TransportConnection c = iter.next();
                         if ((c != this) && (duplexNetworkConnectorId.equals(c.getDuplexNetworkConnectorId()))) {
@@ -1428,11 +1563,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 if (duplexName.contains("#")) {
                     duplexName = duplexName.substring(duplexName.lastIndexOf("#"));
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
                 MBeanNetworkListener listener = new MBeanNetworkListener(brokerService, config, brokerService.createDuplexNetworkConnectorObjectName(duplexName));
                 listener.setCreatedByDuplex(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6861
                 duplexBridge = config.getBridgeFactory().createNetworkBridge(config, localTransport, remoteBridgeTransport, listener);
                 duplexBridge.setBrokerService(brokerService);
                 //Need to set durableDestinations to properly restart subs when dynamicOnly=false
+//IC see: https://issues.apache.org/jira/browse/AMQ-6366
                 duplexBridge.setDurableDestinations(NetworkConnector.getDurableTopicDestinations(
                         broker.getDurableDestinations()));
 
@@ -1454,6 +1592,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (this.brokerInfo != null) {
             LOG.warn("Unexpected extra broker info command received: {}", info);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1349
         this.brokerInfo = info;
         networkConnection = true;
         List<TransportConnectionState> connectionStates = listConnectionStates();
@@ -1479,15 +1618,18 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public String getRemoteAddress() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-753
         return transport.getRemoteAddress();
     }
 
     public Transport getTransport() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         return transport;
     }
 
     @Override
     public String getConnectionId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1349
         List<TransportConnectionState> connectionStates = listConnectionStates();
         for (TransportConnectionState cs : connectionStates) {
             if (cs.getInfo().getClientId() != null) {
@@ -1500,6 +1642,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public void updateClient(ConnectionControl control) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         if (isActive() && isBlocked() == false && isFaultTolerantConnection() && this.wireFormatInfo != null
                 && this.wireFormatInfo.getVersion() >= 6) {
             dispatchAsync(control);
@@ -1507,6 +1650,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public ProducerBrokerExchange getProducerBrokerExchangeIfExists(ProducerInfo producerInfo){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
         ProducerBrokerExchange result = null;
         if (producerInfo != null && producerInfo.getProducerId() != null){
             synchronized (producerExchanges){
@@ -1521,10 +1665,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (result == null) {
             synchronized (producerExchanges) {
                 result = new ProducerBrokerExchange();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3074
                 TransportConnectionState state = lookupConnectionState(id);
                 context = state.getContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
                 result.setConnectionContext(context);
                 if (context.isReconnect() || (context.isNetworkConnection() && connector.isAuditNetworkProducers())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
                     result.setLastStoredSequenceId(brokerService.getPersistenceAdapter().getLastProducerSequenceId(id));
                 }
                 SessionState ss = state.getSessionState(id.getParentId());
@@ -1533,6 +1680,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     ProducerState producerState = ss.getProducerState(id);
                     if (producerState != null && producerState.getInfo() != null) {
                         ProducerInfo info = producerState.getInfo();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
                         result.setMutable(info.getDestination() == null || info.getDestination().isComposite());
                     }
                 }
@@ -1552,6 +1700,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     private ConsumerBrokerExchange getConsumerBrokerExchange(ConsumerId id) {
         ConsumerBrokerExchange result = consumerExchanges.get(id);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3605
         return result;
     }
 
@@ -1560,6 +1709,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (result == null) {
             synchronized (consumerExchanges) {
                 result = new ConsumerBrokerExchange();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6275
                 context = connectionState.getContext();
                 result.setConnectionContext(context);
                 SessionState ss = connectionState.getSessionState(id.getParentId());
@@ -1602,6 +1752,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public Response processConnectionControl(ConnectionControl control) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
         if (control != null) {
             faultTolerantConnection = control.isFaultTolerant();
         }
@@ -1615,12 +1766,16 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public Response processConsumerControl(ConsumerControl control) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
         ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(control.getConsumerId());
         broker.processConsumerControl(consumerExchange, control);
         return null;
     }
 
     protected synchronized TransportConnectionState registerConnectionState(ConnectionId connectionId,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
+//IC see: https://issues.apache.org/jira/browse/AMQ-3294
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
                                                                             TransportConnectionState state) {
         TransportConnectionState cs = null;
         if (!connectionStateRegister.isEmpty() && !connectionStateRegister.doesHandleMultipleConnectionStates()) {
@@ -1642,6 +1797,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     protected synchronized TransportConnectionState lookupConnectionState(String connectionId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
         return connectionStateRegister.lookupConnectionState(connectionId);
     }
 
@@ -1663,6 +1819,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     protected synchronized void setDuplexNetworkConnectorId(String duplexNetworkConnectorId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
         this.duplexNetworkConnectorId = duplexNetworkConnectorId;
     }
 
@@ -1671,6 +1830,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public boolean isStopping() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3074
         return stopping.get();
     }
 
@@ -1680,6 +1840,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     private int getProducerCount(ConnectionId connectionId) {
         int result = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
         TransportConnectionState cs = lookupConnectionState(connectionId);
         if (cs != null) {
             for (SessionId sessionId : cs.getSessionIds()) {
@@ -1707,6 +1868,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public WireFormatInfo getRemoteWireFormatInfo() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5050
         return wireFormatInfo;
     }
 
@@ -1715,6 +1877,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
      */
     @Override
     public Response processBrokerSubscriptionInfo(BrokerSubscriptionInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         return null;
     }
 }

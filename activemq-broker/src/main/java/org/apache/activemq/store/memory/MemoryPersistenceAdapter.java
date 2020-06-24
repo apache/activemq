@@ -47,6 +47,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
     private static final Logger LOG = LoggerFactory.getLogger(MemoryPersistenceAdapter.class);
 
     MemoryTransactionStore transactionStore;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
     ConcurrentMap<ActiveMQDestination, TopicMessageStore> topics = new ConcurrentHashMap<ActiveMQDestination, TopicMessageStore>();
     ConcurrentMap<ActiveMQDestination, MessageStore> queues = new ConcurrentHashMap<ActiveMQDestination, MessageStore>();
     private boolean useExternalMessageReferences;
@@ -101,6 +102,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
      */
     @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2053
         queues.remove(destination);
     }
 
@@ -118,6 +120,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
     @Override
     public TransactionStore createTransactionStore() throws IOException {
         if (transactionStore == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1886
             transactionStore = new MemoryTransactionStore(this);
         }
         return transactionStore;
@@ -178,8 +181,10 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
 
     protected MemoryMessageStore asMemoryMessageStore(Object value) {
         if (value instanceof MemoryMessageStore) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
             return (MemoryMessageStore) value;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1446
         if (value instanceof ProxyMessageStore) {
             MessageStore delegate = ((ProxyMessageStore) value).getDelegate();
             if (delegate instanceof MemoryMessageStore) {
@@ -226,6 +231,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
     }
 
     public void setCreateTransactionStore(boolean create) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2599
         if (create) {
             createTransactionStore();
         }
@@ -234,6 +240,9 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
     @Override
     public long getLastProducerSequenceId(ProducerId id) {
         // memory map does duplicate suppression
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         return -1;
     }
 
@@ -243,6 +252,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
         // We could eventuall implement an in memory scheduler.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         throw new UnsupportedOperationException();
     }
 
@@ -251,6 +261,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
      */
     @Override
     public boolean isPersistNoLocal() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
         return true;
     }
 }

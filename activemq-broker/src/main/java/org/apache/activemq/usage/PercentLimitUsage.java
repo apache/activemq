@@ -61,6 +61,7 @@ public abstract class PercentLimitUsage <T extends Usage> extends Usage<T> {
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
     public void setTotal(long max) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6441
         this.total = max;
     }
 

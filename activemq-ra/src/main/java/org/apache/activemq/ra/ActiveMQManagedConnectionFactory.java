@@ -52,11 +52,14 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
     public void setResourceAdapter(ResourceAdapter adapter) throws ResourceException {
         if (!(adapter instanceof MessageResourceAdapter)) {
             throw new ResourceException("ResourceAdapter is not of type: " + MessageResourceAdapter.class.getName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         } else {
             if (log.isDebugEnabled()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
                 log.debug(this + ", copying standard ResourceAdapter configuration properties");
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-765
             ActiveMQConnectionRequestInfo baseInfo = ((MessageResourceAdapter) adapter).getInfo().copy();
             if (getClientid() == null) {
                 setClientid(baseInfo.getClientid());
@@ -70,12 +73,14 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
             if (getUseInboundSession() == null) {
                 setUseInboundSession(baseInfo.getUseInboundSession());
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
             if (getUseSessionArgs() == null) {
                 setUseSessionArgs(baseInfo.isUseSessionArgs());
             }
             if (getUserName() == null) {
                 setUserName(baseInfo.getUserName());
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6970
             if (getDurableTopicPrefetch() == null) {
                 setDurableTopicPrefetch(baseInfo.getDurableTopicPrefetch());
             }
@@ -122,6 +127,7 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
         if (object == null || object.getClass() != ActiveMQManagedConnectionFactory.class) {
             return false;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         return ((ActiveMQManagedConnectionFactory) object).getInfo().equals(getInfo());
     }
 
@@ -144,6 +150,7 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
      *         if the object cannot be serialized
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (logWriter != null && !(logWriter instanceof Serializable)) {
             // if the PrintWriter injected by the application server is not
             // serializable we just drop the reference and let the application
@@ -170,6 +177,7 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         setInfo((ActiveMQConnectionRequestInfo) in.readObject());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3177
         log = LoggerFactory.getLogger(getClass());
     }
 
@@ -201,6 +209,7 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
     @Override
     public ManagedConnection createManagedConnection(Subject subject, ConnectionRequestInfo connectionRequestInfo) throws ResourceException {
         ActiveMQConnectionRequestInfo amqInfo = getInfo();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (connectionRequestInfo instanceof ActiveMQConnectionRequestInfo) {
             amqInfo = (ActiveMQConnectionRequestInfo) connectionRequestInfo;
         }
@@ -220,6 +229,7 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
     public ManagedConnection matchManagedConnections(Set connections, Subject subject, ConnectionRequestInfo connectionRequestInfo) throws ResourceException {
         Iterator iterator = connections.iterator();
         while (iterator.hasNext()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
             ActiveMQManagedConnection c = (ActiveMQManagedConnection) iterator.next();
             if (c.matches(subject, connectionRequestInfo)) {
                 try {
@@ -238,6 +248,7 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
      */
     @Override
     public void setLogWriter(PrintWriter aLogWriter) throws ResourceException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isTraceEnabled()) {
             log.trace("setting log writer [" + aLogWriter + "]");
         }

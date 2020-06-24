@@ -86,6 +86,7 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2111
         assertNoUnhandeledExceptions();
     }
 
@@ -117,6 +118,10 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
         // wait for consumers to get propagated
         for (int i = 1; i <= BROKER_COUNT; i++) {
         	// all consumers on the remote brokers look like 1 consumer to the local broker.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2527
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-2527
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         	assertConsumersConnect("Broker" + i, dest, (BROKER_COUNT-1)+CONSUMER_COUNT, 65000);
         }
 
@@ -140,6 +145,7 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
         }
         assertEquals(BROKER_COUNT * PRODUCER_COUNT * MESSAGE_COUNT, totalMsg);
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-2111
         assertNoUnhandeledExceptions();
     }
 
@@ -159,6 +165,7 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
     }
 
     public void uncaughtException(Thread t, Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2111
         synchronized(unhandeledExceptions) {
             unhandeledExceptions.put(t,e);
         }

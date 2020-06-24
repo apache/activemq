@@ -28,6 +28,7 @@ public class AmqpProtocolVerifier implements ProtocolVerifier {
     @Override
     public boolean isProtocol(byte[] value) {
         for (int i = 0; i < PREFIX.length; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             if (value[i] != PREFIX[i]) {
                 return false;
             }

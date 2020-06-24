@@ -92,11 +92,14 @@ public class StatisticsBroker extends BrokerFilter {
             boolean brokerStats = physicalName.regionMatches(true, 0, STATS_BROKER_PREFIX, 0, STATS_BROKER_PREFIX
                     .length());
             boolean subStats = physicalName.regionMatches(true, 0, STATS_SUBSCRIPTION_PREFIX, 0, STATS_SUBSCRIPTION_PREFIX
+//IC see: https://issues.apache.org/jira/browse/AMQ-3820
                     .length());
             BrokerService brokerService = getBrokerService();
             RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
             if (destStats) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4161
                 String destinationName = physicalName.substring(STATS_DESTINATION_PREFIX.length(), physicalName.length());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5165
                 if (destinationName.startsWith(".")) {
                     destinationName = destinationName.substring(1);
                 }
@@ -109,6 +112,7 @@ public class StatisticsBroker extends BrokerFilter {
                     DestinationStatistics stats = dest.getDestinationStatistics();
                     if (stats != null) {
                         ActiveMQMapMessage statsMessage = new ActiveMQMapMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4912
                         statsMessage.setString("brokerName", regionBroker.getBrokerName());
                         statsMessage.setString("brokerId", regionBroker.getBrokerId().toString());
                         statsMessage.setString("destinationName", dest.getActiveMQDestination().toString());
@@ -120,6 +124,7 @@ public class StatisticsBroker extends BrokerFilter {
                         statsMessage.setLong("inflightCount", stats.getInflight().getCount());
                         statsMessage.setLong("messagesCached", stats.getMessagesCached().getCount());
                         // we are okay with the size without decimals so cast to long
+//IC see: https://issues.apache.org/jira/browse/AMQ-6518
                         statsMessage.setLong("averageMessageSize", (long) stats.getMessageSize().getAverageSize());
                         statsMessage.setInt("memoryPercentUsage", dest.getMemoryUsage().getPercentUsage());
                         statsMessage.setLong("memoryUsage", dest.getMemoryUsage().getUsage());
@@ -133,17 +138,20 @@ public class StatisticsBroker extends BrokerFilter {
                         sendStats(producerExchange.getConnectionContext(), statsMessage, replyTo);
                     }
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4161
                 if(endListMessage){
                     ActiveMQMapMessage statsMessage = new ActiveMQMapMessage();
                     statsMessage.setJMSCorrelationID(messageSend.getCorrelationId());
                     sendStats(producerExchange.getConnectionContext(),statsMessage,replyTo);
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3820
             } else if (subStats) {
                 sendSubStats(producerExchange.getConnectionContext(), getBrokerView().getQueueSubscribers(), replyTo);
                 sendSubStats(producerExchange.getConnectionContext(), getBrokerView().getTopicSubscribers(), replyTo);
             } else if (brokerStats) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3878
                 if (messageSend.getProperties().containsKey(STATS_BROKER_RESET_HEADER)) {
                     getBrokerView().resetStatistics();
                 }
@@ -160,6 +168,7 @@ public class StatisticsBroker extends BrokerFilter {
                 statsMessage.setLong("expiredCount", stats.getExpired().getCount());
                 statsMessage.setLong("inflightCount", stats.getInflight().getCount());
                 // we are okay with the size without decimals so cast to long
+//IC see: https://issues.apache.org/jira/browse/AMQ-5523
                 statsMessage.setLong("averageMessageSize",(long) stats.getMessageSize().getAverageSize());
                 statsMessage.setLong("messagesCached", stats.getMessagesCached().getCount());
                 statsMessage.setInt("memoryPercentUsage", systemUsage.getMemoryUsage().getPercentUsage());
@@ -194,6 +203,8 @@ public class StatisticsBroker extends BrokerFilter {
                 File file = brokerService.getDataDirectoryFile();
                 answer = file != null ? file.getCanonicalPath() : "";
                 statsMessage.setString("dataDirectory", answer);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2461
+//IC see: https://issues.apache.org/jira/browse/AMQ-2461
                 statsMessage.setJMSCorrelationID(messageSend.getCorrelationId());
                 sendStats(producerExchange.getConnectionContext(), statsMessage, replyTo);
             } else {
@@ -204,6 +215,7 @@ public class StatisticsBroker extends BrokerFilter {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3820
     BrokerViewMBean getBrokerView() throws Exception {
         if (this.brokerView == null) {
             ObjectName brokerName = getBrokerService().getBrokerObjectName();
@@ -225,6 +237,7 @@ public class StatisticsBroker extends BrokerFilter {
     }
 
     protected void sendSubStats(ConnectionContext context, ObjectName[] subscribers, ActiveMQDestination replyTo) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3820
         for (int i = 0; i < subscribers.length; i++) {
             ObjectName name = subscribers[i];
             SubscriptionViewMBean subscriber = (SubscriptionViewMBean)getBrokerService().getManagementContext().newProxyInstance(name, SubscriptionViewMBean.class, true);
@@ -234,6 +247,7 @@ public class StatisticsBroker extends BrokerFilter {
     }
 
     protected ActiveMQMapMessage prepareSubscriptionMessage(SubscriptionViewMBean subscriber) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4912
         Broker regionBroker = getBrokerService().getRegionBroker();
         ActiveMQMapMessage statsMessage = new ActiveMQMapMessage();
         statsMessage.setString("brokerName", regionBroker.getBrokerName());
@@ -258,6 +272,7 @@ public class StatisticsBroker extends BrokerFilter {
     protected void sendStats(ConnectionContext context, ActiveMQMapMessage msg, ActiveMQDestination replyTo)
             throws Exception {
         msg.setPersistent(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5011
         msg.setTimestamp(System.currentTimeMillis());
         msg.setPriority((byte) javax.jms.Message.DEFAULT_PRIORITY);
         msg.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);

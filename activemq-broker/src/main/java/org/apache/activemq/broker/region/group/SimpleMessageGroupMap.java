@@ -62,6 +62,7 @@ public class SimpleMessageGroupMap implements MessageGroupMap {
 
     @Override
     public void removeAll(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4766
         map.clear();
     }
 

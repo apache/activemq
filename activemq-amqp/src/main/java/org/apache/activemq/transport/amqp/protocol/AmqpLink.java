@@ -67,6 +67,7 @@ public interface AmqpLink extends AmqpResource {
      * @throws Exception if an error occurs while performing the commit.
      */
     void commit(LocalTransactionId txnId) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
 
     /**
      * Handle work necessary on rollback of transacted resources associated with

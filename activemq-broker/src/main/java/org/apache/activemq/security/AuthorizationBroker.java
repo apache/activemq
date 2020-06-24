@@ -51,6 +51,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         this.authorizationMap = authorizationMap;
 
         // add DestinationInterceptor
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         final RegionBroker regionBroker = (RegionBroker) next.getAdaptor(RegionBroker.class);
         final CompositeDestinationInterceptor compositeInterceptor = (CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor();
         DestinationInterceptor[] interceptors = compositeInterceptor.getInterceptors();
@@ -64,6 +65,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     }
 
     public void setAuthorizationMap(AuthorizationMap map) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         authorizationMap = map;
     }
 
@@ -72,10 +74,14 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if (securityContext == null) {
             throw new SecurityException("User is not authenticated.");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3851
         return securityContext;
     }
 
     protected boolean checkDestinationAdmin(SecurityContext securityContext, ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5212
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         Destination existing = this.getDestinationMap(destination).get(destination);
         if (existing != null) {
             return true;
@@ -90,6 +96,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             }
 
             if (allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3851
                 return false;
             }
         }
@@ -104,6 +111,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to create: " + info.getDestination());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2539
         super.addDestinationInfo(context, info);
     }
 
@@ -121,12 +129,14 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(context);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3851
 
         if (!checkDestinationAdmin(securityContext, destination)) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to remove: " + destination);
         }
 
         securityContext.getAuthorizedWriteDests().remove(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6116
 
         super.removeDestination(context, destination, timeout);
     }
@@ -140,6 +150,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         }
 
         securityContext.getAuthorizedWriteDests().remove(info.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6116
 
         super.removeDestinationInfo(context, info);
     }
@@ -152,9 +163,11 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if (!info.getDestination().isTemporary()) {
             allowedACLs = authorizationMap.getReadACLs(info.getDestination());
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1163
             allowedACLs = authorizationMap.getTempDestinationReadACLs();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
         if (!securityContext.isBrokerContext() && allowedACLs != null && !securityContext.isInOneOf(allowedACLs) ) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to read from: " + info.getDestination());
         }
@@ -186,6 +199,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(context);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3851
 
         if (!securityContext.isBrokerContext() && info.getDestination() != null) {
 
@@ -195,6 +209,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             } else {
                 allowedACLs = authorizationMap.getTempDestinationWriteACLs();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3851
             if (allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
                 throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to write to: " + info.getDestination());
             }
@@ -209,6 +224,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         final SecurityContext securityContext = checkSecurityContext(producerExchange.getConnectionContext());
 
         if (!securityContext.isBrokerContext() && !securityContext.getAuthorizedWriteDests().containsValue(messageSend.getDestination())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
 
             Set<?> allowedACLs = null;
             if (!messageSend.getDestination().isTemporary()) {
@@ -217,6 +233,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
                 allowedACLs = authorizationMap.getTempDestinationWriteACLs();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3851
             if (allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
                 throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to write to: " + messageSend.getDestination());
             }

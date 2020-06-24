@@ -33,6 +33,7 @@ import org.apache.commons.net.ftp.FTPClient;
 public class FTPBlobDownloadStrategy extends FTPStrategy implements BlobDownloadStrategy {
 
     public FTPBlobDownloadStrategy(BlobTransferPolicy transferPolicy) throws MalformedURLException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         super(transferPolicy);
     }
 
@@ -75,6 +76,7 @@ public class FTPBlobDownloadStrategy extends FTPStrategy implements BlobDownload
     }
 
     public void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         url = message.getURL();
         final FTPClient ftp = createFTP();
 

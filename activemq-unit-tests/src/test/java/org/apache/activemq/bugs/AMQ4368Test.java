@@ -90,6 +90,7 @@ public class AMQ4368Test {
     abstract class Client implements Runnable   {
         private final String name;
         final AtomicBoolean done = new AtomicBoolean();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4463
         CountDownLatch startedLatch;
         CountDownLatch doneLatch = new CountDownLatch(1);
         Connection connection;
@@ -157,6 +158,7 @@ public class AMQ4368Test {
 
     class ProducingClient extends Client {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4463
         ProducingClient(String name, CountDownLatch startedLatch) {
             super(name, startedLatch);
         }
@@ -173,6 +175,7 @@ public class AMQ4368Test {
         protected void work() throws Exception {
             String data = createMessage();
             MessageProducer producer = session.createProducer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4463
             startedLatch.countDown();
             while (!done.get()) {
                 producer.send(session.createTextMessage(data));
@@ -186,6 +189,7 @@ public class AMQ4368Test {
 
     class ConsumingClient extends Client {
         public ConsumingClient(String name, CountDownLatch startedLatch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4463
             super(name, startedLatch);
         }
 

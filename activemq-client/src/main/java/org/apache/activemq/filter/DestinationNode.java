@@ -26,6 +26,7 @@ import java.util.Set;
  */
 public interface DestinationNode {
     void appendMatchingValues(Set<DestinationNode> answer, String[] paths, int startIndex);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
 
     void appendMatchingWildcards(Set<DestinationNode> answer, String[] paths, int startIndex);
 

@@ -45,6 +45,7 @@ public class SessionState {
     }
 
     public void addProducer(ProducerInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-724
         checkShutdown();
         producers.put(info.getProducerId(), new ProducerState(info));
     }
@@ -61,6 +62,7 @@ public class SessionState {
     }
     
     public void addConsumer(ConsumerInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-724
         checkShutdown();
         consumers.put(info.getConsumerId(), new ConsumerState(info));
     }
@@ -99,6 +101,7 @@ public class SessionState {
 
     private void checkShutdown() {
         if (shutdown.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-724
             throw new IllegalStateException("Disposed");
         }
     }

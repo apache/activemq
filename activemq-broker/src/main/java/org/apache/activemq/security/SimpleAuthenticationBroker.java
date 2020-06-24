@@ -57,6 +57,7 @@ public class SimpleAuthenticationBroker extends AbstractAuthenticationBroker {
     }
 
     public void setUserPasswords(Map<String,String> value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4849
         userPasswords = value;
     }
 
@@ -66,6 +67,7 @@ public class SimpleAuthenticationBroker extends AbstractAuthenticationBroker {
 
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5470
         SecurityContext securityContext = context.getSecurityContext();
         if (securityContext == null) {
             securityContext = authenticate(info.getUserName(), info.getPassword(), null);
@@ -73,6 +75,7 @@ public class SimpleAuthenticationBroker extends AbstractAuthenticationBroker {
             securityContexts.add(securityContext);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3052
         try {
             super.addConnection(context, info);
         } catch (Exception e) {

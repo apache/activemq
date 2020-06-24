@@ -48,6 +48,7 @@ public class SSLMAnagedConnectionFactoryTest {
     @Before
     public void setUp() throws Exception {
         createAndStartBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
         managedConnectionFactory.setServerUrl(connectionURI);
@@ -84,6 +85,7 @@ public class SSLMAnagedConnectionFactoryTest {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setUseJmx(false);
         broker.setBrokerName("BROKER");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         broker.setDataDirectory(KAHADB_DIRECTORY);
         KeyManager[] km = SSLTest.getKeyManager();
         TrustManager[] tm = SSLTest.getTrustManager();

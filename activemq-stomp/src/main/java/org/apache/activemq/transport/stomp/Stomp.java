@@ -22,6 +22,7 @@ public interface Stomp {
     String NULL = "\u0000";
     String NEWLINE = "\n";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
     byte BREAK = '\n';
     byte COLON = ':';
     byte ESCAPE = '\\';
@@ -32,6 +33,7 @@ public interface Stomp {
     String COMMA = ",";
     String V1_0 = "1.0";
     String V1_1 = "1.1";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
     String V1_2 = "1.2";
     String DEFAULT_HEART_BEAT = "0,0";
     String DEFAULT_VERSION = "1.0";
@@ -49,6 +51,7 @@ public interface Stomp {
         String CONNECT = "CONNECT";
         String SEND = "SEND";
         String DISCONNECT = "DISCONNECT";
+//IC see: https://issues.apache.org/jira/browse/AMQ-7012
         String SUBSCRIBE = "SUBSCRIBE";
         String UNSUBSCRIBE = "UNSUBSCRIBE";
 
@@ -65,6 +68,7 @@ public interface Stomp {
         String COMMIT = "COMMIT";
         String ABORT = "ABORT";
         String ACK = "ACK";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         String NACK = "NACK";
         String KEEPALIVE = "KEEPALIVE";
     }
@@ -81,15 +85,19 @@ public interface Stomp {
         String RECEIPT_REQUESTED = "receipt";
         String TRANSACTION = "transaction";
         String CONTENT_LENGTH = "content-length";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         String CONTENT_TYPE = "content-type";
+//IC see: https://issues.apache.org/jira/browse/AMQ-943
         String TRANSFORMATION = "transformation";
         String TRANSFORMATION_ERROR = "transformation-error";
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
 
         /**
          * This header is used to instruct ActiveMQ to construct the message
          * based with a specific type.
          */
         String AMQ_MESSAGE_TYPE = "amq-msg-type";
+//IC see: https://issues.apache.org/jira/browse/AMQ-2833
 
         public interface Response {
             String RECEIPT_ID = "receipt-id";
@@ -102,11 +110,13 @@ public interface Stomp {
             String EXPIRATION_TIME = "expires";
             String PRIORITY = "priority";
             String TYPE = "type";
+//IC see: https://issues.apache.org/jira/browse/AMQ-2817
             String PERSISTENT = "persistent";
         }
 
         public interface Message {
             String MESSAGE_ID = "message-id";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
             String ACK_ID = "ack";
             String DESTINATION = "destination";
             String CORRELATION_ID = "correlation-id";
@@ -117,9 +127,13 @@ public interface Stomp {
             String TIMESTAMP = "timestamp";
             String TYPE = "type";
             String SUBSCRIPTION = "subscription";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             String BROWSER = "browser";
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
             String USERID = "JMSXUserID";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3146
             String ORIGINAL_DESTINATION = "original-destination";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3475
             String PERSISTENT = "persistent";
         }
 
@@ -129,10 +143,12 @@ public interface Stomp {
             String ID = "id";
             String SELECTOR = "selector";
             String BROWSER = "browser";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
 
             public interface AckModeValues {
                 String AUTO = "auto";
                 String CLIENT = "client";
+//IC see: https://issues.apache.org/jira/browse/AMQ-1874
                 String INDIVIDUAL = "client-individual";
             }
         }
@@ -146,7 +162,9 @@ public interface Stomp {
             String LOGIN = "login";
             String PASSCODE = "passcode";
             String CLIENT_ID = "client-id";
+//IC see: https://issues.apache.org/jira/browse/AMQ-748
             String REQUEST_ID = "request-id";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             String ACCEPT_VERSION = "accept-version";
             String HOST = "host";
             String HEART_BEAT = "heart-beat";
@@ -158,7 +176,9 @@ public interface Stomp {
 
         public interface Connected {
             String SESSION = "session";
+//IC see: https://issues.apache.org/jira/browse/AMQ-748
             String RESPONSE_ID = "response-id";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             String SERVER = "server";
             String VERSION = "version";
             String HEART_BEAT = "heart-beat";
@@ -167,11 +187,13 @@ public interface Stomp {
         public interface Ack {
             String MESSAGE_ID = "message-id";
             String SUBSCRIPTION = "subscription";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
             String ACK_ID = "id";
         }
     }
 
     public enum Transformations {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2098
         JMS_BYTE,
         JMS_XML,
         JMS_JSON,
@@ -184,10 +206,12 @@ public interface Stomp {
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4012
             return name().replaceAll("_", "-").toLowerCase(Locale.ENGLISH);
         }
 
         public boolean equals(String value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5220
             return toString().equals(value);
         }
 

@@ -35,6 +35,7 @@ public class CompositeTopic extends CompositeDestination {
 
     @Override
     public Destination interceptMappedDestination(Destination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
         if (!isForwardOnly() && destination.getActiveMQDestination().isQueue()) {
             // recover retroactive messages in mapped Queue
             return new MappedQueueFilter(getVirtualDestination(), destination);
@@ -44,6 +45,7 @@ public class CompositeTopic extends CompositeDestination {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         return "CompositeTopic [" + getName() + "]";
     }
 }

@@ -70,6 +70,10 @@ public class FailoverStaticNetworkTest {
     private SslContext sslContext;
 
     protected BrokerService createBroker(String scheme, String listenPort, String[] networkToPorts) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
         return createBroker(scheme, listenPort, networkToPorts, null);
     }
 
@@ -81,6 +85,7 @@ public class FailoverStaticNetworkTest {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setBrokerName("Broker_" + listenPort);
         // lazy init listener on broker start
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
         TransportConnector transportConnector = new TransportConnector();
         transportConnector.setUri(new URI(scheme + "://localhost:" + listenPort));
         List<TransportConnector> transportConnectors = new ArrayList<TransportConnector>();
@@ -94,7 +99,12 @@ public class FailoverStaticNetworkTest {
             }
             // limit the reconnects in case of initial random connection to slave
             // leaving randomize on verifies that this config is picked up
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
             builder.append(")?maxReconnectAttempts=0)?useExponentialBackOff=false");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
             NetworkConnector nc = broker.addNetworkConnector(builder.toString());
             if (networkProps != null) {
                 IntrospectionSupport.setProperties(nc, networkProps);
@@ -131,6 +141,10 @@ public class FailoverStaticNetworkTest {
         brokerA.stop();
         brokerA.waitUntilStopped();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
         if (brokerA1 != null) {
             brokerA1.stop();
             brokerA1.waitUntilStopped();
@@ -144,6 +158,8 @@ public class FailoverStaticNetworkTest {
 
     @Test
     public void testSendReceiveAfterReconnect() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2904
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
         brokerA = createBroker("tcp", "61617", null);
         brokerA.start();
         brokerB = createBroker("tcp", "62617", new String[]{"61617"});
@@ -170,6 +186,7 @@ public class FailoverStaticNetworkTest {
         doTestNetworkSendReceive();
 
         // check mbean
+//IC see: https://issues.apache.org/jira/browse/AMQ-3523
         Set<String> bridgeNames = getNetworkBridgeMBeanName(brokerB);
         assertEquals("only one bridgeName: " + bridgeNames, 1, bridgeNames.size());
 
@@ -183,6 +200,7 @@ public class FailoverStaticNetworkTest {
 
         doTestNetworkSendReceive();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3523
         Set<String> otherBridgeNames = getNetworkBridgeMBeanName(brokerB);
         assertEquals("only one bridgeName: " + otherBridgeNames, 1, otherBridgeNames.size());
 
@@ -192,6 +210,7 @@ public class FailoverStaticNetworkTest {
     private Set<String> getNetworkBridgeMBeanName(BrokerService brokerB) throws Exception {
         Set<String> names = new HashSet<String>();
         for (ObjectName objectName : brokerB.getManagementContext().queryNames(null, null)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             if (objectName.getKeyProperty("networkBridge") != null) {
                 names.add(objectName.getKeyProperty("networkBridge"));
             }
@@ -201,6 +220,10 @@ public class FailoverStaticNetworkTest {
 
     @Test
     public void testSendReceiveFailoverDuplex() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
         final Vector<Throwable> errors = new Vector<Throwable>();
         final String dataDir = "target/data/shared";
         brokerA = createBroker("61617", dataDir);
@@ -302,6 +325,7 @@ public class FailoverStaticNetworkTest {
     public void testSendReceive() throws Exception {
 
         brokerA = createBroker("tcp", "61617", null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4225
         brokerA.start();
         brokerB = createBroker("tcp", "62617", new String[]{"61617","1111"});
         brokerB.start();
@@ -317,11 +341,16 @@ public class FailoverStaticNetworkTest {
         brokerB = createBroker("ssl", "62617", new String[]{"61617", "1111"});
         brokerB.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2904
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
+//IC see: https://issues.apache.org/jira/browse/AMQ-2904
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
         doTestNetworkSendReceive();
     }
 
     @Test
     public void testRepeatedSendReceiveWithMasterSlaveAlternate() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
         doTestRepeatedSendReceiveWithMasterSlaveAlternate(null);
     }
 
@@ -337,6 +366,7 @@ public class FailoverStaticNetworkTest {
 
         brokerB = createBroker("tcp", "62617", new String[]{"61610","61611"}, networkConnectorProps);
         brokerB.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
 
         final AtomicBoolean done = new AtomicBoolean(false);
         ExecutorService executorService = Executors.newCachedThreadPool();
@@ -349,6 +379,7 @@ public class FailoverStaticNetworkTest {
                         brokerA.setBrokerName("Pair");
                         brokerA.setBrokerObjectName(new ObjectName(brokerA.getManagementContext().getJmxDomainName() + ":" + "brokerName="
                                 + JMXSupport.encodeObjectNamePart("A") + "," + "Type=Broker"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
                         ((KahaDBPersistenceAdapter)brokerA.getPersistenceAdapter()).getLocker().setLockAcquireSleepInterval(1000);
                         brokerA.start();
                         brokerA.waitUntilStopped();
@@ -380,6 +411,7 @@ public class FailoverStaticNetworkTest {
                         // so they can coexist in local jmx we set the object name b/c the brokername identifies the shared store
                         brokerA1.setBrokerObjectName(new ObjectName(brokerA.getManagementContext().getJmxDomainName() + ":" + "brokerName="
                             + JMXSupport.encodeObjectNamePart("A1") + "," + "Type=Broker"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
                         ((KahaDBPersistenceAdapter)brokerA1.getPersistenceAdapter()).getLocker().setLockAcquireSleepInterval(1000);
                         brokerA1.start();
                         brokerA1.waitUntilStopped();
@@ -393,6 +425,7 @@ public class FailoverStaticNetworkTest {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
         for (int i=0; i<4; i++) {
             BrokerService currentMaster =  (i%2 == 0 ? brokerA : brokerA1);
             LOG.info("iteration: " + i + ", using: " + currentMaster.getBrokerObjectName().getKeyProperty("brokerName"));
@@ -405,12 +438,17 @@ public class FailoverStaticNetworkTest {
             currentMaster.waitUntilStopped();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
         done.set(true);
         LOG.info("all done");
         executorService.shutdownNow();
     }
 
     private void doTestNetworkSendReceive() throws Exception, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
         doTestNetworkSendReceive(brokerB, brokerA);
     }
 
@@ -459,6 +497,7 @@ public class FailoverStaticNetworkTest {
     }
 
     protected ConnectionFactory createConnectionFactory(final BrokerService broker) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4225
         String url = broker.getTransportConnectors().get(0).getServer().getConnectURI().toString();
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
         connectionFactory.setOptimizedMessageDispatch(true);

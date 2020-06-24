@@ -40,12 +40,14 @@ class BackupTransport extends DefaultTransportListener{
     public void onException(IOException error) {
 		this.disposed=true;
 		if (failoverTransport!=null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
 			this.failoverTransport.reconnect(false);
 		}
 	}
 
 	@Override
 	public void onCommand(Object command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6124
 		if (command instanceof BrokerInfo) {
 			brokerInfo = (BrokerInfo) command;
 		}
@@ -94,6 +96,7 @@ class BackupTransport extends DefaultTransportListener{
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3685
         return "Backup transport: " + uri;
     }
 }

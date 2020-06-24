@@ -49,6 +49,7 @@ import static org.junit.Assert.fail;
 @RunWith ( FrameworkRunner.class )
 @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", port=1024)})
 @ApplyLdifFiles(
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
    "test.ldif"
 )
 public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
@@ -110,6 +111,7 @@ public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
         LoginContext context = new LoginContext("LDAPLogin", new CallbackHandler() {
             @Override
             public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5860
                 for (int i = 0; i < callbacks.length; i++) {
                     if (callbacks[i] instanceof NameCallback) {
                         ((NameCallback) callbacks[i]).setName("first");
@@ -148,6 +150,7 @@ public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
 
     @Test
     public void testUnauthenticated() throws LoginException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5345
         LoginContext context = new LoginContext("UnAuthenticatedLDAPLogin", new CallbackHandler() {
             @Override
             public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {

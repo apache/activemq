@@ -128,6 +128,7 @@ public class JMSConsumerTest extends JmsTestSupport {
 
     public void testMessageListenerWithConsumerCanBeStoppedConcurently() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2100
         final AtomicInteger counter = new AtomicInteger(0);
         final CountDownLatch closeDone = new CountDownLatch(1);
 
@@ -169,6 +170,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                     if (count % 200 == 0) {
                         // ensure there are some outstanding messages
                         // ack every 200
+//IC see: https://issues.apache.org/jira/browse/AMQ-2100
                         try {
                             message.acknowledge();
                         } catch (IllegalStateException okForAck) {}
@@ -233,6 +235,7 @@ public class JMSConsumerTest extends JmsTestSupport {
     public void testReceiveTopicWithPrefetch1() throws Exception {
 
         // Set prefetch to 1
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
         connection.getPrefetchPolicy().setAll(1);
         connection.start();
 
@@ -253,6 +256,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
         Thread.sleep(1000);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
         assertTrue("prefetch extension..",
                 subscriptions.stream().
                         filter(s -> s instanceof TopicSubscription).
@@ -262,6 +266,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
         message.acknowledge();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
         assertTrue("prefetch extension back to 0", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -296,6 +301,7 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
         assertTrue("prefetch extension..", Wait.waitFor(new Wait.Condition() {
                     @Override
                     public boolean isSatisified() throws Exception {
@@ -310,6 +316,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
         message.acknowledge();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
         assertTrue("prefetch extension back to 0", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -474,6 +481,7 @@ public class JMSConsumerTest extends JmsTestSupport {
 
     public void testMessageListenerOnMessageCloseUnackedWithPrefetch1StayInQueue() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2128
         final AtomicInteger counter = new AtomicInteger(0);
         final CountDownLatch sendDone = new CountDownLatch(1);
         final CountDownLatch got2Done = new CountDownLatch(1);
@@ -563,6 +571,7 @@ public class JMSConsumerTest extends JmsTestSupport {
     public void testMessageListenerAutoAckOnCloseWithPrefetch1() throws Exception {
 
         final AtomicInteger counter = new AtomicInteger(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1042
         final CountDownLatch sendDone = new CountDownLatch(1);
         final CountDownLatch got2Done = new CountDownLatch(1);
 
@@ -589,6 +598,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                     counter.incrementAndGet();
                     m.acknowledge();
                     if (counter.get() == 2) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1042
                         sendDone.await();
                         connection.close();
                         got2Done.countDown();
@@ -602,6 +612,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         // Send the messages
         sendMessages(session, destination, 4);
         sendDone.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1042
 
         // Wait for first 2 messages to arrive.
         assertTrue(got2Done.await(100000, TimeUnit.MILLISECONDS));
@@ -790,8 +801,10 @@ public class JMSConsumerTest extends JmsTestSupport {
         connections.add(connection2);
         Session session2 = connection2.createSession(true, 0);
         MessageConsumer consumer2 = session2.createConsumer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1951
 
         // Pick up the first message.
+//IC see: https://issues.apache.org/jira/browse/AMQ-845
         Message message1 = consumer.receive(1000);
         assertNotNull(message1);
 
@@ -872,6 +885,7 @@ public class JMSConsumerTest extends JmsTestSupport {
     public void testDupsOkConsumer() throws Exception {
 
         // Receive a message with the JMS API
+//IC see: https://issues.apache.org/jira/browse/AMQ-1949
         connection.start();
         Session session = connection.createSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
@@ -915,12 +929,15 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         Message msg = redispatchConsumer.receive(1000);
         assertNotNull(msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
         assertTrue("redelivered flag set", msg.getJMSRedelivered());
         assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
 
         msg = redispatchConsumer.receive(1000);
         assertNotNull(msg);
         assertTrue(msg.getJMSRedelivered());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
         redispatchSession.commit();
 
@@ -930,11 +947,17 @@ public class JMSConsumerTest extends JmsTestSupport {
 
     public void testRedispatchOfRolledbackTx() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1957
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
 
         sendMessages(connection, destination, 2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
 
         MessageConsumer consumer = session.createConsumer(destination);
         assertNotNull(consumer.receive(1000));
@@ -950,6 +973,8 @@ public class JMSConsumerTest extends JmsTestSupport {
         Message msg = redispatchConsumer.receive(1000);
         assertNotNull(msg);
         assertTrue(msg.getJMSRedelivered());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
         msg = redispatchConsumer.receive(1000);
         assertNotNull(msg);
@@ -963,6 +988,7 @@ public class JMSConsumerTest extends JmsTestSupport {
 
     public void testExceptionOnClientAckAfterConsumerClose() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6454
         connection.start();
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
@@ -989,6 +1015,8 @@ public class JMSConsumerTest extends JmsTestSupport {
 
 
     public void initCombosForTestAckOfExpired() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2265
+//IC see: https://issues.apache.org/jira/browse/AMQ-2262
         addCombinationValues("destinationType",
             new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)});
     }
@@ -1007,6 +1035,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         connection.setStatsEnabled(true);
 
         Session sendSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5089
         MessageProducer producer = sendSession.createProducer(destination);
         producer.setTimeToLive(500);
         final int count = 4;
@@ -1038,9 +1067,12 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         DestinationViewMBean view = createView(destination);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2262
+//IC see: https://issues.apache.org/jira/browse/AMQ-2265
         assertEquals("Wrong inFlightCount: " + view.getInFlightCount(), 0, view.getInFlightCount());
         assertEquals("Wrong dispatch count: " + view.getDispatchCount(), 8, view.getDispatchCount());
         assertEquals("Wrong dequeue count: " + view.getDequeueCount(), 8, view.getDequeueCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5089
         assertEquals("Wrong expired count: " + view.getExpiredCount(), 4, view.getExpiredCount());
     }
 
@@ -1049,6 +1081,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         String domain = "org.apache.activemq";
         ObjectName name;
         if (destination.isQueue()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             name = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=test");
         } else {
             name = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test");

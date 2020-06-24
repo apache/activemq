@@ -59,6 +59,8 @@ public class ExpiryHogTest extends JmsMultipleClientsTestSupport {
         bs.setDestinationPolicy(policyMap);
 
         KahaDBPersistenceAdapter ad = (KahaDBPersistenceAdapter) bs.getPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3149
+//IC see: https://issues.apache.org/jira/browse/AMQ-3145
         ad.setConcurrentStoreAndDispatchQueues(true);
         return bs;
     }

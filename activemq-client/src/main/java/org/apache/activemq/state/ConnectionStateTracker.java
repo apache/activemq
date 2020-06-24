@@ -80,9 +80,12 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             if (result) {
                 if (eldest.getValue() instanceof Message) {
                     currentCacheSize -= ((Message)eldest.getValue()).getSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3316
                 } else if (eldest.getValue() instanceof MessagePull) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3352
                     currentCacheSize -= MESSAGE_PULL_SIZE;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("removing tracked message: " + eldest.getKey());
                 }
@@ -102,6 +105,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         public void onResponse(Command response) {
             ConnectionId connectionId = info.getConnectionId();
             ConnectionState cs = connectionStates.get(connectionId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1719
             if (cs != null) {
                 cs.removeTransactionState(info.getTransactionId());
             }
@@ -112,6 +116,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         private final Command tracked;
 
         public ExceptionResponseCheckAction(Command tracked) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6603
             this.tracked = tracked;
         }
 
@@ -129,6 +134,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     private class PrepareReadonlyTransactionAction extends RemoveTransactionAction {
         public PrepareReadonlyTransactionAction(TransactionInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2556
             super(info);
         }
 
@@ -184,8 +190,10 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             } else if (command instanceof MessagePull) {
                 // We only track one MessagePull per consumer so only add to cache size
                 // when the command has been marked as tracked.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4977
                 if (((MessagePull)command).isTracked()) {
                     // just needs to be a rough estimate of size, ~4 identifiers
+//IC see: https://issues.apache.org/jira/browse/AMQ-3352
                     currentCacheSize += MESSAGE_PULL_SIZE;
                 }
             }
@@ -196,7 +204,12 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the connections.
         for (Iterator<ConnectionState> iter = connectionStates.values().iterator(); iter.hasNext();) {
             ConnectionState connectionState = iter.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
             connectionState.getInfo().setFailoverReconnect(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2540
+//IC see: https://issues.apache.org/jira/browse/AMQ-2473
             if (LOG.isDebugEnabled()) {
                 LOG.debug("conn: " + connectionState.getInfo().getConnectionId());
             }
@@ -213,6 +226,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
 
         // now flush messages and MessagePull commands.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4977
         for (Command msg : messageCache.values()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("command: " + (msg.isMessage() ? ((Message) msg).getMessageId() : msg));
@@ -222,8 +236,10 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     }
 
     private void restoreTransactions(Transport transport, ConnectionState connectionState) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6603
         Vector<TransactionInfo> toRollback = new Vector<>();
         for (TransactionState transactionState : connectionState.getTransactionStates()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             if (LOG.isDebugEnabled()) {
                 LOG.debug("tx: " + transactionState.getId());
             }
@@ -286,6 +302,8 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the connection's sessions
         for (Iterator iter2 = connectionState.getSessionStates().iterator(); iter2.hasNext();) {
             SessionState sessionState = (SessionState)iter2.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2540
+//IC see: https://issues.apache.org/jira/browse/AMQ-2473
             if (LOG.isDebugEnabled()) {
                 LOG.debug("session: " + sessionState.getInfo().getSessionId());
             }
@@ -308,8 +326,10 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
      */
     protected void restoreConsumers(Transport transport, SessionState sessionState) throws IOException {
         // Restore the session's consumers but possibly in pull only (prefetch 0 state) till recovery complete
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
         final ConnectionState connectionState = connectionStates.get(sessionState.getInfo().getSessionId().getParentId());
         final boolean connectionInterruptionProcessingComplete = connectionState.isConnectionInterruptProcessingComplete();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4977
         for (ConsumerState consumerState : sessionState.getConsumerStates()) {
             ConsumerInfo infoToSend = consumerState.getInfo();
             if (!connectionInterruptionProcessingComplete && infoToSend.getPrefetchSize() > 0) {
@@ -336,6 +356,8 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the session's producers
         for (Iterator iter3 = sessionState.getProducerStates().iterator(); iter3.hasNext();) {
             ProducerState producerState = (ProducerState)iter3.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2540
+//IC see: https://issues.apache.org/jira/browse/AMQ-2473
             if (LOG.isDebugEnabled()) {
                 LOG.debug("producer: " + producerState.getInfo().getProducerId());
             }
@@ -351,6 +373,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     protected void restoreTempDestinations(Transport transport, ConnectionState connectionState)
         throws IOException {
         // Restore the connection's temp destinations.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3040
         for (Iterator iter2 = connectionState.getTempDestinations().iterator(); iter2.hasNext();) {
             DestinationInfo info = (DestinationInfo)iter2.next();
             transport.oneway(info);
@@ -437,6 +460,8 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                         SessionState ss = cs.getSessionState(sessionId);
                         if (ss != null) {
                             ss.addConsumer(info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6603
+//IC see: https://issues.apache.org/jira/browse/AMQ-6603
                             if (info.isResponseRequired()) {
                                 return new Tracked(new ExceptionResponseCheckAction(info));
                             }
@@ -461,6 +486,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                         if (ss != null) {
                             ss.removeConsumer(id);
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
                         cs.getRecoveringPullConsumers().remove(id);
                     }
                 }
@@ -531,6 +557,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                                 // and needs to be replayed
                                 SessionState ss = cs.getSessionState(producerId.getParentId());
                                 ProducerState producerState = ss.getProducerState(producerId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4977
                                 producerState.setTransactionState(transactionState);
                             }
                         }
@@ -538,6 +565,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 }
                 return TRACKED_RESPONSE_MARKER;
             }else if (trackMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3352
                 messageCache.put(send.getMessageId(), send);
             }
         }
@@ -552,6 +580,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     cs.addTransactionState(info.getTransactionId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1585
                     TransactionState state = cs.getTransactionState(info.getTransactionId());
                     state.addCommand(info);
                 }
@@ -571,6 +600,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                     TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
                     if (transactionState != null) {
                         transactionState.addCommand(info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2556
                         return new Tracked(new PrepareReadonlyTransactionAction(info));
                     }
                 }
@@ -635,6 +665,11 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     @Override
     public Response processEndTransaction(TransactionInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5090
+//IC see: https://issues.apache.org/jira/browse/AMQ-5090
+//IC see: https://issues.apache.org/jira/browse/AMQ-5090
+//IC see: https://issues.apache.org/jira/browse/AMQ-5090
+//IC see: https://issues.apache.org/jira/browse/AMQ-5090
         if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
@@ -656,11 +691,13 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (pull != null) {
             // leave a single instance in the cache
             final String id = pull.getDestination() + "::" + pull.getConsumerId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4977
             if (messageCache.put(id.intern(), pull) == null) {
                 // Only marked as tracked if this is the first request we've seen.
                 pull.setTracked(true);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
         return null;
     }
 
@@ -689,6 +726,8 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     }
 
     public boolean isTrackTransactions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-915
+//IC see: https://issues.apache.org/jira/browse/AMQ-915
         return trackTransactions;
     }
 
@@ -732,10 +771,12 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
      * @return the current cache size for the Message and MessagePull Command cache.
      */
     public long getCurrentCacheSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4977
         return this.currentCacheSize;
     }
 
     public void connectionInterruptProcessingComplete(Transport transport, ConnectionId connectionId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
         ConnectionState connectionState = connectionStates.get(connectionId);
         if (connectionState != null) {
             connectionState.setConnectionInterruptProcessingComplete(true);
@@ -749,6 +790,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("restored recovering consumer: " + control.getConsumerId() + " with: " + control.getPrefetch());
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4977
                     transport.oneway(control);
                 } catch (Exception ex) {
                     if (LOG.isDebugEnabled()) {
@@ -762,6 +804,8 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     }
 
     public void transportInterrupted(ConnectionId connectionId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2904
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
         ConnectionState connectionState = connectionStates.get(connectionId);
         if (connectionState != null) {
             connectionState.setConnectionInterruptProcessingComplete(false);

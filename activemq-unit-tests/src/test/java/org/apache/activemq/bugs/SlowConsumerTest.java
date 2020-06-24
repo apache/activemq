@@ -58,6 +58,7 @@ public class SlowConsumerTest extends TestCase {
         broker.setUseJmx(true);
         broker.setDeleteAllMessagesOnStartup(true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(

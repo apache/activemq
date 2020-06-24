@@ -46,6 +46,8 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
 
     @Parameterized.Parameters(name = "isTopic({0})")
     public static Collection<Object[]> getTestParameters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
         return Arrays.asList(new Object[][]{{Boolean.TRUE}, {Boolean.FALSE}});
     }
 
@@ -70,6 +72,7 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         BrokerService broker = super.createBroker();
         PolicyEntry policy = new PolicyEntry();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
         strategy = createSlowConsumerStrategy();
         underTest = strategy;
 
@@ -114,10 +117,12 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         assertNotNull(message);
 
         TimeUnit.SECONDS.sleep(15);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
 
         try {
             consumer.receive(5000);
             fail("Slow consumer not aborted.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
         } catch (Exception ex) {
         }
     }
@@ -137,6 +142,7 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         conn.start();
 
         startProducers(destination, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
 
         Message message = consumer.receive(5000);
         assertNotNull(message);
@@ -147,6 +153,7 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         try {
             consumer.receive(5000);
             fail("Idle consumer not aborted.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
         } catch (Exception ex) {
         }
     }
@@ -155,6 +162,7 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
     public void testIdleConsumerCanBeAborted() throws Exception {
         strategy.setIgnoreIdleConsumers(false);
         strategy.setMaxTimeSinceLastAck(2000); // Make it shorter
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
 
         ActiveMQConnection conn = (ActiveMQConnection) createConnectionFactory().createConnection();
         conn.setExceptionListener(this);
@@ -165,6 +173,7 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         assertNotNull(consumer);
         conn.start();
         startProducers(destination, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
 
         Message message = consumer.receive(5000);
         assertNotNull(message);
@@ -176,6 +185,7 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         try {
             consumer.receive(5000);
             fail("Idle consumer not aborted.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
         } catch (Exception ex) {
         }
     }

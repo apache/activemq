@@ -68,7 +68,9 @@ public class MQTTInactivityMonitor extends TransportFilter {
         public void run() {
 
             long now = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5468
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
             if ((now - startTime) >= connectionTimeout && connectCheckerTask != null && !ASYNC_TASKS.isShutdown()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("No CONNECT frame received in time for " + MQTTInactivityMonitor.this.toString() + "! Throwing InactivityIOException.");
@@ -78,6 +80,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
                     ASYNC_TASKS.execute(new Runnable() {
                         @Override
                         public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
                             onException(new InactivityIOException("CONNECT frame not received with in connectionTimeout (>" + connectionTimeout + "): "
                                 + next.getRemoteAddress()));
                         }
@@ -117,6 +120,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
                 return;
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
             if ((now - lastReceiveTime) >= readKeepAliveTime + readGraceTime && readCheckerTask != null && !ASYNC_TASKS.isShutdown()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("No message received since last read check for " + MQTTInactivityMonitor.this.toString() + "! Throwing InactivityIOException.");
@@ -150,6 +154,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
     @Override
     public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5468
         stopReadChecker();
         stopConnectChecker();
         next.stop();
@@ -159,6 +164,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
     public void onCommand(Object command) {
         inReceive.set(true);
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4123
             transportListener.onCommand(command);
         } finally {
             inReceive.set(false);
@@ -169,6 +175,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
     public void oneway(Object o) throws IOException {
         // To prevent the inactivity monitor from sending a message while we
         // are performing a send we take the lock.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4117
         this.sendLock.lock();
         try {
             doOnewaySend(o);
@@ -188,8 +195,10 @@ public class MQTTInactivityMonitor extends TransportFilter {
     @Override
     public void onException(IOException error) {
         if (failed.compareAndSet(false, true)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5468
             stopConnectChecker();
             stopReadChecker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
             if (protocolConverter != null) {
                 protocolConverter.onTransportError();
             }
@@ -198,6 +207,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
     }
 
     public long getReadGraceTime() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5043
         return readGraceTime;
     }
 
@@ -214,6 +224,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
     }
 
     public void setProtocolConverter(MQTTProtocolConverter protocolConverter) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
         this.protocolConverter = protocolConverter;
     }
 
@@ -222,6 +233,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
     }
 
     public synchronized void startConnectChecker(long connectionTimeout) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5468
         this.connectionTimeout = connectionTimeout;
         if (connectionTimeout > 0 && connectCheckerTask == null) {
             connectCheckerTask = new SchedulerTimerTask(connectChecker);
@@ -247,6 +259,8 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
             synchronized (AbstractInactivityMonitor.class) {
                 if (CHECKER_COUNTER == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
                     if (ASYNC_TASKS == null || ASYNC_TASKS.isShutdown()) {
                         ASYNC_TASKS = createExecutor();
                     }
@@ -300,6 +314,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
     };
 
     private ThreadPoolExecutor createExecutor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4117
         ThreadPoolExecutor exec = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
         exec.allowCoreThreadTimeOut(true);
         return exec;

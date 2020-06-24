@@ -59,7 +59,9 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
         copy.setRemoteBlobUrl(getRemoteBlobUrl());
         copy.setMimeType(getMimeType());
         copy.setDeletedByBroker(isDeletedByBroker());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1770
         copy.setBlobUploader(getBlobUploader());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3067
         copy.setName(getName());
     }
 
@@ -97,6 +99,7 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     }
 
     public String getName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return name;
     }
 
@@ -122,10 +125,12 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     }
 
     public String getJMSXMimeType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return getMimeType();
     }
 
     public InputStream getInputStream() throws IOException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1744
         if(blobDownloader == null) {
             return null;
         }
@@ -157,6 +162,7 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     }
 
     public BlobDownloader getBlobDownloader() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1744
         return blobDownloader;
     }
 
@@ -180,6 +186,7 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     }
     
     public void deleteFile() throws IOException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         blobDownloader.deleteFile(this);
     }
 }

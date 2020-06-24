@@ -39,6 +39,7 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
         verifyQueueLimit("Before", 1024);
         applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-mod", SLEEP);
         verifyQueueLimit("After", 4194304);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
         // change to existing dest
         verifyQueueLimit("Before", 4194304);
@@ -65,6 +66,7 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
 
     @Test
     public void testModParentPolicy() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6088
         final String brokerConfig = configurationSeed + "-policy-ml-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-parent");
         startBroker(brokerConfig);

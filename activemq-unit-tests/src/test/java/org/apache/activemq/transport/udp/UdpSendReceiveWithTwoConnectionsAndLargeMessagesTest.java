@@ -24,6 +24,7 @@ public class UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest extends UdpSen
 
     protected void setUp() throws Exception {
         largeMessages = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3275
         messageCount = 2;
         super.setUp();
     }

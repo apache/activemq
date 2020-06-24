@@ -98,6 +98,7 @@ public class MQTTOverlapedSubscriptionsTest {
         //Unsubscribe and resubscribe
         connectionSub.unsubscribe(new String[]{subscribe});
         connectionSub.subscribe(topics);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5882
         connectionPub.publish("test/1", payload.getBytes(), QoS.AT_LEAST_ONCE, false);
         receive(connectionSub, 3000);
 

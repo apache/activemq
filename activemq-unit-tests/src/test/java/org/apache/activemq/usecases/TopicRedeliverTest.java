@@ -148,6 +148,7 @@ public class TopicRedeliverTest extends TestSupport {
     }
 
     public void testNoExceptionOnRedeliveryAckWithSimpleTopicConsumer() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3056
         Destination destination = createDestination(getClass().getName());
         Connection connection = createConnection();
         final AtomicBoolean gotException = new AtomicBoolean();

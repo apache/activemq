@@ -96,6 +96,8 @@ public class ActiveMQConnectionExecutorThreadCleanUpTest {
         // connection error.
         for (int i=0; i<10; i++) {
             LOG.debug("Iteration " + i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5790
+//IC see: https://issues.apache.org/jira/browse/AMQ-4486
             ra.start(null);
             try {
                 XAResource[] resources = ra.getXAResources(null);

@@ -151,6 +151,7 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
     private final AtomicInteger readSize = new AtomicInteger();
 
     public byte[] getReadData() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         return readData != null ? readData : new byte[0];
     }
 
@@ -172,6 +173,7 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
                 if (!plain.hasRemaining()) {
                     int readCount = secureRead(plain);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6535
                     if (readCount == 0) {
                         break;
                     }
@@ -183,12 +185,14 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
                     }
 
                     receiveCounter += readCount;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
                     readSize.addAndGet(readCount);
                 }
 
                 if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
                     processCommand(plain);
                     //we have received enough bytes to detect the protocol
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
                     if (receiveCounter >= 8) {
                         break;
                     }
@@ -204,6 +208,7 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
     @Override
     protected void processCommand(ByteBuffer plain) throws Exception {
         ByteBuffer newBuffer = ByteBuffer.allocate(receiveCounter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         if (readData != null) {
             newBuffer.put(readData);
         }

@@ -30,6 +30,7 @@ public class ActiveMQWASInitialContextFactoryTest extends JNDITestSupport {
         originalEnvironment.put(Context.PROVIDER_URL, "tcp://localhost:61616;tcp://localhost:61617");
         originalEnvironment.put("non-string", Integer.valueOf(43));
         originalEnvironment.put("java.naming.queue", "jms/systemMessageQueue");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4153
 
         Hashtable<Object, Object> transformedEnvironment = new ActiveMQWASInitialContextFactory().transformEnvironment(originalEnvironment);
         assertEquals("ConnectionFactory", "ConnectionFactory", transformedEnvironment.get("connectionFactoryNames"));

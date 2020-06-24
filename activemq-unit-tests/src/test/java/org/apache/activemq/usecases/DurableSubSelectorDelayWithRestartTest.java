@@ -226,6 +226,7 @@ public class DurableSubSelectorDelayWithRestartTest {
                 } while (true);
 
             } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4656
                 try {
                     sess.close();
                     con.close();

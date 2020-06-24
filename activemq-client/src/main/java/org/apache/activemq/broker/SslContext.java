@@ -47,6 +47,7 @@ public class SslContext {
     }
     
     public SslContext(KeyManager[] km, TrustManager[] tm, SecureRandom random) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1749
         if( km!=null ) {
             setKeyManagers(Arrays.asList(km));
         }
@@ -105,6 +106,7 @@ public class SslContext {
     }
         
     public String getProtocol() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1749
         return protocol;
     }
     public void setProtocol(String protocol) {
@@ -118,6 +120,7 @@ public class SslContext {
     }
 
     public SSLContext getSSLContext() throws NoSuchProviderException, NoSuchAlgorithmException, KeyManagementException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5917
         if (!initialized) {
             synchronized (this) {
                 if (!initialized) {

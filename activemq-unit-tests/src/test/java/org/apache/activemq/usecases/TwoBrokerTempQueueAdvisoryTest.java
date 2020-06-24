@@ -62,6 +62,7 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
 
     private void sendReceiveTempQueueMessage(String broker) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ConnectionFactory factory = getConnectionFactory(broker);
         Connection conn = factory.createConnection();
         Session session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -72,6 +73,8 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
     public void testTemporaryQueueAdvisory() throws Exception {
         LOG.info("Running testTemporaryQueueAdvisory()");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         bridgeBrokers("BrokerA", "BrokerB");
         bridgeBrokers("BrokerB", "BrokerA");
 
@@ -109,6 +112,8 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
 
     public boolean useDuplex = true;
     public void initCombosForTestSendToRemovedTemp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         addCombinationValues("useDuplex", new Boolean[]{Boolean.FALSE, Boolean.TRUE});
     }
 
@@ -174,6 +179,7 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
         String domain = "org.apache.activemq";
         ObjectName name;
         if (type == ActiveMQDestination.QUEUE_TYPE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             name = new ObjectName(domain + ":type=Broker,brokerName=" + broker + ",destinationType=Queue,destinationName=" + destination);
         } else {
             name = new ObjectName(domain + ":type=Broker,brokerName=" + broker + ",destinationType=Topic,destinationName=" + destination);
@@ -192,6 +198,8 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
     }
 
     public static Test suite() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         return suite(TwoBrokerTempQueueAdvisoryTest.class);
     }
 }

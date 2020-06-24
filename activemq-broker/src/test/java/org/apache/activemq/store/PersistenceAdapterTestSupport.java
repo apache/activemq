@@ -57,8 +57,10 @@ abstract public class PersistenceAdapterTestSupport extends TestCase {
 
         
         MessageStore ms = pa.createQueueMessageStore(new ActiveMQQueue("TEST"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7308
         ms.start();
         ConnectionContext context = new ConnectionContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
 
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setText("test");
@@ -100,6 +102,7 @@ abstract public class PersistenceAdapterTestSupport extends TestCase {
     }
 
     public void testAddRemoveConsumerDest() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
         ActiveMQQueue consumerQ = new ActiveMQQueue("Consumer.A.VirtualTopicTest");
         MessageStore ms = pa.createQueueMessageStore(consumerQ);
         pa.removeQueueMessageStore(consumerQ);

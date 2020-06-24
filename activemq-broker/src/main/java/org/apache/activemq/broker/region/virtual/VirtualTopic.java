@@ -54,12 +54,14 @@ public class VirtualTopic implements VirtualDestination {
 
     @Override
     public Destination intercept(Destination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
         return selectorAware ? new SelectorAwareVirtualTopicInterceptor(destination, this) :
                 new VirtualTopicInterceptor(destination, this);
     }
 
     @Override
     public ActiveMQDestination getMappedDestinations() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
         return new ActiveMQQueue(prefix + name + postfix);
     }
 
@@ -95,7 +97,9 @@ public class VirtualTopic implements VirtualDestination {
 
     @Override
     public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5594
         if (destination.isQueue() && destination.isPattern()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3197
             DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue(prefix + DestinationFilter.ANY_DESCENDENT));
             if (filter.matches(destination)) {
                 broker.addDestination(context, destination, false);
@@ -159,6 +163,7 @@ public class VirtualTopic implements VirtualDestination {
     }
 
     public boolean isLocal() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3550
         return local;
     }
 
@@ -168,12 +173,14 @@ public class VirtualTopic implements VirtualDestination {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
         return new StringBuilder("VirtualTopic:").append(prefix).append(',').append(name).append(',').
                                                   append(postfix).append(',').append(selectorAware).
                                                   append(',').append(local).toString();
     }
 
     public boolean isConcurrentSend() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
         return concurrentSend;
     }
 
@@ -186,6 +193,7 @@ public class VirtualTopic implements VirtualDestination {
     }
 
     public boolean isTransactedSend() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
         return transactedSend;
     }
 
@@ -199,6 +207,7 @@ public class VirtualTopic implements VirtualDestination {
 
     @Override
     public int hashCode() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         final int prime = 31;
         int result = 1;
         result = prime * result + (concurrentSend ? 1231 : 1237);
@@ -247,6 +256,7 @@ public class VirtualTopic implements VirtualDestination {
     }
 
     public boolean isDropOnResourceLimit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
         return dropOnResourceLimit;
     }
 
@@ -255,6 +265,7 @@ public class VirtualTopic implements VirtualDestination {
     }
 
     public boolean isSetOriginalDestination() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6100
         return setOriginalDestination;
     }
 

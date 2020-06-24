@@ -72,6 +72,7 @@ public class AmqpSaslPlainTest extends AmqpClientTestSupport {
 
     @Test(timeout = 30000)
     public void testSaslPlainWithValidUsernameAndPasswordAndAuthzidAsUnkown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         AmqpClient client = createAmqpClient(USER, USER_PASSWORD);
         client.setAuthzid("unknown");
 
@@ -83,6 +84,7 @@ public class AmqpSaslPlainTest extends AmqpClientTestSupport {
 
         // Expect connection to succeed
         AmqpConnection connection = trackConnection(client.connect());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
 
         // Exercise it for verification
         exerciseConnection(connection);
@@ -118,6 +120,7 @@ public class AmqpSaslPlainTest extends AmqpClientTestSupport {
 
     @Test(timeout = 30000)
     public void testSaslPlainWithInvalidUsernameAndAuthzid() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         AmqpClient client = createAmqpClient("not-user", USER_PASSWORD);
         client.setAuthzid(USER);
         doFailedConnectionTestImpl(client);

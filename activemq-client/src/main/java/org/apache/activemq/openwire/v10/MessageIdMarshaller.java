@@ -66,6 +66,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         MessageId info = (MessageId)o;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         info.setTextView(tightUnmarshalString(dataIn, bs));
         info.setProducerId((org.apache.activemq.command.ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setProducerSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
@@ -82,6 +83,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         MessageId info = (MessageId)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         rc += tightMarshalString1(info.getTextView(), bs);
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getProducerId(), bs);
         rc+=tightMarshalLong1(wireFormat, info.getProducerSequenceId(), bs);
@@ -101,6 +103,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageId info = (MessageId)o;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         tightMarshalString2(info.getTextView(), dataOut, bs);
         tightMarshalCachedObject2(wireFormat, (DataStructure)info.getProducerId(), dataOut, bs);
         tightMarshalLong2(wireFormat, info.getProducerSequenceId(), dataOut, bs);
@@ -119,6 +122,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         MessageId info = (MessageId)o;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         info.setTextView(looseUnmarshalString(dataIn));
         info.setProducerId((org.apache.activemq.command.ProducerId) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setProducerSequenceId(looseUnmarshalLong(wireFormat, dataIn));
@@ -135,6 +139,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         MessageId info = (MessageId)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         looseMarshalString(info.getTextView(), dataOut);
         looseMarshalCachedObject(wireFormat, (DataStructure)info.getProducerId(), dataOut);
         looseMarshalLong(wireFormat, info.getProducerSequenceId(), dataOut);

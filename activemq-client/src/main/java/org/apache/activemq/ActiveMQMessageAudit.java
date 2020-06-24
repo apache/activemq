@@ -32,6 +32,9 @@ public class ActiveMQMessageAudit extends ActiveMQMessageAuditNoSync {
      * 64
      */
     public ActiveMQMessageAudit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         super();
     }
 
@@ -43,6 +46,9 @@ public class ActiveMQMessageAudit extends ActiveMQMessageAuditNoSync {
      *                the system
      */
     public ActiveMQMessageAudit(int auditDepth, final int maximumNumberOfProducersToTrack) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         super(auditDepth, maximumNumberOfProducersToTrack);
     }
     
@@ -82,6 +88,7 @@ public class ActiveMQMessageAudit extends ActiveMQMessageAuditNoSync {
     }
 
     public void setMaximumNumberOfProducersToTrack(int maximumNumberOfProducersToTrack) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4233
         synchronized (this) {
             super.setMaximumNumberOfProducersToTrack(maximumNumberOfProducersToTrack);
         }

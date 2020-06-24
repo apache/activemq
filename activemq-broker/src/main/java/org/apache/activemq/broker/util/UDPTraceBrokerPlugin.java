@@ -191,6 +191,10 @@ public class UDPTraceBrokerPlugin extends BrokerPluginSupport {
 
     public void postProcessDispatch(MessageDispatch messageDispatch) {
         trace(messageDispatch);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1160
+//IC see: https://issues.apache.org/jira/browse/AMQ-1072
+//IC see: https://issues.apache.org/jira/browse/AMQ-936
+//IC see: https://issues.apache.org/jira/browse/AMQ-567
         super.postProcessDispatch(messageDispatch);
     }
 

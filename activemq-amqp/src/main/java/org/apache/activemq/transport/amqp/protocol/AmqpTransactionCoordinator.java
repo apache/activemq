@@ -84,6 +84,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
         }
 
         final AmqpSession session = (AmqpSession) getEndpoint().getSession().getContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5847
         final ConnectionId connectionId = session.getConnection().getConnectionId();
         final Object action = ((AmqpValue) message.getBody()).getValue();
 
@@ -119,6 +120,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
 
             for (AmqpSession txSession : txSessions) {
                 if (operation == TransactionInfo.ROLLBACK) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
                     txSession.rollback(txId);
                 } else {
                     txSession.commit(txId);
@@ -155,6 +157,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
             throw new Exception("Expected coordinator message type: " + action.getClass());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5763
         replenishCredit();
     }
 
@@ -176,6 +179,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
     }
 
     public void enlist(AmqpSession session) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5847
         txSessions.add(session);
     }
 }

@@ -156,6 +156,7 @@ public class DestinationGCStressTest {
     @Test(timeout = 60000)
     public void testAddRemoveWildcardWithGc() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
         org.apache.log4j.Logger log4jLogger =
                 org.apache.log4j.Logger.getLogger(RegionBroker.class);
         final AtomicBoolean failed = new AtomicBoolean(false);
@@ -251,8 +252,10 @@ public class DestinationGCStressTest {
     public void testAllDestsSeeSub() throws Exception {
 
         final AtomicInteger foundDestWithMissingSub = new AtomicInteger(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
 
         final AtomicInteger max = new AtomicInteger(20000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
 
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         factory.setWatchTopicAdvisories(false);
@@ -270,6 +273,7 @@ public class DestinationGCStressTest {
                         c.start();
                         Session s = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
                         MessageProducer producer = s.createProducer(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
                         Message message = s.createTextMessage();
                         int j;
                         while ((j = max.decrementAndGet()) > 0) {
@@ -286,6 +290,7 @@ public class DestinationGCStressTest {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
                 for (int i = 0; i < 1000; i++) {
                     try {
                         MessageConsumer messageConsumer = session.createConsumer(new ActiveMQTopic(">"));

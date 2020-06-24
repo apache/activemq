@@ -33,6 +33,7 @@ public class InformixJDBCAdapter extends BlobJDBCAdapter {
         statements.setContainerNameDataType("VARCHAR(150)");
         statements.setStringIdDataType("VARCHAR(150)");
         statements.setLongDataType("INT8");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2291
         statements.setSequenceDataType("INT8");
         statements.setBinaryDataType("BYTE");
         super.setStatements(statements);

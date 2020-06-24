@@ -31,7 +31,9 @@ public interface DestinationInterceptor {
     Destination intercept(Destination destination);
     
     void remove(Destination destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1672
 
     void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3197
 
 }

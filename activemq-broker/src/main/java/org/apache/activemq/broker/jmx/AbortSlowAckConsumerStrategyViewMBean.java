@@ -35,5 +35,6 @@ public interface AbortSlowAckConsumerStrategyViewMBean extends AbortSlowConsumer
 
     @MBeanInfo("sets whether consumers that are from network connector should be included when checking for slow acks.")
     void setIgnoreNetworkConsumers(boolean ignoreIdleConsumers);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
 
 }

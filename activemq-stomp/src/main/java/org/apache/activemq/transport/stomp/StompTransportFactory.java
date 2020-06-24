@@ -41,12 +41,14 @@ public class StompTransportFactory extends TcpTransportFactory implements Broker
 
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         transport = new StompTransportFilter(transport, format, brokerContext);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
     }
 
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2702
         this.brokerContext = brokerService.getBrokerContext();
     }
 
@@ -54,6 +56,7 @@ public class StompTransportFactory extends TcpTransportFactory implements Broker
     @Override
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
         transport = super.serverConfigure(transport, format, options);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
 
         MutexTransport mutex = transport.narrow(MutexTransport.class);
         if (mutex != null) {

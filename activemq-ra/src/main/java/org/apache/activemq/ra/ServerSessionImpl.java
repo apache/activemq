@@ -105,6 +105,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     }
 
     protected boolean isStale() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
         return stale || !session.isRunning() || !session.isClosed();
     }
 
@@ -159,6 +160,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
      * @see java.lang.Runnable#run()
      */
     public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
         log.debug("{} Running", this);
         currentBatchSize = 0;
         while (true) {
@@ -168,6 +170,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                 if (session.isClosed()) {
                     stale = true;
                 } else if (session.isRunning() ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5038
                     session.run();
                 } else {
                     log.debug("JMS Session {} with unconsumed {} is no longer running (maybe due to loss of connection?), marking ServerSession as stale", session, session.getUnconsumedMessages().size());
@@ -176,6 +179,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
             } catch (Throwable e) {
                 stale = true;
                 if ( log.isDebugEnabled() ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
                     log.debug("Endpoint {} failed to process message.", this, e);
                 } else if ( log.isInfoEnabled() ) {
                     log.info("Endpoint {} failed to process message. Reason: " + e.getMessage(), this);
@@ -186,6 +190,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                 synchronized (runControlMutex) {
                     // This endpoint may have gone stale due to error
                     if (stale) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
                         log.debug("Session {} stale, removing from pool", this);
                         runningFlag = false;
                         pool.removeFromPool(this);
@@ -229,6 +234,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
             try {
                 endpoint.afterDelivery();
             } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4634
                 throw new RuntimeException("Endpoint after delivery notification failure: " + e, e);
             } finally {
                 TransactionContext transactionContext = session.getTransactionContext();
@@ -237,6 +243,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                         // Sanitiy Check: If the local transaction has not been
                         // commited..
                         // Commit it now.
+//IC see: https://issues.apache.org/jira/browse/AMQ-1779
                         log.warn("Local transaction had not been commited. Commiting now.");
                     }
                     try {
@@ -261,6 +268,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
      */
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
         return "ServerSessionImpl:" + serverSessionId + "{" + session +"}";
     }
 
@@ -268,6 +276,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
         try {
             endpoint.release();
         } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1779
             log.debug("Endpoint did not release properly: " + e.getMessage(), e);
         }
         try {

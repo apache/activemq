@@ -51,6 +51,7 @@ public class DuplexNetworkMBeanTest {
     @Before
     public void setUp() throws Exception {
         List<Integer> ports = TestUtils.findOpenPorts(2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         primaryBrokerPort = ports.get(0);
         secondaryBrokerPort = ports.get(1);
@@ -68,6 +69,7 @@ public class DuplexNetworkMBeanTest {
     protected BrokerService createNetworkedBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("networkedBroker");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         broker.addConnector("tcp://localhost:" + secondaryBrokerPort + "?transport.reuseAddress=true");
         broker.getManagementContext().setCreateConnector(false);
         NetworkConnector networkConnector =
@@ -88,8 +90,10 @@ public class DuplexNetworkMBeanTest {
                 networkedBroker = createNetworkedBroker();
                 try {
                     networkedBroker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
                     assertEquals(1, countMbeans(networkedBroker, "networkBridge", 2000));
                     assertEquals(1, countMbeans(broker, "networkBridge", 2000));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4852
                     assertEquals(2, countMbeans(broker, "connectionName"));
                 } finally {
                     networkedBroker.stop();
@@ -123,7 +127,9 @@ public class DuplexNetworkMBeanTest {
                 broker = createBroker();
                 try {
                     broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
                     assertEquals(1, countMbeans(networkedBroker, "networkBridge", 5000));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4852
                     assertEquals("restart number: " + i, 2, countMbeans(broker, "connectionName", 10000));
                 } finally {
                     broker.stop();
@@ -132,6 +138,7 @@ public class DuplexNetworkMBeanTest {
                 assertEquals(0, countMbeans(broker, "stopped"));
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             assertEquals(1, countMbeans(networkedBroker, "connector=networkConnectors"));
             assertEquals(0, countMbeans(networkedBroker, "connectionName"));
             assertEquals(0, countMbeans(broker, "connectionName"));
@@ -216,6 +223,7 @@ public class DuplexNetworkMBeanTest {
     private int countMbeans(BrokerService broker, String type, int timeout) throws Exception {
         final long expiryTime = System.currentTimeMillis() + timeout;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         if (!type.contains("=")) {
             type = type + "=*";
         }
@@ -230,6 +238,7 @@ public class DuplexNetworkMBeanTest {
             }
 
             LOG.info("Query name: " + beanName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
             mbeans = mBeanServer.queryNames(beanName, null);
             if (mbeans != null) {
                 count = mbeans.size();
@@ -250,6 +259,7 @@ public class DuplexNetworkMBeanTest {
     private void logAllMbeans(BrokerService broker) throws MalformedURLException {
         try {
             // trace all existing MBeans
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
             Set<?> all = mBeanServer.queryNames(null, null);
             LOG.info("Total MBean count=" + all.size());
             for (Object o : all) {

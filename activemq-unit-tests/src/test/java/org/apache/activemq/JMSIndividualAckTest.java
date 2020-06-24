@@ -34,6 +34,7 @@ public class JMSIndividualAckTest extends TestSupport {
 
     @Override
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1736
         super.setUp();
         connection = createConnection();
     }
@@ -117,6 +118,7 @@ public class JMSIndividualAckTest extends TestSupport {
         assertNotNull(msg);
         assertEquals(msg1,msg);
         msg = consumer.receive(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3486
         assertNotNull(msg);
         assertEquals(msg2,msg);
         msg = consumer.receive(1000);

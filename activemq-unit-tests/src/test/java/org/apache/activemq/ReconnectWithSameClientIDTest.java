@@ -39,6 +39,7 @@ public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
     public boolean useFailover = false;
 
     public static Test suite() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3792
         return suite(ReconnectWithSameClientIDTest.class);
     }
 
@@ -97,6 +98,7 @@ public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         bindAddress = "tcp://localhost:0";
         super.setUp();
     }

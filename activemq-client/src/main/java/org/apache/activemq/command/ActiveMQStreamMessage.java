@@ -155,6 +155,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     @Override
     public boolean isContentMarshalled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6811
         return content != null || dataOut == null;
     }
 
@@ -165,6 +166,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     @Override
     public String getJMSXMimeType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return "jms/stream-message";
     }
 
@@ -211,6 +213,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (type == -1) {
                 throw new MessageEOFException("reached end of data");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             if (type == MarshallingSupport.BOOLEAN_TYPE) {
                 return this.dataIn.readBoolean();
             }
@@ -254,6 +257,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (type == -1) {
                 throw new MessageEOFException("reached end of data");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             if (type == MarshallingSupport.BYTE_TYPE) {
                 return this.dataIn.readByte();
             }
@@ -304,6 +308,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (type == -1) {
                 throw new MessageEOFException("reached end of data");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             if (type == MarshallingSupport.SHORT_TYPE) {
                 return this.dataIn.readShort();
             }
@@ -358,6 +363,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (type == -1) {
                 throw new MessageEOFException("reached end of data");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             if (type == MarshallingSupport.CHAR_TYPE) {
                 return this.dataIn.readChar();
             }
@@ -406,6 +412,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (type == -1) {
                 throw new MessageEOFException("reached end of data");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             if (type == MarshallingSupport.INTEGER_TYPE) {
                 return this.dataIn.readInt();
             }
@@ -463,6 +470,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (type == -1) {
                 throw new MessageEOFException("reached end of data");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             if (type == MarshallingSupport.LONG_TYPE) {
                 return this.dataIn.readLong();
             }
@@ -521,6 +529,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (type == -1) {
                 throw new MessageEOFException("reached end of data");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             if (type == MarshallingSupport.FLOAT_TYPE) {
                 return this.dataIn.readFloat();
             }
@@ -571,6 +580,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (type == -1) {
                 throw new MessageEOFException("reached end of data");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             if (type == MarshallingSupport.DOUBLE_TYPE) {
                 return this.dataIn.readDouble();
             }
@@ -624,6 +634,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (type == -1) {
                 throw new MessageEOFException("reached end of data");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             if (type == MarshallingSupport.NULL) {
                 return null;
             }
@@ -730,6 +741,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 if (type == -1) {
                     throw new MessageEOFException("reached end of data");
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
                 if (type != MarshallingSupport.BYTE_ARRAY_TYPE) {
                     throw new MessageFormatException("Not a byte array");
                 }
@@ -748,6 +760,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 // big buffer
                 int rc = this.dataIn.read(value, 0, remainingBytes);
                 remainingBytes = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6809
                 return rc != -1 ? rc : 0;
             }
 
@@ -798,6 +811,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (type == -1) {
                 throw new MessageEOFException("reached end of data");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             if (type == MarshallingSupport.NULL) {
                 return null;
             }
@@ -808,6 +822,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readUTF();
             }
             if (type == MarshallingSupport.LONG_TYPE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
                 return Long.valueOf(this.dataIn.readLong());
             }
             if (type == MarshallingSupport.INTEGER_TYPE) {
@@ -829,6 +844,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readBoolean() ? Boolean.TRUE : Boolean.FALSE;
             }
             if (type == MarshallingSupport.CHAR_TYPE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
                 return Character.valueOf(this.dataIn.readChar());
             }
             if (type == MarshallingSupport.BYTE_ARRAY_TYPE) {
@@ -874,6 +890,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     public void writeBoolean(boolean value) throws JMSException {
         initializeWriting();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             MarshallingSupport.marshalBoolean(dataOut, value);
         } catch (IOException ioe) {
             throw JMSExceptionSupport.create(ioe);
@@ -893,6 +910,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     public void writeByte(byte value) throws JMSException {
         initializeWriting();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             MarshallingSupport.marshalByte(dataOut, value);
         } catch (IOException ioe) {
             throw JMSExceptionSupport.create(ioe);
@@ -912,6 +930,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     public void writeShort(short value) throws JMSException {
         initializeWriting();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             MarshallingSupport.marshalShort(dataOut, value);
         } catch (IOException ioe) {
             throw JMSExceptionSupport.create(ioe);
@@ -931,6 +950,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     public void writeChar(char value) throws JMSException {
         initializeWriting();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             MarshallingSupport.marshalChar(dataOut, value);
         } catch (IOException ioe) {
             throw JMSExceptionSupport.create(ioe);
@@ -950,6 +970,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     public void writeInt(int value) throws JMSException {
         initializeWriting();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             MarshallingSupport.marshalInt(dataOut, value);
         } catch (IOException ioe) {
             throw JMSExceptionSupport.create(ioe);
@@ -969,6 +990,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     public void writeLong(long value) throws JMSException {
         initializeWriting();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             MarshallingSupport.marshalLong(dataOut, value);
         } catch (IOException ioe) {
             throw JMSExceptionSupport.create(ioe);
@@ -988,6 +1010,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     public void writeFloat(float value) throws JMSException {
         initializeWriting();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             MarshallingSupport.marshalFloat(dataOut, value);
         } catch (IOException ioe) {
             throw JMSExceptionSupport.create(ioe);
@@ -1007,6 +1030,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     public void writeDouble(double value) throws JMSException {
         initializeWriting();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             MarshallingSupport.marshalDouble(dataOut, value);
         } catch (IOException ioe) {
             throw JMSExceptionSupport.create(ioe);
@@ -1027,6 +1051,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
         initializeWriting();
         try {
             if (value == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
                 MarshallingSupport.marshalNull(dataOut);
             } else {
                 MarshallingSupport.marshalString(dataOut, value);
@@ -1074,6 +1099,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     public void writeBytes(byte[] value, int offset, int length) throws JMSException {
         initializeWriting();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
             MarshallingSupport.marshalByteArray(dataOut, value, offset, length);
         } catch (IOException ioe) {
             throw JMSExceptionSupport.create(ioe);
@@ -1099,6 +1125,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
         initializeWriting();
         if (value == null) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
                 MarshallingSupport.marshalNull(dataOut);
             } catch (IOException ioe) {
                 throw JMSExceptionSupport.create(ioe);
@@ -1121,8 +1148,10 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             writeDouble(((Double)value).doubleValue());
         } else if (value instanceof byte[]) {
             writeBytes((byte[])value);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1965
         }else if (value instanceof Long) {
             writeLong(((Long)value).longValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1964
         }else {
             throw new MessageFormatException("Unsupported Object type: " + value.getClass());
         }
@@ -1160,6 +1189,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
         // For a message that already had a body and was sent we need to restore the content
         // if the message is used again without having its clearBody method called.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4887
         if (this.content != null && this.content.length > 0) {
             try {
                 if (compressed) {
@@ -1210,6 +1240,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     @Override
     public void compress() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         storeContent();
         super.compress();
     }

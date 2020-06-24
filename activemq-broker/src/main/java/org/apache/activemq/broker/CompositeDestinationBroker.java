@@ -86,6 +86,7 @@ public class CompositeDestinationBroker extends BrokerFilter {
             for (int i = 0; i < destinations.length; i++) {
                 if (i != 0) {
                     message = message.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2861
                     message.setMemoryUsage(null);
                 }
                 message.setOriginalDestination(destination);

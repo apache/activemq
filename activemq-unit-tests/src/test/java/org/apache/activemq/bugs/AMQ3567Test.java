@@ -73,7 +73,9 @@ public class AMQ3567Test {
         produceSingleMessage();
         org.apache.log4j.Logger log4jLogger = org.apache.log4j.Logger.getLogger("org.apache.activemq.util.ServiceSupport");
         final AtomicBoolean failed = new AtomicBoolean(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3623
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3628
         Appender appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
@@ -87,6 +89,7 @@ public class AMQ3567Test {
                     }
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3628
         };
         log4jLogger.addAppender(appender);
 
@@ -96,12 +99,14 @@ public class AMQ3567Test {
         try {
             stopConsumer();
             stopBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3623
             if (failed.get()) {
                 fail("An Interrupt exception was generated");
             }
 
         } finally {
             log4jLogger.setLevel(level);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3628
             log4jLogger.removeAppender(appender);
         }
     }

@@ -101,6 +101,7 @@ public class DurableSubDelayedUnsubscribeTest {
         // miss the fact that all durables that were abandoned do finally get cleaned up.
 
         // Wait for all clients to stop
+//IC see: https://issues.apache.org/jira/browse/AMQ-4670
         Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
                 return clientManager.getClientCount() == 0;
@@ -115,6 +116,7 @@ public class DurableSubDelayedUnsubscribeTest {
                     return brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1;
                 }
             }, houseKeeper.SWEEP_DELAY * 2));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4670
 
         assertTrue("should be no subscribers subscribed but was: " + brokerService.getAdminView().getDurableTopicSubscribers().length,
             Wait.waitFor(new Wait.Condition() {
@@ -368,6 +370,7 @@ public class DurableSubDelayedUnsubscribeTest {
         }
 
         public int getClientCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4670
             return clients.size();
         }
 

@@ -64,6 +64,8 @@ public class SingleBrokerVirtualDestinationsWithWildcardTest extends JmsMultiple
         startAllBrokers();
 
         sendReceive("local.test.1", true, "Consumer.a.local.test.1", false, 1, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6643
+//IC see: https://issues.apache.org/jira/browse/AMQ-5594
         sendReceive("local.test.1", true, "Consumer.a.local.test.>", false, 1, 2);
         sendReceive("local.test.1.2", true, "Consumer.a.local.test.>", false, 1, 1);
         sendReceive("global.test.1", true, "Consumer.a.global.test.1", false, 1, 1);
@@ -80,6 +82,7 @@ public class SingleBrokerVirtualDestinationsWithWildcardTest extends JmsMultiple
         startAllBrokers();
 
         sendReceive("Consumer.a.local.test.>", false, "Consumer.a.local.test.>", false, 1, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3197
         sendReceive("local.test.1", true, "Consumer.a.local.test.>", false, 1, 1);
         sendReceive("Consumer.a.global.test.>", false, "Consumer.a.global.test.>", false, 1, 1);
         sendReceive("global.test.1", true, "Consumer.a.global.test.>", false, 1, 1);

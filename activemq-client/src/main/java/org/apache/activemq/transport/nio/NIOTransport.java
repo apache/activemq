@@ -65,6 +65,7 @@ public class NIOTransport extends TcpTransport {
      * @throws IOException
      */
     public NIOTransport(WireFormat format, Socket socket, InitBuffer initBuffer) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         super(format, socket, initBuffer);
     }
 
@@ -92,6 +93,7 @@ public class NIOTransport extends TcpTransport {
 
         // Send the data via the channel
         // inputBuffer = ByteBuffer.allocateDirect(8*1024);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6184
         inputBuffer = ByteBuffer.allocateDirect(getIoBufferSize());
         currentBuffer = inputBuffer;
         nextFrameSize = -1;
@@ -102,6 +104,7 @@ public class NIOTransport extends TcpTransport {
     }
 
     protected int readFromBuffer() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         return channel.read(currentBuffer);
     }
 
@@ -134,14 +137,17 @@ public class NIOTransport extends TcpTransport {
                     inputBuffer.flip();
                     nextFrameSize = inputBuffer.getInt() + 4;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
                     if (wireFormat instanceof OpenWireFormat) {
                         long maxFrameSize = ((OpenWireFormat)wireFormat).getMaxFrameSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
                         if (nextFrameSize > maxFrameSize) {
                             throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) + " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
                         }
                     }
 
                     if (nextFrameSize > inputBuffer.capacity()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6184
                         currentBuffer = ByteBuffer.allocateDirect(nextFrameSize);
                         currentBuffer.putInt(nextFrameSize);
                     } else {
@@ -153,6 +159,7 @@ public class NIOTransport extends TcpTransport {
 
                     Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
                     doConsume(command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5822
 
                     nextFrameSize = -1;
                     inputBuffer.clear();
@@ -178,8 +185,10 @@ public class NIOTransport extends TcpTransport {
 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2811
         if (selection != null) {
             selection.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
             selection = null;
         }
         super.doStop(stopper);

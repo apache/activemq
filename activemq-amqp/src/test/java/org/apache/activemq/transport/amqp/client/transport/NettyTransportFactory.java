@@ -46,6 +46,7 @@ public final class NettyTransportFactory {
 
         remoteURI = PropertyUtil.replaceQuery(remoteURI, map);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         if (!remoteURI.getScheme().equalsIgnoreCase("ssl") && !remoteURI.getScheme().equalsIgnoreCase("wss")) {
             transportOptions = NettyTransportOptions.INSTANCE.clone();
         } else {
@@ -62,6 +63,7 @@ public final class NettyTransportFactory {
         }
 
         NettyTransport result = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
 
         switch (remoteURI.getScheme().toLowerCase()) {
             case "tcp":

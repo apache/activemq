@@ -81,6 +81,7 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
         for (Iterator i = result.iterator(); i.hasNext();) {
             Object mbean = i.next();
             if (mbean instanceof ObjectInstance) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3790
                 try {
                     mbeansCollection.add(getMBeanAttributes(((ObjectInstance)mbean).getObjectName(), attribView));
                 } catch (InstanceNotFoundException ignore) {

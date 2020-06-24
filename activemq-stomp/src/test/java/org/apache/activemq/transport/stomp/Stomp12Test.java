@@ -52,6 +52,7 @@ public class Stomp12Test extends StompTestSupport {
 
     @Override
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         try {
             connection.close();
         } catch (Exception ex) {}
@@ -150,6 +151,7 @@ public class Stomp12Test extends StompTestSupport {
         assertEquals("1", received.getBody());
 
         String ackId = received.getHeaders().get(Stomp.Headers.Message.ACK_ID);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
 
         // Put ACK ID in wrong header
         String frame = "ACK\n" + "message-id:" + ackId + "\n\n" + Stomp.NULL;
@@ -278,6 +280,7 @@ public class Stomp12Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
 
         assertTrue(Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -366,6 +369,7 @@ public class Stomp12Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
 
         assertTrue(Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -431,6 +435,7 @@ public class Stomp12Test extends StompTestSupport {
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5622
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -462,6 +467,7 @@ public class Stomp12Test extends StompTestSupport {
         assertTrue(received.getHeaders().containsKey(Stomp.Headers.Message.ACK_ID));
         assertEquals("1", received.getBody());
         String message1AckId = received.getHeaders().get(Stomp.Headers.Message.ACK_ID);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
 
         frame = "ACK\n" + "id:" + message1AckId + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -573,6 +579,7 @@ public class Stomp12Test extends StompTestSupport {
     @Test(timeout = 60000)
     public void testQueueBrowerSubscription() throws Exception {
         final int MSG_COUNT = 10;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4686
 
         String connectFrame = "STOMP\n" +
                               "login:system\n" +
@@ -616,6 +623,7 @@ public class Stomp12Test extends StompTestSupport {
         assertTrue(browseDone.getHeaders().get(Stomp.Headers.Message.DESTINATION) != null);
 
         String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-5622
                        "receipt:1\n" + "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(unsub);
 
@@ -636,6 +644,7 @@ public class Stomp12Test extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testQueueBrowerNotInAutoAckMode() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5159
         String connectFrame = "STOMP\n" +
                               "login:system\n" +
                               "passcode:manager\n" +
@@ -669,6 +678,7 @@ public class Stomp12Test extends StompTestSupport {
     @Test(timeout = 60000)
     public void testDurableSubAndUnSub() throws Exception {
         BrokerViewMBean view = getProxyToBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5622
 
         String connectFrame = "STOMP\n" +
                               "login:system\n" +
@@ -755,6 +765,7 @@ public class Stomp12Test extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testSizeAndBrokerUsage() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6206
         final int MSG_COUNT = 10;
         final int numK = 4;
 
@@ -779,6 +790,7 @@ public class Stomp12Test extends StompTestSupport {
 
         long usageStart = brokerService.getSystemUsage().getMemoryUsage().getUsage();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
         for (int i = 0; i < MSG_COUNT; ++i) {
             String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" +
                              "receipt:0\n" +
@@ -801,6 +813,7 @@ public class Stomp12Test extends StompTestSupport {
                            "id:12345\n" + "browser:true\n\n" + Stomp.NULL;
         stompConnection.sendFrame(subscribe);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
         for (int i = 0; i < MSG_COUNT; ++i) {
             StompFrame message = stompConnection.receive();
             assertEquals(Stomp.Responses.MESSAGE, message.getAction());

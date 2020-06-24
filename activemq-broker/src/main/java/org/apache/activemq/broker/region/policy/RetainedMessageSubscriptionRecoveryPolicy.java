@@ -57,6 +57,7 @@ public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRe
             if (message.getContent().getLength() > 0) {
                 // non zero length message content
                 retainedMessage = message.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
                 retainedMessage.getMessage().removeProperty(RETAIN_PROPERTY);
                 retainedMessage.getMessage().setProperty(RETAINED_PROPERTY, true);
             } else {
@@ -77,6 +78,7 @@ public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRe
         if (wrapped != null) {
             // retain default ActiveMQ behaviour of recovering messages only for empty durable subscriptions
             boolean recover = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
             if (sub instanceof DurableTopicSubscription && !((DurableTopicSubscription)sub).isEmpty(topic)) {
                 recover = false;
             }
@@ -87,6 +89,7 @@ public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRe
     }
 
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         if (wrapped != null) {
             wrapped.start();
         }
@@ -99,6 +102,7 @@ public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRe
     }
 
     public Message[] browse(ActiveMQDestination destination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         final List<Message> result = new ArrayList<Message>();
         if (retainedMessage != null) {
             DestinationFilter filter = DestinationFilter.parseFilter(destination);
@@ -130,6 +134,7 @@ public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRe
     }
 
     public SubscriptionRecoveryPolicy getWrapped() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         return wrapped;
     }
 }

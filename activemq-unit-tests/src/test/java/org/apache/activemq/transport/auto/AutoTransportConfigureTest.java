@@ -48,6 +48,7 @@ public class AutoTransportConfigureTest {
 
     @Parameters
     public static Iterable<Object[]> parameters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return Arrays.asList(new Object[][] { { "auto" }, { "auto+nio" }, { "auto+ssl" }, { "auto+nio+ssl" } });
     }
 
@@ -106,6 +107,7 @@ public class AutoTransportConfigureTest {
     public void testUrlConfigurationOpenWireSuccess() throws Exception {
         // Will work because max frame size only applies to stomp
         createBroker(transportType + "://localhost:0?wireFormat.stomp.maxFrameSize=10");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
 
         ConnectionFactory factory = new ActiveMQConnectionFactory(url);
         sendMessage(factory.createConnection());
@@ -132,6 +134,7 @@ public class AutoTransportConfigureTest {
     @Test
     public void testUrlConfigurationOpenWireAndAmqpAvailable() throws Exception {
         createBroker(transportType + "://localhost:0?auto.protocols=default,stomp");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
 
         ConnectionFactory factory = new ActiveMQConnectionFactory(url);
         sendMessage(factory.createConnection());

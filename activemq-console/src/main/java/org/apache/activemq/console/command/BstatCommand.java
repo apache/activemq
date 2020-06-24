@@ -29,6 +29,8 @@ public class BstatCommand extends QueryCommand {
         "",
         "Bstat Options:",
         "    --jmxurl <url>                Set the JMX URL to connect to.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-2975
+//IC see: https://issues.apache.org/jira/browse/AMQ-4438
         "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",
         "    --jmxuser <user>              Set the JMX user used for authenticating.",
         "    --jmxpassword <password>      Set the JMX password used for authenticating.",
@@ -61,6 +63,7 @@ public class BstatCommand extends QueryCommand {
         List<String> queryTokens = new ArrayList<String>();
         // Find the first non-option token
         String brokerName = "*";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4438
         for (Iterator<String> i = tokens.iterator(); i.hasNext();) {
             String token = i.next();
             if (!token.startsWith("-")) {
@@ -76,10 +79,12 @@ public class BstatCommand extends QueryCommand {
         queryTokens.add("--objname");
         queryTokens.add("type=*,brokerName=" + brokerName + ",*");
         queryTokens.add("-xQTopic=ActiveMQ.Advisory.*");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4195
         queryTokens.add("--view");
         queryTokens.add("BrokerName,Name,connectorName,networkConnectorName,destinationName,destinationType,EnqueueCount,"
                         + "DequeueCount,TotalEnqueueCount,TotalDequeueCount,Messages,"
                         + "TotalMessageCount,ConsumerCount,TotalConsumerCount,DispatchCount,Duplex,NetworkTTL,Uptime");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4438
 
         // Call the query command
         super.parseOptions(queryTokens);
@@ -91,6 +96,7 @@ public class BstatCommand extends QueryCommand {
      */
     @Override
     protected void printHelp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2447
         context.printHelp(helpFile);
     }
 

@@ -72,11 +72,13 @@ public class BlockingQueueTransport extends TransportSupport {
 
     @Override
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         return 0;
     }
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return null;
     }
 

@@ -40,18 +40,21 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     private final ClassLoader inLoader;
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         serializablePackages = System.getProperty("org.apache.activemq.SERIALIZABLE_PACKAGES","org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper").split(",");
     }
 
     public ClassLoadingAwareObjectInputStream(InputStream in) throws IOException {
         super(in);
         inLoader = in.getClass().getClassLoader();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         trustedPackages.addAll(Arrays.asList(serializablePackages));
     }
 
     @Override
     protected Class<?> resolveClass(ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6013
         Class clazz = load(classDesc.getName(), cl, inLoader);
         checkSecurity(clazz);
         return clazz;
@@ -94,6 +97,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     }
 
     private boolean trustAllPackages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         return trustAllPackages || (trustedPackages.size() == 1 && trustedPackages.get(0).equals("*"));
     }
 
@@ -108,6 +112,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
                    }
                }
                if (!found) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
                    throw new ClassNotFoundException("Forbidden " + clazz + "! This class is not trusted to be serialized as ObjectMessage payload. Please take a look at http://activemq.apache.org/objectmessage.html for more information on how to configure trusted classes.");
                }
             }
@@ -116,6 +121,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
 
     private Class<?> load(String className, ClassLoader... cl) throws ClassNotFoundException {
         // check for simple types first
+//IC see: https://issues.apache.org/jira/browse/AMQ-4746
         final Class<?> clazz = loadSimpleType(className);
         if (clazz != null) {
             LOG.trace("Loaded class: {} as simple type -> {}", className, clazz);
@@ -190,6 +196,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
             return Double.class;
         } else if ("double".equals(name)) {
             return double.class;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5921
         } else if ("void".equals(name)) {
             return void.class;
         }
@@ -198,6 +205,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     }
 
     public List<String> getTrustedPackages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         return trustedPackages;
     }
 

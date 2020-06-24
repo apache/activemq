@@ -71,6 +71,7 @@ public class TestUtils {
     private static AtomicLong txGenerator = new AtomicLong(System.currentTimeMillis());
     public static Xid createXid() throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(baos);
         os.writeLong(txGenerator.incrementAndGet());

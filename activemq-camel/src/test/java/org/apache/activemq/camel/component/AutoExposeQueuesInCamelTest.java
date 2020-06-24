@@ -59,6 +59,7 @@ public class AutoExposeQueuesInCamelTest extends EmbeddedBrokerTestSupport {
         Thread.sleep(1000);
         // Changed from using CamelContextHelper.getSingletonEndpoints here because JMS Endpoints in Camel
         // are always non-singleton
+//IC see: https://issues.apache.org/jira/browse/AMQ-1986
         List<BrowsableEndpoint> endpoints = getEndpoints(camelContext, BrowsableEndpoint.class);
         for (BrowsableEndpoint endpoint : endpoints) {
             LOG.debug("Endpoint: " + endpoint);
@@ -83,6 +84,7 @@ public class AutoExposeQueuesInCamelTest extends EmbeddedBrokerTestSupport {
         super.setUp();
 
         // lets configure the ActiveMQ component for Camel
+//IC see: https://issues.apache.org/jira/browse/AMQ-4574
         component = new ActiveMQComponent();
         component.setBrokerURL(bindAddress);
         component.setExposeAllQueues(true);

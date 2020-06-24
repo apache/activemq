@@ -114,6 +114,7 @@ public class JDBCPersistenceAdapterExpiredMessageTest {
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setExpireMessagesPeriod(5000);
         defaultEntry.setMaxExpirePageSize(expireSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6967
         defaultEntry.setMemoryLimit(100*16*1024);
         policyMap.setDefaultEntry(defaultEntry);
         brokerService.setDestinationPolicy(policyMap);
@@ -162,6 +163,7 @@ public class JDBCPersistenceAdapterExpiredMessageTest {
 
     @Test
     public void testExpiredAfterCacheExhausted() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6967
         final ActiveMQQueue queue = new ActiveMQQueue("test.q");
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         factory.setWatchTopicAdvisories(false);

@@ -89,6 +89,8 @@ public class AMQ3903Test {
 
         final Topic advisoryTopic = AdvisorySupport.getFastProducerAdvisoryTopic((ActiveMQDestination) queue);
         final Topic advisoryWhenFullTopic = AdvisorySupport.getFullAdvisoryTopic((ActiveMQDestination) queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
+//IC see: https://issues.apache.org/jira/browse/AMQ-3925
 
         MessageConsumer advisoryConsumer = session.createConsumer(advisoryTopic);
         MessageConsumer advisoryWhenFullConsumer = session.createConsumer(advisoryWhenFullTopic);
@@ -112,6 +114,8 @@ public class AMQ3903Test {
         Message advCmsg = advisoryConsumer.receive(4000);
         assertNotNull(advCmsg);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
+//IC see: https://issues.apache.org/jira/browse/AMQ-3925
         advCmsg = advisoryWhenFullConsumer.receive(4000);
         assertNotNull(advCmsg);
 
@@ -126,6 +130,8 @@ public class AMQ3903Test {
 
         PolicyEntry entry = new PolicyEntry();
         entry.setAdvisoryForFastProducers(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
+//IC see: https://issues.apache.org/jira/browse/AMQ-3925
         entry.setAdvisoryWhenFull(true);
         entry.setMemoryLimit(10000);
         PolicyMap map = new PolicyMap();

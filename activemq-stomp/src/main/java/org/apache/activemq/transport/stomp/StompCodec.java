@@ -30,10 +30,15 @@ import org.apache.activemq.util.DataByteArrayInputStream;
 
 public class StompCodec {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3729
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
     final static byte[] crlfcrlf = new byte[]{'\r','\n','\r','\n'};
     TcpTransport transport;
     StompWireFormat wireFormat;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5573
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
     AtomicLong frameSize = new AtomicLong(); 
     ByteArrayOutputStream currentCommand = new ByteArrayOutputStream();
     boolean processedHeaders = false;
@@ -44,15 +49,18 @@ public class StompCodec {
     int previousByte = -1;
     boolean awaitingCommandStart = true;
     String version = Stomp.DEFAULT_VERSION;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
 
     public StompCodec(TcpTransport transport) {
         this.transport = transport;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5573
         this.wireFormat = (StompWireFormat) transport.getWireFormat();
     }
 
     public void parse(ByteArrayInputStream input, int readSize) throws Exception {
        int i = 0;
        int b;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
        while(i++ < readSize) {
            b = input.read();
            // skip repeating nulls
@@ -63,6 +71,7 @@ public class StompCodec {
            if (!processedHeaders) {
 
                // skip heart beat commands.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4106
                if (awaitingCommandStart && b == '\n') {
                    continue;
                } else {
@@ -71,14 +80,19 @@ public class StompCodec {
 
                currentCommand.write(b);
                // end of headers section, parse action and header
+//IC see: https://issues.apache.org/jira/browse/AMQ-3729
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
                if (b == '\n' && (previousByte == '\n' || currentCommand.endsWith(crlfcrlf))) {
                    DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());
 
                    try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
                        action = wireFormat.parseAction(data, frameSize);
                        headers = wireFormat.parseHeaders(data, frameSize);
                        
                        String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
                        if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLengthHeader != null) {
                            contentLength = wireFormat.parseContentLength(contentLengthHeader, frameSize);
                        } else {
@@ -132,14 +146,17 @@ public class StompCodec {
         StompFrame frame = new StompFrame(action, headers, currentCommand.toByteArray());
         transport.doConsume(frame);
         processedHeaders = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4106
         awaitingCommandStart = true;
         currentCommand.reset();
         contentLength = -1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
         frameSize.set(0);
     }
 
     public static String detectVersion(Map<String, String> headers) throws ProtocolException {
         String accepts = headers.get(Stomp.Headers.Connect.ACCEPT_VERSION);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
 
         if (accepts == null) {
             accepts = Stomp.DEFAULT_VERSION;

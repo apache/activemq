@@ -394,6 +394,7 @@ public class DurableSubProcessWithRestartTest {
                 + "jms.alwaysSyncSend=true&jms.dispatchAsync=true&"
                 + "jms.producerWindowSize=20971520&"
                 + "jms.copyMessageOnSend=false&"
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
                 + "initialReconnectDelay=100&maxReconnectDelay=30000&"
                 + "useExponentialBackOff=true";
         final ConnectionFactory cf = new ActiveMQConnectionFactory(url);

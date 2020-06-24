@@ -182,6 +182,7 @@ public class JmsTransactionCommitFailureTest {
         // Set failure flag on persistence adapter
         persistenceAdapter.setCommitFailureEnabled(true);
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6891
             for (int i = 0; i < 10; i++) {
                 try {
                     sendMessage(queueName, 2);
@@ -206,6 +207,7 @@ public class JmsTransactionCommitFailureTest {
     @Test
     public void testQueueMemoryLeakNoTx() throws Exception {
         String queueName = "testMemoryLeak";
+//IC see: https://issues.apache.org/jira/browse/AMQ-6891
 
         sendMessage(queueName, 1);
 
@@ -250,6 +252,7 @@ public class JmsTransactionCommitFailureTest {
                         message.setText("Message-" + messageCounter++);
                         producer.send(message);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6891
                     if (transacted) {
                         session.commit();
                     }
@@ -335,6 +338,7 @@ public class JmsTransactionCommitFailureTest {
 
         @Override
         public TransactionContext getTransactionContext() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
             TransactionContext answer = new TransactionContext(this, -1, -1) {
                 @Override
                 public void executeBatch() throws SQLException {

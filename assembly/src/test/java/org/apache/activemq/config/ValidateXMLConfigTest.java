@@ -50,6 +50,7 @@ public class ValidateXMLConfigTest {
         // resource:copy-resource brings all config files into target/conf
         File sampleConfDir = new File("target/conf");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5176
         final HashSet<String> skipped = new HashSet<String>(java.util.Arrays.asList(new String[]{
             "resin-web.xml", "web.xml"
         }));

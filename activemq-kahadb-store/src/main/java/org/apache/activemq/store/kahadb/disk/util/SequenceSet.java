@@ -96,6 +96,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
 
     public void merge(SequenceSet sequenceSet) {
         Sequence node = sequenceSet.getHead();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
 
         while (node != null) {
             add(node);
@@ -132,6 +133,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
         }
 
         // check for append
+//IC see: https://issues.apache.org/jira/browse/AMQ-4094
         Sequence sequence = getTail();
         if (sequence.isAdjacentToLast(value)) {
             sequence.last = value;
@@ -140,6 +142,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
 
         // check if the value is greater than the bigger sequence value and if it's not adjacent to it
         // in this case, we are sure that the value should be add to the tail of the sequence.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7055
         if (sequence.isBiggerButNotAdjacentToLast(value)) {
             addLast(new Sequence(value));
             return true;
@@ -210,6 +213,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
      *         was no sequence in the set that contained the given value.
      */
     public boolean remove(long value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         Sequence sequence = getHead();
         while (sequence != null ) {
             if(sequence.contains(value)) {
@@ -283,6 +287,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
                 return sequence;
             }
             if (sequence.range() > count ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
                 Sequence rc = new Sequence(sequence.first, sequence.first+count-1);
                 sequence.first+=count;
                 return rc;
@@ -354,6 +359,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
      * @return true if the value is contained in the set.
      */
     public boolean contains(long value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         if (isEmpty()) {
             return false;
         }
@@ -370,12 +376,15 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
     }
 
     public boolean contains(int first, int last) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2338
+//IC see: https://issues.apache.org/jira/browse/AMQ-2337
         if (isEmpty()) {
             return false;
         }
         Sequence sequence = getHead();
         while (sequence != null) {
             if (sequence.first <= first && first <= sequence.last ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                 return last <= sequence.last;
             }
             sequence = sequence.getNext();
@@ -384,6 +393,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
     }
 
     public Sequence get(int value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5703
         if (!isEmpty()) {
             Sequence sequence = getHead();
             while (sequence != null) {
@@ -405,6 +415,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
      *         were to be iterated over like an array.
      */
     public long rangeSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         long result = 0;
         Sequence sequence = getHead();
         while (sequence != null) {
@@ -415,6 +426,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
     }
 
     public Iterator<Long> iterator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         return new SequenceIterator();
     }
 
@@ -425,6 +437,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
 
         public SequenceIterator() {
             currentEntry = getHead();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             if (currentEntry != null) {
                 lastReturned = currentEntry.first - 1;
             }

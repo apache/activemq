@@ -29,6 +29,7 @@ public class TransactJDBCAdapter extends ImageBasedJDBCAdaptor {
     @Override
     public void setStatements(Statements statements) {
         String lockCreateStatement = "SELECT * FROM " + statements.getFullLockTableName() + " WITH (UPDLOCK, ROWLOCK)";
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
 
         if (statements.isUseLockCreateWhereClause()) {
             lockCreateStatement += " WHERE ID = 1";

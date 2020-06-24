@@ -178,6 +178,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     public void duplexStart(TransportConnection connection, BrokerInfo localBrokerInfo, BrokerInfo remoteBrokerInfo) throws Exception {
         this.localBrokerInfo = localBrokerInfo;
         this.remoteBrokerInfo = remoteBrokerInfo;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1848
         this.duplexInitiatingConnection = connection;
         start();
         serviceRemoteCommand(remoteBrokerInfo);
@@ -187,12 +188,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
             if (brokerService == null) {
                 throw new IllegalArgumentException("BrokerService is null on " + this);
             }
 
             networkBridgeStatistics.setEnabled(brokerService.isEnableStatistics());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
             if (isDuplex()) {
                 duplexInboundLocalBroker = NetworkBridgeFactory.createLocalAsyncTransport(brokerService.getBroker().getVmConnectorURI());
                 duplexInboundLocalBroker.setTransportListener(new DefaultTransportListener() {
@@ -215,12 +219,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
                 @Override
                 public void onCommand(Object o) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                     Command command = (Command) o;
                     serviceLocalCommand(command);
                 }
 
                 @Override
                 public void onException(IOException error) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4082
                     if (!futureLocalBrokerInfo.isDone()) {
                         LOG.info("Error with pending local brokerInfo on: {} ({})", localBroker, error.getMessage());
                         LOG.debug("Peer error: ", error);
@@ -232,15 +238,18 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             });
 
             remoteBroker.setTransportListener(new DefaultTransportListener() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
 
                 @Override
                 public void onCommand(Object o) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                     Command command = (Command) o;
                     serviceRemoteCommand(command);
                 }
 
                 @Override
                 public void onException(IOException error) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4082
                     if (!futureRemoteBrokerInfo.isDone()) {
                         LOG.info("Error with pending remote brokerInfo on: {} ({})", remoteBroker, error.getMessage());
                         LOG.debug("Peer error: ", error);
@@ -260,6 +269,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 } catch (IOException e) {
                     LOG.warn("Caught exception from remote start", e);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3014
             } else {
                 LOG.warn("Bridge was disposed before the start() method was fully executed.");
                 throw new TransportDisposedIOException();
@@ -269,6 +279,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4082
         if (started.compareAndSet(true, false)) {
             if (disposed.compareAndSet(false, true)) {
                 LOG.debug(" stopping {} bridge to {}", configuration.getBrokerName(), remoteBrokerName);
@@ -276,6 +287,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 futureRemoteBrokerInfo.cancel(true);
                 futureLocalBrokerInfo.cancel(true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
                 NetworkBridgeListener l = this.networkBridgeListener;
                 if (l != null) {
                     l.onStop(this);
@@ -284,8 +296,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     // local start complete
                     if (startedLatch.getCount() < 2) {
                         LOG.trace("{} unregister bridge ({}) to {}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                                 configuration.getBrokerName(), this, remoteBrokerName
                         });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                         brokerService.getBroker().removeBroker(null, remoteBrokerInfo);
                         brokerService.getBroker().networkBridgeStopped(remoteBrokerInfo);
                     }
@@ -293,10 +308,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     remoteBridgeStarted.set(false);
                     final CountDownLatch sendShutdown = new CountDownLatch(1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
                     brokerService.getTaskRunnerFactory().execute(new Runnable() {
                         @Override
                         public void run() {
                             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4196
+//IC see: https://issues.apache.org/jira/browse/AMQ-3038
                                 serialExecutor.shutdown();
                                 if (!serialExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
                                     List<Runnable> pendingTasks = serialExecutor.shutdownNow();
@@ -305,6 +323,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 //Shutdown the syncExecutor, call countDown to make sure a thread can
                                 //terminate if it is waiting
                                 staticDestinationsLatch.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6476
                                 syncExecutor.shutdown();
                                 if (!syncExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
                                     List<Runnable> pendingTasks = syncExecutor.shutdownNow();
@@ -320,15 +339,19 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
                         }
                     }, "ActiveMQ ForwardingBridge StopTask");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                     if (!sendShutdown.await(10, TimeUnit.SECONDS)) {
                         LOG.info("Network Could not shutdown in a timely manner");
                     }
                 } finally {
                     ServiceStopper ss = new ServiceStopper();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6792
                     stopFailoverTransport(remoteBroker);
                     ss.stop(remoteBroker);
                     ss.stop(localBroker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
                     ss.stop(duplexInboundLocalBroker);
                     // Release the started Latch since another thread could be
                     // stuck waiting for it to start up.
@@ -346,6 +369,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     private void stopFailoverTransport(Transport transport) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6792
         FailoverTransport failoverTransport = transport.narrow(FailoverTransport.class);
         if (failoverTransport != null) {
             // may be blocked on write, in which case stop will block
@@ -356,12 +380,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void triggerStartAsyncNetworkBridgeCreation() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
         brokerService.getTaskRunnerFactory().execute(new Runnable() {
             @Override
             public void run() {
                 final String originalName = Thread.currentThread().getName();
                 Thread.currentThread().setName("triggerStartAsyncNetworkBridgeCreation: " +
                         "remoteBroker=" + remoteBroker + ", localBroker= " + localBroker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4924
 
                 try {
                     // First we collect the info data from both the local and remote ends
@@ -379,6 +406,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private void collectBrokerInfos() {
         int timeout = 30000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6322
         TcpTransport tcpTransport = remoteBroker.narrow(TcpTransport.class);
         if (tcpTransport != null) {
            timeout = tcpTransport.getConnectionTimeout();
@@ -389,6 +417,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         try {
             remoteBrokerInfo = futureRemoteBrokerInfo.get(timeout, TimeUnit.MILLISECONDS);
             if (remoteBrokerInfo == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5605
                 serviceLocalException(new Throwable("remoteBrokerInfo is null"));
                 return;
             }
@@ -398,19 +427,25 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6322
             localBrokerInfo = futureLocalBrokerInfo.get(timeout, TimeUnit.MILLISECONDS);
             if (localBrokerInfo == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5605
                 serviceLocalException(new Throwable("localBrokerInfo is null"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5315
                 return;
             }
 
             // Before we try and build the bridge lets check if we are in a loop
             // and if so just stop now before registering anything.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4408
             remoteBrokerId = remoteBrokerInfo.getBrokerId();
             if (localBrokerId.equals(remoteBrokerId)) {
                 LOG.trace("{} disconnecting remote loop back connector for: {}, with id: {}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                         configuration.getBrokerName(), remoteBrokerName, remoteBrokerId
                 });
+//IC see: https://issues.apache.org/jira/browse/AMQ-4924
                 ServiceSupport.dispose(localBroker);
                 ServiceSupport.dispose(remoteBroker);
                 // the bridge is left in a bit of limbo, but it won't get retried
@@ -421,6 +456,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             // Fill in the remote broker's information now.
             remoteBrokerPath[0] = remoteBrokerId;
             remoteBrokerName = remoteBrokerInfo.getBrokerName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
             if (configuration.isUseBrokerNamesAsIdSeed()) {
                 idGenerator = new IdGenerator(brokerService.getBrokerName() + "->" + remoteBrokerName);
             }
@@ -431,6 +467,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private void doStartLocalAndRemoteBridges() {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4082
         if (disposed.get()) {
             return;
         }
@@ -466,9 +503,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4082
             startRemoteBridge();
         } catch (Throwable e) {
             serviceRemoteException(e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5315
             return;
         }
 
@@ -477,12 +516,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 setupStaticDestinations();
                 staticDestinationsLatch.countDown();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
         } catch (Throwable e) {
             serviceLocalException(e);
         }
     }
 
     private void startLocalBridge() throws Throwable {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5315
         if (!bridgeFailed.get() && localBridgeStarted.compareAndSet(false, true)) {
             synchronized (this) {
                 LOG.trace("{} starting local Bridge, localBroker={}", configuration.getBrokerName(), localBroker);
@@ -494,19 +537,25 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
                     localConnectionInfo = new ConnectionInfo();
                     localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
                     localClientId = configuration.getName() + configuration.getClientIdToken() + remoteBrokerName + configuration.getClientIdToken() + "inbound" + configuration.getClientIdToken() + configuration.getBrokerName();
                     localConnectionInfo.setClientId(localClientId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
                     localConnectionInfo.setUserName(configuration.getUserName());
                     localConnectionInfo.setPassword(configuration.getPassword());
                     Transport originalTransport = remoteBroker;
                     while (originalTransport instanceof TransportFilter) {
                         originalTransport = ((TransportFilter) originalTransport).getNext();
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6665
                     if (originalTransport instanceof TcpTransport) {
                         X509Certificate[] peerCerts = originalTransport.getPeerCertificates();
                         localConnectionInfo.setTransportContext(peerCerts);
                     }
                     // sync requests that may fail
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
                     Object resp = localBroker.request(localConnectionInfo);
                     if (resp instanceof ExceptionResponse) {
                         throw ((ExceptionResponse) resp).getException();
@@ -517,16 +566,19 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     if (configuration.isDuplex()) {
                         // separate in-bound channel for forwards so we don't
                         // contend with out-bound dispatch on same connection
+//IC see: https://issues.apache.org/jira/browse/AMQ-5830
                         remoteBrokerInfo.setNetworkConnection(true);
                         duplexInboundLocalBroker.oneway(remoteBrokerInfo);
 
                         ConnectionInfo duplexLocalConnectionInfo = new ConnectionInfo();
                         duplexLocalConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
                         duplexLocalConnectionInfo.setClientId(configuration.getName() + configuration.getClientIdToken() + remoteBrokerName + configuration.getClientIdToken() + "inbound" + configuration.getClientIdToken() + "duplex"
                                 + configuration.getClientIdToken() + configuration.getBrokerName());
                         duplexLocalConnectionInfo.setUserName(configuration.getUserName());
                         duplexLocalConnectionInfo.setPassword(configuration.getPassword());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6665
                         if (originalTransport instanceof TcpTransport) {
                             X509Certificate[] peerCerts = originalTransport.getPeerCertificates();
                             duplexLocalConnectionInfo.setTransportContext(peerCerts);
@@ -541,7 +593,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         duplexInboundLocalBroker.oneway(duplexInboundSession);
                         duplexInboundLocalBroker.oneway(duplexInboundLocalProducerInfo);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
                     brokerService.getBroker().networkBridgeStarted(remoteBrokerInfo, this.createdByDuplex, remoteBroker.toString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                     NetworkBridgeListener l = this.networkBridgeListener;
                     if (l != null) {
                         l.onStart(this);
@@ -551,8 +607,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     localBroker.oneway(remoteBrokerInfo);
                     // new peer broker (a consumer can work with remote broker also)
                     brokerService.getBroker().addBroker(null, remoteBrokerInfo);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
 
                     LOG.info("Network connection between {} and {} ({}) has been established.", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                             localBroker, remoteBroker, remoteBrokerName
                     });
                     LOG.trace("{} register bridge ({}) to {}", new Object[]{
@@ -561,6 +620,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 } else {
                     LOG.warn("Bridge was disposed before the startLocalBridge() method was fully executed.");
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1343
                 startedLatch.countDown();
                 localStartedLatch.countDown();
             }
@@ -568,19 +628,24 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void startRemoteBridge() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5315
         if (!bridgeFailed.get() && remoteBridgeStarted.compareAndSet(false, true)) {
             LOG.trace("{} starting remote Bridge, remoteBroker={}", configuration.getBrokerName(), remoteBroker);
             synchronized (this) {
                 if (!isCreatedByDuplex()) {
                     BrokerInfo brokerInfo = new BrokerInfo();
                     brokerInfo.setBrokerName(configuration.getBrokerName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                     brokerInfo.setBrokerURL(configuration.getBrokerURL());
                     brokerInfo.setNetworkConnection(true);
                     brokerInfo.setDuplexConnection(configuration.isDuplex());
                     // set our properties
                     Properties props = new Properties();
                     IntrospectionSupport.getProperties(configuration, props, null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1542
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
                     String dynamicallyIncludedDestinationsKey = "dynamicallyIncludedDestinations";
                     String staticallyIncludedDestinationsKey = "staticallyIncludedDestinations";
 
@@ -595,13 +660,17 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 convertFromActiveMQDestination(configuration.getStaticallyIncludedDestinations(), true));
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
                     props.remove("networkTTL");
                     String str = MarshallingSupport.propertiesToString(props);
                     brokerInfo.setNetworkProperties(str);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1542
                     brokerInfo.setBrokerId(this.localBrokerId);
                     remoteBroker.oneway(brokerInfo);
                     if (configuration.isSyncDurableSubs() &&
                             remoteBroker.getWireFormat().getVersion() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
                         remoteBroker.oneway(NetworkBridgeUtils.getBrokerSubscriptionInfo(brokerService,
                                 configuration));
                     }
@@ -611,6 +680,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
                 remoteConnectionInfo = new ConnectionInfo();
                 remoteConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
                 remoteConnectionInfo.setClientId(configuration.getName() + configuration.getClientIdToken() + configuration.getBrokerName() + configuration.getClientIdToken() + "outbound");
                 remoteConnectionInfo.setUserName(configuration.getUserName());
                 remoteConnectionInfo.setPassword(configuration.getPassword());
@@ -622,16 +692,19 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 producerInfo.setResponseRequired(false);
                 remoteBroker.oneway(producerInfo);
                 // Listen to consumer advisory messages on the remote broker to determine demand.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3632
                 if (!configuration.isStaticBridge()) {
                     demandConsumerInfo = new ConsumerInfo(remoteSessionInfo, 1);
                     // always dispatch advisory message asynchronously so that
                     // we never block the producer broker if we are slow
                     demandConsumerInfo.setDispatchAsync(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3384
                     String advisoryTopic = configuration.getDestinationFilter();
                     if (configuration.isBridgeTempDestinations()) {
                         advisoryTopic += "," + AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC;
                     }
                     demandConsumerInfo.setDestination(new ActiveMQTopic(advisoryTopic));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6267
                     configureConsumerPrefetch(demandConsumerInfo);
                     remoteBroker.oneway(demandConsumerInfo);
                 }
@@ -665,11 +738,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
      * @return
      */
     protected boolean isDirectBridgeConsumer(ConsumerInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         return (info.getSubscriptionName() != null && info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX)) &&
                 (info.getClientId() == null || info.getClientId().startsWith(configuration.getName()));
     }
 
     protected boolean isProxyBridgeSubscription(String clientId, String subName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         if (subName != null && clientId != null) {
             if (subName.startsWith(DURABLE_SUB_PREFIX) && !clientId.startsWith(configuration.getName())) {
                 return true;
@@ -709,6 +784,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (sub != null && path.length > 1 && subName != null) {
             String b1 = path[path.length-1].toString();
             String b2 = path[path.length-2].toString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
             final SubscriptionInfo newSubInfo = new SubscriptionInfo(b2 + configuration.getClientIdToken() + "inbound" + configuration.getClientIdToken() + b1, subName);
             sub.getDurableRemoteSubs().add(newSubInfo);
         }
@@ -716,6 +792,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private String getProxyBridgeClientId(String clientId) {
         String newClientId = clientId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         String[] clientIdTokens = newClientId != null ? newClientId.split(Pattern.quote(configuration.getClientIdToken())) : null;
         if (clientIdTokens != null && clientIdTokens.length > 2) {
             newClientId = clientIdTokens[clientIdTokens.length - 3] +  configuration.getClientIdToken() + "inbound"
@@ -729,6 +806,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected boolean isProxyNSConsumerClientId(String clientId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         return clientId != null && clientId.split(Pattern.quote(configuration.getClientIdToken())).length > 3;
     }
 
@@ -736,14 +814,20 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (!disposed.get()) {
             try {
                 if (command.isMessageDispatch()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3887
                     safeWaitUntilStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                     MessageDispatch md = (MessageDispatch) command;
                     serviceRemoteConsumerAdvisory(md.getMessage().getDataStructure());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                     ackAdvisory(md.getMessage());
                 } else if (command.isBrokerInfo()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4082
                     futureRemoteBrokerInfo.set((BrokerInfo) command);
                 } else if (command instanceof BrokerSubscriptionInfo) {
                     final BrokerSubscriptionInfo brokerSubscriptionInfo = (BrokerSubscriptionInfo) command;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6476
 
                     //Start in a new thread so we don't block the transport waiting for staticDestinations
                     syncExecutor.execute(new Runnable() {
@@ -767,6 +851,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                                     //dynamicallyIncludedDestinations list
                                                     //Also re-add network consumers that are not part of this direct
                                                     //bridge (proxy of proxy bridges)
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
                                                     if((info.getSubscriptionName() == null || !isDirectBridgeConsumer(info)) &&
                                                             NetworkBridgeUtils.matchesDestinations(dynamicallyIncludedDestinations, info.getDestination())) {
                                                         serviceRemoteConsumerAdvisory(info);
@@ -777,6 +862,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                             //After re-added, clean up any empty durables
                                             for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
                                                 DemandSubscription ds = i.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
                                                 if (NetworkBridgeUtils.matchesDestinations(dynamicallyIncludedDestinations, ds.getLocalInfo().getDestination())) {
                                                     cleanupDurableSub(ds, i);
                                                 }
@@ -792,23 +878,32 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     });
 
                 } else if (command.getClass() == ConnectionError.class) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                     ConnectionError ce = (ConnectionError) command;
                     serviceRemoteException(ce.getException());
                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1521
                     if (isDuplex()) {
                         LOG.trace("{} duplex command type: {}", configuration.getBrokerName(), command.getDataStructureType());
                         if (command.isMessage()) {
                             final ActiveMQMessage message = (ActiveMQMessage) command;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5639
                             if (NetworkBridgeFilter.isAdvisoryInterpretedByNetworkBridge(message)) {
                                 serviceRemoteConsumerAdvisory(message.getDataStructure());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                                 ackAdvisory(message);
                             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2086
                                 if (!isPermissableDestination(message.getDestination(), true)) {
                                     return;
                                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3887
+//IC see: https://issues.apache.org/jira/browse/AMQ-7193
                                 safeWaitUntilStarted();
                                 // message being forwarded - we need to
                                 // propagate the response to our local send
+//IC see: https://issues.apache.org/jira/browse/AMQ-4924
                                 if (canDuplexDispatch(message)) {
                                     message.setProducerId(duplexInboundLocalProducerInfo.getProducerId());
                                     if (message.isResponseRequired() || configuration.isAlwaysSyncSend()) {
@@ -822,6 +917,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                                     reply.setCorrelationId(correlationId);
                                                     remoteBroker.oneway(reply);
                                                     //increment counter when messages are received in duplex mode
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
                                                     networkBridgeStatistics.getReceivedCount().increment();
                                                 } catch (IOException error) {
                                                     LOG.error("Exception: {} on duplex forward of: {}", error, message);
@@ -831,8 +927,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                         });
                                     } else {
                                         duplexInboundLocalBroker.oneway(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
                                         networkBridgeStatistics.getReceivedCount().increment();
                                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
                                     serviceInboundMessage(message);
                                 } else {
                                     if (message.isResponseRequired() || configuration.isAlwaysSyncSend()) {
@@ -845,6 +943,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         } else {
                             switch (command.getDataStructureType()) {
                                 case ConnectionInfo.DATA_STRUCTURE_TYPE:
+//IC see: https://issues.apache.org/jira/browse/AMQ-4852
                                     if (duplexInitiatingConnection != null && duplexInitiatingConnectionInfoReceived.compareAndSet(false, true)) {
                                         // end of initiating connection setup - propogate to initial connection to get mbean by clientid
                                         duplexInitiatingConnection.processAddConnection((ConnectionInfo) command);
@@ -853,11 +952,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                     }
                                     break;
                                 case SessionInfo.DATA_STRUCTURE_TYPE:
+//IC see: https://issues.apache.org/jira/browse/AMQ-1176
                                     localBroker.oneway(command);
                                     break;
                                 case ProducerInfo.DATA_STRUCTURE_TYPE:
                                     // using duplexInboundLocalProducerInfo
                                     break;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                                 case MessageAck.DATA_STRUCTURE_TYPE:
                                     MessageAck ack = (MessageAck) command;
                                     DemandSubscription localSub = subscriptionMapByRemoteId.get(ack.getConsumerId());
@@ -884,6 +986,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                         LOG.warn("Stopping - ignoring ConsumerInfo: {}", command);
                                     }
                                     break;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2764
                                 case ShutdownInfo.DATA_STRUCTURE_TYPE:
                                     // initiator is shutting down, controlled case
                                     // abortive close dealt with by inactivity monitor
@@ -898,6 +1001,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         switch (command.getDataStructureType()) {
                             case KeepAliveInfo.DATA_STRUCTURE_TYPE:
                             case WireFormatInfo.DATA_STRUCTURE_TYPE:
+//IC see: https://issues.apache.org/jira/browse/AMQ-802
+//IC see: https://issues.apache.org/jira/browse/AMQ-805
                             case ShutdownInfo.DATA_STRUCTURE_TYPE:
                                 break;
                             default:
@@ -907,13 +1012,18 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
             } catch (Throwable e) {
                 LOG.debug("Exception processing remote command: {}", command, e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-802
+//IC see: https://issues.apache.org/jira/browse/AMQ-805
                 serviceRemoteException(e);
             }
         }
     }
 
     private void ackAdvisory(Message message) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         demandConsumerDispatched++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6267
         if (demandConsumerDispatched > (demandConsumerInfo.getPrefetchSize() *
                 (configuration.getAdvisoryAckPercentage() / 100f))) {
             final MessageAck ack = new MessageAck(message, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched);
@@ -933,9 +1043,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     private void serviceRemoteConsumerAdvisory(DataStructure data) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         final int networkTTL = configuration.getConsumerTTL();
         if (data.getClass() == ConsumerInfo.class) {
             // Create a new local subscription
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
             ConsumerInfo info = (ConsumerInfo) data;
             BrokerId[] path = info.getBrokerPath();
 
@@ -946,11 +1059,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
             if (path != null && networkTTL > -1 && path.length >= networkTTL) {
                 LOG.debug("{} Ignoring sub from {}, restricted to {} network hops only: {}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                         configuration.getBrokerName(), remoteBrokerName, networkTTL, info
                 });
                 return;
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2030
             if (contains(path, localBrokerPath[0])) {
                 // Ignore this consumer as it's a consumer we locally sent to the broker.
                 LOG.debug("{} Ignoring sub from {}, already routed through this broker once: {}", new Object[]{
@@ -973,16 +1088,24 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (isDuplicateSuppressionOff(info)) {
                 addConsumerInfo(info);
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                 synchronized (brokerService.getVmConnectorURI()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
                     addConsumerInfo(info);
                 }
             }
         } else if (data.getClass() == DestinationInfo.class) {
             // It's a destination info - we want to pass up information about temporary destinations
+//IC see: https://issues.apache.org/jira/browse/AMQ-4196
+//IC see: https://issues.apache.org/jira/browse/AMQ-3038
             final DestinationInfo destInfo = (DestinationInfo) data;
             BrokerId[] path = destInfo.getBrokerPath();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
             if (path != null && networkTTL > -1 && path.length >= networkTTL) {
                 LOG.debug("{} Ignoring destination {} restricted to {} network hops only", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                         configuration.getBrokerName(), destInfo, networkTTL
                 });
                 return;
@@ -994,13 +1117,17 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             destInfo.setConnectionId(localConnectionInfo.getConnectionId());
             if (destInfo.getDestination() instanceof ActiveMQTempDestination) {
                 // re-set connection id so comes from here
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                 ActiveMQTempDestination tempDest = (ActiveMQTempDestination) destInfo.getDestination();
                 tempDest.setConnectionId(localSessionInfo.getSessionId().getConnectionId());
             }
             destInfo.setBrokerPath(appendToBrokerPath(destInfo.getBrokerPath(), getRemoteBrokerPath()));
             LOG.trace("{} bridging {} destination on {} from {}, destination: {}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                     configuration.getBrokerName(), (destInfo.isAddOperation() ? "add" : "remove"), localBroker, remoteBrokerName, destInfo
             });
+//IC see: https://issues.apache.org/jira/browse/AMQ-4196
+//IC see: https://issues.apache.org/jira/browse/AMQ-3038
             if (destInfo.isRemoveOperation()) {
                 // Serialize with removeSub operations such that all removeSub advisories
                 // are generated
@@ -1018,9 +1145,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 localBroker.oneway(destInfo);
             }
         } else if (data.getClass() == RemoveInfo.class) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
             ConsumerId id = (ConsumerId) ((RemoveInfo) data).getObjectId();
             removeDemandSubscription(id);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
             if (forcedDurableRemoteId.remove(id)) {
                 for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
                     DemandSubscription ds = i.next();
@@ -1032,10 +1162,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
            }
 
         } else if (data.getClass() == RemoveSubscriptionInfo.class) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
             final RemoveSubscriptionInfo info = ((RemoveSubscriptionInfo) data);
             final SubscriptionInfo subscriptionInfo = new SubscriptionInfo(info.getClientId(), info.getSubscriptionName());
             final boolean proxyBridgeSub = isProxyBridgeSubscription(subscriptionInfo.getClientId(),
                     subscriptionInfo.getSubscriptionName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5315
             for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
                 DemandSubscription ds = i.next();
                 boolean removed = ds.getDurableRemoteSubs().remove(subscriptionInfo);
@@ -1050,6 +1182,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
 
                 if (removed) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
                     cleanupDurableSub(ds, i);
                 }
             }
@@ -1059,6 +1192,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     private void cleanupDurableSub(final DemandSubscription ds,
             Iterator<DemandSubscription> i) throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         if (ds != null && ds.getLocalDurableSubscriber() != null && ds.getDurableRemoteSubs().isEmpty()
                 && ds.getForcedDurableConsumersSize() == 0) {
             // deactivate subscriber
@@ -1074,8 +1209,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
             //remove subscriber from local map
             i.remove();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
 
             //need to remove the mapping from the remote map as well
+//IC see: https://issues.apache.org/jira/browse/AMQ-7238
             subscriptionMapByRemoteId.remove(ds.getRemoteInfo().getConsumerId());
         }
     }
@@ -1110,9 +1247,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             LOG.info("Network connection between {} and {} shutdown due to a local error: {}", new Object[]{localBroker, remoteBroker, error});
             LOG.debug("The local Exception was: {}", error, error);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
             brokerService.getTaskRunnerFactory().execute(new Runnable() {
                 @Override
                 public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1848
+//IC see: https://issues.apache.org/jira/browse/AMQ-1848
                     ServiceSupport.dispose(getControllingService());
                 }
             });
@@ -1135,6 +1276,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     advisoryMessage.setStringProperty("cause", error.getLocalizedMessage());
                     advisoryBroker.fireAdvisory(context, AdvisorySupport.getNetworkBridgeForwardFailureAdvisoryTopic(), messageDispatch.getMessage(), null,
                             advisoryMessage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4924
 
                 }
             } catch (Exception e) {
@@ -1150,6 +1292,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void addSubscription(DemandSubscription sub) throws IOException {
         if (sub != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4328
             localBroker.oneway(sub.getLocalInfo());
         }
     }
@@ -1170,6 +1313,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 public void run() {
                     sub.waitForCompletion();
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
                         localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
                     } catch (IOException e) {
                         LOG.warn("failed to deliver remove command for local subscription, for remote {}", sub.getRemoteInfo().getConsumerId(), e);
@@ -1185,11 +1329,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         message.setBrokerPath(appendToBrokerPath(message.getBrokerPath(), localBrokerPath));
         message.setProducerId(producerInfo.getProducerId());
         message.setDestination(md.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4147
         message.setMemoryUsage(null);
         if (message.getOriginalTransactionId() == null) {
             message.setOriginalTransactionId(message.getTransactionId());
         }
         message.setTransactionId(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         if (configuration.isUseCompression()) {
             message.compress();
         }
@@ -1197,17 +1343,26 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void serviceLocalCommand(Command command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
         if (!disposed.get()) {
             try {
                 if (command.isMessageDispatch()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3887
+//IC see: https://issues.apache.org/jira/browse/AMQ-3887
                     safeWaitUntilStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
                     networkBridgeStatistics.getEnqueues().increment();
                     final MessageDispatch md = (MessageDispatch) command;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                     final DemandSubscription sub = subscriptionMapByLocalId.get(md.getConsumerId());
                     if (sub != null && md.getMessage() != null && sub.incrementOutstandingResponses()) {
 
                         if (suppressMessageDispatch(md, sub)) {
                             LOG.debug("{} message not forwarded to {} because message came from there or fails TTL, brokerPath: {}, message: {}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                                     configuration.getBrokerName(), remoteBrokerName, Arrays.toString(md.getMessage().getBrokerPath()), md.getMessage()
                             });
                             // still ack as it may be durable
@@ -1223,6 +1378,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         LOG.debug("bridging ({} -> {}), consumer: {}, destination: {}, brokerPath: {}, message: {}", new Object[]{
                                 configuration.getBrokerName(), remoteBrokerName, md.getConsumerId(), message.getDestination(), Arrays.toString(message.getBrokerPath()), (LOG.isTraceEnabled() ? message : message.getMessageId())
                         });
+//IC see: https://issues.apache.org/jira/browse/AMQ-5639
                         if (isDuplex() && NetworkBridgeFilter.isAdvisoryInterpretedByNetworkBridge(message)) {
                             try {
                                 // never request b/c they are eventually                     acked async
@@ -1232,6 +1388,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             }
                             return;
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6331
                         if (isPermissableDestination(md.getDestination())) {
                            if (message.isPersistent() || configuration.isAlwaysSyncSend()) {
 
@@ -1244,10 +1401,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                     try {
                                        Response response = future.getResult();
                                        if (response.isException()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                                           ExceptionResponse er = (ExceptionResponse) response;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
                                           serviceLocalException(md, er.getException());
                                        } else {
                                           localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
                                           networkBridgeStatistics.getDequeues().increment();
                                        }
                                     } catch (IOException e) {
@@ -1264,37 +1424,54 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                               // of message loss).
                               try {
                                  remoteBroker.oneway(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1976
+//IC see: https://issues.apache.org/jira/browse/AMQ-1976
                                  localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
                                  networkBridgeStatistics.getDequeues().increment();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
                               } finally {
                                  sub.decrementOutstandingResponses();
                               }
                            }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
                            serviceOutbound(message);
                         }
                     } else {
                         LOG.debug("No subscription registered with this network bridge for consumerId: {} for message: {}", md.getConsumerId(), md.getMessage());
                     }
                 } else if (command.isBrokerInfo()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4082
                     futureLocalBrokerInfo.set((BrokerInfo) command);
                 } else if (command.isShutdownInfo()) {
                     LOG.info("{} Shutting down {}", configuration.getBrokerName(), configuration.getName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-802
+//IC see: https://issues.apache.org/jira/browse/AMQ-805
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
                     stop();
                 } else if (command.getClass() == ConnectionError.class) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                     ConnectionError ce = (ConnectionError) command;
                     serviceLocalException(ce.getException());
                 } else {
                     switch (command.getDataStructureType()) {
                         case WireFormatInfo.DATA_STRUCTURE_TYPE:
                             break;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
                         case BrokerSubscriptionInfo.DATA_STRUCTURE_TYPE:
                             break;
                         default:
                             LOG.warn("Unexpected local command: {}", command);
                     }
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
             } catch (Throwable e) {
                 LOG.warn("Caught an exception processing local command", e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-802
+//IC see: https://issues.apache.org/jira/browse/AMQ-805
                 serviceLocalException(e);
             }
         }
@@ -1304,7 +1481,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         boolean suppress = false;
         // for durable subs, suppression via filter leaves dangling acks so we
         // need to check here and allow the ack irrespective
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         if (sub.getLocalInfo().isDurable()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
             NonCachedMessageEvaluationContext messageEvalContext = new NonCachedMessageEvaluationContext();
             messageEvalContext.setMessageReference(md.getMessage());
             messageEvalContext.setDestination(md.getDestination());
@@ -1336,6 +1517,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected BrokerId[] appendToBrokerPath(BrokerId[] brokerPath, BrokerId idToAppend) {
         if (brokerPath == null || brokerPath.length == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4924
             return new BrokerId[]{idToAppend};
         }
         BrokerId rc[] = new BrokerId[brokerPath.length + 1];
@@ -1345,6 +1527,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected boolean isPermissableDestination(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2086
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
         return isPermissableDestination(destination, false);
     }
 
@@ -1358,6 +1542,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6331
         ActiveMQDestination[] dests = excludedDestinations;
         if (dests != null && dests.length > 0) {
             for (ActiveMQDestination dest : dests) {
@@ -1368,6 +1553,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6331
         dests = staticallyIncludedDestinations;
         if (dests != null && dests.length > 0) {
             for (ActiveMQDestination dest : dests) {
@@ -1380,6 +1566,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
         dests = dynamicallyIncludedDestinations;
         if (dests != null && dests.length > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
             for (ActiveMQDestination dest : dests) {
                 DestinationFilter inclusionFilter = DestinationFilter.parseFilter(dest);
                 if (dest != null && inclusionFilter.matches(destination) && dest.getDestinationType() == destination.getDestinationType()) {
@@ -1400,9 +1588,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         ActiveMQDestination[] dests = staticallyIncludedDestinations;
         if (dests != null) {
             for (ActiveMQDestination dest : dests) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6331
                 if (isPermissableDestination(dest)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
                     DemandSubscription sub = createDemandSubscription(dest, null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
                     if (sub != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
                         sub.setStaticallyIncluded(true);
                         try {
                             addSubscription(sub);
@@ -1425,14 +1617,18 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         addRemoteBrokerToBrokerPath(info);
         DemandSubscription sub = createDemandSubscription(info);
         if (sub != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
             if (duplicateSuppressionIsRequired(sub)) {
                 undoMapRegistration(sub);
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
                 if (consumerInfo.isDurable()) {
                     //Handle the demand generated by proxy network subscriptions
                     //The broker path is case is normal
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
                     if (isProxyNSConsumerBrokerPath(sub.getRemoteInfo()) &&
                             info.getSubscriptionName() != null && info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
                         final BrokerId[] path = info.getBrokerPath();
                         addProxyNetworkSubscriptionBrokerPath(sub, path, consumerInfo.getSubscriptionName());
                     //This is the durable sync case on broker restart
@@ -1450,7 +1646,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     private void undoMapRegistration(DemandSubscription sub) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2298
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
         subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
+//IC see: https://issues.apache.org/jira/browse/AMQ-3716
         subscriptionMapByRemoteId.remove(sub.getRemoteInfo().getConsumerId());
     }
 
@@ -1467,12 +1667,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             return suppress;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
         List<ConsumerId> candidateConsumers = consumerInfo.getNetworkConsumerIds();
         Collection<Subscription> currentSubs = getRegionSubscriptions(consumerInfo.getDestination());
         for (Subscription sub : currentSubs) {
             List<ConsumerId> networkConsumers = sub.getConsumerInfo().getNetworkConsumerIds();
             if (!networkConsumers.isEmpty()) {
                 if (matchFound(candidateConsumers, networkConsumers)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
                     if (isInActiveDurableSub(sub)) {
                         suppress = false;
                     } else {
@@ -1500,6 +1702,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
         if (existingSub.getConsumerInfo().getPriority() >= candidateInfo.getPriority()) {
             LOG.debug("{} Ignoring duplicate subscription from {}, sub: {} is duplicate by network subscription with equal or higher network priority: {}, networkConsumerIds: {}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                     configuration.getBrokerName(), remoteBrokerName, candidateInfo, existingSub, existingSub.getConsumerInfo().getNetworkConsumerIds()
             });
             suppress = true;
@@ -1578,14 +1781,17 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         result.getLocalInfo().setConsumerId(new ConsumerId(localSessionInfo.getSessionId(), consumerIdGenerator.getNextSequenceId()));
         if (info.getDestination().isTemporary()) {
             // reset the local connection Id
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
             ActiveMQTempDestination dest = (ActiveMQTempDestination) result.getLocalInfo().getDestination();
             dest.setConnectionId(localConnectionInfo.getConnectionId().toString());
         }
 
         if (configuration.isDecreaseNetworkConsumerPriority()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3558
             byte priority = (byte) configuration.getConsumerPriorityBase();
             if (info.getBrokerPath() != null && info.getBrokerPath().length > 1) {
                 // The longer the path to the consumer, the less it's consumer priority.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                 priority -= info.getBrokerPath().length + 1;
             }
             result.getLocalInfo().setPriority(priority);
@@ -1595,8 +1801,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return result;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
     final protected DemandSubscription createDemandSubscription(ActiveMQDestination destination, final String subscriptionName) {
         ConsumerInfo info = new ConsumerInfo();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
         info.setNetworkSubscription(true);
         info.setDestination(destination);
 
@@ -1606,6 +1814,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
         // Indicate that this subscription is being made on behalf of the remote broker.
         info.setBrokerPath(new BrokerId[]{remoteBrokerId});
+//IC see: https://issues.apache.org/jira/browse/AMQ-4924
 
         // the remote info held by the DemandSubscription holds the original
         // consumerId, the local info get's overwritten
@@ -1620,22 +1829,28 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void configureDemandSubscription(ConsumerInfo info, DemandSubscription sub) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         if (AdvisorySupport.isConsumerAdvisoryTopic(info.getDestination()) ||
                 AdvisorySupport.isVirtualDestinationConsumerAdvisoryTopic(info.getDestination())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4282
             sub.getLocalInfo().setDispatchAsync(true);
         } else {
             sub.getLocalInfo().setDispatchAsync(configuration.isDispatchAsync());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6267
         configureConsumerPrefetch(sub.getLocalInfo());
         subscriptionMapByLocalId.put(sub.getLocalInfo().getConsumerId(), sub);
         subscriptionMapByRemoteId.put(sub.getRemoteInfo().getConsumerId(), sub);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         sub.setNetworkBridgeFilter(createNetworkBridgeFilter(info));
         if (!info.isDurable()) {
             // This works for now since we use a VM connection to the local broker.
             // may need to change if we ever subscribe to a remote broker.
             sub.getLocalInfo().setAdditionalPredicate(sub.getNetworkBridgeFilter());
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
             sub.setLocalDurableSubscriber(new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
         }
     }
@@ -1643,6 +1858,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected void removeDemandSubscription(ConsumerId id) throws IOException {
         DemandSubscription sub = subscriptionMapByRemoteId.remove(id);
         LOG.debug("{} remove request on {} from {}, consumer id: {}, matching sub: {}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                 configuration.getBrokerName(), localBroker, remoteBrokerName, id, sub
         });
         if (sub != null) {
@@ -1655,10 +1871,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected boolean removeDemandSubscriptionByLocalId(ConsumerId consumerId) {
         boolean removeDone = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2298
         DemandSubscription sub = subscriptionMapByLocalId.get(consumerId);
         if (sub != null) {
             try {
                 removeDemandSubscription(sub.getRemoteInfo().getConsumerId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
                 removeDone = true;
             } catch (IOException e) {
                 LOG.debug("removeDemandSubscriptionByLocalId failed for localId: {}", consumerId, e);
@@ -1681,6 +1899,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3630
         NetworkBridgeFilterFactory filterFactory = defaultFilterFactory;
         if (brokerService != null && brokerService.getDestinationPolicy() != null) {
             PolicyEntry entry = brokerService.getDestinationPolicy().getEntryFor(info.getDestination());
@@ -1688,6 +1907,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 filterFactory = entry.getNetworkBridgeFilterFactory();
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         return filterFactory.create(info, getRemoteBrokerPath(), configuration.getMessageTTL(), configuration.getConsumerTTL());
     }
 
@@ -1706,7 +1927,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private void fireBridgeFailed(Throwable reason) {
         LOG.trace("fire bridge failed, listener: {}", this.networkBridgeListener, reason);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
         NetworkBridgeListener l = this.networkBridgeListener;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4082
         if (l != null && this.bridgeFailed.compareAndSet(false, true)) {
             l.bridgeFailed();
         }
@@ -1814,6 +2037,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public String getRemoteBrokerId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4924
         return (remoteBrokerInfo == null || remoteBrokerInfo.getBrokerId() == null) ? null : remoteBrokerInfo.getBrokerId().toString();
     }
 
@@ -1824,6 +2048,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public long getDequeueCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
         return networkBridgeStatistics.getDequeues().getCount();
     }
 
@@ -1838,6 +2063,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected boolean isDuplex() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1521
         return configuration.isDuplex() || createdByDuplex;
     }
 
@@ -1847,13 +2073,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2030
         this.brokerService = brokerService;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
         this.localBrokerId = brokerService.getRegionBroker().getBrokerId();
         localBrokerPath[0] = localBrokerId;
     }
 
     @Override
     public void setMbeanObjectName(ObjectName objectName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3523
         this.mbeanObjectName = objectName;
     }
 
@@ -1864,6 +2093,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public void resetStats() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
         networkBridgeStatistics.reset();
     }
 
@@ -1878,6 +2108,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         private volatile BrokerInfo info = null;
 
         public FutureBrokerInfo(BrokerInfo info, AtomicBoolean disposed) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4082
             this.info = info;
             this.disposed = disposed;
         }
@@ -1945,6 +2176,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void serviceOutbound(Message message) {
         NetworkBridgeListener l = this.networkBridgeListener;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4924
         if (l != null) {
             l.onOutboundMessage(this, message);
         }
@@ -1985,6 +2217,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected void configureConsumerPrefetch(ConsumerInfo consumerInfo) {
         //If a consumer on an advisory topic and advisoryPrefetchSize has been explicitly
         //set then use it, else default to the prefetchSize setting
+//IC see: https://issues.apache.org/jira/browse/AMQ-6267
         if (AdvisorySupport.isAdvisoryTopic(consumerInfo.getDestination()) &&
                 configuration.getAdvisoryPrefetchSize() > 0) {
             consumerInfo.setPrefetchSize(configuration.getAdvisoryPrefetchSize());

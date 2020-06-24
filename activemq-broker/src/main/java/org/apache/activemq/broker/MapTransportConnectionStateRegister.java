@@ -43,6 +43,7 @@ public class MapTransportConnectionStateRegister  implements TransportConnection
 
     public TransportConnectionState unregisterConnectionState(ConnectionId connectionId) {
         TransportConnectionState rc = connectionStates.remove(connectionId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3198
         if (rc.getReferenceCounter().get() > 1) {
             rc.decrementReference();
             connectionStates.put(connectionId, rc);

@@ -99,12 +99,16 @@ public class HttpClientTransport extends HttpTransportSupport {
     public void oneway(Object command) throws IOException {
 
         if (isStopped()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-806
+//IC see: https://issues.apache.org/jira/browse/AMQ-807
             throw new IOException("stopped.");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3521
         HttpPost httpMethod = new HttpPost(getRemoteUrl().toString());
         configureMethod(httpMethod);
         String data = getTextWireFormat().marshalText(command);
         byte[] bytes = data.getBytes("UTF-8");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3566
         if (useCompression && canSendCompressed && bytes.length > minSendAsCompressedSize) {
             ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
             GZIPOutputStream stream = new GZIPOutputStream(bytesOut);
@@ -150,6 +154,7 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     private DataInputStream createDataInputStream(HttpResponse answer) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3566
         Header encoding = answer.getEntity().getContentEncoding();
         if (encoding != null && "gzip".equalsIgnoreCase(encoding.getValue())) {
             return new DataInputStream(new GZIPInputStream(answer.getEntity().getContent()));
@@ -169,6 +174,7 @@ public class HttpClientTransport extends HttpTransportSupport {
 
         while (!isStopped() && !isStopping()) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3521
             httpMethod = new HttpGet(remoteUrl.toString());
             configureMethod(httpMethod);
             HttpResponse answer = null;
@@ -183,6 +189,8 @@ public class HttpClientTransport extends HttpTransportSupport {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
                             onException(new InterruptedIOException());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
                             Thread.currentThread().interrupt();
                             break;
                         }
@@ -191,16 +199,21 @@ public class HttpClientTransport extends HttpTransportSupport {
                         break;
                     }
                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
                     receiveCounter++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3566
                     DataInputStream stream = createDataInputStream(answer);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4307
                     Object command = getTextWireFormat().unmarshal(stream);
                     if (command == null) {
                         LOG.debug("Received null command from url: " + remoteUrl);
                     } else {
                         doConsume(command);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3521
                     stream.close();
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7069
             } catch (Exception e) { // handle RuntimeException from unmarshal
                 onException(IOExceptionSupport.create("Failed to perform GET on: " + remoteUrl + " Reason: " + e.getMessage(), e));
                 break;
@@ -244,6 +257,7 @@ public class HttpClientTransport extends HttpTransportSupport {
     @Override
     protected void doStart() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3566
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP GET consumer thread starting: " + this);
         }
@@ -287,17 +301,20 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2472
         if (httpMethod != null) {
             // In some versions of the JVM a race between the httpMethod and the completion
             // of the method when using HTTPS can lead to a deadlock.  This hack attempts to
             // detect that and interrupt the thread that's locked so that they can complete
             // on another attempt.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4307
             for (int i = 0; i < 3; ++i) {
                 Thread abortThread = new Thread(new Runnable() {
 
                     @Override
                     public void run() {
                         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2238
                             httpMethod.abort();
                         } catch (Exception e) {
                         }
@@ -306,6 +323,7 @@ public class HttpClientTransport extends HttpTransportSupport {
 
                 abortThread.start();
                 abortThread.join(2000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4307
                 if (abortThread.isAlive() && !httpMethod.isAborted()) {
                     abortThread.interrupt();
                 }
@@ -316,6 +334,7 @@ public class HttpClientTransport extends HttpTransportSupport {
     protected HttpClient createHttpClient() {
         HttpClientBuilder clientBuilder = HttpClientBuilder.create();
         clientBuilder.setConnectionManager(createClientConnectionManager());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3566
         if (useCompression) {
             clientBuilder.addInterceptorLast(new HttpRequestInterceptor() {
                 @Override
@@ -356,6 +375,8 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     public boolean isTrace() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-806
+//IC see: https://issues.apache.org/jira/browse/AMQ-807
         return trace;
     }
 
@@ -365,10 +386,12 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     @Override
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         return receiveCounter;
     }
 
     public int getSoTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3175
         return soTimeout;
     }
 
@@ -377,6 +400,7 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     public void setUseCompression(boolean useCompression) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3566
         this.useCompression = useCompression;
     }
 
@@ -403,6 +427,7 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return null;
     }
 
@@ -417,6 +442,7 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     @Override
     protected String getSystemPropertyPrefix() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6556
         return "http.";
     }
 

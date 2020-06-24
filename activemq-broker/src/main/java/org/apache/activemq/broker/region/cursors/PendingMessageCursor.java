@@ -239,6 +239,8 @@ public interface PendingMessageCursor extends Service {
      * @param value
      */
     void setMaxProducersToAudit(int value);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
 
     /**
      * @return the maximum number of producers to audit

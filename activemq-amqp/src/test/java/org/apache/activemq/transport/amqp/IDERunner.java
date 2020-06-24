@@ -56,6 +56,7 @@ public class IDERunner {
         brokerService.start();
 
         if (CLIENT_CONNECT) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5698
             Connection connection = JMSClientContext.INSTANCE.createConnection(connector.getPublishableConnectURI());
             connection.start();
         }

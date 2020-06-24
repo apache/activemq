@@ -57,6 +57,7 @@ public class JettyTestSupport {
     private int proxyPort = 0;
 
     protected boolean isPersistent() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4277
         return false;
     }
 
@@ -74,6 +75,7 @@ public class JettyTestSupport {
 
         int port = getPort();
         server = new Server();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(port);
         WebAppContext context = new WebAppContext();
@@ -98,6 +100,7 @@ public class JettyTestSupport {
 
     @After
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3924
         session.close();
         connection.close();
         server.stop();
@@ -125,6 +128,7 @@ public class JettyTestSupport {
     }
 
     public void waitForJettySocketToAccept(String bindLocation) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
         final URL url = new URL(bindLocation);
         assertTrue("Jetty endpoint is available", Wait.waitFor(new Wait.Condition() {
 

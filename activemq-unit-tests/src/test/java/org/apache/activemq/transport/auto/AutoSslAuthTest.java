@@ -75,7 +75,9 @@ public class AutoSslAuthTest {
         BrokerService brokerService = new BrokerService();
         brokerService.setPersistent(false);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         TransportConnector connector = brokerService.addConnector(protocol + "://localhost:0?transport.needClientAuth=true");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6420
         connector.setName("auto");
         uri = connector.getPublishableConnectString();
 
@@ -90,6 +92,7 @@ public class AutoSslAuthTest {
                     @Override
                     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
                         super.addConnection(context, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6420
                         if (info.getTransportContext() instanceof X509Certificate[]) {
                             hasCertificateCount.getAndIncrement();
                         }
@@ -127,8 +130,10 @@ public class AutoSslAuthTest {
     public void testConnect() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
         factory.setBrokerURL(uri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
 
         //Create 5 connections to make sure all are properly set
+//IC see: https://issues.apache.org/jira/browse/AMQ-6420
         for (int i = 0; i < 5; i++) {
             factory.createConnection().start();
         }

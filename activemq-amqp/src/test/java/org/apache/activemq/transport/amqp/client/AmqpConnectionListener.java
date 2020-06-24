@@ -28,5 +28,6 @@ public interface AmqpConnectionListener {
      *        The error that triggered this event.
      */
     void onException(Throwable ex);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
 
 }

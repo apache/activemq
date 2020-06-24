@@ -31,6 +31,7 @@ import org.apache.activemq.broker.region.MessageReference;
 public class OldestMessageEvictionStrategy extends MessageEvictionStrategySupport  {
 
     public MessageReference[] evictMessages(LinkedList messages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-871
         return new MessageReference[] {(MessageReference) messages.removeFirst()};
     }
 }

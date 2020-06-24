@@ -36,6 +36,7 @@ public class Target {
     }
 
     public Target(String ...ids) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5176
         this.ids.addAll(java.util.Arrays.asList(ids));
     }
 

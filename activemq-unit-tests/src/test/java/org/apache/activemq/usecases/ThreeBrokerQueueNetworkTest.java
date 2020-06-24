@@ -120,6 +120,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerB", "BrokerA", true, 1, false);
         bridgeBrokers("BrokerB", "BrokerC", true, 1, false);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
         startAllBrokers();
         waitForBridgeFormation();
         
@@ -159,6 +160,10 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
      */
     public void testBAandBCbrokerNetworkWithSelectorsSubscribeFirst() throws Exception {
     	// Setup broker networks
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
+//IC see: https://issues.apache.org/jira/browse/AMQ-1509
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
+//IC see: https://issues.apache.org/jira/browse/AMQ-1509
         bridgeBrokers("BrokerB", "BrokerA", true, 1, false);
         bridgeBrokers("BrokerB", "BrokerC", true, 1, false);
 
@@ -314,6 +319,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     }
 
     public void testAllConnectedUsingMulticastProducerConsumerOnA() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2198
         bridgeAllBrokers("default", 3, false);
         startAllBrokers();
         waitForBridgeFormation();
@@ -358,6 +364,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         // Send messages
         sendMessages("BrokerB", dest, messageCount);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2298
         assertTrue("messaged received within time limit", messagesReceived.await(30, TimeUnit.SECONDS));
         
         // Get message count
@@ -469,12 +476,14 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         sendMessages("BrokerB", dest, messageCount);
 
         // Let's try to wait for any messages.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2298
         assertTrue("messages are received within limit", messagesReceived.await(60, TimeUnit.SECONDS));
         assertEquals(messageCount, msgs.getMessageCount());      
     }
 
     public void testNoDuplicateQueueSubs() throws Exception {
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-2198
         bridgeAllBrokers("default", 3, true);
         
         startAllBrokers();
@@ -514,6 +523,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         boolean suppressQueueDuplicateSubscriptions = true;
         boolean decreaseNetworkConsumerPriority = true;
         bridgeAllBrokers("default", 3, suppressQueueDuplicateSubscriptions, decreaseNetworkConsumerPriority);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2298
 
         // Setup destination
         final Destination dest = createDestination("TEST.FOO", false);
@@ -572,6 +582,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
 
     public void testDuplicateQueueSubs() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         configureBroker(createBroker("BrokerD"));
         
         bridgeAllBrokers("default", 3, false);
@@ -596,7 +607,9 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = i.next().broker;
             if (!brokerName.equals(broker.getBrokerName())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
                 verifyConsumerCount(broker, 5, dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2298
                 verifyConsumePriority(broker, ConsumerInfo.NORMAL_PRIORITY, dest);
             }
         }
@@ -606,6 +619,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         // wait for advisories
         Thread.sleep(2000);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = i.next().broker;
             if (!brokerName.equals(broker.getBrokerName())) {
@@ -632,6 +646,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     }
 
     private void logConsumerCount(BrokerService broker, int count, final Destination dest) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         final RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
         waitFor(new Condition() {
             public boolean isSatisified() throws Exception {
@@ -652,6 +667,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
 
     @Override
     public void configureBroker(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         brokerService.setBrokerId(brokerService.getBrokerName());
     }
 

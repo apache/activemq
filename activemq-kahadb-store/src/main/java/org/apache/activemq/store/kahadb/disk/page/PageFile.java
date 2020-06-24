@@ -157,12 +157,15 @@ public class PageFile {
         Page page;
         byte[] current;
         byte[] diskBound;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3466
         long currentLocation = -1;
         long diskBoundLocation = -1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3374
         File tmpFile;
         int length;
 
         public PageWrite(Page page, byte[] data) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
             this.page = page;
             current = data;
         }
@@ -175,6 +178,7 @@ public class PageFile {
         }
 
         public void setCurrent(Page page, byte[] data) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
             this.page = page;
             current = data;
             currentLocation = -1;
@@ -190,6 +194,7 @@ public class PageFile {
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
             return "[PageWrite:" + page.getPageId() + "-" + page.getType() + "]";
         }
 
@@ -201,6 +206,7 @@ public class PageFile {
         public byte[] getDiskBound(HashMap<File, RandomAccessFile> tmpFiles) throws IOException {
             if (diskBound == null && diskBoundLocation != -1) {
                 diskBound = new byte[length];
+//IC see: https://issues.apache.org/jira/browse/AMQ-7143
                 if (tmpFiles.containsKey(tmpFile) && tmpFiles.get(tmpFile).getChannel().isOpen()) {
                     RandomAccessFile file = tmpFiles.get(tmpFile);
                     file.seek(diskBoundLocation);
@@ -208,6 +214,7 @@ public class PageFile {
                 } else {
                     try (RandomAccessFile file = new RandomAccessFile(tmpFile, "r")) {
                         file.seek(diskBoundLocation);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3466
                         file.read(diskBound);
                     }
                 }
@@ -217,11 +224,14 @@ public class PageFile {
         }
 
         void begin() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
             if (currentLocation != -1) {
                 diskBoundLocation = currentLocation;
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
                 diskBound = current;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
             current = null;
             currentLocation = -1;
         }
@@ -331,6 +341,7 @@ public class PageFile {
      * @throws IllegalStateException if this PageFile is loaded
      */
     public void delete() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         if (loaded.get()) {
             throw new IllegalStateException("Cannot delete page file data when the page file is loaded");
         }
@@ -341,6 +352,7 @@ public class PageFile {
 
     public void archive() throws IOException {
         if (loaded.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3634
             throw new IllegalStateException("Cannot delete page file data when the page file is loaded");
         }
         long timestamp = System.currentTimeMillis();
@@ -354,7 +366,9 @@ public class PageFile {
      * @throws IOException
      */
     private void delete(File file) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
         if (file.exists() && !file.delete()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
             throw new IOException("Could not delete: " + file.getPath());
         }
     }
@@ -383,12 +397,14 @@ public class PageFile {
                 if (isUseLFRUEviction()) {
                     pageCache = Collections.synchronizedMap(new LFUCache<Long, Page>(pageCacheSize, getLFUEvictionFactor()));
                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3028
                     pageCache = Collections.synchronizedMap(new LRUCache<Long, Page>(pageCacheSize, pageCacheSize, 0.75f, true));
                 }
             }
 
             File file = getMainPageFile();
             IOHelper.mkdirs(file.getParentFile());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
             writeFile = new RecoverableRandomAccessFile(file, "rw", false);
             readFile = new RecoverableRandomAccessFile(file, "r");
 
@@ -409,6 +425,7 @@ public class PageFile {
             }
 
             if (enableRecoveryFile) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3725
                 recoveryFile = new RecoverableRandomAccessFile(getRecoveryFile(), "rw");
             }
 
@@ -420,6 +437,7 @@ public class PageFile {
             } else {
                 LOG.debug(toString() + ", Recovering page file...");
                 nextTxid.set(redoRecoveryUpdates());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
                 trackingFreeDuringRecovery.set(new SequenceSet());
             }
 
@@ -432,7 +450,9 @@ public class PageFile {
             storeMetaData();
             getFreeFile().delete();
             startWriter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
             if (trackingFreeDuringRecovery.get() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
                 asyncFreePageRecovery(nextFreePageId.get());
             }
         } else {
@@ -441,6 +461,8 @@ public class PageFile {
     }
 
     private void asyncFreePageRecovery(final long lastRecoveryPage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
+//IC see: https://issues.apache.org/jira/browse/AMQ-6590
         Thread thread = new Thread("KahaDB Index Free Page Recovery") {
             @Override
             public void run() {
@@ -468,6 +490,7 @@ public class PageFile {
             for (Iterator<Page> i = new Transaction(recoveryPageFile).iterator(true); i.hasNext(); ) {
                 Page page = i.next();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
                 if (page.getPageId() >= lastRecoveryPage) {
                     break;
                 }
@@ -484,7 +507,9 @@ public class PageFile {
         if (!newFreePages.isEmpty()) {
 
             // allow flush (with index lock held) to merge eventually
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
             recoveredFreeList.lazySet(newFreePages);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7163
         } else {
             // If there is no free pages, set trackingFreeDuringRecovery to allow the broker to have a clean shutdown
             trackingFreeDuringRecovery.set(null);
@@ -519,6 +544,7 @@ public class PageFile {
                 throw new InterruptedIOException();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
             if (freeList.isEmpty()) {
                 metaData.setFreePages(0);
             } else {
@@ -527,8 +553,11 @@ public class PageFile {
             }
 
             metaData.setLastTxId(nextTxid.get() - 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
             if (trackingFreeDuringRecovery.get() != null) {
                 // async recovery incomplete, will have to try again
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
+//IC see: https://issues.apache.org/jira/browse/AMQ-6590
                 metaData.setCleanShutdown(false);
             } else {
                 metaData.setCleanShutdown(true);
@@ -562,10 +591,12 @@ public class PageFile {
     }
 
     public boolean isCleanShutdown() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7163
         return metaData != null && metaData.isCleanShutdown();
     }
 
     public void allowIOResumption() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
         loaded.set(true);
     }
 
@@ -576,10 +607,12 @@ public class PageFile {
      */
     public void flush() throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         if (enabledWriteThread && stopWriter.get()) {
             throw new IOException("Page file already stopped: checkpointing is not allowed");
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
         SequenceSet recovered = recoveredFreeList.get();
         if (recovered != null) {
             recoveredFreeList.lazySet(null);
@@ -610,8 +643,10 @@ public class PageFile {
             }
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3076
             checkpointLatch.await();
         } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
             InterruptedIOException ioe = new InterruptedIOException();
             ioe.initCause(e);
             throw ioe;
@@ -621,6 +656,7 @@ public class PageFile {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         return "Page File: " + getMainPageFile();
     }
 
@@ -650,6 +686,7 @@ public class PageFile {
         MetaData v2 = new MetaData();
         try {
             Properties p = new Properties();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
             byte[] d = new byte[PAGE_FILE_HEADER_SIZE / 2];
             readFile.seek(0);
             readFile.readFully(d);
@@ -662,6 +699,7 @@ public class PageFile {
 
         try {
             Properties p = new Properties();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
             byte[] d = new byte[PAGE_FILE_HEADER_SIZE / 2];
             readFile.seek(PAGE_FILE_HEADER_SIZE / 2);
             readFile.readFully(d);
@@ -672,6 +710,7 @@ public class PageFile {
             v2 = null;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         if (v1 == null && v2 == null) {
             throw new IOException("Could not load page file meta data");
         }
@@ -696,6 +735,7 @@ public class PageFile {
         ByteArrayOutputStream os = new ByteArrayOutputStream(PAGE_FILE_HEADER_SIZE);
         p.store(os, "");
         if (os.size() > PAGE_FILE_HEADER_SIZE / 2) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
             throw new IOException("Configuation is larger than: " + PAGE_FILE_HEADER_SIZE / 2);
         }
         // Fill the rest with space...
@@ -709,9 +749,11 @@ public class PageFile {
         // So we don't loose it.. write it 2 times...
         writeFile.seek(0);
         writeFile.write(d);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
         writeFile.sync();
         writeFile.seek(PAGE_FILE_HEADER_SIZE / 2);
         writeFile.write(d);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
         writeFile.sync();
     }
 
@@ -778,6 +820,7 @@ public class PageFile {
      * @return the amount of content data that a page can hold.
      */
     public int getPageContentSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         return this.pageSize - Page.PAGE_HEADER_SIZE;
     }
 
@@ -838,6 +881,7 @@ public class PageFile {
     }
 
     public boolean isFreePage(long pageId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
         return freeList.contains(pageId);
     }
     /**
@@ -853,6 +897,7 @@ public class PageFile {
 
     public long getFreePageCount() {
         assertLoaded();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         return freeList.rangeSize();
     }
 
@@ -871,6 +916,7 @@ public class PageFile {
     }
 
     public int getWriteBatchSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         return writeBatchSize;
     }
 
@@ -902,6 +948,7 @@ public class PageFile {
      * @throws IllegalStateException if the page file is not loaded.
      */
     void assertLoaded() throws IllegalStateException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         if (!loaded.get()) {
             throw new IllegalStateException("PageFile is not loaded");
         }
@@ -936,6 +983,7 @@ public class PageFile {
             int c = count;
 
             // Perform the id's only once....
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
             long pageId = nextFreePageId.getAndAdd(count);
             long writeTxnId = nextTxid.getAndAdd(count);
 
@@ -968,6 +1016,7 @@ public class PageFile {
         return nextTxid.incrementAndGet();
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3982
     synchronized void readPage(long pageId, byte[] data) throws IOException {
         readFile.seek(toOffset(pageId));
         readFile.readFully(data);
@@ -976,7 +1025,9 @@ public class PageFile {
     public void freePage(long pageId) {
         freeList.add(pageId);
         removeFromCache(pageId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
         SequenceSet trackFreeDuringRecovery = trackingFreeDuringRecovery.get();
         if (trackFreeDuringRecovery != null) {
             trackFreeDuringRecovery.add(pageId);
@@ -986,6 +1037,7 @@ public class PageFile {
     @SuppressWarnings("unchecked")
     private <T> void write(Page<T> page, byte[] data) throws IOException {
         final PageWrite write = new PageWrite(page, data);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         Entry<Long, PageWrite> entry = new Entry<Long, PageWrite>() {
             @Override
             public Long getKey() {
@@ -1007,6 +1059,7 @@ public class PageFile {
     }
 
     void write(Collection<Map.Entry<Long, PageWrite>> updates) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         synchronized (writes) {
             if (enabledWriteThread) {
                 while (writes.size() >= writeBatchSize && !stopWriter.get()) {
@@ -1025,9 +1078,11 @@ public class PageFile {
                 Long key = entry.getKey();
                 PageWrite value = entry.getValue();
                 PageWrite write = writes.get(key);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
                 if (write == null) {
                     writes.put(key, value);
                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3374
                     if (value.currentLocation != -1) {
                         write.setCurrentLocation(value.page, value.currentLocation, value.length);
                         write.tmpFile = value.tmpFile;
@@ -1041,6 +1096,7 @@ public class PageFile {
             // Once we start approaching capacity, notify the writer to start writing
             // sync immediately for long txs
             if (longTx || canStartWriteBatch()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
 
                 if (enabledWriteThread) {
                     writes.notify();
@@ -1068,6 +1124,7 @@ public class PageFile {
     ///////////////////////////////////////////////////////////////////
     @SuppressWarnings("unchecked")
     <T> Page<T> getFromCache(long pageId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         synchronized (writes) {
             PageWrite pageWrite = writes.get(pageId);
             if (pageWrite != null) {
@@ -1088,6 +1145,7 @@ public class PageFile {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
     void removeFromCache(long pageId) {
         if (enablePageCaching) {
             pageCache.remove(pageId);
@@ -1100,6 +1158,7 @@ public class PageFile {
 
     private void pollWrites() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
             while (!stopWriter.get()) {
                 // Wait for a notification...
                 synchronized (writes) {
@@ -1125,6 +1184,7 @@ public class PageFile {
 
     private void writeBatch() throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         CountDownLatch checkpointLatch;
         ArrayList<PageWrite> batch;
         synchronized (writes) {
@@ -1132,6 +1192,7 @@ public class PageFile {
 
             batch = new ArrayList<PageWrite>(writes.size());
             // build a write batch from the current write cache.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
             for (PageWrite write : writes.values()) {
                 batch.add(write);
                 // Move the current write to the diskBound write, this lets folks update the
@@ -1145,19 +1206,24 @@ public class PageFile {
             // Grab on to the existing checkpoint latch cause once we do this write we can
             // release the folks that were waiting for those writes to hit disk.
             checkpointLatch = this.checkpointLatch;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
             this.checkpointLatch = null;
         }
 
         try {
 
             // First land the writes in the recovery file
+//IC see: https://issues.apache.org/jira/browse/AMQ-5815
             if (enableRecoveryFile) {
                 Checksum checksum = new Adler32();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6207
 
                 recoveryFile.seek(RECOVERY_FILE_HEADER_SIZE);
 
                 for (PageWrite w : batch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7143
                         checksum.update(w.getDiskBound(tmpFilesForRemoval), 0, pageSize);
                     } catch (Throwable t) {
                         throw IOExceptionSupport.create("Cannot create recovery file. Reason: " + t, t);
@@ -1167,6 +1233,7 @@ public class PageFile {
                 }
 
                 // Can we shrink the recovery buffer??
+//IC see: https://issues.apache.org/jira/browse/AMQ-6207
                 if (recoveryPageCount > recoveryFileMaxPageCount) {
                     int t = Math.max(recoveryFileMinPageCount, batch.size());
                     recoveryFile.setLength(recoveryFileSizeForPages(t));
@@ -1184,12 +1251,14 @@ public class PageFile {
                 recoveryFile.writeInt(batch.size());
 
                 if (enableDiskSyncs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5444
                     recoveryFile.sync();
                 }
             }
 
             for (PageWrite w : batch) {
                 writeFile.seek(toOffset(w.page.getPageId()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7143
                 writeFile.write(w.getDiskBound(tmpFilesForRemoval), 0, pageSize);
                 w.done();
             }
@@ -1198,6 +1267,7 @@ public class PageFile {
                 writeFile.sync();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
         } catch (IOException ioError) {
             LOG.info("Unexpected io error on pagefile write of " + batch.size() + " pages.", ioError);
             // any subsequent write needs to be prefaced with a considered call to redoRecoveryUpdates
@@ -1211,8 +1281,11 @@ public class PageFile {
                     // the write cache.
                     if (w.isDone()) {
                         writes.remove(w.page.getPageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7143
                         if (w.tmpFile != null && tmpFilesForRemoval.containsKey(w.tmpFile)) {
                             tmpFilesForRemoval.get(w.tmpFile).close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3374
+//IC see: https://issues.apache.org/jira/browse/AMQ-3443
                             if (!w.tmpFile.delete()) {
                                 throw new IOException("Can't delete temporary KahaDB transaction file:" + w.tmpFile);
                             }
@@ -1229,6 +1302,7 @@ public class PageFile {
     }
 
     public void removeTmpFile(File file, RandomAccessFile randomAccessFile) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7143
         if (!tmpFilesForRemoval.containsKey(file)) {
             tmpFilesForRemoval.put(file, randomAccessFile);
         } else {
@@ -1270,6 +1344,7 @@ public class PageFile {
 
         // How many recovery pages do we have in the recovery buffer?
         recoveryFile.seek(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2687
         long nextTxId = recoveryFile.readLong();
         long expectedChecksum = recoveryFile.readLong();
         int pageCounter = recoveryFile.readInt();
@@ -1298,17 +1373,20 @@ public class PageFile {
         recoveryPageCount = pageCounter;
 
         // If the checksum is not valid then the recovery buffer was partially written to disk.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         if (checksum.getValue() != expectedChecksum) {
             return nextTxId;
         }
 
         // Re-apply all the writes in the recovery buffer.
         for (Map.Entry<Long, byte[]> e : batch.entrySet()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2935
             writeFile.seek(toOffset(e.getKey()));
             writeFile.write(e.getValue());
         }
 
         // And sync it to disk
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
         writeFile.sync();
         return nextTxId;
     }
@@ -1331,6 +1409,7 @@ public class PageFile {
     }
 
     private void stopWriter() throws InterruptedException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3638
         if (enabledWriteThread) {
             stopWriter.set(true);
             writerThread.join();
@@ -1342,6 +1421,7 @@ public class PageFile {
     }
 
     public File getDirectory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3374
         return directory;
     }
 }

@@ -57,6 +57,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     }
 
     private ServerSessionImpl createServerSessionImpl() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1147
         MessageActivationSpec activationSpec = activeMQAsfEndpointWorker.endpointActivationKey.getActivationSpec();
         int acknowledge = (activeMQAsfEndpointWorker.transacted) ? Session.SESSION_TRANSACTED : activationSpec.getAcknowledgeModeForSession();
         final ActiveMQConnection connection = activeMQAsfEndpointWorker.getConnection();
@@ -74,6 +75,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
             if (activationSpec.isUseRAManagedTransactionEnabled()) {
                 // The RA will manage the transaction commit.
                 endpoint = createEndpoint(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6150
                 return new ServerSessionImpl(this, session, activeMQAsfEndpointWorker.workManager, endpoint, true, batchSize);
             } else {
                 // Give the container an object to manage to transaction with.
@@ -109,6 +111,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
             throw new JMSException("Session Pool Shutting Down.");
         }
         ServerSessionImpl ss = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1618
         sessionLock.lock();
         try {
             ss = getExistingServerSession(false);
@@ -151,6 +154,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
      * @return an already existing session.
      */
     private ServerSessionImpl getExistingServerSession(boolean force) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1618
         ServerSessionImpl ss = null;
         if (idleSessions.size() > 0) {
             ss = idleSessions.remove(idleSessions.size() - 1);
@@ -194,7 +198,9 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
 
     public void returnToPool(ServerSessionImpl ss) {
         sessionLock.lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
         activeSessions.remove(ss);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1779
         try {
             // make sure we only return non-stale sessions to the pool
             if ( ss.isStale() ) {
@@ -225,8 +231,11 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         }
         try {
             ActiveMQSession session = (ActiveMQSession)ss.getSession();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6150
             List<MessageDispatch> l = session.getUnconsumedMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
             if (!isClosing() && !l.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
                 ActiveMQConnection connection = activeMQAsfEndpointWorker.getConnection();
                 if (connection != null) {
                     for (Iterator<MessageDispatch> i = l.iterator(); i.hasNext();) {
@@ -265,6 +274,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         if (s instanceof ActiveMQSession) {
             session = (ActiveMQSession) s;
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1779
             activeMQAsfEndpointWorker.getConnection()
                     .onAsyncException(new JMSException(
                             "Session pool provided an invalid session type: "
@@ -293,6 +303,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
                 Thread.currentThread().interrupt();
                 return;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5038
             activeCount = closeSessions();
         }
     }
@@ -301,6 +312,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     protected int closeSessions() {
         sessionLock.lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
             List<ServerSessionImpl> alreadyClosedServerSessions = new ArrayList<>(activeSessions.size());
             for (ServerSessionImpl ss : activeSessions) {
                 try {
@@ -318,6 +330,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
                     }
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
             for (ServerSessionImpl ss : alreadyClosedServerSessions) {
                 removeFromPool(ss);
             }

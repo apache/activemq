@@ -298,6 +298,7 @@ public class ActiveMQTopicSession implements TopicSession {
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equals(Object arg0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2213
         if(this != arg0) {
             return next.equals(arg0);
         }

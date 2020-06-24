@@ -69,6 +69,7 @@ public class AMQ4083Test {
         brokerService.waitUntilStarted();
 
         data = new String[messageCount];
+//IC see: https://issues.apache.org/jira/browse/AMQ-4083
 
         for (int i = 0; i < messageCount; i++) {
             data[i] = "Text for message: " + i + " at " + new Date();
@@ -440,6 +441,7 @@ public class AMQ4083Test {
     @Test
     public void testConsumeExpiredQueueAndDlq() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4083
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         Connection connection = factory.createConnection();
 
@@ -500,6 +502,7 @@ public class AMQ4083Test {
     }
 
     private QueueViewMBean getProxyToQueueViewMBean() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         final ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + queue.getQueueName());
         final QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext().newProxyInstance(
                 queueViewMBeanName, QueueViewMBean.class, true);

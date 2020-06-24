@@ -89,6 +89,7 @@ public class Journal {
         // with corruption on recovery we have no faith in the content - slip to the next batch record or eof
         DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
             RandomAccessFile randomAccessFile = reader.getRaf().getRaf();
             randomAccessFile.seek(recoveryPosition.getOffset() + 1);
             byte[] data = new byte[getWriteBatchSize()];
@@ -114,10 +115,12 @@ public class Journal {
     }
 
     public DataFileAccessorPool getAccessorPool() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6372
         return accessorPool;
     }
 
     public void allowIOResumption() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
         if (appender instanceof DataFileAppender) {
             DataFileAppender dataFileAppender = (DataFileAppender)appender;
             dataFileAppender.shutdown = false;
@@ -125,6 +128,7 @@ public class Journal {
     }
 
     public void setCleanupInterval(long cleanupInterval) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
         this.cleanupInterval = cleanupInterval;
     }
 
@@ -135,17 +139,20 @@ public class Journal {
     public enum PreallocationStrategy {
         SPARSE_FILE,
         OS_KERNEL_COPY,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         ZEROS,
         CHUNKED_ZEROS;
     }
 
     public enum PreallocationScope {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         ENTIRE_JOURNAL,
         ENTIRE_JOURNAL_ASYNC,
         NONE;
     }
 
     public enum JournalDiskSyncStrategy {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         ALWAYS,
         PERIODIC,
         NEVER;
@@ -160,11 +167,14 @@ public class Journal {
             sequence.compact();
             return sequence.getData();
         } catch (IOException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
             throw new RuntimeException("Could not create batch control record header.", e);
         }
     }
 
     private static byte[] createEmptyBatchControlRecordHeader() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         try (DataByteArrayOutputStream os = new DataByteArrayOutputStream();) {
             os.writeInt(BATCH_CONTROL_RECORD_SIZE);
             os.writeByte(BATCH_CONTROL_RECORD_TYPE);
@@ -243,6 +253,7 @@ public class Journal {
     protected JournalDiskSyncStrategy journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS;
 
     public interface DataFileRemovedListener {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5438
         void fileRemoved(DataFile datafile);
     }
 
@@ -267,11 +278,13 @@ public class Journal {
         });
 
         if (files != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
             for (File file : files) {
                 try {
                     String n = file.getName();
                     String numStr = n.substring(filePrefix.length(), n.length()-fileSuffix.length());
                     int num = Integer.parseInt(numStr);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
                     DataFile dataFile = new DataFile(file, num);
                     fileMap.put(dataFile.getDataFileId(), dataFile);
                     totalLength.addAndGet(dataFile.getLength());
@@ -282,9 +295,11 @@ public class Journal {
 
             // Sort the list so that we can link the DataFiles together in the
             // right order.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
             LinkedList<DataFile> l = new LinkedList<>(fileMap.values());
             Collections.sort(l);
             for (DataFile df : l) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3122
                 if (df.getLength() == 0) {
                     // possibly the result of a previous failed write
                     LOG.info("ignoring zero length, partially initialised journal data file: " + df);
@@ -301,11 +316,13 @@ public class Journal {
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6451
         if (preallocationScope != PreallocationScope.NONE) {
             switch (preallocationStrategy) {
                 case SPARSE_FILE:
                     break;
                 case OS_KERNEL_COPY: {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
                     osKernelCopyTemplateFile = createJournalTemplateFile();
                 }
                 break;
@@ -345,6 +362,7 @@ public class Journal {
 
         // ensure we don't report unused space of last journal file in size metric
         int lastFileLength = dataFiles.getTail().getLength();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6572
         if (totalLength.get() > lastFileLength && lastAppendLocation.get().getOffset() > 0) {
             totalLength.addAndGet(lastAppendLocation.get().getOffset() - lastFileLength);
         }
@@ -355,12 +373,14 @@ public class Journal {
                 cleanup();
             }
         }, cleanupInterval, cleanupInterval, TimeUnit.MILLISECONDS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
 
         long end = System.currentTimeMillis();
         LOG.trace("Startup took: "+(end-start)+" ms");
     }
 
     private ByteBuffer allocateDirectBuffer(int size) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6451
         ByteBuffer buffer = ByteBuffer.allocateDirect(size);
         buffer.put(EOF_RECORD);
         return buffer;
@@ -373,8 +393,10 @@ public class Journal {
             try {
                 if (PreallocationStrategy.OS_KERNEL_COPY == preallocationStrategy) {
                     doPreallocationKernelCopy(file);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
                 } else if (PreallocationStrategy.ZEROS == preallocationStrategy) {
                     doPreallocationZeros(file);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
                 } else if (PreallocationStrategy.CHUNKED_ZEROS == preallocationStrategy) {
                     doPreallocationChunkedZeros(file);
                 } else {
@@ -388,6 +410,7 @@ public class Journal {
     }
 
     private void doPreallocationSparseFile(RecoverableRandomAccessFile file) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         final ByteBuffer journalEof = ByteBuffer.wrap(EOF_RECORD);
         try {
             FileChannel channel = file.getChannel();
@@ -406,6 +429,7 @@ public class Journal {
     }
 
     private void doPreallocationZeros(RecoverableRandomAccessFile file) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6451
         preAllocateDirectBuffer.rewind();
         try {
             FileChannel channel = file.getChannel();
@@ -420,6 +444,7 @@ public class Journal {
     }
 
     private void doPreallocationKernelCopy(RecoverableRandomAccessFile file) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6445
         try (RandomAccessFile templateRaf = new RandomAccessFile(osKernelCopyTemplateFile, "rw");){
             templateRaf.getChannel().transferTo(0, getMaxFileLength(), file.getChannel());
         } catch (ClosedByInterruptException ignored) {
@@ -447,6 +472,7 @@ public class Journal {
     }
 
     private void doPreallocationChunkedZeros(RecoverableRandomAccessFile file) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6451
         preAllocateDirectBuffer.limit(preAllocateDirectBuffer.capacity());
         preAllocateDirectBuffer.rewind();
         try {
@@ -464,6 +490,7 @@ public class Journal {
 
             channel.force(false);
             channel.position(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         } catch (ClosedByInterruptException ignored) {
             LOG.trace("Could not preallocate journal file with zeros", ignored);
         } catch (IOException e) {
@@ -472,6 +499,7 @@ public class Journal {
     }
 
     private static byte[] bytes(String string) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
         try {
             return string.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
@@ -483,6 +511,7 @@ public class Journal {
         if (preallocationScope == PreallocationScope.ENTIRE_JOURNAL_ASYNC) {
             DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
                 byte[] firstFewBytes = new byte[BATCH_CONTROL_RECORD_HEADER.length];
                 reader.readFully(0, firstFewBytes);
                 ByteSequence bs = new ByteSequence(firstFewBytes);
@@ -502,6 +531,7 @@ public class Journal {
 
         DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
             RandomAccessFile randomAccessFile = reader.getRaf().getRaf();
             randomAccessFile.seek(0);
             final long totalFileLength = randomAccessFile.length();
@@ -510,6 +540,7 @@ public class Journal {
 
             while (true) {
                 int size = checkBatchRecord(bs, randomAccessFile);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7488
                 if (size > 0 && location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size <= totalFileLength) {
                     location.setOffset(location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size);
                 } else if (size == 0 && location.getOffset() + EOF_RECORD.length + size <= totalFileLength) {
@@ -518,6 +549,7 @@ public class Journal {
                 } else  {
                     // track corruption and skip if possible
                     Sequence sequence = new Sequence(location.getOffset());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
                     if (findNextBatchRecord(bs, randomAccessFile) >= 0) {
                         int nextOffset = Math.toIntExact(randomAccessFile.getFilePointer() - bs.remaining());
                         sequence.setLast(nextOffset - 1);
@@ -549,6 +581,7 @@ public class Journal {
     }
 
     private int findNextBatchRecord(ByteSequence bs, RandomAccessFile reader) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         final ByteSequence header = new ByteSequence(BATCH_CONTROL_RECORD_HEADER);
         int pos = 0;
         while (true) {
@@ -570,6 +603,8 @@ public class Journal {
     }
 
     private int checkBatchRecord(ByteSequence bs, RandomAccessFile reader) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6831
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         ensureAvailable(bs, reader, EOF_RECORD.length);
         if (bs.startsWith(EOF_RECORD)) {
             return 0; // eof
@@ -585,7 +620,9 @@ public class Journal {
             }
 
             int size = controlIs.readInt();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6522
             if (size < 0 || size > Integer.MAX_VALUE - (BATCH_CONTROL_RECORD_SIZE + EOF_RECORD.length)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
                 return -2;
             }
 
@@ -628,9 +665,13 @@ public class Journal {
     }
 
     private void ensureAvailable(ByteSequence bs, RandomAccessFile reader, int required) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6831
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         if (bs.remaining() < required) {
             bs.reset();
             int read = reader.read(bs.data, bs.length, bs.data.length - bs.length);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6831
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
             if (read < 0) {
                 if (bs.remaining() == 0) {
                     throw new EOFException("request for " + required + " bytes reached EOF");
@@ -640,6 +681,7 @@ public class Journal {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
     void addToTotalLength(int size) {
         totalLength.addAndGet(size);
     }
@@ -649,6 +691,7 @@ public class Journal {
     }
 
     public void rotateWriteFile() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
        synchronized (dataFileIdLock) {
             DataFile dataFile = nextDataFile;
             if (dataFile == null) {
@@ -687,6 +730,7 @@ public class Journal {
     private DataFile newDataFile() throws IOException {
         int nextNum = nextDataFileId++;
         File file = getFile(nextNum);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         DataFile nextWriteFile = new DataFile(file, nextNum);
         preallocateEntireJournalDataFile(nextWriteFile.appendRandomAccessFile());
         return nextWriteFile;
@@ -696,6 +740,7 @@ public class Journal {
     public DataFile reserveDataFile() {
         synchronized (dataFileIdLock) {
             int nextNum = nextDataFileId++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
             File file = getFile(nextNum);
             DataFile reservedDataFile = new DataFile(file, nextNum);
             synchronized (currentDataFile) {
@@ -717,6 +762,7 @@ public class Journal {
         return file;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
     DataFile getDataFile(Location item) throws IOException {
         Integer key = Integer.valueOf(item.getDataFileId());
         DataFile dataFile = null;
@@ -735,6 +781,7 @@ public class Journal {
             if (!started) {
                 return;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
             cleanupTask.cancel(true);
             if (preAllocateNextDataFileFuture != null) {
                 preAllocateNextDataFileFuture.cancel(true);
@@ -771,6 +818,7 @@ public class Journal {
             result &= dataFile.delete();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         if (preAllocateNextDataFileFuture != null) {
             preAllocateNextDataFileFuture.cancel(true);
         }
@@ -781,6 +829,7 @@ public class Journal {
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         totalLength.set(0);
         synchronized (currentDataFile) {
             fileMap.clear();
@@ -797,6 +846,7 @@ public class Journal {
     public void removeDataFiles(Set<Integer> files) throws IOException {
         for (Integer key : files) {
             // Can't remove the data file (or subsequent files) that is currently being written to.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
             if (key >= lastAppendLocation.get().getDataFileId()) {
                 continue;
             }
@@ -818,6 +868,7 @@ public class Journal {
         accessorPool.disposeDataFileAccessors(dataFile);
         totalLength.addAndGet(-dataFile.getLength());
         if (archiveDataLogs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5438
             File directoryArchive = getDirectoryArchive();
             if (directoryArchive.exists()) {
                 LOG.debug("Archive directory exists: {}", directoryArchive);
@@ -834,6 +885,7 @@ public class Journal {
             LOG.debug("Successfully moved data file");
         } else {
             LOG.debug("Deleting data file: {}", dataFile);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
             if (dataFile.delete()) {
                 LOG.debug("Discarded data file: {}", dataFile);
             } else {
@@ -865,6 +917,8 @@ public class Journal {
     }
 
     public Location getNextLocation(Location location) throws IOException, IllegalStateException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6432
+//IC see: https://issues.apache.org/jira/browse/AMQ-6288
         return getNextLocation(location, null);
     }
 
@@ -873,11 +927,14 @@ public class Journal {
         while (true) {
             if (cur == null) {
                 if (location == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
                     DataFile head = null;
                     synchronized (currentDataFile) {
                         head = dataFiles.getHead();
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
                     if (head == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
                         return null;
                     }
                     cur = new Location();
@@ -900,7 +957,9 @@ public class Journal {
 
             // Did it go into the next file??
             if (dataFile.getLength() <= cur.getOffset()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
                 synchronized (currentDataFile) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
                     dataFile = dataFile.getNext();
                 }
                 if (dataFile == null) {
@@ -908,6 +967,8 @@ public class Journal {
                 } else {
                     cur.setDataFileId(dataFile.getDataFileId().intValue());
                     cur.setOffset(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6432
+//IC see: https://issues.apache.org/jira/browse/AMQ-6288
                     if (limit != null && cur.compareTo(limit) >= 0) {
                         LOG.trace("reached limit: {} at: {}", limit, cur);
                         return null;
@@ -918,7 +979,10 @@ public class Journal {
             // Load in location size and type.
             DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
                 reader.readLocationDetails(cur);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6432
+//IC see: https://issues.apache.org/jira/browse/AMQ-6288
             } catch (EOFException eof) {
                 LOG.trace("EOF on next: " + location + ", cur: " + cur);
                 throw eof;
@@ -926,10 +990,12 @@ public class Journal {
                 accessorPool.closeDataFileAccessor(reader);
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5703
             Sequence corruptedRange = dataFile.corruptedBlocks.get(cur.getOffset());
             if (corruptedRange != null) {
                 // skip corruption
                 cur.setSize((int) corruptedRange.range());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
             } else if (cur.getSize() == EOF_INT && cur.getType() == EOF_EOT ||
                     (cur.getType() == 0 && cur.getSize() == 0)) {
                 // eof - jump to next datafile
@@ -951,6 +1017,7 @@ public class Journal {
         ByteSequence rc = null;
         try {
             rc = reader.readRecord(location);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
         } finally {
             accessorPool.closeDataFileAccessor(reader);
         }
@@ -978,6 +1045,7 @@ public class Journal {
     }
 
     public PreallocationStrategy getPreallocationStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         return preallocationStrategy;
     }
 
@@ -1022,6 +1090,7 @@ public class Journal {
     }
 
     public File getDirectoryArchive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5438
         if (!directoryArchiveOverridden && (directoryArchive == null)) {
             // create the directoryArchive relative to the journal location
             directoryArchive = new File(directory.getAbsolutePath() +
@@ -1044,6 +1113,7 @@ public class Journal {
     }
 
     public DataFile getDataFileById(int dataFileId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         synchronized (currentDataFile) {
             return fileMap.get(Integer.valueOf(dataFileId));
         }
@@ -1081,6 +1151,7 @@ public class Journal {
      * @return files currently being used
      */
     public Set<File> getFiles() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         synchronized (currentDataFile) {
             return fileByFileMap.keySet();
         }
@@ -1093,10 +1164,12 @@ public class Journal {
     }
 
     public long getDiskSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         return totalLength.get();
     }
 
     public void setReplicationTarget(ReplicationTarget replicationTarget) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
         this.replicationTarget = replicationTarget;
     }
 
@@ -1113,6 +1186,7 @@ public class Journal {
     }
 
     public boolean isChecksum() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
         return checksum;
     }
 
@@ -1141,6 +1215,7 @@ public class Journal {
     }
 
     public void setEnableAsyncDiskSync(boolean val) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         this.enableAsyncDiskSync = val;
     }
 
@@ -1149,6 +1224,7 @@ public class Journal {
     }
 
     public JournalDiskSyncStrategy getJournalDiskSyncStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         return journalDiskSyncStrategy;
     }
 
@@ -1161,6 +1237,7 @@ public class Journal {
     }
 
     public void setDataFileRemovedListener(DataFileRemovedListener dataFileRemovedListener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5438
         this.dataFileRemovedListener = dataFileRemovedListener;
     }
 

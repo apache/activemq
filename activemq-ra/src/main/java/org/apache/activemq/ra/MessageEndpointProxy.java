@@ -120,6 +120,8 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
         }
 
         public void onMessage(MessageEndpointProxy proxy, Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-612
+//IC see: https://issues.apache.org/jira/browse/AMQ-613
             proxy.messageListener.onMessage(message);
         }
 

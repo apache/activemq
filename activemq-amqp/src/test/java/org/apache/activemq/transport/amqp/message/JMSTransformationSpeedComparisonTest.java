@@ -79,6 +79,7 @@ public class JMSTransformationSpeedComparisonTest {
     private InboundTransformer getInboundTransformer() {
         switch (transformer) {
             case "raw":
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
                 return new AMQPRawInboundTransformer();
             case "native":
                 return new AMQPNativeInboundTransformer();
@@ -91,6 +92,7 @@ public class JMSTransformationSpeedComparisonTest {
         switch (transformer) {
             case "raw":
             case "native":
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
                 return new AMQPNativeOutboundTransformer();
             default:
                 return new JMSMappingOutboundTransformer();
@@ -162,6 +164,7 @@ public class JMSTransformationSpeedComparisonTest {
         totalDuration += System.nanoTime() - startTime;
 
         LOG.info("[{}] Total time for {} cycles of transforms = {} ms  -> [{}]",
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             transformer, PROFILE_CYCLES, TimeUnit.NANOSECONDS.toMillis(totalDuration), test.getMethodName());
     }
 
@@ -196,6 +199,7 @@ public class JMSTransformationSpeedComparisonTest {
     @Test
     public void testComplexQpidJMSMessage() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         EncodedMessage encoded = encode(createComplexQpidJMSMessage());
         InboundTransformer inboundTransformer = getInboundTransformer();
         OutboundTransformer outboundTransformer = getOutboundTransformer();
@@ -211,6 +215,14 @@ public class JMSTransformationSpeedComparisonTest {
 
         long startTime = System.nanoTime();
         for (int i = 0; i < PROFILE_CYCLES; ++i) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
             intermediate.onSend();
             outboundTransformer.transform(intermediate);
@@ -218,6 +230,7 @@ public class JMSTransformationSpeedComparisonTest {
         totalDuration += System.nanoTime() - startTime;
 
         LOG.info("[{}] Total time for {} cycles of transforms = {} ms  -> [{}]",
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             transformer, PROFILE_CYCLES, TimeUnit.NANOSECONDS.toMillis(totalDuration), test.getMethodName());
     }
 
@@ -242,6 +255,8 @@ public class JMSTransformationSpeedComparisonTest {
         totalDuration += System.nanoTime() - startTime;
 
         LOG.info("[{}] Total time for {} cycles of transforms = {} ms  -> [{}]",
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             transformer, PROFILE_CYCLES, TimeUnit.NANOSECONDS.toMillis(totalDuration), test.getMethodName());
     }
 
@@ -252,6 +267,8 @@ public class JMSTransformationSpeedComparisonTest {
         InboundTransformer inboundTransformer = getInboundTransformer();
         OutboundTransformer outboundTransformer = getOutboundTransformer();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         ActiveMQMessage outbound = inboundTransformer.transform(encoded);
         outbound.onSend();
 
@@ -298,6 +315,7 @@ public class JMSTransformationSpeedComparisonTest {
     }
 
     private Message createComplexQpidJMSMessage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         Map<String, Object> applicationProperties = new HashMap<String, Object>();
         Map<Symbol, Object> messageAnnotations = new HashMap<Symbol, Object>();
 

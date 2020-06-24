@@ -25,6 +25,7 @@ public class StringArrayConverterTest {
 
     @Test
     public void testConvertToStringArray() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         assertNull(StringArrayConverter.convertToStringArray(null));
         assertNull(StringArrayConverter.convertToStringArray(""));
 

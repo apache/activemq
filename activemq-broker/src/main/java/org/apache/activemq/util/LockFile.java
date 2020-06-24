@@ -65,6 +65,7 @@ public class LockFile {
 
         IOHelper.mkdirs(file.getParentFile());
         synchronized (LockFile.class) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
             lockSystemPropertyName = getVmLockKey();
             if (System.getProperty(lockSystemPropertyName) != null) {
                 throw new IOException("File '" + file + "' could not be locked as lock is already held for this jvm. Value: " + System.getProperty(lockSystemPropertyName));
@@ -73,12 +74,14 @@ public class LockFile {
         }
         try {
             if (lock == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
                 randomAccessLockFile = new RandomAccessFile(file, "rw");
                 IOException reason = null;
                 try {
                     lock = randomAccessLockFile.getChannel().tryLock(0, Math.max(1, randomAccessLockFile.getChannel().size()), false);
                 } catch (OverlappingFileLockException e) {
                     reason = IOExceptionSupport.create("File '" + file + "' could not be locked.", e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3007
                 } catch (IOException ioe) {
                     reason = ioe;
                 }
@@ -88,7 +91,9 @@ public class LockFile {
                     randomAccessLockFile.getChannel().force(true);
                     lastModified = file.lastModified();
                     lockCounter++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
                     System.setProperty(lockSystemPropertyName, new Date().toString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5568
                     locked = true;
                 } else {
                     // new read file for next attempt
@@ -111,12 +116,14 @@ public class LockFile {
 
     /**
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
     synchronized public void unlock() {
         if (DISABLE_FILE_LOCK) {
             return;
         }
 
         lockCounter--;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3301
         if (lockCounter != 0) {
             return;
         }
@@ -126,15 +133,19 @@ public class LockFile {
             try {
                 lock.release();
             } catch (Throwable ignore) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
             } finally {
                 if (lockSystemPropertyName != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
                     System.getProperties().remove(lockSystemPropertyName);
                 }
                 lock = null;
             }
         }
         closeReadFile();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2366
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5568
         if (locked && deleteOnUnlock) {
             file.delete();
         }
@@ -146,6 +157,7 @@ public class LockFile {
 
     private void closeReadFile() {
         // close the file.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
         if (randomAccessLockFile != null) {
             try {
                 randomAccessLockFile.close();
@@ -163,6 +175,7 @@ public class LockFile {
 
         //Create a new instance of the File object so we can get the most up to date information on the file.
         File localFile = new File(file.getAbsolutePath());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
 
         if (localFile.exists()) {
             if(localFile.lastModified() != lastModified) {

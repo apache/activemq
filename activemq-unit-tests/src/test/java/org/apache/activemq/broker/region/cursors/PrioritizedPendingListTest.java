@@ -187,6 +187,7 @@ public class PrioritizedPendingListTest {
         Iterator<MessageReference> iter = list.iterator();
         int lastId = list.size();
         while (iter.hasNext()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6239
             MessageReference nextMessage = iter.next();
             assertNotNull(nextMessage);
             assertEquals(lastId--, nextMessage.getMessage().getPriority());
@@ -220,6 +221,7 @@ public class PrioritizedPendingListTest {
     @Test
     public void testFullRangeIteration() {
         PrioritizedPendingList list = new PrioritizedPendingList();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6239
 
         int totalElements = 0;
 
@@ -352,6 +354,7 @@ public class PrioritizedPendingListTest {
 
         @Override
         public boolean canProcessAsExpired() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6361
             return false;
         }
     }

@@ -59,17 +59,21 @@ public class FailoverTransportFactory extends TransportFactory {
      * @throws IOException
      */
     public Transport createTransport(CompositeData compositData) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3513
         Map<String, String> options = compositData.getParameters();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1071
         FailoverTransport transport = createTransport(options);
         if (!options.isEmpty()) {
             throw new IllegalArgumentException("Invalid connect parameters: " + options);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         transport.add(false,compositData.getComponents());
         return transport;
     }
 
     public FailoverTransport createTransport(Map<String, String> parameters) throws IOException {
         FailoverTransport transport = new FailoverTransport();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4718
         Map<String, Object> nestedExtraQueryOptions = IntrospectionSupport.extractProperties(parameters, "nested.");
         IntrospectionSupport.setProperties(transport, parameters);
         try {

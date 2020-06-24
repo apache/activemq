@@ -95,6 +95,8 @@ public class MissingDataFileTest extends TestCase {
 
         SystemUsage systemUsage;
         systemUsage = new SystemUsage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2868
+//IC see: https://issues.apache.org/jira/browse/AMQ-3470
         systemUsage.getMemoryUsage().setLimit(10 * 1024 * 1024); // Just a few messags
         broker.setSystemUsage(systemUsage);
 

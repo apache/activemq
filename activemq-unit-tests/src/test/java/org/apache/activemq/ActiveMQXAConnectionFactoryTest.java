@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 
 public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQXAConnectionFactoryTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
     long txGenerator = System.currentTimeMillis();
     private ActiveMQConnection connection;
     private BrokerService broker;
@@ -75,6 +76,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     }
 
     protected ActiveMQConnectionFactory getXAConnectionFactory(String brokerUrl) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         return new ActiveMQXAConnectionFactory(brokerUrl);
     }
 
@@ -105,6 +107,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         assertEquals("vm:(broker:()/localhost)", cf.getBrokerURL());
 
         cf = getXAConnectionFactory(
+//IC see: https://issues.apache.org/jira/browse/AMQ-3285
                 "vm://localhost?jms.redeliveryPolicy.maximumRedeliveries=10&" +
                                "jms.redeliveryPolicy.initialRedeliveryDelay=10000&" +
                                "jms.redeliveryPolicy.redeliveryDelay=10000&" +
@@ -121,6 +124,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testCreateVMConnectionWithEmbdeddBroker() throws URISyntaxException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQConnectionFactory cf = getXAConnectionFactory("vm://myBroker?broker.persistent=false");
         // Make sure the broker is not created until the connection is
         // instantiated.
@@ -138,6 +142,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testGetBrokerName() throws URISyntaxException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQConnectionFactory cf = getXAConnectionFactory("vm://localhost?broker.persistent=false");
         connection = (ActiveMQConnection)cf.createConnection();
         connection.start();
@@ -162,6 +167,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         XAConnection connection1 = null;
         XAConnection connection2 = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
             ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
             connection1 = (XAConnection)cf1.createConnection();
             XASession session1 = connection1.createXASession();
@@ -195,9 +201,11 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
     public void testIsSameRMOverride() throws URISyntaxException, JMSException, XAException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5031
         XAConnection connection1 = null;
         XAConnection connection2 = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
             ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false&jms.rmIdFromConnectionId=true");
             connection1 = (XAConnection)cf1.createConnection();
             XASession session1 = connection1.createXASession();
@@ -237,8 +245,10 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
         XAConnection connection1 = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
             ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
             connection1 = (XAConnection)cf1.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
             connection1.start();
             XASession session = connection1.createXASession();
             XAResource resource = session.getXAResource();
@@ -367,15 +377,18 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
 
     public void testReadonlyNoLeak() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2556
         final String brokerName = "readOnlyNoLeak";
         BrokerService broker = BrokerFactory.createBroker(new URI("broker:(tcp://localhost:0)/" + brokerName));
         broker.setPersistent(false);
         broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQConnectionFactory cf1 = getXAConnectionFactory("failover:(" + broker.getTransportConnectors().get(0).getConnectUri() + ")");
         cf1.setStatsEnabled(true);
         ActiveMQXAConnection xaConnection = (ActiveMQXAConnection)cf1.createConnection();
         xaConnection.start();
         XASession session = xaConnection.createXASession();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3285
         XAResource resource = session.getXAResource();
         Xid tid = createXid();
         resource.start(tid, XAResource.TMNOFLAGS);
@@ -409,6 +422,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testCloseSendConnection() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2950
         String brokerName = "closeSend";
         BrokerService broker = BrokerFactory.createBroker(new URI("broker:(tcp://localhost:0)/" + brokerName));
         broker.start();
@@ -461,6 +475,10 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
     public void testProducerFailAfterRollbackOnly() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
+//IC see: https://issues.apache.org/jira/browse/AMQ-7485
         ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
         XAConnection connection1 = (XAConnection)cf1.createConnection();
         connection1.start();
@@ -489,6 +507,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         resource.start(tid, XAResource.TMNOFLAGS);
         producer.send(message);
         resource.end(tid, XAResource.TMSUCCESS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3285
         resource.commit(tid, true);
         connection1.close();
     }
@@ -498,6 +517,8 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         BrokerService broker = BrokerFactory.createBroker(new URI("broker:(tcp://localhost:0)/" + brokerName));
         broker.start();
         broker.waitUntilStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQConnectionFactory cf = getXAConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
         XAConnection connection = (XAConnection)cf.createConnection();
         connection.start();
@@ -510,6 +531,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
             fail("Expected xa exception on no tx");
         } catch (XAException expected) {
             LOG.info("got expected xa", expected);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5311
             assertEquals("no tx", XAException.XAER_NOTA, expected.errorCode);
         }
         connection.close();
@@ -551,6 +573,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         TransactionBroker transactionBroker = (TransactionBroker)broker.getBroker().getAdaptor(TransactionBroker.class);
         try {
             transactionBroker.getTransaction(null, new XATransactionId(tid), false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2950
             fail("expected exception on tx not found");
         } catch (XAException expectedOnNotFound) {
         }
@@ -560,6 +583,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         // Start up a broker with a tcp connector.
         broker = new BrokerService();
         broker.setPersistent(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4033
         broker.setUseJmx(false);
         TransportConnector connector = broker.addConnector(uri);
         broker.start();
@@ -578,6 +602,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         LOG.info("connection URI is: " + connectURI);
 
         // This should create the connection.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         ActiveMQConnectionFactory cf = getXAConnectionFactory(connectURI);
         Connection connection = cf.createConnection();
 
@@ -587,6 +612,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         connection.close();
 
         connection = ((XAConnectionFactory)cf).createXAConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
 
         assertXAConnection(connection);
 
@@ -601,6 +627,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
     public Xid createXid() throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(baos);
         os.writeLong(++txGenerator);

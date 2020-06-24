@@ -47,6 +47,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
     public boolean isUseCache = false;
 
     public static Test suite() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3935
         return suite(JmsQueueBrowserTest.class);
     }
 
@@ -109,6 +110,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
     }
 
     public void initCombosForTestBatchSendBrowseReceive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3935
         addCombinationValues("isUseCache", new Boolean[]{Boolean.TRUE, Boolean.FALSE});
     }
 
@@ -190,6 +192,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         }
 
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=TEST");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         LOG.info("Create QueueView MBean...");
         QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
@@ -290,6 +293,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         Enumeration<?> enumeration = browser.getEnumeration();
 
         // browse the first message
+//IC see: https://issues.apache.org/jira/browse/AMQ-1859
         assertTrue("should have received the first message", enumeration.hasMoreElements());
         assertEquals(outbound[0], enumeration.nextElement());
 
@@ -301,6 +305,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
     }
 
     public void testLargeNumberOfMessages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1919
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         ActiveMQQueue destination = new ActiveMQQueue("TEST");
         connection.start();
@@ -309,6 +314,8 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
 
         int numberOfMessages = 4096;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
         for (int i = 0; i < numberOfMessages; i++) {
             producer.send(session.createTextMessage("Message: "  + i));
         }
@@ -331,6 +338,8 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         }
 
         System.out.println("Number browsed:  " + numberBrowsed);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
         assertEquals(numberOfMessages, numberBrowsed);
         browser.close();
         producer.close();
@@ -354,6 +363,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         MessageConsumer consumer = session.createConsumer(destinationPrefetch10);
 
         // lets consume any outstanding messages from previous test runs
+//IC see: https://issues.apache.org/jira/browse/AMQ-3935
         while (consumer.receive(1000) != null) {
         }
 
@@ -401,6 +411,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
                                            session.createTextMessage("Third Message")};
 
         // create consumer
+//IC see: https://issues.apache.org/jira/browse/AMQ-3935
         MessageConsumer consumer = session.createConsumer(destination);
         // lets consume any outstanding messages from previous test runs
         while (consumer.receive(1000) != null) {
@@ -436,10 +447,15 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
 
     @Override
     protected BrokerService createBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3935
         BrokerService brokerService = super.createBroker();
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setUseCache(isUseCache);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
         policyEntry.setMaxBrowsePageSize(4096);
         policyMap.setDefaultEntry(policyEntry);
         brokerService.setDestinationPolicy(policyMap);

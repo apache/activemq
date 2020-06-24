@@ -28,6 +28,7 @@ public class AnyDestination extends ActiveMQDestination {
     public AnyDestination(ActiveMQDestination[] destinations) {
         super(destinations);
         // ensure we are small when it comes to comparison in DestinationMap
+//IC see: https://issues.apache.org/jira/browse/AMQ-5450
         physicalName = "!0";
     }
 

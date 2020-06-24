@@ -57,6 +57,7 @@ public class BrokerInfoTest extends BaseCommandTestSupport {
         info.setNetworkConnection(true);
         info.setConnectionId(1);
         info.setBrokerUploadUrl("BrokerUploadUrl:5");
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
         info.setNetworkProperties("NetworkProperties:6");
     }
 }

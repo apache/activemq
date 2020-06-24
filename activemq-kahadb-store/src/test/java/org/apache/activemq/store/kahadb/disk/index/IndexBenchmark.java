@@ -50,6 +50,7 @@ public abstract class IndexBenchmark extends TestCase {
     public void setUp() throws Exception {
         ROOT_DIR = new File(IOHelper.getDefaultDataDirectory());
         IOHelper.delete(ROOT_DIR);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
 
         pf = new PageFile(ROOT_DIR, getClass().getName());
         pf.load();

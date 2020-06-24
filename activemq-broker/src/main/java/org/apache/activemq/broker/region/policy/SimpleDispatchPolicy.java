@@ -32,6 +32,7 @@ public class SimpleDispatchPolicy implements DispatchPolicy {
 
     public boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List<Subscription> consumers)
             throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1553
 
         int count = 0;
         for (Subscription sub : consumers) {
@@ -41,6 +42,7 @@ public class SimpleDispatchPolicy implements DispatchPolicy {
             }
             // Only dispatch to interested subscriptions
             if (!sub.matches(node, msgContext)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2870
                 sub.unmatched(node);
                 continue;
             }

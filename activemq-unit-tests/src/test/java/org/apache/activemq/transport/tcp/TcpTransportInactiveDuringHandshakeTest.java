@@ -60,6 +60,7 @@ public class TcpTransportInactiveDuringHandshakeTest {
 
     private BrokerService brokerService;
     private DefaultTestAppender appender;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
     CountDownLatch inactivityMonitorFired;
     CountDownLatch handShakeComplete;
 
@@ -69,6 +70,7 @@ public class TcpTransportInactiveDuringHandshakeTest {
         brokerService.setPersistent(false);
         brokerService.setUseJmx(false);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
         inactivityMonitorFired = new CountDownLatch(1);
         handShakeComplete = new CountDownLatch(1);
         appender = new DefaultTestAppender() {
@@ -106,6 +108,7 @@ public class TcpTransportInactiveDuringHandshakeTest {
 
 
         final CountDownLatch blockHandShakeCompletion = new CountDownLatch(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7106
 
         TrustManager[] trustManagers = new TrustManager[]{new X509TrustManager() {
             @Override

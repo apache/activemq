@@ -44,6 +44,8 @@ public class StompFrame implements Command {
     private transient Object transportContext = null;
 
     public StompFrame(String command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2003
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
         this(command, null, null);
     }
 
@@ -75,9 +77,12 @@ public class StompFrame implements Command {
     }
 
     public String getBody() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2684
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
         try {
             return new String(content, "UTF-8");
         } catch (UnsupportedEncodingException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2003
             return new String(content);
         }
     }
@@ -156,6 +161,8 @@ public class StompFrame implements Command {
 
     @Override
     public boolean isConsumerControl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
+//IC see: https://issues.apache.org/jira/browse/AMQ-5707
         return false;
     }
 
@@ -205,9 +212,11 @@ public class StompFrame implements Command {
     }
 
     public String format(boolean forLogging) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4840
         if( !forLogging && getAction().equals(Stomp.Commands.KEEPALIVE) ) {
             return "\n";
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         StringBuilder buffer = new StringBuilder();
         buffer.append(getAction());
         buffer.append("\n");
@@ -215,7 +224,9 @@ public class StompFrame implements Command {
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             buffer.append(entry.getKey());
             buffer.append(":");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4012
             if (forLogging && entry.getKey().toString().toLowerCase(Locale.ENGLISH).contains(Stomp.Headers.Connect.PASSCODE)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
                 buffer.append("*****");
             } else {
                 buffer.append(entry.getValue());
@@ -225,6 +236,7 @@ public class StompFrame implements Command {
         buffer.append("\n");
         if (getContent() != null) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3231
                 String contentString = new String(getContent(), "UTF-8");
                 if (forLogging) {
                     contentString = MarshallingSupport.truncate64(contentString);
@@ -235,6 +247,7 @@ public class StompFrame implements Command {
             }
         }
         // terminate the frame
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
         buffer.append('\u0000');
         return buffer.toString();
     }
@@ -247,6 +260,8 @@ public class StompFrame implements Command {
      * @return the transport context.
      */
     public Object getTransportContext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4126
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         return transportContext;
     }
 

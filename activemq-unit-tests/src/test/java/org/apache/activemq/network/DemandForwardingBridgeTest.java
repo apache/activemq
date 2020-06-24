@@ -75,6 +75,7 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         connection1.send(consumerInfo1.createRemoveCommand());
 
         final DestinationStatistics destinationStatistics = broker.getDestination(destination).getDestinationStatistics();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
 
         Wait.waitFor(new Wait.Condition() {
             @Override
@@ -105,6 +106,7 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
             }
         }));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
         assertTrue("broker dest stat forwards", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -163,7 +165,9 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         config.setBrokerName("local");
         config.setDispatchAsync(false);
         bridge = new DemandForwardingBridge(config, createTransport(), createRemoteTransport());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2030
         bridge.setBrokerService(broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1337
         bridge.start();
     }
 

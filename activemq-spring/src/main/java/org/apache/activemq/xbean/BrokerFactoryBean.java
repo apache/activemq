@@ -73,6 +73,7 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
     }
 
     public void setApplicationContext(ApplicationContext parentContext) throws BeansException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-853
         this.parentContext = parentContext;
     }
 
@@ -103,6 +104,7 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
             throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + config);
         }
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-1720
         if( systemExitOnShutdown ) {
             broker.addShutdownHook(new Runnable(){
                 public void run() {
@@ -145,6 +147,7 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
     }
 
     public boolean isSystemExitOnStop() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1720
         return systemExitOnShutdown;
     }
 

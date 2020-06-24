@@ -44,6 +44,7 @@ public class SubscriptionStatistics extends StatsImpl {
         dispatched = new CountStatisticImpl("dispatched", "The number of messages that have been dispatched from the subscription");
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the subscription");
         inflightMessageSize = new SizeStatisticImpl("inflightMessageSize", "The size in bytes of messages dispatched but awaiting acknowledgement");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
 
         addStatistic("consumedCount", consumedCount);
         addStatistic("enqueues", enqueues);
@@ -71,6 +72,7 @@ public class SubscriptionStatistics extends StatsImpl {
     }
 
     public SizeStatisticImpl getInflightMessageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
         return inflightMessageSize;
     }
 
@@ -81,6 +83,7 @@ public class SubscriptionStatistics extends StatsImpl {
             enqueues.reset();
             dequeues.reset();
             dispatched.reset();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
             inflightMessageSize.reset();
         }
     }
@@ -91,6 +94,7 @@ public class SubscriptionStatistics extends StatsImpl {
         enqueues.setEnabled(enabled);
         dispatched.setEnabled(enabled);
         dequeues.setEnabled(enabled);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
         inflightMessageSize.setEnabled(enabled);
     }
 
@@ -100,6 +104,7 @@ public class SubscriptionStatistics extends StatsImpl {
             enqueues.setParent(parent.enqueues);
             dispatched.setParent(parent.dispatched);
             dequeues.setParent(parent.dequeues);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
             inflightMessageSize.setParent(parent.inflightMessageSize);
         } else {
             consumedCount.setParent(null);

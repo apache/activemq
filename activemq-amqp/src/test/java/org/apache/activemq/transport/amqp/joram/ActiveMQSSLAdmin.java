@@ -79,6 +79,7 @@ public class ActiveMQSSLAdmin extends ActiveMQAdmin {
     public void createConnectionFactory(String name) {
         try {
             LOG.debug("Creating a connection factory using port {}", port);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
             final JmsConnectionFactory factory =
                 new JmsConnectionFactory("amqps://localhost:" + port + "?transport.verifyHost=false");
 

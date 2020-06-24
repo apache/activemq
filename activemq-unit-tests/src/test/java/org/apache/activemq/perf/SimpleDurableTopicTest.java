@@ -32,6 +32,7 @@ public class SimpleDurableTopicTest extends SimpleTopicTest {
     protected long initialConsumerDelay = 0;
     @Override
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         numberOfDestinations=1;
         numberOfConsumers = 1;
         numberofProducers = Integer.parseInt(System.getProperty("SimpleDurableTopicTest.numberofProducers", "20"), 20);

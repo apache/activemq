@@ -44,6 +44,7 @@ public class PooledConnectionFactoryWithTemporaryDestinationsTest extends JmsPoo
     @Before
     public void setUp() throws Exception {
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         brokerService = new BrokerService();
         brokerService.setUseJmx(false);
@@ -53,6 +54,7 @@ public class PooledConnectionFactoryWithTemporaryDestinationsTest extends JmsPoo
         TransportConnector connector = brokerService.addConnector("tcp://localhost:0");
         brokerService.start();
         factory = new ActiveMQConnectionFactory("mock:" + connector.getConnectUri() + "?closeAsync=false");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         pooledFactory = new PooledConnectionFactory();
         pooledFactory.setConnectionFactory(factory);
     }
@@ -122,6 +124,7 @@ public class PooledConnectionFactoryWithTemporaryDestinationsTest extends JmsPoo
 
     @Test(timeout = 60000)
     public void testTemporaryQueueLeakAfterConnectionCloseWithConsumer() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7233
         Connection pooledConnection = null;
         Session session = null;
         Queue tempQueue = null;
@@ -139,6 +142,7 @@ public class PooledConnectionFactoryWithTemporaryDestinationsTest extends JmsPoo
     }
 
     private int countBrokerTemporaryQueues() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         return ((RegionBroker) brokerService.getRegionBroker()).getTempQueueRegion().getDestinationMap().size();
     }
 

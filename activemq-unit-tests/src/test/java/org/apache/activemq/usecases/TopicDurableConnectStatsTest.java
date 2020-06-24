@@ -153,6 +153,7 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
         DurableSubscriptionViewMBean subscriber1 = null;
 
         ObjectName query = new ObjectName(domain + ":type=Broker,brokerName=" + getName(true) + ",destinationType=Topic,destinationName=" + topic.getTopicName() + ",endpoint=Consumer,clientId=cliId1,consumerId=*");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         java.util.Set<ObjectName>set = mbeanServer.queryNames(query,null);
 

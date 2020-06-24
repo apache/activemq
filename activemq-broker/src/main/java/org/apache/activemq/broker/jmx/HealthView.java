@@ -46,6 +46,7 @@ public class HealthView implements HealthViewMBean {
     public TabularData health() throws Exception {
         OpenTypeSupport.OpenTypeFactory factory = OpenTypeSupport.getFactory(HealthStatus.class);
         CompositeType ct = factory.getCompositeType();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5140
         TabularType tt = new TabularType("HealthStatus", "HealthStatus", ct, new String[] { "healthId", "level", "message", "resource" });
         TabularDataSupport rc = new TabularDataSupport(tt);
 
@@ -92,6 +93,7 @@ public class HealthView implements HealthViewMBean {
                     long storeLimit = usage.getStoreUsage().getLimit();
                     long dirFreeSpace = dir.getUsableSpace();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5140
                     if (storeSize != 0 && storeLimit != 0) {
                         int val = (int) ((storeSize * 100) / storeLimit);
                         if (val > 90) {
@@ -121,6 +123,7 @@ public class HealthView implements HealthViewMBean {
                         tmpDir = tmpDir.getParentFile();
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5140
                     if (storeLimit != 0) {
                         int val = (int) ((storeSize * 100) / storeLimit);
                         if (val > 90) {
@@ -167,6 +170,7 @@ public class HealthView implements HealthViewMBean {
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6252
         StringBuilder currentState = new StringBuilder();
         if (answer != null && !answer.isEmpty()) {
             currentState.append("Getting Worried {");

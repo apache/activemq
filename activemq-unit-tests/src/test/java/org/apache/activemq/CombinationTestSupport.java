@@ -156,6 +156,7 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         } catch (Throwable e) {
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1268
         String name = getName().split(" ")[0];
         String comboSetupMethodName = "initCombosFor" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         try {
@@ -260,6 +261,7 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
     @Override
     public String getName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2209
         return getName(false);
     }
 

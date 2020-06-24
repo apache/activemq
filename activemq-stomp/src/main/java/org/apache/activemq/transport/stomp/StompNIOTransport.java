@@ -48,6 +48,7 @@ public class StompNIOTransport extends TcpTransport {
 
     private ByteBuffer inputBuffer;
     StompCodec codec;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
 
     public StompNIOTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -58,6 +59,7 @@ public class StompNIOTransport extends TcpTransport {
     }
 
     public StompNIOTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         super(wireFormat, socket, initBuffer);
     }
 
@@ -67,6 +69,7 @@ public class StompNIOTransport extends TcpTransport {
         channel.configureBlocking(false);
 
         // listen for events telling us when the socket is readable.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2386
         selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
             @Override
             public void onSelect(SelectorSelection selection) {
@@ -84,11 +87,14 @@ public class StompNIOTransport extends TcpTransport {
         });
 
         inputBuffer = ByteBuffer.allocate(8 * 1024);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2737
         NIOOutputStream outPutStream = new NIOOutputStream(channel, 8 * 1024);
         this.dataOut = new DataOutputStream(outPutStream);
         this.buffOut = outPutStream;
         codec = new StompCodec(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         try {
             if (initBuffer != null) {
                 processBuffer(initBuffer.buffer, initBuffer.readSize);
@@ -118,9 +124,11 @@ public class StompNIOTransport extends TcpTransport {
                    break;
                }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
                processBuffer(inputBuffer, readSize);
            }
         } catch (IOException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2440
             onException(e);
         } catch (Throwable e) {
             onException(IOExceptionSupport.create(e));
@@ -129,11 +137,14 @@ public class StompNIOTransport extends TcpTransport {
 
     protected void processBuffer(ByteBuffer buffer, int readSize) throws Exception {
         receiveCounter += readSize;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4106
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
 
         buffer.flip();
 
         ByteArrayInputStream input = new ByteArrayInputStream(buffer.array());
         codec.parse(input, readSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
 
         // clear the buffer
         buffer.clear();
@@ -149,6 +160,7 @@ public class StompNIOTransport extends TcpTransport {
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3721
             if (selection != null) {
                 selection.close();
             }

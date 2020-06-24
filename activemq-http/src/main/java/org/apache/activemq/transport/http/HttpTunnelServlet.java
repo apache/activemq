@@ -67,11 +67,15 @@ public class HttpTunnelServlet extends HttpServlet {
         if (listener == null) {
             throw new ServletException("No such attribute 'acceptListener' available in the ServletContext");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2764
         transportFactory = (HttpTransportFactory)getServletContext().getAttribute("transportFactory");
         if (transportFactory == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3012
             throw new ServletException("No such attribute 'transportFactory' available in the ServletContext");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1514
         transportOptions = (HashMap<String, Object>)getServletContext().getAttribute("transportOptions");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7327
         wireFormatOptions = (HashMap<String, Object>)getServletContext().getAttribute("wireFormatOptions");
         wireFormat = (TextWireFormat)getServletContext().getAttribute("wireFormat");
         if (wireFormat == null) {
@@ -81,6 +85,7 @@ public class HttpTunnelServlet extends HttpServlet {
 
     @Override
     protected void doOptions(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3566
         response.addHeader("Accepts-Encoding", "gzip");
         super.doOptions(request, response);
     }
@@ -118,6 +123,7 @@ public class HttpTunnelServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         if (wireFormatOptions.get("maxFrameSize") != null && request.getContentLength() > Integer.parseInt(wireFormatOptions.get("maxFrameSize").toString())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7419
             response.setStatus(405);
             response.setContentType("plain/text");
             PrintWriter writer = response.getWriter();
@@ -127,6 +133,7 @@ public class HttpTunnelServlet extends HttpServlet {
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3566
         InputStream stream = request.getInputStream();
         String contentType = request.getContentType();
         if (contentType != null && contentType.equals("application/x-gzip")) {
@@ -144,12 +151,16 @@ public class HttpTunnelServlet extends HttpServlet {
             }
 
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-806
+//IC see: https://issues.apache.org/jira/browse/AMQ-807
 
             BlockingQueueTransport transport = getTransportChannel(request, response);
             if (transport == null) {
                 return;
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6029
+//IC see: https://issues.apache.org/jira/browse/AMQ-6013
             if (command instanceof ConnectionInfo) {
                 ((ConnectionInfo) command).setTransportContext(request.getAttribute("javax.servlet.request.X509Certificate"));
             }
@@ -183,6 +194,7 @@ public class HttpTunnelServlet extends HttpServlet {
             LOG.warn("No clientID header specified");
             return null;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3021
         BlockingQueueTransport answer = clients.get(clientID);
         if (answer == null) {
             LOG.warn("The clientID header specified is invalid. Client sesion has not yet been established for it: " + clientID);
@@ -202,10 +214,12 @@ public class HttpTunnelServlet extends HttpServlet {
 
         // Optimistically create the client's transport; this transport may be thrown away if the client has already registered.
         BlockingQueueTransport answer = createTransportChannel();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3021
 
         // Record the client's transport and ensure that it has not already registered; this is thread-safe and only allows one
         // thread to register the client
         if (clients.putIfAbsent(clientID, answer) != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7339
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for the given clientID has already been established");
             LOG.warn("A session for clientID '" + clientID + "' has already been established");
             return null;
@@ -229,9 +243,11 @@ public class HttpTunnelServlet extends HttpServlet {
         Transport transport = answer;
         try {
             // Preserve the transportOptions for future use by making a copy before applying (they are removed when applied).
+//IC see: https://issues.apache.org/jira/browse/AMQ-1514
             HashMap<String, Object> options = new HashMap<String, Object>(transportOptions);
             transport = transportFactory.serverConfigure(answer, null, options);
         } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3012
             throw IOExceptionSupport.create(e);
         }
 
@@ -246,6 +262,7 @@ public class HttpTunnelServlet extends HttpServlet {
 
         // Ensure that the transport was not prematurely disposed.
         if (transport.isDisposed()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7339
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "The session for the given clientID was prematurely disposed");
             LOG.warn("The session for clientID '" + clientID + "' was prematurely disposed");
             return null;
@@ -255,6 +272,7 @@ public class HttpTunnelServlet extends HttpServlet {
     }
 
     protected BlockingQueueTransport createTransportChannel() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2238
        return new BlockingQueueTransport(new LinkedBlockingQueue<Object>());
     }
 

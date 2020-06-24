@@ -61,6 +61,7 @@ public class QueueBrowsingTest {
         broker.start();
         broker.waitUntilStarted();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         PolicyEntry policy = new PolicyEntry();
         policy.setMaxPageSize(maxPageSize);
         broker.setDestinationPolicy(new PolicyMap());
@@ -183,6 +184,8 @@ public class QueueBrowsingTest {
     @Test
     public void testMemoryLimit() throws Exception {
         broker.getSystemUsage().getMemoryUsage().setLimit((maxPageSize + 10) * 4 * 1024);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-7126
 
         int messageToSend = 370;
 
@@ -202,6 +205,7 @@ public class QueueBrowsingTest {
         }
 
         //Consume one message to free memory and allow the cursor to pageIn messages
+//IC see: https://issues.apache.org/jira/browse/AMQ-7107
         MessageConsumer consumer = session.createConsumer(queue);
         consumer.receive(1000);
 
@@ -215,6 +219,7 @@ public class QueueBrowsingTest {
         }
 
         browser.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         assertTrue("got at least maxPageSize", received >= maxPageSize);
     }
 }

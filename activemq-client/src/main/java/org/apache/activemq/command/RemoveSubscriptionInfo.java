@@ -49,6 +49,7 @@ public class RemoveSubscriptionInfo extends BaseCommand {
      * @openwire:property version=1
      */
     public String getSubcriptionName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1305
         return subscriptionName;
     }
 

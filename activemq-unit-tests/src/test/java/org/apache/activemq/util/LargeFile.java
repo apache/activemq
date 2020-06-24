@@ -31,6 +31,7 @@ import java.io.File;
  */
 public class LargeFile extends File {
 	public LargeFile(File parent, String child) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6441
 		super(parent, child);
 	}
 
@@ -41,6 +42,7 @@ public class LargeFile extends File {
 
 	@Override
 	public long getUsableSpace() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6441
 		return getTotalSpace() - 1024L;
 	}
 }

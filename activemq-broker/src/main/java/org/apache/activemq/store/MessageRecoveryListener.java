@@ -26,6 +26,7 @@ public interface MessageRecoveryListener {
     boolean recoverMessage(Message message) throws Exception;
     boolean recoverMessageReference(MessageId ref) throws Exception;
     boolean hasSpace();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7126
     default boolean canRecoveryNextMessage() {
         return true;
     }

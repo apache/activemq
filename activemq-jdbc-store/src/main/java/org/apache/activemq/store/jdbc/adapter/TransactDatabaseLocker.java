@@ -45,6 +45,7 @@ public class TransactDatabaseLocker extends DefaultDatabaseLocker {
             try {
                 connection = dataSource.getConnection();
                 connection.setAutoCommit(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4841
                 String sql = getStatements().getLockCreateStatement();
                 statement = connection.prepareStatement(sql);
                 if (statement.getMetaData() != null) {
@@ -56,6 +57,7 @@ public class TransactDatabaseLocker extends DefaultDatabaseLocker {
                 }
                 break;
             } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
                 if (isStopping()) {
                     throw new Exception("Cannot start broker as being asked to shut down. Interrupted attempt to acquire lock: " + e, e);
                 }

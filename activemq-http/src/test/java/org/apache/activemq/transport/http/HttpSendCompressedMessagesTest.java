@@ -72,6 +72,7 @@ public class HttpSendCompressedMessagesTest {
 
     @Test
     public void testTextMessageCompressionFromTcp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3556
         sendTextMessage(true);
         doTestTextMessageCompression();
     }
@@ -120,6 +121,7 @@ public class HttpSendCompressedMessagesTest {
     @Test
     public void testBytesMessageCompressionFromTcp() throws Exception {
         sendBytesMessage(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3556
         doTestBytesMessageCompression();
     }
 
@@ -167,6 +169,7 @@ public class HttpSendCompressedMessagesTest {
     @Test
     public void testStreamMessageCompressionFromTcp() throws Exception {
         sendStreamMessage(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3556
         doTestStreamMessageCompression();
     }
 
@@ -214,6 +217,7 @@ public class HttpSendCompressedMessagesTest {
     @Test
     public void testMapMessageCompressionFromTcp() throws Exception {
         sendMapMessage(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3556
         doTestMapMessageCompression();
     }
 
@@ -296,6 +300,7 @@ public class HttpSendCompressedMessagesTest {
     }
 
     private void sendTextMessage(boolean compressed) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3556
         sendTextMessage(tcpConnectionFactory, compressed);
     }
 

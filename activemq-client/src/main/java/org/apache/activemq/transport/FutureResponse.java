@@ -34,6 +34,8 @@ public class FutureResponse {
     private final ArrayBlockingQueue<Response> responseSlot = new ArrayBlockingQueue<Response>(1);
 
     public FutureResponse(ResponseCallback responseCallback) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
         this(responseCallback, null);
     }
 
@@ -75,12 +77,16 @@ public class FutureResponse {
     public Response getResult(int timeout) throws IOException {
         final boolean wasInterrupted = Thread.interrupted();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2867
+//IC see: https://issues.apache.org/jira/browse/AMQ-2507
             Response result = responseSlot.poll(timeout, TimeUnit.MILLISECONDS);
             if (result == null && timeout > 0) {
                 throw new RequestTimedOutIOException();
             }
             return result;
         } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
             throw dealWithInterrupt(e);
         } finally {
             if (wasInterrupted) {

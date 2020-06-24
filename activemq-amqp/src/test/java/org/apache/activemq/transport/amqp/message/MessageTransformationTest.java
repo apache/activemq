@@ -88,6 +88,7 @@ public class MessageTransformationTest {
     }
 
     private OutboundTransformer getOutboundTransformer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         return new AutoOutboundTransformer();
     }
 
@@ -215,6 +216,7 @@ public class MessageTransformationTest {
     public void testMessageWithAmqpValueThatFailsJMSConversion() throws Exception {
 
         Message incomingMessage = Proton.message();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         incomingMessage.setBody(new AmqpValue(new Boolean(true)));
 

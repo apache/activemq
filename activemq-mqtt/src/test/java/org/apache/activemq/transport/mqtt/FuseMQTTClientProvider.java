@@ -48,6 +48,7 @@ public class FuseMQTTClientProvider implements MQTTClientProvider {
 
     @Override
     public void publish(String topic, byte[] payload, int qos) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4927
         publish(topic,payload,qos,false);
     }
 

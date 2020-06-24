@@ -170,6 +170,8 @@ public class MKahaDBStoreLimitTest {
 
     @Test
     public void testExplicitAdapterBlockingProducer() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
+//IC see: https://issues.apache.org/jira/browse/AMQ-3143
         MultiKahaDBPersistenceAdapter persistenceAdapter = new MultiKahaDBPersistenceAdapter();
         KahaDBPersistenceAdapter kahaStore = new KahaDBPersistenceAdapter();
         kahaStore.setJournalMaxFileLength(1024*8);
@@ -178,6 +180,7 @@ public class MKahaDBStoreLimitTest {
         FilteredKahaDBPersistenceAdapter filtered = new FilteredKahaDBPersistenceAdapter();
         StoreUsage storeUsage = new StoreUsage();
         storeUsage.setLimit(44*1024);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
 
         filtered.setUsage(storeUsage);
         filtered.setDestination(queueA);
@@ -254,6 +257,8 @@ public class MKahaDBStoreLimitTest {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(queue);
         BytesMessage bytesMessage = session.createBytesMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
+//IC see: https://issues.apache.org/jira/browse/AMQ-3143
         bytesMessage.writeBytes(new byte[1*1024]);
         for (int i = 0; i < count; ++i) {
             producer.send(bytesMessage);

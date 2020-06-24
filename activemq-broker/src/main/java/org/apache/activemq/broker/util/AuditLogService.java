@@ -30,16 +30,19 @@ public class AuditLogService {
     }
 
     private AuditLogService() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3100
         factory = new DefaultAuditLogFactory();
     }
 
     public void log(AuditLogEntry entry) {
         for (AuditLog log : factory.getAuditLogs()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3100
             log.log(entry);
         }
     }
 
     public void setFactory(AuditLogFactory factory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3100
         this.factory = factory;
     }
 }

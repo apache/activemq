@@ -65,12 +65,14 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         if (parent != null) {
             parent.waitForSpace();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.readLock().lock();
         try {
             if (percentUsage >= 100 && isStarted()) {
                 usageLock.readLock().unlock();
                 usageLock.writeLock().lock();
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4361
                     while (percentUsage >= 100 && isStarted()) {
                         waitForSpaceCondition.await();
                     }
@@ -100,12 +102,14 @@ public class MemoryUsage extends Usage<MemoryUsage> {
                 return false;
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.readLock().lock();
         try {
             if (percentUsage >= 100) {
                 usageLock.readLock().unlock();
                 usageLock.writeLock().lock();
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7234
                     final long deadline = timeout > 0 ? System.currentTimeMillis() + timeout : Long.MAX_VALUE;
                     long timeleft = deadline;
                     while (percentUsage >= 100 && timeleft > 0) {
@@ -129,6 +133,8 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         if (parent != null && parent.isFull()) {
             return true;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
+//IC see: https://issues.apache.org/jira/browse/AMQ-4361
         usageLock.readLock().lock();
         try {
             return percentUsage >= 100;
@@ -159,6 +165,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.writeLock().lock();
         try {
             usage += value;
@@ -168,6 +175,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         }
 
         if (parent != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4361
             parent.increaseUsage(value);
         }
     }
@@ -182,6 +190,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.writeLock().lock();
         try {
             usage -= value;
@@ -190,6 +199,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
             usageLock.writeLock().unlock();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         if (parent != null) {
             parent.decreaseUsage(value);
         }
@@ -210,6 +220,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
     }
 
     public void setPercentOfJvmHeap(int percentOfJvmHeap) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4482
         if (percentOfJvmHeap > 0) {
             setLimit(Math.round(Runtime.getRuntime().maxMemory() * percentOfJvmHeap / 100.0));
         }

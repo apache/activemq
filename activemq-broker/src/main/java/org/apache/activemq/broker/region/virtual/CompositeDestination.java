@@ -33,6 +33,7 @@ public abstract class CompositeDestination implements VirtualDestination {
 
     @Override
     public Destination intercept(Destination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6281
         return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(), isConcurrentSend());
     }
 
@@ -81,6 +82,7 @@ public abstract class CompositeDestination implements VirtualDestination {
 
     @Deprecated
     public boolean isCopyMessage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6281
         return true;
     }
 
@@ -99,6 +101,7 @@ public abstract class CompositeDestination implements VirtualDestination {
      * when true, sends are done in parallel with the broker executor
      */
     public void setConcurrentSend(boolean concurrentSend) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         this.concurrentSend = concurrentSend;
     }
 
@@ -108,6 +111,7 @@ public abstract class CompositeDestination implements VirtualDestination {
 
     @Override
     public ActiveMQDestination getMappedDestinations() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
         final ActiveMQDestination[] destinations = new ActiveMQDestination[forwardTo.size()];
         int i = 0;
         for (Object dest : forwardTo) {
@@ -147,6 +151,7 @@ public abstract class CompositeDestination implements VirtualDestination {
         int result = 1;
         result = prime * result + (concurrentSend ? 1231 : 1237);
         result = prime * result + (forwardOnly ? 1231 : 1237);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6281
         result = prime * result + ((forwardTo == null) ? 0 : forwardTo.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;

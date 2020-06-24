@@ -40,6 +40,7 @@ public class AMQ2902Test extends TestCase {
     final AtomicBoolean gotExceptionInLog = new AtomicBoolean(Boolean.FALSE);
     final AtomicBoolean failedToFindMDC = new AtomicBoolean(Boolean.FALSE);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3623
     Appender appender = new DefaultTestAppender() {
         @Override
         public void doAppend(LoggingEvent event) {
@@ -55,6 +56,7 @@ public class AMQ2902Test extends TestCase {
                 LOG.error("got event: " + event + ", ex:" + event.getThrowableInformation().getThrowable(), event.getThrowableInformation().getThrowable());
                 LOG.error("Event source: ", new Throwable("Here"));
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7142
             if( !((String) event.getMessage()).startsWith("Loaded the Bouncy Castle security provider at position") ) {
                 if (event.getMDC("activemq.broker") == null) {
                     failedToFindMDC.set(Boolean.TRUE);
@@ -75,6 +77,8 @@ public class AMQ2902Test extends TestCase {
 
     public void testNoExceptionOnClose() throws JMSException {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
+//IC see: https://issues.apache.org/jira/browse/AMQ-4532
                 "vm://localhost?broker.persistent=false");
         Connection connection = connectionFactory.createConnection();
         connection.close();

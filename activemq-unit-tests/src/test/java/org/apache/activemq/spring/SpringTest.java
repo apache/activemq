@@ -89,6 +89,7 @@ public class SpringTest extends SpringTestSupport {
     }
     
     public void testStartFalse() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2203
         String config = "spring-start-false.xml";
         Thread.currentThread().setContextClassLoader(SpringTest.class.getClassLoader());
         context = new ClassPathXmlApplicationContext(config);

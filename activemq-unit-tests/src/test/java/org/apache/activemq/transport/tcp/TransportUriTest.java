@@ -42,6 +42,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
     public String postfix;
 
     public void initCombosForTestUriOptionsWork() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4725
         initSharedCombos();
     }
 
@@ -54,6 +55,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
     }
 
     public void initCombosForTestValidDiffServOptionsWork() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         initSharedCombos();
     }
 
@@ -62,6 +64,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         for (String opt : validIntegerOptions) {
             testValidOptionsWork(DIFF_SERV + opt, "");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         String[] validNameOptions = { "CS0", "CS1", "CS2", "CS3", "CS4", "CS5", "CS6",
                 "CS7", "EF", "AF11", "AF12","AF13", "AF21", "AF22", "AF23", "AF31",
                 "AF32", "AF33", "AF41", "AF42", "AF43" };
@@ -139,12 +142,15 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         addCombinationValues("prefix", new Object[] {""});
         // TODO: Add more combinations.
         addCombinationValues("postfix", new Object[]
+//IC see: https://issues.apache.org/jira/browse/AMQ-3315
             {"?tcpNoDelay=true&keepAlive=true&soLinger=0"});
+//IC see: https://issues.apache.org/jira/browse/AMQ-3315
         addCombinationValues("postfix", new Object[]
             {"?tcpNoDelay=true&keepAlive=true&soLinger=-1"});
     }
 
     private void testValidOptionsWork(String options, String msg) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4725
         String uri = prefix + bindAddress + postfix + options;
         LOG.info("Connecting via: " + uri);
 
@@ -199,6 +205,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
     }
 
     public static Test suite() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         return suite(TransportUriTest.class);
     }
 }

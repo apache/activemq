@@ -36,6 +36,7 @@ public class BlobTransferPolicyUriTest extends TestCase {
     }
 
     public void testDefaultUploadStrategySensibleError() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6646
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         BlobTransferPolicy policy = factory.getBlobTransferPolicy();
         BlobUploadStrategy strategy = policy.getUploadStrategy();

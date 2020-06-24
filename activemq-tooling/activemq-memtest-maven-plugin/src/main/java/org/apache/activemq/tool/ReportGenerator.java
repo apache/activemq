@@ -106,6 +106,7 @@ public class ReportGenerator {
 
     protected void startTestResult(long checkpointInterval) {
         long intervalInSec = checkpointInterval / 1000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1867
         writeWithIndent(2, "<test-result checkpoint_interval_in_sec='" + intervalInSec + "' >");
     }
 

@@ -105,6 +105,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         connectionProtocol = "s";
         authentication = "simple";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
         topicSearchMatchingFormat = new MessageFormat("uid={0},ou=topics,ou=destinations,o=ActiveMQ,dc=example,dc=com");
         queueSearchMatchingFormat = new MessageFormat("uid={0},ou=queues,ou=destinations,o=ActiveMQ,dc=example,dc=com");
 
@@ -118,6 +119,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     }
 
     public LDAPAuthorizationMap(Map<String,String> options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
         initialContextFactory = options.get(INITIAL_CONTEXT_FACTORY);
         connectionURL = options.get(CONNECTION_URL);
         connectionUsername = options.get(CONNECTION_USERNAME);
@@ -138,11 +140,13 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         String queueSearchSubtree = options.get(QUEUE_SEARCH_SUBTREE);
         topicSearchMatchingFormat = new MessageFormat(topicSearchMatching);
         queueSearchMatchingFormat = new MessageFormat(queueSearchMatching);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         topicSearchSubtreeBool = Boolean.valueOf(topicSearchSubtree).booleanValue();
         queueSearchSubtreeBool = Boolean.valueOf(queueSearchSubtree).booleanValue();
     }
 
     public Set<GroupPrincipal> getTempDestinationAdminACLs() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
         try {
             context = open();
         } catch (NamingException e) {
@@ -179,6 +183,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     }
 
     public Set<GroupPrincipal> getAdminACLs(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
         if (destination.isComposite()) {
             return getCompositeACLs(destination, adminBase, adminAttribute);
         }
@@ -339,6 +344,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     }
 
     public boolean isUseAdvisorySearchBase() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
         return useAdvisorySearchBase;
     }
 
@@ -355,6 +361,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     }
 
     public String getTempSearchBase() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
         return tempSearchBase;
     }
 
@@ -364,6 +371,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
 
     protected Set<GroupPrincipal> getCompositeACLs(ActiveMQDestination destination, String roleBase, String roleAttribute) {
         ActiveMQDestination[] dests = destination.getCompositeDestinations();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
         Set<GroupPrincipal> acls = null;
         for (ActiveMQDestination dest : dests) {
             acls = DestinationMap.union(acls, getACLs(dest, roleBase, roleAttribute));
@@ -388,7 +396,9 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
 
         String destinationBase = "";
         SearchControls constraints = new SearchControls();
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
         if (AdvisorySupport.isAdvisoryTopic(destination) && useAdvisorySearchBase) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3770
             destinationBase = advisorySearchBase;
         } else {
             if ((destination.getDestinationType() & ActiveMQDestination.QUEUE_TYPE) == ActiveMQDestination.QUEUE_TYPE) {
@@ -411,6 +421,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
 
         constraints.setReturningAttributes(new String[] {roleAttribute});
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
         return getACLs(destinationBase, constraints, roleBase, roleAttribute);
     }
 
@@ -418,6 +429,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         try {
             Set<GroupPrincipal> roles = new HashSet<GroupPrincipal>();
             Set<String> acls = new HashSet<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
             NamingEnumeration<?> results = context.search(destinationBase, roleBase, constraints);
             while (results.hasMore()) {
                 SearchResult result = (SearchResult)results.next();
@@ -429,6 +441,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             }
             for (Iterator<String> iter = acls.iterator(); iter.hasNext();) {
                 String roleName = iter.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3770
                 LdapName ldapname = new LdapName(roleName);
                 Rdn rdn = ldapname.getRdn(ldapname.size() - 1);
                 LOG.debug("Found role: [" + rdn.getValue().toString() + "]");
@@ -452,6 +465,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         if (attr == null) {
             return values;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
         NamingEnumeration<?> e = attr.getAll();
         while (e.hasMore()) {
             String value = (String)e.next();
@@ -468,6 +482,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         try {
             Hashtable<String, String> env = new Hashtable<String, String>();
             env.put(Context.INITIAL_CONTEXT_FACTORY, initialContextFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5345
             if (connectionUsername != null && !"".equals(connectionUsername)) {
                 env.put(Context.SECURITY_PRINCIPAL, connectionUsername);
             } else {

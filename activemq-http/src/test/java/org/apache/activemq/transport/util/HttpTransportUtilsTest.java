@@ -28,6 +28,7 @@ public class HttpTransportUtilsTest {
 
     @Test
     public void testGenerateWsRemoteAddress() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5865
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getScheme()).thenReturn("http");
         when(request.getRemoteAddr()).thenReturn("localhost");

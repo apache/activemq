@@ -118,6 +118,7 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
     }
 
     public void testNoBrokersInBrokerInfo() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3178
         final BrokerInfo info[] = new BrokerInfo[1];
         TransportListener listener = new TransportListener() {
             @Override

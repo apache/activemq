@@ -36,6 +36,7 @@ public interface MessageEvictionStrategy {
      * as usually all the messages will be in RAM when this method is called).
      */
     MessageReference[] evictMessages(LinkedList messages) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-871
 
     /**
      * REturns the high water mark on which we will eagerly evict expired messages from RAM

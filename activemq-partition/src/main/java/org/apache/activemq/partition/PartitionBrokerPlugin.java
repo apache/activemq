@@ -54,10 +54,12 @@ public class PartitionBrokerPlugin implements BrokerPlugin {
     }
 
     public void setConfigAsJson(String config) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         this.config = Partitioning.MAPPER.readValue(config, Partitioning.class);
     }
 
     public String getBrokerURL(PartitionBroker partitionBroker, String id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         if( config!=null && config.brokers!=null ) {
             return config.brokers.get(id);
         }

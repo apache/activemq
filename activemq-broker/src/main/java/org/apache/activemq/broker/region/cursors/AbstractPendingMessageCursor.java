@@ -51,6 +51,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     protected final boolean prioritizedMessages;
 
     public AbstractPendingMessageCursor(boolean prioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         this.prioritizedMessages=prioritizedMessages;
     }
 
@@ -90,6 +91,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
 
     @Override
     public boolean addMessageLast(MessageReference node) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5712
         return tryAddMessageLast(node, INFINITE_WAIT);
     }
 
@@ -174,11 +176,14 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     @Override
     public boolean hasSpace() {
         // allow isFull to verify parent usage and otherwise enforce local memoryUsageHighWaterMark
+//IC see: https://issues.apache.org/jira/browse/AMQ-6687
+//IC see: https://issues.apache.org/jira/browse/AMQ-4467
         return systemUsage != null ? (!isParentFull() && systemUsage.getMemoryUsage().getPercentUsage() < memoryUsageHighWaterMark) : true;
     }
 
     boolean parentHasSpace(int waterMark) {
         boolean result = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7126
         if (systemUsage != null) {
             if (systemUsage.getMemoryUsage().getParent() != null) {
                 return systemUsage.getMemoryUsage().getParent().getPercentUsage() <= waterMark;
@@ -261,6 +266,8 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
      */
     @Override
     public synchronized int getMaxProducersToAudit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
         return maxProducersToAudit;
     }
 
@@ -317,6 +324,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
 
     @Override
     public boolean isTransient() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1449
         return false;
     }
 
@@ -351,6 +359,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
 
     public synchronized boolean isDuplicate(MessageId messageId) {
         boolean unique = recordUniqueId(messageId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
         rollback(messageId);
         return !unique;
     }
@@ -380,6 +389,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
 
     public static boolean isPrioritizedMessageSubscriber(Broker broker,Subscription sub) {
         boolean result = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         Set<Destination> destinations = broker.getDestinations(sub.getActiveMQDestination());
         if (destinations != null) {
             for (Destination dest:destinations) {
@@ -399,6 +409,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     }
 
     public synchronized void setCacheEnabled(boolean val) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
         cacheEnabled = val;
     }
 

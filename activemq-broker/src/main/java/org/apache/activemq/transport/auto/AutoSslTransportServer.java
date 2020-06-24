@@ -122,6 +122,7 @@ public class AutoSslTransportServer extends AutoTcpTransportServer {
     @Override
     protected TcpTransport createTransport(Socket socket, WireFormat format,
             TcpTransportFactory detectedTransportFactory, InitBuffer initBuffer) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6505
 
         return detectedTransportFactory.createTransport(format, socket, initBuffer);
     }

@@ -63,6 +63,7 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
         // Constructs object name query
         String objNameQuery = "";
         String queryExp = "";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         String delimiter = "";
         for (Iterator i = queries.iterator(); i.hasNext();) {
             String key = (String)i.next();
@@ -71,6 +72,7 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
             if (pos >= 0) {
                 val = key.substring(pos + 1);
                 key = key.substring(0, pos);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             } else {
                 objNameQuery += delimiter + key;
             }
@@ -78,6 +80,7 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
             if (val.startsWith(QUERY_EXP_PREFIX)) {
                 // do nothing as of the moment
             } else if (!key.equals("") && !val.equals("")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
                 objNameQuery += delimiter + key + "=" + val;
                 delimiter = ",";
             }

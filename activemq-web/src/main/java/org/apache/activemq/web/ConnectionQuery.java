@@ -33,6 +33,7 @@ public class ConnectionQuery {
 	private String mConnectionID;
 
 	public ConnectionQuery(BrokerFacade brokerFacade) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1324
 		mBrokerFacade = brokerFacade;
 	}
 

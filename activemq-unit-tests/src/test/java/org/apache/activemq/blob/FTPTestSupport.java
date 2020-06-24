@@ -51,6 +51,7 @@ public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
     protected void setUp() throws Exception {
 
         if (ftpHomeDirFile.getParentFile().exists()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
             IOHelper.deleteFile(ftpHomeDirFile.getParentFile());
         }
         ftpHomeDirFile.mkdirs();
@@ -106,6 +107,7 @@ public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
         connectionFactory = createConnectionFactory();
 
         connection = createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         connection.start();
     }
 
@@ -118,6 +120,7 @@ public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
         if (server != null) {
             server.stop();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         IOHelper.deleteFile(ftpHomeDirFile.getParentFile());
     }
 

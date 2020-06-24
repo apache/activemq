@@ -26,6 +26,7 @@ import org.junit.Test;
 public class ActiveMQSslConnectionFactoryTest {
 
     final String TRUST_STORE_FILE_NAME = "client.keystore";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5789
     final String TRUST_STORE_PKCS12_FILE_NAME = "client-pkcs12.keystore";
     final String TRUST_STORE_DIRECTORY_NAME = "src/test/resources/ssl/";
     final String TRUST_STORE_RESOURCE_PREFIX = "ssl/";
@@ -95,6 +96,7 @@ public class ActiveMQSslConnectionFactoryTest {
 
     @Test(expected = ConnectException.class)
     public void validPkcs12TrustStoreFileTest() throws Throwable {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5789
         executeTest(SSL_TRANSPORT, TRUST_STORE_DIRECTORY_NAME + TRUST_STORE_PKCS12_FILE_NAME, "pkcs12");
     }
 
@@ -114,6 +116,7 @@ public class ActiveMQSslConnectionFactoryTest {
     }
 
     protected void executeTest(String transport, String name) throws Throwable {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
     	executeTest(transport, name, null);
     }
 

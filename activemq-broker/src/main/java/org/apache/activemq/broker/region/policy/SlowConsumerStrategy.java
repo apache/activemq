@@ -35,6 +35,7 @@ public interface SlowConsumerStrategy {
      *      The subscription object for the slow consumer.
      */
     void slowConsumer(ConnectionContext context, Subscription subs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
 
     /**
      * Sets the Broker instance which can provide a Scheduler among other things.
@@ -43,6 +44,7 @@ public interface SlowConsumerStrategy {
      *      The running Broker.
      */
     void setBrokerService(Broker broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
 
     /**
      * For Strategies that need to examine assigned destination for slow consumers

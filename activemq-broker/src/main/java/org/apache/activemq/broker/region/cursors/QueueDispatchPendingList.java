@@ -85,6 +85,7 @@ public class QueueDispatchPendingList implements PendingList {
     public PendingNode remove(MessageReference message) {
         if (pagedInPendingDispatch.contains(message)) {
             return pagedInPendingDispatch.remove(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6151
         } else if (redeliveredWaitingDispatch.contains(message)) {
             return redeliveredWaitingDispatch.remove(message);
         }
@@ -103,6 +104,7 @@ public class QueueDispatchPendingList implements PendingList {
 
     @Override
     public Iterator<MessageReference> iterator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6151
         if (prioritized && hasRedeliveries()) {
             final QueueDispatchPendingList delegate = this;
             final PrioritizedPendingList  priorityOrderedRedeliveredAndPending = new PrioritizedPendingList();
@@ -193,6 +195,7 @@ public class QueueDispatchPendingList implements PendingList {
     }
 
     public void setPrioritizedMessages(boolean prioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6151
         prioritized = prioritizedMessages;
         if (prioritizedMessages && this.pagedInPendingDispatch instanceof OrderedPendingList) {
             pagedInPendingDispatch = new PrioritizedPendingList();
@@ -208,10 +211,12 @@ public class QueueDispatchPendingList implements PendingList {
     }
 
     public void addForRedelivery(List<MessageReference> list, boolean noConsumers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6286
         if (noConsumers && redeliveredWaitingDispatch instanceof OrderedPendingList && willBeInOrder(list)) {
             // a single consumer can expect repeatable redelivery order irrespective
             // of transaction or prefetch boundaries
             ((OrderedPendingList)redeliveredWaitingDispatch).insertAtHead(list);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6286
         } else {
             for (MessageReference ref : list) {
                 redeliveredWaitingDispatch.addMessageLast(ref);
@@ -223,6 +228,7 @@ public class QueueDispatchPendingList implements PendingList {
         // for a single consumer inserting at head will be in order w.r.t brokerSequence but
         // will not be if there were multiple consumers in the mix even if this is the last
         // consumer to close (noConsumers==true)
+//IC see: https://issues.apache.org/jira/browse/AMQ-6286
         return !redeliveredWaitingDispatch.isEmpty() && list != null && !list.isEmpty() &&
             redeliveredWaitingDispatch.iterator().next().getMessageId().getBrokerSequenceId() > list.get(list.size() - 1).getMessageId().getBrokerSequenceId();
     }

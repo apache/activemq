@@ -19,6 +19,7 @@ package org.apache.activemq.transport;
 public interface TransmitCallback {
 
     void onSuccess();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
 
     void onFailure();
 

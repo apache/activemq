@@ -46,6 +46,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQServiceFactory.class);
 
     BundleContext bundleContext;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7153
     Map<String, BrokerService> brokers = new HashMap<>();
     Map<String, ServiceRegistration<BrokerService>> brokerRegs = new HashMap<>();
 
@@ -55,20 +56,24 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
     }
 
     public Map<String, BrokerService> getBrokersMap() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5239
         return Collections.unmodifiableMap(brokers);
     }
 
     @Override
     synchronized public void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7153
 
         // First stop currently running broker (if any)
         deleted(pid);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4034
 
         String config = (String) properties.get("config");
         if (config == null) {
             throw new ConfigurationException("config", "Property must be set");
         }
         String name = (String) properties.get("broker-name");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4034
         if (name == null) {
             throw new ConfigurationException("broker-name", "Property must be set");
         }
@@ -79,6 +84,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             Thread.currentThread().setContextClassLoader(BrokerService.class.getClassLoader());
             Resource resource = Utils.resourceFromString(config);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6301
             ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(
                     new String[]{resource.getURL().toExternalForm()}, false);
 
@@ -110,6 +116,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
             // Handle properties in configuration
             PropertyPlaceholderConfigurer configurator = new PropertyPlaceholderConfigurer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5239
 
             // convert dictionary to properties. Is there a better way?
             Properties props = new Properties();
@@ -133,6 +140,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             }
             // TODO deal with multiple brokers
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
             SpringBrokerContext brokerContext = new SpringBrokerContext();
             brokerContext.setConfigurationUrl(resource.getURL().toExternalForm());
             brokerContext.setApplicationContext(ctx);
@@ -144,6 +152,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             if (!broker.isSlave())
                 broker.waitUntilStarted();
             brokers.put(pid, broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7153
             brokerRegs.put(pid, bundleContext.registerService(BrokerService.class, broker, properties));
         } catch (Exception e) {
             throw new ConfigurationException(null, "Cannot start the broker", e);
@@ -151,6 +160,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
     }
 
     private boolean isCamelContextFactoryBeanExist() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6301
         try {
             Class.forName("org.apache.camel.osgi.CamelContextFactoryBean");
             return true;
@@ -161,6 +171,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
     @Override
     synchronized public void deleted(String pid) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7153
         ServiceRegistration<BrokerService> reg = brokerRegs.remove(pid);
         if (reg != null) {
             reg.unregister();
@@ -182,6 +193,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
 	}
 
     synchronized public void destroy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5239
         for (String broker : brokers.keySet()) {
             deleted(broker);
         }

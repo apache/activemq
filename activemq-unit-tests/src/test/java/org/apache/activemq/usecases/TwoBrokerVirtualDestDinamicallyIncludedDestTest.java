@@ -193,6 +193,7 @@ public class TwoBrokerVirtualDestDinamicallyIncludedDestTest extends JmsMultiple
         nc1.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("global.>", ActiveMQDestination.QUEUE_TYPE));
         nc1.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("global.>", ActiveMQDestination.TOPIC_TYPE));
         nc1.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("Consumer.*.global.>", ActiveMQDestination.QUEUE_TYPE));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3550
 
         NetworkConnector nc2 = bridgeBrokers("BrokerB", "BrokerA", dynamicOnly, networkTTL, conduit);
         nc2.setDecreaseNetworkConsumerPriority(decreaseNetworkConsumerPriority);
@@ -211,6 +212,7 @@ public class TwoBrokerVirtualDestDinamicallyIncludedDestTest extends JmsMultiple
 
         // make all topics virtual and consumers use the default prefix
         VirtualDestinationInterceptor virtualDestinationInterceptor = new VirtualDestinationInterceptor();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3550
         VirtualTopic vTopic = new VirtualTopic();
         vTopic.setLocal(true);
         virtualDestinationInterceptor.setVirtualDestinations(new VirtualDestination[]{vTopic});

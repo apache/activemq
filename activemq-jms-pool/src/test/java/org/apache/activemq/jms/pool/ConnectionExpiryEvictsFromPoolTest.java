@@ -41,6 +41,7 @@ public class ConnectionExpiryEvictsFromPoolTest extends JmsPoolTestSupport {
     @Before
     public void setUp() throws Exception {
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         brokerService = new BrokerService();
         brokerService.setUseJmx(false);
@@ -50,6 +51,7 @@ public class ConnectionExpiryEvictsFromPoolTest extends JmsPoolTestSupport {
         TransportConnector connector = brokerService.addConnector("tcp://localhost:0");
         brokerService.start();
         factory = new ActiveMQConnectionFactory("mock:" + connector.getConnectUri());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         pooledFactory = new PooledConnectionFactory();
         pooledFactory.setConnectionFactory(factory);
         pooledFactory.setMaxConnections(1);
@@ -106,6 +108,7 @@ public class ConnectionExpiryEvictsFromPoolTest extends JmsPoolTestSupport {
 
         // let connection to get idle
         TimeUnit.MILLISECONDS.sleep(500);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         // get a connection from pool again, it should be the same underlying connection
         // as before and should not be idled out since an open session exists.
@@ -121,12 +124,15 @@ public class ConnectionExpiryEvictsFromPoolTest extends JmsPoolTestSupport {
         }
 
         Connection original = connection.getConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4366
         connection.close();
         connection2.close();
 
         // let connection to get idle
         TimeUnit.MILLISECONDS.sleep(500);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         // get a connection from pool again, it should be a new Connection instance as the
         // old one should have been inactive and idled out.

@@ -46,6 +46,8 @@ public class QueueBrowserSubscription extends QueueSubscription {
     private long maxMessages;
 
     public QueueBrowserSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
         super(broker, usageManager, context, info);
     }
 
@@ -67,12 +69,16 @@ public class QueueBrowserSubscription extends QueueSubscription {
     }
 
     public boolean isDuplicate(MessageId messageId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6062
         return audit.putIfAbsent(messageId, Boolean.TRUE) != null;
     }
 
     private void checkDone() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
         if (!browseDone && queueRefs == 0 && destinationsAdded) {
             browseDone = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
             add(QueueMessageReference.NULL_MESSAGE);
         }
     }
@@ -87,6 +93,9 @@ public class QueueBrowserSubscription extends QueueSubscription {
      */
     @Override
     protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2529
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
         if (info.isNetworkSubscription()) {
             super.acknowledge(context, ack, n);
         }
@@ -97,6 +106,7 @@ public class QueueBrowserSubscription extends QueueSubscription {
     }
 
     synchronized public void decrementQueueRef() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
         if (queueRefs > 0) {
             queueRefs--;
         }
@@ -105,6 +115,7 @@ public class QueueBrowserSubscription extends QueueSubscription {
 
     @Override
     public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3262
         super.remove(context, destination);
         // there's no unacked messages that needs to be redelivered
         // in case of browser
@@ -112,6 +123,10 @@ public class QueueBrowserSubscription extends QueueSubscription {
     }
 
     public boolean atMax() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
         return maxMessages > 0 && getEnqueueCounter() >= maxMessages;
     }
 

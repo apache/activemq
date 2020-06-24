@@ -32,6 +32,7 @@ public interface PersistenceAdapterViewMBean {
 
     @MBeanInfo("Statistics related to the PersistentAdapter.")
     String getStatistics();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7159
 
     @MBeanInfo("Resets statistics.")
     String resetStatistics();

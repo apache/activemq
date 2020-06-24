@@ -35,6 +35,7 @@ public class AmqpCorruptedFrameHandlingTest extends AmqpClientTestSupport {
 
     @Override
     protected String getAdditionalConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5778
         return "?transport.maxFrameSize=65535&transport.wireFormat.idleTimeout=5000";
     }
 
@@ -72,6 +73,7 @@ public class AmqpCorruptedFrameHandlingTest extends AmqpClientTestSupport {
         connection.close();
 
         // Should be able to recycle the client ID now.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5731
         connection = client.createConnection();
         connection.setContainerId("ClientID:" + getTestName());
         connection.connect();
@@ -123,6 +125,9 @@ public class AmqpCorruptedFrameHandlingTest extends AmqpClientTestSupport {
 
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.createConnection());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
 
         connection.setContainerId("ClientID:" + getTestName());
         connection.connect();

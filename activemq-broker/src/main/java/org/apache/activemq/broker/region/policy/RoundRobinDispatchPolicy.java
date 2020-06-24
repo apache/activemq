@@ -45,6 +45,7 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
             throws Exception {
         int count = 0;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1006
         Subscription firstMatchingConsumer = null;
         synchronized (consumers) {
             for (Iterator<Subscription> iter = consumers.iterator(); iter
@@ -53,10 +54,12 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
 
                 // Only dispatch to interested subscriptions
                 if (!sub.matches(node, msgContext)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2870
                     sub.unmatched(node);
                     continue;
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1006
                 if (firstMatchingConsumer == null) {
                     firstMatchingConsumer = sub;
                 }

@@ -39,6 +39,7 @@ public interface JDBCAdapter {
     void doDropTables(TransactionContext c) throws SQLException, IOException;
 
     void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data, long expiration, byte priority, XATransactionId xid) throws SQLException, IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
 
     void doAddMessageReference(TransactionContext c, long sequence, MessageId messageId, ActiveMQDestination destination, long expirationTime, String messageRef) throws SQLException, IOException;
 
@@ -49,6 +50,7 @@ public interface JDBCAdapter {
     String doGetMessageReference(TransactionContext c, long id) throws SQLException, IOException;
 
     void doRemoveMessage(TransactionContext c, long seq, XATransactionId xid) throws SQLException, IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
 
     void doRecover(TransactionContext c, ActiveMQDestination destination, JDBCMessageRecoveryListener listener) throws Exception;
 
@@ -60,6 +62,7 @@ public interface JDBCAdapter {
     void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long seq, long priority, int maxReturned,
                                JDBCMessageRecoveryListener listener) throws Exception;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
     void doRecoverNextMessagesWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long seq, long priority, int maxReturned,
                                JDBCMessageRecoveryListener listener) throws Exception;
 
@@ -74,6 +77,7 @@ public interface JDBCAdapter {
     void doDeleteSubscription(TransactionContext c, ActiveMQDestination destinationName, String clientId, String subscriptionName) throws SQLException, IOException;
 
     void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
 
     long doGetLastMessageStoreSequenceId(TransactionContext c) throws SQLException, IOException;
 
@@ -88,28 +92,38 @@ public interface JDBCAdapter {
     int doGetMessageCount(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException;
 
     void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long[] lastRecoveredEntries, long maxSeq, int maxReturned, boolean isPrioritizeMessages, JDBCMessageRecoveryListener listener) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
 
     long doGetLastAckedDurableSubscriberMessageId(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriberName) throws SQLException, IOException;
 
     void doMessageIdScan(TransactionContext c, int limit, JDBCMessageIdScanListener listener) throws SQLException, IOException;
 
     long doGetLastProducerSequenceId(TransactionContext c, ProducerId id) throws SQLException, IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
 
     void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId, String subscriptionName, long re, long re1) throws SQLException, IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
 
     public int getMaxRows();
 
     public void setMaxRows(int maxRows);
 
     void doRecordDestination(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
 
     void doRecoverPreparedOps(TransactionContext c, JdbcMemoryTransactionStore jdbcMemoryTransactionStore) throws SQLException, IOException;
 
     void doCommitAddOp(TransactionContext c, long preparedSequence, long sequence) throws SQLException, IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5567
 
     void doClearLastAck(TransactionContext c, ActiveMQDestination destination, byte priority, String subId, String subName) throws SQLException, IOException;
 
     void doUpdateMessage(TransactionContext c, ActiveMQDestination destination, MessageId id, byte[] data) throws SQLException, IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6049
     String limitQuery(String query);
 }

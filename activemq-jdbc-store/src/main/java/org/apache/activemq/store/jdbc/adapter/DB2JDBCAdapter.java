@@ -30,6 +30,7 @@ public class DB2JDBCAdapter extends DefaultJDBCAdapter {
 
     @Override
     public void setStatements(Statements statements) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1193
         String lockCreateStatement = "LOCK TABLE " + statements.getFullLockTableName() + " IN EXCLUSIVE MODE";
         statements.setLockCreateStatement(lockCreateStatement);
 

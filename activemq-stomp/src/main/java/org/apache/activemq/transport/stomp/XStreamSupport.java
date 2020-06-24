@@ -37,6 +37,7 @@ public class XStreamSupport {
         if (ClassLoadingAwareObjectInputStream.isAllAllowed()) {
             stream.addPermission(AnyTypePermission.ANY);
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6013
             for (String packageName : ClassLoadingAwareObjectInputStream.serializablePackages) {
                 stream.allowTypesByWildcard(new String[]{packageName + ".**"});
             }

@@ -40,6 +40,7 @@ public class DefaultBrokerFactory implements BrokerFactoryHandler {
 
         BrokerService brokerService = new BrokerService();
         IntrospectionSupport.setProperties(brokerService, params);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2240
         if (!params.isEmpty()) {
             String msg = "There are " + params.size()
                 + " Broker options that couldn't be set on the BrokerService."

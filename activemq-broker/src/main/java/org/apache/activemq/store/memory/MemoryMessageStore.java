@@ -45,6 +45,7 @@ public class MemoryMessageStore extends AbstractMessageStore {
     }
 
     public MemoryMessageStore(ActiveMQDestination destination, Map<MessageId, Message> messageTable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1842
         super(destination);
         this.messageTable = Collections.synchronizedMap(messageTable);
     }
@@ -54,7 +55,10 @@ public class MemoryMessageStore extends AbstractMessageStore {
         synchronized (messageTable) {
             messageTable.put(message.getMessageId(), message);
             incMessageStoreStatistics(getMessageStoreStatistics(), message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6164
             message.incrementReferenceCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             message.getMessageId().setFutureOrSequenceLong(sequenceId++);
             if (indexListener != null) {
                 indexListener.onAdd(new IndexListener.MessageContext(context, message, null));
@@ -75,6 +79,7 @@ public class MemoryMessageStore extends AbstractMessageStore {
     public void removeMessage(MessageId msgId) throws IOException {
         synchronized (messageTable) {
             Message removed = messageTable.remove(msgId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
             if (removed != null) {
                 removed.decrementReferenceCount();
                 decMessageStoreStatistics(getMessageStoreStatistics(), removed);
@@ -89,6 +94,7 @@ public class MemoryMessageStore extends AbstractMessageStore {
     public void recover(MessageRecoveryListener listener) throws Exception {
         // the message table is a synchronizedMap - so just have to synchronize here
         synchronized (messageTable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
             for (Message message : messageTable.values()) {
                 listener.recoverMessage(message);
             }
@@ -114,6 +120,7 @@ public class MemoryMessageStore extends AbstractMessageStore {
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
         synchronized (messageTable) {
             boolean pastLackBatch = lastBatchId == null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
             for (Map.Entry<MessageId, Message> entry : messageTable.entrySet()) {
                 if (pastLackBatch) {
                     Object msg = entry.getValue();
@@ -137,6 +144,7 @@ public class MemoryMessageStore extends AbstractMessageStore {
 
     @Override
     public void setBatch(MessageId messageId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7009
         synchronized (messageTable) {
             if (messageTable.containsKey(messageId)) {
                 lastBatchId = messageId;
@@ -148,6 +156,8 @@ public class MemoryMessageStore extends AbstractMessageStore {
 
     @Override
     public void updateMessage(Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         synchronized (messageTable) {
             Message original = messageTable.get(message.getMessageId());
 
@@ -167,6 +177,7 @@ public class MemoryMessageStore extends AbstractMessageStore {
         synchronized (messageTable) {
             long size = 0;
             int count = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
             for (Message message : messageTable.values()) {
                 size += message.getSize();
             }

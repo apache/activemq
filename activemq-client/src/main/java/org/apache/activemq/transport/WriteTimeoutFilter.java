@@ -79,6 +79,7 @@ public class WriteTimeoutFilter extends TransportFilter {
     }
 
     public long getWriteTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2006
         return writeTimeout;
     }
 
@@ -96,6 +97,7 @@ public class WriteTimeoutFilter extends TransportFilter {
 
 
     protected TimeStampStream getWriter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2737
         return next.narrow(TimeStampStream.class);
     }
 
@@ -152,6 +154,8 @@ public class WriteTimeoutFilter extends TransportFilter {
             while (run) {
                 boolean error = false;
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2006
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
                     if (!interrupted()) {
                         Iterator<WriteTimeoutFilter> filters = writers.iterator();
                         while (run && filters.hasNext()) {

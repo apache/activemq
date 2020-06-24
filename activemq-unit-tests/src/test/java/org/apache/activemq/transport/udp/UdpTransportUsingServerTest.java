@@ -44,6 +44,7 @@ public class UdpTransportUsingServerTest extends UdpTestSupport {
         expected.setResponseRequired(true);
         LOG.info("About to send: " + expected);
         Response response = (Response) producer.request(expected, 2000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-976
 
         LOG.info("Received: " + response);
         assertNotNull("Received a response", response);
@@ -57,6 +58,7 @@ public class UdpTransportUsingServerTest extends UdpTestSupport {
     }
 
     protected TransportServer createServer() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         return TransportFactory.bind(new URI(serverURI));
     }
 

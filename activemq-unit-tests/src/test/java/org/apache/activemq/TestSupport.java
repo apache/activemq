@@ -77,6 +77,8 @@ public abstract class TestSupport extends CombinationTestSupport {
      * Returns the name of the destination used in this test case
      */
     protected String getDestinationString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         return getClass().getName() + "." + getName(true);
     }
 
@@ -149,6 +151,7 @@ public abstract class TestSupport extends CombinationTestSupport {
     }
 
     public static DestinationStatistics getDestinationStatistics(BrokerService broker, ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         DestinationStatistics result = null;
         org.apache.activemq.broker.region.Destination dest = getDestination(broker, destination);
         if (dest != null) {
@@ -158,6 +161,7 @@ public abstract class TestSupport extends CombinationTestSupport {
     }
 
     public static List<Subscription> getDestinationConsumers(BrokerService broker, ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6577
         List<Subscription> result = null;
         org.apache.activemq.broker.region.Destination dest = getDestination(broker, destination);
         if (dest != null) {
@@ -180,6 +184,7 @@ public abstract class TestSupport extends CombinationTestSupport {
     private static Map<ActiveMQDestination, org.apache.activemq.broker.region.Destination> getDestinationMap(BrokerService target,
             ActiveMQDestination destination) {
         RegionBroker regionBroker = (RegionBroker) target.getRegionBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4222
         if (destination.isTemporary()) {
             return destination.isQueue() ? regionBroker.getTempQueueRegion().getDestinationMap() :
                     regionBroker.getTempTopicRegion().getDestinationMap();
@@ -190,7 +195,9 @@ public abstract class TestSupport extends CombinationTestSupport {
     }
 
     protected QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4483
         BrokerService brokerService = BrokerRegistry.getInstance().lookup("localhost");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5614
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="+ JMXSupport.encodeObjectNamePart(name));
         QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
@@ -227,6 +234,8 @@ public abstract class TestSupport extends CombinationTestSupport {
     }
 
     public void stopBrokerWithStoreFailure(BrokerService broker, PersistenceAdapterChoice choice) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         switch (choice) {
             case KahaDB:
                 KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();

@@ -45,6 +45,7 @@ public class JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest extends 
 
         if (broker != null) {
             broker.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
             broker = null;
         }
     }

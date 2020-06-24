@@ -94,6 +94,8 @@ public class MessageEvaluationContext {
     }
 
     public MessageReference getMessageReference() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         return messageReference;
     }
 }

@@ -117,6 +117,9 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         super.addConnection(context, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
 
         ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
         // do not distribute passwords in advisory messages. usernames okay
@@ -129,15 +132,20 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         Subscription answer = super.addConsumer(context, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
 
         // Don't advise advisory topics.
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5337
             consumersLock.writeLock().lock();
             try {
                 consumers.put(info.getConsumerId(), info);
 
                 //check if this is a consumer on a destination that matches a virtual destination
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
                 if (getBrokerService().isUseVirtualDestSubs()) {
                     for (VirtualDestination virtualDestination : virtualDestinations) {
                         if (virtualDestinationMatcher.matches(virtualDestination, info.getDestination())) {
@@ -148,12 +156,14 @@ public class AdvisoryBroker extends BrokerFilter {
             } finally {
                 consumersLock.writeLock().unlock();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1255
             fireConsumerAdvisory(context, info.getDestination(), topic, info);
         } else {
             // We need to replay all the previously collected state objects
             // for this newly added consumer.
             if (AdvisorySupport.isConnectionAdvisoryTopic(info.getDestination())) {
                 // Replay the connections.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
                 for (Iterator<ConnectionInfo> iter = connections.values().iterator(); iter.hasNext(); ) {
                     ConnectionInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
@@ -165,6 +175,7 @@ public class AdvisoryBroker extends BrokerFilter {
             // can avoid sending advisory messages to the consumer if it only wants Temporary Destination
             // notifications.  If its not just temporary destination related destinations then we have
             // to send them all, a composite destination could want both.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3615
             if (AdvisorySupport.isTempDestinationAdvisoryTopic(info.getDestination())) {
                 // Replay the temporary destinations.
                 for (DestinationInfo destination : destinations.values()) {
@@ -183,6 +194,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
             // Replay the producers.
             if (AdvisorySupport.isProducerAdvisoryTopic(info.getDestination())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
                 for (Iterator<ProducerInfo> iter = producers.values().iterator(); iter.hasNext(); ) {
                     ProducerInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(value.getDestination());
@@ -192,6 +204,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
             // Replay the consumers.
             if (AdvisorySupport.isConsumerAdvisoryTopic(info.getDestination())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5337
                 consumersLock.readLock().lock();
                 try {
                     for (Iterator<ConsumerInfo> iter = consumers.values().iterator(); iter.hasNext(); ) {
@@ -205,6 +218,7 @@ public class AdvisoryBroker extends BrokerFilter {
             }
 
             // Replay the virtual destination consumers.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
             if (AdvisorySupport.isVirtualDestinationConsumerAdvisoryTopic(info.getDestination())) {
                 for (Iterator<ConsumerInfo> iter = virtualDestinationConsumers.keySet().iterator(); iter.hasNext(); ) {
                     ConsumerInfo key = iter.next();
@@ -214,6 +228,7 @@ public class AdvisoryBroker extends BrokerFilter {
             }
 
             // Replay network bridges
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
             if (AdvisorySupport.isNetworkBridgeAdvisoryTopic(info.getDestination())) {
                 for (Iterator<BrokerInfo> iter = networkBridges.keySet().iterator(); iter.hasNext(); ) {
                     BrokerInfo key = iter.next();
@@ -228,12 +243,17 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.addProducer(context, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
 
         //Verify destination is either non-null or that we want to advise anonymous producers on null destination
         //Don't advise advisory topics.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7352
         if ((info.getDestination() != null || getBrokerService().isAnonymousProducerAdvisorySupport())
                 && !AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(info.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1553
             fireProducerAdvisory(context, info.getDestination(), topic, info);
             producers.put(info.getProducerId(), info);
         }
@@ -241,9 +261,11 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean create) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
         Destination answer = super.addDestination(context, destination, create);
         if (!AdvisorySupport.isAdvisoryTopic(destination)) {
             //for queues, create demand if isUseVirtualDestSubsOnCreation is true
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
             if (getBrokerService().isUseVirtualDestSubsOnCreation() && destination.isQueue()) {
                 //check if this new destination matches a virtual destination that exists
                 for (VirtualDestination virtualDestination : virtualDestinations) {
@@ -270,6 +292,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
         if (!AdvisorySupport.isAdvisoryTopic(destination)) {
             DestinationInfo previous = destinations.putIfAbsent(destination, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
             if (previous == null) {
                 ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
                 fireAdvisory(context, topic, info);
@@ -279,11 +302,15 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
         super.removeDestination(context, destination, timeout);
         DestinationInfo info = destinations.remove(destination);
         if (info != null) {
 
             //on destination removal, remove all demand if using virtual dest subs
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
             if (getBrokerService().isUseVirtualDestSubs()) {
                 for (ConsumerInfo consumerInfo : virtualDestinationConsumers.keySet()) {
                     //find all consumers for this virtual destination
@@ -294,6 +321,7 @@ public class AdvisoryBroker extends BrokerFilter {
                         //in case of multiple matches
                         VirtualConsumerPair key = new VirtualConsumerPair(virtualDestination, destination);
                         ConsumerInfo i = brokerConsumerDests.get(key);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6204
                         if (consumerInfo.equals(i) && brokerConsumerDests.remove(key) != null) {
                             LOG.debug("Virtual consumer pair removed: {} for consumer: {} ", key, i);
                             fireVirtualDestinationRemoveAdvisory(context, consumerInfo);
@@ -304,11 +332,14 @@ public class AdvisoryBroker extends BrokerFilter {
             }
 
             // ensure we don't modify (and loose/overwrite) an in-flight add advisory, so duplicate
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             info = info.copy();
             info.setDestination(destination);
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
             fireAdvisory(context, topic, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3705
             ActiveMQTopic[] advisoryDestinations = AdvisorySupport.getAllDestinationAdvisoryTopics(destination);
             for (ActiveMQTopic advisoryDestination : advisoryDestinations) {
                 try {
@@ -321,19 +352,31 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo destInfo) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
+//IC see: https://issues.apache.org/jira/browse/AMQ-3615
         super.removeDestinationInfo(context, destInfo);
         DestinationInfo info = destinations.remove(destInfo.getDestination());
         if (info != null) {
             // ensure we don't modify (and loose/overwrite) an in-flight add advisory, so duplicate
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             info = info.copy();
             info.setDestination(destInfo.getDestination());
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destInfo.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-677
             fireAdvisory(context, topic, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3705
             ActiveMQTopic[] advisoryDestinations = AdvisorySupport.getAllDestinationAdvisoryTopics(destInfo.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
             for (ActiveMQTopic advisoryDestination : advisoryDestinations) {
                 try {
                     next.removeDestination(context, advisoryDestination, -1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1255
+//IC see: https://issues.apache.org/jira/browse/AMQ-3615
                 } catch (Exception expectedIfDestinationDidNotExistYet) {
                 }
             }
@@ -343,6 +386,9 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         super.removeConnection(context, info, error);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
 
         ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
         fireAdvisory(context, topic, info.createRemoveCommand());
@@ -352,16 +398,21 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         super.removeConsumer(context, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
 
         // Don't advise advisory topics.
         ActiveMQDestination dest = info.getDestination();
         if (!AdvisorySupport.isAdvisoryTopic(dest)) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5337
             consumersLock.writeLock().lock();
             try {
                 consumers.remove(info.getConsumerId());
 
                 //remove the demand for this consumer if it matches a virtual destination
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
                 if(getBrokerService().isUseVirtualDestSubs()) {
                     fireVirtualDestinationRemoveAdvisory(context, info);
                 }
@@ -377,7 +428,9 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5035
         RegionBroker regionBroker = null;
         if (next instanceof RegionBroker) {
             regionBroker = (RegionBroker) next;
@@ -394,6 +447,7 @@ public class AdvisoryBroker extends BrokerFilter {
         DurableTopicSubscription sub = ((TopicRegion) regionBroker.getTopicRegion()).getDurableSubscription(key);
 
         super.removeSubscription(context, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4671
 
         if (sub == null) {
             LOG.warn("We cannot send an advisory message for a durable sub removal when we don't know about the durable sub");
@@ -413,10 +467,14 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.removeProducer(context, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
 
         //Verify destination is either non-null or that we want to advise anonymous producers on null destination
         //Don't advise advisory topics.
         ActiveMQDestination dest = info.getDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7352
         if ((dest != null || getBrokerService().isAnonymousProducerAdvisorySupport()) && !AdvisorySupport.isAdvisoryTopic(dest)) {
             ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(dest);
             producers.remove(info.getProducerId());
@@ -431,6 +489,7 @@ public class AdvisoryBroker extends BrokerFilter {
         super.messageExpired(context, messageReference, subscription);
         try {
             if (!messageReference.isAdvisory()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
                 BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
                 ActiveMQTopic topic = AdvisorySupport.getExpiredMessageTopic(baseDestination.getActiveMQDestination());
                 Message payload = messageReference.getMessage().copy();
@@ -451,6 +510,7 @@ public class AdvisoryBroker extends BrokerFilter {
         super.messageConsumed(context, messageReference);
         try {
             if (!messageReference.isAdvisory()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
                 BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
                 ActiveMQTopic topic = AdvisorySupport.getMessageConsumedAdvisoryTopic(baseDestination.getActiveMQDestination());
                 Message payload = messageReference.getMessage().copy();
@@ -472,6 +532,7 @@ public class AdvisoryBroker extends BrokerFilter {
         super.messageDelivered(context, messageReference);
         try {
             if (!messageReference.isAdvisory()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
                 BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
                 ActiveMQTopic topic = AdvisorySupport.getMessageDeliveredAdvisoryTopic(baseDestination.getActiveMQDestination());
                 Message payload = messageReference.getMessage().copy();
@@ -490,22 +551,27 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
         super.messageDiscarded(context, sub, messageReference);
         try {
             if (!messageReference.isAdvisory()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
                 BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
                 ActiveMQTopic topic = AdvisorySupport.getMessageDiscardedAdvisoryTopic(baseDestination.getActiveMQDestination());
                 Message payload = messageReference.getMessage().copy();
                 if (!baseDestination.isIncludeBodyForAdvisory()) {
                     payload.clearBody();
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 if (sub instanceof TopicSubscription) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
                     advisoryMessage.setIntProperty(AdvisorySupport.MSG_PROPERTY_DISCARDED_COUNT, ((TopicSubscription) sub).discarded());
                 }
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID, sub.getConsumerInfo().getConsumerId().toString());
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, baseDestination.getActiveMQDestination().getQualifiedName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
 
                 fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
@@ -516,10 +582,13 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public void slowConsumer(ConnectionContext context, Destination destination, Subscription subs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
         super.slowConsumer(context, destination, subs);
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3882
             if (!AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination())) {
                 ActiveMQTopic topic = AdvisorySupport.getSlowConsumerAdvisoryTopic(destination.getActiveMQDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID, subs.getConsumerInfo().getConsumerId().toString());
                 fireAdvisory(context, topic, subs.getConsumerInfo(), null, advisoryMessage);
@@ -535,6 +604,7 @@ public class AdvisoryBroker extends BrokerFilter {
         try {
             if (!AdvisorySupport.isAdvisoryTopic(destination)) {
                 ActiveMQTopic topic = AdvisorySupport.getFastProducerAdvisoryTopic(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_PRODUCER_ID, producerInfo.getProducerId().toString());
                 fireAdvisory(context, topic, producerInfo, null, advisoryMessage);
@@ -550,6 +620,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public void virtualDestinationAdded(ConnectionContext context,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
             VirtualDestination virtualDestination) {
         super.virtualDestinationAdded(context, virtualDestination);
 
@@ -601,6 +672,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
             //store the virtual destination and the activeMQDestination as a pair so that we can keep track
             //of all matching forwarded destinations that caused demand
+//IC see: https://issues.apache.org/jira/browse/AMQ-6204
             VirtualConsumerPair pair = new VirtualConsumerPair(virtualDestination, activeMQDest);
             if (brokerConsumerDests.get(pair) == null) {
                 ConnectionId connectionId = new ConnectionId(connectionIdGenerator.generateId());
@@ -622,6 +694,8 @@ public class AdvisoryBroker extends BrokerFilter {
         //this is the case of a real consumer coming online
         } else {
             info = info.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6875
+//IC see: https://issues.apache.org/jira/browse/AMQ-6875
             setConsumerInfoVirtualDest(info, virtualDestination, activeMQDest);
             ActiveMQTopic topic = AdvisorySupport.getVirtualDestinationConsumerAdvisoryTopic(info.getDestination());
 
@@ -642,6 +716,7 @@ public class AdvisoryBroker extends BrokerFilter {
      * @param activeMQDest
      */
     private void setConsumerInfoVirtualDest(ConsumerInfo info, VirtualDestination virtualDestination, ActiveMQDestination activeMQDest) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6875
         info.setDestination(virtualDestination.getVirtualDestination());
         if (virtualDestination instanceof VirtualTopic) {
             VirtualTopic vt = (VirtualTopic) virtualDestination;
@@ -691,6 +766,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
                                     //check consumers created for the existence of a destination to see if they
                                     //match the consumerinfo and clean up
+//IC see: https://issues.apache.org/jira/browse/AMQ-6204
                                     for (VirtualConsumerPair activeMQDest : brokerConsumerDests.keySet()) {
                                         ConsumerInfo i = brokerConsumerDests.get(activeMQDest);
                                         if (info.equals(i) && brokerConsumerDests.remove(activeMQDest) != null) {
@@ -721,7 +797,9 @@ public class AdvisoryBroker extends BrokerFilter {
 
             ActiveMQDestination dest = info.getDestination();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2782
             if (!dest.isTemporary() || destinations.containsKey(dest)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
                 fireConsumerAdvisory(context, dest, topic, info.createRemoveCommand());
             }
         }
@@ -729,6 +807,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public void isFull(ConnectionContext context, Destination destination, Usage<?> usage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2533
         super.isFull(context, destination, usage);
         if (AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination()) == false) {
             try {
@@ -736,6 +815,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 ActiveMQTopic topic = AdvisorySupport.getFullAdvisoryTopic(destination.getActiveMQDestination());
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_USAGE_NAME, usage.getName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6199
                 advisoryMessage.setLongProperty(AdvisorySupport.MSG_PROPERTY_USAGE_COUNT, usage.getUsage());
                 fireAdvisory(context, topic, null, null, advisoryMessage);
 
@@ -754,6 +834,7 @@ public class AdvisoryBroker extends BrokerFilter {
             ConnectionContext context = new ConnectionContext();
             context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
             context.setBroker(getBrokerService().getBroker());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
             fireAdvisory(context, topic, null, null, advisoryMessage);
         } catch (Exception e) {
             handleFireFailure("now master broker", e);
@@ -762,17 +843,24 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                                          Subscription subscription, Throwable poisonCause) {
         boolean wasDLQd = super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
         if (wasDLQd) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
                 if (!messageReference.isAdvisory()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
                     BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
                     ActiveMQTopic topic = AdvisorySupport.getMessageDLQdAdvisoryTopic(baseDestination.getActiveMQDestination());
                     Message payload = messageReference.getMessage().copy();
                     if (!baseDestination.isIncludeBodyForAdvisory()) {
                         payload.clearBody();
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
                     fireAdvisory(context, topic, payload);
                 }
             } catch (Exception e) {
@@ -785,13 +873,17 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3107
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
             if (brokerInfo != null) {
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 advisoryMessage.setBooleanProperty("started", true);
                 advisoryMessage.setBooleanProperty("createdByDuplex", createdByDuplex);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
                 advisoryMessage.setStringProperty("remoteIp", remoteIp);
                 networkBridges.putIfAbsent(brokerInfo, advisoryMessage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
 
                 ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
 
@@ -808,14 +900,18 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public void networkBridgeStopped(BrokerInfo brokerInfo) {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
             if (brokerInfo != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3615
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 advisoryMessage.setBooleanProperty("started", false);
                 networkBridges.remove(brokerInfo);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
 
                 ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
 
                 ConnectionContext context = new ConnectionContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2096
                 context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
                 context.setBroker(getBrokerService().getBroker());
                 fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
@@ -840,6 +936,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQDestination consumerDestination, ActiveMQTopic topic, Command command) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
         fireConsumerAdvisory(context, consumerDestination, topic, command, null);
     }
 
@@ -853,11 +950,13 @@ public class AdvisoryBroker extends BrokerFilter {
             }
         }
         advisoryMessage.setIntProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_COUNT, count);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
 
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
     protected void fireProducerAdvisory(ConnectionContext context, ActiveMQDestination producerDestination, ActiveMQTopic topic, Command command) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
         fireProducerAdvisory(context, producerDestination, topic, command, null);
     }
 
@@ -868,6 +967,7 @@ public class AdvisoryBroker extends BrokerFilter {
             Set<Destination> set = getDestinations(producerDestination);
             if (set != null) {
                 for (Destination dest : set) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1553
                     count += dest.getDestinationStatistics().getProducers().getCount();
                 }
             }
@@ -878,6 +978,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
     public void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Exception {
         //set properties
+//IC see: https://issues.apache.org/jira/browse/AMQ-6778
         advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_NAME, getBrokerName());
         String id = getBrokerId() != null ? getBrokerId().getValue() : "NOT_SET";
         advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_ID, id);
@@ -885,6 +986,7 @@ public class AdvisoryBroker extends BrokerFilter {
         String url = getBrokerService().getVmConnectorURI().toString();
         //try and find the URL on the transport connector and use if it exists else
         //try and find a default URL
+//IC see: https://issues.apache.org/jira/browse/AMQ-5705
         if (context.getConnector() instanceof TransportConnector
                 && ((TransportConnector) context.getConnector()).getPublishableConnectString() != null) {
             url = ((TransportConnector) context.getConnector()).getPublishableConnectString();
@@ -920,6 +1022,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public Collection<ConsumerInfo> getAdvisoryConsumers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5337
         consumersLock.readLock().lock();
         try {
             return new ArrayList<ConsumerInfo>(consumers.values());
@@ -937,6 +1040,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public ConcurrentMap<ConsumerInfo, VirtualDestination> getVirtualDestinationConsumers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
         return virtualDestinationConsumers;
     }
 
@@ -949,6 +1053,7 @@ public class AdvisoryBroker extends BrokerFilter {
         private final ActiveMQDestination activeMQDestination;
 
         public VirtualConsumerPair(VirtualDestination virtualDestination,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
                 ActiveMQDestination activeMQDestination) {
             super();
             this.virtualDestination = virtualDestination;
@@ -997,6 +1102,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6204
             return "VirtualConsumerPair [virtualDestination=" + virtualDestination + ", activeMQDestination="
                     + activeMQDestination + "]";
         }

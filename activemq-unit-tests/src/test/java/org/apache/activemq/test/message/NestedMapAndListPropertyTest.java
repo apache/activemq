@@ -67,6 +67,7 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
         assertEquals("listField[0]", "a", list.get(0));
         assertEquals("listField[1]", "b", list.get(1));
         assertEquals("listField[2]", "c", list.get(2));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3211
         assertEquals("JohnDoe", message.getStringProperty("JMSXUserID"));
     }
 
@@ -89,6 +90,7 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
         answer.setObjectProperty("mapField", nestedMap);
         answer.setObjectProperty("listField", Arrays.asList(new Object[] {"a", "b", "c"}));
         answer.setStringProperty("JMSXUserID", "JohnDoe");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3211
 
         return answer;
     }

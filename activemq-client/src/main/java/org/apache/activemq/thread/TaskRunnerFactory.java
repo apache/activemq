@@ -57,6 +57,7 @@ public class TaskRunnerFactory implements Executor {
     private ClassLoader threadClassLoader;
 
     public TaskRunnerFactory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         this("ActiveMQ Task");
     }
 
@@ -65,6 +66,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     private TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6126
         this(name, priority, daemon, maxIterationsPerRun, false);
     }
 
@@ -78,6 +80,7 @@ public class TaskRunnerFactory implements Executor {
         this.daemon = daemon;
         this.maxIterationsPerRun = maxIterationsPerRun;
         this.dedicatedTaskRunner = dedicatedTaskRunner;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         this.maxThreadPoolSize = maxThreadPoolSize;
     }
 
@@ -110,6 +113,7 @@ public class TaskRunnerFactory implements Executor {
     public void shutdown() {
         ExecutorService executor = executorRef.get();
         if (executor != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
             ThreadPoolUtils.shutdown(executor);
         }
         clearExecutor();
@@ -146,6 +150,7 @@ public class TaskRunnerFactory implements Executor {
         //but then getting null from executorRef
         synchronized(this) {
             executorRef.set(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3335
             initDone.set(false);
         }
     }
@@ -162,16 +167,19 @@ public class TaskRunnerFactory implements Executor {
 
     @Override
     public void execute(Runnable runnable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         execute(runnable, name);
     }
 
     public void execute(Runnable runnable, String name) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3335
         init();
         LOG.trace("Execute[{}] runnable: {}", name, runnable);
         ExecutorService executor = executorRef.get();
         if (executor != null) {
             executor.execute(runnable);
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
             doExecuteNewThread(runnable, name);
         }
     }
@@ -186,16 +194,20 @@ public class TaskRunnerFactory implements Executor {
     }
 
     protected ExecutorService createDefaultExecutor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6126
         ThreadPoolExecutor rc = new ThreadPoolExecutor(getDefaultCorePoolSize(), getMaxThreadPoolSize(), getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
                 String threadName = name + "-" + id.incrementAndGet();
                 Thread thread = new Thread(runnable, threadName);
                 thread.setDaemon(daemon);
                 thread.setPriority(priority);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5417
                 if (threadClassLoader != null) {
                     thread.setContextClassLoader(threadClassLoader);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5750
                 thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
                     @Override
                     public void uncaughtException(final Thread t, final Throwable e) {
@@ -208,8 +220,10 @@ public class TaskRunnerFactory implements Executor {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         if (rejectedTaskHandler != null) {
             rc.setRejectedExecutionHandler(rejectedTaskHandler);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5486
         } else {
             rc.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         }
@@ -226,6 +240,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     public int getMaxIterationsPerRun() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3335
         return maxIterationsPerRun;
     }
 
@@ -266,6 +281,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     public int getMaxThreadPoolSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         return maxThreadPoolSize;
     }
 
@@ -274,10 +290,12 @@ public class TaskRunnerFactory implements Executor {
     }
 
     public void setThreadClassLoader(ClassLoader threadClassLoader) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5417
         this.threadClassLoader = threadClassLoader;
     }
 
     public RejectedExecutionHandler getRejectedTaskHandler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         return rejectedTaskHandler;
     }
 
@@ -286,6 +304,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     public long getShutdownAwaitTermination() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
         return shutdownAwaitTermination;
     }
 
@@ -294,6 +313,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     private static int getDefaultCorePoolSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6126
         return Integer.getInteger("org.apache.activemq.thread.TaskRunnerFactory.corePoolSize", 0);
     }
 
@@ -302,6 +322,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     private static int getDefaultKeepAliveTime() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4205
         return Integer.getInteger("org.apache.activemq.thread.TaskRunnerFactory.keepAliveTime", 30);
     }
 }

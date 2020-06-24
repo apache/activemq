@@ -52,6 +52,7 @@ public class FactoryFinder {
      */
     protected static class StandaloneObjectFactory implements ObjectFactory {
         final ConcurrentMap<String, Class> classMap = new ConcurrentHashMap<String, Class>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
 
         @Override
         public Object create(final String path) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException {
@@ -69,6 +70,7 @@ public class FactoryFinder {
             if (className == null) {
                 throw new IOException("Expected property is missing: class");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1229
             Class clazz = null;
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
             if (loader != null) {

@@ -71,6 +71,7 @@ public class DurableSubscriptionWithNoLocalTest {
 
     @Parameters(name="keepDurableSubsActive={0}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
         return Arrays.asList(new Object[][] {
                 {true},
                 {false}
@@ -99,6 +100,7 @@ public class DurableSubscriptionWithNoLocalTest {
      */
     @Test(timeout = 60000)
     public void testNoLocalStillWorkWithConnectionRestart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
         ActiveMQConnection connection = null;
         try {
             connection = (ActiveMQConnection) factory.createConnection();
@@ -451,6 +453,7 @@ public class DurableSubscriptionWithNoLocalTest {
         brokerService.setStoreOpenWireVersion(CommandTypes.PROTOCOL_VERSION);
         brokerService.setUseJmx(false);
         brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
         brokerService.setKeepDurableSubsActive(keepDurableSubsActive);
         TransportConnector connector = brokerService.addConnector("tcp://0.0.0.0:0");
 

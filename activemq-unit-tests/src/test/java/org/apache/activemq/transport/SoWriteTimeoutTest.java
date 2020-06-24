@@ -50,6 +50,7 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
         broker.setPersistent(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
         broker.setDeleteAllMessagesOnStartup(true);
         KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
         adapter.setConcurrentStoreAndDispatchQueues(false);
@@ -113,6 +114,7 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
         stompConnection.open(new Socket("localhost", proxy.getUrl().getPort()));
         stompConnection.getStompSocket().setTcpNoDelay(true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         frame = stompConnection.receiveFrame();

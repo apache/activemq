@@ -52,6 +52,7 @@ public class DataFileAccessorPoolTest {
 
         context.checking(new Expectations(){{exactly(1).of(journal).getInflightWrites();}});
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6372
         DataFile dataFile = new DataFile(new File(temporaryFolder.getRoot(), "aa"), 1);
         underTest.closeDataFileAccessor(underTest.openDataFileAccessor(dataFile));
 

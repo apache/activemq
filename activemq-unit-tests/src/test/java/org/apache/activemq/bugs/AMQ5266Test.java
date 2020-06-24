@@ -89,6 +89,7 @@ public class AMQ5266Test {
     @Parameterized.Parameters(name="#{0},producerThreads:{1},consumerThreads:{2},mL:{3},useCache:{4},store:{5},optimizedDispatch:{6}")
     public static Iterable<Object[]> parameters() {
         return Arrays.asList(new Object[][]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 {1,    1,   1,   50*1024,   false, TestSupport.PersistenceAdapterChoice.JDBC, true},
                 {1000, 20,  5,   50*1024,   true,  TestSupport.PersistenceAdapterChoice.JDBC, false},
                 {100,  20,  5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.JDBC, false},
@@ -117,9 +118,11 @@ public class AMQ5266Test {
     @Before
     public void startBroker() throws Exception {
         brokerService = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         TestSupport.setPersistenceAdapter(brokerService, persistenceAdapterChoice);
         brokerService.setDeleteAllMessagesOnStartup(true);
         brokerService.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
@@ -128,6 +131,7 @@ public class AMQ5266Test {
         defaultEntry.setEnableAudit(true);
         defaultEntry.setUseCache(useCache);
         defaultEntry.setMaxPageSize(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         defaultEntry.setOptimizedDispatch(optimizeDispatch);
         defaultEntry.setMemoryLimit(destMemoryLimit);
         defaultEntry.setExpireMessagesPeriod(0);
@@ -181,6 +185,7 @@ public class AMQ5266Test {
 
         publisher.waitForCompletion();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         List<String> publishedIds = publisher.getIDs();
         distinctPublishedCount = new TreeSet<String>(publishedIds).size();
 
@@ -319,6 +324,8 @@ public class AMQ5266Test {
                     // Loop until we've published enough messages
                     while (count-- > 0) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                         TextMessage tm = session.createTextMessage(getMessageText());
                         String id = UUID.randomUUID().toString();
                         tm.setStringProperty("KEY", id);
@@ -353,6 +360,8 @@ public class AMQ5266Test {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
     String messageText;
     private String getMessageText() {
 
@@ -498,6 +507,8 @@ public class AMQ5266Test {
                 qName = queueName;
                 qc = newQueueConnection();
                 session = newSession(qc);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 Queue q = session.createQueue(queueName + "?consumer.prefetchSize=" + batchSize);
                 mc = session.createConsumer(q);
 
@@ -516,6 +527,8 @@ public class AMQ5266Test {
 
                         if (idList.size() >= totalToExpect) {
                             LOG.info("Got {} for q: {}", +idList.size(), qName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                             session.commit();
                             break;
                         }
@@ -543,6 +556,8 @@ public class AMQ5266Test {
                             count = 0;
 
                             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                                 if (idList.size() < totalToExpect) {
                                     LOG.info("did not receive on {}, current count: {}", qName, idList.size());
                                 }

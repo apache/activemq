@@ -151,6 +151,7 @@ public class MemoryUsageCleanupTest {
 
             @Override
             public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4342
                 return broker.getAdminView().getMemoryPercentUsage() <= startPercentage + 1;
             }
         }));

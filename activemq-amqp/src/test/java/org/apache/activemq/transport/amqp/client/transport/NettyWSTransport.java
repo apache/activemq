@@ -75,6 +75,7 @@ public class NettyWSTransport extends NettyTcpTransport {
      *        the transport options used to configure the socket connection.
      */
     public NettyWSTransport(NettyTransportListener listener, URI remoteLocation, NettyTransportOptions options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         super(listener, remoteLocation, options);
     }
 
@@ -93,6 +94,7 @@ public class NettyWSTransport extends NettyTcpTransport {
 
     @Override
     protected ChannelInboundHandlerAdapter createChannelHandler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return new NettyWebSocketTransportHandler();
     }
 
@@ -115,6 +117,7 @@ public class NettyWSTransport extends NettyTcpTransport {
 
         public NettyWebSocketTransportHandler() {
             handshaker = WebSocketClientHandshakerFactory.newHandshaker(
+//IC see: https://issues.apache.org/jira/browse/AMQ-6675
                 getRemoteLocation(), WebSocketVersion.V13, AMQP_SUB_PROTOCOL,
                 true, new DefaultHttpHeaders(), getMaxFrameSize());
         }
@@ -135,6 +138,7 @@ public class NettyWSTransport extends NettyTcpTransport {
                 handshaker.finishHandshake(ch, (FullHttpResponse) message);
                 LOG.trace("WebSocket Client connected! {}", ctx.channel());
                 // Now trigger super processing as we are really connected.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
                 NettyWSTransport.super.handleConnected(ch);
                 return;
             }
@@ -143,7 +147,9 @@ public class NettyWSTransport extends NettyTcpTransport {
             if (message instanceof FullHttpResponse) {
                 FullHttpResponse response = (FullHttpResponse) message;
                 throw new IllegalStateException(
+//IC see: https://issues.apache.org/jira/browse/AMQ-6673
                     "Unexpected FullHttpResponse (getStatus=" + response.status() +
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
                     ", content=" + response.content().toString(StandardCharsets.UTF_8) + ')');
             }
 
@@ -156,10 +162,12 @@ public class NettyWSTransport extends NettyTcpTransport {
                 BinaryWebSocketFrame binaryFrame = (BinaryWebSocketFrame) frame;
                 LOG.trace("WebSocket Client received data: {} bytes", binaryFrame.content().readableBytes());
                 listener.onData(binaryFrame.content());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6676
             } else if (frame instanceof ContinuationWebSocketFrame) {
                 ContinuationWebSocketFrame binaryFrame = (ContinuationWebSocketFrame) frame;
                 LOG.trace("WebSocket Client received data continuation: {} bytes", binaryFrame.content().readableBytes());
                 listener.onData(binaryFrame.content());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
             } else if (frame instanceof PingWebSocketFrame) {
                 LOG.trace("WebSocket Client received ping, response with pong");
                 ch.write(new PongWebSocketFrame(frame.content()));

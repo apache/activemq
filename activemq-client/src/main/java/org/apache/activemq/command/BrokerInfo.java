@@ -43,11 +43,16 @@ public class BrokerInfo extends BaseCommand {
     BrokerInfo peerBrokerInfos[];
     String brokerName;
     long connectionId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
     String brokerUploadUrl;
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
     String networkProperties;
     transient int refCount = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
 
     public BrokerInfo copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         BrokerInfo copy = new BrokerInfo();
         copy(copy);
         return copy;
@@ -218,6 +223,7 @@ public class BrokerInfo extends BaseCommand {
      * @openwire:property version=3
      */
     public String getBrokerUploadUrl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return brokerUploadUrl;
     }
 
@@ -242,6 +248,7 @@ public class BrokerInfo extends BaseCommand {
 
     public boolean isPassiveSlave() {
         boolean result = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
         Properties props = getProperties();
         if (props != null) {
             result = Boolean.parseBoolean(props.getProperty(PASSIVE_SLAVE_KEY, "false"));
@@ -270,6 +277,8 @@ public class BrokerInfo extends BaseCommand {
     }
 
     public int getRefCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return refCount;
     }
 

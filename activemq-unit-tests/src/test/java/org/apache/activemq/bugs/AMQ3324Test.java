@@ -130,6 +130,7 @@ public class AMQ3324Test {
         entry.setInactiveTimoutBeforeGC(2000);
         entry.setProducerFlowControl(true);
         entry.setAdvisoryForConsumed(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
         entry.setAdvisoryForFastProducers(true);
         entry.setAdvisoryForDelivery(true);
         PolicyMap map = new PolicyMap();

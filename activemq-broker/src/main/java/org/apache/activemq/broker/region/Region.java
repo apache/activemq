@@ -52,6 +52,7 @@ public interface Region extends Service {
      * @return TODO
      * @throws Exception TODO
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
     Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean createIfTemporary) throws Exception;
     
     /**
@@ -146,10 +147,13 @@ public interface Region extends Service {
      * 
      * @return a set of matching destination objects.
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-6497
     Set<Destination> getDestinations(ActiveMQDestination destination);
     
     void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4995
     void reapplyInterceptor();
     
 }

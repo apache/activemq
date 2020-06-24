@@ -49,10 +49,14 @@ public abstract class IndexTestSupport extends TestCase {
     }
 
     public File getDirectory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
         if (directory != null) {
             IOHelper.delete(directory);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
         directory = new File(IOHelper.getDefaultDataDirectory() + System.currentTimeMillis());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
         IOHelper.delete(directory);
         return directory;
     }

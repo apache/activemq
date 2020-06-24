@@ -38,6 +38,7 @@ public class WSSTransportHttpTraceTest extends WSTransportHttpTraceTest {
     @Override
     @Test(timeout=10000)
     public void testHttpTraceEnabled() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
         SslContextFactory factory = new SslContextFactory.Client();
         factory.setEndpointIdentificationAlgorithm(null);       // service cert does not contain a SAN
         factory.setSslContext(broker.getSslContext().getSSLContext());

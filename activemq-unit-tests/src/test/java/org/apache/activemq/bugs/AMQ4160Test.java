@@ -52,6 +52,7 @@ import org.junit.Assert;
  */
 public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
     final long MAX_TEST_TIME = TimeUnit.MINUTES.toMillis(2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
 
     /**
      * Since these tests involve wait conditions, protect against indefinite
@@ -74,6 +75,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
      */
     public void testLostActiveBridge() throws Exception {
         final long ATTEMPT_TO_CREATE_DELAY = TimeUnit.SECONDS.toMillis(15);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
 
         // Start two brokers with a bridge from broker1 to broker2.
         BrokerService broker1 = createBroker(new URI(
@@ -107,6 +109,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
         // synchronization in createBridge ensures that pre-patch both threads
         // actually attempt to start bridges. Post-patch, only one thread is
         // allowed to start the bridge.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
         final CountDownLatch attemptLatch = new CountDownLatch(2);
         final CountDownLatch createLatch = new CountDownLatch(2);
 
@@ -189,6 +192,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
         nc.start();
 
         // Wait for the bridge to be formed by the first attempt.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
         waitForBridge(broker1.getBrokerName(), broker2.getBrokerName(),
                 MAX_TEST_TIME, TimeUnit.MILLISECONDS);
 
@@ -306,6 +310,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
 
                     @Override
                     public String getRemoteBrokerId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4825
                         return next.getRemoteBrokerId();
                     }
 
@@ -331,6 +336,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
 
                     @Override
                     public NetworkBridgeStatistics getNetworkBridgeStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
                         return next.getNetworkBridgeStatistics();
                     }
 
@@ -346,6 +352,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
 
                     @Override
                     public void resetStats(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
                         next.resetStats();
                     }
                 };
@@ -371,6 +378,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
      */
     public void testAllowAttemptsAfterRestart() throws Exception {
         final long STOP_DELAY = TimeUnit.SECONDS.toMillis(10);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
 
         // Start two brokers with a bridge from broker1 to broker2.
         BrokerService broker1 = createBroker(new URI(

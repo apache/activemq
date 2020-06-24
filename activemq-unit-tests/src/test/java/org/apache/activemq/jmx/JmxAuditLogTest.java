@@ -61,9 +61,11 @@ public class JmxAuditLogTest extends TestSupport
       setAutoFail(true);
 
       System.setProperty("org.apache.activemq.audit", "all");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6764
 
       broker = new BrokerService();
       broker.setUseJmx(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7094
       broker.setDeleteAllMessagesOnStartup(true);
       portToUse = findOpenPort();
       broker.setManagementContext(createManagementContext("broker", portToUse));
@@ -163,8 +165,10 @@ public class JmxAuditLogTest extends TestSupport
    @Test
    public void testNameTargetVisible() throws Exception
    {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7094
       Logger log4jLogger = Logger.getLogger("org.apache.activemq.audit");
       log4jLogger.setLevel(Level.INFO);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6764
       final AtomicInteger logCount = new AtomicInteger(0);
       final AtomicBoolean gotEnded = new AtomicBoolean(false);
       final AtomicBoolean gotQueueName = new AtomicBoolean(false);
@@ -194,6 +198,7 @@ public class JmxAuditLogTest extends TestSupport
                   }
                }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6764
                if (message.contains(VERBS[1])) {
                   gotEnded.set(true);
                }
@@ -211,6 +216,7 @@ public class JmxAuditLogTest extends TestSupport
 
       conn.invoke(queueObjName, "purge", params, signature);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6764
       assertTrue("got ended statement", gotEnded.get());
       assertEquals("got two messages", 2, logCount.get());
       assertTrue("got queueName in called statement", gotQueueName.get());

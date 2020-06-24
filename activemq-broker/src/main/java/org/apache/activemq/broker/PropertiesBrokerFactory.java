@@ -38,6 +38,7 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
 
     public BrokerService createBroker(URI brokerURI) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         Map<Object, Object> properties = loadProperties(brokerURI);
         BrokerService brokerService = createBrokerService(brokerURI, properties);
 
@@ -54,6 +55,7 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
         Properties properties = new Properties();
         File file = new File(remaining);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try (InputStream inputStream = loadStream(file, remaining)) {
             if (inputStream != null) {
                 properties.load(inputStream);
@@ -89,6 +91,7 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
                 inputStream = url.openStream();
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         return inputStream;
     }
 

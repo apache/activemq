@@ -60,6 +60,7 @@ public class ListIndexTest extends IndexTestSupport {
         ListIndex<String, Long> index = new ListIndex<String, Long>(pf, id);
         index.setKeyMarshaller(StringMarshaller.INSTANCE);
         index.setValueMarshaller(LongMarshaller.INSTANCE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7084
         index.load(tx);
         tx.commit();
         return index;
@@ -103,6 +104,7 @@ public class ListIndexTest extends IndexTestSupport {
     @Test(timeout=60000)
     public void testPut() throws Exception {
         createPageFileAndIndex(100);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
 
         ListIndex<String, Long> listIndex = ((ListIndex<String, Long>) this.index);
         this.index.load(tx);
@@ -159,6 +161,7 @@ public class ListIndexTest extends IndexTestSupport {
         counter--;
         int count = 0;
         while (iterator.hasNext() && count < counter) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
             Map.Entry<String, Long> entry = iterator.next();
             assertEquals(key(count), entry.getKey());
             assertEquals(count, (long) entry.getValue());
@@ -269,6 +272,8 @@ public class ListIndexTest extends IndexTestSupport {
 
         int counter = 0;
         for (Iterator<Map.Entry<String, Long>> i = index.iterator(tx); i.hasNext(); ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
             Map.Entry<String, Long> entry = i.next();
             assertEquals(key(counter), entry.getKey());
             assertEquals(counter, (long) entry.getValue());
@@ -312,6 +317,7 @@ public class ListIndexTest extends IndexTestSupport {
     @Test(timeout=60000)
     public void testRandomRemove() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         createPageFileAndIndex(4*1024);
         ListIndex<String, Long> index = ((ListIndex<String, Long>) this.index);
         this.index.load(tx);
@@ -350,6 +356,7 @@ public class ListIndexTest extends IndexTestSupport {
 
     @Test(timeout=60000)
     public void testLargeAppendRemoveTimed() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         createPageFileAndIndex(1024*4);
         ListIndex<String, Long> listIndex = ((ListIndex<String, Long>) this.index);
         this.index.load(tx);
@@ -357,6 +364,7 @@ public class ListIndexTest extends IndexTestSupport {
         final int COUNT = 50000;
         long start = System.currentTimeMillis();
         for (int i = 0; i < COUNT; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
              listIndex.add(tx, key(i), (long) i);
              tx.commit();
         }
@@ -380,6 +388,7 @@ public class ListIndexTest extends IndexTestSupport {
     }
 
     private int getMessageSize(int min, int max) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         return min + (int)(Math.random() * ((max - min) + 1));
     }
 
@@ -528,6 +537,7 @@ public class ListIndexTest extends IndexTestSupport {
         for (int i = 0; i < NUM_ITERATIONS; ++i) {
             LOG.debug("Size of ListIndex before removal of entry ["+i+"] is: " + test.size());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             assertTrue("List should contain Key["+i+"]",test.containsKey(tx, String.valueOf(i)));
             assertNotNull("List contents of Key["+i+"] should not be null", test.remove(tx, String.valueOf(i)));
             LOG.debug("Size of ListIndex after removal of entry ["+i+"] is: " + test.size());
@@ -540,6 +550,7 @@ public class ListIndexTest extends IndexTestSupport {
     public void testListLargeDataAddWithReverseRemove() throws Exception {
 
         final int NUM_ITERATIONS = 100;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
 
         pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
@@ -645,6 +656,11 @@ public class ListIndexTest extends IndexTestSupport {
 
         final int NUM_ITERATIONS = 100;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
         pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         pf.setEnablePageCaching(false);
@@ -722,6 +738,7 @@ public class ListIndexTest extends IndexTestSupport {
 
     static class HashSetStringMarshaller extends VariableMarshaller<HashSet<String>> {
         final static HashSetStringMarshaller INSTANCE = new HashSetStringMarshaller();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
 
         @Override
 		public void writePayload(HashSet<String> object, DataOutput dataOut) throws IOException {

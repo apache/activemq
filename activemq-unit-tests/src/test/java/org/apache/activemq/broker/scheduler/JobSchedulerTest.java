@@ -63,6 +63,8 @@ public class JobSchedulerTest {
     @Test
     public void testAddCronAndByteSequence() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3199
+//IC see: https://issues.apache.org/jira/browse/AMQ-3200
         final CountDownLatch latch = new CountDownLatch(1);
         scheduler.addListener(new JobListener() {
             @Override
@@ -72,6 +74,7 @@ public class JobSchedulerTest {
         });
 
         Calendar current = Calendar.getInstance();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4273
         current.add(Calendar.MINUTE, 1);
         int minutes = current.get(Calendar.MINUTE);
         int hour = current.get(Calendar.HOUR_OF_DAY);
@@ -84,6 +87,7 @@ public class JobSchedulerTest {
 
         // need a little slack so go over 60 seconds
         assertTrue(latch.await(70, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4273
         assertEquals(0, latch.getCount());
     }
 
@@ -97,6 +101,7 @@ public class JobSchedulerTest {
                 latch.countDown();
             }
         });
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         long time = 2000;
         for (int i = 0; i < COUNT; i++) {
             String test = new String("test" + i);
@@ -111,6 +116,7 @@ public class JobSchedulerTest {
     public void testAddStopThenDeliver() throws Exception {
         final int COUNT = 10;
         final CountDownLatch latch = new CountDownLatch(COUNT);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4273
         long time = 2000;
         for (int i = 0; i < COUNT; i++) {
             String test = new String("test" + i);
@@ -147,6 +153,7 @@ public class JobSchedulerTest {
         scheduler.remove(removeTime);
 
         // If all jobs are not started within the same second we need to call remove again
+//IC see: https://issues.apache.org/jira/browse/AMQ-4273
         if (size != 0) {
             removeTime = scheduler.getNextScheduleTime();
             scheduler.remove(removeTime);
@@ -161,6 +168,7 @@ public class JobSchedulerTest {
         final int COUNT = 10;
         final String test = "TESTREMOVE";
         long time = 20000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
 
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
@@ -179,6 +187,7 @@ public class JobSchedulerTest {
 
     @Test
     public void testGetExecutionCount() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         final String jobId = "Job-1";
         long time = 10000;
         final CountDownLatch done = new CountDownLatch(10);
@@ -213,6 +222,7 @@ public class JobSchedulerTest {
         final int COUNT = 10;
         final String ID = "id:";
         long time = 20000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4273
 
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
@@ -237,6 +247,7 @@ public class JobSchedulerTest {
 
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4273
             scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), "", start + (i * 1000), 10000 + i, 0);
         }
 
@@ -260,6 +271,7 @@ public class JobSchedulerTest {
 
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4273
             scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), "", start + (i * 1000), 10000 + i, 0);
         }
         start = System.currentTimeMillis();
@@ -271,6 +283,7 @@ public class JobSchedulerTest {
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3140
         File directory = new File("target/test/ScheduledJobsDB");
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
@@ -278,6 +291,7 @@ public class JobSchedulerTest {
     }
 
     protected JobSchedulerStore createJobSchedulerStore() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5271
         return new JobSchedulerStoreImpl();
     }
 
@@ -291,6 +305,7 @@ public class JobSchedulerTest {
 
     @After
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4988
         scheduler.stopDispatching();
         store.stop();
     }

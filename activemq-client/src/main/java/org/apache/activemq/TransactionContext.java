@@ -69,6 +69,8 @@ public class TransactionContext implements XAResource {
     // XATransactionId -> ArrayList of TransactionContext objects
     private final static HashMap<TransactionId, List<TransactionContext>> ENDED_XA_TRANSACTION_CONTEXTS =
             new HashMap<TransactionId, List<TransactionContext>>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3465
+//IC see: https://issues.apache.org/jira/browse/AMQ-5600
 
     private ActiveMQConnection connection;
     private final LongSequenceGenerator localTransactionIdGenerator;
@@ -83,6 +85,7 @@ public class TransactionContext implements XAResource {
 
     // for RAR recovery
     public TransactionContext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
         localTransactionIdGenerator = null;
     }
 
@@ -92,9 +95,12 @@ public class TransactionContext implements XAResource {
     }
 
     public boolean isInXATransaction() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3465
         if (transactionId != null && transactionId.isXATransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5600
             return true;
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5961
             synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                 for(List<TransactionContext> transactions : ENDED_XA_TRANSACTION_CONTEXTS.values()) {
                       if (transactions.contains(this)) {
@@ -108,10 +114,12 @@ public class TransactionContext implements XAResource {
     }
 
     public void setRollbackOnly(boolean val) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
         rollbackOnly = val;
     }
 
     public boolean isRollbackOnly() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7485
         return rollbackOnly;
     }
 
@@ -159,6 +167,7 @@ public class TransactionContext implements XAResource {
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         Throwable firstException = null;
         int size = synchronizations.size();
         for (int i = 0; i < size; i++) {
@@ -182,6 +191,7 @@ public class TransactionContext implements XAResource {
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         Throwable firstException = null;
         int size = synchronizations.size();
         for (int i = 0; i < size; i++) {
@@ -240,7 +250,9 @@ public class TransactionContext implements XAResource {
         if (transactionId == null) {
             synchronizations = null;
             beforeEndIndex = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
             setRollbackOnly(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
             this.transactionId = new LocalTransactionId(getConnectionId(), localTransactionIdGenerator.getNextSequenceId());
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.BEGIN);
             this.connection.ensureConnectionInfoSent();
@@ -270,6 +282,7 @@ public class TransactionContext implements XAResource {
         }
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
             beforeEnd();
         } catch (TransactionRolledBackException canOcurrOnFailover) {
             LOG.warn("rollback processing error", canOcurrOnFailover);
@@ -277,10 +290,12 @@ public class TransactionContext implements XAResource {
         if (transactionId != null) {
             LOG.debug("Rollback: {} syncCount: {}",
                 transactionId, (synchronizations != null ? synchronizations.size() : 0));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5600
 
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.ROLLBACK);
             this.transactionId = null;
             //make this synchronous - see https://issues.apache.org/activemq/browse/AMQ-2364
+//IC see: https://issues.apache.org/jira/browse/AMQ-6362
             this.connection.syncSendPacket(info, this.connection.isClosing() ? this.connection.getCloseTimeout() : 0);
             // Notify the listener that the tx was rolled back
             if (localTransactionEventListener != null) {
@@ -312,7 +327,9 @@ public class TransactionContext implements XAResource {
             throw e;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
         if (transactionId != null && rollbackOnly) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
             final String message = "Commit of " + transactionId + "  failed due to rollback only request; typically due to failover with pending acks";
             try {
                 rollback();
@@ -326,11 +343,14 @@ public class TransactionContext implements XAResource {
         if (transactionId != null) {
             LOG.debug("Commit: {} syncCount: {}",
                 transactionId, (synchronizations != null ? synchronizations.size() : 0));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5600
 
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.COMMIT_ONE_PHASE);
             this.transactionId = null;
             // Notify the listener that the tx was committed back
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
                 this.connection.syncSendPacket(info);
                 if (localTransactionEventListener != null) {
                     localTransactionEventListener.commitEvent();
@@ -377,8 +397,10 @@ public class TransactionContext implements XAResource {
         // }
 
         // associate
+//IC see: https://issues.apache.org/jira/browse/AMQ-3022
         synchronizations = null;
         beforeEndIndex = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
         setRollbackOnly(false);
         setXid(xid);
     }
@@ -404,6 +426,8 @@ public class TransactionContext implements XAResource {
             if (!equals(associatedXid, xid)) {
                 throw new XAException(XAException.XAER_PROTO);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
             invokeBeforeEnd();
         } else if ((flags & TMSUCCESS) == TMSUCCESS) {
             // set to null if this is the current xid.
@@ -423,6 +447,7 @@ public class TransactionContext implements XAResource {
         } catch (JMSException e) {
             throwingException = true;
             throw toXAException(e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
         } finally {
             try {
                 setXid(null);
@@ -461,6 +486,7 @@ public class TransactionContext implements XAResource {
             x = new XATransactionId(xid);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
         if (rollbackOnly) {
             LOG.warn("prepare of: " + x + " failed because it was marked rollback only; typically due to failover with pending acks");
             throw new XAException(XAException.XA_RBINTEGRITY);
@@ -470,9 +496,12 @@ public class TransactionContext implements XAResource {
             TransactionInfo info = new TransactionInfo(getConnectionId(), x, TransactionInfo.PREPARE);
 
             // Find out if the server wants to commit or rollback.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
             IntegerResponse response = (IntegerResponse)this.connection.syncSendPacket(info);
             if (XAResource.XA_RDONLY == response.getResult()) {
                 // transaction stops now, may be syncs that need a callback
+//IC see: https://issues.apache.org/jira/browse/AMQ-5961
                 List<TransactionContext> l;
                 synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                     l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
@@ -492,6 +521,7 @@ public class TransactionContext implements XAResource {
 
         } catch (JMSException e) {
             LOG.warn("prepare of: " + x + " failed with: " + e, e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5961
             List<TransactionContext> l;
             synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                 l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
@@ -542,6 +572,7 @@ public class TransactionContext implements XAResource {
             this.connection.syncSendPacket(info);
 
             List<TransactionContext> l;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5600
             synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                 l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
             }
@@ -549,6 +580,7 @@ public class TransactionContext implements XAResource {
             // No risk for concurrent updates as we own the list now
             if (l != null) {
                 for (TransactionContext ctx : l) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
                     try {
                         ctx.afterRollback();
                     } catch (Exception ignored) {
@@ -578,6 +610,7 @@ public class TransactionContext implements XAResource {
             x = new XATransactionId(xid);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
         if (rollbackOnly) {
              LOG.warn("commit of: " + x + " failed because it was marked rollback only; typically due to failover with pending acks");
              throw new XAException(XAException.XA_RBINTEGRITY);
@@ -592,6 +625,7 @@ public class TransactionContext implements XAResource {
 
             this.connection.syncSendPacket(info);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5961
             List<TransactionContext> l;
             synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                 l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
@@ -600,6 +634,7 @@ public class TransactionContext implements XAResource {
             // No risk for concurrent updates as we own the list now
             if (l != null) {
                 for (TransactionContext ctx : l) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
                     try {
                         ctx.afterCommit();
                     } catch (Exception ignored) {
@@ -611,6 +646,8 @@ public class TransactionContext implements XAResource {
         } catch (JMSException e) {
             LOG.warn("commit of: " + x + " failed with: " + e, e);
             if (onePhase) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5961
+//IC see: https://issues.apache.org/jira/browse/AMQ-5961
                 List<TransactionContext> l;
                 synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                     l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
@@ -656,6 +693,8 @@ public class TransactionContext implements XAResource {
         } catch (JMSException e) {
             throw toXAException(e);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3465
+//IC see: https://issues.apache.org/jira/browse/AMQ-5600
         synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
             ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
         }
@@ -681,6 +720,7 @@ public class TransactionContext implements XAResource {
     public Xid[] recover(int flag) throws XAException {
         LOG.debug("recover({})", flag);
         XATransactionId[] answer;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6089
 
         if (XAResource.TMNOFLAGS == flag) {
             // signal next in cursor scan, which for us is always the end b/c we don't maintain any cursor state
@@ -754,17 +794,30 @@ public class TransactionContext implements XAResource {
         } else {
 
             if (transactionId != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
                 TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.END);
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
                     this.connection.syncSendPacket(info);
                     LOG.debug("{} ended XA transaction {}", this, transactionId);
                 } catch (JMSException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
                     disassociate();
                     throw toXAException(e);
                 }
 
                 // Add our self to the list of contexts that are interested in
                 // post commit/rollback events.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5961
                 List<TransactionContext> l;
                 synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                     l = ENDED_XA_TRANSACTION_CONTEXTS.get(transactionId);
@@ -778,6 +831,7 @@ public class TransactionContext implements XAResource {
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
             disassociate();
         }
     }
@@ -799,11 +853,13 @@ public class TransactionContext implements XAResource {
         if (e.getCause() != null && e.getCause() instanceof XAException) {
             XAException original = (XAException)e.getCause();
             XAException xae = new XAException(original.getMessage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7480
             if (original != null) {
                 xae.errorCode = original.errorCode;
             }
             if (original != null && xae != null && xae.errorCode == XA_OK) {
                 // detail not unmarshalled see: org.apache.activemq.openwire.v1.BaseDataStreamMarshaller.createThrowable
+//IC see: https://issues.apache.org/jira/browse/AMQ-5311
                 xae.errorCode = parseFromMessageOr(original.getMessage(), XAException.XAER_RMERR);
             }
             if (original != null) {
@@ -819,6 +875,7 @@ public class TransactionContext implements XAResource {
     }
 
     private static int parseFromMessageOr(String message, int fallbackCode) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5311
         final String marker = "xaErrorCode:";
         final int index = message.lastIndexOf(marker);
         if (index > -1) {
@@ -835,6 +892,7 @@ public class TransactionContext implements XAResource {
 
     // for RAR xa recovery where xaresource connection is per request
     public ActiveMQConnection setConnection(ActiveMQConnection connection) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
         ActiveMQConnection existing = this.connection;
         this.connection = connection;
         return existing;
@@ -849,6 +907,7 @@ public class TransactionContext implements XAResource {
     public String toString() {
         return "TransactionContext{" +
                 "transactionId=" + transactionId +
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
                 ",connection=" + connection +
                 '}';
     }

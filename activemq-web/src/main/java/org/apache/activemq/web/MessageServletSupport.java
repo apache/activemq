@@ -127,6 +127,7 @@ public abstract class MessageServletSupport extends HttpServlet {
             message.setJMSReplyTo(replyTo);
         }
         String type = (String)asString(parameters.remove("JMSType"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3590
         if (type != null) {
             message.setJMSType(type);
         }
@@ -182,6 +183,9 @@ public abstract class MessageServletSupport extends HttpServlet {
     }
 
     protected boolean isSync(HttpServletRequest request) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1955
+//IC see: https://issues.apache.org/jira/browse/AMQ-1453
+//IC see: https://issues.apache.org/jira/browse/AMQ-1960
         String text = request.getParameter("sync");
         if (text != null) {
             return true;
@@ -258,6 +262,7 @@ public abstract class MessageServletSupport extends HttpServlet {
      */
     protected Destination getDestination(WebClient client, HttpServletRequest request) throws JMSException {
         String destinationName = request.getParameter(destinationParameter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1840
         if (destinationName == null  || destinationName.equals("")) {
             if (defaultDestination == null) {
                 return getDestinationFromURI(client, request);
@@ -302,11 +307,13 @@ public abstract class MessageServletSupport extends HttpServlet {
         boolean isTopic = defaultTopicFlag;
         if (destinationName.startsWith("topic://")) {
             isTopic = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
         } else if (destinationName.startsWith("channel://") || destinationName.startsWith("queue://")) {
             isTopic = false;
         } else {
             isTopic = isTopic(request);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
         if (destinationName.indexOf("://") != -1) {
             destinationName = destinationName.substring(destinationName.indexOf("://") + 3);
         }
@@ -341,10 +348,12 @@ public abstract class MessageServletSupport extends HttpServlet {
     protected String getPostedMessageBody(HttpServletRequest request) throws IOException {
         String answer = request.getParameter(bodyParameter);
         String contentType = request.getContentType();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4668
         if (answer == null && contentType != null) {
             LOG.debug("Content-Type={}", contentType);
             // lets read the message body instead
             BufferedReader reader = request.getReader();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7446
             StringBuilder buffer = new StringBuilder();
             while (true) {
                 String line = reader.readLine();
@@ -360,6 +369,8 @@ public abstract class MessageServletSupport extends HttpServlet {
     }
 
     protected String getSelector(HttpServletRequest request) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1547
+//IC see: https://issues.apache.org/jira/browse/AMQ-3518
         return request.getHeader(WebClient.selectorName);
     }
 }

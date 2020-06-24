@@ -41,6 +41,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
      */
     public ComparisonExpression(Expression left, Expression right) {
         super(left, right);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4146
         convertStringExpressions = CONVERT_STRING_EXPRESSIONS.get()!=null;
     }
 
@@ -53,6 +54,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
     }
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         REGEXP_CONTROL_CHARS.add(Character.valueOf('.'));
         REGEXP_CONTROL_CHARS.add(Character.valueOf('\\'));
         REGEXP_CONTROL_CHARS.add(Character.valueOf('['));
@@ -88,6 +90,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
             regexp.append("\\A"); // The beginning of the input
             for (int i = 0; i < like.length(); i++) {
                 char c = like.charAt(i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6137
                 if (escape == (0xFFFF & c) && shouldEscapeNext(like, i, c)) {
                     i++;
                     char t = like.charAt(i);
@@ -104,6 +107,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
 
         private boolean shouldEscapeNext(String selector, int i, char escape) {
             int next = i+1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6137
             if (next < selector.length()) {
                 final char c = selector.charAt(next);
                 return  (c == '_' || c == '%' || c == escape);
@@ -222,6 +226,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
 
                 // If one of the values is null
                 if (lv == null ^ rv == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5281
                     if (lv == null) {
                         return null;
                     }
@@ -372,8 +377,10 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
         // If the the objects are not of the same type,
         // try to convert up to allow the comparison.
         if (lc != rc) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1942
             try {
                 if (lc == Boolean.class) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4146
                     if (convertStringExpressions && rc == String.class) {
                         lv = Boolean.valueOf((String)lv).booleanValue();
                     } else {
@@ -390,6 +397,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         lv = new Float(((Number)lv).floatValue());
                     } else if (rc == Double.class) {
                         lv = new Double(((Number)lv).doubleValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4146
                     } else if (convertStringExpressions && rc == String.class) {
                         rv = Byte.valueOf((String)rv);
                     } else {
@@ -404,6 +412,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         lv = new Float(((Number)lv).floatValue());
                     } else if (rc == Double.class) {
                         lv = new Double(((Number)lv).doubleValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4146
                     } else if (convertStringExpressions && rc == String.class) {
                         rv = Short.valueOf((String)rv);
                     } else {
@@ -416,6 +425,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         lv = new Float(((Number)lv).floatValue());
                     } else if (rc == Double.class) {
                         lv = new Double(((Number)lv).doubleValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4146
                     } else if (convertStringExpressions && rc == String.class) {
                         rv = Integer.valueOf((String)rv);
                     } else {
@@ -428,6 +438,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         lv = new Float(((Number)lv).floatValue());
                     } else if (rc == Double.class) {
                         lv = new Double(((Number)lv).doubleValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4146
                     } else if (convertStringExpressions && rc == String.class) {
                         rv = Long.valueOf((String)rv);
                     } else {
@@ -440,6 +451,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         rv = new Float(((Number)rv).floatValue());
                     } else if (rc == Double.class) {
                         lv = new Double(((Number)lv).doubleValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4146
                     } else if (convertStringExpressions && rc == String.class) {
                         rv = Float.valueOf((String)rv);
                     } else {
@@ -452,6 +464,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         rv = new Double(((Number)rv).doubleValue());
                     } else if (rc == Float.class) {
                         rv = new Float(((Number)rv).doubleValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4146
                     } else if (convertStringExpressions && rc == String.class) {
                         rv = Double.valueOf((String)rv);
                     } else {

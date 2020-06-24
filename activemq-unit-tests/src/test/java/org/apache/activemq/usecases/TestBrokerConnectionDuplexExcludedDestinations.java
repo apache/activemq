@@ -37,6 +37,7 @@ import org.apache.activemq.broker.BrokerService;
 
 public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2086
     BrokerService receiverBroker;
     BrokerService senderBroker;
 
@@ -103,6 +104,7 @@ public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
         hubProducer.setDisableMessageTimestamp(true);
 
         //create spoke producer
+//IC see: https://issues.apache.org/jira/browse/AMQ-3382
         MessageProducer spokeProducer = hubSession.createProducer(null);
         spokeProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         spokeProducer.setDisableMessageID(true);
@@ -116,6 +118,7 @@ public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
 
         TextMessage includedMsgHub = hubSession.createTextMessage();
         includedMsgHub.setText(includedQueueHub.toString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3382
 
         Queue alwaysIncludedQueueHub = hubSession.createQueue("always.include.test.foo");
 
@@ -134,6 +137,7 @@ public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
 
         Queue includedQueueSpoke = spokeSession.createQueue("include.test.foo");
         MessageConsumer includedConsumerSpoke = spokeSession.createConsumer(includedQueueSpoke);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3382
 
         Thread.sleep(100);
 
@@ -155,8 +159,10 @@ public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
         // Receiving from included Spoke queue
         msg = includedConsumerSpoke.receive(200);
         assertEquals(includedMsgHub, msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2086
 
         // Receiving from included Spoke queue
+//IC see: https://issues.apache.org/jira/browse/AMQ-3382
         msg = alwaysIncludedConsumerSpoke.receive(200);
         assertEquals(alwaysIncludedMsgHub, msg);
 

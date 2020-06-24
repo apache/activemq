@@ -30,7 +30,9 @@ public class ZeroconfDiscoveryAgentFactory extends DiscoveryAgentFactory {
 
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
             Map options = URISupport.parseParameters(uri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3613
             ZeroconfDiscoveryAgent rc = new ZeroconfDiscoveryAgent();
             rc.setGroup(uri.getHost());
             IntrospectionSupport.setProperties(rc, options);

@@ -32,6 +32,7 @@ public class XBeanFileResolverTest {
     @Test
     public void urlToXBeanFileShouldBeResolvedToAbsolutePath() throws IOException {
         XBeanFileResolver xBeanFileResolver = new XBeanFileResolver();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5499
 
         String currentDirectory = getCurrentDirectoryLinuxStyle();
         String relativeXBeanFilePath = "src/main/resources/activemq.xml";

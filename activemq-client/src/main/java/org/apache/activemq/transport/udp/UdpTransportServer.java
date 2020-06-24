@@ -140,6 +140,7 @@ public class UdpTransportServer extends TransportServerSupport {
     }
 
     protected Transport configureTransport(Transport transport) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2088
         transport = new InactivityMonitor(transport, serverTransport.getWireFormat());
         getAcceptListener().onAccept(transport);
         return transport;
@@ -188,11 +189,13 @@ public class UdpTransportServer extends TransportServerSupport {
 
     @Override
     public boolean isSslServer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         return false;
     }
 
     @Override
     public boolean isAllowLinkStealing() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         return allowLinkStealing;
     }
 

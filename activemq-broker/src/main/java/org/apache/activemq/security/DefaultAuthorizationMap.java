@@ -63,6 +63,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     @Override
     public Set<Object> getTempDestinationAdminACLs() {
         if (tempDestinationAuthorizationEntry != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
             Set<Object> answer = new WildcardAwareSet<Object>();
             answer.addAll(tempDestinationAuthorizationEntry.getAdminACLs());
             return answer;
@@ -74,6 +75,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     @Override
     public Set<Object> getTempDestinationReadACLs() {
         if (tempDestinationAuthorizationEntry != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
             Set<Object> answer = new WildcardAwareSet<Object>();
             answer.addAll(tempDestinationAuthorizationEntry.getReadACLs());
             return answer;
@@ -85,6 +87,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     @Override
     public Set<Object> getTempDestinationWriteACLs() {
         if (tempDestinationAuthorizationEntry != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
             Set<Object> answer = new WildcardAwareSet<Object>();
             answer.addAll(tempDestinationAuthorizationEntry.getWriteACLs());
             return answer;
@@ -123,6 +126,9 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     public Set<Object> getWriteACLs(ActiveMQDestination destination) {
         Set<AuthorizationEntry> entries = getAllEntries(destination);
         Set<Object> answer = new WildcardAwareSet<Object>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
 
         // now lets go through each entry adding individual
         for (Iterator<AuthorizationEntry> iter = entries.iterator(); iter.hasNext();) {
@@ -167,6 +173,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
             return answer;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5644
         return findWildcardMatches(key, false);
     }
 
@@ -203,6 +210,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     }
 
     public String getGroupClass() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3883
         return groupClass;
     }
 
@@ -210,6 +218,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         this.groupClass = groupClass;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
     final static String WILDCARD = "*";
     public static Object createGroupPrincipal(String name, String groupClass) throws Exception {
         if (WILDCARD.equals(name)) {
@@ -239,6 +248,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         Object instance;
         for (i = 0; i < constructors.length; i++) {
             Class<?>[] paramTypes = constructors[i].getParameterTypes();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6337
             if (paramTypes.length == 1 && paramTypes[0].equals(String.class)) {
                 break;
             }
@@ -251,6 +261,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
             i = 0;
             for (i = 0; i < methods.length; i++) {
                 Class<?>[] paramTypes = methods[i].getParameterTypes();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6337
                 if (paramTypes.length == 1 && methods[i].getName().equals("setName") && paramTypes[0].equals(String.class)) {
                     break;
                 }
@@ -266,6 +277,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         return instance;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
     class WildcardAwareSet<T> extends HashSet<T> {
         boolean hasWildcard = false;
 

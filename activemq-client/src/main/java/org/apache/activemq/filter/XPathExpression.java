@@ -54,6 +54,7 @@ public final class XPathExpression implements BooleanExpression {
         try {
             try {
                 m = getXPathEvaluatorConstructor(cn);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5333
                 DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
                 builderFactory.setNamespaceAware(true);
                 builderFactory.setIgnoringElementContentWhitespace(true);
@@ -101,6 +102,7 @@ public final class XPathExpression implements BooleanExpression {
         if (!XPathEvaluator.class.isAssignableFrom(c)) {
             throw new ClassCastException("" + c + " is not an instance of " + XPathEvaluator.class);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5333
         return c.getConstructor(new Class[] {String.class, DocumentBuilder.class});
     }
 

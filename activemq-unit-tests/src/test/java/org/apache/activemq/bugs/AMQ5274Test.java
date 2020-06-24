@@ -54,6 +54,7 @@ public class AMQ5274Test {
     public void startBroker() throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         brokerService.getManagementContext().setCreateConnector(false);
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultPolicy = new PolicyEntry();
@@ -93,6 +94,7 @@ public class AMQ5274Test {
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         MessageConsumer consumer = session.createConsumer(dest);
         Message m;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         while ((m = consumer.receive(4000)) != null) {
             LOG.info("Got:" + m);
             TimeUnit.SECONDS.sleep(1);
@@ -108,6 +110,7 @@ public class AMQ5274Test {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(dest);
         producer.setTimeToLive(10000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         for (int i = 0; i < 20; i++) {
             producer.send(session.createTextMessage("i=" + i));
         }

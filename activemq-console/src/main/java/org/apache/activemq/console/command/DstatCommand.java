@@ -66,6 +66,7 @@ public class DstatCommand extends AbstractJmxCommand {
      */
     @Override
     protected void runTask(List<String> tokens) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
         if (tokens.contains("topics")) {
             displayTopicStats();
         } else if (tokens.contains("queues")) {
@@ -80,7 +81,9 @@ public class DstatCommand extends AbstractJmxCommand {
 
         String query = JmxMBeansUtil.createQueryString(queryString, "*");
         List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4829
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
         final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s  %10s";
         final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d  %10d";
 
@@ -88,6 +91,8 @@ public class DstatCommand extends AbstractJmxCommand {
         Collections.sort(queueList, new ObjectInstanceComparator());
 
         context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Forward #", "Memory %"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
 
         // Iterate through the queue result
         for (Object view : queueList) {
@@ -101,12 +106,16 @@ public class DstatCommand extends AbstractJmxCommand {
                 newProxyInstance(createJmxConnection(), queueName, QueueViewMBean.class, true);
 
             context.print(String.format(Locale.US, tableRow,
+//IC see: https://issues.apache.org/jira/browse/AMQ-4760
+//IC see: https://issues.apache.org/jira/browse/AMQ-4760
                     queueView.getName(),
                     queueView.getQueueSize(),
                     queueView.getProducerCount(),
                     queueView.getConsumerCount(),
                     queueView.getEnqueueCount(),
                     queueView.getDequeueCount(),
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
                     queueView.getForwardCount(),
                     queueView.getMemoryPercentUsage()));
         }
@@ -117,7 +126,9 @@ public class DstatCommand extends AbstractJmxCommand {
 
         String query = JmxMBeansUtil.createQueryString(queryString, "Queue");
         List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4829
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6829
         final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s  %10s  %10s";
         final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d  %10d  %10d";
 
@@ -144,6 +155,7 @@ public class DstatCommand extends AbstractJmxCommand {
                     queueView.getEnqueueCount(),
                     queueView.getDequeueCount(),
                     queueView.getForwardCount(),
+//IC see: https://issues.apache.org/jira/browse/AMQ-6829
                     queueView.getMemoryPercentUsage(),
                     queueView.getInFlightCount()));
         }
@@ -154,7 +166,10 @@ public class DstatCommand extends AbstractJmxCommand {
 
         String query = JmxMBeansUtil.createQueryString(queryString, "Topic");
         List topicsList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4829
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
         final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s  %10s";
         final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d  %10d";
 
@@ -162,6 +177,7 @@ public class DstatCommand extends AbstractJmxCommand {
         Collections.sort(topicsList, new ObjectInstanceComparator());
 
         context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Forward #", "Memory %"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
 
         // Iterate through the topics result
         for (Object view : topicsList) {
@@ -175,12 +191,14 @@ public class DstatCommand extends AbstractJmxCommand {
                 newProxyInstance(createJmxConnection(), topicName, TopicViewMBean.class, true);
 
             context.print(String.format(Locale.US, tableRow,
+//IC see: https://issues.apache.org/jira/browse/AMQ-4760
                     topicView.getName(),
                     topicView.getQueueSize(),
                     topicView.getProducerCount(),
                     topicView.getConsumerCount(),
                     topicView.getEnqueueCount(),
                     topicView.getDequeueCount(),
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
                     topicView.getForwardCount(),
                     topicView.getMemoryPercentUsage()));
         }
@@ -205,6 +223,7 @@ public class DstatCommand extends AbstractJmxCommand {
     }
 
     protected boolean filterMBeans(ObjectInstance obj) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4829
         String className = obj.getClassName();
         return className.equals(QueueView.class.getName()) || className.equals(TopicView.class.getName());
     }

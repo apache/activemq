@@ -125,6 +125,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         MessageConsumer advisoryConsumer = getVirtualDestinationAdvisoryConsumer("VirtualTopic.>");
 
         MessageProducer includedProducer = localSession.createProducer(new ActiveMQTopic("VirtualTopic.include.test.bar"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6875
         MessageProducer includedProducer2 = localSession.createProducer(new ActiveMQTopic("VirtualTopic.include.test.bar2"));
         MessageProducer includedProducer3 = localSession.createProducer(new ActiveMQTopic("VirtualTopic.include.test.bar3"));
         Thread.sleep(2000);
@@ -260,6 +261,8 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
      */
     @Test(timeout = 60 * 1000)
     public void testDynamicFlow() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         testDynamicFlow(false);
     }
 
@@ -291,6 +294,8 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
                 new ActiveMQQueue("include.test.bar.bridge")).getDestinationStatistics();
 
         waitForConsumerCount(destinationStatistics, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         assertNCDurableSubsCount(localBroker, included, forceDurable ? 1 : 0);
         includedProducer.send(test);
 
@@ -312,6 +317,8 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
     @Test(timeout = 60 * 1000)
     public void testSecondNonIncludedCompositeTopicForwardSameQueue() throws Exception {
         Assume.assumeTrue(isUseVirtualDestSubsOnCreation);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-5898
 
         doSetUp(true, null);
 
@@ -380,6 +387,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
                 new ActiveMQQueue("include.test.bar.bridge"));
 
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic, compositeTopic2}, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
         Thread.sleep(2000);
         MessageProducer includedProducer = localSession.createProducer(included);
@@ -582,6 +590,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
     @Test(timeout = 60 * 1000)
     public void testTwoCompositeTopicsRemove1() throws Exception {
         Assume.assumeTrue(isUseVirtualDestSubsOnCreation);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6204
 
         doSetUp(true, null);
 
@@ -611,6 +620,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         assertEquals("remote dest messages", 1, remoteDestStatistics.getMessages().getCount());
 
         //verify there are 2 virtual destinations but only 1 consumer and broker dest
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         assertAdvisoryBrokerCounts(2,1,1);
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic1}, true);
         Thread.sleep(2000);
@@ -642,8 +652,11 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQQueue("include.test.bar.bridge"),
                 new ActiveMQQueue("include.test.bar.bridge2"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Message test = localSession.createTextMessage("test");
@@ -861,6 +874,8 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         MessageProducer includedProducer = localSession.createProducer(included);
         Message test = localSession.createTextMessage("test");
         Thread.sleep(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
 
@@ -911,10 +926,16 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
                 new ActiveMQQueue("exclude.test.bar.bridge"));
 
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
         MessageProducer includedProducer = localSession.createProducer(excluded);
         Message test = localSession.createTextMessage("test");
         Thread.sleep(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
         MessageConsumer bridgeConsumer = remoteSession.createConsumer(new ActiveMQQueue("exclude.test.bar.bridge"));
         Thread.sleep(2000);
@@ -957,6 +978,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(new ActiveMQQueue(testQueueName)).getDestinationStatistics();
         MessageConsumer bridgeConsumer = remoteSession.createConsumer(new ActiveMQQueue("include.test.foo.bridge"));
@@ -1064,6 +1086,10 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
                 new ActiveMQQueue("include.test.bar.bridge"));
 
         doSetUp(true, new VirtualDestination[] {compositeTopic}, false, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
 
         MessageConsumer advisoryConsumer = getVirtualDestinationAdvisoryConsumer(testTopicName);
 
@@ -1126,6 +1152,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
 
         //remove the virtual destinations after startup, will trigger a remove advisory
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {}, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Thread.sleep(2000);
@@ -1222,6 +1249,9 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
                 new ActiveMQTopic("include.test.bar.bridge"));
 
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Thread.sleep(2000);
@@ -1267,8 +1297,17 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
                 new ActiveMQTopic("include.test.bar.bridge"));
 
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
         MessageProducer includedProducer = localSession.createProducer(included);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
 
@@ -1320,6 +1359,8 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
 
     protected void doSetUp(boolean deleteAllMessages,
             VirtualDestination[] remoteVirtualDests) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         doSetUp(deleteAllMessages, remoteVirtualDests, true, false);
     }
 
@@ -1359,6 +1400,8 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         brokerService.setDataDirectoryFile(tempFolder.newFolder());
         brokerService.setBrokerName("localBroker");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI = transportConnectors.get(0).getConnectUri();
         String uri = "static:(" + remoteURI + ")";
@@ -1370,6 +1413,8 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         connector.setDuplex(isDuplex);
         connector.setUseVirtualDestSubs(true);
         connector.setDynamicallyIncludedDestinations(Lists.newArrayList(new ActiveMQQueue(testQueueName),
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
                 new ActiveMQTopic(testTopicName + (forceDurable ? "?forceDurable=true" : "")), new ActiveMQTopic("VirtualTopic.>")));
         connector.setExcludedDestinations(Lists.newArrayList(new ActiveMQQueue("exclude.test.foo"),
                 new ActiveMQTopic("exclude.test.bar")));
@@ -1407,6 +1452,10 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
                 brokerService.getBroker().getAdaptor(AdvisoryBroker.class);
 
         brokerService.addConnector("tcp://localhost:0");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
 
         return brokerService;
     }

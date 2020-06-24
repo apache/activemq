@@ -42,6 +42,7 @@ public class PooledSessionNoPublisherCachingTest extends JmsPoolTestSupport {
     @Before
     public void setUp() throws Exception {
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         brokerService = new BrokerService();
         brokerService.setPersistent(false);

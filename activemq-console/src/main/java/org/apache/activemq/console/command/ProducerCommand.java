@@ -38,6 +38,7 @@ public class ProducerCommand extends AbstractCommand {
     int sleep = 0;
     boolean persistent = true;
     String message = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
     String payloadUrl = null;
     int messageSize = 0;
     int textMessageSize;
@@ -55,6 +56,7 @@ public class ProducerCommand extends AbstractCommand {
         LOG.info("Running " + parallelThreads + " parallel threads");
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         Connection conn = null;
         try {
             conn = factory.createConnection(user, password);
@@ -63,6 +65,7 @@ public class ProducerCommand extends AbstractCommand {
             CountDownLatch active = new CountDownLatch(parallelThreads);
 
             for (int i = 1; i <= parallelThreads; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 Session sess;
                 if (transactionBatchSize != 0) {
                     sess = conn.createSession(true, Session.SESSION_TRANSACTED);
@@ -77,6 +80,7 @@ public class ProducerCommand extends AbstractCommand {
                 producer.setPersistent(persistent);
                 producer.setTransactionBatchSize(transactionBatchSize);
                 producer.setMessage(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 producer.setPayloadUrl(payloadUrl);
                 producer.setMessageSize(messageSize);
                 producer.setMsgGroupID(msgGroupID);
@@ -198,6 +202,7 @@ public class ProducerCommand extends AbstractCommand {
     }
 
     public String getPayloadUrl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         return payloadUrl;
     }
 

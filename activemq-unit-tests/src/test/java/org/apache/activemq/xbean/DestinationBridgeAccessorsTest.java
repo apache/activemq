@@ -27,6 +27,7 @@ public class DestinationBridgeAccessorsTest extends Assert {
     @Test
     public void testCreateBroker() throws Exception {
         XBeanBrokerFactory xBeanBrokerFactory = new XBeanBrokerFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5713
 
         BrokerService broker = xBeanBrokerFactory.createBroker(new URI("handleReplyToActivemq.xml"));
 

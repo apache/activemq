@@ -40,25 +40,32 @@ public final class Scheduler extends ServiceSupport {
     }
 
     public synchronized void executePeriodically(final Runnable task, long period) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6555
         TimerTask existing = timerTasks.get(task);
         if (existing != null) {
             LOG.debug("Task {} already scheduled, cancelling and rescheduling", task);
             cancel(task);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3031
         TimerTask timerTask = new SchedulerTimerTask(task);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         timer.schedule(timerTask, period, period);
         timerTasks.put(task, timerTask);
     }
 
     public synchronized void cancel(Runnable task) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3031
         TimerTask ticket = timerTasks.remove(task);
         if (ticket != null) {
             ticket.cancel();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
             timer.purge(); // remove cancelled TimerTasks
         }
     }
 
     public synchronized void executeAfterDelay(final Runnable task, long redeliveryDelay) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3031
         TimerTask timerTask = new SchedulerTimerTask(task);
         timer.schedule(timerTask, redeliveryDelay);
     }
@@ -74,12 +81,14 @@ public final class Scheduler extends ServiceSupport {
 
     @Override
     protected synchronized void doStop(ServiceStopper stopper) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5251
         if (this.timer != null) {
             this.timer.cancel();
         }
     }
 
     public String getName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3310
         return name;
     }
 }

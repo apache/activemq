@@ -42,12 +42,15 @@ public class HttpTransportFactory extends TransportFactory {
 
     @Override
     public TransportServer doBind(URI location) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2764
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             HttpTransportServer result = new HttpTransportServer(location, this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7063
             Map<String, Object> jettyOptions = IntrospectionSupport.extractProperties(options, "jetty.");
             Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7327
             Map<String, Object> wireFormatOptions = IntrospectionSupport.extractProperties(options, "wireFormat.");
             result.setJettyOptions(jettyOptions);
             result.setTransportOption(transportOptions);
@@ -76,6 +79,7 @@ public class HttpTransportFactory extends TransportFactory {
     protected Transport createTransport(URI location, WireFormat wf) throws IOException {
         TextWireFormat textWireFormat = asTextWireFormat(wf);
         // need to remove options from uri
+//IC see: https://issues.apache.org/jira/browse/AMQ-4058
         URI uri;
         try {
             uri = URISupport.removeQuery(location);
@@ -97,6 +101,7 @@ public class HttpTransportFactory extends TransportFactory {
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = super.compositeConfigure(transport, format, options);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6262
         HttpClientTransport httpTransport = transport.narrow(HttpClientTransport.class);
         if (httpTransport != null && httpTransport.isTrace()) {
             try {
@@ -107,6 +112,7 @@ public class HttpTransportFactory extends TransportFactory {
         }
         boolean useInactivityMonitor = "true".equals(getOption(options, "useInactivityMonitor", "true"));
         if (useInactivityMonitor) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6262
             transport = new HttpInactivityMonitor(transport);
             IntrospectionSupport.setProperties(transport, options);
         }

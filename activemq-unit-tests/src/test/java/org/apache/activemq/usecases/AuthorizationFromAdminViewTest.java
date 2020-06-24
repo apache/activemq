@@ -28,6 +28,7 @@ public class AuthorizationFromAdminViewTest extends org.apache.activemq.TestSupp
     private BrokerService broker;
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2970
         return new ActiveMQConnectionFactory("vm://" + getName());
     }
 

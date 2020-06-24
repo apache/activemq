@@ -70,6 +70,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
      * @throws JMSException
      */
     protected ActiveMQQueueBrowser(ActiveMQSession session, ConsumerId consumerId, ActiveMQDestination destination, String selector, boolean dispatchAsync) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3945
         if (destination == null) {
             throw new InvalidDestinationException("Don't understand null destinations");
         } else if (destination.getPhysicalName() == null) {
@@ -183,11 +184,13 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
             }
 
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3945
                 javax.jms.Message answer = consumer.receiveNoWait();
                 if (answer != null) {
                     return answer;
                 }
             } catch (JMSException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
                 this.session.connection.onClientInternalException(e);
                 return null;
             }
@@ -202,6 +205,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
     }
 
     public synchronized void close() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
         browseDone.set(true);
         destroyConsumer();
         closed = true;
@@ -232,6 +236,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
      */
     protected void waitForMessage() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2171
             consumer.sendPullCommand(-1);
             synchronized (semaphore) {
                 semaphore.wait(2000);

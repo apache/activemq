@@ -118,6 +118,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
     static {
         String javaVersion = System.getProperty("java.version");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5845
 
         BROKER_PLATFORM = "Java/" + (javaVersion == null ? "unknown" : javaVersion);
 
@@ -161,6 +162,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
         AmqpInactivityMonitor monitor = transport.getInactivityMonitor();
         if (monitor != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
             monitor.setAmqpTransport(amqpTransport);
         }
 
@@ -171,6 +173,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         int maxFrameSize = amqpWireFormat.getMaxAmqpFrameSize();
         if (maxFrameSize > AmqpWireFormat.NO_AMQP_MAX_FRAME_SIZE) {
             this.protonTransport.setMaxFrameSize(maxFrameSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6909
             try {
                 this.protonTransport.setOutboundFrameSizeLimit(maxFrameSize);
             } catch (Throwable e) {
@@ -181,6 +184,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         this.protonTransport.bind(this.protonConnection);
         this.protonTransport.setChannelMax(CHANNEL_MAX);
         this.protonTransport.setEmitFlowEventOnSend(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
 
         this.protonConnection.collect(eventCollector);
 
@@ -194,6 +198,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
      * @return the capabilities that are offered to new clients on connect.
      */
     protected Symbol[] getConnectionCapabilitiesOffered() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6410
         return new Symbol[]{ ANONYMOUS_RELAY, DELAYED_DELIVERY };
     }
 
@@ -208,6 +213,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
         properties.put(QUEUE_PREFIX, "queue://");
         properties.put(TOPIC_PREFIX, "topic://");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5845
         properties.put(PRODUCT, "ActiveMQ");
         properties.put(VERSION, BROKER_VERSION);
         properties.put(PLATFORM, BROKER_PLATFORM);
@@ -250,12 +256,14 @@ public class AmqpConnection implements AmqpProtocolConverter {
     @Override
     public long keepAlive() throws IOException {
         long rescheduleAt = 0l;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
 
         LOG.trace("Performing connection:{} keep-alive processing", amqpTransport.getRemoteAddress());
 
         if (protonConnection.getLocalState() != EndpointState.CLOSED) {
             // Using nano time since it is not related to the wall clock, which may change
             long now = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6813
             long deadline = protonTransport.tick(now);
             pumpProtonToSocket();
             if (protonTransport.isClosed()) {
@@ -310,6 +318,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
      * @return the configured max frame size allowed for incoming messages.
      */
     public long getMaxFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5778
         return amqpWireFormat.getMaxFrameSize();
     }
 
@@ -340,6 +349,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         if (command.getClass() == AmqpHeader.class) {
             AmqpHeader header = (AmqpHeader) command;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
             if (amqpWireFormat.isHeaderValid(header, authenticator != null)) {
                 LOG.trace("Connection from an AMQP v1.0 client initiated. {}", header);
             } else {
@@ -352,6 +362,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
             switch (header.getProtocolId()) {
                 case 0:
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
                     authenticator = null;
                     break; // nothing to do..
                 case 3: // Client will be using SASL for auth..
@@ -364,6 +375,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
             frame = (Buffer) command;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
         if (protonTransport.isClosed()) {
             LOG.debug("Ignoring incoming AMQP data, transport is closed.");
             return;
@@ -380,6 +392,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
                 return;
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
             if (authenticator != null) {
                 processSaslExchange();
             } else {
@@ -448,6 +461,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
     protected void processConnectionOpen(Connection connection) throws Exception {
 
         stopConnectionTimeoutChecker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
 
         connectionInfo.setResponseRequired(true);
         connectionInfo.setConnectionId(connectionId);
@@ -459,6 +473,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
         connectionInfo.setTransportContext(amqpTransport.getPeerCertificates());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
         if (connection.getTransport().getRemoteIdleTimeout() > 0 && !amqpTransport.isUseInactivityMonitor()) {
             // We cannot meet the requested Idle processing because the inactivity monitor is
             // disabled so we won't send idle frames to match the request.
@@ -487,6 +502,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
                             protonConnection.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
                         } else if (exception instanceof InvalidClientIDException) {
                             ErrorCondition condition = new ErrorCondition(AmqpError.INVALID_FIELD, exception.getMessage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5801
 
                             Map<Symbol, Object> infoMap = new HashMap<> ();
                             infoMap.put(INVALID_FIELD, CONTAINER_ID);
@@ -499,6 +515,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
                         protonConnection.close();
                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
                         if (amqpTransport.isUseInactivityMonitor() && amqpWireFormat.getIdleTimeout() > 0) {
                             LOG.trace("Connection requesting Idle timeout of: {} mills", amqpWireFormat.getIdleTimeout());
                             protonTransport.setIdleTimeout(amqpWireFormat.getIdleTimeout());
@@ -506,6 +523,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
                         protonConnection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
                         protonConnection.setProperties(getConnetionProperties());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6304
                         protonConnection.setContainer(brokerService.getBrokerName());
                         protonConnection.open();
 
@@ -615,6 +633,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
     public void onAMQPException(IOException error) {
         closedSocket = true;
         if (!closing) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5731
             try {
                 closing = true;
                 // Attempt to inform the other end that we are going to close
@@ -666,6 +685,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
             // Pass down any unexpected async errors. Should this close the connection?
             Throwable exception = ((ConnectionError) command).getException();
             handleException(exception);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5707
         } else if (command.isConsumerControl()) {
             ConsumerControl control = (ConsumerControl) command;
             AmqpSender sender = subscriptionsByConsumerId.get(control.getConsumerId());
@@ -681,6 +701,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
     //----- Utility methods for connection resources to use ------------------//
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5738
     void registerSender(ConsumerId consumerId, AmqpSender sender) {
         subscriptionsByConsumerId.put(consumerId, sender);
     }
@@ -689,6 +710,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         subscriptionsByConsumerId.remove(consumerId);
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5847
     void registerTransaction(TransactionId txId, AmqpTransactionCoordinator coordinator) {
         transactions.put(txId, coordinator);
     }
@@ -705,6 +727,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         return new LocalTransactionId(getConnectionId(), ++nextTransactionId);
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5799
     ConsumerInfo lookupSubscription(String subscriptionName) throws AmqpProtocolException {
         ConsumerInfo result = null;
         RegionBroker regionBroker;
@@ -718,6 +741,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         final TopicRegion topicRegion = (TopicRegion) regionBroker.getTopicRegion();
         DurableTopicSubscription subscription = topicRegion.lookupSubscription(subscriptionName, connectionInfo.getClientId());
         if (subscription != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5799
             result = subscription.getConsumerInfo();
         }
 
@@ -725,6 +749,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
     }
 
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
     Subscription lookupPrefetchSubscription(ConsumerInfo consumerInfo)  {
         Subscription subscription = null;
         try {
@@ -807,11 +832,14 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
     void handleException(Throwable exception) {
         LOG.debug("Exception detail", exception);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5778
         if (exception instanceof AmqpProtocolException) {
             onAMQPException((IOException) exception);
         } else {
             try {
                 // Must ensure that the broker removes Connection resources.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5731
+//IC see: https://issues.apache.org/jira/browse/AMQ-5731
                 sendToActiveMQ(new ShutdownInfo());
                 amqpTransport.stop();
             } catch (Throwable e) {
@@ -843,8 +871,10 @@ public class AmqpConnection implements AmqpProtocolConverter {
         // will give us a deadline on the next time we need to tick() in order
         // to meet those obligations.
         // Using nano time since it is not related to the wall clock, which may change
+//IC see: https://issues.apache.org/jira/browse/AMQ-6031
         long now = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
         long nextIdleCheck = protonTransport.tick(now);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6813
         if (nextIdleCheck != 0) {
             // monitor treats <= 0 as no work, ensure value is at least 1 as there was a deadline
             long delay = Math.max(nextIdleCheck - now, 1);

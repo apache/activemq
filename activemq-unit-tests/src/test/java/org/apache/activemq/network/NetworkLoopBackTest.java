@@ -46,6 +46,7 @@ public class NetworkLoopBackTest {
                 }
             });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
             final DemandForwardingBridgeSupport loopbackBridge = (DemandForwardingBridgeSupport) networkConnector.bridges.values().iterator().next();
             assertTrue("nc started", networkConnector.isStarted());
 

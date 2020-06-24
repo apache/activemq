@@ -58,16 +58,19 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * @param subscription  subscription for this cursor
      */
     public StoreDurableSubscriberCursor(Broker broker,String clientId, String subscriberName,int maxBatchSize, DurableTopicSubscription subscription) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         super(AbstractPendingMessageCursor.isPrioritizedMessageSubscriber(broker,subscription));
         this.subscription=subscription;
         this.clientId = clientId;
         this.subscriberName = subscriberName;
         if (broker.getBrokerService().isPersistent()) {
             this.nonPersistent = new FilePendingMessageCursor(broker,clientId + subscriberName,this.prioritizedMessages);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3196
         } else {
             this.nonPersistent = new VMPendingMessageCursor(this.prioritizedMessages);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2002
         this.nonPersistent.setMaxBatchSize(maxBatchSize);
         this.nonPersistent.setSystemUsage(systemUsage);
         this.storePrefetches.add(this.nonPersistent);
@@ -80,6 +83,8 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     @Override
     public synchronized void start() throws Exception {
         if (!isStarted()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
             super.start();
             for (PendingMessageCursor tsp : storePrefetches) {
                 tsp.setMessageAudit(getMessageAudit());
@@ -91,12 +96,15 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     @Override
     public synchronized void stop() throws Exception {
         if (isStarted()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3196
             if (subscription.isKeepDurableSubsActive()) {
                 super.gc();
                 for (PendingMessageCursor tsp : storePrefetches) {
                     tsp.gc();
                 }
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
                 super.stop();
                 for (PendingMessageCursor tsp : storePrefetches) {
                     tsp.stop();
@@ -119,10 +127,16 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             TopicStorePrefetch tsp = new TopicStorePrefetch(this.subscription,(Topic)destination, clientId, subscriberName);
             tsp.setMaxBatchSize(destination.getMaxPageSize());
             tsp.setSystemUsage(systemUsage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1566
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
             tsp.setMessageAudit(getMessageAudit());
             tsp.setEnableAudit(isEnableAudit());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2002
             tsp.setMemoryUsageHighWaterMark(getMemoryUsageHighWaterMark());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
             tsp.setUseCache(isUseCache());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
             tsp.setCacheEnabled(isUseCache() && tsp.isEmpty());
             topics.put(destination, tsp);
             storePrefetches.add(tsp);
@@ -153,6 +167,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      */
     @Override
     public synchronized boolean isEmpty() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1095
         for (PendingMessageCursor tsp : storePrefetches) {
             if( !tsp.isEmpty() )
                 return false;
@@ -188,6 +203,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             Message msg = node.getMessage();
             if (isStarted()) {
                 if (!msg.isPersistent()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6924
                     nonPersistent.tryAddMessageLast(node, wait);
                 }
             }
@@ -206,11 +222,14 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             }
 
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         return true;
     }
 
     @Override
     public boolean isTransient() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3196
         return subscription.isKeepDurableSubsActive();
     }
 
@@ -273,6 +292,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized void remove(MessageReference node) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
         for (PendingMessageCursor tsp : storePrefetches) {
             tsp.remove(node);
         }
@@ -287,6 +307,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized void release() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
         this.currentCursor = null;
         for (PendingMessageCursor storePrefetch : storePrefetches) {
             storePrefetch.release();
@@ -296,6 +317,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     @Override
     public synchronized int size() {
         int pendingCount=0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1095
         for (PendingMessageCursor tsp : storePrefetches) {
             pendingCount += tsp.size();
         }
@@ -313,6 +335,8 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     @Override
     public void setMaxBatchSize(int newMaxBatchSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         for (PendingMessageCursor storePrefetch : storePrefetches) {
             storePrefetch.setMaxBatchSize(newMaxBatchSize);
         }
@@ -336,6 +360,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     @Override
     public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2002
         super.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
@@ -384,6 +409,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                 }
             }
             // round-robin
+//IC see: https://issues.apache.org/jira/browse/AMQ-1799
             if (storePrefetches.size()>1) {
                 PendingMessageCursor first = storePrefetches.remove(0);
                 storePrefetches.add(first);

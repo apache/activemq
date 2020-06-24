@@ -56,9 +56,11 @@ public class ManagedConnectionFactoryTest {
     @Before
     public void setUp() throws Exception {
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-765
         managedConnectionFactory.setServerUrl(DEFAULT_HOST);
         managedConnectionFactory.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
         managedConnectionFactory.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
         managedConnectionFactory.setUseSessionArgs(false);
     }
 
@@ -97,11 +99,13 @@ public class ManagedConnectionFactoryTest {
         Session session = connection.createSession(true, 0);
         assertFalse("transacted attribute is ignored, only transacted with xa or local tx", session.getTransacted());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4226
         connection.close();
     }
 
     @Test(timeout = 60000)
     public void testConnectionSessionArgs() throws ResourceException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
         ActiveMQConnectionRequestInfo connectionRequestInfo = new ActiveMQConnectionRequestInfo();
         connectionRequestInfo.setServerUrl(DEFAULT_HOST);
         connectionRequestInfo.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
@@ -150,6 +154,7 @@ public class ManagedConnectionFactoryTest {
         test = managedConnectionFactory.matchManagedConnections(set, null, ri2);
         assertTrue(connection2 == test);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4226
         for (ManagedConnection managedConnection : set) {
             managedConnection.destroy();
         }
@@ -174,6 +179,7 @@ public class ManagedConnectionFactoryTest {
     public void testSerializability() throws Exception {
 
         managedConnectionFactory.setLogWriter(new PrintWriter(new ByteArrayOutputStream()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-765
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos);
@@ -186,6 +192,7 @@ public class ManagedConnectionFactoryTest {
         ois.close();
 
         assertNull(
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
                 "[logWriter] property of deserialized ActiveMQManagedConnectionFactory is not null",
                 deserializedFactory.getLogWriter());
         assertNotNull(

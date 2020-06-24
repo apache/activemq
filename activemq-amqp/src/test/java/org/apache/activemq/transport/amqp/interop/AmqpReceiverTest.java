@@ -128,6 +128,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testSenderSettlementModeSettledIsHonored() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         doTestSenderSettlementModeIsHonored(SenderSettleMode.SETTLED);
     }
 
@@ -202,8 +203,10 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testCreateQueueReceiverWithJMSSelector() throws Exception {
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
 
         client.setValidator(new AmqpValidator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
 
             @SuppressWarnings("unchecked")
             @Override
@@ -241,6 +244,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
 
         client.setValidator(new AmqpValidator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
 
             @SuppressWarnings("unchecked")
             @Override
@@ -276,6 +280,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testCreateTopicReceiver() throws Exception {
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -318,10 +323,14 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     @Repeat(repetitions = 1)
     public void testPresettledReceiverReadsAllMessages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
         final int MSG_COUNT = 100;
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -345,6 +354,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     @Repeat(repetitions = 1)
     public void testPresettledReceiverReadsAllMessagesInNonFlowBatchQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         doTestPresettledReceiverReadsAllMessagesInNonFlowBatch(false);
     }
 
@@ -403,6 +413,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         receiver.close();
 
         assertEquals(0, destinationView.getEnqueueCount() - destinationView.getDequeueCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
 
         connection.close();
     }
@@ -510,6 +521,9 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -560,6 +574,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testUnsupportedFiltersAreNotListedAsSupported() throws Exception {
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
 
         client.setValidator(new AmqpValidator() {
 
@@ -581,6 +596,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         Map<Symbol, DescribedType> filters = new HashMap<>();
         filters.put(AmqpUnknownFilterType.UNKNOWN_FILTER_NAME, AmqpUnknownFilterType.UNKOWN_FILTER);
 
@@ -590,6 +606,10 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         source.setDurable(TerminusDurability.NONE);
         source.setExpiryPolicy(TerminusExpiryPolicy.LINK_DETACH);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -658,6 +678,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         message.reject();
 
         // Attempt to read the message again but should not get it.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6464
         message = receiver.receive(2, TimeUnit.SECONDS);
         assertNull("shoudl not receive message again", message);
 
@@ -666,6 +687,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
 
     @Test(timeout = 30000)
     public void testModifiedDispositionWithDeliveryFailedWithoutUndeliverableHereFieldsSet() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5890
         doModifiedDispositionTestImpl(Boolean.TRUE, null);
     }
 
@@ -689,6 +711,8 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), msgCount, false);
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 

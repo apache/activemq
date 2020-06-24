@@ -221,6 +221,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     protected ActiveMQConnection(final Transport transport, IdGenerator clientIdGenerator, IdGenerator connectionIdGenerator, JMSStatsImpl factoryStats) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-836
         this.transport = transport;
         this.clientIdGenerator = clientIdGenerator;
         this.factoryStats = factoryStats;
@@ -237,9 +238,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             }
         });
         // asyncConnectionThread.allowCoreThreadTimeOut(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
         String uniqueId = connectionIdGenerator.generateId();
         this.info = new ConnectionInfo(new ConnectionId(uniqueId));
         this.info.setManageable(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         this.info.setFaultTolerant(transport.isFaultTolerant());
         this.connectionSessionId = new SessionId(info.getConnectionId(), -1);
 
@@ -247,6 +250,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         this.stats = new JMSConnectionStatsImpl(sessions, this instanceof XAConnection);
         this.factoryStats.addConnection(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1253
         this.timeCreated = System.currentTimeMillis();
         this.connectionAudit.setCheckForDuplicates(transport.isFaultTolerant());
     }
@@ -327,6 +331,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5462
         if (!transacted) {
             if (acknowledgeMode == Session.SESSION_TRANSACTED) {
                 throw new JMSException("acknowledgeMode SESSION_TRANSACTED cannot be used for an non-transacted Session");
@@ -496,6 +501,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @return the listener or <code>null</code> if no listener is registered with the connection.
      */
     public ClientInternalExceptionListener getClientInternalExceptionListener() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
         return clientInternalExceptionListener;
     }
 
@@ -566,6 +572,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     @Override
     public void stop() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4769
         doStop(true);
     }
 
@@ -580,6 +587,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             checkClosedOrFailed();
         }
         if (started.compareAndSet(true, false)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1810
             synchronized(sessions) {
                 for (Iterator<ActiveMQSession> i = sessions.iterator(); i.hasNext();) {
                     ActiveMQSession s = i.next();
@@ -639,6 +647,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             if (!closed.get() && !transportFailed.get()) {
                 // do not fail if already closed as according to JMS spec we must not
                 // throw exception if already closed
+//IC see: https://issues.apache.org/jira/browse/AMQ-4769
                 doStop(false);
             }
 
@@ -646,6 +655,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 if (!closed.get()) {
                     closing.set(true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1199
                     if (destinationSource != null) {
                         destinationSource.stop();
                         destinationSource = null;
@@ -655,6 +665,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         advisoryConsumer = null;
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3714
                     Scheduler scheduler = this.scheduler;
                     if (scheduler != null) {
                         try {
@@ -665,6 +676,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         }
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
                     long lastDeliveredSequenceId = -1;
                     for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
                         ActiveMQSession s = i.next();
@@ -677,14 +689,19 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     }
 
                     this.activeTempDestinations.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4196
+//IC see: https://issues.apache.org/jira/browse/AMQ-3038
 
                     try {
                         if (isConnectionInfoSentToBroker) {
                             // If we announced ourselves to the broker.. Try to let the broker
                             // know that the connection is being shutdown.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
                             RemoveInfo removeCommand = info.createRemoveCommand();
                             removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
                             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6362
                                 syncSendPacket(removeCommand, closeTimeout);
                             } catch (JMSException e) {
                                 if (e.getCause() instanceof RequestTimedOutIOException) {
@@ -702,6 +719,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         // factory
                         // then we may need to call
                         // factory.onConnectionClose(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
                         if (sessionTaskRunner != null) {
                             sessionTaskRunner.shutdown();
                         }
@@ -713,6 +732,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         } finally {
             try {
                 if (executor != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
                     ThreadPoolUtils.shutdown(executor);
                 }
             } catch (Throwable e) {
@@ -803,6 +823,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                                               boolean noLocal) throws JMSException {
         checkClosedOrFailed();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3944
         if (queueOnlyConnection) {
             throw new IllegalStateException("QueueConnection cannot be used to create Pub/Sub based resources.");
         }
@@ -815,9 +836,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         info.setSelector(messageSelector);
         info.setPrefetchSize(maxMessages);
         info.setDispatchAsync(isDispatchAsync());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1646
+//IC see: https://issues.apache.org/jira/browse/AMQ-1646
 
         // Allows the options on the destination to configure the consumerInfo
         if (info.getDestination().getOptions() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6968
             Map<String, String> options = new HashMap<>(info.getDestination().getOptions());
             IntrospectionSupport.setProperties(this.info, options, "consumer.");
         }
@@ -957,6 +981,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public boolean isNestedMapAndListEnabled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-757
         return nestedMapAndListEnabled;
     }
 
@@ -990,6 +1015,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * the underlying transport
      */
     public void addTransportListener(TransportListener transportListener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-600
         transportListeners.add(transportListener);
     }
 
@@ -998,6 +1024,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public boolean isUseDedicatedTaskRunner() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
         return useDedicatedTaskRunner;
     }
 
@@ -1008,6 +1036,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public TaskRunnerFactory getSessionTaskRunner() {
         synchronized (this) {
             if (sessionTaskRunner == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
                 sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000, isUseDedicatedTaskRunner(), maxThreadPoolSize);
                 sessionTaskRunner.setRejectedTaskHandler(rejectedTaskHandler);
             }
@@ -1020,6 +1049,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public MessageTransformer getTransformer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1053
         return transformer;
     }
 
@@ -1055,6 +1085,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     @Override
     public DestinationSource getDestinationSource() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1199
         if (destinationSource == null) {
             destinationSource = new DestinationSource(this);
             destinationSource.start();
@@ -1228,6 +1259,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         ensureConnectionInfoSent();
 
         ConsumerId consumerId = createConsumerId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1758
         ConsumerInfo consumerInfo = new ConsumerInfo(consumerId);
         consumerInfo.setDestination(ActiveMQMessageTransformation.transformDestination(destination));
         consumerInfo.setSelector(messageSelector);
@@ -1237,6 +1269,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         // Allows the options on the destination to configure the consumerInfo
         if (consumerInfo.getDestination().getOptions() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6968
             Map<String, String> options = new HashMap<>(consumerInfo.getDestination().getOptions());
             IntrospectionSupport.setProperties(consumerInfo, options, "consumer.");
         }
@@ -1304,6 +1337,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     private void doAsyncSendPacket(Command command) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2349
+//IC see: https://issues.apache.org/jira/browse/AMQ-2716
         try {
             this.transport.oneway(command);
         } catch (IOException e) {
@@ -1319,6 +1354,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public void syncSendPacket(final Command command, final AsyncCallback onComplete) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3769
         if(onComplete==null) {
             syncSendPacket(command);
         } else {
@@ -1340,6 +1376,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         } catch (Exception e) {
                             exception = e;
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6968
                         if (exception != null) {
                             if ( exception instanceof JMSException) {
                                 onComplete.onException((JMSException) exception);
@@ -1354,8 +1391,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                     LOG.error("Caught an exception trying to create a JMSException for " +exception,e);
                                 }
                                 // dispose of transport for security exceptions on connection initiation
+//IC see: https://issues.apache.org/jira/browse/AMQ-3294
                                 if (exception instanceof SecurityException && command instanceof ConnectionInfo){
+//IC see: https://issues.apache.org/jira/browse/AMQ-6968
                                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5472
                                         forceCloseOnSecurityException(exception);
                                     } catch (Throwable t) {
                                         // We throw the original error from the ExceptionResponse instead.
@@ -1378,6 +1418,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     private void forceCloseOnSecurityException(Throwable exception) {
         LOG.trace("force close on security exception:{}, transport={}", this, transport, exception);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5472
         onException(new IOException("Force close due to SecurityException on connect", exception));
     }
 
@@ -1387,6 +1428,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         } else {
 
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6362
                 Response response = (Response)(timeout > 0
                         ? this.transport.request(command, timeout)
                         : this.transport.request(command));
@@ -1395,17 +1437,24 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     if (er.getException() instanceof JMSException) {
                         throw (JMSException)er.getException();
                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6968
                         if (isClosed() || closing.get()) {
                             LOG.debug("Received an exception but connection is closing");
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1811
                         JMSException jmsEx = null;
                         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3294
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
                             jmsEx = JMSExceptionSupport.create(er.getException());
                         } catch(Throwable e) {
                             LOG.error("Caught an exception trying to create a JMSException for " +er.getException(),e);
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3294
                         if (er.getException() instanceof SecurityException && command instanceof ConnectionInfo){
+//IC see: https://issues.apache.org/jira/browse/AMQ-6968
                             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5472
                                 forceCloseOnSecurityException(er.getException());
                             } catch (Throwable t) {
                                 // We throw the original error from the ExceptionResponse instead.
@@ -1433,6 +1482,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public Response syncSendPacket(Command command) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6362
         return syncSendPacket(command, 0);
     }
 
@@ -1474,8 +1524,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     protected void ensureConnectionInfoSent() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1810
         synchronized(this.ensureConnectionInfoSentMutex) {
             // Can we skip sending the ConnectionInfo packet??
+//IC see: https://issues.apache.org/jira/browse/AMQ-600
             if (isConnectionInfoSentToBroker || closed.get()) {
                 return;
             }
@@ -1484,6 +1536,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 info.setClientId(clientIdGenerator.generateId());
             }
             syncSendPacket(info.copy(), getConnectResponseTimeout());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6362
 
             this.isConnectionInfoSentToBroker = true;
             // Add a temp destination advisory consumer so that
@@ -1498,6 +1551,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public synchronized boolean isWatchTopicAdvisories() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1176
         return watchTopicAdvisories;
     }
 
@@ -1543,6 +1597,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @return the messagePrioritySupported
      */
     public boolean isMessagePrioritySupported() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2790
         return this.messagePrioritySupported;
     }
 
@@ -1560,14 +1615,17 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * connection.
      */
     public void cleanup() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5710
         doCleanup(false);
     }
 
     public boolean isUserSpecifiedClientID() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6068
         return userSpecifiedClientID;
     }
 
     public void doCleanup(boolean removeConnection) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2195
         if (advisoryConsumer != null && !isTransportFailed()) {
             advisoryConsumer.dispose();
             advisoryConsumer = null;
@@ -1582,9 +1640,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             c.dispose();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5710
         if (removeConnection) {
             if (isConnectionInfoSentToBroker) {
                 if (!transportFailed.get() && !closing.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2346
                     syncSendPacket(info.createRemoveCommand());
                 }
                 isConnectionInfoSentToBroker = false;
@@ -1619,6 +1679,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public String getResourceManagerId() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5031
         if (isRmIdFromConnectionId()) {
             return info.getConnectionId().getValue();
         }
@@ -1634,8 +1695,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * available yet.
      */
     public String getBrokerName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1337
         try {
             brokerInfoReceived.await(5, TimeUnit.SECONDS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-514
             if (brokerInfo == null) {
                 return null;
             }
@@ -1659,6 +1722,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public RedeliveryPolicy getRedeliveryPolicy() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3224
         return redeliveryPolicyMap.getDefaultEntry();
     }
 
@@ -1673,6 +1737,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         if (blobTransferPolicy == null) {
             blobTransferPolicy = createBlobTransferPolicy();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return blobTransferPolicy;
     }
 
@@ -1723,6 +1788,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @param optimizeAcknowledgeTimeOut
      */
     public void setOptimizeAcknowledgeTimeOut(long optimizeAcknowledgeTimeOut) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3332
         this.optimizeAcknowledgeTimeOut =  optimizeAcknowledgeTimeOut;
     }
 
@@ -1752,6 +1818,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @return the sendTimeout (in milliseconds)
      */
     public int getSendTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
         return sendTimeout;
     }
 
@@ -1766,6 +1833,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @return the sendAcksAsync
      */
     public boolean isSendAcksAsync() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
         return sendAcksAsync;
     }
 
@@ -1787,6 +1855,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         try {
             brokerInfoReceived.await();
         } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
             Thread.currentThread().interrupt();
             throw JMSExceptionSupport.create(e);
         }
@@ -1814,6 +1883,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public boolean hasDispatcher(ConsumerId consumerId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
         return dispatchers.containsKey(consumerId);
     }
 
@@ -1828,6 +1898,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 command.visit(new CommandVisitorAdapter() {
                     @Override
                     public Response processMessageDispatch(MessageDispatch md) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
                         waitForTransportInterruptionProcessingToComplete();
                         ActiveMQDispatcher dispatcher = dispatchers.get(md.getConsumerId());
                         if (dispatcher != null) {
@@ -1842,10 +1913,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                 msg.setReadOnlyProperties(true);
                                 msg.setRedeliveryCounter(md.getRedeliveryCounter());
                                 msg.setConnection(ActiveMQConnection.this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4116
                                 msg.setMemoryUsage(null);
                                 md.setMessage(msg);
                             }
                             dispatcher.dispatch(md);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
                         } else {
                             LOG.debug("{} no dispatcher for {} in {}", this, md, dispatchers);
                         }
@@ -1874,6 +1947,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
                     @Override
                     public Response processConnectionError(final ConnectionError error) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                         executor.execute(new Runnable() {
                             @Override
                             public void run() {
@@ -1907,6 +1982,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     }
                 });
             } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
                 onClientInternalException(e);
             }
         }
@@ -1932,8 +2008,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @param error the exception that the problem
      */
     public void onClientInternalException(final Throwable error) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
         if ( !closed.get() && !closing.get() ) {
             if ( this.clientInternalExceptionListener != null ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -1942,6 +2021,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 });
             } else {
                 LOG.debug("Async client internal exception occurred with no exception listener registered: {}",
+//IC see: https://issues.apache.org/jira/browse/AMQ-6963
                         error, error);
             }
         }
@@ -1961,6 +2041,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 }
                 final JMSException e = (JMSException)error;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -1976,19 +2058,27 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     @Override
     public void onException(final IOException error) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2349
+//IC see: https://issues.apache.org/jira/browse/AMQ-2716
         onAsyncException(error);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6494
         if (!closed.get() && !closing.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
                     transportFailed(error);
                     ServiceSupport.dispose(ActiveMQConnection.this.transport);
                     brokerInfoReceived.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2195
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5710
                         doCleanup(true);
                     } catch (JMSException e) {
                         LOG.warn("Exception during connection cleanup, " + e, e);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
                     for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
                         TransportListener listener = iter.next();
                         listener.onException(error);
@@ -2000,12 +2090,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     @Override
     public void transportInterupted() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
         transportInterruptionProcessingComplete.set(1);
         for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
             ActiveMQSession s = i.next();
             s.clearMessagesInProgress(transportInterruptionProcessingComplete);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2765
+//IC see: https://issues.apache.org/jira/browse/AMQ-2772
         for (ActiveMQConnectionConsumer connectionConsumer : this.connectionConsumers) {
             connectionConsumer.clearMessagesInProgress(transportInterruptionProcessingComplete);
         }
@@ -2014,6 +2107,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             if (LOG.isDebugEnabled()) {
                 LOG.debug("transport interrupted - processing required, dispatchers: " + transportInterruptionProcessingComplete.get());
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2904
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
             signalInterruptionProcessingNeeded();
         }
 
@@ -2067,6 +2162,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         checkClosedOrFailed();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
         for (ActiveMQSession session : this.sessions) {
             if (session.isInUse(destination)) {
                 throw new JMSException("A consumer is consuming from the temporary destination");
@@ -2075,6 +2171,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         activeTempDestinations.remove(destination);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         DestinationInfo destInfo = new DestinationInfo();
         destInfo.setConnectionId(this.info.getConnectionId());
         destInfo.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
@@ -2088,9 +2185,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         // If we are not watching the advisories.. then
         // we will assume that the temp destination does exist.
         if (advisoryConsumer == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1176
             return false;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
         return !activeTempDestinations.containsValue(dest);
     }
 
@@ -2122,6 +2221,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         info.setConnectionId(this.info.getConnectionId());
         info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
         info.setDestination(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-695
+//IC see: https://issues.apache.org/jira/browse/AMQ-695
         info.setTimeout(0);
         syncSendPacket(info);
     }
@@ -2244,6 +2345,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     protected void onConsumerControl(ConsumerControl command) {
         if (command.isClose()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
             for (ActiveMQSession session : this.sessions) {
                 session.close(command.getConsumerId());
             }
@@ -2251,6 +2353,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             for (ActiveMQSession session : this.sessions) {
                 session.setPrefetchSize(command.getConsumerId(), command.getPrefetch());
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4226
             for (ActiveMQConnectionConsumer connectionConsumer: connectionConsumers) {
                 ConsumerInfo consumerInfo = connectionConsumer.getConsumerInfo();
                 if (consumerInfo.getConsumerId().equals(command.getConsumerId())) {
@@ -2299,6 +2402,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public void setAuditDepth(int auditDepth) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2160
         connectionAudit.setAuditDepth(auditDepth);
     }
 
@@ -2311,6 +2415,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     protected boolean isDuplicate(ActiveMQDispatcher dispatcher, Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2777
         return checkForDuplicates && connectionAudit.isDuplicate(dispatcher, message);
     }
 
@@ -2319,10 +2424,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public IOException getFirstFailureError() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2195
         return firstFailureError;
     }
 
     protected void waitForTransportInterruptionProcessingToComplete() throws InterruptedException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
         if (!closed.get() && !transportFailed.get() && transportInterruptionProcessingComplete.get()>0) {
             LOG.warn("dispatch with outstanding dispatch interruption processing count " + transportInterruptionProcessingComplete.get());
             signalInterruptionProcessingComplete();
@@ -2349,10 +2456,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                             + ") of interruption completion for: " + this.getConnectionInfo().getConnectionId());
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
             transportInterruptionProcessingComplete.set(0);
     }
 
     private void signalInterruptionProcessingNeeded() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2904
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
         FailoverTransport failoverTransport = transport.narrow(FailoverTransport.class);
         if (failoverTransport != null) {
             failoverTransport.getStateTracker().transportInterrupted(this.getConnectionInfo().getConnectionId());
@@ -2377,8 +2487,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     protected Scheduler getScheduler() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3714
         Scheduler result = scheduler;
         if (result == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5535
             if (isClosing() || isClosed()) {
                 // without lock contention report the closing state
                 throw new ConnectionClosedException();
@@ -2388,6 +2500,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 if (result == null) {
                     checkClosed();
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5198
                         result = new Scheduler("ActiveMQConnection["+info.getConnectionId().getValue()+"] Scheduler");
                         result.start();
                         scheduler = result;
@@ -2405,6 +2518,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     protected CopyOnWriteArrayList<ActiveMQSession> getSessions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5279
         return sessions;
     }
 
@@ -2412,6 +2526,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @return the checkForDuplicates
      */
     public boolean isCheckForDuplicates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2777
         return this.checkForDuplicates;
     }
 
@@ -2423,6 +2538,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public boolean isTransactedIndividualAck() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         return transactedIndividualAck;
     }
 
@@ -2431,6 +2547,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public boolean isNonBlockingRedelivery() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1853
         return nonBlockingRedelivery;
     }
 
@@ -2439,6 +2556,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public boolean isRmIdFromConnectionId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5031
         return rmIdFromConnectionId;
     }
 
@@ -2454,10 +2572,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void cleanUpTempDestinations() {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2349
+//IC see: https://issues.apache.org/jira/browse/AMQ-2716
         if (this.activeTempDestinations == null || this.activeTempDestinations.isEmpty()) {
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
         Iterator<ConcurrentMap.Entry<ActiveMQTempDestination, ActiveMQTempDestination>> entries
             = this.activeTempDestinations.entrySet().iterator();
         while(entries.hasNext()) {
@@ -2465,6 +2586,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             try {
                 // Only delete this temp destination if it was created from this connection. The connection used
                 // for the advisory consumer may also have a reference to this temp destination.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3547
                 ActiveMQTempDestination dest = entry.getValue();
                 String thisConnectionId = (info.getConnectionId() == null) ? "" : info.getConnectionId().toString();
                 if (dest.getConnectionId() != null && dest.getConnectionId().equals(thisConnectionId)) {
@@ -2482,6 +2604,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @param redeliveryPolicyMap the redeliveryPolicyMap to set
      */
     public void setRedeliveryPolicyMap(RedeliveryPolicyMap redeliveryPolicyMap) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3224
         this.redeliveryPolicyMap = redeliveryPolicyMap;
     }
 
@@ -2496,6 +2619,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public int getMaxThreadPoolSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         return maxThreadPoolSize;
     }
 
@@ -2508,12 +2632,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *
      * @return this object, useful for chaining
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-3944
     ActiveMQConnection enforceQueueOnlyConnection() {
         this.queueOnlyConnection = true;
         return this;
     }
 
     public RejectedExecutionHandler getRejectedTaskHandler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3885
         return rejectedTaskHandler;
     }
 
@@ -2529,6 +2655,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @return the scheduledOptimizedAckInterval
      */
     public long getOptimizedAckScheduledAckInterval() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3664
         return optimizedAckScheduledAckInterval;
     }
 
@@ -2546,6 +2673,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @return true if MessageConsumer instance will check for expired messages before dispatch.
      */
     public boolean isConsumerExpiryCheckEnabled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5406
         return consumerExpiryCheckEnabled;
     }
 
@@ -2562,6 +2690,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public List<String> getTrustedPackages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         return trustedPackages;
     }
 
@@ -2578,6 +2707,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public int getConnectResponseTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6362
+//IC see: https://issues.apache.org/jira/browse/AMQ-6968
         return connectResponseTimeout;
     }
 

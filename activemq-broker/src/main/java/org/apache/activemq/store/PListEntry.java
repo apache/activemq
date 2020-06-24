@@ -27,6 +27,7 @@ public class PListEntry {
     public PListEntry(String entry, ByteSequence bs, Object locator) {
         this.entry = entry;
         this.byteSequence = bs;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         this.locator = locator;
     }
 
@@ -39,6 +40,7 @@ public class PListEntry {
     }
 
     public Object getLocator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         return locator;
     }
 

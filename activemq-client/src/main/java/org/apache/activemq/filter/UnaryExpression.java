@@ -200,6 +200,7 @@ public abstract class UnaryExpression implements Expression {
             bd = bd.negate();
 
             if (BD_LONG_MIN_VALUE.compareTo(bd) == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
                 return Long.valueOf(Long.MIN_VALUE);
             }
             return bd;

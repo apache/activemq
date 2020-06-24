@@ -48,6 +48,7 @@ public class DispatchMultipleConsumersTest extends TestCase {
     AtomicInteger consumedCount;
     CountDownLatch producerLatch;
     CountDownLatch consumerLatch;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
     String brokerURL;
     String userName = "";
     String password = "";
@@ -59,6 +60,7 @@ public class DispatchMultipleConsumersTest extends TestCase {
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.deleteAllMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         broker.addConnector("tcp://localhost:0");
         broker.start();
         broker.waitUntilStarted();
@@ -128,6 +130,7 @@ public class DispatchMultipleConsumersTest extends TestCase {
         public ConsumerThread(Connection conn, String name) {
             super();
             this.setName(name);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
             logger.trace("Created new consumer thread:" + name);
             try {
                 session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -160,6 +163,7 @@ public class DispatchMultipleConsumersTest extends TestCase {
                         nullCount = 0;
                     }
                     Thread.sleep(100);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
                     if (logger.isTraceEnabled()) {
                         logger.trace("Message received:" + msg.getJMSMessageID());
                     }
@@ -191,6 +195,7 @@ public class DispatchMultipleConsumersTest extends TestCase {
             super();
             this.count = count;
             this.setName(name);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
             logger.trace("Created new producer thread:" + name);
             try {
                 conn = connFactory.createConnection();
@@ -215,6 +220,7 @@ public class DispatchMultipleConsumersTest extends TestCase {
             } catch (JMSException e) {
                 logger.error(e.getMessage(), e);
             } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
                 logger.error("Interrupted!", e);
             }
             sentCount.addAndGet(i);

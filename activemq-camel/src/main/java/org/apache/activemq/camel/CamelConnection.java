@@ -31,6 +31,7 @@ public class CamelConnection extends ActiveMQConnection implements CamelContextA
     private CamelContext camelContext;
 
     protected CamelConnection(Transport transport, IdGenerator clientIdGenerator,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
                               IdGenerator connectionIdGenerator, JMSStatsImpl factoryStats) throws Exception {
         super(transport, clientIdGenerator, connectionIdGenerator, factoryStats);
     }

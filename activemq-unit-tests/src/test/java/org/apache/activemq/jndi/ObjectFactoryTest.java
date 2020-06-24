@@ -39,6 +39,7 @@ public class ObjectFactoryTest extends CombinationTestSupport {
         factory.setUseCompression(true);
         factory.setUseRetroactiveConsumer(true);
         factory.setUserName("user");
+//IC see: https://issues.apache.org/jira/browse/AMQ-406
         factory.getPrefetchPolicy().setQueuePrefetch(777);
         factory.getRedeliveryPolicy().setMaximumRedeliveries(15);
         factory.getRedeliveryPolicy().setBackOffMultiplier((short) 32);
@@ -53,6 +54,7 @@ public class ObjectFactoryTest extends CombinationTestSupport {
         temp = (ActiveMQConnectionFactory)refFactory.getObjectInstance(ref, null, null, null);
 
         // Check settings
+//IC see: https://issues.apache.org/jira/browse/AMQ-792
         assertEquals(factory.isDispatchAsync(), temp.isDispatchAsync());
         assertEquals(factory.getBrokerURL(), temp.getBrokerURL());
         assertEquals(factory.getClientID(), temp.getClientID());
@@ -65,6 +67,7 @@ public class ObjectFactoryTest extends CombinationTestSupport {
         assertEquals(factory.isUseCompression(), temp.isUseCompression());
         assertEquals(factory.isUseRetroactiveConsumer(), temp.isUseRetroactiveConsumer());
         assertEquals(factory.getUserName(), temp.getUserName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-406
         assertEquals(factory.getPrefetchPolicy().getQueuePrefetch(), temp.getPrefetchPolicy().getQueuePrefetch());
         assertEquals(factory.getRedeliveryPolicy().getMaximumRedeliveries(), temp.getRedeliveryPolicy().getMaximumRedeliveries());
         assertEquals(factory.getRedeliveryPolicy().getBackOffMultiplier(), temp.getRedeliveryPolicy().getBackOffMultiplier());

@@ -93,6 +93,7 @@ public class NettyTcpTransport implements NettyTransport {
      *        the transport options used to configure the socket connection.
      */
     public NettyTcpTransport(NettyTransportListener listener, URI remoteLocation, NettyTransportOptions options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         if (options == null) {
             throw new IllegalArgumentException("Transport Options cannot be null");
         }
@@ -113,6 +114,7 @@ public class NettyTcpTransport implements NettyTransport {
             throw new IllegalStateException("A transport listener must be set before connection attempts.");
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         final SslHandler sslHandler;
         if (isSSL()) {
             try {
@@ -144,6 +146,7 @@ public class NettyTcpTransport implements NettyTransport {
 
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
                 if (!future.isSuccess()) {
                     handleException(future.channel(), IOExceptionSupport.create(future.cause()));
                 }
@@ -165,6 +168,7 @@ public class NettyTcpTransport implements NettyTransport {
                 channel = null;
             }
             if (group != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6673
                 Future<?> fut = group.shutdownGracefully(0, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
                 if (!fut.awaitUninterruptibly(2 * SHUTDOWN_TIMEOUT)) {
                     LOG.trace("Channel group shutdown failed to complete in allotted time");
@@ -179,6 +183,7 @@ public class NettyTcpTransport implements NettyTransport {
 
                 @Override
                 public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
                     if (failureCause != null) {
                         channel.pipeline().fireExceptionCaught(failureCause);
                     }
@@ -194,6 +199,7 @@ public class NettyTcpTransport implements NettyTransport {
 
     @Override
     public boolean isSSL() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return options.isSSL();
     }
 
@@ -201,6 +207,7 @@ public class NettyTcpTransport implements NettyTransport {
     public void close() throws IOException {
         if (closed.compareAndSet(false, true)) {
             connected.set(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6673
             try {
                 if (channel != null) {
                     channel.close().syncUninterruptibly();
@@ -258,6 +265,7 @@ public class NettyTcpTransport implements NettyTransport {
     @Override
     public Principal getLocalPrincipal() {
         Principal result = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
 
         if (isSSL()) {
             SslHandler sslHandler = channel.pipeline().get(SslHandler.class);
@@ -269,6 +277,7 @@ public class NettyTcpTransport implements NettyTransport {
 
     @Override
     public void setMaxFrameSize(int maxFrameSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6675
         if (connected.get()) {
             throw new IllegalStateException("Cannot change Max Frame Size while connected.");
         }
@@ -396,11 +405,13 @@ public class NettyTcpTransport implements NettyTransport {
             channel.pipeline().addLast(sslHandler);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6673
         if (getTransportOptions().isTraceBytes()) {
             channel.pipeline().addLast("logger", new LoggingHandler(getClass()));
         }
 
         addAdditionalHandlers(channel.pipeline());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
 
         channel.pipeline().addLast(createChannelHandler());
     }

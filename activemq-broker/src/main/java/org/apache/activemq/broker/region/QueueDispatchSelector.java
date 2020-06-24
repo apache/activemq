@@ -55,12 +55,14 @@ public class QueueDispatchSelector extends SimpleDispatchSelector {
 
         boolean result = !paused && super.canDispatch(subscription, m);
         if (result && !subscription.isBrowser()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2952
             result = exclusiveConsumer == null || exclusiveConsumer == subscription;
         }
         return result;
     }
 
     public void pause() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5229
         paused = true;
     }
 

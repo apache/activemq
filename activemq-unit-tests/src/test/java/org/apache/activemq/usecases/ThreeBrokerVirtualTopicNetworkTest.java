@@ -104,6 +104,7 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
         Thread.sleep(2000);
 
         sendMessages("BrokerA", dest, 10);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2720
 
         msgsA = getConsumerMessages("BrokerA", clientA);
 
@@ -166,6 +167,7 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
     private BrokerService createAndConfigureBroker(URI uri) throws Exception {
         BrokerService broker = createBroker(uri);
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-2720
         configurePersistenceAdapter(broker);
         
         // make all topics virtual and consumers use the default prefix
@@ -177,6 +179,7 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
     }
     
     protected void configurePersistenceAdapter(BrokerService broker) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2720
         File dataFileDir = new File("target/test-amq-data/kahadb/" + broker.getBrokerName());
         KahaDBStore kaha = new KahaDBStore();
         kaha.setDirectory(dataFileDir);

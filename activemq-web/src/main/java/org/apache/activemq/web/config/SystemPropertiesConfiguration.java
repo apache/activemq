@@ -55,6 +55,7 @@ public class SystemPropertiesConfiguration extends AbstractConfiguration {
 	}
 
 	public String getJmxPassword() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2352
 		return System.getProperty(PROPERTY_JMX_PASSWORD);
 	}
 

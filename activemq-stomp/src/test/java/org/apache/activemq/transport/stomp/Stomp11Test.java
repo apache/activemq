@@ -58,6 +58,7 @@ public class Stomp11Test extends StompTestSupport {
 
         stompConnect();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3501
         connection = cf.createConnection("system", "manager");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         queue = new ActiveMQQueue(getQueueName());
@@ -66,6 +67,7 @@ public class Stomp11Test extends StompTestSupport {
 
     @Override
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         try {
             if (connection != null) {
                 connection.close();
@@ -100,7 +102,9 @@ public class Stomp11Test extends StompTestSupport {
     @Test(timeout = 60000)
     public void testConnectedNeverEncoded() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4104
         String connectFrame = "STOMP\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                               "login:system\n" +
                               "passcode:manager\n" +
                               "accept-version:1.1\n" +
@@ -128,6 +132,7 @@ public class Stomp11Test extends StompTestSupport {
     public void testConnectWithVersionOptions() throws Exception {
 
         String connectFrame = "STOMP\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                               "login:system\n" +
                               "passcode:manager\n" +
                               "accept-version:1.0,1.1\n" +
@@ -147,6 +152,7 @@ public class Stomp11Test extends StompTestSupport {
     public void testConnectWithValidFallback() throws Exception {
 
         String connectFrame = "STOMP\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                               "login:system\n" +
                               "passcode:manager\n" +
                               "accept-version:1.0,10.1\n" +
@@ -166,6 +172,7 @@ public class Stomp11Test extends StompTestSupport {
     public void testConnectWithInvalidFallback() throws Exception {
 
         String connectFrame = "STOMP\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                               "login:system\n" +
                               "passcode:manager\n" +
                               "accept-version:9.0,10.1\n" +
@@ -185,6 +192,7 @@ public class Stomp11Test extends StompTestSupport {
     public void testHeartbeats() throws Exception {
 
         String connectFrame = "STOMP\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                               "login:system\n" +
                               "passcode:manager\n" +
                               "accept-version:1.1\n" +
@@ -197,6 +205,7 @@ public class Stomp11Test extends StompTestSupport {
 
         LOG.info("Broker sent: " + f);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3897
         assertTrue("Failed to receive a connected frame.", f.startsWith("CONNECTED"));
         assertTrue("Frame should have a versoion 1.1 header.", f.indexOf("version:1.1") >= 0);
         assertTrue("Frame should have a heart beat header.", f.indexOf("heart-beat:") >= 0);
@@ -257,7 +266,9 @@ public class Stomp11Test extends StompTestSupport {
     @Test(timeout = 60000)
     public void testHeartbeatsKeepsConnectionOpen() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4106
         String connectFrame = "STOMP\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                               "login:system\n" +
                               "passcode:manager\n" +
                               "accept-version:1.1\n" +
@@ -304,8 +315,10 @@ public class Stomp11Test extends StompTestSupport {
     @Test(timeout = 60000)
     public void testSendAfterMissingHeartbeat() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String connectFrame = "STOMP\n" + "login:system\n" +
                               "passcode:manager\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3484
                               "accept-version:1.1\n" +
                               "heart-beat:1000,0\n" +
                               "host:localhost\n" +
@@ -320,6 +333,7 @@ public class Stomp11Test extends StompTestSupport {
         LOG.debug("Broker sent: " + f);
 
         Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -328,6 +342,7 @@ public class Stomp11Test extends StompTestSupport {
         }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25));
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3897
             String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" +
                              "receipt:1\n\n" + "Hello World" + Stomp.NULL;
             stompConnection.sendFrame(message);
@@ -342,6 +357,7 @@ public class Stomp11Test extends StompTestSupport {
     public void testRejectInvalidHeartbeats1() throws Exception {
 
         String connectFrame = "STOMP\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                               "login:system\n" +
                               "passcode:manager\n" +
                               "accept-version:1.1\n" +
@@ -362,6 +378,7 @@ public class Stomp11Test extends StompTestSupport {
     public void testRejectInvalidHeartbeats2() throws Exception {
 
         String connectFrame = "STOMP\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                               "login:system\n" +
                               "passcode:manager\n" +
                               "accept-version:1.1\n" +
@@ -382,6 +399,7 @@ public class Stomp11Test extends StompTestSupport {
     public void testRejectInvalidHeartbeats3() throws Exception {
 
         String connectFrame = "STOMP\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                               "login:system\n" +
                               "passcode:manager\n" +
                               "accept-version:1.1\n" +
@@ -422,10 +440,12 @@ public class Stomp11Test extends StompTestSupport {
                        "id:12345\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3501
         StompFrame stompFrame = stompConnection.receive();
         assertTrue(stompFrame.getAction().equals("MESSAGE"));
 
         frame = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
                 "receipt:1\n" + "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -483,6 +503,7 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(f.startsWith("CONNECTED"));
 
         String frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
                        "receipt:1\n" + "id:12345\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -656,6 +677,7 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(browseDone.getHeaders().get(Stomp.Headers.Message.DESTINATION) != null);
 
         String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
                        "receipt:1\n" + "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(unsub);
 
@@ -678,6 +700,7 @@ public class Stomp11Test extends StompTestSupport {
     public void testSendMessageWithStandardHeadersEncoded() throws Exception {
 
         MessageConsumer consumer = session.createConsumer(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3501
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n" +
                 "accept-version:1.1" + "\n\n" + Stomp.NULL;
@@ -709,7 +732,9 @@ public class Stomp11Test extends StompTestSupport {
     public void testSendMessageWithRepeatedEntries() throws Exception {
 
         MessageConsumer consumer = session.createConsumer(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3929
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n" +
                 "accept-version:1.1" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -718,6 +743,7 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame = "SEND\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3917
                 "value:newest" + "\n" +
                 "value:older" + "\n" +
                 "value:oldest" + "\n" +
@@ -735,6 +761,7 @@ public class Stomp11Test extends StompTestSupport {
     @Test(timeout = 60000)
     public void testSubscribeWithMessageSentWithEncodedProperties() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n" +  "accept-version:1.1" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -761,6 +788,7 @@ public class Stomp11Test extends StompTestSupport {
     @Test(timeout = 60000)
     public void testNackMessage() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3670
         String connectFrame = "STOMP\n" +
                 "login:system\n" +
                 "passcode:manager\n" +
@@ -813,8 +841,17 @@ public class Stomp11Test extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testHeaderValuesAreNotWSTrimmed() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         stompConnection.setVersion(Stomp.V1_1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String connectFrame = "STOMP\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
                               "login:system\n" +
                               "passcode:manager\n" +
                               "accept-version:1.1\n" +
@@ -854,6 +891,7 @@ public class Stomp11Test extends StompTestSupport {
     @Test(timeout = 60000)
     public void testDurableSubAndUnSubOnTwoTopics() throws Exception {
         stompConnection.setVersion(Stomp.V1_1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3917
 
         String domain = "org.apache.activemq";
         ObjectName brokerName = new ObjectName(domain + ":type=Broker,brokerName=localhost");
@@ -900,6 +938,7 @@ public class Stomp11Test extends StompTestSupport {
         frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -948,6 +987,8 @@ public class Stomp11Test extends StompTestSupport {
 
         String domain = "org.apache.activemq";
         ObjectName brokerName = new ObjectName(domain + ":type=Broker,brokerName=localhost");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         BrokerViewMBean view = (BrokerViewMBean)brokerService.getManagementContext().newProxyInstance(brokerName, BrokerViewMBean.class, true);
 
@@ -1020,6 +1061,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.setVersion(Stomp.V1_1);
 
         final BrokerViewMBean view = getProxyToBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
         String connectFrame = "STOMP\n" + "login:system\n" + "passcode:manager\n" +
                 "accept-version:1.1\n" + "host:localhost\n" + "client-id:test\n" + "\n" + Stomp.NULL;
@@ -1060,6 +1102,7 @@ public class Stomp11Test extends StompTestSupport {
         frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         assertTrue(Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -1073,6 +1116,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(connectFrame);
         frame = stompConnection.receiveFrame();
         LOG.debug("Broker sent: " + frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
         assertTrue(frame.contains("CONNECTED"));
         assertEquals(view.getDurableTopicSubscribers().length, 0);
         assertEquals(view.getInactiveDurableTopicSubscribers().length, 2);
@@ -1132,6 +1176,7 @@ public class Stomp11Test extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testTransactionRollbackAllowsSecondAckOutsideTXClientAck() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6697
         doTestTransactionRollbackAllowsSecondAckOutsideTXClientAck("client");
     }
 
@@ -1142,6 +1187,7 @@ public class Stomp11Test extends StompTestSupport {
 
     public void doTestTransactionRollbackAllowsSecondAckOutsideTXClientAck(String ackMode) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6697
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Hello"));
         producer.close();
@@ -1153,6 +1199,7 @@ public class Stomp11Test extends StompTestSupport {
         String f = stompConnection.receiveFrame();
         assertTrue(f.startsWith("CONNECTED"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6697
         final QueueViewMBean queueView = getProxyToQueue(getQueueName());
         assertEquals(1, queueView.getQueueSize());
 
@@ -1160,6 +1207,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+//IC see: https://issues.apache.org/jira/browse/AMQ-6697
             "id:12345\n" + "ack:" + ackMode + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -1200,6 +1248,7 @@ public class Stomp11Test extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testAckMessagesInTransactionOutOfOrderWithTXClientAck() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6796
         doTestAckMessagesInTransactionOutOfOrderWithTXClientAck("client");
     }
 

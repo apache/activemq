@@ -135,6 +135,7 @@ public class AMQ4952Test {
     }
 
     public void repeat() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6411
         for (int i=0; i<10; i++) {
             LOG.info("Iteration: " + i);
             testConsumerBrokerRestart();
@@ -165,6 +166,7 @@ public class AMQ4952Test {
 
                     while (true) {
                         TextMessage textMsg = (TextMessage) messageConsumer.receive(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6411
 
                         if (textMsg == null) {
                             textMsg = (TextMessage) messageConsumer.receive(4000);
@@ -279,10 +281,13 @@ public class AMQ4952Test {
     @Before
     public void setUp() throws Exception {
         LOG.debug("Running with enableCursorAudit set to {}", this.enableCursorAudit);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6411
         stopConsumerBroker = new CountDownLatch(1);
         consumerBrokerRestarted = new CountDownLatch(1);
         consumerRestartedAndMessageForwarded = new CountDownLatch(1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
+//IC see: https://issues.apache.org/jira/browse/AMQ-1957
         doSetUp();
     }
 
@@ -295,6 +300,8 @@ public class AMQ4952Test {
 
         DataSource dataSource = ((JDBCPersistenceAdapter)producerBroker.getPersistenceAdapter()).getDataSource();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
+//IC see: https://issues.apache.org/jira/browse/AMQ-1957
             producerBroker.stop();
         } catch (Exception ex) {
         } finally {
@@ -416,6 +423,8 @@ public class AMQ4952Test {
         PolicyEntry policy = new PolicyEntry();
 
         policy.setQueue(">");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
+//IC see: https://issues.apache.org/jira/browse/AMQ-1957
         policy.setEnableAudit(enableCursorAudit);
         policy.setExpireMessagesPeriod(0);
 

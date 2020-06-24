@@ -66,6 +66,8 @@ public class FailoverClusterTestSupport extends TestCase {
             public boolean isSatisified() throws Exception {
                 set.clear();
                 for (ActiveMQConnection c : connections) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
                     if (c.getTransportChannel().getRemoteAddress() != null) {
                         set.add(c.getTransportChannel().getRemoteAddress());
                     }
@@ -106,6 +108,7 @@ public class FailoverClusterTestSupport extends TestCase {
     }
 
     protected void assertAllConnected(final int expected) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
         assertTrue("All connections connected!", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -128,6 +131,8 @@ public class FailoverClusterTestSupport extends TestCase {
     }
 
     protected void assertBrokerInfo(String brokerName) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3699
+//IC see: https://issues.apache.org/jira/browse/AMQ-6124
         for (ActiveMQConnection c : connections) {
             assertEquals(brokerName, c.getBrokerInfo().getBrokerName());
         }
@@ -142,6 +147,7 @@ public class FailoverClusterTestSupport extends TestCase {
     }
 
     protected void stopBroker(String name) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3699
         BrokerService broker = brokers.remove(name);
         broker.stop();
         broker.waitUntilStopped();
@@ -155,6 +161,7 @@ public class FailoverClusterTestSupport extends TestCase {
         for (BrokerService b : brokers.values()) {
             try {
                 b.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
                 b.waitUntilStopped();
             } catch (Exception e) {
                 // Keep on going, we want to try and stop them all.
@@ -192,6 +199,7 @@ public class FailoverClusterTestSupport extends TestCase {
             connector.setUpdateClusterClients(false);
             connector.setUpdateClusterClientsOnRemove(false);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
         connector.getPublishedAddressPolicy().setPublishedHostStrategy(PublishedAddressPolicy.PublishedHostStrategy.IPADDRESS);
     }
 
@@ -212,6 +220,7 @@ public class FailoverClusterTestSupport extends TestCase {
     @SuppressWarnings("unused")
     protected void createClients(int numOfClients) throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(clientUrl);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
         for (int i = 0; i < numOfClients; i++) {
             ActiveMQConnection c = (ActiveMQConnection) factory.createConnection();
             c.start();

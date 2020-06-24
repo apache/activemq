@@ -39,6 +39,7 @@ public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
 
     public XalanXPathEvaluator(String xpathExpression, DocumentBuilder builder) throws Exception {
         this.xpathExpression = xpathExpression;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5333
         if (builder != null) {
             this.builder = builder;
         } else {
@@ -72,6 +73,8 @@ public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
     private boolean evaluate(String text) {
         try {
             InputSource inputSource = new InputSource(new StringReader(text));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5333
+//IC see: https://issues.apache.org/jira/browse/AMQ-5333
             Document inputDocument = builder.parse(inputSource);
             return ((Boolean) xpath.evaluate(xpathExpression, inputDocument, XPathConstants.BOOLEAN)).booleanValue();
         } catch (Exception e) {

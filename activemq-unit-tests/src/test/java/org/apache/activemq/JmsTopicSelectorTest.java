@@ -145,6 +145,7 @@ public class JmsTopicSelectorTest extends TestSupport {
 
     public void testEmptyPropertySelector() throws Exception {
         int remaining = 5;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2528
         Message message = null;
         consumer = createConsumer("");
         sendMessages();
@@ -156,6 +157,7 @@ public class JmsTopicSelectorTest extends TestSupport {
 
             remaining--;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
         assertEquals(0, remaining);
         consumer.close();
         consumeMessages(remaining);
@@ -178,6 +180,7 @@ public class JmsTopicSelectorTest extends TestSupport {
             }
             remaining--;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
         assertEquals(3, remaining);
         consumer.close();
         consumeMessages(remaining);
@@ -200,6 +203,7 @@ public class JmsTopicSelectorTest extends TestSupport {
             }
             remaining--;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
         assertEquals(2, remaining);
         consumer.close();
         consumeMessages(remaining);

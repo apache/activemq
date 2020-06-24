@@ -130,18 +130,23 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription, Throwable poisonCause) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7062
         if (messageReference.isExpired() || (poisonCause != null && poisonCause.getMessage() != null && poisonCause.getMessage().contains(DUPLICATE_FROM_STORE_MSG_PREFIX))) {
             // there are three uses of  sendToDeadLetterQueue, we are only interested in valid messages
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
             return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
         } else {
             try {
                 Destination regionDestination = (Destination) messageReference.getRegionDestination();
                 final RedeliveryPolicy redeliveryPolicy = redeliveryPolicyMap.getEntryFor(regionDestination.getActiveMQDestination());
                 if (redeliveryPolicy != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4362
                     final int maximumRedeliveries = redeliveryPolicy.getMaximumRedeliveries();
                     int redeliveryCount = messageReference.getRedeliveryCounter();
                     if (RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES == maximumRedeliveries || redeliveryCount < maximumRedeliveries) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5674
                         long delay = redeliveryPolicy.getInitialRedeliveryDelay();
                         for (int i = 0; i < redeliveryCount; i++) {
                             delay = redeliveryPolicy.getNextRedeliveryDelay(delay);
@@ -149,6 +154,8 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
 
                         scheduleRedelivery(context, messageReference, delay, ++redeliveryCount);
                     } else if (isSendToDlqIfMaxRetriesExceeded()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                         return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
                     } else {
                         LOG.debug("Discarding message that exceeds max redelivery count({}), {}", maximumRedeliveries, messageReference.getMessageId());
@@ -173,6 +180,7 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
         if (LOG.isTraceEnabled()) {
             Destination regionDestination = (Destination) messageReference.getRegionDestination();
             LOG.trace("redelivery #{} of: {} with delay: {}, dest: {}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                     redeliveryCount, messageReference.getMessageId(), delay, regionDestination.getActiveMQDestination()
             });
         }

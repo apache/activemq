@@ -58,12 +58,15 @@ public class AnnotatedMBean extends StandardMBean {
     private static AuditLogService auditLog;
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3877
         Class<?>[] p = { byte.class, short.class, int.class, long.class, float.class, double.class, char.class, boolean.class, };
         for (Class<?> c : p) {
             primitives.put(c.getName(), c);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6764
         audit = byteFromProperty("org.apache.activemq.audit");
         if (audit != OFF) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3100
             auditLog = AuditLogService.getAuditLog();
         }
     }
@@ -90,6 +93,7 @@ public class AnnotatedMBean extends StandardMBean {
 
         for (Class c : object.getClass().getInterfaces()) {
             if (mbeanName.equals(c.getName())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7094
                 context.registerMBean(new AnnotatedMBean(object, c, objectName), objectName);
                 return;
             }
@@ -101,6 +105,7 @@ public class AnnotatedMBean extends StandardMBean {
     /** Instance where the MBean interface is implemented by another object. */
     public <T> AnnotatedMBean(T impl, Class<T> mbeanInterface, ObjectName objectName) throws NotCompliantMBeanException {
         super(impl, mbeanInterface);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7094
         this.objectName = objectName;
     }
 
@@ -202,6 +207,7 @@ public class AnnotatedMBean extends StandardMBean {
 
     @Override
     public Object invoke(String s, Object[] objects, String[] strings) throws MBeanException, ReflectionException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6764
         JMXAuditLogEntry entry = null;
         if (audit != OFF) {
             Subject subject = Subject.getSubject(AccessController.getContext());
@@ -213,12 +219,16 @@ public class AnnotatedMBean extends StandardMBean {
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6764
             entry = new JMXAuditLogEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3100
             entry.setUser(caller);
             entry.setTimestamp(System.currentTimeMillis());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7094
             entry.setTarget(extractTargetTypeProperty(objectName));
             entry.setOperation(this.getMBeanInfo().getClassName() + "." + s);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5729
             try
             {
                if (objects.length == strings.length)
@@ -238,6 +248,7 @@ public class AnnotatedMBean extends StandardMBean {
                entry.getParameters().put("arguments", objects);
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6764
             if ((audit&ENTRY) == ENTRY) {
                 auditLog.log(entry);
             }
@@ -251,6 +262,7 @@ public class AnnotatedMBean extends StandardMBean {
     }
 
     // keep brokerName last b/c objectNames include the brokerName
+//IC see: https://issues.apache.org/jira/browse/AMQ-7094
     final static String[] targetPropertiesCandidates = new String[] {"destinationName", "networkConnectorName", "connectorName", "connectionName", "brokerName"};
     private String extractTargetTypeProperty(ObjectName objectName) {
         String result = null;

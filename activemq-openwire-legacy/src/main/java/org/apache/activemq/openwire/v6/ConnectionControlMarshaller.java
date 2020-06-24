@@ -71,6 +71,7 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         info.setFaultTolerant(bs.readBoolean());
         info.setResume(bs.readBoolean());
         info.setSuspend(bs.readBoolean());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         info.setConnectedBrokers(tightUnmarshalString(dataIn, bs));
         info.setReconnectTo(tightUnmarshalString(dataIn, bs));
         info.setRebalanceConnection(bs.readBoolean());
@@ -91,6 +92,7 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         bs.writeBoolean(info.isFaultTolerant());
         bs.writeBoolean(info.isResume());
         bs.writeBoolean(info.isSuspend());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         rc += tightMarshalString1(info.getConnectedBrokers(), bs);
         rc += tightMarshalString1(info.getReconnectTo(), bs);
         bs.writeBoolean(info.isRebalanceConnection());
@@ -114,6 +116,7 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         bs.readBoolean();
         bs.readBoolean();
         bs.readBoolean();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         tightMarshalString2(info.getConnectedBrokers(), dataOut, bs);
         tightMarshalString2(info.getReconnectTo(), dataOut, bs);
         bs.readBoolean();
@@ -136,6 +139,7 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         info.setFaultTolerant(dataIn.readBoolean());
         info.setResume(dataIn.readBoolean());
         info.setSuspend(dataIn.readBoolean());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         info.setConnectedBrokers(looseUnmarshalString(dataIn));
         info.setReconnectTo(looseUnmarshalString(dataIn));
         info.setRebalanceConnection(dataIn.readBoolean());
@@ -156,6 +160,7 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         dataOut.writeBoolean(info.isFaultTolerant());
         dataOut.writeBoolean(info.isResume());
         dataOut.writeBoolean(info.isSuspend());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         looseMarshalString(info.getConnectedBrokers(), dataOut);
         looseMarshalString(info.getReconnectTo(), dataOut);
         dataOut.writeBoolean(info.isRebalanceConnection());

@@ -84,6 +84,7 @@ public interface PersistenceAdapter extends Service {
      *            Destination to forget
      */
     void removeQueueMessageStore(ActiveMQQueue destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2053
 
     /**
      * Cleanup method to remove any state associated with the given destination
@@ -179,6 +180,7 @@ public interface PersistenceAdapter extends Service {
      * @return the directory used by the persistence adaptor
      */
     File getDirectory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3573
 
     /**
      * checkpoint any
@@ -188,6 +190,7 @@ public interface PersistenceAdapter extends Service {
      *
      */
     void checkpoint(boolean cleanup) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7086
 
     /**
      * A hint to return the size of the store on disk
@@ -207,5 +210,6 @@ public interface PersistenceAdapter extends Service {
      */
     long getLastProducerSequenceId(ProducerId id) throws IOException;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
     void allowIOResumption();
 }

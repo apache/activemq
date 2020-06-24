@@ -39,6 +39,7 @@ public class Sequence extends LinkedNode<Sequence> {
     }
 
     public boolean isBiggerButNotAdjacentToLast(long value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7055
         return last + 1 < value;
     }
 
@@ -56,6 +57,8 @@ public class Sequence extends LinkedNode<Sequence> {
     
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
         return first == last ? "" + first : first + ".." + last;
     }
 

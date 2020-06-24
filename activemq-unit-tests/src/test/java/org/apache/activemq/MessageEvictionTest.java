@@ -69,12 +69,14 @@ public class MessageEvictionTest {
     protected String payload = new String(new byte[1024*2]);
 
     public void setUp(PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2626
         broker = createBroker(pendingSubscriberPolicy);
         broker.start();
         connectionFactory = createConnectionFactory();
         connection = connectionFactory.createConnection();
         connection.start();
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
         destination = session.createTopic(destinationName);
     }
 
@@ -86,6 +88,7 @@ public class MessageEvictionTest {
 
     @Test
     public void testMessageEvictionMemoryUsageFileCursor() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
         setUp(new FilePendingSubscriberMessageStoragePolicy());
         doTestMessageEvictionMemoryUsage();
     }
@@ -154,6 +157,7 @@ public class MessageEvictionTest {
 
         ExecutorService executor = Executors.newCachedThreadPool();
         final CountDownLatch doAck = new CountDownLatch(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
         final CountDownLatch ackDone = new CountDownLatch(1);
         final CountDownLatch consumerRegistered = new CountDownLatch(1);
         executor.execute(new Runnable() {
@@ -169,6 +173,7 @@ public class MessageEvictionTest {
                                 doAck.await(60, TimeUnit.SECONDS);
                                 LOG.info("acking: " + message.getJMSMessageID());
                                 message.acknowledge();
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
                                 ackDone.countDown();
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -213,6 +218,7 @@ public class MessageEvictionTest {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
         assertTrue("messages sending done", sendDone.await(180, TimeUnit.SECONDS));
         assertEquals("all message were sent", numMessages, sent.get());
 
@@ -220,6 +226,7 @@ public class MessageEvictionTest {
         executor.shutdown();
         executor.awaitTermination(30, TimeUnit.SECONDS);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2626
         assertTrue("usage goes to 0 once consumer goes away", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -243,12 +250,14 @@ public class MessageEvictionTest {
         entry.setTopic(">");
 
         entry.setAdvisoryForDiscardingMessages(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
 
         // so consumer does not get over run while blocked limit the prefetch
         entry.setTopicPrefetch(50);
 
 
         entry.setPendingSubscriberPolicy(pendingSubscriberPolicy);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2626
 
         // limit the number of outstanding messages, large enough to use the file store
         // or small enough not to blow memory limit

@@ -49,14 +49,17 @@ public abstract class ServiceSupport implements Service {
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
             boolean success = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3347
             stopped.set(false);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
                 preStart();
                 doStart();
                 success = true;
             } finally {
                 started.set(success);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
             for(ServiceListener l:this.serviceListeners) {
                 l.started(this);
             }
@@ -71,12 +74,14 @@ public abstract class ServiceSupport implements Service {
                 doStop(stopper);
             } catch (Exception e) {
                 stopper.onException(this, e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
             } finally {
                 postStop(stopper);
             }
             stopped.set(true);
             started.set(false);
             stopping.set(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
             for(ServiceListener l:this.serviceListeners) {
                 l.stopped(this);
             }
@@ -106,6 +111,7 @@ public abstract class ServiceSupport implements Service {
     }
     
     public void addServiceListener(ServiceListener l) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
         this.serviceListeners.add(l);
     }
     

@@ -46,6 +46,7 @@ public interface NetworkBridgeListener {
      * @param message
      */
     void onOutboundMessage (NetworkBridge bridge,Message message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
 
     /**
      * Called for when a message arrives over the network

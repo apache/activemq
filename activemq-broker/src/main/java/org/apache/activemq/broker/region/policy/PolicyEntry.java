@@ -115,16 +115,22 @@ public class PolicyEntry extends DestinationMapEntry {
 
 
     public void configure(Broker broker,Queue queue) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         baseConfiguration(broker,queue);
         if (dispatchPolicy != null) {
             queue.setDispatchPolicy(dispatchPolicy);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         queue.setDeadLetterStrategy(getDeadLetterStrategy());
+//IC see: https://issues.apache.org/jira/browse/AMQ-769
         queue.setMessageGroupMapFactory(getMessageGroupMapFactory());
         if (memoryLimit > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1510
             queue.getMemoryUsage().setLimit(memoryLimit);
         }
         if (pendingQueuePolicy != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1562
             PendingMessageCursor messages = pendingQueuePolicy.getQueuePendingMessageCursor(broker,queue);
             queue.setMessages(messages);
         }
@@ -136,10 +142,12 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setTimeBeforeDispatchStarts(getTimeBeforeDispatchStarts());
         queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
         queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         queue.setPersistJMSRedelivered(isPersistJMSRedelivered());
     }
 
     public void update(Queue queue) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
         update(queue, null);
     }
 
@@ -156,9 +164,11 @@ public class PolicyEntry extends DestinationMapEntry {
     public void update(Queue queue, Set<String> includedProperties) {
         baseUpdate(queue, includedProperties);
         if (isUpdate("memoryLimit", includedProperties) && memoryLimit > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
             queue.getMemoryUsage().setLimit(memoryLimit);
         }
         if (isUpdate("useConsumerPriority", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1560
             queue.setUseConsumerPriority(isUseConsumerPriority());
         }
         if (isUpdate("strictOrderDispatch", includedProperties)) {
@@ -177,18 +187,23 @@ public class PolicyEntry extends DestinationMapEntry {
             queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
         }
         if (isUpdate("allConsumersExclusiveByDefault", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2795
             queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
         }
         if (isUpdate("persistJMSRedelivered", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
             queue.setPersistJMSRedelivered(isPersistJMSRedelivered());
         }
     }
 
     public void configure(Broker broker,Topic topic) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         baseConfiguration(broker,topic);
         if (dispatchPolicy != null) {
             topic.setDispatchPolicy(dispatchPolicy);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         topic.setDeadLetterStrategy(getDeadLetterStrategy());
         if (subscriptionRecoveryPolicy != null) {
             SubscriptionRecoveryPolicy srp = subscriptionRecoveryPolicy.copy();
@@ -202,6 +217,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void update(Topic topic) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
         update(topic, null);
     }
 
@@ -210,6 +226,8 @@ public class PolicyEntry extends DestinationMapEntry {
     public void update(Topic topic, Set<String> includedProperties) {
         baseUpdate(topic, includedProperties);
         if (isUpdate("memoryLimit", includedProperties) && memoryLimit > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1510
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
             topic.getMemoryUsage().setLimit(memoryLimit);
         }
         if (isUpdate("lazyDispatch", includedProperties)) {
@@ -230,6 +248,7 @@ public class PolicyEntry extends DestinationMapEntry {
             destination.setProducerFlowControl(isProducerFlowControl());
         }
         if (isUpdate("alwaysRetroactive", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2911
             destination.setAlwaysRetroactive(isAlwaysRetroactive());
         }
         if (isUpdate("blockedProducerWarningInterval", includedProperties)) {
@@ -239,6 +258,8 @@ public class PolicyEntry extends DestinationMapEntry {
             destination.setMaxPageSize(getMaxPageSize());
         }
         if (isUpdate("maxBrowsePageSize", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
+//IC see: https://issues.apache.org/jira/browse/AMQ-1914
             destination.setMaxBrowsePageSize(getMaxBrowsePageSize());
         }
 
@@ -249,6 +270,7 @@ public class PolicyEntry extends DestinationMapEntry {
             destination.setMaxExpirePageSize(getMaxExpirePageSize());
         }
         if (isUpdate("cursorMemoryHighWaterMark", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
             destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         }
         if (isUpdate("storeUsageHighWaterMark", includedProperties)) {
@@ -258,18 +280,23 @@ public class PolicyEntry extends DestinationMapEntry {
             destination.setGcIfInactive(isGcInactiveDestinations());
         }
         if (isUpdate("gcWithNetworkConsumers", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
         }
         if (isUpdate("inactiveTimeoutBeforeGc", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5253
             destination.setInactiveTimeoutBeforeGC(getInactiveTimeoutBeforeGC());
         }
         if (isUpdate("reduceMemoryFootprint", includedProperties)) {
             destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
         }
         if (isUpdate("doOptimizeMessageStore", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
             destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
         }
         if (isUpdate("optimizeMessageStoreInFlightLimit", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
             destination.setOptimizeMessageStoreInFlightLimit(getOptimizeMessageStoreInFlightLimit());
         }
         if (isUpdate("advisoryForConsumed", includedProperties)) {
@@ -285,12 +312,14 @@ public class PolicyEntry extends DestinationMapEntry {
             destination.setAdvisoryForSlowConsumers(isAdvisoryForSlowConsumers());
         }
         if (isUpdate("advisoryForFastProducers", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
             destination.setAdvisoryForFastProducers(isAdvisoryForFastProducers());
         }
         if (isUpdate("advisoryWhenFull", includedProperties)) {
             destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
         }
         if (isUpdate("includeBodyForAdvisory", includedProperties)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
             destination.setIncludeBodyForAdvisory(isIncludeBodyForAdvisory());
         }
         if (isUpdate("sendAdvisoryIfNoConsumers", includedProperties)) {
@@ -305,16 +334,23 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setMaxProducersToAudit(getMaxProducersToAudit());
         destination.setUseCache(isUseCache());
         destination.setExpireMessagesPeriod(getExpireMessagesPeriod());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         SlowConsumerStrategy scs = getSlowConsumerStrategy();
         if (scs != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
             scs.setBrokerService(broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
             scs.addDestination(destination);
         }
         destination.setSlowConsumerStrategy(scs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         destination.setPrioritizedMessages(isPrioritizedMessages());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
         if (sendFailIfNoSpace != -1) {
             destination.getSystemUsage().setSendFailIfNoSpace(isSendFailIfNoSpace());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
         if (sendFailIfNoSpaceAfterTimeout != -1) {
             destination.getSystemUsage().setSendFailIfNoSpaceAfterTimeout(getSendFailIfNoSpaceAfterTimeout());
         }
@@ -322,9 +358,13 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
         configurePrefetch(subscription);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6577
         subscription.setUsePrefetchExtension(isUsePrefetchExtension());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6199
         subscription.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         subscription.setUseTopicSubscriptionInflightStats(isUseTopicSubscriptionInflightStats());
+//IC see: https://issues.apache.org/jira/browse/AMQ-606
         if (pendingMessageLimitStrategy != null) {
             int value = pendingMessageLimitStrategy.getMaximumPendingMessageLimit(subscription);
             int consumerLimit = subscription.getInfo().getMaximumPendingMessageLimit();
@@ -344,8 +384,10 @@ public class PolicyEntry extends DestinationMapEntry {
         if (pendingSubscriberPolicy != null) {
             String name = subscription.getContext().getClientId() + "_" + subscription.getConsumerInfo().getConsumerId();
             int maxBatchSize = subscription.getConsumerInfo().getPrefetchSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
             subscription.setMatched(pendingSubscriberPolicy.getSubscriberPendingMessageCursor(broker,name, maxBatchSize,subscription));
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2704
         if (enableAudit) {
             subscription.setEnableAudit(enableAudit);
             subscription.setMaxProducersToAudit(maxProducersToAudit);
@@ -370,11 +412,13 @@ public class PolicyEntry extends DestinationMapEntry {
             sub.setMaxAuditDepth(auditDepth);
         }
         sub.setMaxProducersToAudit(getMaxProducersToAudit());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
         sub.setUsePrefetchExtension(isUsePrefetchExtension());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, QueueBrowserSubscription sub) {
         configurePrefetch(sub);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         sub.setUsePrefetchExtension(isUsePrefetchExtension());
 
@@ -382,15 +426,25 @@ public class PolicyEntry extends DestinationMapEntry {
         // We currently need an infinite audit because of the way that browser dispatch
         // is done.  We should refactor the browsers to better handle message dispatch so
         // we can remove this and perform a more efficient dispatch.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
         sub.setMaxProducersToAudit(Integer.MAX_VALUE);
         sub.setMaxAuditDepth(Short.MAX_VALUE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
 
         // part solution - dispatching to browsers needs to be restricted
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
+//IC see: https://issues.apache.org/jira/browse/AMQ-4595
         sub.setMaxMessages(getMaxBrowsePageSize());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, QueueSubscription sub) {
         configurePrefetch(sub);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         sub.setUsePrefetchExtension(isUsePrefetchExtension());
         sub.setMaxProducersToAudit(getMaxProducersToAudit());
@@ -424,6 +478,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     private boolean isUpdate(String property, Set<String> includedProperties) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
         return includedProperties == null || includedProperties.contains(property);
     }
     // Properties
@@ -457,6 +512,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public DeadLetterStrategy getDeadLetterStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-459
         return deadLetterStrategy;
     }
 
@@ -497,6 +553,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public long getMemoryLimit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-633
         return memoryLimit;
     }
 
@@ -509,7 +566,9 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public MessageGroupMapFactory getMessageGroupMapFactory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-769
         if (messageGroupMapFactory == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4766
             try {
             messageGroupMapFactory = GroupFactoryFinder.createMessageGroupMapFactory(getMessageGroupMapFactoryType());
             }catch(Exception e){
@@ -531,6 +590,7 @@ public class PolicyEntry extends DestinationMapEntry {
 
 
     public String getMessageGroupMapFactoryType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4766
         return messageGroupMapFactoryType;
     }
 
@@ -600,6 +660,7 @@ public class PolicyEntry extends DestinationMapEntry {
      * @return true if topic is always retroactive
      */
     public boolean isAlwaysRetroactive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2911
         return alwaysRetroactive;
     }
 
@@ -636,6 +697,8 @@ public class PolicyEntry extends DestinationMapEntry {
      * @return the maxProducersToAudit
      */
     public int getMaxProducersToAudit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
         return maxProducersToAudit;
     }
 
@@ -675,6 +738,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public int getMaxQueueAuditDepth() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         return maxQueueAuditDepth;
     }
 
@@ -699,6 +763,8 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public int getMaxBrowsePageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
+//IC see: https://issues.apache.org/jira/browse/AMQ-1914
         return maxBrowsePageSize;
     }
 
@@ -723,6 +789,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public boolean isUseConsumerPriority() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1560
         return useConsumerPriority;
     }
 
@@ -766,6 +833,9 @@ public class PolicyEntry extends DestinationMapEntry {
      * @return the advisoryForSlowConsumers
      */
     public boolean isAdvisoryForSlowConsumers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
         return advisoryForSlowConsumers;
     }
 
@@ -837,6 +907,7 @@ public class PolicyEntry extends DestinationMapEntry {
      * @return the advisdoryForFastProducers
      */
     public boolean isAdvisoryForFastProducers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
         return advisoryForFastProducers;
     }
 
@@ -854,6 +925,7 @@ public class PolicyEntry extends DestinationMapEntry {
      * @return
      */
     public boolean isIncludeBodyForAdvisory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
         return includeBodyForAdvisory;
     }
 
@@ -868,6 +940,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void setMaxExpirePageSize(int maxExpirePageSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         this.maxExpirePageSize = maxExpirePageSize;
     }
 
@@ -888,6 +961,7 @@ public class PolicyEntry extends DestinationMapEntry {
      * @return the queuePrefetch
      */
     public int getQueuePrefetch() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1846
         return this.queuePrefetch;
     }
 
@@ -956,6 +1030,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public int getCursorMemoryHighWaterMark() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
         return this.cursorMemoryHighWaterMark;
     }
 
@@ -964,6 +1039,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void setStoreUsageHighWaterMark(int storeUsageHighWaterMark) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
         this.storeUsageHighWaterMark = storeUsageHighWaterMark;
     }
 
@@ -972,6 +1048,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void setSlowConsumerStrategy(SlowConsumerStrategy slowConsumerStrategy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
         this.slowConsumerStrategy = slowConsumerStrategy;
     }
 
@@ -981,6 +1058,7 @@ public class PolicyEntry extends DestinationMapEntry {
 
 
     public boolean isPrioritizedMessages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         return this.prioritizedMessages;
     }
 
@@ -989,6 +1067,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void setAllConsumersExclusiveByDefault(boolean allConsumersExclusiveByDefault) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2795
         this.allConsumersExclusiveByDefault = allConsumersExclusiveByDefault;
     }
 
@@ -997,6 +1076,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public boolean isGcInactiveDestinations() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2821
         return this.gcInactiveDestinations;
     }
 
@@ -1011,6 +1091,7 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     @Deprecated
     public long getInactiveTimoutBeforeGC() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5253
         return getInactiveTimeoutBeforeGC();
     }
 
@@ -1045,6 +1126,8 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void setGcWithNetworkConsumers(boolean gcWithNetworkConsumers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         this.gcWithNetworkConsumers = gcWithNetworkConsumers;
     }
 
@@ -1061,6 +1144,8 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void setNetworkBridgeFilterFactory(NetworkBridgeFilterFactory networkBridgeFilterFactory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         this.networkBridgeFilterFactory = networkBridgeFilterFactory;
     }
 
@@ -1069,6 +1154,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public boolean isDoOptimzeMessageStorage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
         return doOptimzeMessageStorage;
     }
 
@@ -1077,6 +1163,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public int getOptimizeMessageStoreInFlightLimit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
         return optimizeMessageStoreInFlightLimit;
     }
 
@@ -1085,6 +1172,8 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void setPersistJMSRedelivered(boolean val) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         this.persistJMSRedelivered = val;
     }
 
@@ -1108,10 +1197,12 @@ public class PolicyEntry extends DestinationMapEntry {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5972
         return "PolicyEntry [" + destination + "]";
     }
 
     public void setSendFailIfNoSpace(boolean val) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
         if (val) {
             this.sendFailIfNoSpace = 1;
         } else {
@@ -1132,6 +1223,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public boolean isUseTopicSubscriptionInflightStats() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         return useTopicSubscriptionInflightStats;
     }
 

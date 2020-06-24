@@ -53,13 +53,17 @@ public class IdGenerator {
 
         if (canAccessSystemProps) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5652
             hostName = System.getProperty(PROPERTY_IDGENERATOR_HOSTNAME);
             int localPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_LOCALPORT, "0"));
 
             int idGeneratorPort = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4588
             ServerSocket ss = null;
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5652
                 if( hostName==null ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2965
                     hostName = InetAddressUtil.getLocalHostName();
                 }
                 if( localPort==0 ) {
@@ -72,6 +76,7 @@ public class IdGenerator {
                 } else {
                     stub = "-" + localPort + "-" + System.currentTimeMillis() + "-";
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4958
             } catch (Exception e) {
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("could not generate unique stub by using DNS and binding to local port", e);
@@ -99,10 +104,12 @@ public class IdGenerator {
             }
         }
         // fallback
+//IC see: https://issues.apache.org/jira/browse/AMQ-3614
         if (hostName == null) {
             hostName = "localhost";
         }
         hostName = sanitizeHostName(hostName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2505
 
         if (stub.length() == 0) {
             stub = "-1-" + System.currentTimeMillis() + "-";
@@ -116,11 +123,13 @@ public class IdGenerator {
     public IdGenerator(String prefix) {
         synchronized (UNIQUE_STUB) {
             this.seed = prefix + UNIQUE_STUB + (instanceCount++) + ":";
+//IC see: https://issues.apache.org/jira/browse/AMQ-2932
             this.length = this.seed.length() + ("" + Long.MAX_VALUE).length();
         }
     }
 
     public IdGenerator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-836
         this("ID:" + hostName);
     }
 
@@ -140,6 +149,7 @@ public class IdGenerator {
      * @return a unique id
      */
     public synchronized String generateId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2932
         StringBuilder sb = new StringBuilder(length);
         sb.append(seed);
         sb.append(sequence.getAndIncrement());
@@ -149,6 +159,7 @@ public class IdGenerator {
     public static String sanitizeHostName(String hostName) {
         boolean changed = false;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2505
         StringBuilder sb = new StringBuilder();
         for (char ch : hostName.toCharArray()) {
             // only include ASCII chars
@@ -192,6 +203,7 @@ public class IdGenerator {
         if (id != null) {
             int index = id.lastIndexOf(':');
             if (index > 0 && (index + 1) < id.length()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3422
                 result = id.substring(0, index);
             }
         }

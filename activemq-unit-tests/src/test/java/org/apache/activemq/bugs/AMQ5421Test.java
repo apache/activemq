@@ -75,6 +75,7 @@ public class AMQ5421Test {
         policy.setTopicPrefetch(10);
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         brokerService.setUseJmx(false);
         brokerService.setDestinationPolicy(pMap);
         brokerService.addConnector("tcp://0.0.0.0:0");

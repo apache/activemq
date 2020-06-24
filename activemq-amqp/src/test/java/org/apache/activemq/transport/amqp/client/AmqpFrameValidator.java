@@ -74,6 +74,7 @@ public class AmqpFrameValidator {
     }
 
     public boolean isValid() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6484
         return errorMessage.get() != null;
     }
 

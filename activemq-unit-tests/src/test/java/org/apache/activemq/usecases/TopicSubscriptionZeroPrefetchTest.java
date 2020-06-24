@@ -63,6 +63,7 @@ public class TopicSubscriptionZeroPrefetchTest {
     private BrokerService brokerService;
 
     public String getTopicName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         return name.getMethodName();
     }
 
@@ -77,6 +78,7 @@ public class TopicSubscriptionZeroPrefetchTest {
         connection = activeMQConnectionFactory.createConnection();
         connection.setClientID("ClientID-1");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         destination = new ActiveMQTopic(getTopicName());
         producer = session.createProducer(destination);
 
@@ -89,6 +91,7 @@ public class TopicSubscriptionZeroPrefetchTest {
     @Test(timeout = 60000)
     public void testTopicConsumerPrefetchZero() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         ActiveMQTopic consumerDestination = new ActiveMQTopic(getTopicName() + "?consumer.retroactive=true&consumer.prefetchSize=0");
         consumer = session.createConsumer(consumerDestination);
 
@@ -103,6 +106,7 @@ public class TopicSubscriptionZeroPrefetchTest {
 
     @Test(timeout = 60000)
     public void testTopicConsumerPrefetchZeroClientAckLoopReceive() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         ActiveMQTopic consumerDestination = new ActiveMQTopic(getTopicName() + "?consumer.retroactive=true&consumer.prefetchSize=0");
         Session consumerClientAckSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         consumer = consumerClientAckSession.createConsumer(consumerDestination);
@@ -263,6 +267,8 @@ public class TopicSubscriptionZeroPrefetchTest {
     public void testReceiveTimeoutRespectedWithExpiryProcessing() throws Exception {
 
         ActiveMQTopic consumerDestination = new ActiveMQTopic(getTopicName() + "?consumer.prefetchSize=0");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6979
+//IC see: https://issues.apache.org/jira/browse/AMQ-5129
 
         for (int i=0; i<500; i++) {
             consumer = session.createDurableSubscriber(consumerDestination, "mysub-" + i);
@@ -299,6 +305,8 @@ public class TopicSubscriptionZeroPrefetchTest {
         broker.setUseJmx(false);
         broker.setDeleteAllMessagesOnStartup(true);
         broker.addConnector("vm://localhost");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6979
+//IC see: https://issues.apache.org/jira/browse/AMQ-5129
         PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setExpireMessagesPeriod(5000);
         policyEntry.setMaxExpirePageSize(2000);

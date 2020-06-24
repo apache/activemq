@@ -50,6 +50,8 @@ public class AMQ4487Test {
     public void startBroker() throws Exception {
         broker = new BrokerService();
         broker.deleteAllMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
         broker.setUseJmx(false);
         broker.setAdvisorySupport(false);
 
@@ -62,6 +64,8 @@ public class AMQ4487Test {
 
         broker.start();
         broker.waitUntilStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
         factory = new ActiveMQConnectionFactory("vm://localhost");
     }
 
@@ -98,6 +102,8 @@ public class AMQ4487Test {
 
     @Test
     public void testBrowsingWithMoreThanMaxAuditDepth() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4487
+//IC see: https://issues.apache.org/jira/browse/AMQ-4372
         doTestBrowsing(300);
     }
 

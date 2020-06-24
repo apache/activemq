@@ -53,16 +53,21 @@ public class VirtualTopicInterceptor extends DestinationFilter {
 
     public VirtualTopicInterceptor(Destination next, VirtualTopic virtualTopic) {
         super(next);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
         this.prefix = virtualTopic.getPrefix();
         this.postfix = virtualTopic.getPostfix();
         this.local = virtualTopic.isLocal();
         this.concurrentSend = virtualTopic.isConcurrentSend();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
         this.transactedSend = virtualTopic.isTransactedSend();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
         this.dropMessageOnResourceLimit = virtualTopic.isDropOnResourceLimit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6100
         this.setOriginalDestination = virtualTopic.isSetOriginalDestination();
     }
 
     public Topic getTopic() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4356
         return (Topic) this.next;
     }
 
@@ -72,11 +77,13 @@ public class VirtualTopicInterceptor extends DestinationFilter {
             ActiveMQDestination queueConsumers = getQueueConsumersWildcard(message.getDestination());
             send(context, message, queueConsumers);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1435
         super.send(context, message);
     }
 
     @Override
     protected void send(final ProducerBrokerExchange context, final Message message, ActiveMQDestination destination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
         final Broker broker = context.getConnectionContext().getBroker();
         final Set<Destination> destinations = broker.getDestinations(destination);
         final int numDestinations = destinations.size();
@@ -97,8 +104,10 @@ public class VirtualTopicInterceptor extends DestinationFilter {
                             public void run() {
                                 try {
                                     if (exceptionAtomicReference.get() == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6100
                                         dest.send(context, copy(message, dest.getActiveMQDestination()));
                                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
                                 } catch (ResourceAllocationException e) {
                                     if (!dropMessageOnResourceLimit) {
                                         exceptionAtomicReference.set(e);
@@ -122,7 +131,9 @@ public class VirtualTopicInterceptor extends DestinationFilter {
             } else {
                 for (final Destination dest : destinations) {
                     if (shouldDispatch(broker, message, dest)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
                         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6100
                             dest.send(context, copy(message, dest.getActiveMQDestination()));
                         } catch (ResourceAllocationException e) {
                             if (!dropMessageOnResourceLimit) {
@@ -138,7 +149,9 @@ public class VirtualTopicInterceptor extends DestinationFilter {
     }
 
     private Message copy(Message original, ActiveMQDestination target) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6100
         Message msg = original.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6100
         if (setOriginalDestination) {
             msg.setDestination(target);
             msg.setOriginalDestination(original.getDestination());
@@ -148,6 +161,7 @@ public class VirtualTopicInterceptor extends DestinationFilter {
 
     private LocalTransactionId beginLocalTransaction(int numDestinations, ConnectionContext connectionContext, Message message) throws Exception {
         LocalTransactionId result = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
         if (transactedSend && numDestinations > 1 && message.isPersistent() && message.getTransactionId() == null) {
             result = new LocalTransactionId(new ConnectionId(message.getMessageId().getProducerId().toString()), message.getMessageId().getProducerSequenceId());
             connectionContext.getBroker().beginTransaction(connectionContext, result);
@@ -173,6 +187,8 @@ public class VirtualTopicInterceptor extends DestinationFilter {
 
     protected ActiveMQDestination getQueueConsumersWildcard(ActiveMQDestination original) {
         ActiveMQQueue queue;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4571
+//IC see: https://issues.apache.org/jira/browse/AMQ-4356
         synchronized (cache) {
             queue = cache.get(original);
             if (queue == null) {

@@ -42,9 +42,11 @@ public class ProducerThread extends Thread {
     int transactionBatchSize;
 
     int transactions = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
     AtomicInteger sentCount = new AtomicInteger(0);
     String message;
     String messageText = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
     String payloadUrl = null;
     byte[] payload = null;
     boolean running = false;
@@ -70,6 +72,7 @@ public class ProducerThread extends Thread {
             LOG.info(threadName +  " Started to calculate elapsed time ...\n");
             long tStart = System.currentTimeMillis();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
             if (runIndefinitely) {
                 while (running) {
                     synchronized (this) {
@@ -110,6 +113,7 @@ public class ProducerThread extends Thread {
     }
 
     private void sendMessage(MessageProducer producer, String threadName) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
         Message message = createMessage(sentCount.get());
         producer.send(message);
         if (LOG.isDebugEnabled()) {
@@ -136,6 +140,7 @@ public class ProducerThread extends Thread {
     }
 
     protected Message createMessage(int i) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         Message answer;
         if (payload != null) {
             answer = session.createBytesMessage();
@@ -145,6 +150,7 @@ public class ProducerThread extends Thread {
                 if (messageText == null) {
                     messageText = readInputStream(getClass().getResourceAsStream("demo.txt"), textMessageSize, i);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
             } else if (payloadUrl != null) {
                 messageText = readInputStream(new URL(payloadUrl).openStream(), -1, i);
             } else if (message != null) {
@@ -204,6 +210,7 @@ public class ProducerThread extends Thread {
     }
 
     public int getSentCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
         return sentCount.get();
     }
 
@@ -272,6 +279,7 @@ public class ProducerThread extends Thread {
     }
 
     public String getPayloadUrl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         return payloadUrl;
     }
 
@@ -288,6 +296,7 @@ public class ProducerThread extends Thread {
     }
 
     public boolean isRunIndefinitely() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
         return runIndefinitely;
     }
 

@@ -50,12 +50,17 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCMessagePriorityTest.class);
     DataSource dataSource;
     JDBCPersistenceAdapter jdbc;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
 
     @Override
     protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception {
         jdbc = new JDBCPersistenceAdapter();
         dataSource = jdbc.getDataSource();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
         jdbc.deleteAllMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
         jdbc.setCleanupPeriod(2000);
         return jdbc;
     }
@@ -63,6 +68,8 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
     // this cannot be a general test as kahaDB just has support for 3 priority levels
     public void testDurableSubsReconnectWithFourLevels() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         ActiveMQTopic topic = (ActiveMQTopic) sess.createTopic("TEST");
         final String subName = "priorityDisconnect";
         TopicSubscriber sub = sess.createDurableSubscriber(topic, subName);
@@ -114,6 +121,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
     public void testConcurrentDurableSubsReconnectWithXLevels() throws Exception {
         ActiveMQTopic topic = (ActiveMQTopic) sess.createTopic("TEST");
         final String subName = "priorityDisconnect";
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         Connection consumerConn = factory.createConnection();
         consumerConn.setClientID("priorityDisconnect");
         consumerConn.start();
@@ -125,6 +133,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         final int maxPriority = 5;
 
         final AtomicInteger[] messageCounts = new AtomicInteger[maxPriority];
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
         final long[] messageIds = new long[maxPriority];
         Vector<ProducerThread> producers = new Vector<ProducerThread>();
         for (int priority = 0; priority < maxPriority; priority++) {
@@ -139,12 +148,14 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
         final int closeFrequency = MSG_NUM / 2;
         HashMap<String, String> dups = new HashMap<String, String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         sub = consumerSession.createDurableSubscriber(topic, subName);
         for (int i = 0; i < MSG_NUM * maxPriority; i++) {
             Message msg = sub.receive(10000);
             LOG.debug("received i=" + i + ", m=" + (msg != null ?
                     msg.getJMSMessageID() + ", priority: " + msg.getJMSPriority()
                     : null));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
             assertNotNull("Message " + i + " was null, counts: " + Arrays.toString(messageCounts), msg);
             assertNull("no duplicate message failed on : " + msg.getJMSMessageID(), dups.put(msg.getJMSMessageID(), subName));
             messageCounts[msg.getJMSPriority()].incrementAndGet();
@@ -154,6 +165,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
             if (i > 0 && i % closeFrequency == 0) {
                 LOG.info("Closing durable sub.. on: " + i + ", counts: " + Arrays.toString(messageCounts));
                 sub.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                 sub = consumerSession.createDurableSubscriber(topic, subName);
             }
         }
@@ -271,6 +283,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
     public void testCleanupPriorityDestination() throws Exception {
         assertEquals("no messages pending", 0, messageTableCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
 
         ActiveMQTopic topic = (ActiveMQTopic) sess.createTopic("TEST");
         final String subName = "priorityConcurrent";

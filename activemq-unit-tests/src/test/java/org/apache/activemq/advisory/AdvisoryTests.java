@@ -71,6 +71,7 @@ public class AdvisoryTests {
 
     @Parameters(name = "includeBodyForAdvisory={0}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
         return Arrays.asList(new Object[][] {
                 // Include the full body of the message
                 {true},
@@ -116,6 +117,8 @@ public class AdvisoryTests {
         MessageConsumer consumer = s.createConsumer(queue);
         assertNotNull(consumer);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         Topic advisoryTopic = AdvisorySupport.getSlowConsumerAdvisoryTopic((ActiveMQDestination) queue);
         s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
@@ -189,8 +192,12 @@ public class AdvisoryTests {
 
         //This should always be tcp:// because that is the transport that is used to connect even though
         //the nio transport is the first one in the list
+//IC see: https://issues.apache.org/jira/browse/AMQ-5705
+//IC see: https://issues.apache.org/jira/browse/AMQ-5705
         assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
         assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), ((ActiveMQDestination) queue).getQualifiedName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
 
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
@@ -215,6 +222,7 @@ public class AdvisoryTests {
             producer.send(m);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         Message msg = advisoryConsumer.receive(EXPIRE_MESSAGE_PERIOD);
         assertNotNull(msg);
         ActiveMQMessage message = (ActiveMQMessage) msg;
@@ -230,6 +238,7 @@ public class AdvisoryTests {
 
     @Test(timeout = 60000)
     public void testMessageDLQd() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5718
         ActiveMQPrefetchPolicy policy = new ActiveMQPrefetchPolicy();
         policy.setTopicPrefetch(2);
         ((ActiveMQConnection) connection).setPrefetchPolicy(policy);
@@ -241,6 +250,7 @@ public class AdvisoryTests {
             s.createConsumer(advisoryTopic);
         }
         MessageConsumer advisoryConsumer = s.createConsumer(AdvisorySupport.getMessageDLQdAdvisoryTopic((ActiveMQDestination) topic));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
 
         MessageProducer producer = s.createProducer(topic);
         int count = 10;
@@ -255,6 +265,7 @@ public class AdvisoryTests {
         ActiveMQMessage message = (ActiveMQMessage) msg;
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
         //This should be set
+//IC see: https://issues.apache.org/jira/browse/AMQ-5705
         assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
         //Add assertion to make sure body is included for DLQ advisory topics
         //when includeBodyForAdvisory is true
@@ -265,6 +276,7 @@ public class AdvisoryTests {
 
     @Test(timeout = 60000)
     public void testMessageDiscardedAdvisory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
         Session s = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         Topic topic = s.createTopic(getClass().getName());
         MessageConsumer consumer = s.createConsumer(topic);
@@ -277,26 +289,34 @@ public class AdvisoryTests {
         int count = (new ActiveMQPrefetchPolicy().getTopicPrefetch() * 2);
         for (int i = 0; i < count; i++) {
             BytesMessage m = s.createBytesMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
             m.writeBytes(new byte[1024]);
             producer.send(m);
         }
 
         Message msg = advisoryConsumer.receive(1000);
         assertNotNull(msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
         ActiveMQMessage message = (ActiveMQMessage) msg;
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
 
         //This should be set
+//IC see: https://issues.apache.org/jira/browse/AMQ-5705
+//IC see: https://issues.apache.org/jira/browse/AMQ-5705
         assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
         assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), ((ActiveMQDestination) topic).getQualifiedName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
 
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
         assertIncludeBodyForAdvisory(payload);
     }
 
     @Test(timeout = 60000)
     public void testMessageDeliveryVTAdvisory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         ActiveMQTopic vt = new ActiveMQTopic("VirtualTopic.TEST");
 
@@ -355,6 +375,7 @@ public class AdvisoryTests {
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         return new ActiveMQConnectionFactory(broker.getTransportConnectorByName("OpenWire").getPublishableConnectString());
     }
 
@@ -368,15 +389,19 @@ public class AdvisoryTests {
     protected void configureBroker(BrokerService answer) throws Exception {
         answer.setPersistent(false);
         PolicyEntry policy = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         policy.setExpireMessagesPeriod(EXPIRE_MESSAGE_PERIOD);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
         policy.setAdvisoryForFastProducers(true);
         policy.setAdvisoryForConsumed(true);
         policy.setAdvisoryForDelivery(true);
         policy.setAdvisoryForDiscardingMessages(true);
         policy.setAdvisoryForSlowConsumers(true);
         policy.setAdvisoryWhenFull(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
         policy.setIncludeBodyForAdvisory(includeBodyForAdvisory);
         policy.setProducerFlowControl(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         ConstantPendingMessageLimitStrategy strategy = new ConstantPendingMessageLimitStrategy();
         strategy.setLimit(10);
         policy.setPendingMessageLimitStrategy(strategy);
@@ -384,12 +409,15 @@ public class AdvisoryTests {
         pMap.setDefaultEntry(policy);
 
         answer.setDestinationPolicy(pMap);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5705
         answer.addConnector("nio://localhost:0");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         answer.addConnector("tcp://localhost:0").setName("OpenWire");
         answer.setDeleteAllMessagesOnStartup(true);
     }
 
     protected void assertIncludeBodyForAdvisory(ActiveMQMessage payload) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5843
         if (includeBodyForAdvisory) {
             assertNotNull(payload.getContent());
         } else {

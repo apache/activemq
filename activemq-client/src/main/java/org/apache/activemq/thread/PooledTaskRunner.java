@@ -44,6 +44,7 @@ class PooledTaskRunner implements TaskRunner {
             @Override
             public void run() {
                 runningThread = Thread.currentThread();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1647
                 try {
                     runTask();
                 } finally {
@@ -127,6 +128,7 @@ class PooledTaskRunner implements TaskRunner {
         // Don't synchronize while we are iterating so that
         // multiple wakeup() calls can be executed concurrently.
         boolean done = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1647
         try {
             for (int i = 0; i < maxIterationsPerRun; i++) {
                 LOG.trace("Running task iteration {} - {}", i, task);
@@ -136,12 +138,15 @@ class PooledTaskRunner implements TaskRunner {
                 }
             }
         } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5071
             synchronized (runable) {
                 iterating = false;
                 runable.notifyAll();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1686
                 if (shutdown) {
                     queued = false;
                     runable.notifyAll();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6434
                 } else {
                     // If we could not iterate all the items
                     // then we need to re-queue.

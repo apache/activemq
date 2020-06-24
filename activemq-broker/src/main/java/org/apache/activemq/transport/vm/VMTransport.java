@@ -90,10 +90,12 @@ public class VMTransport implements Transport, Task {
 
         try {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
             if (peer.disposed.get()) {
                 throw new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed.");
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
             if (peer.async) {
                 peer.getMessageQueue().put(command);
                 peer.wakeup();
@@ -125,7 +127,10 @@ public class VMTransport implements Transport, Task {
                 }
             }
         } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
             Thread.currentThread().interrupt();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
             InterruptedIOException iioe = new InterruptedIOException(e.getMessage());
             iioe.initCause(e);
             throw iioe;
@@ -140,6 +145,7 @@ public class VMTransport implements Transport, Task {
             // Lock here on the target transport's started since we want to wait for its start()
             // method to finish dispatching out of the queue before we do our own.
             synchronized (transport.started) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3873
 
                 // Ensure that no additional commands entered the queue in the small time window
                 // before the start method locks the dispatch lock and the oneway method was in
@@ -161,6 +167,7 @@ public class VMTransport implements Transport, Task {
     }
 
     public void doDispatch(VMTransport transport, TransportListener transportListener, Object command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4977
         transport.receiveCounter++;
         transportListener.onCommand(command);
     }
@@ -182,6 +189,7 @@ public class VMTransport implements Transport, Task {
                     LinkedBlockingQueue<Object> mq = getMessageQueue();
                     Object command;
                     while ((command = mq.poll()) != null && !disposed.get() ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
                         receiveCounter++;
                         doDispatch(this, transportListener, command);
                     }
@@ -216,6 +224,7 @@ public class VMTransport implements Transport, Task {
                     tr.shutdown(1);
                 } catch(Exception e) {
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5138
                 tr = null;
             }
 
@@ -223,12 +232,16 @@ public class VMTransport implements Transport, Task {
                 // let the peer know that we are disconnecting after attempting
                 // to cleanly shutdown the async tasks so that this is the last
                 // command it see's.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
+//IC see: https://issues.apache.org/jira/browse/AMQ-4532
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2902
                     peer.transportListener.onCommand(new ShutdownInfo());
                 } catch (Exception ignore) {
                 }
 
                 // let any requests pending a response see an exception
+//IC see: https://issues.apache.org/jira/browse/AMQ-4532
                 try {
                     peer.transportListener.onException(new TransportDisposedIOException("peer (" + this + ") stopped."));
                 } catch (Exception ignore) {
@@ -236,6 +249,7 @@ public class VMTransport implements Transport, Task {
             }
 
             // shutdown task runner factory
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
             if (taskRunnerFactory != null) {
                 taskRunnerFactory.shutdownNow();
                 taskRunnerFactory = null;
@@ -261,6 +275,7 @@ public class VMTransport implements Transport, Task {
     public boolean iterate() {
 
         final TransportListener tl = transportListener;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
 
         LinkedBlockingQueue<Object> mq;
         try {
@@ -271,7 +286,9 @@ public class VMTransport implements Transport, Task {
 
         Object command = mq.poll();
         if (command != null && !disposed.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6494
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4977
                 tl.onCommand(command);
             } catch (Exception e) {
                 try {
@@ -294,6 +311,7 @@ public class VMTransport implements Transport, Task {
     }
 
     public LinkedBlockingQueue<Object> getMessageQueue() throws TransportDisposedIOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
         LinkedBlockingQueue<Object> result = messageQueue;
         if (result == null) {
             synchronized (this) {
@@ -320,6 +338,7 @@ public class VMTransport implements Transport, Task {
                         throw new TransportDisposedIOException("The Transport has been disposed");
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                     String name = "ActiveMQ VMTransport: " + toString();
                     if (taskRunnerFactory == null) {
                         taskRunnerFactory = new TaskRunnerFactory(name);
@@ -376,6 +395,7 @@ public class VMTransport implements Transport, Task {
     @Override
     public String getRemoteAddress() {
         if (peer != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-753
             return peer.toString();
         }
         return null;
@@ -421,6 +441,7 @@ public class VMTransport implements Transport, Task {
 
     @Override
     public boolean isConnected() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
         return !disposed.get();
     }
 
@@ -431,6 +452,7 @@ public class VMTransport implements Transport, Task {
 
     @Override
     public boolean isReconnectSupported() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return false;
     }
 
@@ -441,16 +463,19 @@ public class VMTransport implements Transport, Task {
 
     @Override
     public void updateURIs(boolean reblance,URI[] uris) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
         throw new IOException("URI update feature not supported");
     }
 
     @Override
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         return receiveCounter;
     }
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return null;
     }
 

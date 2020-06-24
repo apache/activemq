@@ -74,6 +74,7 @@ public class ActiveMQMessageAuditTest extends TestCase {
             list.add(id);
             assertFalse(audit.isDuplicate(id));
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1742
         List<String> windowList = list.subList(list.size() -1 -audit.getAuditDepth(), list.size() -1);
         for (String id : windowList) {
             assertTrue("duplicate, id:" + id, audit.isDuplicate(id));
@@ -96,8 +97,11 @@ public class ActiveMQMessageAuditTest extends TestCase {
             ActiveMQMessage msg = new ActiveMQMessage();
             msg.setMessageId(id);
             list.add(msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
             assertFalse(audit.isDuplicate(msg.getMessageId()));
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1742
         List<MessageReference> windowList = list.subList(list.size() -1 -audit.getAuditDepth(), list.size() -1);
         for (MessageReference msg : windowList) {
             assertTrue("duplicate msg:" + msg, audit.isDuplicate(msg));
@@ -114,6 +118,7 @@ public class ActiveMQMessageAuditTest extends TestCase {
             String id = idGen.generateId();
             if (i==0) {
                 assertFalse(audit.isDuplicate(id));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
                 assertTrue(audit.isInOrder(id));
             }
             if (i > 1 && i%2 != 0) {
@@ -129,6 +134,7 @@ public class ActiveMQMessageAuditTest extends TestCase {
 
     public void testSerialization() throws Exception {
         ActiveMQMessageAuditNoSync audit = new ActiveMQMessageAuditNoSync();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3422
 
         byte[] bytes =  serialize(audit);
         LOG.debug("Length: " + bytes.length);

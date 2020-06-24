@@ -86,6 +86,7 @@ public class CramMD5Mechanism extends AbstractMechanism {
 
     @Override
     public boolean isApplicable(String username, String password) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         return username != null && username.length() > 0 && password != null && password.length() > 0;
     }
 }

@@ -72,6 +72,7 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
         stompConnection.open("localhost", 61614);
         // Creating a temp queue
         stompConnection.sendFrame("CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
 
         StompFrame frame = stompConnection.receive();
         assertTrue(frame.toString().startsWith("CONNECTED"));
@@ -108,6 +109,7 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
         assertEquals("Advisory topic should have been deleted", 0, advisoryTopicsForTempQueues);
         advisoryTopicsForTempQueues = countTopicsByName("BrokerC", "ActiveMQ.Advisory.Consumer.Queue.ID");
         assertEquals("Advisory topic should have been deleted", 0, advisoryTopicsForTempQueues);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
 
         LOG.info("Restarting brokerA");
         BrokerItem brokerItem = brokers.remove("BrokerA");

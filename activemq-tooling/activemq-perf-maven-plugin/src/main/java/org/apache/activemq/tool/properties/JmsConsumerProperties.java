@@ -79,6 +79,7 @@ public class JmsConsumerProperties extends JmsClientProperties {
     }
     
     public void setRecvDelay(long delay) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
     	this.recvDelay = delay;
     }
     
@@ -87,6 +88,7 @@ public class JmsConsumerProperties extends JmsClientProperties {
     }
     
     public String getMessageSelector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3280
     	return this.messageSelector;
     }
     

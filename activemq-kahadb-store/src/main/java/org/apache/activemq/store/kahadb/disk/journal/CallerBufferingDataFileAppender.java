@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 class CallerBufferingDataFileAppender extends DataFileAppender {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
 
     private static final Logger logger = LoggerFactory.getLogger(CallerBufferingDataFileAppender.class);
 
@@ -74,6 +75,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
     }
 
     public CallerBufferingDataFileAppender(Journal dataManager) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         super(dataManager);
     }
 
@@ -88,6 +90,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
     @Override
     protected void processQueue() {
         DataFile dataFile = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3725
         RecoverableRandomAccessFile file = null;
         WriteBatch wb = null;
         try {
@@ -115,6 +118,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                 wb = (WriteBatch)o;
                 if (dataFile != wb.dataFile) {
                     if (file != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
                         if (periodicSync) {
                             if (logger.isTraceEnabled()) {
                                 logger.trace("Syning file {} on rotate", dataFile.getFile().getName());
@@ -137,6 +141,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                 buff.skip(5+Journal.BATCH_CONTROL_RECORD_MAGIC.length);
                 buff.writeInt(sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE);
                 if( journal.isChecksum() ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
                     Checksum checksum = new Adler32();
                     checksum.update(sequence.getData(), sequence.getOffset()+Journal.BATCH_CONTROL_RECORD_SIZE, sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE);
                     buff.writeLong(checksum.getValue());
@@ -158,6 +163,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                 file.write(sequence.getData(), sequence.getOffset(), sequence.getLength());
                 ReplicationTarget replicationTarget = journal.getReplicationTarget();
                 if( replicationTarget!=null ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
                     replicationTarget.replicate(wb.writes.getHead().location, sequence, forceToDisk);
                 }
 
@@ -169,6 +175,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                 journal.setLastAppendLocation(lastWrite.location);
                 signalDone(wb);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
 
             }
         } catch (IOException e) {
@@ -187,6 +194,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
         } finally {
             try {
                 if (file != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
                     if (periodicSync) {
                         if (logger.isTraceEnabled()) {
                             logger.trace("Syning file {} on close", dataFile.getFile().getName());
@@ -209,6 +217,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
         buff.writeInt(write.location.getSize());
         buff.writeByte(write.location.getType());
         buff.write(write.data.getData(), write.data.getOffset(), write.data.getLength());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         return write.sync | (syncOnComplete && write.onComplete != null);
     }
 }

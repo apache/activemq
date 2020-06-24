@@ -50,6 +50,7 @@ public class StorePendingDurableSubscriberMessageStoragePolicy implements Pendin
     }
 
     public boolean isUseCache() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
         return useCache;
     }
 
@@ -69,6 +70,7 @@ public class StorePendingDurableSubscriberMessageStoragePolicy implements Pendin
      */
     public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String clientId, String name, int maxBatchSize, DurableTopicSubscription sub) {
         StoreDurableSubscriberCursor cursor = new StoreDurableSubscriberCursor(broker,clientId, name, maxBatchSize, sub);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
         cursor.setUseCache(isUseCache());
         cursor.setImmediatePriorityDispatch(isImmediatePriorityDispatch());
         return cursor;

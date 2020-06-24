@@ -57,6 +57,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // lets consume any outstanding messages from previous test runs
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
         while (consumer.receive(1000) != null) {
         }
@@ -72,6 +73,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
 
         ArrayList<Message> messages = new ArrayList<Message>();
         beginTx();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         Message message = consumer.receive(2000);
         assertEquals(outbound[0], message);
 
@@ -84,7 +86,9 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
 
         // Consume again.. the previous message should
         // get redelivered.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         message = consumer.receive(2000);
         assertNotNull("Should have re-received the first message again!", message);
         messages.add(message);
@@ -95,6 +99,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         messages.add(message);
         assertEquals(outbound[1], message);
         commitTx();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
 
         Message inbound[] = new Message[messages.size()];
         messages.toArray(inbound);
@@ -116,6 +121,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
             // Session that sends messages
             {
                 Session session = resourceProvider.createSession(connection);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
                 this.session = session;
                 MessageProducer producer = resourceProvider.createProducer(session, destination);
                 // consumer = resourceProvider.createConsumer(session,
@@ -154,6 +160,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message"), session.createTextMessage("Third Message")};
 
         // lets consume any outstanding messages from previous test runs
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
         while (consumer.receive(1000) != null) {
         }
@@ -207,6 +214,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
     }
 
     public void testCloseConsumer() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3485
         Destination dest = session.createQueue(getSubject() + "?consumer.prefetchSize=0");
         producer = session.createProducer(dest);
         beginTx();
@@ -229,6 +237,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         String text2 = ((TextMessage)message2).getText();
         assertNotNull(message2);
         assertEquals("message 2", text2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         commitTx();
     }
 

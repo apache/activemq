@@ -27,6 +27,7 @@ public class ThroughputSamplerTask extends AbstractPerformanceSampler {
     private final List<MeasurableClient> clients = new CopyOnWriteArrayList<>();
 
     public void registerClient(MeasurableClient client) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
         clients.add(client);
     }
 

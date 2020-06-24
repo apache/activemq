@@ -111,6 +111,7 @@ public class PooledConnectionSecurityExceptionTest {
 
     @Test
     public void testFailureGetsNewConnectionOnRetryLooped() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6290
         for (int i = 0; i < 10; ++i) {
             testFailureGetsNewConnectionOnRetry();
         }
@@ -233,6 +234,7 @@ public class PooledConnectionSecurityExceptionTest {
             @Override
             public boolean isSatisified() throws Exception {
                 return connection1.getConnection() !=
+//IC see: https://issues.apache.org/jira/browse/AMQ-6290
                           ((PooledConnection) pooledConnFact.createConnection("invalid", "credentials")).getConnection();
             }
         }));

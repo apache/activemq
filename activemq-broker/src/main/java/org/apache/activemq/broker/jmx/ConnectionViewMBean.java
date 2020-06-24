@@ -67,6 +67,8 @@ public interface ConnectionViewMBean extends Service {
      */
     @MBeanInfo("client id for this connection")
     String getClientId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
     /**
      * Returns the number of messages to be dispatched to this connection
@@ -83,6 +85,7 @@ public interface ConnectionViewMBean extends Service {
      */
     @MBeanInfo("User Name used to authorize creation of this connection")
     String getUserName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
 
     /**
      * Returns the ObjectNames of all the Consumers created by this Connection.
@@ -91,6 +94,7 @@ public interface ConnectionViewMBean extends Service {
      */
     @MBeanInfo("The ObjectNames of all Consumers created by this Connection")
     ObjectName[] getConsumers();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1905
 
     /**
      * Returns the ObjectNames of all the Producers created by this Connection.

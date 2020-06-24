@@ -82,6 +82,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
     @Override
     public void close() throws JMSException {
         this.cleanupAllLoanedSessions();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7233
         this.cleanupConnectionTemporaryDestinations();
         if (this.pool != null) {
             this.pool.decrementReferenceCount();
@@ -122,6 +123,8 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
 
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5510
+//IC see: https://issues.apache.org/jira/browse/AMQ-5534
         return pool.getParentExceptionListener();
     }
 
@@ -132,6 +135,8 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
 
     @Override
     public void setExceptionListener(ExceptionListener exceptionListener) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5510
+//IC see: https://issues.apache.org/jira/browse/AMQ-5534
         pool.setParentExceptionListener(exceptionListener);
     }
 
@@ -165,6 +170,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
     @Override
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
         PooledSession result = (PooledSession) pool.createSession(transacted, ackMode);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
 
         // Store the session so we can close the sessions that this PooledConnection
         // created in order to ensure that consumers etc are closed per the JMS contract.

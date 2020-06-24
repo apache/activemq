@@ -41,6 +41,7 @@ public class VMPendingDurableSubscriberMessageStoragePolicy implements PendingDu
      * @return the Pending Message cursor
      */
     public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String clientId, String name,int maxBatchSize, DurableTopicSubscription sub) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         return new VMPendingMessageCursor(AbstractPendingMessageCursor.isPrioritizedMessageSubscriber(broker, sub));
     }
 }

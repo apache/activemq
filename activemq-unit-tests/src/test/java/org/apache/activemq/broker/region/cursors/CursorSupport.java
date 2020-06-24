@@ -77,6 +77,7 @@ public abstract class CursorSupport extends CombinationTestSupport {
         consumer = getConsumer(consumerConnection);
         List<Message> consumerList = new ArrayList<Message>();
         for (int i = 0; i < MESSAGE_COUNT; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1095
             Message msg = consumer.receive(1000*5);
             assertNotNull("Message "+i+" was missing.", msg);
             consumerList.add(msg);
@@ -87,6 +88,8 @@ public abstract class CursorSupport extends CombinationTestSupport {
 
 
     public void initCombosForTestSendWhilstConsume() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1902
+//IC see: https://issues.apache.org/jira/browse/AMQ-1866
         addCombinationValues("MESSAGE_COUNT", new Object[] {Integer.valueOf(400),
                                                            Integer.valueOf(500)});
         addCombinationValues("PREFETCH_SIZE", new Object[] {Integer.valueOf(100),

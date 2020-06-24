@@ -71,6 +71,7 @@ public class ReliableReconnectTest extends org.apache.activemq.TestSupport {
     }
 
     public ActiveMQConnectionFactory getConnectionFactory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1645
         return new ActiveMQConnectionFactory();
     }
 

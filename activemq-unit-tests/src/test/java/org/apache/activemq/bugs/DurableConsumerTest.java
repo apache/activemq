@@ -135,6 +135,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
             
             topicConnectionFactory = new ActiveMQConnectionFactory(CONNECTION_URL);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2303
                 topic = new ActiveMQTopic(TOPIC_NAME);
                 topicConnection = topicConnectionFactory.createTopicConnection();
                 topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -197,7 +198,10 @@ public class DurableConsumerTest extends CombinationTestSupport{
         broker = createBroker(false);
         configurePersistence(broker);
         broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2303
         Thread.sleep(10000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         for (SimpleTopicSubscriber s:list) {
             s.closeConnection();
         }
@@ -213,12 +217,14 @@ public class DurableConsumerTest extends CombinationTestSupport{
     public void testConcurrentDurableConsumer() throws Exception{
         
         broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4656
         broker.waitUntilStarted();
         
         factory = createConnectionFactory();
         final String topicName = getName();
         final int numMessages = 500;
         int numConsumers = 1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
         final CountDownLatch counsumerStarted = new CountDownLatch(numConsumers);
         final AtomicInteger receivedCount = new AtomicInteger();
         Runnable consumer = new Runnable(){
@@ -245,6 +251,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
                             msg = consumer.receive(5000);
                             if (msg != null) {
                                 receivedCount.incrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
                                 if (received != 0 && received % 100 == 0) {
                                     LOG.info("Received msg: " + msg.getJMSMessageID());
                                 }
@@ -265,6 +272,8 @@ public class DurableConsumerTest extends CombinationTestSupport{
             }
         };
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
         ExecutorService executor = Executors.newFixedThreadPool(numConsumers);
         
         for (int i = 0; i < numConsumers; i++) {
@@ -294,14 +303,17 @@ public class DurableConsumerTest extends CombinationTestSupport{
         Wait.waitFor(new Wait.Condition(){
             public boolean isSatisified() throws Exception{
                 LOG.info("receivedCount: " + receivedCount.get());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
                 return receivedCount.get() == numMessages;
             }
         }, 360 * 1000);
         assertEquals("got required some messages", numMessages, receivedCount.get());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         assertTrue("no exceptions, but: " + exceptions, exceptions.isEmpty());
     }
     
     public void testConsumerRecover() throws Exception{
+//IC see: https://issues.apache.org/jira/browse/AMQ-2303
         doTestConsumer(true);
     }
     
@@ -311,6 +323,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
 
     public void testPrefetchViaBrokerConfig() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3095
         Integer prefetchVal = new Integer(150);
         PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setDurableTopicPrefetch(prefetchVal.intValue());
@@ -350,6 +363,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
         consumerConnection.close();
         broker.stop();
         broker = createBroker(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2303
         if (forceRecover) {
             configurePersistence(broker);
         }
@@ -372,6 +386,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
         producerConnection.close();
         broker.stop();
         broker = createBroker(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2303
         if (forceRecover) {
             configurePersistence(broker);
         }
@@ -406,9 +421,12 @@ public class DurableConsumerTest extends CombinationTestSupport{
     
     @Override
     protected void tearDown() throws Exception{
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
         super.tearDown();
         if (broker != null) {
             broker.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4656
             broker.waitUntilStopped();
             broker = null;
         }
@@ -444,6 +462,8 @@ public class DurableConsumerTest extends CombinationTestSupport{
         answer.addConnector(bindAddress);
         answer.setUseShutdownHook(false);
         answer.setAdvisorySupport(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
         answer.setDedicatedTaskRunner(useDedicatedTaskRunner);
     }
     

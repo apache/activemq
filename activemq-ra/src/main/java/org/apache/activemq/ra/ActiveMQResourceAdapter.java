@@ -78,14 +78,18 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
      */
     @Override
     public void start(BootstrapContext bootstrapContext) throws ResourceAdapterInternalException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5790
+//IC see: https://issues.apache.org/jira/browse/AMQ-4486
         log.debug("Start: " + this.getInfo());
         this.bootstrapContext = bootstrapContext;
         if (brokerXmlConfig != null && brokerXmlConfig.trim().length() > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1519
             brokerStartThread = new Thread("Starting ActiveMQ Broker") {
                 @Override
                 public void run () {
                     try {
                         // ensure RAR resources are available to xbean (needed for weblogic)
+//IC see: https://issues.apache.org/jira/browse/AMQ-2212
                         log.debug("original thread context classLoader: " + Thread.currentThread().getContextClassLoader());
                         Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
                         log.debug("current (from getClass()) thread context classLoader: " + Thread.currentThread().getContextClassLoader());
@@ -95,10 +99,12 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                         }
                         broker.start();
                         // Default the ServerUrl to the local broker if not specified in the ra.xml
+//IC see: https://issues.apache.org/jira/browse/AMQ-2354
                         if (getServerUrl() == null) {
                             setServerUrl("vm://" + broker.getBrokerName() + "?create=false");
                         }
                     } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-765
                         log.warn("Could not start up embeded ActiveMQ Broker '"+brokerXmlConfig+"': "+e.getMessage());
                         log.debug("Reason for: "+e.getMessage(), e);
                     }
@@ -114,11 +120,14 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                 Thread.currentThread().interrupt();
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5790
+//IC see: https://issues.apache.org/jira/browse/AMQ-4486
         started.compareAndSet(false, true);
     }
 
     public ActiveMQConnection makeConnection() throws JMSException {
         if( connectionFactory == null ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-765
             return makeConnection(getInfo());
         } else {
             return makeConnection(getInfo(), connectionFactory);
@@ -130,12 +139,15 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
      */
     @Override
     public ActiveMQConnection makeConnection(MessageActivationSpec activationSpec) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1779
         ActiveMQConnectionFactory cf = getConnectionFactory();
         if (cf == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5782
             cf = createConnectionFactory(getInfo(), activationSpec);
         }
         String userName = defaultValue(activationSpec.getUserName(), getInfo().getUserName());
         String password = defaultValue(activationSpec.getPassword(), getInfo().getPassword());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6905
         String clientId = defaultValue(activationSpec.getClientId(), getInfo().getClientid());
         if (clientId != null) {
             cf.setClientID(clientId);
@@ -159,6 +171,8 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
      */
     @Override
     public void stop() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5790
+//IC see: https://issues.apache.org/jira/browse/AMQ-4486
         log.debug("Stop: " + this.getInfo());
         started.compareAndSet(true, false);
         synchronized (endpointWorkers) {
@@ -168,6 +182,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1519
         synchronized( this ) {
             if (broker != null) {
                 if( brokerStartThread.isAlive() ) {
@@ -206,6 +221,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
         }
 
         if (!(activationSpec instanceof MessageActivationSpec)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4226
             throw new NotSupportedException("That type of ActivationSpec not supported: " + activationSpec.getClass());
         }
 
@@ -426,6 +442,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
 
         final MessageResourceAdapter activeMQResourceAdapter = (MessageResourceAdapter)o;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-765
         if (!getInfo().equals(activeMQResourceAdapter.getInfo())) {
             return false;
         }
@@ -442,6 +459,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
     @Override
     public int hashCode() {
         int result;
+//IC see: https://issues.apache.org/jira/browse/AMQ-765
         result = getInfo().hashCode();
         if (brokerXmlConfig != null) {
             result ^= brokerXmlConfig.hashCode();
@@ -454,6 +472,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
     }
 
     public void setConnectionFactory(ActiveMQConnectionFactory aConnectionFactory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1779
         this.connectionFactory = aConnectionFactory;
     }
 

@@ -45,6 +45,7 @@ public class UniquePropertyMessageEvictionStrategy extends MessageEvictionStrate
 
     @Override
     public MessageReference[] evictMessages(LinkedList messages) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3379
         MessageReference oldest = (MessageReference)messages.getFirst();
         HashMap<Object, MessageReference> pivots = new HashMap<Object, MessageReference>();
         Iterator iter = messages.iterator();
@@ -69,11 +70,13 @@ public class UniquePropertyMessageEvictionStrategy extends MessageEvictionStrate
                 messages.remove(ref);
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3379
             if (messages.size() != 0) {
                 return (MessageReference[])messages.toArray(new MessageReference[messages.size()]);
             }
         }
         return new MessageReference[] {oldest};
+//IC see: https://issues.apache.org/jira/browse/AMQ-3379
 
     }
 }

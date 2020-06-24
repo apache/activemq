@@ -49,12 +49,14 @@ public class ProducerBrokerExchange {
     }
 
     public ProducerBrokerExchange copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2435
         ProducerBrokerExchange rc = new ProducerBrokerExchange();
         rc.connectionContext = connectionContext.copy();
         rc.regionDestination = regionDestination;
         rc.region = region;
         rc.producerState = producerState;
         rc.mutable = mutable;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6614
         rc.flowControlInfo = flowControlInfo;
         return rc;
     }
@@ -137,6 +139,7 @@ public class ProducerBrokerExchange {
      */
     public boolean canDispatch(Message messageSend) {
         boolean canDispatch = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
         if (auditProducerSequenceIds && messageSend.isPersistent()) {
             final long producerSequenceId = messageSend.getMessageId().getProducerSequenceId();
             if (isNetworkProducer) {
@@ -150,6 +153,7 @@ public class ProducerBrokerExchange {
                 }
             } else if (producerSequenceId <= lastSendSequenceNumber.get()) {
                 canDispatch = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
                 if (messageSend.isInTransaction()) {
                     LOG.warn("suppressing duplicated message send [{}] with producerSequenceId [{}] <= last stored: {}", new Object[]{
                             (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()), producerSequenceId, lastSendSequenceNumber
@@ -188,6 +192,7 @@ public class ProducerBrokerExchange {
     }
 
     public void incrementSend() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
         flowControlInfo.incrementSend();
     }
 

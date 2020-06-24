@@ -51,6 +51,7 @@ public class DefaultUnresolvedDestinationTransformer implements UnresolvedDestin
 
     @Override
     public ActiveMQDestination transform(String dest) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3496
         return new ActiveMQQueue(dest);
     }
 }

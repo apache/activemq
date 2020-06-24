@@ -39,6 +39,7 @@ public class PropertiesLoader {
         FileNameKey key = new FileNameKey(nameProperty, fallbackName, options);
         key.setDebug(debug);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7423
         ReloadableProperties result = staticCache.computeIfAbsent(key, k -> new ReloadableProperties(k));
         return result.obtained();
     }
@@ -60,6 +61,7 @@ public class PropertiesLoader {
             absPath = file.getAbsolutePath();
             reload = booleanOption("reload", options);
             decrypt = booleanOption("decrypt", options);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
             algorithm = stringOption("algorithm", "PBEWithMD5AndDES", options);
         }
 
@@ -90,6 +92,7 @@ public class PropertiesLoader {
         }
 
         public String getAlgorithm() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
             return algorithm;
         }
 

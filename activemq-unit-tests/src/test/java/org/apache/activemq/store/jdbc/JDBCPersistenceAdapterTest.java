@@ -30,6 +30,9 @@ public class JDBCPersistenceAdapterTest extends PersistenceAdapterTestSupport {
         
         // explicitly enable audit as it is now off by default
         // due to org.apache.activemq.broker.ProducerBrokerExchange.canDispatch(Message)
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         jdbc.setEnableAudit(true);
         
         brokerService.setSchedulerSupport(false);
@@ -43,6 +46,7 @@ public class JDBCPersistenceAdapterTest extends PersistenceAdapterTestSupport {
     public void testAuditOff() throws Exception {
         pa.stop();
         pa = createPersistenceAdapter(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2519
         ((JDBCPersistenceAdapter)pa).setEnableAudit(false);
         pa.start();
     	boolean failed = true;

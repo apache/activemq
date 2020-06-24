@@ -47,9 +47,11 @@ public class ProxyTestSupport extends BrokerTestSupport {
         service.setBrokerName("broker1");
         service.setPersistent(false);
         service.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2767
 
         connector = service.addConnector(getLocalURI());
         proxyConnector = new ProxyConnector();
+//IC see: https://issues.apache.org/jira/browse/AMQ-522
         proxyConnector.setName("proxy");
         proxyConnector.setBind(new URI(getLocalProxyURI()));
         proxyConnector.setRemote(new URI("fanout:static://" + getRemoteURI()));
@@ -63,9 +65,11 @@ public class ProxyTestSupport extends BrokerTestSupport {
         service.setBrokerName("broker2");
         service.setPersistent(false);
         service.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2767
 
         remoteConnector = service.addConnector(getRemoteURI());
         remoteProxyConnector = new ProxyConnector();
+//IC see: https://issues.apache.org/jira/browse/AMQ-522
         remoteProxyConnector.setName("remoteProxy");
         remoteProxyConnector.setBind(new URI(getRemoteProxyURI()));
         remoteProxyConnector.setRemote(new URI("fanout:static://" + getLocalURI()));

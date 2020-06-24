@@ -173,6 +173,7 @@ public class BenchmarkSupport {
                 times++;
             }
             if (times > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
                 average = total / (double) times;
             }
 

@@ -61,6 +61,7 @@ public class ShellCommand extends AbstractCommand {
                     "",
                     "Task Data:",
                     "    - Information needed by each specific task.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-3456
                     "",
                     "JMX system property options:",
                     "    -Dactivemq.jmx.url=<jmx service uri> (default is: 'service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi')",
@@ -92,6 +93,7 @@ public class ShellCommand extends AbstractCommand {
      */
     public static int main(String[] args, InputStream in, PrintStream out) {
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         CommandContext context = new CommandContext();
         context.setFormatter(new CommandShellOutputFormatter(out));
 
@@ -105,11 +107,13 @@ public class ShellCommand extends AbstractCommand {
             return 0;
         } catch (Exception e) {
             context.printException(e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5841
             return 1;
         }
     }
 
     public static void main(String[] args) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         main(args, System.in, System.out);
     }
 
@@ -145,6 +149,8 @@ public class ShellCommand extends AbstractCommand {
                 if (taskToken.equals("help")) {
                     printHelp();
                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1096
+//IC see: https://issues.apache.org/jira/browse/AMQ-1046
                     printHelp();
                 }
             }
@@ -161,6 +167,7 @@ public class ShellCommand extends AbstractCommand {
 
     ArrayList<Command> getCommands() {
         ServiceLoader<Command> loader = ServiceLoader.load(Command.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5123
         Iterator<Command> iterator = loader.iterator();
         ArrayList<Command> rc = new ArrayList<Command>();
         boolean done = false;
@@ -183,6 +190,7 @@ public class ShellCommand extends AbstractCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         context.printHelp(helpFile);
     }
 }

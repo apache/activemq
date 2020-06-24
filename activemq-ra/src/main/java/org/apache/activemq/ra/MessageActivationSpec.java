@@ -118,6 +118,7 @@ public interface MessageActivationSpec extends ActivationSpec {
     double getBackOffMultiplier();
     
     long getMaximumRedeliveryDelay();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3205
 
     long getInitialRedeliveryDelay();
 
@@ -132,6 +133,7 @@ public interface MessageActivationSpec extends ActivationSpec {
     boolean isUseJndi();
 
     String getTrustStore();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5782
 
     String getTrustStorePassword();
 

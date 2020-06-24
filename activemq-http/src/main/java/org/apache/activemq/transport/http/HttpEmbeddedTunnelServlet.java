@@ -42,6 +42,7 @@ public class HttpEmbeddedTunnelServlet extends HttpTunnelServlet {
 
                 // Add the servlet connector
                 String url = getConnectorURL();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2764
                 HttpTransportFactory factory = new HttpTransportFactory();
                 transportConnector = (HttpTransportServer) factory.doBind(new URI(url));
                 broker.addConnector(transportConnector);

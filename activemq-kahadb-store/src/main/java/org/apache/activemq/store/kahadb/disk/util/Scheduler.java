@@ -34,6 +34,7 @@ public final class Scheduler {
     }
 
     public static synchronized void executePeriodically(final Runnable task, long period) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3031
         TimerTask timerTask = new SchedulerTimerTask(task);
         CLOCK_DAEMON.schedule(timerTask, period, period);
         TIMER_TASKS.put(task, timerTask);
@@ -48,6 +49,7 @@ public final class Scheduler {
     }
 
     public static void executeAfterDelay(final Runnable task, long redeliveryDelay) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3031
         TimerTask timerTask = new SchedulerTimerTask(task);
         CLOCK_DAEMON.schedule(timerTask, redeliveryDelay);
     }

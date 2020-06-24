@@ -55,6 +55,7 @@ public class ConsumerCommand extends AbstractCommand {
         Connection conn = null;
         try {
             conn = factory.createConnection(user, password);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
             if (durable && clientId != null && clientId.length() > 0 && !"null".equals(clientId)) {
                 conn.setClientID(clientId);
             }
@@ -64,6 +65,7 @@ public class ConsumerCommand extends AbstractCommand {
             CountDownLatch active = new CountDownLatch(parallelThreads);
 
             for (int i = 1; i <= parallelThreads; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 Session sess;
                 if (transacted) {
                    sess = conn.createSession(true, Session.SESSION_TRANSACTED);
@@ -72,12 +74,14 @@ public class ConsumerCommand extends AbstractCommand {
                 }
                 ConsumerThread consumer = new ConsumerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
                 consumer.setName("consumer-" + i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 consumer.setDurable(durable);
                 consumer.setBreakOnNull(false);
                 consumer.setMessageCount(messageCount);
                 consumer.setSleep(sleep);
                 consumer.setBatchSize(batchSize);
                 consumer.setFinished(active);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 consumer.setBytesAsText(bytesAsText);
                 consumer.start();
             }
@@ -139,6 +143,7 @@ public class ConsumerCommand extends AbstractCommand {
     }
 
     public int getBatchSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         return batchSize;
     }
 
@@ -155,6 +160,7 @@ public class ConsumerCommand extends AbstractCommand {
     }
 
     public boolean isBytesAsText() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         return bytesAsText;
     }
 
@@ -163,6 +169,7 @@ public class ConsumerCommand extends AbstractCommand {
     }
 
     public boolean isTransacted() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         return transacted;
     }
 

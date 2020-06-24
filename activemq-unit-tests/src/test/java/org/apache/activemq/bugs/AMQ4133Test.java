@@ -46,6 +46,7 @@ public class AMQ4133Test {
 
     @Before
     public void before() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4386
         if (System.getProperty(java_security_auth_login_config) != null) {
             oldLoginConf = System.getProperty(java_security_auth_login_config);
         }
@@ -55,6 +56,7 @@ public class AMQ4133Test {
         broker.start();
         broker.waitUntilStarted();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6021
         System.setProperty("javax.net.ssl.trustStore", certBase + "/" + "broker1.ks");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
@@ -93,6 +95,7 @@ public class AMQ4133Test {
 
     @Test
     public void mqttSSLNeedClientAuthTrue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6021
         mqttConnectTo("localhost", broker.getConnectorByName("mqtt+ssl").getConnectUri().getPort());
     }
 
@@ -116,6 +119,7 @@ public class AMQ4133Test {
     }
 
     public void mqttConnectTo(String host, int port) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6021
         MQTT mqtt = new MQTT();
         mqtt.setConnectAttemptsMax(1);
         mqtt.setReconnectAttemptsMax(0);

@@ -30,6 +30,7 @@ public class MaxDBJDBCAdapter extends DefaultJDBCAdapter {
         statements.setStringIdDataType("VARCHAR(250) ASCII");
         statements.setContainerNameDataType("VARCHAR(250) ASCII");
         statements.setLongDataType("INTEGER");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2291
         statements.setSequenceDataType("INTEGER");
         super.setStatements(statements);
     }

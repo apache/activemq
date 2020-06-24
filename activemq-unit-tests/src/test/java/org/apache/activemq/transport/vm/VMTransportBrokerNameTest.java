@@ -66,6 +66,7 @@ public class VMTransportBrokerNameTest {
     @Test
     public void testPublishableAddressUri() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5705
         PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
         final AtomicReference<URI> uriAtomicReference = new AtomicReference<>();
 
@@ -93,6 +94,7 @@ public class VMTransportBrokerNameTest {
     @Test
     public void testBrokerInfoReceiptClientAsync() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(new URI(vmUrl));
         ActiveMQConnection c1 = (ActiveMQConnection) cf.createConnection();
 

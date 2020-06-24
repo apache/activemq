@@ -42,6 +42,7 @@ public class XaConnectionPool extends ConnectionPool {
 
     @Override
     protected Session makeSession(SessionKey key) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5189
         return ((XAConnection) connection).createXASession();
     }
 
@@ -54,6 +55,7 @@ public class XaConnectionPool extends ConnectionPool {
                 // local transaction or auto ack
                 transacted = false;
                 ackMode = Session.CLIENT_ACKNOWLEDGE;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
             } else if (transactionManager != null) {
                 // cmt or transactionManager managed
                 transacted = false;
@@ -68,6 +70,7 @@ public class XaConnectionPool extends ConnectionPool {
                 transactionManager.getTransaction().registerSynchronization(new Synchronization(session));
                 incrementReferenceCount();
                 transactionManager.getTransaction().enlistResource(createXaResource(session));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3863
             } else {
                 session.setIgnoreClose(false);
             }
@@ -84,6 +87,7 @@ public class XaConnectionPool extends ConnectionPool {
     }
 
     protected XAResource createXaResource(PooledSession session) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2095
         return session.getXAResource();
     }
 

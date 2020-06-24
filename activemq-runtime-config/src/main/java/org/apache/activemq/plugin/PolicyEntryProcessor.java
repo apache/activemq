@@ -41,6 +41,7 @@ public class PolicyEntryProcessor extends DefaultConfigurationProcessor {
 
         //Look up an existing entry that matches the candidate
         //First just look up by the destination type to see if anything matches
+//IC see: https://issues.apache.org/jira/browse/AMQ-6088
         PolicyEntry existingEntry = PolicyEntryUtil.findEntryByDestination(plugin, updatedEntry);
         if (existingEntry != null) {
             //if found, update the policy and apply the updates to existing destinations

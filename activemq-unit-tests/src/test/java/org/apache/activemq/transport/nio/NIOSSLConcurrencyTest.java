@@ -129,6 +129,7 @@ public class NIOSSLConcurrencyTest extends TestCase {
                 return failed || getReceived() == PRODUCER_COUNT * MESSAGE_COUNT;
             }
         }, 120000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4345
 
         assertEquals(PRODUCER_COUNT * MESSAGE_COUNT, getReceived());
 

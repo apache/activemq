@@ -37,6 +37,10 @@ public class StoreUsage extends PercentLimitUsage<StoreUsage> {
     public StoreUsage(String name, PersistenceAdapter store) {
         super(null, name, 1.0f);
         this.store = store;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5964
+//IC see: https://issues.apache.org/jira/browse/AMQ-5965
+//IC see: https://issues.apache.org/jira/browse/AMQ-5969
         updateLimitBasedOnPercent();
     }
 
@@ -59,6 +63,10 @@ public class StoreUsage extends PercentLimitUsage<StoreUsage> {
 
     public void setStore(PersistenceAdapter store) {
         this.store = store;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5964
+//IC see: https://issues.apache.org/jira/browse/AMQ-5965
+//IC see: https://issues.apache.org/jira/browse/AMQ-5969
         if (percentLimit > 0 && store != null) {
             //will trigger onLimitChange
             updateLimitBasedOnPercent();
@@ -69,8 +77,10 @@ public class StoreUsage extends PercentLimitUsage<StoreUsage> {
 
     @Override
     public int getPercentUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2986
             percentUsage = caclPercentUsage();
             return super.getPercentUsage();
         } finally {
@@ -83,6 +93,7 @@ public class StoreUsage extends PercentLimitUsage<StoreUsage> {
     protected void updateLimitBasedOnPercent() {
         usageLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6441
             percentLimitFromFile(store != null ? store.getDirectory() : null);
         } finally {
             usageLock.writeLock().unlock();
@@ -90,6 +101,7 @@ public class StoreUsage extends PercentLimitUsage<StoreUsage> {
     }
 
     public StoreUsage copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
         StoreUsage storeUsage = new StoreUsage();
         storeUsage.name = name;
         storeUsage.parent = parent;

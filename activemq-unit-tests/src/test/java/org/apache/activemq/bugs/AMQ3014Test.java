@@ -108,6 +108,7 @@ public class AMQ3014Test {
         remoteBroker.setBrokerName("remoteBroker");
         remoteBroker.setPersistent(false);
         remoteBroker.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3014
         remoteBroker.addConnector(BROKER_URL);
         remoteBroker.setSchedulerSupport(false);
     }
@@ -147,6 +148,7 @@ public class AMQ3014Test {
         // to the remote broker.
         DiscoveryNetworkConnector dnc = new DiscoveryNetworkConnector();
         SimpleDiscoveryAgent da = new SimpleDiscoveryAgent();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3014
         da.setServices(remoteBroker.getTransportConnectors().get(0).getPublishableConnectString());
         dnc.setDiscoveryAgent(da);
         localBroker.addNetworkConnector(dnc);

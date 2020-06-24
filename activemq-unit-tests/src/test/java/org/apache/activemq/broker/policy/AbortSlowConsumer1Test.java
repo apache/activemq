@@ -42,6 +42,8 @@ public class AbortSlowConsumer1Test extends AbortSlowConsumerBase {
     public static Collection<Object[]> getTestParameters() {
         return Arrays.asList(new Object[][]{
                 {Boolean.TRUE, Boolean.TRUE},
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
                 {Boolean.FALSE, Boolean.TRUE}});
     }
 

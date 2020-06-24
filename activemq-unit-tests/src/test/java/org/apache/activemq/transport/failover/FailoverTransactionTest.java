@@ -77,6 +77,7 @@ public class FailoverTransactionTest extends TestSupport {
     private static final String QUEUE_NAME = "Failover.WithTx";
     private static final String TRANSPORT_URI = "tcp://localhost:0";
     private String url;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
     BrokerService broker;
     final Random random = new Random();
 
@@ -85,12 +86,14 @@ public class FailoverTransactionTest extends TestSupport {
     }
 
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4415
         super.setMaxTestTime(2 * 60 * 1000); // some boxes can be real slow
         super.setAutoFail(true);
         super.setUp();
     }
 
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4415
         super.tearDown();
         stopBroker();
     }
@@ -122,6 +125,9 @@ public class FailoverTransactionTest extends TestSupport {
     public BrokerService createBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
         broker = new BrokerService();
         broker.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         broker.setAdvisorySupport(false);
         broker.addConnector(bindAddress);
         broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
@@ -236,6 +242,8 @@ public class FailoverTransactionTest extends TestSupport {
         broker.start();
 
         assertTrue("tx committed through failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
 
         // new transaction
         Message msg = consumer.receive(20000);
@@ -271,6 +279,7 @@ public class FailoverTransactionTest extends TestSupport {
     @SuppressWarnings("unchecked")
     public void testFailoverCommitReplyLostWithDestinationPathSeparator() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3600
         broker = createBroker(true);
         setDefaultPersistenceAdapter(broker);
 
@@ -299,6 +308,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker.start();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
@@ -307,7 +317,10 @@ public class FailoverTransactionTest extends TestSupport {
 
         MessageConsumer consumer = session.createConsumer(destination);
         produceMessage(session, destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2540
+//IC see: https://issues.apache.org/jira/browse/AMQ-2473
         final CountDownLatch commitDoneLatch = new CountDownLatch(1);
         // broker will die on commit reply so this will hang till restart
         Executors.newSingleThreadExecutor().execute(new Runnable() {
@@ -327,9 +340,13 @@ public class FailoverTransactionTest extends TestSupport {
         // will be stopped by the plugin
         broker.waitUntilStopped();
         broker = createBroker(false, url);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         setDefaultPersistenceAdapter(broker);
         broker.setPlugins(new BrokerPlugin[]{new DestinationPathSeparatorBroker()});
         broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2540
+//IC see: https://issues.apache.org/jira/browse/AMQ-2473
 
         assertTrue("tx committed trough failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
 
@@ -372,7 +389,10 @@ public class FailoverTransactionTest extends TestSupport {
     }
 
     public void initCombosForTestFailoverSendReplyLost() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         addCombinationValues("defaultPersistenceAdapter",
+//IC see: https://issues.apache.org/jira/browse/AMQ-3517
+//IC see: https://issues.apache.org/jira/browse/AMQ-4228
             new Object[]{PersistenceAdapterChoice.KahaDB,
                     PersistenceAdapterChoice.JDBC
                     // not implemented for AMQ store or PersistenceAdapterChoice.LevelDB
@@ -437,6 +457,7 @@ public class FailoverTransactionTest extends TestSupport {
         // will be stopped by the plugin
         broker.waitUntilStopped();
         broker = createBroker(false, url);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         setDefaultPersistenceAdapter(broker);
         LOG.info("restarting....");
         broker.start();
@@ -452,6 +473,7 @@ public class FailoverTransactionTest extends TestSupport {
         connection.close();
 
         // verify stats
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         assertEquals("no newly queued messages", 0, ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getEnqueues().getCount());
         assertEquals("1 dequeue", 1, ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getDequeues().getCount());
 
@@ -478,7 +500,10 @@ public class FailoverTransactionTest extends TestSupport {
     }
 
     public void initCombosForTestFailoverConnectionSendReplyLost() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         addCombinationValues("defaultPersistenceAdapter",
+//IC see: https://issues.apache.org/jira/browse/AMQ-3517
+//IC see: https://issues.apache.org/jira/browse/AMQ-4228
             new Object[]{PersistenceAdapterChoice.KahaDB,
                     PersistenceAdapterChoice.JDBC
                     // last producer message id store feature not implemented for AMQ store
@@ -536,6 +561,8 @@ public class FailoverTransactionTest extends TestSupport {
         proxy.open();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + proxy.getUrl().toASCIIString() + ")?jms.watchTopicAdvisories=false");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
@@ -545,6 +572,8 @@ public class FailoverTransactionTest extends TestSupport {
         MessageConsumer consumer = session.createConsumer(destination);
         final CountDownLatch sendDoneLatch = new CountDownLatch(1);
         // proxy connection will die on send reply so this will hang on failover reconnect till open
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
                 LOG.info("doing async send...");
@@ -575,6 +604,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // verify stats, connection dup suppression means dups don't get to broker
         assertEquals("one queued message", 1, ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getEnqueues().getCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
 
         // ensure no dangling messages with fresh broker etc
         broker.stop();
@@ -587,6 +617,9 @@ public class FailoverTransactionTest extends TestSupport {
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         configureConnectionFactory(cf);
         connection = cf.createConnection();
         connection.start();
@@ -599,6 +632,7 @@ public class FailoverTransactionTest extends TestSupport {
     }
 
     public void testFailoverProducerCloseBeforeTransactionFailWhenDisabled() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         startCleanBroker();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?trackTransactionProducers=false");
         configureConnectionFactory(cf);
@@ -609,11 +643,14 @@ public class FailoverTransactionTest extends TestSupport {
 
         MessageConsumer consumer = session.createConsumer(destination);
         produceMessage(session, destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
 
         // restart to force failover and connection state recovery before the commit
         broker.stop();
         startBroker(false, url);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
         try {
             session.commit();
             fail("expect ex for rollback only on async exc");
@@ -621,6 +658,8 @@ public class FailoverTransactionTest extends TestSupport {
         }
 
         // without tracking producers, message will not be replayed on recovery
+//IC see: https://issues.apache.org/jira/browse/AMQ-2540
+//IC see: https://issues.apache.org/jira/browse/AMQ-2473
         assertNull("we got the message", consumer.receive(5000));
         session.commit();
         connection.close();
@@ -662,6 +701,9 @@ public class FailoverTransactionTest extends TestSupport {
     public void testFailoverWithConnectionConsumer() throws Exception {
         startCleanBroker();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
@@ -690,6 +732,7 @@ public class FailoverTransactionTest extends TestSupport {
         MessageProducer producer;
         TextMessage message;
         final int count = 10;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         for (int i = 0; i < count; i++) {
             producer = session.createProducer(destination);
             message = session.createTextMessage("Test message: " + count);
@@ -727,6 +770,7 @@ public class FailoverTransactionTest extends TestSupport {
     public void doTestFailoverConsumerAckLost(final int pauseSeconds) throws Exception {
         broker = createBroker(true);
         setDefaultPersistenceAdapter(broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
 
         broker.setPlugins(new BrokerPlugin[]{
                 new BrokerPluginSupport() {
@@ -738,6 +782,7 @@ public class FailoverTransactionTest extends TestSupport {
                             final MessageAck ack) throws Exception {
 
                         consumerExchange.getConnectionContext().setDontSendReponse(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
                         Executors.newSingleThreadExecutor().execute(new Runnable() {
                             public void run() {
                                 LOG.info("Stopping broker on ack: " + ack);
@@ -781,6 +826,7 @@ public class FailoverTransactionTest extends TestSupport {
         final Vector<Message> receivedMessages = new Vector<Message>();
         final CountDownLatch commitDoneLatch = new CountDownLatch(1);
         final AtomicBoolean gotTransactionRolledBackException = new AtomicBoolean(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
                 LOG.info("doing async commit after consume...");
@@ -809,6 +855,7 @@ public class FailoverTransactionTest extends TestSupport {
                     LOG.info("committing consumer1 session: " + receivedMessages.size() + " messsage(s)");
                     try {
                         consumerSession1.commit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6406
                     } catch (TransactionRolledBackException expected) {
                         LOG.info("got exception ex on commit", expected);
                         gotTransactionRolledBackException.set(true);
@@ -829,10 +876,12 @@ public class FailoverTransactionTest extends TestSupport {
         broker.start();
 
         assertTrue("tx committed through failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5279
 
         LOG.info("received message count: " + receivedMessages.size());
 
         // new transaction to get both messages from either consumer
+//IC see: https://issues.apache.org/jira/browse/AMQ-6406
         for (int i=0; i<2; i++) {
             Message msg = consumer1.receive(5000);
             LOG.info("post: from consumer1 received: " + msg);
@@ -845,6 +894,7 @@ public class FailoverTransactionTest extends TestSupport {
             assertNotNull("got message [" + i + "]", msg);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         for (Connection c : connections) {
             c.close();
         }
@@ -855,16 +905,19 @@ public class FailoverTransactionTest extends TestSupport {
 
         LOG.info("Checking for remaining/hung messages..");
         broker = createBroker(false, url);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         configureConnectionFactory(cf);
         connection = cf.createConnection();
         connection.start();
         Session sweeperSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer sweeper = sweeperSession.createConsumer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6406
         Message msg = sweeper.receive(1000);
         LOG.info("Sweep received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
@@ -872,6 +925,7 @@ public class FailoverTransactionTest extends TestSupport {
     }
 
     public void testPoolingNConsumesAfterReconnect() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
         broker = createBroker(true);
         setDefaultPersistenceAdapter(broker);
 
@@ -886,6 +940,7 @@ public class FailoverTransactionTest extends TestSupport {
                                 public void run() {
                                     LOG.info("Stopping broker on removeConsumer: " + info);
                                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
                                         broker.stop();
                                     } catch (Exception e) {
                                         e.printStackTrace();
@@ -900,6 +955,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         Vector<Connection> connections = new Vector<Connection>();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
@@ -1025,6 +1081,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker.stop();
         broker = createBroker(false, url);
         // use empty jdbc store so that default wait(0) for redeliveries will timeout after failover
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         setPersistenceAdapter(broker, PersistenceAdapterChoice.JDBC);
         broker.start();
 
@@ -1065,10 +1122,12 @@ public class FailoverTransactionTest extends TestSupport {
         broker.stop();
         broker = createBroker(false, url);
         // use empty jdbc store so that wait for re-deliveries occur when failover resumes
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         setPersistenceAdapter(broker, PersistenceAdapterChoice.JDBC);
         broker.start();
 
         final CountDownLatch commitDone = new CountDownLatch(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
         final CountDownLatch gotException = new CountDownLatch(1);
         // will block pending re-deliveries
         Executors.newSingleThreadExecutor().execute(new Runnable() {
@@ -1092,6 +1151,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         assertTrue("commit was successful", commitDone.await(30, TimeUnit.SECONDS));
         assertTrue("got exception on commit", gotException.await(30, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
 
         assertNotNull("should get failed committed message", consumer.receive(5000));
         connection.close();
@@ -1102,6 +1162,10 @@ public class FailoverTransactionTest extends TestSupport {
         broker = createBroker(true);
         broker.start();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?jms.consumerFailoverRedeliveryWaitPeriod=10000");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
         configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
@@ -1109,6 +1173,7 @@ public class FailoverTransactionTest extends TestSupport {
         final Queue destination = producerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=0");
         final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
         final Session secondConsumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
 
         MessageConsumer consumer = consumerSession.createConsumer(destination);
 
@@ -1121,7 +1186,9 @@ public class FailoverTransactionTest extends TestSupport {
 
         // add another consumer into the mix that may get the message after restart
         MessageConsumer consumer2 = secondConsumerSession.createConsumer(consumerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=1"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         broker.stop();
         broker = createBroker(false, url);
         broker.start();
@@ -1132,6 +1199,7 @@ public class FailoverTransactionTest extends TestSupport {
         final Vector<Exception> exceptions = new Vector<Exception>();
 
         // commit will fail due to failover with outstanding ack
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
                 LOG.info("doing async commit...");
@@ -1150,6 +1218,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         assertTrue("commit completed ", commitDone.await(15, TimeUnit.SECONDS));
         assertTrue("got Rollback", gotRollback.await(15, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
 
         assertTrue("no other exceptions", exceptions.isEmpty());
 
@@ -1172,6 +1241,7 @@ public class FailoverTransactionTest extends TestSupport {
 
     private void produceMessage(final Session producerSession, Queue destination)
             throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
         MessageProducer producer = producerSession.createProducer(destination);
         TextMessage message = producerSession.createTextMessage("Test message");
         producer.send(message);

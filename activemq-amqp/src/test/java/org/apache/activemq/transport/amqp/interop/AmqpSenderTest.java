@@ -71,6 +71,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testCreateTopicSender() throws Exception {
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -89,6 +90,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testSenderSettlementModeSettledIsHonored() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         doTestSenderSettlementModeIsHonored(SenderSettleMode.SETTLED);
     }
 
@@ -148,6 +150,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
      */
     private void doTestReceiverSettlementModeForcedToFirst(ReceiverSettleMode modeToUse) throws Exception {
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -194,6 +197,8 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
         final int MSG_COUNT = 100;
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -218,6 +223,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
         final int MSG_COUNT = 1000;
 
         final CountDownLatch settled = new CountDownLatch(MSG_COUNT);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6485
 
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
@@ -258,6 +264,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
         sender.close();
 
         assertTrue("Remote should have settled all deliveries", settled.await(5, TimeUnit.MINUTES));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6485
 
         connection.close();
     }
@@ -265,8 +272,10 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testPresettledSender() throws Exception {
         final int MSG_COUNT = 1000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5723
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -299,6 +308,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
     public void testDeliveryDelayOfferedWhenRequested() throws Exception {
 
         final BrokerViewMBean brokerView = getProxyToBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
 
         AmqpClient client = createAmqpClient();
         client.setValidator(new AmqpValidator() {
@@ -313,6 +323,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 

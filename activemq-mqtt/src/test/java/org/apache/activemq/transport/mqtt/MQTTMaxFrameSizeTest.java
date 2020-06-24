@@ -59,6 +59,7 @@ public class MQTTMaxFrameSizeTest extends MQTTTestSupport {
 
     @Override
     public String getProtocolConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
         return "?wireFormat.maxFrameSize=" + maxFrameSize;
     }
 
@@ -97,6 +98,8 @@ public class MQTTMaxFrameSizeTest extends MQTTTestSupport {
         LOG.debug("Starting test on connector {} for frame size: {}", getProtocolScheme(), maxFrameSize);
 
         MQTT mqtt = createMQTTConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5872
+//IC see: https://issues.apache.org/jira/browse/AMQ-5872
         mqtt.setClientId(getTestName());
         mqtt.setKeepAlive((short) 10);
         mqtt.setVersion("3.1.1");

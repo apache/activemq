@@ -123,6 +123,9 @@ public class SimpleJmsTopicConnector extends JmsConnector {
      * @return Returns the localTopicConnection.
      */
     public TopicConnection getLocalTopicConnection() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
         return (TopicConnection) localConnection.get();
     }
 
@@ -158,6 +161,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
     protected void initializeForeignConnection() throws NamingException, JMSException {
 
         TopicConnection newConnection = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6334
 
         try {
             if (foreignConnection.get() == null) {
@@ -168,6 +172,9 @@ public class SimpleJmsTopicConnector extends JmsConnector {
                         outboundTopicConnectionFactory = jndiOutboundTemplate
                             .lookup(outboundTopicConnectionFactoryName, TopicConnectionFactory.class);
                         if (outboundUsername != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
                             newConnection = outboundTopicConnectionFactory
                                 .createTopicConnection(outboundUsername, outboundPassword);
                         } else {
@@ -237,6 +244,9 @@ public class SimpleJmsTopicConnector extends JmsConnector {
                             localTopicConnectionFactory = jndiLocalTemplate
                                 .lookup(localConnectionFactoryName, TopicConnectionFactory.class);
                             if (localUsername != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
                                 newConnection = localTopicConnectionFactory
                                     .createTopicConnection(localUsername, localPassword);
                             } else {
@@ -351,6 +361,9 @@ public class SimpleJmsTopicConnector extends JmsConnector {
     }
 
     protected void initializeOutboundDestinationBridgesLocalSide(TopicConnection connection) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
         if (outboundTopicBridges != null) {
             TopicSession localSession =
                     connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -448,6 +461,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
     protected Topic createForeignTopic(TopicSession session, String topicName) throws JMSException {
         Topic result = null;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3298
         if (preferJndiDestinationLookup) {
             try {
                 // look-up the Queue

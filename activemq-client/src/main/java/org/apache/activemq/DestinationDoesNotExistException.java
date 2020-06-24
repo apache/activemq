@@ -26,6 +26,7 @@ import javax.jms.JMSException;
 public class DestinationDoesNotExistException extends JMSException {
 
     public DestinationDoesNotExistException(String destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
         super(destination);
     }
 

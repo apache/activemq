@@ -116,6 +116,7 @@ public final class Location implements Comparable<Location> {
     }
 
     public CountDownLatch getLatch() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6815
         return latch;
     }
 
@@ -146,6 +147,7 @@ public final class Location implements Comparable<Location> {
     }
 
     public AtomicReference<IOException> getException() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6815
         return exception;
     }
 }

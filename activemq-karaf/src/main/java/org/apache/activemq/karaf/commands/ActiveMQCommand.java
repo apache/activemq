@@ -129,6 +129,7 @@ public class ActiveMQCommand extends AbstractCommand implements CompletableFunct
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5525
             if (argumentValues.size() == 1 && arguments.size() == 1) {
                 Object val = argumentValues.values().iterator().next();
                 // short circut convert via blueprint... cause all our commands match this
@@ -179,6 +180,7 @@ public class ActiveMQCommand extends AbstractCommand implements CompletableFunct
     @Override
     public Map<String, Completer> getOptionalCompleters() {
         //TODO implement completers
+//IC see: https://issues.apache.org/jira/browse/AMQ-4034
         return null;
     }
 }

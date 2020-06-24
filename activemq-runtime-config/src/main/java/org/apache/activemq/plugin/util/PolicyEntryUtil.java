@@ -68,6 +68,7 @@ public class PolicyEntryUtil {
      * @param updatedEntry
      */
     public static void applyRetrospectively(AbstractRuntimeConfigurationBroker runtimeBroker,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
             PolicyEntry updatedEntry) {
         PolicyEntryUtil.applyRetrospectively(runtimeBroker, updatedEntry, null);
     }
@@ -98,6 +99,7 @@ public class PolicyEntryUtil {
             //currently just an identity check which is what we want
             if (updatedEntry.equals(specificyPolicy)){
                 Destination target = destination;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
                 while (target instanceof DestinationFilter) {
                     target = ((DestinationFilter)target).getNext();
                 }

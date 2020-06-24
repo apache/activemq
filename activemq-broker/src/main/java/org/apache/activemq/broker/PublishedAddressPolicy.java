@@ -71,12 +71,14 @@ public class PublishedAddressPolicy {
         }
 
         String scheme = connectorURI.getScheme();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5705
         if ("vm".equals(scheme)) {
             return connectorURI;
         }
 
         String userInfo = getPublishedUserInfoValue(connectorURI.getUserInfo());
         String host = getPublishedHostValue(connectorURI.getHost());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6392
         if (hostMapping.containsKey(host)) {
             host = hostMapping.get(host);
         }
@@ -226,6 +228,7 @@ public class PublishedAddressPolicy {
     }
 
     public Map<Integer, Integer>  getPortMapping() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6392
         return this.portMapping;
     }
 

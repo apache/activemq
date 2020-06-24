@@ -343,6 +343,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected String resolveHostName(String host) throws UnknownHostException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2965
         String localName = InetAddressUtil.getLocalHostName();
         if (localName != null && isUseLocalHost()) {
             if (localName.equals(host)) {
@@ -392,6 +393,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         // bind it again.
         //
         for (int i = 0; i < MAX_BIND_ATTEMPTS; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-787
             try {
                 socket.bind(localAddress);
                 return;
@@ -402,6 +404,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 try {
                     Thread.sleep(BIND_ATTEMPT_DELAY);
                 } catch (InterruptedException e1) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
                     Thread.currentThread().interrupt();
                     throw e;
                 }
@@ -464,6 +467,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     @Override
     public String getRemoteAddress() {
         if (targetAddress != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-753
             return "" + targetAddress;
         }
         return null;
@@ -471,6 +475,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
 
     @Override
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         if (commandChannel == null) {
             return 0;
         }
@@ -479,6 +484,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return null;
     }
 

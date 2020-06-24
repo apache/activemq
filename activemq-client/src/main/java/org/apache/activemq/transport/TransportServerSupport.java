@@ -87,11 +87,13 @@ public abstract class TransportServerSupport extends ServiceSupport implements T
     }
 
     public void setTransportOption(Map<String, Object> transportOptions) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2764
         this.transportOptions = transportOptions;
     }
 
     @Override
     public boolean isAllowLinkStealing() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         return allowLinkStealing;
     }
 

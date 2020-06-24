@@ -57,6 +57,7 @@ public class KahaDBDurableMessageRecoveryTest {
 
     @Parameters(name = "recoverIndex={0},enableSubscriptionStats={1}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7136
         return Arrays.asList(new Object[][] { { false, false }, { false, true }, { true, false }, { true, true } });
     }
 
@@ -85,6 +86,7 @@ public class KahaDBDurableMessageRecoveryTest {
     public KahaDBDurableMessageRecoveryTest(boolean recoverIndex, boolean enableSubscriptionStats) {
         super();
         this.recoverIndex = recoverIndex;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7136
         this.enableSubscriptionStats = enableSubscriptionStats;
     }
 
@@ -108,6 +110,7 @@ public class KahaDBDurableMessageRecoveryTest {
 
         adapter.setForceRecoverIndex(forceRecoverIndex);
         adapter.setEnableSubscriptionStatistics(enableSubscriptionStats);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7136
 
         // set smaller size for test
         adapter.setJournalMaxFileLength(1024 * 20);
@@ -214,6 +217,7 @@ public class KahaDBDurableMessageRecoveryTest {
         assertTrue(Wait.waitFor(() -> 10 == getPendingMessageCount(topic, "clientId1", "sub2"), 3000, 500));
 
         // Verify the pending size is less for sub1
+//IC see: https://issues.apache.org/jira/browse/AMQ-7136
         final long sub1PendingSizeBeforeRestart = getPendingMessageSize(topic, "clientId1", "sub1");
         final long sub2PendingSizeBeforeRestart = getPendingMessageSize(topic, "clientId1", "sub2");
         assertTrue(sub1PendingSizeBeforeRestart > 0);
@@ -229,6 +233,7 @@ public class KahaDBDurableMessageRecoveryTest {
         assertTrue(Wait.waitFor(() -> 10 == getPendingMessageCount(topic, "clientId1", "sub2"), 3000, 500));
 
         // Verify the pending size is less for sub1
+//IC see: https://issues.apache.org/jira/browse/AMQ-7136
         assertEquals(sub1PendingSizeBeforeRestart, getPendingMessageSize(topic, "clientId1", "sub1"));
         assertEquals(sub2PendingSizeBeforeRestart, getPendingMessageSize(topic, "clientId1", "sub2"));
 
@@ -364,6 +369,7 @@ public class KahaDBDurableMessageRecoveryTest {
     }
 
     protected long getPendingMessageSize(ActiveMQTopic topic, String clientId, String subId) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7129
         final Topic brokerTopic = (Topic) broker.getDestination(topic);
         final TopicMessageStore store = (TopicMessageStore) brokerTopic.getMessageStore();
         return store.getMessageSize(clientId, subId);

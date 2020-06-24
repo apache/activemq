@@ -59,6 +59,7 @@ import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
 public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerContextAware {
 
     XStream xStream = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7467
 	XStream xStreamAdvisory = null;
     BrokerContext brokerContext;
 
@@ -66,6 +67,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
     public ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame command) throws JMSException, ProtocolException {
         Map<String, String> headers = command.getHeaders();
         ActiveMQMessage msg;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5220
         String transformation = headers.get(Headers.TRANSFORMATION);
         if (headers.containsKey(Headers.CONTENT_LENGTH) || transformation.equals(Transformations.JMS_BYTE.toString())) {
             msg = super.convertFrame(converter, command);
@@ -76,6 +78,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
                 String text = new String(command.getContent(), "UTF-8");
                 switch (Transformations.getValue(transformation)) {
                     case JMS_OBJECT_XML:
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
                         in = new XppReader(new StringReader(text), XppFactory.createDefaultParser());
                         msg = createObjectMessage(in);
                         break;
@@ -84,6 +87,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
                         msg = createObjectMessage(in);
                         break;
                     case JMS_MAP_XML:
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
                         in = new XppReader(new StringReader(text), XppFactory.createDefaultParser());
                         msg = createMapMessage(in);
                         break;
@@ -92,6 +96,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
                         msg = createMapMessage(in);
                         break;
                     default:
+//IC see: https://issues.apache.org/jira/browse/AMQ-6013
                         throw new Exception("Unknown transformation: " + transformation);
                 }
             } catch (Throwable e) {
@@ -183,7 +188,9 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
     protected String marshall(Serializable object, String transformation) throws JMSException {
         StringWriter buffer = new StringWriter();
         HierarchicalStreamWriter out;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4012
         if (transformation.toLowerCase(Locale.ENGLISH).endsWith("json")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2825
             out = new JettisonMappedXmlDriver(new Configuration(), false).createWriter(buffer);
         } else {
             out = new PrettyPrintWriter(buffer);
@@ -202,6 +209,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
     @SuppressWarnings("unchecked")
     protected ActiveMQMapMessage createMapMessage(HierarchicalStreamReader in) throws JMSException {
         ActiveMQMapMessage mapMsg = new ActiveMQMapMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5220
         Map<String, Object> map = (Map<String, Object>) getXStream().unmarshal(in);
         for (String key : map.keySet()) {
             mapMsg.setObject(key, map.get(key));
@@ -211,14 +219,17 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
 
     protected String marshallAdvisory(final DataStructure ds, String transformation) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2098
         StringWriter buffer = new StringWriter();
         HierarchicalStreamWriter out;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4012
         if (transformation.toLowerCase(Locale.ENGLISH).endsWith("json")) {
             out = new JettisonMappedXmlDriver().createWriter(buffer);
         } else {
             out = new PrettyPrintWriter(buffer);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7467
         XStream xstream = getXStreamAdvisory();
         xstream.setMode(XStream.NO_REFERENCES);
         xstream.aliasPackage("", "org.apache.activemq.command");
@@ -251,6 +262,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
     @SuppressWarnings("unchecked")
     protected XStream createXStream() {
         XStream xstream = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2702
         if (brokerContext != null) {
             Map<String, XStream> beans = brokerContext.getBeansOfType(XStream.class);
             for (XStream bean : beans.values()) {
@@ -262,7 +274,9 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
         }
 
         if (xstream == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6013
             xstream = XStreamSupport.createXStream();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3388
             xstream.ignoreUnknownElements();
         }
 
@@ -270,6 +284,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
         // of a String type we map it to String both in and out such that we don't
         // marshal UTF8Buffers out
         xstream.registerConverter(new AbstractSingleValueConverter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
 
             @Override
             public Object fromString(String str) {
@@ -290,11 +305,13 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
 
     @Override
     public void setBrokerContext(BrokerContext brokerContext) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2702
         this.brokerContext = brokerContext;
     }
 
     @Override
     public BrokerContext getBrokerContext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         return this.brokerContext;
     }
 
@@ -307,6 +324,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
      * @return the JSON marshaled form of the given DataStructure instance.
      */
     protected String marshallAdvisory(final DataStructure ds) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2098
         XStream xstream = new XStream(new JsonHierarchicalStreamDriver());
         xstream.setMode(XStream.NO_REFERENCES);
         xstream.aliasPackage("", "org.apache.activemq.command");

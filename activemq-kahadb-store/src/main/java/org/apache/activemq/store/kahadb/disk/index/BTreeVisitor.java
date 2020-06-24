@@ -166,6 +166,7 @@ public interface BTreeVisitor<Key,Value> {
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6083
             return first+" >= key < "+last;
         }
     }

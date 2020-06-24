@@ -31,6 +31,7 @@ public class BlobDownloader {
     
     public BlobDownloader(BlobTransferPolicy transferPolicy) {
         // need to do a defensive copy
+//IC see: https://issues.apache.org/jira/browse/AMQ-4002
         this.blobTransferPolicy = transferPolicy.copy();
     }
     
@@ -39,6 +40,7 @@ public class BlobDownloader {
     }
     
     public void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         getStrategy().deleteFile(message);
     }
     

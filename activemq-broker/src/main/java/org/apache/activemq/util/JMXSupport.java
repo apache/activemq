@@ -29,6 +29,7 @@ public final class JMXSupport {
     }
 
     public static String encodeObjectNamePart(String part) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4010
         String answer = PART_1.matcher(part).replaceAll("_");
         answer = PART_2.matcher(answer).replaceAll("&qe;");
         answer = PART_3.matcher(answer).replaceAll("&amp;");

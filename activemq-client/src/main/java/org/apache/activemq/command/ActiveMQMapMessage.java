@@ -104,7 +104,9 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     protected transient Map<String, Object> map = new HashMap<String, Object>();
 
     private Object readResolve() throws ObjectStreamException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         if (this.map == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3202
             this.map = new HashMap<String, Object>();
         }
         return this;
@@ -164,6 +166,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
 
     @Override
     public boolean isContentMarshalled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6811
         return content != null || map == null || map.isEmpty();
     }
 
@@ -197,6 +200,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
 
     @Override
     public String getJMSXMimeType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return "jms/map-message";
     }
 
@@ -233,6 +237,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         if (value instanceof Boolean) {
             return ((Boolean)value).booleanValue();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         if (value instanceof UTF8Buffer) {
             return Boolean.valueOf(value.toString()).booleanValue();
         }
@@ -262,6 +267,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         if (value instanceof Byte) {
             return ((Byte)value).byteValue();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         if (value instanceof UTF8Buffer) {
             return Byte.valueOf(value.toString()).byteValue();
         }
@@ -294,6 +300,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         if (value instanceof Byte) {
             return ((Byte)value).shortValue();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         if (value instanceof UTF8Buffer) {
             return Short.valueOf(value.toString()).shortValue();
         }
@@ -320,6 +327,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
 
         if (value == null) {
             throw new NullPointerException();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5629
         } else if (value instanceof Character) {
             return ((Character)value).charValue();
         } else {
@@ -352,6 +360,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         if (value instanceof Byte) {
             return ((Byte)value).intValue();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         if (value instanceof UTF8Buffer) {
             return Integer.valueOf(value.toString()).intValue();
         }
@@ -390,6 +399,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         if (value instanceof Byte) {
             return ((Byte)value).longValue();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         if (value instanceof UTF8Buffer) {
             return Long.valueOf(value.toString()).longValue();
         }
@@ -419,6 +429,8 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         if (value instanceof Float) {
             return ((Float)value).floatValue();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         if (value instanceof UTF8Buffer) {
             return Float.valueOf(value.toString()).floatValue();
         }
@@ -445,6 +457,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
 
         if (value == null) {
             return 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5628
         } else if (value instanceof Double) {
             return ((Double)value).doubleValue();
         } else if (value instanceof Float) {
@@ -496,6 +509,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     public byte[] getBytes(String name) throws JMSException {
         initializeReading();
         Object value = map.get(name);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
         if (value == null) {
             return null;
         }
@@ -529,6 +543,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     @Override
     public Object getObject(String name) throws JMSException {
         initializeReading();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         Object result = map.get(name);
         if (result instanceof UTF8Buffer) {
             result = result.toString();
@@ -591,6 +606,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     @Override
     public void setByte(String name, byte value) throws JMSException {
         initializeWriting();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         put(name, Byte.valueOf(value));
     }
 
@@ -608,6 +624,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     @Override
     public void setShort(String name, short value) throws JMSException {
         initializeWriting();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         put(name, Short.valueOf(value));
     }
 
@@ -625,6 +642,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     @Override
     public void setChar(String name, char value) throws JMSException {
         initializeWriting();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         put(name, Character.valueOf(value));
     }
 
@@ -642,6 +660,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     @Override
     public void setInt(String name, int value) throws JMSException {
         initializeWriting();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         put(name, Integer.valueOf(value));
     }
 
@@ -659,6 +678,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     @Override
     public void setLong(String name, long value) throws JMSException {
         initializeWriting();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         put(name, Long.valueOf(value));
     }
 
@@ -779,6 +799,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         initializeWriting();
         if (value != null) {
             // byte[] not allowed on properties
+//IC see: https://issues.apache.org/jira/browse/AMQ-757
             if (!(value instanceof byte[])) {
                 checkValidObject(value);
             }
@@ -814,6 +835,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
 
     @Override
     public void compress() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         storeContent();
         super.compress();
     }
@@ -824,6 +846,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     }
 
     public Map<String, Object> getContentMap() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-511
         initializeReading();
         return map;
     }

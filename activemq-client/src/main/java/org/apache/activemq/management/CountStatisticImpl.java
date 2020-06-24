@@ -44,6 +44,7 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
     }
 
     public void reset() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1946
         if (isDoReset()) {
             super.reset();
             counter.set(0);
@@ -56,6 +57,7 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
 
     public void setCount(long count) {
         if (isEnabled()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-894
             counter.set(count);
         }
     }
@@ -105,6 +107,7 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
     }
 
     public void setParent(CountStatisticImpl parent) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4711
         if (this.parent != null) {
             this.parent.subtract(this.getCount());
         }

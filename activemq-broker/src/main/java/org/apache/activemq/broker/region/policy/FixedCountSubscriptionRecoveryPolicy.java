@@ -41,6 +41,7 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
 
     public SubscriptionRecoveryPolicy copy() {
         FixedCountSubscriptionRecoveryPolicy rc = new FixedCountSubscriptionRecoveryPolicy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-714
         rc.setMaximumSize(maximumSize);
         return rc;
     }

@@ -144,6 +144,7 @@ public class TcpBufferedInputStream extends FilterInputStream {
      */
     public void unread(byte[] array) throws IOException {
         int avail = internalBuffer.length - position;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         if (array.length > avail) {
             throw new IOException("Buffer is full, can't unread");
         }

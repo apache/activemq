@@ -53,6 +53,7 @@ public class ConsumerThread extends Thread {
         String threadName = Thread.currentThread().getName();
         LOG.info(threadName + " wait until " + messageCount + " messages are consumed");
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
             if (durable && destination instanceof Topic) {
                 consumer = session.createDurableSubscriber((Topic) destination, getName());
             } else {
@@ -62,6 +63,7 @@ public class ConsumerThread extends Thread {
                 Message msg = consumer.receive(receiveTimeOut);
                 if (msg != null) {
                     LOG.info(threadName + " Received " + (msg instanceof TextMessage ? ((TextMessage) msg).getText() : msg.getJMSMessageID()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                     if (bytesAsText && (msg instanceof BytesMessage)) {
                         long length = ((BytesMessage) msg).getBodyLength();
                         byte[] bytes = new byte[(int) length];
@@ -75,6 +77,7 @@ public class ConsumerThread extends Thread {
                     }
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 if (session.getTransacted()) {
                     if (batchSize > 0 && received > 0 && received % batchSize == 0) {
                         LOG.info(threadName + " Committing transaction: " + transactions++);
@@ -115,6 +118,7 @@ public class ConsumerThread extends Thread {
     }
 
     public boolean isDurable() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         return durable;
     }
 
@@ -131,6 +135,7 @@ public class ConsumerThread extends Thread {
     }
 
     public int getBatchSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         return batchSize;
     }
 
@@ -179,6 +184,7 @@ public class ConsumerThread extends Thread {
     }
 
     public boolean isBytesAsText() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         return bytesAsText;
     }
 

@@ -59,6 +59,7 @@ public class PooledConnectionSessionCleanupTest extends JmsPoolTestSupport {
     @Before
     public void setUp() throws java.lang.Exception {
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         brokerService = new BrokerService();
         brokerService.setBrokerName("PooledConnectionSessionCleanupTestBroker");
@@ -74,6 +75,7 @@ public class PooledConnectionSessionCleanupTest extends JmsPoolTestSupport {
         // Set a long idle timeout on the pooled connections to better show the
         // problem of holding onto created resources on close.
         directConnFact = new ActiveMQConnectionFactory(brokerService.getVmConnectorURI());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         pooledConnFact = new PooledConnectionFactory();
         pooledConnFact.setConnectionFactory(directConnFact);
         pooledConnFact.setIdleTimeout((int)TimeUnit.MINUTES.toMillis(60));
@@ -120,6 +122,7 @@ public class PooledConnectionSessionCleanupTest extends JmsPoolTestSupport {
         } catch (JMSException jms_exc) {
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         super.tearDown();
     }
 
@@ -150,6 +153,7 @@ public class PooledConnectionSessionCleanupTest extends JmsPoolTestSupport {
                 return view.getInFlightCount() == MESSAGE_COUNT;
             }
         }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(25)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         // While all the message are in flight we should get anything on this consumer.
         Session session = directConn1.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -165,6 +169,7 @@ public class PooledConnectionSessionCleanupTest extends JmsPoolTestSupport {
                 return view.getSubscriptions().length == 1;
             }
         }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(25)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         // Now we'd expect that the message stuck in the prefetch of the pooled session's
         // consumer would be rerouted to the non-pooled session's consumer.
@@ -188,6 +193,7 @@ public class PooledConnectionSessionCleanupTest extends JmsPoolTestSupport {
                 return view.getInFlightCount() == MESSAGE_COUNT;
             }
         }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(25)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         // While all the message are in flight we should get anything on this consumer.
         Session session = directConn1.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -203,6 +209,7 @@ public class PooledConnectionSessionCleanupTest extends JmsPoolTestSupport {
                 return view.getSubscriptions().length == 1;
             }
         }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(25)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         // Now we'd expect that the message stuck in the prefetch of the first session's
         // consumer would be rerouted to the alternate session's consumer.

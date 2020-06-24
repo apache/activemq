@@ -40,11 +40,13 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
 
     @Override
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3842
         setAutoFail(true);
         super.setUp();
     }
 
     public void testNoExtraThreads() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2283
         BrokerService broker = new BrokerService();
         TransportConnector tcp = broker.addConnector("tcp://localhost:0?transport.closeAsync=false");
         String group = "GR-" +  System.currentTimeMillis();
@@ -63,6 +65,7 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
 
        final int noConnectionToCreate = 10;
         for (int i=0; i<10;i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3842
             ActiveMQConnectionFactory factory =
                 new ActiveMQConnectionFactory("discovery:(multicast://239.255.2.3:6155?group=" + group +")?closeAsync=false&startupMaxReconnectAttempts=10&initialReconnectDelay=1000");
             LOG.info("Connecting.");
@@ -96,6 +99,9 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
             connection.setClientID("test");
             fail("Did not fail to connect as expected.");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2080
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
         catch ( JMSException expected ) {
             assertTrue("reason is java.io.IOException, was: " + expected.getCause(), expected.getCause() instanceof java.io.IOException);
         }
@@ -110,13 +116,21 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         long startT = System.currentTimeMillis();
         String groupId = "WillNotMatch" + startT;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3842
             String urlStr = "discovery:(multicast://default?group=" + groupId +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
                 ")?useExponentialBackOff=false&maxReconnectAttempts=2&reconnectDelay=" + initialReconnectDelay;
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(urlStr);
             LOG.info("Connecting.");
             Connection connection = factory.createConnection();
             connection.setClientID("test");
             fail("Did not fail to connect as expected.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1957
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
         } catch ( JMSException expected ) {
             assertTrue("reason is java.io.IOException, was: " + expected.getCause(), expected.getCause() instanceof java.io.IOException);
             long duration = System.currentTimeMillis() - startT;
@@ -125,14 +139,21 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
     }
 
     public void testSetDiscoveredBrokerProperties() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2849
         final String extraParameterName = "connectionTimeout";
         final String extraParameterValue = "3000";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
         final URI uri = new URI("discovery:(multicast://default)?initialReconnectDelay=100&"
                 + DiscoveryListener.DISCOVERED_OPTION_PREFIX + extraParameterName + "=" + extraParameterValue);
         CompositeData compositeData = URISupport.parseComposite(uri);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3842
         StubCompositeTransport compositeTransport = new StubCompositeTransport();
         DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(compositeTransport, compositeData, compositeData.getParameters());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
 
         discoveryTransport.onServiceAdd(new DiscoveryEvent("tcp://localhost:61616"));
         assertEquals("expected added URI after discovery event", compositeTransport.getTransportURIs().length, 1);
@@ -157,17 +178,20 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         assertEquals("expected added URI after discovery event", 1, compositeTransport.getTransportURIs().length);
 
         URI discoveredServiceURI = compositeTransport.getTransportURIs()[0];
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
         Map<String, String> parameters = URISupport.parseParameters(discoveredServiceURI);
         assertTrue("unable to add parameter to discovered service", parameters.containsKey(extraParameterName));
         assertEquals("incorrect value for parameter added to discovered service", parameters.get(extraParameterName), extraParameterValue);
     }
 
     public void testAddRemoveDiscoveredBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3842
         final URI uri = new URI("discovery:(multicast://default)?initialReconnectDelay=100&connectionTimeout=3000");
         CompositeData compositeData = URISupport.parseComposite(uri);
 
         StubCompositeTransport compositeTransport = new StubCompositeTransport();
         DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(compositeTransport, compositeData, compositeData.getParameters());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
 
         final String serviceName = "tcp://localhost:61616";
         discoveryTransport.onServiceAdd(new DiscoveryEvent(serviceName));

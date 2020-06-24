@@ -86,6 +86,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
      * @throws Exception
      */
     public void testAdvisoryPrefetchSize() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6267
         ActiveMQTopic advisoryTopic = new ActiveMQTopic("ActiveMQ.Advisory.Consumer.Topic.A.>");
         ActiveMQTopic topic1 = new ActiveMQTopic("A.FOO");
 
@@ -273,6 +274,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
 
     public void testAdvisoryForwardingDuplexNC() throws Exception {
         ActiveMQTopic advisoryTopic = new ActiveMQTopic("ActiveMQ.Advisory.Producer.Topic.FOO");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5639
 
         createBroker("A");
         createBroker("B");
@@ -325,6 +327,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
     }
 
     public void testAdvisoryViaVirtualDest() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5639
         ActiveMQQueue advisoryQueue = new ActiveMQQueue("advQ");
         createBroker("A");
 

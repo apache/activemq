@@ -52,6 +52,7 @@ public class OutOfOrderTestCase extends TestCase {
     private int seq = 0;
 
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         brokerService = new BrokerService();
         brokerService.setUseJmx(true);
         brokerService.addConnector(BROKER_URL);
@@ -118,6 +119,7 @@ public class OutOfOrderTestCase extends TestCase {
     }
 
     private String toString(final Message message) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         String ret = "received message '" + ((TextMessage) message).getText() + "' - " + message.getJMSMessageID();
         if (message.getJMSRedelivered())
              ret += " (redelivered)";

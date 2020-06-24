@@ -58,6 +58,7 @@ public class PreallocationJournalTest  {
 
     @Test
     public void testZerosLoop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6451
         Random rand = new Random();
         int randInt = rand.nextInt(100);
         File dataDirectory = new File("./target/activemq-data/kahadb" + randInt);
@@ -101,6 +102,7 @@ public class PreallocationJournalTest  {
         store.setPreallocationStrategy(preallocationStrategy);
         store.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         final File journalLog = new File(dataDirectory, "db-1.log");
         assertTrue("file exists", Wait.waitFor(new Wait.Condition() {
             @Override

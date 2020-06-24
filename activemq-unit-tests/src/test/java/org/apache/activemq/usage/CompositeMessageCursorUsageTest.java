@@ -84,6 +84,7 @@ public class CompositeMessageCursorUsageTest extends TestCase {
     }
     
     public QueueViewMBean getQueueView(String queueName) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq" + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + queueName);
         return (QueueViewMBean) broker.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
     }

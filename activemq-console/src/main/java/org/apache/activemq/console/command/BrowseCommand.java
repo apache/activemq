@@ -47,6 +47,7 @@ public class BrowseCommand extends AbstractJmxCommand {
         "                                  message header, or the message body.",
         "    --view <attr1>,<attr2>,...    Select the specific attribute of the message to view.", 
         "    --jmxurl <url>                Set the JMX URL to connect to.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-2975
         "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",            
         "    --jmxuser <user>              Set the JMX user used for authenticating.",
         "    --jmxpassword <password>      Set the JMX password used for authenticating.",
@@ -98,6 +99,7 @@ public class BrowseCommand extends AbstractJmxCommand {
      */
     protected void runTask(List<String> tokens) throws Exception {
         // If there is no queue name specified, let's select all
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
         if (tokens.isEmpty()) {
             tokens.add("*");
         }
@@ -143,6 +145,8 @@ public class BrowseCommand extends AbstractJmxCommand {
             // If no message selector is specified, or next token is a new
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
@@ -157,6 +161,7 @@ public class BrowseCommand extends AbstractJmxCommand {
 
             // If no view specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new IllegalArgumentException("Attributes to view not specified"));
                 return;
             }
@@ -204,6 +209,7 @@ public class BrowseCommand extends AbstractJmxCommand {
 
                 // Unknown group view
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printInfo("Unknown group view: " + viewGroup + ". Ignoring group view option.");
             }
         } else {
@@ -216,6 +222,7 @@ public class BrowseCommand extends AbstractJmxCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         context.printHelp(helpFile);
     }
 

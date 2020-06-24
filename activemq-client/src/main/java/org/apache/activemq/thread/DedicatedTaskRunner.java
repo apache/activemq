@@ -38,6 +38,7 @@ class DedicatedTaskRunner implements TaskRunner {
         thread = new Thread(name) {
             @Override
             public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
                 try {
                     runTask();
                 } finally {
@@ -125,6 +126,7 @@ class DedicatedTaskRunner implements TaskRunner {
 
         } catch (InterruptedException e) {
             // Someone really wants this thread to die off.
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
             Thread.currentThread().interrupt();
         } finally {
             // Make sure we notify any waiting threads that thread

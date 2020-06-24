@@ -34,6 +34,7 @@ public class CachedMessageGroupMap implements MessageGroupMap {
     private final LRUMap<String, ConsumerId> cache;
     private final int maximumCacheSize;
     Destination destination;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5483
 
     CachedMessageGroupMap(int size){
       cache = new LRUMap<String, ConsumerId>(size) {
@@ -44,6 +45,8 @@ public class CachedMessageGroupMap implements MessageGroupMap {
                   if (destination != null) {
                       for (Subscription s : destination.getConsumers()) {
                         if (s.getConsumerInfo().getConsumerId().equals(eldest.getValue())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6016
+//IC see: https://issues.apache.org/jira/browse/AMQ-2106
                             s.getConsumerInfo().decrementAssignedGroupCount(destination.getActiveMQDestination());
                             break;
                           }
@@ -88,8 +91,11 @@ public class CachedMessageGroupMap implements MessageGroupMap {
     @Override
     public synchronized void removeAll(){
         cache.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5483
         if (destination != null) {
             for (Subscription s : destination.getConsumers()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6016
+//IC see: https://issues.apache.org/jira/browse/AMQ-2106
                 s.getConsumerInfo().clearAssignedGroupCount(destination.getActiveMQDestination());
             }
         }
@@ -118,6 +124,7 @@ public class CachedMessageGroupMap implements MessageGroupMap {
     }
 
     public void setDestination(Destination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5483
         this.destination = destination;
     }
 }

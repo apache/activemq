@@ -40,6 +40,7 @@ public class AMQ2513Test extends TestCase {
     private BrokerService broker;
     private String connectionUri;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
     void createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
         broker = new BrokerService();
         broker.setBrokerName("localhost");
@@ -96,8 +97,10 @@ public class AMQ2513Test extends TestCase {
 
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
     DestinationViewMBean createView() throws Exception {
         String domain = "org.apache.activemq";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName name = new ObjectName(domain + ":type=Broker,brokerName=localhost," +
                                                   "destinationType=Queue,destinationName=test");
         return (DestinationViewMBean) broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class,

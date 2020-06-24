@@ -116,6 +116,7 @@ public class AmqpSession implements AmqpResource {
         LOG.debug("Session {} closed", getSessionId());
 
         connection.sendToActiveMQ(new RemoveInfo(getSessionId()), new ResponseHandler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6341
 
             @Override
             public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
@@ -136,6 +137,7 @@ public class AmqpSession implements AmqpResource {
      */
     public void commit(LocalTransactionId txId) throws Exception {
         for (AmqpSender consumer : consumers.values()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
             consumer.commit(txId);
         }
 
@@ -152,9 +154,12 @@ public class AmqpSession implements AmqpResource {
      */
     public void rollback(LocalTransactionId txId) throws Exception {
         for (AmqpSender consumer : consumers.values()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
             consumer.rollback(txId);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5847
+//IC see: https://issues.apache.org/jira/browse/AMQ-5847
         enlisted = false;
     }
 
@@ -194,6 +199,7 @@ public class AmqpSession implements AmqpResource {
 
                 Map<Symbol, Object> dynamicNodeProperties = new HashMap<>();
                 dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6467
 
                 // Currently we only support temporary destinations with delete on close lifetime policy.
                 Target actualTarget = new Target();
@@ -212,6 +218,7 @@ public class AmqpSession implements AmqpResource {
                 });
             } else if (targetNodeName != null && !targetNodeName.isEmpty()) {
                 destination = createDestination(remoteTarget);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5711
                 if (destination.isTemporary()) {
                     String connectionId = ((ActiveMQTempDestination) destination).getConnectionId();
                     if (connectionId == null) {
@@ -220,6 +227,7 @@ public class AmqpSession implements AmqpResource {
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
             Symbol[] remoteDesiredCapabilities = protonReceiver.getRemoteDesiredCapabilities();
             if (remoteDesiredCapabilities != null) {
                 List<Symbol> list = Arrays.asList(remoteDesiredCapabilities);
@@ -265,6 +273,7 @@ public class AmqpSession implements AmqpResource {
         LOG.debug("opening new sender {} on link: {}", consumerInfo.getConsumerId(), protonSender.getName());
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
             final Map<Symbol, Object> supportedFilters = new HashMap<>();
             protonSender.setContext(sender);
 
@@ -308,6 +317,7 @@ public class AmqpSession implements AmqpResource {
                     source.setDistributionMode(COPY);
 
                     if (storedInfo.isNoLocal()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5799
                         supportedFilters.put(NO_LOCAL_NAME, AmqpNoLocalFilter.NO_LOCAL);
                     }
 
@@ -321,8 +331,11 @@ public class AmqpSession implements AmqpResource {
             } else if (source.getDynamic()) {
                 destination = connection.createTemporaryDestination(protonSender, source.getCapabilities());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
+//IC see: https://issues.apache.org/jira/browse/AMQ-6536
                 Map<Symbol, Object> dynamicNodeProperties = new HashMap<>();
                 dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6467
 
                 // Currently we only support temporary destinations with delete on close lifetime policy.
                 source = new org.apache.qpid.proton.amqp.messaging.Source();
@@ -340,6 +353,7 @@ public class AmqpSession implements AmqpResource {
                 });
             } else {
                 destination = createDestination(source);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5711
                 if (destination.isTemporary()) {
                     String connectionId = ((ActiveMQTempDestination) destination).getConnectionId();
                     if (connectionId == null) {
@@ -354,6 +368,7 @@ public class AmqpSession implements AmqpResource {
             int senderCredit = protonSender.getRemoteCredit();
 
             // Allows the options on the destination to configure the consumerInfo
+//IC see: https://issues.apache.org/jira/browse/AMQ-6359
             if (destination.getOptions() != null) {
                 Map<String, Object> options = IntrospectionSupport.extractProperties(
                     new HashMap<String, Object>(destination.getOptions()), "consumer.");
@@ -421,6 +436,7 @@ public class AmqpSession implements AmqpResource {
 
     public void registerSender(ConsumerId consumerId, AmqpSender sender) {
         consumers.put(consumerId, sender);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5738
         connection.registerSender(consumerId, sender);
     }
 
@@ -430,6 +446,7 @@ public class AmqpSession implements AmqpResource {
     }
 
     public void enlist(TransactionId txId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5847
         if (!enlisted) {
             connection.getTxCoordinator(txId).enlist(this);
             enlisted = true;
@@ -451,6 +468,7 @@ public class AmqpSession implements AmqpResource {
     }
 
     public long getMaxFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5778
         return connection.getMaxFrameSize();
     }
 

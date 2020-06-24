@@ -79,6 +79,7 @@ public abstract class AutoFailTestSupport extends TestCase {
                     // which usually means, it has finished its run.
                     if (!isTestSuccess.get()) {
                         LOG.error("Test case has exceeded the maximum allotted time to run of: " + getMaxTestTime() + " ms.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2183
                         dumpAllThreads(getName());
                         if (System.getProperty("org.apache.activemq.AutoFailTestSupport.disableSystemExit") == null) {
                             System.exit(EXIT_ERROR);
@@ -147,6 +148,7 @@ public abstract class AutoFailTestSupport extends TestCase {
     
     
     public static void dumpAllThreads(String prefix) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2183
         Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
         for (Entry<Thread, StackTraceElement[]> stackEntry : stacks.entrySet()) {
             System.err.println(prefix + " " + stackEntry.getKey());

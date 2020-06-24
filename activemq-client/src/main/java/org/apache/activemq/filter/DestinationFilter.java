@@ -57,6 +57,7 @@ public abstract class DestinationFilter implements BooleanExpression {
         if (idx >= 0) {
             String lastPath = paths[idx];
             if (lastPath.equals(ANY_DESCENDENT)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2360
                 return new PrefixDestinationFilter(paths, destination.getDestinationType());
             } else {
                 while (idx >= 0) {

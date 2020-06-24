@@ -32,6 +32,7 @@ import org.apache.activemq.usage.MemoryUsage;
 public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMessageStore  {
 
     public ProxyTopicMessageStore(TopicMessageStore delegate) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         super(delegate);
     }
 
@@ -46,6 +47,7 @@ public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMe
 
     @Override
     public void addMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
        delegate.addMessage(context, message, canOptimizeHint);
     }
 
@@ -81,6 +83,7 @@ public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMe
 
     @Override
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         return ((TopicMessageStore)delegate).lookupSubscription(clientId, subscriptionName);
     }
 
@@ -124,6 +127,7 @@ public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMe
 
     @Override
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         return ((TopicMessageStore)delegate).getAllSubscriptions();
     }
 
@@ -134,6 +138,7 @@ public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMe
 
     @Override
     public int getMessageCount(String clientId, String subscriberName) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         return ((TopicMessageStore)delegate).getMessageCount(clientId, subscriberName);
     }
 
@@ -154,6 +159,7 @@ public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMe
 
     @Override
     public void dispose(ConnectionContext context) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1842
         delegate.dispose(context);
     }
 
@@ -169,6 +175,7 @@ public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMe
 
     @Override
     public boolean isEmpty() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2512
         return delegate.isEmpty();
      }
 
@@ -199,6 +206,7 @@ public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMe
 
     @Override
     public void setPrioritizedMessages(boolean prioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
         delegate.setPrioritizedMessages(prioritizedMessages);
     }
 
@@ -209,11 +217,15 @@ public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMe
 
     @Override
     public void updateMessage(Message message) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         delegate.updateMessage(message);
     }
 
     @Override
     public void registerIndexListener(IndexListener indexListener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         delegate.registerIndexListener(indexListener);
     }
 
@@ -228,6 +240,7 @@ public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMe
     @Override
     public long getMessageSize(String clientId, String subscriberName)
             throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         return ((TopicMessageStore)delegate).getMessageSize(clientId, subscriberName);
     }
 

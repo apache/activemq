@@ -91,6 +91,7 @@ public class MultipleCompositeToPhysicalQueueTest {
         Session publisherSession = buildSession("Producer", url);
 
         createPublisher(publisherSession, PUB_BROADCAST.getVirtualDestination()).send(publisherSession.createTextMessage("BROADCAST"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6274
         ActiveMQMessage broadcastMessage = (ActiveMQMessage) consumer.receive();
         ActiveMQDestination originalDestination = broadcastMessage.getOriginalDestination();
 

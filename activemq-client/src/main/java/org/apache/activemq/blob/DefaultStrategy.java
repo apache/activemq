@@ -28,6 +28,7 @@ public class DefaultStrategy {
     protected BlobTransferPolicy transferPolicy;
 
     public DefaultStrategy(BlobTransferPolicy transferPolicy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         this.transferPolicy = transferPolicy;
     }
 

@@ -37,6 +37,7 @@ public abstract class AbstractJDBCLocker extends AbstractLocker {
 
     public void configure(PersistenceAdapter adapter) throws IOException {
         if (adapter instanceof JDBCPersistenceAdapter) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4841
             this.jdbcAdapter = (JDBCPersistenceAdapter) adapter;
             this.dataSource = ((JDBCPersistenceAdapter) adapter).getLockDataSource();
             // we cannot get the statements (yet) as they may be configured later
@@ -105,6 +106,7 @@ public abstract class AbstractJDBCLocker extends AbstractLocker {
         if (createTablesOnStartup) {
 
             String[] createStatements = getStatements().getCreateLockSchemaStatements();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4841
 
             Connection connection = null;
             Statement statement = null;

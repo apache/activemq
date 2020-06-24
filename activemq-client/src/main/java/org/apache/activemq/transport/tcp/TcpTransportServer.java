@@ -126,6 +126,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected final AtomicInteger currentTransportCount = new AtomicInteger();
 
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException,
+//IC see: https://issues.apache.org/jira/browse/AMQ-4531
         URISyntaxException {
         super(location);
         this.transportFactory = transportFactory;
@@ -140,12 +141,14 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         InetAddress addr = InetAddress.getByName(host);
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6209
             serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog, addr);
             configureServerSocket(serverSocket);
         } catch (IOException e) {
             throw IOExceptionSupport.create("Failed to bind to server socket: " + bind + " due to: " + e, e);
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4531
             setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), resolveHostName(serverSocket, addr), serverSocket.getLocalPort(), bind.getPath(),
                 bind.getQuery(), bind.getFragment()));
         } catch (URISyntaxException e) {
@@ -161,6 +164,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     }
 
     private void configureServerSocket(ServerSocket socket) throws SocketException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1967
         socket.setSoTimeout(2000);
         if (transportOptions != null) {
 
@@ -176,6 +180,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             if (socket instanceof SSLServerSocket) {
                 if (transportOptions.containsKey("verifyHostName")) {
                     verifyHostName = Boolean.parseBoolean(transportOptions.get("verifyHostName").toString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
                 } else {
                     transportOptions.put("verifyHostName", verifyHostName);
                 }
@@ -261,6 +266,8 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     }
 
     public String getLogWriterName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
         return logWriterName;
     }
 
@@ -277,6 +284,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     }
 
     public void setJmxPort(int jmxPort) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6446
         this.jmxPort = jmxPort;
     }
 
@@ -296,6 +304,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * @return the backlog
      */
     public int getBacklog() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1752
         return backlog;
     }
 
@@ -327,6 +336,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      */
     @Override
     public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6209
         if (!isStopped() && !isStopping()) {
             final ServerSocket serverSocket = this.serverSocket;
             if (serverSocket == null) {
@@ -360,6 +370,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             // Update object instance for later cleanup.
             this.selector = selector;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6184
             while (!isStopped()) {
                 int count = selector.select(10);
 
@@ -420,8 +431,10 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                     if (isStopped() || getAcceptListener() == null) {
                         socket.close();
                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1752
                         if (useQueueForAccept) {
                             socketQueue.put(socket);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4531
                         } else {
                             handleSocket(socket);
                         }
@@ -469,10 +482,12 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * @throws UnknownHostException
      */
     protected String resolveHostName(ServerSocket socket, InetAddress bindAddress) throws UnknownHostException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2094
         String result = null;
         if (socket.isBound()) {
             if (socket.getInetAddress().isAnyLocalAddress()) {
                 // make it more human readable and useful, an alternative to 0.0.0.0
+//IC see: https://issues.apache.org/jira/browse/AMQ-2965
                 result = InetAddressUtil.getLocalHostName();
             } else {
                 result = socket.getInetAddress().getCanonicalHostName();
@@ -485,6 +500,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     @Override
     protected void doStart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4531
         if (useQueueForAccept) {
             Runnable run = new Runnable() {
                 @Override
@@ -493,6 +509,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                         while (!isStopped() && !isStopping()) {
                             Socket sock = socketQueue.poll(1, TimeUnit.SECONDS);
                             if (sock != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4989
                                 try {
                                     handleSocket(sock);
                                 } catch (Throwable thrown) {
@@ -507,6 +524,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                         }
 
                     } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6004
                         if (!isStopped() || !isStopping()) {
                             LOG.info("socketQueue interrupted - stopping");
                             onAcceptError(e);
@@ -514,6 +532,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                     }
                 }
             };
+//IC see: https://issues.apache.org/jira/browse/AMQ-4531
             socketHandlerThread = new Thread(null, run, "ActiveMQ Transport Server Thread Handler: " + toString(), getStackSize());
             socketHandlerThread.setDaemon(true);
             socketHandlerThread.setPriority(ThreadPriorities.BROKER_MANAGEMENT - 1);
@@ -525,10 +544,13 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         Exception firstFailure = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6209
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5269
             if (selector != null) {
                 selector.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6291
                 selector = null;
             }
         } catch (Exception error) {
@@ -544,6 +566,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             firstFailure = error;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6004
         if (socketHandlerThread != null) {
             socketHandlerThread.interrupt();
             socketHandlerThread = null;
@@ -564,10 +587,12 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     @Override
     public InetSocketAddress getSocketAddress() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4531
         return (InetSocketAddress) serverSocket.getLocalSocketAddress();
     }
 
     protected void handleSocket(Socket socket) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         doHandleSocket(socket);
     }
 
@@ -576,6 +601,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         boolean countIncremented = false;
         try {
             int currentCount;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             do {
                 currentCount = currentTransportCount.get();
                 if (currentCount >= this.maximumConnections) {
@@ -593,16 +619,21 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             countIncremented = true;
 
             HashMap<String, Object> options = new HashMap<String, Object>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
             options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
             options.put("maxInactivityDurationInitalDelay", Long.valueOf(maxInactivityDurationInitalDelay));
             options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
             options.put("trace", Boolean.valueOf(trace));
             options.put("soTimeout", Integer.valueOf(soTimeout));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1860
             options.put("socketBufferSize", Integer.valueOf(socketBufferSize));
             options.put("connectionTimeout", Integer.valueOf(connectionTimeout));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
             options.put("logWriterName", logWriterName);
             options.put("dynamicManagement", Boolean.valueOf(dynamicManagement));
             options.put("startLogging", Boolean.valueOf(startLogging));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6446
             options.put("jmxPort", Integer.valueOf(jmxPort));
             options.putAll(transportOptions);
 
@@ -621,6 +652,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         } catch (SocketTimeoutException ste) {
             // expect this to happen
         } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4531
             if (closeSocket) {
                 try {
                     //if closing the socket, only decrement the count it was actually incremented
@@ -643,6 +675,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     }
 
     protected TransportInfo configureTransport(final TcpTransportServer server, final Socket socket) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         WireFormat format = wireFormatFactory.createWireFormat();
         Transport transport = createTransport(socket, format);
         return new TransportInfo(format, transport, transportFactory);
@@ -661,6 +694,8 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     }
 
     public int getSoTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1860
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         return soTimeout;
     }
 
@@ -688,6 +723,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * @return the maximumConnections
      */
     public int getMaximumConnections() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1928
         return maximumConnections;
     }
 
@@ -700,6 +736,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     }
 
     public AtomicInteger getCurrentTransportCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         return currentTransportCount;
     }
 
@@ -709,16 +746,19 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     @Override
     public void stopped(Service service) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4469
         this.currentTransportCount.decrementAndGet();
     }
 
     @Override
     public boolean isSslServer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         return false;
     }
 
     @Override
     public boolean isAllowLinkStealing() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         return allowLinkStealing;
     }
 

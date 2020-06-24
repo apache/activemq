@@ -81,6 +81,7 @@ public class AMQ4212Test {
         pa.setCleanupInterval(TimeUnit.SECONDS.toMillis(5));
         pa.setForceRecoverIndex(recover);
         pa.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
 
         service.setPersistenceAdapter(pa);
         service.start();

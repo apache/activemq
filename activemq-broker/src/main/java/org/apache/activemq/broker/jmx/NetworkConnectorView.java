@@ -33,6 +33,7 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
 
     @Override
     public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
         connector.stop();
     }
 
@@ -43,6 +44,8 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
 
     @Override
     public int getMessageTTL() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         return connector.getMessageTTL();
     }
 
@@ -58,6 +61,7 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
 
     @Override
     public int getAdvisoryPrefetchSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6267
         return connector.getAdvisoryPrefetchSize();
     }
 
@@ -98,6 +102,7 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
 
     @Override
     public boolean isSuppressDuplicateQueueSubscriptions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3439
         return connector.isSuppressDuplicateQueueSubscriptions();
     }
 
@@ -128,6 +133,8 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
 
     @Override
     public void setMessageTTL(int messageTTL) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         connector.setMessageTTL(messageTTL);
     }
 
@@ -173,6 +180,7 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
 
     @Override
     public void setSuppressDuplicateQueueSubscriptions(boolean val) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3439
         connector.setSuppressDuplicateQueueSubscriptions(val);
     }
 

@@ -54,6 +54,7 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
 
     @Override
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4142
         setAutoFail(true);
         super.setUp();
     }
@@ -76,18 +77,21 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestPredefinedDestinations() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1747
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST.Q")});
     }
 
     public void testPredefinedDestinations() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4142
         Message sent = doSend(false);
         assertEquals("guest", ((ActiveMQMessage)sent).getUserID());
         assertEquals("guest", sent.getStringProperty("JMSXUserID"));
     }
 
     public void testTempDestinations() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2539
         Connection conn = factory.createConnection("guest", "password");
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         String name = "org.apache.activemq:BrokerName=localhost,Type=TempTopic";
@@ -108,6 +112,7 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
 
     public void testConnectionStartThrowsJMSSecurityException() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4373
         Connection connection = factory.createConnection("badUser", "password");
         try {
             connection.start();
@@ -121,6 +126,7 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
 
     public void testSecurityContextClearedOnPurge() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4319
         connection.close();
         ActiveMQConnectionFactory tcpFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
         ActiveMQConnection conn = (ActiveMQConnection) tcpFactory.createConnection("user", "password");
@@ -139,6 +145,7 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
             public boolean isSatisified() throws Exception {
                 LOG.info("dest list:" + Arrays.asList(broker.getRegionBroker().getDestinations()));
                 LOG.info("dests, orig: " + numDests + ", now: "+ broker.getRegionBroker().getDestinations().length);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6778
                 return numDests == broker.getRegionBroker().getDestinations().length;
             }
         }));

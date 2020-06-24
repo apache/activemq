@@ -55,6 +55,7 @@ public class AMQ3529Test {
 
     @Before
     public void startBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3547
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setPersistent(false);
@@ -89,6 +90,7 @@ public class AMQ3529Test {
                     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                     assertNotNull(session);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3547
                     Properties props = new Properties();
                     props.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.apache.activemq.jndi.ActiveMQInitialContextFactory");
                     props.setProperty(Context.PROVIDER_URL, "tcp://0.0.0.0:0");
@@ -143,6 +145,7 @@ public class AMQ3529Test {
                 fail("Remaining thread: " + t.toString());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3547
         ThreadGroup root = Thread.currentThread().getThreadGroup().getParent();
         while (root.getParent() != null) {
             root = root.getParent();

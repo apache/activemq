@@ -44,7 +44,9 @@ public class ActiveMQSessionExecutor implements Task {
 
     ActiveMQSessionExecutor(ActiveMQSession session) {
         this.session = session;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2790
         if (this.session.connection != null && this.session.connection.isMessagePrioritySupported()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2790
            this.messageQueue = new SimplePriorityMessageDispatchChannel();
         }else {
             this.messageQueue = new FifoMessageDispatchChannel();
@@ -93,6 +95,8 @@ public class ActiveMQSessionExecutor implements Task {
                     if (taskRunner == null) {
                         synchronized (this) {
                             if (this.taskRunner == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
                                 if (!isRunning()) {
                                     // stop has been called
                                     return;
@@ -120,6 +124,7 @@ public class ActiveMQSessionExecutor implements Task {
     }
 
     public boolean hasUncomsumedMessages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-662
         return !messageQueue.isClosed() && messageQueue.isRunning() && !messageQueue.isEmpty();
     }
 
@@ -146,6 +151,8 @@ public class ActiveMQSessionExecutor implements Task {
     void stop() throws JMSException {
         try {
             if (messageQueue.isRunning()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
                 synchronized(this) {
                     messageQueue.stop();
                     if (this.taskRunner != null) {
@@ -155,6 +162,7 @@ public class ActiveMQSessionExecutor implements Task {
                 }
             }
         } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
             Thread.currentThread().interrupt();
             throw JMSExceptionSupport.create(e);
         }
@@ -204,6 +212,7 @@ public class ActiveMQSessionExecutor implements Task {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3547
     List<MessageDispatch> getUnconsumedMessages() {
         return messageQueue.removeAll();
     }

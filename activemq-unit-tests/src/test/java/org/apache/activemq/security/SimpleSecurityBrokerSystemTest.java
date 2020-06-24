@@ -57,6 +57,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
     public static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
     public static Principal WILDCARD;
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
         try {
          WILDCARD = (Principal) DefaultAuthorizationMap.createGroupPrincipal("*", GroupPrincipal.class.getName());
         } catch (Exception e) {
@@ -91,6 +92,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
      * @throws javax.jms.JMSException
      */
     public void testPopulateJMSXUserID() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4717
         destination = new ActiveMQQueue("TEST");
         Connection connection = factory.createConnection("system", "manager");
         connections.add(connection);
@@ -107,11 +109,13 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         // And also via JMS.
         MessageConsumer consumer = session.createConsumer(destination);
         Message m = consumer.receive(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4717
         assertTrue(m.propertyExists("JMSXUserID"));
         assertEquals("system",  m.getStringProperty("JMSXUserID"));
     }
 
     public static AuthorizationMap createAuthorizationMap() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
         DestinationMap readAccess = new DefaultAuthorizationMap();
         readAccess.put(new ActiveMQQueue(">"), ADMINS);
         readAccess.put(new ActiveMQQueue("USERS.>"), USERS);
@@ -120,6 +124,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         readAccess.put(new ActiveMQTopic("USERS.>"), USERS);
         readAccess.put(new ActiveMQTopic("GUEST.>"), GUESTS);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
         DestinationMap writeAccess = new DefaultAuthorizationMap();
         writeAccess.put(new ActiveMQQueue(">"), ADMINS);
         writeAccess.put(new ActiveMQQueue("USERS.>"), USERS);
@@ -130,9 +135,11 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         writeAccess.put(new ActiveMQTopic("GUEST.>"), USERS);
         writeAccess.put(new ActiveMQTopic("GUEST.>"), GUESTS);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4709
         readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
         writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
         DestinationMap adminAccess = new DefaultAuthorizationMap();
         adminAccess.put(new ActiveMQTopic(">"), ADMINS);
         adminAccess.put(new ActiveMQTopic(">"), USERS);
@@ -152,6 +159,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
             u.put("user", "password");
             u.put("guest", "password");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
             Map<String, Set<Principal>> groups = new HashMap<String, Set<Principal>>();
             groups.put("system", new HashSet<Principal>(Arrays.asList(new Principal[] {ADMINS, USERS})));
             groups.put("user", new HashSet<Principal>(Arrays.asList(new Principal[] {USERS})));
@@ -176,7 +184,9 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
     }
 
     protected BrokerService createBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-940
         BrokerService broker = super.createBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4717
         broker.setPopulateJMSXUserID(true);
         broker.setUseAuthenticatedPrincipalForJMSXUserID(true);
         broker.setPlugins(new BrokerPlugin[] {authorizationPlugin, authenticationPlugin});

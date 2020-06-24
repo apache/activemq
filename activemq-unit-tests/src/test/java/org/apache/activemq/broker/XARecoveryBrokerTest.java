@@ -56,6 +56,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     public void testPreparedJmxView() throws Exception {
 
         ActiveMQDestination destination = createDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
 
         // Setup the producer and send the message.
         StubConnection connection = createConnection();
@@ -110,6 +111,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertEquals(4, dar.getData().length);
 
         // verify XAResource scan loop
+//IC see: https://issues.apache.org/jira/browse/AMQ-6089
         XAResource transactionContextXAResource = new TransactionContext(ActiveMQConnection.makeConnection(broker.getVmConnectorURI().toString()));
         LinkedList<Xid> tracked = new LinkedList<Xid>();
         Xid[] recoveryXids = transactionContextXAResource.recover(XAResource.TMSTARTRSCAN);
@@ -120,6 +122,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertEquals("got 4 via scan loop", 4, tracked.size());
 
         // validate destination depth via jmx
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         DestinationViewMBean destinationView = getProxyToDestination(destinationList(destination)[0]);
         assertEquals("enqueue count does not see prepared", 0, destinationView.getQueueSize());
 
@@ -130,6 +133,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             RecoveredXATransactionViewMBean mbean =  getProxyToPreparedTransactionViewMBean((TransactionId)dar.getData()[i]);
             if (i%2==0) {
                 mbean.heuristicCommit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
                 commitCount++;
             } else {
                 mbean.heuristicRollback();
@@ -144,6 +149,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // verify messages available
         assertEquals("enqueue count reflects outcome", commitCount, destinationView.getQueueSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
 
         // verify mbeans gone
         try {
@@ -162,6 +169,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     private RecoveredXATransactionViewMBean getProxyToPreparedTransactionViewMBean(TransactionId xid) throws MalformedObjectNameException, JMSException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5213
         ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,transactionType=RecoveredXaTransaction,xid=" +
                 JMXSupport.encodeObjectNamePart(xid.toString()));
         RecoveredXATransactionViewMBean proxy = (RecoveredXATransactionViewMBean) broker.getManagementContext().newProxyInstance(objectName,
@@ -171,10 +179,12 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     private DestinationViewMBean getProxyToDestination(ActiveMQDestination destination) throws MalformedObjectNameException, JMSException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         final ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName="+broker.getBrokerName()+",destinationType="
                 + JMXSupport.encodeObjectNamePart(destination.getDestinationTypeAsString())
                 + ",destinationName=" + JMXSupport.encodeObjectNamePart(destination.getPhysicalName()));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         DestinationViewMBean proxy = (DestinationViewMBean) broker.getManagementContext().newProxyInstance(objectName,
                 DestinationViewMBean.class, true);
         return proxy;
@@ -184,6 +194,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     public void testPreparedTransactionRecoveredOnRestart() throws Exception {
 
         ActiveMQDestination destination = createDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7015
 
         // Setup the producer and send the message.
         StubConnection connection = createConnection();
@@ -229,6 +240,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         connection.send(consumerInfo);
 
         // Since prepared but not committed.. they should not get delivered.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7015
         assertNull(receiveMessage(connection));
         assertNoMessagesLeft(connection);
 
@@ -251,12 +263,16 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // Commit the prepared transactions.
         for (int i = 0; i < dar.getData().length; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
             TransactionId transactionId = (TransactionId) dar.getData()[i];
             LOG.info("commit: " + transactionId);
             connection.request(createCommitTransaction2Phase(connectionInfo, transactionId));
         }
 
         // We should get the committed transactions.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
         final int countToReceive = expectedMessageCount(4, destination);
         for (int i = 0; i < countToReceive ; i++) {
             Message m = receiveMessage(connection, TimeUnit.SECONDS.toMillis(10));
@@ -386,6 +402,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     public void testTopicPreparedTransactionRecoveredOnRestart() throws Exception {
         ActiveMQDestination destination = new ActiveMQTopic("TryTopic");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
 
         StubConnection connection = createConnection();
         ConnectionInfo connectionInfo = createConnectionInfo();
@@ -415,6 +432,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         }
 
         // Since prepared but not committed.. they should not get delivered.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         assertNull(receiveMessage(connection));
         assertNoMessagesLeft(connection);
         connection.request(closeConnectionInfo(connectionInfo));
@@ -435,6 +453,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         connection.send(consumerInfo);
 
         // Since prepared but not committed.. they should not get delivered.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         assertNull(receiveMessage(connection));
         assertNoMessagesLeft(connection);
 
@@ -445,6 +464,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // ensure we can close a connection with prepared transactions
         connection.request(closeConnectionInfo(connectionInfo));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
 
         // open again  to deliver outcome
         connection = createConnection();
@@ -522,6 +542,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     public void testQueuePersistentCommited2PhaseMessagesNotLostOnRestart() throws Exception {
 
         ActiveMQDestination destination = createDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1498
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
 
         // Setup the producer and send the message.
         StubConnection connection = createConnection();
@@ -560,6 +582,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         connection.send(consumerInfo);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         for (int i = 0; i < expectedMessageCount(4, destination); i++) {
             Message m = receiveMessage(connection);
             assertNotNull(m);
@@ -653,7 +677,12 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         ConsumerInfo consumerInfo;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         Message m = null;
         for (ActiveMQDestination dest : destinationList(destination)) {
             // Setup the consumer and receive the message.
@@ -661,6 +690,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             connection.send(consumerInfo);
 
             for (int i = 0; i < 4; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
                 m = receiveMessage(connection);
                 assertNotNull(m);
             }
@@ -699,6 +729,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // validate destination depth via jmx
         DestinationViewMBean destinationView = getProxyToDestination(destinationList(destination)[0]);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         assertEquals("enqueue count does not see prepared acks", 0, destinationView.getQueueSize());
         assertEquals("dequeue count does not see prepared acks", 0, destinationView.getDequeueCount());
 
@@ -710,10 +741,12 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         assertEquals("enqueue count does not see commited acks", 0, destinationView.getQueueSize());
         assertEquals("dequeue count does not see commited acks", 4, destinationView.getDequeueCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
 
     }
 
     public void initCombosForTestTopicPersistentPreparedAcksNotLostOnRestart() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         addCombinationValues("prioritySupport", new Boolean[]{Boolean.FALSE, Boolean.TRUE});
     }
 
@@ -795,6 +828,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     public void testTopicPersistentPreparedAcksNotLostOnRestartForNSubs() throws Exception {
         ActiveMQDestination destination = new ActiveMQTopic("TryTopic");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
 
         // Setup the producer and send the message.
         StubConnection connection = createConnection();
@@ -816,6 +850,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         connection.send(consumerInfoX);
         connection.send(consumerInfoX.createRemoveCommand());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         final int numMessages = 4;
         for (int i = 0; i < numMessages; i++) {
             Message message = createMessage(producerInfo, destination);
@@ -827,6 +863,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         final int messageCount = expectedMessageCount(numMessages, destination);
         Message m = null;
         for (int i = 0; i < messageCount; i++) {
@@ -863,6 +901,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         connection.send(consumerInfo);
 
         // no redelivery, exactly once semantics unless there is rollback
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         m = receiveMessage(connection);
         assertNull(m);
         assertNoMessagesLeft(connection);
@@ -887,6 +926,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     public void testQueuePersistentPreparedAcksAvailableAfterRestartAndRollback() throws Exception {
 
         ActiveMQDestination destination = createDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
 
         // Setup the producer and send the message.
         StubConnection connection = createConnection();
@@ -908,6 +948,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         ConsumerInfo consumerInfo;
         Message message = null;
         for (ActiveMQDestination dest : destinationList(destination)) {
@@ -952,6 +993,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNull(message);
         assertNoMessagesLeft(connection);
         connection.request(consumerInfo.createRemoveCommand());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
 
         LOG.info("Send some more before the rollback");
         // send some more messages
@@ -973,6 +1015,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
         Set<ConsumerInfo> consumerInfoSet = new HashSet<ConsumerInfo>();
         for (ActiveMQDestination dest : destinationList(destination)) {
             // Setup the consumer and receive the message.
@@ -1018,6 +1061,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         }
         // consume the additional messages
         for (ActiveMQDestination dest : destinationList(destination)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
 
             // Setup the consumer and receive the message.
             consumerInfo = createConsumerInfo(sessionInfo, dest);
@@ -1041,6 +1085,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     public void testQueuePersistentPreparedAcksAvailableAfterRollbackPrefetchOne() throws Exception {
 
         ActiveMQDestination destination = createDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
 
         // Setup the producer and send the message.
         StubConnection connection = createConnection();
@@ -1243,6 +1289,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     }
 
     public void initCombosForTestTopicPersistentPreparedAcksAvailableAfterRestartAndRollback() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         addCombinationValues("prioritySupport", new Boolean[]{Boolean.FALSE, Boolean.TRUE});
     }
 
@@ -1419,6 +1466,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
 
     public void initCombosForTestTopicPersistentPreparedAcksUnavailableTillRollback() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
         addCombinationValues("keepDurableSubsActive", new Boolean[]{Boolean.FALSE, Boolean.TRUE});
     }
 
@@ -1489,6 +1537,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         connection.request(createRollbackTransaction(connectionInfo, txid));
 
         // verify receive after rollback
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         for (int i = 0; i < numMessages; i++) {
             message = receiveMessage(connection);
             assertNotNull("unexpected null on:" + i, message);
@@ -1547,6 +1596,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         ack.setTransactionId(txid);
         connection.send(ack);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
         connection.request(createEndTransaction(connectionInfo, txid));
         connection.request(createPrepareTransaction(connectionInfo, txid));
 
@@ -1575,6 +1626,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // verify still unavailable
         message = receiveMessage(connection, 2000);
         assertNull("unexpected non null: " + message, message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
 
         // unsubscribe
         connection.request(consumerInfo.createRemoveCommand());
@@ -1619,6 +1671,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         connection.send(createBeginTransaction(connectionInfo, txid));
 
         Message message = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         for (int i = 0; i < numMessages; i++) {
             message = receiveMessage(connection);
             assertNotNull(message);
@@ -1640,6 +1694,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         LOG.info("new connection/consumer for redelivery");
 
         connection.request(closeConnectionInfo(connectionInfo));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
 
         connectionInfo = createConnectionInfo();
         connectionInfo.setClientId("durable");
@@ -1677,6 +1733,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     }
 
     private ActiveMQDestination[] destinationList(ActiveMQDestination dest) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         return dest.isComposite() ? dest.getCompositeDestinations() : new ActiveMQDestination[]{dest};
     }
 
@@ -1750,6 +1807,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     @Override
     protected PolicyEntry getDefaultPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         PolicyEntry policyEntry = super.getDefaultPolicy();
         policyEntry.setPrioritizedMessages(prioritySupport);
         return policyEntry;
@@ -1757,6 +1815,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     @Override
     protected void configureBroker(BrokerService broker) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
         super.configureBroker(broker);
         broker.setKeepDurableSubsActive(keepDurableSubsActive);
         maxWait = 2000;

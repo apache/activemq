@@ -45,12 +45,14 @@ public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
         boolean hasLock = true;
         if (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter) {
             JDBCPersistenceAdapter jdbcPersistenceAdapter = (JDBCPersistenceAdapter) broker.getPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
             Locker locker = jdbcPersistenceAdapter.getLocker();
             if (locker != null) {
                 try {
                     if (!locker.keepAlive()) {
                         hasLock = false;
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
                 } catch (SuppressReplyException ignoreWhileHandlingInProgress) {
                 } catch (IOException ignored) {
                 }

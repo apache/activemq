@@ -59,6 +59,7 @@ public class JMSUsecaseTest extends JmsTestSupport {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         destination = createDestination(session, destinationType);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3954
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(this.deliveryMode);
         sendMessages(session, producer, 5);
@@ -85,9 +86,11 @@ public class JMSUsecaseTest extends JmsTestSupport {
     public void testSendReceive() throws Exception {
         // Send a message to the broker.
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1919
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         destination = createDestination(session, destinationType);
         MessageProducer producer = session.createProducer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3954
         producer.setDeliveryMode(this.deliveryMode);
         MessageConsumer consumer = session.createConsumer(destination);
         ActiveMQMessage message = new ActiveMQMessage();
@@ -110,6 +113,7 @@ public class JMSUsecaseTest extends JmsTestSupport {
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         destination = createDestination(session, destinationType);
         MessageProducer producer = session.createProducer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3954
         producer.setDeliveryMode(this.deliveryMode);
         MessageConsumer consumer = session.createConsumer(destination);
         producer.send(session.createTextMessage("test"));

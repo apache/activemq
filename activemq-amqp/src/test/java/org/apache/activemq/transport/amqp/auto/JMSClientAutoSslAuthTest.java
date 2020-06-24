@@ -79,6 +79,7 @@ public class JMSClientAutoSslAuthTest extends JMSClientTestSupport {
 
     @Override
     protected String getAdditionalConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         return "?transport.needClientAuth=true";
     }
 

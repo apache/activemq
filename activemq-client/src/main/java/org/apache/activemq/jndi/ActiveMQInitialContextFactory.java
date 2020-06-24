@@ -128,6 +128,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
     protected ActiveMQConnectionFactory createConnectionFactory(String name, Hashtable environment) throws URISyntaxException {
         Hashtable temp = new Hashtable(environment);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2656
         if (DEFAULT_CONNECTION_FACTORY_NAMES[1].equals(name)) {
             // don't try to mod environment, it may be readonly
             temp.put("xa", String.valueOf(true));
@@ -204,6 +205,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
      * environment
      */
     protected ActiveMQConnectionFactory createConnectionFactory(Hashtable environment) throws URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2656
         ActiveMQConnectionFactory answer = needsXA(environment) ? new ActiveMQXAConnectionFactory() : new ActiveMQConnectionFactory();
         Properties properties = new Properties();
         properties.putAll(environment);

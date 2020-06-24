@@ -71,5 +71,6 @@ public interface Connector extends Service {
      * @return The comma separated string of regex patterns to match 
      * broker names for cluster client updates
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-4818
     String getUpdateClusterFilter();
 }

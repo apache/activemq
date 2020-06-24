@@ -51,6 +51,7 @@ public class MappedQueueFilter extends DestinationFilter {
         // for virtual consumer wildcard dests, only subscribe to exact match or non wildcard dests to ensure no duplicates
         int match = sub.getActiveMQDestination().compareTo(next.getActiveMQDestination());
         if (match == 0 || (!next.getActiveMQDestination().isPattern() && match == 1)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5594
             super.addSubscription(context, sub);
         }
         if (noSubs && !getConsumers().isEmpty()) {
@@ -60,6 +61,7 @@ public class MappedQueueFilter extends DestinationFilter {
 
             final ActiveMQDestination newDestination = sub.getActiveMQDestination();
             BaseDestination regionDest = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
 
             for (Destination virtualDest : virtualDests) {
                 if (virtualDest.getActiveMQDestination().isTopic() &&
@@ -75,6 +77,7 @@ public class MappedQueueFilter extends DestinationFilter {
                             final Message copy = message.copy();
                             copy.setOriginalDestination(message.getDestination());
                             copy.setDestination(newDestination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
                             if (regionDest == null) {
                                 regionDest = getBaseDestination((Destination) regionBroker.getDestinations(newDestination).toArray()[0]);
                             }
@@ -108,6 +111,7 @@ public class MappedQueueFilter extends DestinationFilter {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5594
         return "MappedQueueFilter[" + virtualDestination + ", " + next + "]";
     }
 }

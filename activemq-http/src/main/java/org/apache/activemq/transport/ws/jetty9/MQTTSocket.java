@@ -47,12 +47,14 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
     public MQTTSocket(String remoteAddress) {
         super(remoteAddress);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
         this.codec = new MQTTCodec(this, getWireFormat());
     }
 
     @Override
     public void sendToMQTT(MQTTFrame command) throws IOException {
         ByteSequence bytes = wireFormat.marshal(command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6482
         try {
             //timeout after a period of time so we don't wait forever and hold the protocol lock
             session.getRemote().sendBytesByFuture(
@@ -64,6 +66,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
 
     @Override
     public void handleStopped() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5856
         if (session != null && session.isOpen()) {
             session.close();
         }
@@ -73,6 +76,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
 
     @Override
     public void onWebSocketBinary(byte[] bytes, int offset, int length) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         if (!transportStartedAtLeastOnce()) {
             LOG.debug("Waiting for MQTTSocket to be properly started...");
             try {
@@ -82,9 +86,12 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6346
         protocolLock.lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
             receiveCounter += length;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
             codec.parse(new DataByteArrayInputStream(new Buffer(bytes, offset, length)), length);
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
@@ -99,9 +106,11 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
             if (protocolLock.tryLock() || protocolLock.tryLock(ORDERLY_CLOSE_TIMEOUT, TimeUnit.SECONDS)) {
                 LOG.debug("MQTT WebSocket closed: code[{}] message[{}]", arg0, arg1);
                 //Check if we received a disconnect packet before closing
+//IC see: https://issues.apache.org/jira/browse/AMQ-6343
                 if (!receivedDisconnect.get()) {
                     getProtocolConverter().onTransportError();
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4896
                 getProtocolConverter().onMQTTCommand(new DISCONNECT().encode());
             }
         } catch (Exception e) {
@@ -128,6 +137,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
     }
 
     private static int getDefaultSendTimeOut() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6482
         return Integer.getInteger("org.apache.activemq.transport.ws.MQTTSocket.sendTimeout", 30);
     }
 
@@ -135,6 +145,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
 
     @Override
     public void onFrame(MQTTFrame mqttFrame) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
         try {
             if (mqttFrame.messageType() == DISCONNECT.TYPE) {
                 receivedDisconnect.set(true);

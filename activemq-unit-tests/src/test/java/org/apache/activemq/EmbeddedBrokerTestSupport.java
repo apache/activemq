@@ -61,6 +61,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
     @Override
     protected void tearDown() throws Exception {
         if (broker != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5372
             try {
                 broker.stop();
             } catch (Exception e) {
@@ -74,6 +75,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
      * @return a newly created JmsTemplate
      */
     protected JmsTemplate createJmsTemplate() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1802
         return new JmsTemplate(connectionFactory);
     }
 

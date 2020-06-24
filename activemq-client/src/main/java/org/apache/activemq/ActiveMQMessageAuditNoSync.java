@@ -88,6 +88,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
      */
     public void setMaximumNumberOfProducersToTrack(int maximumNumberOfProducersToTrack) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4233
         if (maximumNumberOfProducersToTrack < this.maximumNumberOfProducersToTrack){
             LRUCache<String, BitArrayBin> newMap = new LRUCache<String, BitArrayBin>(0,maximumNumberOfProducersToTrack,0.75f,true);
             /**
@@ -100,6 +101,8 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
         }
         this.map.setMaxCacheSize(maximumNumberOfProducersToTrack);
         this.maximumNumberOfProducersToTrack = maximumNumberOfProducersToTrack;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
         this.modified = true;
     }
 
@@ -129,6 +132,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
             if (bab == null) {
                 bab = new BitArrayBin(auditDepth);
                 map.put(seed, bab);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
                 modified = true;
             }
             long index = IdGenerator.getSequenceFromId(id);
@@ -167,6 +171,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
                 if (bab == null) {
                     bab = new BitArrayBin(auditDepth);
                     map.put(pid.toString(), bab);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
                     modified = true;
                 }
                 answer = bab.setBit(id.getProducerSequenceId(), true);
@@ -204,12 +209,14 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
     }
 
     public void rollback(final String id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3422
         String seed = IdGenerator.getSeedFromId(id);
         if (seed != null) {
             BitArrayBin bab = map.get(seed);
             if (bab != null) {
                 long index = IdGenerator.getSequenceFromId(id);
                 bab.setBit(index, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
                 modified = true;
             }
         }
@@ -245,6 +252,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
                 if (bab != null) {
                     long index = IdGenerator.getSequenceFromId(id);
                     answer = bab.isInOrder(index);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
                     modified = true;
                 }
             }
@@ -280,6 +288,8 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
                 if (bab == null) {
                     bab = new BitArrayBin(auditDepth);
                     map.put(pid.toString(), bab);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
                     modified = true;
                 }
                 answer = bab.isInOrder(id.getProducerSequenceId());
@@ -291,6 +301,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
 
     public long getLastSeqId(ProducerId id) {
         long result = -1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3383
         BitArrayBin bab = map.get(id.toString());
         if (bab != null) {
             result = bab.getLastSetIndex();
@@ -299,6 +310,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
     }
 
     public void clear() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3196
         map.clear();
     }
 
@@ -310,6 +322,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
      * @return true if the Audit has been modified.
      */
     public boolean isModified() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3833
         return this.modified;
     }
 

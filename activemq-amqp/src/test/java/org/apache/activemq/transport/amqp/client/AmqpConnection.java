@@ -117,6 +117,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         this.remoteURI = transport.getRemoteLocation();
 
         this.serializer = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6674
 
             @Override
             public Thread newThread(Runnable runner) {
@@ -128,10 +129,12 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         });
 
         // Ensure timely shutdown
+//IC see: https://issues.apache.org/jira/browse/AMQ-6674
         this.serializer.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         this.serializer.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
 
         this.transport.setTransportListener(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6675
         this.transport.setMaxFrameSize(getMaxFrameSize());
     }
 
@@ -152,6 +155,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                         getEndpoint().setProperties(getOfferedProperties());
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
                     if (getIdleTimeout() > 0) {
                         protonTransport.setIdleTimeout(getIdleTimeout());
                     }
@@ -162,10 +166,13 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                     if (sasl != null) {
                         sasl.client();
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
                     authenticator = new SaslAuthenticator(sasl, username, password, authzid, mechanismRestriction);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6479
                     ((TransportImpl) protonTransport).setProtocolTracer(new AmqpProtocolTracer(AmqpConnection.this));
                     open(future);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
                     pumpToProtonTransport(future);
                 }
             });
@@ -214,6 +221,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                             request.onSuccess();
                         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
                         pumpToProtonTransport(request);
                     } catch (Exception e) {
                         LOG.debug("Caught exception while closing proton connection");
@@ -269,8 +277,10 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
             public void run() {
                 checkClosed();
                 session.setEndpoint(getEndpoint().session());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
                 session.setStateInspector(getStateInspector());
                 session.open(request);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
                 pumpToProtonTransport(request);
             }
         });
@@ -284,6 +294,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
 
     public void sendRawBytes(final byte[] rawData) throws Exception {
         checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5731
 
         final ClientFuture request = new ClientFuture();
 
@@ -322,6 +333,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     }
 
     public void setAuthzid(String authzid) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         this.authzid = authzid;
     }
 
@@ -386,6 +398,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     }
 
     public long getDrainTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         return drainTimeout;
     }
 
@@ -418,10 +431,12 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     }
 
     public Connection getConnection() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6672
         return UnmodifiableProxy.connectionProxy(getEndpoint());
     }
 
     public AmqpConnectionListener getListener() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
         return listener;
     }
 
@@ -451,6 +466,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
      * @param mechanismRestriction the mechanism to use
      */
     public void setMechanismRestriction(String mechanismRestriction) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         this.mechanismRestriction = mechanismRestriction;
     }
 
@@ -467,6 +483,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     }
 
     public AmqpFrameValidator getSentFrameInspector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6479
         return sentFrameInspector;
     }
 
@@ -492,6 +509,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         return getEndpoint();
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
     String getConnectionId() {
         return this.connectionId;
     }
@@ -501,6 +519,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     }
 
     void pumpToProtonTransport() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         pumpToProtonTransport(NOOP_REQUEST);
     }
 
@@ -520,6 +539,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
             }
         } catch (IOException e) {
             fireClientException(e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
             request.onFailure(e);
         }
     }
@@ -539,6 +559,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                 ByteBuffer source = incoming.nioBuffer();
                 LOG.trace("Client Received from Broker {} bytes:", source.remaining());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
                 if (protonTransport.isClosed()) {
                     LOG.debug("Ignoring incoming data because transport is closed");
                     return;
@@ -567,6 +588,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     @Override
     public void onTransportClosed() {
         LOG.debug("The transport has unexpectedly closed");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         failed(getOpenAbortException());
     }
 
@@ -588,6 +610,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                 long initialNow = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
                 long initialKeepAliveDeadline = protonTransport.tick(initialNow);
                 if (initialKeepAliveDeadline != 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6813
 
                     getScheduler().schedule(new Runnable() {
 
@@ -599,6 +622,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                                     // Using nano time since it is not related to the wall clock, which may change
                                     long now = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
                                     long deadline = protonTransport.tick(now);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6813
 
                                     pumpToProtonTransport();
                                     if (protonTransport.isClosed()) {
@@ -618,6 +642,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                                 fireClientException(e);
                             }
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6031
                     }, initialKeepAliveDeadline - initialNow, TimeUnit.MILLISECONDS);
                 }
             }
@@ -644,6 +669,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     }
 
     protected void fireClientException(Throwable ex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
         AmqpConnectionListener listener = this.listener;
         if (listener != null) {
             listener.onException(ex);
@@ -664,6 +690,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                     LOG.trace("Client: New Proton Event: {}", protonEvent.getType());
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
                 AmqpEventSink amqpEventSink = null;
                 switch (protonEvent.getType()) {
                     case CONNECTION_REMOTE_CLOSE:

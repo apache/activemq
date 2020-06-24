@@ -57,6 +57,9 @@ class TopicBridge extends DestinationBridge {
     @Override
     protected MessageConsumer createConsumer() throws JMSException {
         // set up the consumer
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
         if (consumerConnection == null) return null;
         consumerSession = consumerConnection.createTopicSession(false, Session.CLIENT_ACKNOWLEDGE);
         MessageConsumer consumer = null;
@@ -76,6 +79,9 @@ class TopicBridge extends DestinationBridge {
         }
 
         consumer.setMessageListener(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
 
         return consumer;
     }
@@ -113,6 +119,9 @@ class TopicBridge extends DestinationBridge {
      */
     public void setConsumerConnection(TopicConnection consumerConnection) {
         this.consumerConnection = consumerConnection;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
         if (started.get()) {
             try {
                 createConsumer();

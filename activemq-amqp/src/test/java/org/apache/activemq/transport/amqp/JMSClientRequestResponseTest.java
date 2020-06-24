@@ -61,6 +61,7 @@ public class JMSClientRequestResponseTest extends AmqpTestSupport implements Mes
     @Override
     @After
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         if (requestorConnection != null) {
             try {
                 requestorConnection.close();
@@ -152,6 +153,7 @@ public class JMSClientRequestResponseTest extends AmqpTestSupport implements Mes
     }
 
     private Connection createConnection(String clientId) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         return JMSClientContext.INSTANCE.createConnection(amqpURI, "admin", "password", clientId);
     }
 

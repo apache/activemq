@@ -55,6 +55,7 @@ public class SharedFileLocker extends AbstractLocker {
                 while ((!isStopped()) && (!isStopping())) {
                     try {
                         lockFile.lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
                         if (warned) {
                             // ensure lockHolder has released; wait for one keepAlive iteration
                             try {
@@ -62,9 +63,11 @@ public class SharedFileLocker extends AbstractLocker {
                             } catch (InterruptedException e1) {
                             }
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
                         locked = keepAlive();
                         break;
                     } catch (IOException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5709
                         if (!warned)
                         {
                             LOG.info("Database "
@@ -80,6 +83,7 @@ public class SharedFileLocker extends AbstractLocker {
                                     + " seconds for the database to be unlocked. Reason: "
                                     + e);
                         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
                             TimeUnit.MILLISECONDS.sleep(lockAcquireSleepInterval);
                         } catch (InterruptedException e1) {
                         }

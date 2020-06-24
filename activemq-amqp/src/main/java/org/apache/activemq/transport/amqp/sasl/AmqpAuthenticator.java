@@ -76,6 +76,7 @@ public class AmqpAuthenticator {
 
                 mechanism.processSaslStep(sasl);
                 if (!mechanism.isFailed()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
 
                     connectionInfo.setUserName(mechanism.getUsername());
                     connectionInfo.setPassword(mechanism.getPassword());

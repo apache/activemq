@@ -60,6 +60,7 @@ public class ClientTestSupport extends TestCase {
         try {
             broker = BrokerFactory.createBroker(new URI(this.brokerURL));
             broker.getBrokerName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
             connector = new TransportConnector(TransportFactory.bind(new URI(this.brokerURL))) {
                 // Hook into the connector so we can assert that the server
                 // accepted a connection.
@@ -69,6 +70,7 @@ public class ClientTestSupport extends TestCase {
                     return super.createConnection(transport);
                 }
             };
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
             broker.addConnector(connector);
             broker.start();
 

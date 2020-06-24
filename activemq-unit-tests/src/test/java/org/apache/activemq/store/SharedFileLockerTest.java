@@ -52,6 +52,8 @@ public class SharedFileLockerTest {
 
 
     public SharedFileLockerTest() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5709
+//IC see: https://issues.apache.org/jira/browse/AMQ-4705
         File file = new File(IOHelper.getDefaultDataDirectory());
         file.mkdir();
 
@@ -148,6 +150,7 @@ public class SharedFileLockerTest {
             thread.join(5000);
 
             Assert.assertEquals("Extra logs in place", 1, logCounts.get());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5709
 
             long timeout = System.currentTimeMillis() + 5000;
 
@@ -160,6 +163,7 @@ public class SharedFileLockerTest {
             locker2.stop();
 
             Assert.assertEquals(0, errors.get());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5709
 
         } finally {
 

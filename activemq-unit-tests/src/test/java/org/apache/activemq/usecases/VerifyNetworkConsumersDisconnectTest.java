@@ -52,6 +52,7 @@ public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTest
 
     protected Map<String, MessageConsumer> consumerMap;
     Map<Thread, Throwable> unhandledExceptions = new HashMap<Thread, Throwable>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
 
     private void assertNoUnhandledExceptions() {
         for( Entry<Thread, Throwable> e: unhandledExceptions.entrySet()) {
@@ -66,6 +67,7 @@ public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTest
         networkConnector.setSuppressDuplicateQueueSubscriptions(true);
         networkConnector.setDecreaseNetworkConsumerPriority(true);
         networkConnector.setDuplex(DUPLEX);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         networkConnector.setConduitNetworkQueueSubscriptions(conduitNetworkQueueSubscriptions);
         return networkConnector;
     }
@@ -75,6 +77,7 @@ public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTest
     }
 
     /*why conduit proxy proxy consumers gets us in a knot w.r.t removal
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
     DC-7 for CA-9, add DB-15, remove CA-9, add CB-8
     CB-8 add DC-7
     CB-8 - why not dead?
@@ -101,6 +104,7 @@ public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTest
             consumerMap.put("Consumer:" + i + ":0", createConsumer("Broker" + i, dest));
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         assertExactConsumersConnect("Broker0", 3, 1, TIMEOUT);
         assertExactConsumersConnect("Broker2", 3, 1, TIMEOUT);
         // piggy in the middle
@@ -125,6 +129,7 @@ public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTest
 
         // wait for consumers to get propagated
         for (int i = 0; i < BROKER_COUNT; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         	assertExactConsumersConnect("Broker" + i, 3, 1, TIMEOUT);
         }
 
@@ -143,6 +148,7 @@ public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTest
     }
 
     public void testConsumerOnEachBrokerNetworkQueueConduitSubs() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         bridge("Broker0", "Broker1", true);
         if (!DUPLEX) bridge("Broker1", "Broker0", true);
 
@@ -194,6 +200,7 @@ public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTest
 
         LOG.info("Check for no consumers..");
         for (int i = 0; i < BROKER_COUNT; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
             assertExactConsumersConnect("Broker" + i, 0, 0, TIMEOUT);
         }
 
@@ -208,6 +215,7 @@ public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTest
 
         startAllBrokers();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         waitForBridgeFormation(brokers.get("Broker0").broker, 1, 0);
         waitForBridgeFormation(brokers.get("Broker2").broker, 1, 0);
         waitForBridgeFormation(brokers.get("Broker1").broker, 1, 0);
@@ -299,6 +307,7 @@ public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTest
         super.setAutoFail(true);
         super.setUp();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         unhandledExceptions.clear();
         Thread.setDefaultUncaughtExceptionHandler(this);
 
@@ -321,6 +330,7 @@ public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTest
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         synchronized(unhandledExceptions) {
             unhandledExceptions.put(t, e);
         }

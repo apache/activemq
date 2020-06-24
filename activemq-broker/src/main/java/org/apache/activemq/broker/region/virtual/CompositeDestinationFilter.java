@@ -46,6 +46,7 @@ public class CompositeDestinationFilter extends DestinationFilter {
         super(next);
         this.forwardDestinations = forwardDestinations;
         this.forwardOnly = forwardOnly;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         this.concurrentSend = concurrentSend;
     }
 
@@ -110,8 +111,10 @@ public class CompositeDestinationFilter extends DestinationFilter {
     }
 
     private void doForward(ProducerBrokerExchange context, Message message, Broker regionBroker, ActiveMQDestination destination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6281
         Message forwardedMessage = message.copy();
         forwardedMessage.setMemoryUsage(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6696
 
         forwardedMessage.setOriginalDestination( message.getDestination() );
         forwardedMessage.setDestination(destination);

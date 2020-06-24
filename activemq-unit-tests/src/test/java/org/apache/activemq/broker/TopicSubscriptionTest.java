@@ -41,6 +41,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
 
     @After
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         super.tearDown();
         ThreadTracker.result();
     }
@@ -56,6 +57,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount * consumerCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         assertDestinationMemoryUsageGoesToZero();
     }
 
@@ -70,6 +72,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         assertDestinationMemoryUsageGoesToZero();
     }
 
@@ -84,6 +87,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         assertDestinationMemoryUsageGoesToZero();
     }
 
@@ -111,6 +115,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         assertDestinationMemoryUsageGoesToZero();
     }
 
@@ -125,6 +130,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         assertDestinationMemoryUsageGoesToZero();
     }
 
@@ -139,6 +145,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         assertDestinationMemoryUsageGoesToZero();
     }
 

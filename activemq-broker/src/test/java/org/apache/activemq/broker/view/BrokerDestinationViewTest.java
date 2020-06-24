@@ -65,6 +65,7 @@ public class BrokerDestinationViewTest {
         producerConnection = factory.createConnection();
         producerConnection.start();
         producerSession = producerConnection.createSession(false,Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7151
         queue = producerSession.createQueue(queueName);
         producer = producerSession.createProducer(queue);
     }
@@ -88,6 +89,7 @@ public class BrokerDestinationViewTest {
          }
 
          MessageBrokerView messageBrokerView = MessageBrokerViewRegistry.getInstance().lookup("");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7151
          BrokerDestinationView destinationView = messageBrokerView.getQueueDestinationView(queueName);
          assertEquals(destinationView.getQueueSize(),messageCount);
 

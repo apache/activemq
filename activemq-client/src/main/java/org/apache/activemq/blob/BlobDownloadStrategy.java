@@ -29,5 +29,6 @@ public interface BlobDownloadStrategy {
     InputStream getInputStream(ActiveMQBlobMessage message) throws IOException, JMSException;
     
     void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
 
 }

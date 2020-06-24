@@ -127,6 +127,7 @@ public class JMXRemoveQueueThenSendIgnoredTest {
 
     private int numberOfMessages() throws Exception {
         ObjectName queueViewMBeanName = new ObjectName(
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             domain + ":destinationType=Queue,destinationName=myqueue,type=Broker,brokerName=dev");
         QueueViewMBean queue = (QueueViewMBean)
                 brokerService.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);

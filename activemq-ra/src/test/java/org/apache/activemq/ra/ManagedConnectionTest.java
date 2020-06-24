@@ -52,6 +52,7 @@ public class ManagedConnectionTest {
     @Before
     public void setUp() throws Exception {
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-765
         managedConnectionFactory.setServerUrl(DEFAULT_HOST);
         managedConnectionFactory.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
         managedConnectionFactory.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
@@ -63,6 +64,7 @@ public class ManagedConnectionTest {
 
     @After
     public void destroyManagedConnection() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6068
         if (managedConnection != null) {
             managedConnection.destroy();
         }
@@ -169,6 +171,7 @@ public class ManagedConnectionTest {
     @Test(timeout = 60000)
     public void testSetClientIdAfterCleanup() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6068
         connection.setClientID("test");
         try {
             connection.setClientID("test");

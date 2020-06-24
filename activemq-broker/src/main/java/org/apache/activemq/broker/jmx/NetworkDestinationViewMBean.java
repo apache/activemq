@@ -29,6 +29,7 @@ public interface NetworkDestinationViewMBean {
      */
     @MBeanInfo("Resets statistics.")
     void resetStats();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
 
     /**
      * Returns the number of messages that have been sent to the destination.

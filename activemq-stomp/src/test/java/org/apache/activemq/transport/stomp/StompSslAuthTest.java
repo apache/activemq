@@ -31,6 +31,7 @@ public class StompSslAuthTest extends StompTest {
 
     @Override
     protected boolean isUseTcpConnector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         return false;
     }
 
@@ -54,6 +55,7 @@ public class StompSslAuthTest extends StompTest {
 
     @Override
     public void addOpenWireConnector() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         TransportConnector connector = brokerService.addConnector("ssl://0.0.0.0:0?transport.needClientAuth=true");
         cf = new ActiveMQConnectionFactory(connector.getPublishableConnectString() + "?socket.verifyHostName=false");
     }

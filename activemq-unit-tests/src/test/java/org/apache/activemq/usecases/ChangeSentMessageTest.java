@@ -34,6 +34,7 @@ import org.apache.activemq.test.TestSupport;
 public class ChangeSentMessageTest extends TestSupport {
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util,java.lang");
     }
 
@@ -57,6 +58,7 @@ public class ChangeSentMessageTest extends TestSupport {
         HashMap<String, Integer> map = new HashMap<String, Integer>();
         ObjectMessage message = publisherSession.createObjectMessage();
         for (int i = 0; i < COUNT; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
             map.put(VALUE_NAME, Integer.valueOf(i));
             message.setObject(map);
             producer.send(message);

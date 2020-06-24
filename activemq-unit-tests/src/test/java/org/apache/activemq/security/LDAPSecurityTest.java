@@ -57,6 +57,7 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
     @Before
     public void setup() throws Exception {
         System.setProperty("ldapPort", String.valueOf(getLdapServer().getPort()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3791
 
         broker = BrokerFactory.createBroker("xbean:org/apache/activemq/security/activemq-ldap.xml");
         broker.start();
@@ -103,6 +104,7 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
 
     @Test
     public void testSendDenied() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
         Connection conn = factory.createQueueConnection("jdoe", "sunflower");
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -135,6 +137,7 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
 
     @Test
     public void testTempDestinations() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
         Connection conn = factory.createQueueConnection("jdoe", "sunflower");
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);

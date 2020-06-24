@@ -72,6 +72,7 @@ public class JournalMessageStore extends AbstractMessageStore {
     private MemoryUsage memoryUsage;
 
     public JournalMessageStore(JournalPersistenceAdapter adapter, MessageStore checkpointStore, ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1842
         super(destination);
         this.peristenceAdapter = adapter;
         this.transactionStore = adapter.getTransactionStore();

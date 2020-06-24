@@ -149,6 +149,7 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
 
     @Override
     protected void doStart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6801
         transport.setTransportListener(getTransportListener());
         socketTransportStarted.countDown();
 
@@ -219,6 +220,7 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
     public void onWebSocketConnect(Session session) {
         this.session = session;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         if (wsTransport.getMaxFrameSize() > 0) {
             this.session.getPolicy().setMaxBinaryMessageSize(wsTransport.getMaxFrameSize());
             this.session.getPolicy().setMaxTextMessageSize(wsTransport.getMaxFrameSize());
@@ -242,6 +244,7 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
         }
 
         LOG.trace("WS Proxy sending string of size {} out", data.length());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6482
         try {
             session.getRemote().sendStringByFuture(data).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -262,6 +265,7 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
 
         LOG.trace("WS Proxy sending {} bytes out", data.remaining());
         int limit = data.limit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6482
         try {
             session.getRemote().sendBytesByFuture(data).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -282,6 +286,7 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
     }
 
     private static int getDefaultSendTimeOut() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6482
         return Integer.getInteger("org.apache.activemq.transport.ws.WSTransportProxy.sendTimeout", 30);
     }
 }

@@ -121,6 +121,7 @@ public class PropertiesLoginModuleRaceConditionTest {
     public void after() throws InterruptedException {
         pool.shutdown();
         assertTrue(pool.awaitTermination(500, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5876
         PropertiesLoader.resetUsersAndGroupsCache();
     }
 

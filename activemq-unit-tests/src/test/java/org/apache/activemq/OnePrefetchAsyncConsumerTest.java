@@ -89,6 +89,7 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
 
     @Override
     protected ConnectionFactory createConnectionFactory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
     }
 

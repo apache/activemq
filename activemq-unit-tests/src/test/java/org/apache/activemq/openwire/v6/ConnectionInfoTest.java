@@ -65,7 +65,11 @@ public class ConnectionInfoTest extends BaseCommandTestSupport {
         info.setBrokerMasterConnector(true);
         info.setManageable(false);
         info.setClientMaster(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         info.setFaultTolerant(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         info.setFailoverReconnect(true);
     }
 }

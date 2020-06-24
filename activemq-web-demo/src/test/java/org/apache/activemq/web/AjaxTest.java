@@ -67,6 +67,7 @@ public class AjaxTest extends JettyTestSupport {
         // client 1 subscribes to a queue
         LOG.debug( "SENDING LISTEN" );
         String sessionId = subscribe(httpClient, port, "destination=queue://test&type=listen&message=handler");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
 
         // client 1 polls for messages
         LOG.debug( "SENDING POLL" );
@@ -94,6 +95,7 @@ public class AjaxTest extends JettyTestSupport {
 
         String fullResponse = response + buf2.toString();
         LOG.debug( "full response : " + fullResponse );
+//IC see: https://issues.apache.org/jira/browse/AMQ-3865
         assertContains( "<response id='handler' destination='queue://test' >msg1</response>", fullResponse );
         assertContains( "<response id='handler' destination='queue://test' >msg2</response>", fullResponse );
         assertContains( "<response id='handler' destination='queue://test' >msg3</response>", fullResponse );
@@ -113,6 +115,7 @@ public class AjaxTest extends JettyTestSupport {
         // client 1 subscribes to a queue
         LOG.debug( "SENDING LISTEN" );
         String sessionId = subscribe(httpClient, port, "destination=topic://test&type=listen&message=handler");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
 
         // client 1 polls for messages
         LOG.debug( "SENDING POLL" );
@@ -141,6 +144,7 @@ public class AjaxTest extends JettyTestSupport {
 
         LOG.debug( "full response : " + fullResponse );
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3865
         assertContains( "<response id='handler' destination='topic://test' >msg1</response>", fullResponse );
         assertContains( "<response id='handler' destination='topic://test' >msg2</response>", fullResponse );
         assertContains( "<response id='handler' destination='topic://test' >msg3</response>", fullResponse );
@@ -165,6 +169,7 @@ public class AjaxTest extends JettyTestSupport {
         // client 1 subscribes to queue
         LOG.debug( "SENDING LISTEN" );
         String sessionId = subscribe(httpClient, port, "destination=queue://test&type=listen&message=handler");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
 
         // client 1 polls for messages
         LOG.debug( "SENDING POLL" );
@@ -176,6 +181,7 @@ public class AjaxTest extends JettyTestSupport {
         latch.await();
         String response = buf.toString();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3865
         assertContains( "<response id='handler' destination='queue://test' >test one</response>", response );
         assertContains( "<response id='handler' destination='queue://test' >test two</response>", response );
         assertContains( "<response id='handler' destination='queue://test' >test three</response>", response );
@@ -195,6 +201,7 @@ public class AjaxTest extends JettyTestSupport {
         // client 1 subscribes to a queue
         LOG.debug( "SENDING LISTEN" );
         String sessionId = subscribe(httpClient, port, "destination=queue://test&type=listen&message=handler");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
 
         // client 1 polls for messages
         LOG.debug( "SENDING POLL" );
@@ -223,6 +230,7 @@ public class AjaxTest extends JettyTestSupport {
         connection.disconnect();
 
         // wait for poll to finish
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         latch.await();
         String response = buf.toString();
 
@@ -234,6 +242,7 @@ public class AjaxTest extends JettyTestSupport {
 
         String fullResponse = response + buf2.toString();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3865
         assertContains( "<response id='handler' destination='queue://test' >message1</response>", fullResponse );
         assertContains( "<response id='handler' destination='queue://test' >message2</response>", fullResponse );
         assertContains( "<response id='handler' destination='queue://test' >message3</response>", fullResponse );
@@ -252,6 +261,7 @@ public class AjaxTest extends JettyTestSupport {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         sendMessages(httpClient, port, ("destination=queue://test&type=send&message=msg1&"+
                 "d1=queue://test&t1=send&m1=msg2&"+
                 "d2=queue://test&t2=send&m2=msg3&"+
@@ -301,6 +311,7 @@ public class AjaxTest extends JettyTestSupport {
         // client subscribes to queue
         LOG.debug( "SENDING LISTEN" );
         String sessionId = subscribe(httpClient, port, "destination=queue://test&type=listen&message=handler", "filter='two'", null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
 
         // client 1 polls for messages
         LOG.debug( "SENDING POLL" );
@@ -336,6 +347,7 @@ public class AjaxTest extends JettyTestSupport {
         // clientA subscribes to /queue/testA
         LOG.debug( "SENDING LISTEN" );
         String sessionId = subscribe(httpClient, port, "destination=queue://testA&type=listen&message=handlerA&clientId=clientA");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
 
         // clientB subscribes to /queue/testB using the same JSESSIONID.
         subscribe(httpClient, port, "destination=queue://testB&type=listen&message=handlerB&clientId=clientB", null, sessionId);
@@ -379,6 +391,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING LISTEN FOR /topic/topicA" );
         String sessionId = subscribe(httpClient, port, "destination=topic://topicA&type=listen&message=handlerA");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
 
         LOG.debug( "SENDING LISTEN FOR /topic/topicB" );
         subscribe(httpClient, port, "destination=topic://topicB&type=listen&message=handlerB", null, sessionId);
@@ -408,6 +421,7 @@ public class AjaxTest extends JettyTestSupport {
 
         String fullResponse = response + buf2.toString();
         LOG.debug( "full response " + fullResponse );
+//IC see: https://issues.apache.org/jira/browse/AMQ-3865
         assertContains( "<response id='handlerA' destination='topic://topicA' >A1</response>", fullResponse );
         assertContains( "<response id='handlerB' destination='topic://topicB' >B1</response>", fullResponse );
         assertContains( "<response id='handlerA' destination='topic://topicA' >A2</response>", fullResponse );
@@ -418,6 +432,7 @@ public class AjaxTest extends JettyTestSupport {
      }
 
     protected void sendMessages(HttpClient httpClient, int port, byte[] content) throws InterruptedException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         final CountDownLatch latch = new CountDownLatch(1);
         final StringBuffer buf = new StringBuffer();
         httpClient

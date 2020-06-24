@@ -85,6 +85,7 @@ public class AmqpFrameParser {
         }
 
         if (frameSize > maxFrameSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6228
             throw IOExceptionSupport.createFrameSizeException(frameSize, maxFrameSize);
         }
     }

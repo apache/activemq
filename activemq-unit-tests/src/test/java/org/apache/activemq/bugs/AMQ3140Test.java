@@ -135,6 +135,7 @@ public class AMQ3140Test {
 
         // wait until all scheduled messages has been received
         TimeUnit.MINUTES.sleep(2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4073
 
         session.close();
         connection.close();

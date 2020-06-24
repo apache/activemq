@@ -40,6 +40,7 @@ public class DiscoveryUriTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testConnect() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("discovery:(multicast://default?group=test)?reconnectDelay=1000&maxReconnectAttempts=30&useExponentialBackOff=false");
         Connection conn = factory.createConnection();
         conn.start();
@@ -53,7 +54,9 @@ public class DiscoveryUriTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testFailedConnect() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("discovery:(multicast://default?group=test1)?reconnectDelay=1000&startupMaxReconnectAttempts=3&useExponentialBackOff=false");
             Connection conn = factory.createConnection();
             conn.start();

@@ -60,6 +60,8 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         }
 
         public SimpleDiscoveryEvent(SimpleDiscoveryEvent copy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4159
+//IC see: https://issues.apache.org/jira/browse/AMQ-5442
             super(copy);
             connectFailures = copy.connectFailures;
             reconnectDelay = copy.reconnectDelay;
@@ -69,6 +71,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
             return "[" + serviceName + ", failed:" + failed + ", connectionFailures:" + connectFailures + "]";
         }
     }
@@ -84,9 +87,11 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
     @Override
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         taskRunner = new TaskRunnerFactory();
         taskRunner.init();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-803
         running.set(true);
         for (int i = 0; i < services.length; i++) {
             listener.onServiceAdd(new SimpleDiscoveryEvent(services[i]));
@@ -97,7 +102,9 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     public void stop() throws Exception {
         running.set(false);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5442
         if (taskRunner != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
             taskRunner.shutdown();
         }
 
@@ -130,10 +137,12 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     @Override
     public void serviceFailed(DiscoveryEvent devent) throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4159
         final SimpleDiscoveryEvent sevent = (SimpleDiscoveryEvent)devent;
         if (running.get() && sevent.failed.compareAndSet(false, true)) {
 
             listener.onServiceRemove(sevent);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
             taskRunner.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -151,6 +160,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                             return;
                         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6235
                         if (!useExponentialBackOff || event.reconnectDelay == -1) {
                             event.reconnectDelay = initialReconnectDelay;
                         } else {
@@ -162,6 +172,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                         }
 
                         doReconnectDelay(event);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6235
 
                     } else {
                         LOG.trace("Failure occurred to long after the discovery event was generated.  " +
@@ -181,11 +192,13 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                     event.failed.set(false);
                     listener.onServiceAdd(event);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2852
             }, "Simple Discovery Agent");
         }
     }
 
     protected void doReconnectDelay(SimpleDiscoveryEvent event) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6235
         synchronized (sleepMutex) {
             try {
                 if (!running.get()) {
@@ -197,6 +210,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                 sleepMutex.wait(event.reconnectDelay);
             } catch (InterruptedException ie) {
                 LOG.debug("Reconnecting disabled: ", ie);
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
                 Thread.currentThread().interrupt();
                 return;
             }

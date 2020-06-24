@@ -46,6 +46,7 @@ public abstract class CamelEmbeddedBrokerTestSupport extends EmbeddedBrokerTestS
         addCamelRoutes(camelContext);
         assertValidContext(camelContext);
         camelContext.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2130
         template = camelContext.createProducerTemplate();
         template.start();
     }

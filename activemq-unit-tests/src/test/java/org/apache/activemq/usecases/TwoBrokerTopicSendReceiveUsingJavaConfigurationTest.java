@@ -31,6 +31,7 @@ public class TwoBrokerTopicSendReceiveUsingJavaConfigurationTest extends TwoBrok
     protected ActiveMQConnectionFactory createReceiverConnectionFactory() throws JMSException {
         try {
             receiveBroker = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2897
             receiveBroker.setBrokerName("receiveBroker");
             receiveBroker.setUseJmx(false);
             receiveBroker.setPersistent(false);
@@ -49,6 +50,7 @@ public class TwoBrokerTopicSendReceiveUsingJavaConfigurationTest extends TwoBrok
     protected ActiveMQConnectionFactory createSenderConnectionFactory() throws JMSException {
         try {
             sendBroker = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2897
             sendBroker.setBrokerName("sendBroker");
             sendBroker.setUseJmx(false);
             sendBroker.setPersistent(false);

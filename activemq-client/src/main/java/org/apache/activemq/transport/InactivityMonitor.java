@@ -38,7 +38,9 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
     private boolean ignoreAllWireFormatInfo = false;
 
     public InactivityMonitor(Transport next, WireFormat wireFormat) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         super(next, wireFormat);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2764
         if (this.wireFormat == null) {
             this.ignoreAllWireFormatInfo = true;
         }
@@ -46,7 +48,9 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
 
     @Override
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         if (!isMonitorStarted()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
             startConnectCheckTask();
         }
         super.start();
@@ -82,6 +86,7 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
         long readCheckTime = getReadCheckTime();
 
         if (readCheckTime > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3603
             setWriteCheckTime(writeCheckValueFromReadCheck(readCheckTime));
         }
 
@@ -103,8 +108,10 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
                     LOG.debug("Using min of local: " + localWireFormatInfo + " and remote: " + remoteWireFormatInfo);
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
                 long readCheckTime = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
                 long writeCheckTime = writeCheckValueFromReadCheck(readCheckTime);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3603
 
                 setReadCheckTime(readCheckTime);
                 setInitialDelayTime(Math.min(localWireFormatInfo.getMaxInactivityDurationInitalDelay(), remoteWireFormatInfo.getMaxInactivityDurationInitalDelay()));
@@ -117,6 +124,7 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
 
                 long readCheckTime = localWireFormatInfo.getMaxInactivityDuration();
                 long writeCheckTime = writeCheckValueFromReadCheck(readCheckTime);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3603
 
                 setReadCheckTime(readCheckTime);
                 setInitialDelayTime(localWireFormatInfo.getMaxInactivityDurationInitalDelay());
@@ -129,6 +137,7 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
     }
 
     public boolean isIgnoreAllWireFormatInfo() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         return ignoreAllWireFormatInfo;
     }
 

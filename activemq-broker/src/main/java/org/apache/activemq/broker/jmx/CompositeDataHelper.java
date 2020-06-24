@@ -35,6 +35,7 @@ public class CompositeDataHelper {
      */
     public static Map getTabularMap(CompositeData cdata, String fieldName) {
         Map map = new HashMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
         appendTabularMap(map, cdata, fieldName);
         return map;
     }
@@ -61,6 +62,7 @@ public class CompositeDataHelper {
      * @return a Map of user properties
      */
     public static Map getMessageUserProperties(CompositeData cdata) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1904
         Map map = new HashMap();
         appendTabularMap(map, cdata, CompositeDataConstants.STRING_PROPERTIES);
         appendTabularMap(map, cdata, CompositeDataConstants.BOOLEAN_PROPERTIES);

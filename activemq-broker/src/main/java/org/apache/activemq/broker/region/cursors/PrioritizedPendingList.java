@@ -111,6 +111,8 @@ public class PrioritizedPendingList implements PendingList {
     protected int getPriority(MessageReference message) {
         int priority = javax.jms.Message.DEFAULT_PRIORITY;
         if (message.getMessageId() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
             priority = Math.max(message.getMessage().getPriority(), 0);
             priority = Math.min(priority, 9);
         }
@@ -129,6 +131,7 @@ public class PrioritizedPendingList implements PendingList {
         private MessageReference currentMessage;
 
         PrioritizedPendingListIterator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6239
             for (OrderedPendingList list : lists) {
                 if (!list.isEmpty()) {
                     iterators.push(list.iterator());
@@ -179,6 +182,7 @@ public class PrioritizedPendingList implements PendingList {
 
     @Override
     public boolean contains(MessageReference message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6069
         if (message != null) {
             return this.map.containsKey(message.getMessageId());
         }
@@ -199,6 +203,7 @@ public class PrioritizedPendingList implements PendingList {
 
     @Override
     public MessageReference get(MessageId messageId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5149
         PendingNode node = map.get(messageId);
         if (node != null) {
             return node.getMessage();

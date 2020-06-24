@@ -57,6 +57,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
      * @param destination - JMS destination to query
      */
     public AmqMessagesQueryFilter(ConnectionFactory connectionFactory, Destination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
         super(null);
         this.destination = destination;
         this.connectionFactory = connectionFactory;
@@ -73,6 +74,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
         String selector = "";
 
         // Convert to message selector
+//IC see: https://issues.apache.org/jira/browse/AMQ-4066
         for (Object query : queries) {
             selector = selector + "(" + query.toString() + ") AND ";
         }
@@ -83,6 +85,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
         }
 
         if (destination instanceof ActiveMQQueue) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
             return queryMessages((ActiveMQQueue) destination, selector);
         } else {
             return queryMessages((ActiveMQTopic) destination, selector);
@@ -134,6 +137,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
      */
     protected Connection createConnection() throws JMSException {
         // maintain old behaviour, when called either way.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4066
         if (null == connectionFactory) {
             connectionFactory = (new ActiveMQConnectionFactory(getBrokerUrl()));
         }

@@ -121,6 +121,7 @@ public class FailoverTxSlowAckTest {
 
         broker.start();
         url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setWatchTopicAdvisories(false);
@@ -139,6 +140,7 @@ public class FailoverTxSlowAckTest {
 
         final CountDownLatch commitDoneLatch = new CountDownLatch(1);
         final CountDownLatch messagesReceived = new CountDownLatch(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
         final CountDownLatch brokerDisconnectedLatch = new CountDownLatch(1);
         final AtomicInteger receivedCount = new AtomicInteger();
 
@@ -183,6 +185,7 @@ public class FailoverTxSlowAckTest {
 
                             //connect down to trigger reconnect
                             brokerDisconnectedLatch.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
 
                             LOG.info("got disconnect");
                             gotReconnected.set(Wait.waitFor(new Wait.Condition() {
@@ -227,11 +230,13 @@ public class FailoverTxSlowAckTest {
         // will be stopped by the plugin on TX ack
         broker.waitUntilStopped();
         //await for listener to detect disconnect
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
         brokerDisconnectedLatch.await();
         broker = createBroker(false, url);
         broker.start();
 
         assertTrue("message was recieved ", messagesReceived.await(20, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5854
         assertTrue("tx complete through failover", commitDoneLatch.await(40, TimeUnit.SECONDS));
         assertEquals("one delivery", 1, receivedCount.get());
 

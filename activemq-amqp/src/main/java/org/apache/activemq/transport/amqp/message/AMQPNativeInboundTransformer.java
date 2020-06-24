@@ -22,11 +22,13 @@ public class AMQPNativeInboundTransformer extends AMQPRawInboundTransformer {
 
     @Override
     public String getTransformerName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5795
         return TRANSFORMER_NATIVE;
     }
 
     @Override
     public InboundTransformer getFallbackTransformer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         return new AMQPRawInboundTransformer();
     }
 

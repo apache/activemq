@@ -83,6 +83,7 @@ public class JmsTransactedMessageOrderTest extends JMSClientTestSupport {
         sendMessages(5);
 
         int counter = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6340
         while (counter++ < 20) {
             LOG.info("Creating connection using prefetch of: {}", prefetch);
 

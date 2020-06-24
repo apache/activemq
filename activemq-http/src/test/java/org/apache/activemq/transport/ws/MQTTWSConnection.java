@@ -76,6 +76,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
     }
 
     protected Session getConnection() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6073
         return connection;
     }
 
@@ -91,6 +92,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
         command.cleanSession(false);
         command.version(3);
         command.keepAlive((short) 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6343
         connect(command);
     }
 
@@ -98,11 +100,13 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
         checkConnected();
 
         sendBytes(wireFormat.marshal(command.encode()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
 
         MQTTFrame incoming = receive(15, TimeUnit.SECONDS);
 
         if (incoming == null || incoming.messageType() != CONNACK.TYPE) {
             throw new IOException("Failed to connect to remote service.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6029
         } else {
             CONNACK connack = new CONNACK().decode(incoming);
             if (!connack.code().equals(CONNACK.Code.CONNECTION_ACCEPTED)) {
@@ -117,6 +121,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
         }
 
         DISCONNECT command = new DISCONNECT();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
         sendBytes(wireFormat.marshal(command.encode()));
     }
 
@@ -170,6 +175,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
     }
 
     public boolean isWritePartialFrames() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
         return writePartialFrames;
     }
 
@@ -253,6 +259,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
     //----- Internal implementation ------------------------------------------//
 
     private void sendBytes(ByteSequence payload) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
         if (!isWritePartialFrames()) {
             connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data, payload.offset, payload.length));
         } else {

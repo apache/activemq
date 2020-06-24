@@ -171,10 +171,12 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     public boolean isValidMessageSelector(List<String> errorMessages) {
         try {
             if (!isEmpty(messageSelector)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
                 SelectorParser.parse(messageSelector);
             }
             return true;
         } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2457
             errorMessages.add("messageSelector not set to valid message selector: " + e);
             return false;
         }
@@ -458,6 +460,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     public String toString() {
         return "ActiveMQActivationSpec{" + "acknowledgeMode='" + acknowledgeMode + "'" + ", destinationType='" + destinationType + "'" + ", messageSelector='" + messageSelector + "'"
                + ", destination='" + destination + "'" + ", clientId='" + clientId + "'" + ", subscriptionName='" + subscriptionName + "'" + ", subscriptionDurability='" + subscriptionDurability
+//IC see: https://issues.apache.org/jira/browse/AMQ-4305
                + "'" + ", useJndi='"+ useJndi + "'" +"}";
     }
 
@@ -505,6 +508,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
 
     public String getMaxMessagesPerSessions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         return maxMessagesPerSessions;
     }
 
@@ -573,6 +577,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
 
     public boolean getEnableBatchBooleanValue() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         return Boolean.valueOf(enableBatch).booleanValue();
     }
 
@@ -581,6 +586,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
 
     public String getMaxMessagesPerBatch() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         return maxMessagesPerBatch;
     }
 
@@ -629,6 +635,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
     
     public long getMaximumRedeliveryDelay() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3205
         if (redeliveryPolicy == null) {
             return 0;
         }
@@ -644,6 +651,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
      */
     public void setInitialRedeliveryDelay(long initialRedeliveryDelay) {
         lazyCreateRedeliveryPolicy().setInitialRedeliveryDelay(initialRedeliveryDelay);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5674
         redeliveryPolicy.setRedeliveryDelay(initialRedeliveryDelay);
     }
 
@@ -674,6 +682,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
     
     public void setUseJndi(boolean useJndi) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4305
         this.useJndi = useJndi;
     }
     
@@ -682,6 +691,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
 
     public String getTrustStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5782
         if (!isEmpty(trustStore)) {
             return trustStore;
         }

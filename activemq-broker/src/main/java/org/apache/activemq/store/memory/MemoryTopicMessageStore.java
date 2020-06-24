@@ -51,6 +51,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     }
 
     public MemoryTopicMessageStore(ActiveMQDestination destination, Map<MessageId, Message> messageTable,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
         Map<SubscriptionKey, SubscriptionInfo> subscriberDatabase) {
         super(destination, messageTable);
         this.subscriberDatabase = subscriberDatabase;
@@ -72,6 +73,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     @Override
     public synchronized void addMessage(ConnectionContext context, Message message) throws IOException {
         super.addMessage(context, message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
         for (MemoryTopicSub sub : topicSubMap.values()) {
             sub.addMessage(message.getMessageId(), message);
         }
@@ -95,6 +97,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     @Override
     public synchronized void addSubscription(SubscriptionInfo info, boolean retroactive) throws IOException {
         SubscriptionKey key = new SubscriptionKey(info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
         MemoryTopicSub sub = new MemoryTopicSub(key);
         topicSubMap.put(key, sub);
         if (retroactive) {
@@ -107,6 +110,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
 
     @Override
     public synchronized void deleteSubscription(String clientId, String subscriptionName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
         SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
         subscriberDatabase.remove(key);
         MemoryTopicSub subscription = topicSubMap.get(key);
@@ -210,6 +214,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
             decMessageStoreStatistics(messageStoreStatistics, eldest.getValue());
 
             // We aren't tracking this anymore so remove our reference to it.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
             eldest.getValue().decrementReferenceCount();
         }
     }

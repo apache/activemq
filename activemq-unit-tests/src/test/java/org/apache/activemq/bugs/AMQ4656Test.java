@@ -63,6 +63,7 @@ public class AMQ4656Test {
 
     @Parameterized.Parameters(name="{0}")
     public static Iterable<Object[]> getTestParameters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4656
         return Arrays.asList(new Object[][]{{new FilePendingDurableSubscriberMessageStoragePolicy()},{new StorePendingDurableSubscriberMessageStoragePolicy()}});
     }
 
@@ -102,6 +103,7 @@ public class AMQ4656Test {
 
         MessageConsumer consumer = session.createDurableSubscriber((Topic) destination, "EnqueueSub");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         final BrokerViewMBean brokerView = brokerService.getAdminView();
         ObjectName subName = brokerView.getDurableTopicSubscribers()[0];
 
@@ -125,6 +127,7 @@ public class AMQ4656Test {
         consumer = session.createDurableSubscriber((Topic) destination, "EnqueueSub");
 
         assertTrue("Should be an Active Subscription", Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -156,6 +159,7 @@ public class AMQ4656Test {
         LOG.info("Pending Queue Size with two receives: {}", sub.getPendingQueueSize());
 
         assertTrue("Should be an Active Subscription", Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
             @Override
             public boolean isSatisified() throws Exception {

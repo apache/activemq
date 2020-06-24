@@ -56,6 +56,7 @@ public interface BlobMessage extends Message {
 
 
     String getName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
 
     /**
      * The name of the attachment which can be useful information if transmitting files over ActiveMQ

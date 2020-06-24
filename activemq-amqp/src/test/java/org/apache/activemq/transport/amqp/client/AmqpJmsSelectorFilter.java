@@ -33,6 +33,7 @@ public class AmqpJmsSelectorFilter implements DescribedType {
 
     @Override
     public Object getDescriptor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
         return JMS_SELECTOR_CODE;
     }
 

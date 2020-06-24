@@ -31,6 +31,7 @@ public final class JmxMBeansUtil {
     }
 
     public static List getAllBrokers(MBeanServerConnection jmxConnection) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         return (new MBeansObjectNameQueryFilter(jmxConnection)).query("type=Broker,brokerName=*");
     }
 
@@ -58,6 +59,7 @@ public final class JmxMBeansUtil {
     }
 
     public static Map<Object, List> queryMBeansAsMap(MBeanServerConnection jmxConnection, List queryList, Set attributes) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5724
         Map<Object, List> answer = new HashMap<Object, List>();
         List<AttributeList> mbeans = queryMBeans(jmxConnection, queryList, attributes);
         for (AttributeList mbean : mbeans) {
@@ -99,6 +101,7 @@ public final class JmxMBeansUtil {
     }
 
     public static String createQueryString(String query, List params) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         String output = query;
         int count = 1;
         for (Iterator i = params.iterator(); i.hasNext();) {
@@ -109,6 +112,7 @@ public final class JmxMBeansUtil {
     }
 
     public static QueryFilter createMBeansObjectNameQuery(MBeanServerConnection jmxConnection) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4333
         return new MBeansObjectNameQueryFilter(jmxConnection);
     }
 
@@ -117,6 +121,7 @@ public final class JmxMBeansUtil {
         // Use regular expressions to filter the query result
         // Retrieve the attributes needed
         // Retrieve the mbeans object name specified by the query
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         return new MBeansAttributeQueryFilter(jmxConnection, attributes, new MBeansObjectNameQueryFilter(jmxConnection));
     }
 

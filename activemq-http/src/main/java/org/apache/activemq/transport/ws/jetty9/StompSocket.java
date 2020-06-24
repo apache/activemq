@@ -40,13 +40,16 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     private Session session;
 
     public StompSocket(String remoteAddress) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5865
         super(remoteAddress);
     }
 
     @Override
     public void sendToStomp(StompFrame command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6482
         try {
             //timeout after a period of time so we don't wait forever and hold the protocol lock
+//IC see: https://issues.apache.org/jira/browse/AMQ-6699
             session.getRemote().sendStringByFuture(getWireFormat().marshalToString(command)).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
@@ -55,6 +58,7 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
 
     @Override
     public void handleStopped() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5755
         if (session != null && session.isOpen()) {
             session.close();
         }
@@ -68,7 +72,9 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
 
     @Override
     public void onWebSocketClose(int arg0, String arg1) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4100
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6046
             if (protocolLock.tryLock() || protocolLock.tryLock(ORDERLY_CLOSE_TIMEOUT, TimeUnit.SECONDS)) {
                 LOG.debug("Stomp WebSocket closed: code[{}] message[{}]", arg0, arg1);
                 protocolConverter.onStompCommand(new StompFrame(Stomp.Commands.DISCONNECT));
@@ -93,10 +99,12 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
 
     @Override
     public void onWebSocketText(String data) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5155
         processStompFrame(data);
     }
 
     private static int getDefaultSendTimeOut() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6482
         return Integer.getInteger("org.apache.activemq.transport.ws.StompSocket.sendTimeout", 30);
     }
 }

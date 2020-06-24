@@ -42,6 +42,7 @@ public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
     public int ackMode = Session.AUTO_ACKNOWLEDGE;
 
     public static Test suite() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1763
         return suite(VirtualTopicPubSubTest.class);
     }
 
@@ -52,6 +53,7 @@ public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
     private boolean doneTwice = false;
 
 	public void testVirtualTopicCreation() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1763
 	  doTestVirtualTopicCreation(10);
 	}
 
@@ -77,6 +79,7 @@ public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
         ActiveMQQueue queue1 = new ActiveMQQueue(queueAName);
         ActiveMQQueue queue2 = new ActiveMQQueue(queueAName);
   
+//IC see: https://issues.apache.org/jira/browse/AMQ-1763
         Session session = createStartAndTrackConnection().createSession(false, ackMode);
         MessageConsumer c1 = session.createConsumer(queue1);
          

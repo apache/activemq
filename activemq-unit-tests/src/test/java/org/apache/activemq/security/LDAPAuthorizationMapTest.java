@@ -60,10 +60,13 @@ public class LDAPAuthorizationMapTest extends AbstractLdapTestUnit {
     @Before
     public void setup() throws Exception {
         authMap = new LDAPAuthorizationMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3791
         authMap.setConnectionURL("ldap://localhost:" + getLdapServer().getPort());
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
         authMap.setTopicSearchMatchingFormat(new MessageFormat("uid={0},ou=topics,ou=destinations,o=ActiveMQ,ou=system"));
         authMap.setQueueSearchMatchingFormat(new MessageFormat("uid={0},ou=queues,ou=destinations,o=ActiveMQ,ou=system"));
         authMap.setAdvisorySearchBase("uid=ActiveMQ.Advisory,ou=topics,ou=destinations,o=ActiveMQ,ou=system");
+//IC see: https://issues.apache.org/jira/browse/AMQ-826
         authMap.setTempSearchBase("uid=ActiveMQ.Temp,ou=topics,ou=destinations,o=ActiveMQ,ou=system");
         authMap.setConnectionPassword("secret");
     }
@@ -134,6 +137,7 @@ public class LDAPAuthorizationMapTest extends AbstractLdapTestUnit {
     public void testComposite() {
         ActiveMQDestination q1 = new ActiveMQQueue("queue1,topic://topic1");
         Set<GroupPrincipal> aclsq1 = authMap.getWriteACLs(q1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3749
         assertEquals(0, aclsq1.size());
     }
 

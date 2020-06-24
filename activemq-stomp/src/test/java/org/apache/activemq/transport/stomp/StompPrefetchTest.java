@@ -52,12 +52,14 @@ public class StompPrefetchTest extends StompTestSupport {
 
         brokerService.setDestinationPolicy(pMap);
         brokerService.setAdvisorySupport(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
         brokerService.setUseJmx(false);
         brokerService.setPersistent(false);
     }
 
     @Test(timeout = 60000)
     public void testTopicSubPrefetch() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         stompConnect();
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/topic/T", Stomp.Headers.Subscribe.AckModeValues.AUTO);
@@ -67,6 +69,7 @@ public class StompPrefetchTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testDurableSubPrefetch() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         stompConnect();
         stompConnection.connect("system", "manager");
         HashMap<String,String> headers = new HashMap<String, String>();
@@ -85,6 +88,7 @@ public class StompPrefetchTest extends StompTestSupport {
         headers.put("browser", "true");
         headers.put("accept-version","1.1");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         stompConnect();
         stompConnection.connect(headers);
         stompConnection.subscribe("/queue/Q", Stomp.Headers.Subscribe.AckModeValues.AUTO, headers);
@@ -94,6 +98,7 @@ public class StompPrefetchTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testQueueSubPrefetch() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         stompConnect();
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/queue/Q", Stomp.Headers.Subscribe.AckModeValues.AUTO);
@@ -114,6 +119,7 @@ public class StompPrefetchTest extends StompTestSupport {
                 }
                 return false;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
         }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
     }
 }

@@ -45,6 +45,7 @@ public class JmsClientAckTest {
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
             "vm://localhost?broker.persistent=false&broker.useJmx=false");
 
@@ -113,6 +114,7 @@ public class JmsClientAckTest {
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
         msg = consumer.receive(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         assertNotNull(msg);
         msg = consumer.receive(1000);
         assertNotNull(msg);
@@ -124,6 +126,8 @@ public class JmsClientAckTest {
 
         // Attempt to Consume the message...
         consumer = session.createConsumer(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         msg = consumer.receive(500);
         assertNull(msg);
 
@@ -146,6 +150,7 @@ public class JmsClientAckTest {
         // Consume the message...
         MessageConsumer consumer = session.createConsumer(queue);
         Message msg = consumer.receive(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         assertNotNull(msg);
         // Don't ack the message.
 

@@ -27,6 +27,7 @@ public class AuthenticationUser {
     String username;
     String password;
     String groups;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1010
 
     public AuthenticationUser() {
     }

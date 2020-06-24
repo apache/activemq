@@ -60,6 +60,7 @@ public class ReadOnlyJournal extends Journal {
                 String n = file.getName();
                 String numStr = n.substring(filePrefix.length(), n.length());
                 int num = Integer.parseInt(numStr);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
                 DataFile dataFile = new ReadOnlyDataFile(file, num);
                 fileMap.put(dataFile.getDataFileId(), dataFile);
                 totalLength.addAndGet(dataFile.getLength());

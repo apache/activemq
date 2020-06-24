@@ -91,6 +91,7 @@ public class MessagePullMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
         rc += tightMarshalLong1(wireFormat, info.getTimeout(), bs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
         rc += tightMarshalString1(info.getCorrelationId(), bs);
         rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessageId(), bs);
 
@@ -112,6 +113,7 @@ public class MessagePullMarshaller extends BaseCommandMarshaller {
         tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
         tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
         tightMarshalLong2(wireFormat, info.getTimeout(), dataOut, bs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
         tightMarshalString2(info.getCorrelationId(), dataOut, bs);
         tightMarshalNestedObject2(wireFormat, (DataStructure)info.getMessageId(), dataOut, bs);
 
@@ -152,6 +154,7 @@ public class MessagePullMarshaller extends BaseCommandMarshaller {
         looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
         looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
         looseMarshalLong(wireFormat, info.getTimeout(), dataOut);
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
         looseMarshalString(info.getCorrelationId(), dataOut);
         looseMarshalNestedObject(wireFormat, (DataStructure)info.getMessageId(), dataOut);
 

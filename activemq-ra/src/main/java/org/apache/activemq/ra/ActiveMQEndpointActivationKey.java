@@ -68,6 +68,7 @@ public class ActiveMQEndpointActivationKey {
         if (this == obj) {
             return true;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         if (obj == null || !(obj instanceof ActiveMQEndpointActivationKey)) {
             return false;
         }

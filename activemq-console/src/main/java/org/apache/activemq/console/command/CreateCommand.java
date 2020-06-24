@@ -106,6 +106,7 @@ public class CreateCommand extends AbstractCommand {
             createSubDirs(targetAmqBase, BASE_SUB_DIRS);
             writeFileMapping(targetAmqBase, fileWriteMap);
             copyActivemqConf(amqHome, targetAmqBase, amqConf);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3619
             copyConfDirectory(new File(amqHome, "conf"), new File(targetAmqBase, "conf"));
         }
     }
@@ -184,6 +185,7 @@ public class CreateCommand extends AbstractCommand {
             data = resolveParam("[$][{]activemq.home[}]", amqHome.getCanonicalPath().replaceAll("[\\\\]", "/"), data);
             data = resolveParam("[$][{]activemq.base[}]", targetAmqBase.getCanonicalPath().replaceAll("[\\\\]", "/"), data);
         } else if (typeName.equals("unixActivemq")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3619
             data = getUnixActivemqData();
             data = resolveParam("[$][{]activemq.home[}]", amqHome.getCanonicalPath().replaceAll("[\\\\]", "/"), data);
             data = resolveParam("[$][{]activemq.base[}]", targetAmqBase.getCanonicalPath().replaceAll("[\\\\]", "/"), data);
@@ -195,12 +197,14 @@ public class CreateCommand extends AbstractCommand {
         buf.put(data.getBytes());
         buf.flip();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try(FileOutputStream fos = new FileOutputStream(dest);
             FileChannel destinationChannel = fos.getChannel()) {
             destinationChannel.write(buf);
         }
 
         // Set file permissions available for Java 6.0 only
+//IC see: https://issues.apache.org/jira/browse/AMQ-3619
         dest.setExecutable(true);
         dest.setReadable(true);
         dest.setWritable(true);
@@ -223,6 +227,7 @@ public class CreateCommand extends AbstractCommand {
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try(FileInputStream fis = new FileInputStream(from);
             FileChannel sourceChannel = fis.getChannel();
             FileOutputStream fos = new FileOutputStream(dest);
@@ -232,6 +237,7 @@ public class CreateCommand extends AbstractCommand {
     }
 
     private void copyConfDirectory(File from, File dest) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3619
         if (from.isDirectory()) {
             String files[] = from.list();
 
@@ -271,6 +277,7 @@ public class CreateCommand extends AbstractCommand {
 
 
    private String getUnixActivemqData() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3619
        StringBuffer res = new StringBuffer();
        res.append("#!/bin/sh\n\n");
        res.append("## Figure out the ACTIVEMQ_BASE from the directory this script was run from\n");
@@ -292,6 +299,7 @@ public class CreateCommand extends AbstractCommand {
        res.append("ACTIVEMQ_BASE=`dirname \"$PRG\"`/..\n");
        res.append("cd \"$saveddir\"\n\n");
        res.append("ACTIVEMQ_BASE=`cd \"$ACTIVEMQ_BASE\" && pwd`\n\n");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4473
        res.append("## Enable remote debugging\n");
        res.append("#export ACTIVEMQ_DEBUG_OPTS=\"-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005\"\n\n");
        res.append("## Add system properties for this instance here (if needed), e.g\n");
@@ -299,6 +307,7 @@ public class CreateCommand extends AbstractCommand {
        res.append("#export ACTIVEMQ_OPTS=\"$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties\"\n\n");
        res.append("export ACTIVEMQ_HOME=${activemq.home}\n");
        res.append("export ACTIVEMQ_BASE=$ACTIVEMQ_BASE\n\n");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4648
        res.append("${ACTIVEMQ_HOME}/bin/activemq \"$@\"");
        return res.toString();
    }

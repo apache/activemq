@@ -40,6 +40,7 @@ public abstract class DotFileInterceptorSupport extends BrokerFilter {
     }
 
     protected void generateFile() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
         log.debug("Creating DOT file at: {}", file);
         PrintWriter writer = new PrintWriter(new FileWriter(file));
         try {

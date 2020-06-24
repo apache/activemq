@@ -50,6 +50,8 @@ public class CronParserTest {
         result.setTimeInMillis(next);
         LOG.debug("next:" + result.getTime());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3199
+//IC see: https://issues.apache.org/jira/browse/AMQ-3200
         assertEquals(0,result.get(Calendar.SECOND));
         assertEquals(0,result.get(Calendar.MINUTE));
         assertEquals(0,result.get(Calendar.HOUR));
@@ -63,6 +65,7 @@ public class CronParserTest {
     public void testgetNextTimeDayOfWeekVariant() throws MessageFormatException {
 
         // using an absolute date so that result will be absolute - Monday 7 March 2011
+//IC see: https://issues.apache.org/jira/browse/AMQ-3199
         Calendar current = Calendar.getInstance();
         current.set(2011, Calendar.MARCH, 7, 9, 15, 30);
         LOG.debug("start:" + current.getTime());
@@ -74,6 +77,8 @@ public class CronParserTest {
         result.setTimeInMillis(next);
         LOG.debug("next:" + result.getTime());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3199
+//IC see: https://issues.apache.org/jira/browse/AMQ-3200
         assertEquals(0,result.get(Calendar.SECOND));
         assertEquals(50,result.get(Calendar.MINUTE));
         assertEquals(20,result.get(Calendar.HOUR_OF_DAY));
@@ -84,6 +89,8 @@ public class CronParserTest {
         assertEquals(2011,result.get(Calendar.YEAR));
 
         // Match to the day of week, but to late to run, should just a week forward.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3199
+//IC see: https://issues.apache.org/jira/browse/AMQ-3200
         current = Calendar.getInstance();
         current.set(2011, Calendar.MARCH, 11, 22, 0, 30);
         LOG.debug("update:" + current.getTime());
@@ -195,6 +202,7 @@ public class CronParserTest {
     public void testgetStartNextMonth() throws MessageFormatException {
 
         // using an absolute date so that result will be absolute - Wednesday 15 Dec 2010
+//IC see: https://issues.apache.org/jira/browse/AMQ-5645
         Calendar current = Calendar.getInstance();
         current.set(2010, Calendar.DECEMBER, 15, 9, 15, 30);
         LOG.debug("start:" + current.getTime());
@@ -252,6 +260,8 @@ public class CronParserTest {
         result.setTimeInMillis(next);
         LOG.debug("next:" + result.getTime());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3199
+//IC see: https://issues.apache.org/jira/browse/AMQ-3200
         assertEquals(0,result.get(Calendar.SECOND));
         assertEquals(0,result.get(Calendar.MINUTE));
         assertEquals(0,result.get(Calendar.HOUR));
@@ -289,6 +299,8 @@ public class CronParserTest {
 
         calender.setTimeInMillis(next);
         long result = next - current;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3199
+//IC see: https://issues.apache.org/jira/browse/AMQ-3200
         long expected = 60*1000*60*8 + 60 * 1000;
         assertEquals(expected,result);
     }
@@ -311,6 +323,7 @@ public class CronParserTest {
     @Test
     public void testValidate() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3306
             CronParser.validate("30 08 10 06 ? ");
             CronParser.validate("30 08 ? 06 5 ");
             CronParser.validate("30 08 ? 06 * ");
@@ -392,6 +405,7 @@ public class CronParserTest {
         } catch (Throwable e) {
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3036
         test = "0 1 2 3 4";
         list = CronParser.tokenize(test);
         assertEquals(list.size(), 5);

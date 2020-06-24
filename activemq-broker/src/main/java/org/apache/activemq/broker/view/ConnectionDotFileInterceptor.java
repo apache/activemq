@@ -222,6 +222,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
             // lets write out the links
             String subscriberId = safeClientId + "_" + subscriber.getSessionId() + "_" + subscriber.getSubscriptionId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4855
 
             writer.print(subscriberId);
             writer.print(" -> ");
@@ -236,6 +237,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
             // now lets write out the label
             writer.print(subscriberId);
             writer.print(" [label = \"");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4855
             String label = "Subscription: " + subscriber.getSessionId() + "-" + subscriber.getSubscriptionId();
             if (selector != null && selector.length() > 0) {
                 label = label + "\\nSelector: " + selector;

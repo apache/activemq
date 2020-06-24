@@ -55,6 +55,7 @@ public class JMSQueueBrowserTest extends JMSClientTestSupport {
 
         final int MSG_COUNT = 5;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         JmsConnectionFactory cf = new JmsConnectionFactory(getAmqpURI("jms.prefetchPolicy.all=0"));
         connection = cf.createConnection();
         connection.start();
@@ -86,6 +87,7 @@ public class JMSQueueBrowserTest extends JMSClientTestSupport {
     @Test(timeout = 40000)
     public void testCreateQueueBrowser() throws Exception {
         JmsConnectionFactory cf = new JmsConnectionFactory(getAmqpURI());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
 
         connection = cf.createConnection();
         connection.start();

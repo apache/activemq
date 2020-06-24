@@ -102,6 +102,7 @@ public class TempDestLoadTest extends EmbeddedBrokerTestSupport {
         super.setUp();
         connection = createConnection();
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1919
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 

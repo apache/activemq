@@ -61,6 +61,7 @@ public class ReplicationTestSupport {
     }
 
     static public void removeMessage(MessageStore ms, MessageId messageId) throws JMSException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5300
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
         ack.setFirstMessageId(messageId);

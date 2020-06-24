@@ -44,9 +44,13 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
      * @param queue
      */
     public StoreQueueCursor(Broker broker,Queue queue) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         super((queue != null ? queue.isPrioritizedMessages():false));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1562
         this.broker=broker;
         this.queue = queue;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         this.persistent = new QueueStorePrefetch(queue, broker);
         currentCursor = persistent;
     }
@@ -54,9 +58,12 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     @Override
     public synchronized void start() throws Exception {
         started = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
         super.start();
         if (nonPersistent == null) {
             if (broker.getBrokerService().isPersistent()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
                 nonPersistent = new FilePendingMessageCursor(broker,queue.getName(),this.prioritizedMessages);
             }else {
                 nonPersistent = new VMPendingMessageCursor(this.prioritizedMessages);
@@ -67,6 +74,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             nonPersistent.setMaxAuditDepth(getMaxAuditDepth());
             nonPersistent.setMaxProducersToAudit(getMaxProducersToAudit());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1566
         nonPersistent.setMessageAudit(getMessageAudit());
         nonPersistent.start();
         persistent.setMessageAudit(getMessageAudit());
@@ -82,6 +90,9 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
         persistent.stop();
         persistent.gc();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
+//IC see: https://issues.apache.org/jira/browse/AMQ-1962
         super.stop();
         pendingCount = 0;
     }
@@ -94,10 +105,13 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             if (started) {
                 pendingCount++;
                 if (!msg.isPersistent()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5712
                     result = nonPersistent.tryAddMessageLast(node, maxWait);
                 }
             }
             if (msg.isPersistent()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 result = persistent.addMessageLast(node);
             }
         }
@@ -127,6 +141,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized boolean hasNext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1984
         try {
             getNextCursor();
         } catch (Exception e) {
@@ -164,11 +179,16 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     public synchronized void reset() {
         nonPersistent.reset();
         persistent.reset();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1984
+//IC see: https://issues.apache.org/jira/browse/AMQ-3780
         pendingCount = persistent.size() + nonPersistent.size();
     }
 
     @Override
     public void release() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1748
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
+//IC see: https://issues.apache.org/jira/browse/AMQ-1914
         nonPersistent.release();
         persistent.release();
     }
@@ -176,6 +196,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized int size() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1984
         if (pendingCount < 0) {
             pendingCount = persistent.size() + nonPersistent.size();
         }
@@ -236,6 +257,8 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     @Override
     public void setMaxProducersToAudit(int maxProducersToAudit) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
         super.setMaxProducersToAudit(maxProducersToAudit);
         if (persistent != null) {
             persistent.setMaxProducersToAudit(maxProducersToAudit);
@@ -269,6 +292,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     @Override
     public void rollback(MessageId id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6703
         nonPersistent.rollback(id);
         persistent.rollback(id);
     }
@@ -286,6 +310,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     @Override
     public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
         super.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
         if (persistent != null) {
             persistent.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
@@ -305,6 +330,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         if (nonPersistent != null) {
             nonPersistent.gc();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1984
         pendingCount = persistent.size() + nonPersistent.size();
     }
 
@@ -333,6 +359,8 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     @Override
     public boolean isCacheEnabled() {
         boolean cacheEnabled = isUseCache();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3149
+//IC see: https://issues.apache.org/jira/browse/AMQ-3145
         if (cacheEnabled) {
             if (persistent != null) {
                 cacheEnabled &= persistent.isCacheEnabled();
@@ -340,6 +368,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             if (nonPersistent != null) {
                 cacheEnabled &= nonPersistent.isCacheEnabled();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
             setCacheEnabled(cacheEnabled);
         }
         return cacheEnabled;
@@ -347,6 +376,8 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     @Override
     public void rebase() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
         persistent.rebase();
         reset();
     }

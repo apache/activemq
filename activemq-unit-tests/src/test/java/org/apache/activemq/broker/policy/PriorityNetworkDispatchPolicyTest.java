@@ -45,6 +45,7 @@ public class PriorityNetworkDispatchPolicyTest {
     ConsumerId id = new ConsumerId();
     ConnectionContext context = new ConnectionContext();
     BrokerService brokerService = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3746
 
     @Before
     public void init() throws Exception {
@@ -52,11 +53,13 @@ public class PriorityNetworkDispatchPolicyTest {
         info.setConsumerId(id);
         info.setNetworkSubscription(true);
         info.setNetworkConsumerPath(new ConsumerId[]{id});
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         node.setMessageId(new MessageId("test:1:1:1:1"));
     }
 
     @After
     public void stopBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3746
         brokerService.stop();
     }
 

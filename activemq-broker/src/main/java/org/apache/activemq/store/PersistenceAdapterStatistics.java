@@ -24,6 +24,7 @@ public class PersistenceAdapterStatistics extends StatsImpl {
     protected TimeStatisticImpl readTime;
 
     public PersistenceAdapterStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7159
         writeTime = new TimeStatisticImpl("writeTime", "Time to write data to the PersistentAdapter.");
         readTime = new TimeStatisticImpl("readTime", "Time to read data from the PersistentAdapter.");
         addStatistic("writeTime", writeTime);

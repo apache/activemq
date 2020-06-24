@@ -28,6 +28,7 @@ public class SocketConnectorFactory {
     private Map<String, Object> transportOptions;
 
     public Connector createConnector(Server server) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         ServerConnector connector = new ServerConnector(server);
         server.setStopTimeout(500);
         connector.setStopTimeout(500);

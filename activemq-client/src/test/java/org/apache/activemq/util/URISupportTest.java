@@ -34,6 +34,7 @@ public class URISupportTest {
     @Test
     public void testEmptyCompositePath() throws Exception {
         CompositeData data = URISupport.parseComposite(new URI("broker:()/localhost?persistent=false"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3828
         assertEquals(0, data.getComponents().length);
     }
 
@@ -53,6 +54,7 @@ public class URISupportTest {
 
     @Test
     public void testComposite() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3828
         URI uri = new URI("test:(part1://host,part2://(sub1://part,sube2:part))");
         CompositeData data = URISupport.parseComposite(uri);
         assertEquals(2, data.getComponents().length);
@@ -80,6 +82,7 @@ public class URISupportTest {
 
     @Test
     public void testCompositeWithComponentParam() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
         CompositeData data = URISupport.parseComposite(new URI("test:(part1://host?part1=true)?outside=true"));
         assertEquals(1, data.getComponents().length);
         assertEquals(1, data.getParameters().size());
@@ -109,6 +112,7 @@ public class URISupportTest {
 
     @Test
     public void testParsingCompositeURI() throws URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1855
         CompositeData data = URISupport.parseComposite(new URI("broker://(tcp://localhost:61616)?name=foo"));
         assertEquals("one component", 1, data.getComponents().length);
         assertEquals("Size: " + data.getParameters(), 1, data.getParameters().size());
@@ -124,9 +128,11 @@ public class URISupportTest {
 
     @Test
     public void testCreateWithQuery() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
         URI source = new URI("vm://localhost");
         URI dest = URISupport.createURIWithQuery(source, "network=true&one=two");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
         assertEquals("correct param count", 2, URISupport.parseParameters(dest).size());
         assertEquals("same uri, host", source.getHost(), dest.getHost());
         assertEquals("same uri, scheme", source.getScheme(), dest.getScheme());
@@ -135,18 +141,25 @@ public class URISupportTest {
 
     @Test
     public void testParsingParams() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
         URI uri = new URI("static:(http://localhost:61617?proxyHost=jo&proxyPort=90)?proxyHost=localhost&proxyPort=80");
         Map<String,String>parameters = URISupport.parseParameters(uri);
         verifyParams(parameters);
         uri = new URI("static://http://localhost:61617?proxyHost=localhost&proxyPort=80");
         parameters = URISupport.parseParameters(uri);
         verifyParams(parameters);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
         uri = new URI("http://0.0.0.0:61616");
         parameters = URISupport.parseParameters(uri);
     }
 
     @Test
     public void testCompositeCreateURIWithQuery() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3209
+//IC see: https://issues.apache.org/jira/browse/AMQ-3828
         String queryString = "query=value";
         URI originalURI = new URI("outerscheme:(innerscheme:innerssp)");
         URI querylessURI = originalURI;
@@ -171,6 +184,10 @@ public class URISupportTest {
     @Test
     public void testApplyParameters() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
         URI uri = new URI("http://0.0.0.0:61616");
         Map<String,String> parameters = new HashMap<String, String>();
         parameters.put("t.proxyHost", "localhost");
@@ -198,6 +215,7 @@ public class URISupportTest {
 
     @Test
     public void testIsCompositeURIWithQueryNoSlashes() throws URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3953
         URI[] compositeURIs = new URI[] { new URI("test:(part1://host?part1=true)?outside=true"), new URI("broker:(tcp://localhost:61616)?name=foo") };
         for (URI uri : compositeURIs) {
             assertTrue(uri + " must be detected as composite URI", URISupport.isCompositeURI(uri));

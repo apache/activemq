@@ -117,6 +117,7 @@ public class JmsQueueBrowserExpirationTest {
    public void testDoNotReceiveExpiredMessage() throws Exception {
       int WAIT_TIME = 1000;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6336
       Connection connection = factory.createConnection();
       connection.start();
 

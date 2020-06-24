@@ -58,6 +58,7 @@ public class MessageGroupReconnectDistributionTest {
     protected MessageProducer producer;
     protected ActiveMQQueue destination = new ActiveMQQueue("GroupQ");
     protected TransportConnector connector;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5483
     ActiveMQConnectionFactory connFactory;
     BrokerService broker;
     int numMessages = 10000;
@@ -117,6 +118,7 @@ public class MessageGroupReconnectDistributionTest {
 
         final AtomicLong totalConsumed = new AtomicLong(0);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5483
         ExecutorService executorService = Executors.newFixedThreadPool(numConsumers);
         final ArrayList<AtomicLong> consumedCounters = new ArrayList<AtomicLong>(numConsumers);
         final ArrayList<AtomicLong> batchCounters = new ArrayList<AtomicLong>(numConsumers);
@@ -155,6 +157,7 @@ public class MessageGroupReconnectDistributionTest {
                                 if (totalConsumed.get() == numMessages) {
                                     break;
                                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5483
                                     batchSize = getBatchSize();
                                     messageConsumer = connectionSession.createConsumer(destWithPrefetch(destination));
                                     batches.incrementAndGet();
@@ -177,6 +180,7 @@ public class MessageGroupReconnectDistributionTest {
                     }
                 }
             });
+//IC see: https://issues.apache.org/jira/browse/AMQ-5483
             TimeUnit.MILLISECONDS.sleep(200);
         }
 
@@ -201,6 +205,7 @@ public class MessageGroupReconnectDistributionTest {
     }
 
     private Destination destWithPrefetch(ActiveMQQueue destination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5483
         return destination;
     }
 

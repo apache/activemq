@@ -73,9 +73,11 @@ public class NIOSSLTransport extends NIOTransport {
     }
 
     public NIOSSLTransport(WireFormat wireFormat, Socket socket, SSLEngine engine, InitBuffer initBuffer,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             ByteBuffer inputBuffer) throws IOException {
         super(wireFormat, socket, initBuffer);
         this.sslEngine = engine;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         if (engine != null) {
             this.sslSession = engine.getSession();
         }
@@ -93,6 +95,7 @@ public class NIOSSLTransport extends NIOTransport {
         if (sslEngine != null) {
             hasSslEngine = true;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4889
         NIOOutputStream outputStream = null;
         try {
             channel = socket.getChannel();
@@ -102,6 +105,7 @@ public class NIOSSLTransport extends NIOTransport {
                 sslContext = SSLContext.getDefault();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
             String remoteHost = null;
             int remotePort = -1;
 
@@ -114,6 +118,7 @@ public class NIOSSLTransport extends NIOTransport {
 
             // initialize engine, the initial sslSession we get will need to be
             // updated once the ssl handshake process is completed.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             if (!hasSslEngine) {
                 if (remoteHost != null && remotePort != -1) {
                     sslEngine = sslContext.createSSLEngine(remoteHost, remotePort);
@@ -128,10 +133,12 @@ public class NIOSSLTransport extends NIOTransport {
                 }
 
                 sslEngine.setUseClientMode(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
                 if (enabledCipherSuites != null) {
                     sslEngine.setEnabledCipherSuites(enabledCipherSuites);
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5407
                 if (enabledProtocols != null) {
                     sslEngine.setEnabledProtocols(enabledProtocols);
                 }
@@ -150,12 +157,14 @@ public class NIOSSLTransport extends NIOTransport {
                 inputBuffer.clear();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4889
             outputStream = new NIOOutputStream(channel);
             outputStream.setEngine(sslEngine);
             this.dataOut = new DataOutputStream(outputStream);
             this.buffOut = outputStream;
 
             //If the sslEngine was not passed in, then handshake
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             if (!hasSslEngine) {
                 sslEngine.beginHandshake();
             }
@@ -167,6 +176,7 @@ public class NIOSSLTransport extends NIOTransport {
             selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
                 @Override
                 public void onSelect(SelectorSelection selection) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
                     try {
                         initialized.await();
                     } catch (InterruptedException error) {
@@ -187,6 +197,7 @@ public class NIOSSLTransport extends NIOTransport {
             doInit();
 
         } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4889
             try {
                 if(outputStream != null) {
                     outputStream.close();
@@ -198,6 +209,7 @@ public class NIOSSLTransport extends NIOTransport {
     }
 
     final protected CountDownLatch initialized = new CountDownLatch(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
 
     protected void doInit() throws Exception {
         taskRunnerFactory.execute(new Runnable() {
@@ -219,6 +231,7 @@ public class NIOSSLTransport extends NIOTransport {
     protected void doOpenWireInit() throws Exception {
         //Do this later to let wire format negotiation happen
         if (initBuffer != null && !openWireInititialized && this.wireFormat instanceof OpenWireFormat) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             initBuffer.buffer.flip();
             if (initBuffer.buffer.hasRemaining()) {
                 nextFrameSize = -1;
@@ -226,6 +239,7 @@ public class NIOSSLTransport extends NIOTransport {
                 processCommand(initBuffer.buffer);
                 processCommand(initBuffer.buffer);
                 initBuffer.buffer.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
                 openWireInititialized = true;
             }
         }
@@ -239,6 +253,7 @@ public class NIOSSLTransport extends NIOTransport {
             // Once handshake completes we need to ask for the now real sslSession
             // otherwise the session would return 'SSL_NULL_WITH_NULL_NULL' for the
             // cipher suite.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
             sslSession = sslEngine.getSession();
         }
     }
@@ -251,26 +266,31 @@ public class NIOSSLTransport extends NIOTransport {
             }
 
             doOpenWireInit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
 
             ByteBuffer plain = ByteBuffer.allocate(sslSession.getApplicationBufferSize());
             plain.position(plain.limit());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
             while (true) {
                 if (!plain.hasRemaining()) {
 
                     int readCount = secureRead(plain);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4106
                     if (readCount == 0) {
                         break;
                     }
 
                     // channel is closed, cleanup
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
                     if (readCount == -1) {
                         onException(new EOFException());
                         selection.close();
                         break;
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4106
                     receiveCounter += readCount;
                 }
 
@@ -289,6 +309,7 @@ public class NIOSSLTransport extends NIOTransport {
 
         // Are we waiting for the next Command or are we building on the current one
         if (nextFrameSize == -1) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4132
 
             // We can get small packets that don't give us enough for the frame size
             // so allocate enough for the initial size value and
@@ -332,6 +353,7 @@ public class NIOSSLTransport extends NIOTransport {
             if (wireFormat instanceof OpenWireFormat) {
                 long maxFrameSize = ((OpenWireFormat) wireFormat).getMaxFrameSize();
                 if (nextFrameSize > maxFrameSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
                     throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) +
                                           " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
                 }
@@ -345,6 +367,7 @@ public class NIOSSLTransport extends NIOTransport {
         } else {
             // If its all in one read then we can just take it all, otherwise take only
             // the current frame size and the next iteration starts a new command.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             if (currentBuffer != null) {
                 if (currentBuffer.remaining() >= plain.remaining()) {
                     currentBuffer.put(plain);
@@ -355,11 +378,13 @@ public class NIOSSLTransport extends NIOTransport {
                 }
 
                 // Either we have enough data for a new command or we have to wait for some more.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4132
                 if (currentBuffer.hasRemaining()) {
                     return;
                 } else {
                     currentBuffer.flip();
                     Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4889
                     doConsume(command);
                     nextFrameSize = -1;
                     currentBuffer = null;
@@ -373,12 +398,14 @@ public class NIOSSLTransport extends NIOTransport {
         if (!(inputBuffer.position() != 0 && inputBuffer.hasRemaining()) || status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
             int bytesRead = channel.read(inputBuffer);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5368
             if (bytesRead == 0 && !(sslEngine.getHandshakeStatus().equals(SSLEngineResult.HandshakeStatus.NEED_UNWRAP))) {
                 return 0;
             }
 
             if (bytesRead == -1) {
                 sslEngine.closeInbound();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
                 if (inputBuffer.position() == 0 || status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
                     return -1;
                 }
@@ -391,10 +418,12 @@ public class NIOSSLTransport extends NIOTransport {
         SSLEngineResult res;
         do {
             res = sslEngine.unwrap(inputBuffer, plain);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         } while (res.getStatus() == SSLEngineResult.Status.OK && res.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.NEED_UNWRAP
                 && res.bytesProduced() == 0);
 
         if (res.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.FINISHED) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
             finishHandshake();
         }
 
@@ -416,6 +445,7 @@ public class NIOSSLTransport extends NIOTransport {
 
     protected void doHandshake() throws Exception {
         handshakeInProgress = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5368
         Selector selector = null;
         SelectionKey key = null;
         boolean readable = true;
@@ -423,6 +453,7 @@ public class NIOSSLTransport extends NIOTransport {
             while (true) {
                 HandshakeStatus handshakeStatus = sslEngine.getHandshakeStatus();
                 switch (handshakeStatus) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
                     case NEED_UNWRAP:
                         if (readable) {
                             secureRead(ByteBuffer.allocate(sslSession.getApplicationBufferSize()));
@@ -436,6 +467,7 @@ public class NIOSSLTransport extends NIOTransport {
                                 key.interestOps(SelectionKey.OP_READ);
                             }
                             int keyCount = selector.select(this.getSoTimeout());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5368
                             if (keyCount == 0 && this.getSoTimeout() > 0 && ((System.currentTimeMillis() - now) >= this.getSoTimeout())) {
                                 throw new SocketTimeoutException("Timeout during handshake");
                             }
@@ -465,6 +497,7 @@ public class NIOSSLTransport extends NIOTransport {
 
     @Override
     protected void doStart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         taskRunnerFactory = new TaskRunnerFactory("ActiveMQ NIOSSLTransport Task");
         // no need to init as we can delay that until demand (eg in doHandshake)
         super.doStart();
@@ -473,6 +506,7 @@ public class NIOSSLTransport extends NIOTransport {
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         initialized.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
 
         if (taskRunnerFactory != null) {
             taskRunnerFactory.shutdownNow();
@@ -480,6 +514,7 @@ public class NIOSSLTransport extends NIOTransport {
         }
         if (channel != null) {
             channel.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
             channel = null;
         }
         super.doStop(stopper);
@@ -493,7 +528,9 @@ public class NIOSSLTransport extends NIOTransport {
      */
     @Override
     public void doConsume(Object command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         if (command instanceof ConnectionInfo) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
             ConnectionInfo connectionInfo = (ConnectionInfo) command;
             connectionInfo.setTransportContext(getPeerCertificates());
         }
@@ -508,6 +545,7 @@ public class NIOSSLTransport extends NIOTransport {
 
         X509Certificate[] clientCertChain = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
             if (sslEngine.getSession() != null) {
                 clientCertChain = (X509Certificate[]) sslEngine.getSession().getPeerCertificates();
             }
@@ -521,6 +559,7 @@ public class NIOSSLTransport extends NIOTransport {
     }
 
     public boolean isNeedClientAuth() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
         return needClientAuth;
     }
 
@@ -545,6 +584,7 @@ public class NIOSSLTransport extends NIOTransport {
     }
 
     public String[] getEnabledProtocols() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5407
         return enabledProtocols;
     }
 

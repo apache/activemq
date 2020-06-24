@@ -134,6 +134,7 @@ public interface Transport extends Service {
      * @throws IOException
      */
     void updateURIs(boolean rebalance,URI[] uris) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
 
     /**
      * Returns a counter which gets incremented as data is read from the transport.
@@ -148,6 +149,7 @@ public interface Transport extends Service {
      * @return the Certificates provided by the peer, or null if not a secure channel.
      */
     X509Certificate[] getPeerCertificates();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
 
     /**
      * Sets the certificates provided by the connected peer.

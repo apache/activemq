@@ -47,7 +47,9 @@ public class MQTTTransportFactory extends TcpTransportFactory implements BrokerS
 
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         TcpTransportServer result = new TcpTransportServer(this, location, serverSocketFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         result.setAllowLinkStealing(true);
         return result;
     }
@@ -55,6 +57,7 @@ public class MQTTTransportFactory extends TcpTransportFactory implements BrokerS
     @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4896
         transport = new MQTTTransportFilter(transport, format, brokerService);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);

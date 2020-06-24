@@ -58,6 +58,7 @@ public class QueueBrowseQuery extends DestinationFacade implements DisposableBea
 
     public Queue getQueue() throws JMSException {
         if (queue == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6908
             queue = getSession().createQueue(getValidDestination());
         }
         return queue;
@@ -77,6 +78,7 @@ public class QueueBrowseQuery extends DestinationFacade implements DisposableBea
 
     public Session getSession() throws JMSException {
         ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6908
 
         return WebClient.getWebClient(servletRequestAttributes.getRequest()).getSession();
     }

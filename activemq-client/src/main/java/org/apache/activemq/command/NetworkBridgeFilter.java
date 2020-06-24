@@ -46,6 +46,8 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
 
     public NetworkBridgeFilter(ConsumerInfo consumerInfo, BrokerId networkBrokerId, int messageTTL, int consumerTTL) {
         this.networkBrokerId = networkBrokerId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         this.messageTTL = messageTTL;
         this.consumerTTL = consumerTTL;
         this.consumerInfo = consumerInfo;
@@ -69,6 +71,8 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
             // in the dispatch loop
             // so need to get the reference to it
             Message message = mec.getMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
             return message != null && matchesForwardingFilter(message, mec);
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
@@ -93,6 +97,8 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
 
         int hops = message.getBrokerPath() == null ? 0 : message.getBrokerPath().length;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         if (messageTTL > -1 && hops >= messageTTL) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Message restricted to " + messageTTL + " network hops ignoring: " + message);
@@ -101,8 +107,10 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         }
 
         if (message.isAdvisory()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5639
             if (consumerInfo != null && consumerInfo.isNetworkSubscription() && isAdvisoryInterpretedByNetworkBridge(message)) {
                 // they will be interpreted by the bridge leading to dup commands
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("not propagating advisory to network sub: " + consumerInfo.getConsumerId() + ", message: "+ message);
                 }
@@ -110,6 +118,8 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
             } else if ( message.getDataStructure() != null && message.getDataStructure().getDataStructureType() == CommandTypes.CONSUMER_INFO) {
                 ConsumerInfo info = (ConsumerInfo)message.getDataStructure();
                 hops = info.getBrokerPath() == null ? 0 : info.getBrokerPath().length;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
                 if (consumerTTL > -1 && hops >= consumerTTL) {
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("ConsumerInfo advisory restricted to " + consumerTTL + " network hops ignoring: " + message);
@@ -117,6 +127,8 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
                     return false;
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
                 if (contains(info.getBrokerPath(), networkBrokerId)) {
                     LOG.trace("ConsumerInfo advisory all ready routed once through target broker ("
                             + networkBrokerId + "), path: "
@@ -129,6 +141,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     }
 
     public static boolean isAdvisoryInterpretedByNetworkBridge(Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         return AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination()) ||
                 AdvisorySupport.isVirtualDestinationConsumerAdvisoryTopic(message.getDestination()) ||
                 AdvisorySupport.isTempDestinationAdvisoryTopic(message.getDestination());
@@ -148,6 +161,8 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     // keep for backward compat with older
     // wire formats
     public int getNetworkTTL() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         return messageTTL;
     }
 
@@ -168,6 +183,8 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     }
 
     public void setMessageTTL(int messageTTL) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         this.messageTTL = messageTTL;
     }
 

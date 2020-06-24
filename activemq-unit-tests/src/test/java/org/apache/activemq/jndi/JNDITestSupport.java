@@ -69,6 +69,7 @@ public abstract class JNDITestSupport extends TestCase {
 
         configureEnvironment();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         InitialContextFactory factory = getInitialContextFactory();
         context = factory.getInitialContext(environment);
         assertTrue("No context created", context != null);

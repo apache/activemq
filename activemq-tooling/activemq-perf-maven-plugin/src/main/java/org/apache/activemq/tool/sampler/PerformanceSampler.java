@@ -24,6 +24,7 @@ import org.apache.activemq.tool.reports.PerformanceReportWriter;
 public interface PerformanceSampler extends Runnable {
 
     Long getRampUpTime();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
 
     void setRampUpTime(long rampUpTime);
 
@@ -40,6 +41,7 @@ public interface PerformanceSampler extends Runnable {
     void setInterval(long interval);
 
     long getRampUpPercent();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
 
     void setRampUpPercent(long rampUpPercent);
 
@@ -56,6 +58,7 @@ public interface PerformanceSampler extends Runnable {
     void setPerfEventListener(PerformanceEventListener listener);
 
     void finishSampling();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
 
     void sampleData();
 

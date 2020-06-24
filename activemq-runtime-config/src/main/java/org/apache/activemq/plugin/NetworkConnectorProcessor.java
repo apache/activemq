@@ -36,6 +36,7 @@ public class NetworkConnectorProcessor extends DefaultConfigurationProcessor {
             try {
                 DiscoveryNetworkConnector nc = fromDto(networkConnector, new DiscoveryNetworkConnector());
                 plugin.getBrokerService().addNetworkConnector(nc);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
                 plugin.getBrokerService().startNetworkConnector(nc, null);
                 plugin.info("started new network connector: " + nc);
             } catch (Exception e) {

@@ -54,6 +54,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
 
     public ManagedConnectionProxy(ActiveMQManagedConnection managedConnection, ConnectionRequestInfo info) {
         this.managedConnection = managedConnection;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
         if (info instanceof ActiveMQConnectionRequestInfo) {
             this.info = (ActiveMQConnectionRequestInfo) info;
         }
@@ -77,6 +78,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
     public void cleanup() {
         exceptionListener = null;
         managedConnection = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2166
         synchronized (sessions) {
             for (ManagedSessionProxy p : sessions) {
                 try {
@@ -117,6 +119,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @throws JMSException on error
      */
     private ManagedSessionProxy createSessionProxy(boolean transacted, int acknowledgeMode) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
         ActiveMQSession session;
         if (info != null && info.isUseSessionArgs()) {
             session = (ActiveMQSession) getConnection().createSession(transacted, transacted ? Session.SESSION_TRANSACTED : acknowledgeMode);
@@ -125,6 +128,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
         }
         ManagedTransactionContext txContext = new ManagedTransactionContext(managedConnection.getTransactionContext());
         session.setTransactionContext(txContext);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2166
         ManagedSessionProxy p = new ManagedSessionProxy(session, this);
         p.setUseSharedTxContext(managedConnection.isInManagedTx());
         synchronized (sessions) {

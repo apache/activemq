@@ -29,6 +29,7 @@ public class HashIndexTest extends IndexTestSupport {
         index.setBinCapacity(12);
         index.setKeyMarshaller(StringMarshaller.INSTANCE);
         index.setValueMarshaller(LongMarshaller.INSTANCE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7084
         index.load(tx);
         tx.commit();
         return index;

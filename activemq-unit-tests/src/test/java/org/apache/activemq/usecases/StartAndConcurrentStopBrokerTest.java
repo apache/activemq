@@ -68,6 +68,7 @@ public class StartAndConcurrentStopBrokerTest {
     @Test(timeout = 30000)
     public void testConcurrentStop() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
         final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
         final CountDownLatch gotBrokerMbean = new CountDownLatch(1);
         final CountDownLatch gotPaMBean = new CountDownLatch(1);
@@ -98,6 +99,7 @@ public class StartAndConcurrentStopBrokerTest {
             @Override
             public ObjectInstance registerMBean(Object object, ObjectName name) throws InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException {
                 if (mbeans.containsKey(name)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
                     throw new InstanceAlreadyExistsException("Got one already: " + name);
                 }
                 LOG.info("register:" + name);
@@ -107,6 +109,7 @@ public class StartAndConcurrentStopBrokerTest {
                         gotBrokerMbean.countDown();
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
                     if (checkPaMBean.get()) {
                         if (new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,service=PersistenceAdapter,instanceName=*").apply(name)) {
                             gotPaMBean.countDown();
@@ -281,6 +284,7 @@ public class StartAndConcurrentStopBrokerTest {
 
         final BrokerService broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
         executor.execute(new Runnable() {
@@ -315,6 +319,7 @@ public class StartAndConcurrentStopBrokerTest {
         executor.shutdown();
         assertTrue("stop tasks done", executor.awaitTermination(20, TimeUnit.SECONDS));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
         BrokerService sanityBroker = new BrokerService();
         sanityBroker.getManagementContext().setMBeanServer(mBeanServer);
         sanityBroker.start();
@@ -335,6 +340,8 @@ public class StartAndConcurrentStopBrokerTest {
                     brokerTwo.getManagementContext().setMBeanServer(mBeanServer);
                     brokerTwo.start();
                 } catch (BrokerStoppedException expected) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
                 } catch (ConfigurationException expected) {
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -351,6 +358,8 @@ public class StartAndConcurrentStopBrokerTest {
                     brokerTwo.stop();
                 } catch (Exception e) {
                     e.printStackTrace();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
                     error.set(e);
                 }
             }
@@ -373,6 +382,7 @@ public class StartAndConcurrentStopBrokerTest {
     @Test(timeout = 30000)
     public void testStopWithScheduler() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
         final BrokerService brokerService = new BrokerService();
         brokerService.setSchedulerSupport(true);
 

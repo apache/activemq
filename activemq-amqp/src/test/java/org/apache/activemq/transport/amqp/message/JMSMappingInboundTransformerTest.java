@@ -68,6 +68,7 @@ public class JMSMappingInboundTransformerTest {
     public void testCreateBytesMessageFromNoBodySectionAndContentType() throws Exception {
         JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6374
         Message message = Message.Factory.create();
         message.setContentType(AmqpMessageSupport.OCTET_STREAM_CONTENT_TYPE);
 
@@ -121,6 +122,7 @@ public class JMSMappingInboundTransformerTest {
     @Test
     public void testCreateTextMessageFromNoBodySectionAndContentType() throws Exception {
         JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         Message message = Message.Factory.create();
         message.setContentType("text/plain");
@@ -141,6 +143,8 @@ public class JMSMappingInboundTransformerTest {
      */
     public void testCreateGenericMessageFromNoBodySectionAndUnknownContentType() throws Exception {
         JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         Message message = Message.Factory.create();
         message.setContentType("unknown-content-type");
@@ -405,6 +409,8 @@ public class JMSMappingInboundTransformerTest {
     @Test
     public void testCreateObjectMessageFromAmqpValueWithBinaryAndContentType() throws Exception {
         JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         Message message = Message.Factory.create();
         message.setBody(new AmqpValue(new Binary(new byte[0])));
@@ -448,6 +454,7 @@ public class JMSMappingInboundTransformerTest {
     @Test
     public void testCreateAmqpMapMessageFromAmqpValueWithMapContainingBinaryEntry() throws Exception {
         final String ENTRY_NAME = "bytesEntry";
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         Message message = Proton.message();
         Map<String, Object> map = new HashMap<String, Object>();
@@ -549,6 +556,18 @@ public class JMSMappingInboundTransformerTest {
         EncodedMessage em = encodeMessage(message);
 
         JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         javax.jms.Message jmsMessage = transformer.transform(em);
 
@@ -580,6 +599,7 @@ public class JMSMappingInboundTransformerTest {
 
     @Test
     public void testTransformWithNoToTypeDestinationTypeAnnotation() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5592
         doTransformWithToTypeDestinationTypeAnnotationTestImpl(null, Destination.class);
     }
 
@@ -605,6 +625,8 @@ public class JMSMappingInboundTransformerTest {
 
     private void doTransformWithToTypeDestinationTypeAnnotationTestImpl(Object toTypeAnnotationValue, Class<? extends Destination> expectedClass) throws Exception {
         JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         String toAddress = "toAddress";
         Message amqp = Message.Factory.create();
@@ -627,6 +649,7 @@ public class JMSMappingInboundTransformerTest {
 
     @Test
     public void testTransformWithNoReplyToTypeDestinationTypeAnnotation() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5592
         doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(null, Destination.class);
     }
 
@@ -652,6 +675,8 @@ public class JMSMappingInboundTransformerTest {
 
     private void doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(Object replyToTypeAnnotationValue, Class<? extends Destination> expectedClass) throws Exception {
         JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         String replyToAddress = "replyToAddress";
         Message amqp = Message.Factory.create();

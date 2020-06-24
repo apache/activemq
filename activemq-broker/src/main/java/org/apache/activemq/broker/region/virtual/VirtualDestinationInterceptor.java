@@ -49,11 +49,13 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
 
     @Override
     public Destination intercept(Destination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
         final ActiveMQDestination activeMQDestination = destination.getActiveMQDestination();
         Set matchingDestinations = destinationMap.get(activeMQDestination);
         List<Destination> destinations = new ArrayList<Destination>();
         for (Iterator iter = matchingDestinations.iterator(); iter.hasNext();) {
             VirtualDestination virtualDestination = (VirtualDestination) iter.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3197
             Destination newDestination = virtualDestination.intercept(destination);
             destinations.add(newDestination);
         }
@@ -66,6 +68,7 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
             }
         }
         // check if the destination instead matches any mapped destinations
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
         Set mappedDestinations = mappedDestinationMap.get(activeMQDestination);
         if (!mappedDestinations.isEmpty()) {
             // create a mapped destination interceptor
@@ -94,6 +97,7 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
 
     public void setVirtualDestinations(VirtualDestination[] virtualDestinations) {
         destinationMap = new DestinationMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
         mappedDestinationMap = new DestinationMap();
         this.virtualDestinations = virtualDestinations;
         for (int i = 0; i < virtualDestinations.length; i++) {
@@ -117,6 +121,7 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         return "VirtualDestinationInterceptor" + Arrays.asList(virtualDestinations);
     }
 }

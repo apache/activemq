@@ -103,11 +103,13 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     public static final String PROPERTY_ASYNC_EXECUTOR_MAX_THREADS = "org.apache.activemq.store.kahadb.ASYNC_EXECUTOR_MAX_THREADS";
     private static final int asyncExecutorMaxThreads = Integer.parseInt(System.getProperty(
             PROPERTY_ASYNC_EXECUTOR_MAX_THREADS, "1"), 10);;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
 
     protected ExecutorService queueExecutor;
     protected ExecutorService topicExecutor;
     protected final List<Map<AsyncJobKey, StoreTask>> asyncQueueMaps = new LinkedList<Map<AsyncJobKey, StoreTask>>();
     protected final List<Map<AsyncJobKey, StoreTask>> asyncTopicMaps = new LinkedList<Map<AsyncJobKey, StoreTask>>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
     final WireFormat wireFormat = new OpenWireFormat();
     private SystemUsage usageManager;
     private LinkedBlockingQueue<Runnable> asyncQueueJobQueue;
@@ -203,6 +205,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
     @Override
     protected void configureMetadata() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         if (brokerService != null) {
             metadata.openwireVersion = brokerService.getStoreOpenWireVersion();
             wireFormat.setVersion(metadata.openwireVersion);
@@ -221,12 +224,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         configureMetadata();
 
         super.doStart();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
 
         if (brokerService != null) {
             // In case the recovered store used a different OpenWire version log a warning
             // to assist in determining why journal reads fail.
             if (metadata.openwireVersion != brokerService.getStoreOpenWireVersion()) {
                 LOG.warn("Existing Store uses a different OpenWire version[{}] " +
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
                          "than the version configured[{}] reverting to the version " +
                          "used by this store, some newer broker features may not work" +
                          "as expected.",
@@ -242,15 +248,19 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         this.globalTopicSemaphore = new Semaphore(getMaxAsyncJobs());
         this.asyncQueueJobQueue = new LinkedBlockingQueue<Runnable>(getMaxAsyncJobs());
         this.asyncTopicJobQueue = new LinkedBlockingQueue<Runnable>(getMaxAsyncJobs());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3272
         this.queueExecutor = new StoreTaskExecutor(1, asyncExecutorMaxThreads, 0L, TimeUnit.MILLISECONDS,
             asyncQueueJobQueue, new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable runnable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                     Thread thread = new Thread(runnable, "ConcurrentQueueStoreAndDispatch");
                     thread.setDaemon(true);
                     return thread;
                 }
             });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3272
         this.topicExecutor = new StoreTaskExecutor(1, asyncExecutorMaxThreads, 0L, TimeUnit.MILLISECONDS,
             asyncTopicJobQueue, new ThreadFactory() {
                 @Override
@@ -300,6 +310,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             this.globalTopicSemaphore.drainPermits();
         }
         if (this.queueExecutor != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
             ThreadPoolUtils.shutdownNow(queueExecutor);
             queueExecutor = null;
         }
@@ -335,6 +346,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
     // with asyncTaskMap locked
     protected void addQueueTask(KahaDBMessageStore store, StoreQueueTask task) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6164
         store.asyncTaskMap.put(new AsyncJobKey(task.getMessage().getMessageId(), store.getDestination()), task);
         this.queueExecutor.execute(task);
     }
@@ -360,6 +372,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     }
 
     public boolean getForceRecoverIndex() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
         return this.forceRecoverIndex;
     }
 
@@ -368,6 +381,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     }
 
     public void forgetRecoveredAcks(ArrayList<MessageAck> preparedAcks, boolean isRollback) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         if (preparedAcks != null) {
             Map<ActiveMQDestination, KahaDBMessageStore> stores = new HashMap<>();
             for (MessageAck ack : preparedAcks) {
@@ -404,6 +418,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     }
 
     private KahaDBMessageStore findMatchingStore(ActiveMQDestination activeMQDestination) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7376
         ProxyMessageStore store = (ProxyMessageStore) storeCache.get(key(convert(activeMQDestination)));
         if (store == null) {
             if (activeMQDestination.isQueue()) {
@@ -439,6 +454,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
 
         private final String recoveredTxStateMapKey(ActiveMQDestination destination, MessageAck ack) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
             return destination.isQueue() ? destination.getPhysicalName() : ack.getConsumerId().getConnectionId();
         }
 
@@ -446,9 +462,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         // till then they are skipped by the store.
         // 'at most once' XA guarantee
         public void trackRecoveredAcks(ArrayList<MessageAck> acks) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             indexLock.writeLock().lock();
             try {
                 for (MessageAck ack : acks) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
                     final String key = recoveredTxStateMapKey(destination, ack);
                     Set ackedAndPrepared = ackedAndPreparedMap.get(key);
                     if (ackedAndPrepared == null) {
@@ -468,6 +486,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 try {
                     for (MessageAck ack : acks) {
                         final String id = ack.getLastMessageId().toProducerKey();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
                         final String key = recoveredTxStateMapKey(destination, ack);
                         Set ackedAndPrepared = ackedAndPreparedMap.get(key);
                         if (ackedAndPrepared != null) {
@@ -483,6 +502,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                                 rolledBackAcksMap.put(key, rolledBackAcks);
                             }
                             rolledBackAcks.add(id);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
                             pageFile.tx().execute(tx -> {
                                 incrementAndAddSizeToStoreStat(tx, dest, 0);
                             });
@@ -498,12 +518,17 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         public ListenableFuture<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message)
                 throws IOException {
             if (isConcurrentStoreAndDispatchQueues()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6256
+//IC see: https://issues.apache.org/jira/browse/AMQ-6256
                 message.beforeMarshall(wireFormat);
                 StoreQueueTask result = new StoreQueueTask(this, context, message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 ListenableFuture<Object> future = result.getFuture();
                 message.getMessageId().setFutureOrSequenceLong(future);
                 message.setRecievedByDFBridge(true); // flag message as concurrentStoreAndDispatch
                 result.aquireLocks();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6164
                 synchronized (asyncTaskMap) {
                     addQueueTask(this, result);
                     if (indexListener != null) {
@@ -525,7 +550,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     task = (StoreQueueTask) asyncTaskMap.get(key);
                 }
                 if (task != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4157
                     if (ack.isInTransaction() || !task.cancel()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                         try {
                             task.future.get();
                         } catch (InterruptedException e) {
@@ -535,6 +563,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         }
                         removeMessage(context, ack);
                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6413
                         indexLock.writeLock().lock();
                         try {
                             metadata.producerSequenceIdTracker.isDuplicate(ack.getLastMessageId());
@@ -555,14 +584,21 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         @Override
         public void addMessage(final ConnectionContext context, final Message message) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             final KahaAddMessageCommand command = new KahaAddMessageCommand();
             command.setDestination(dest);
             command.setMessageId(message.getMessageId().toProducerKey());
             command.setTransactionInfo(TransactionIdConversion.convert(transactionIdTransformer.transform(message.getTransactionId())));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
             command.setPriority(message.getPriority());
             command.setPrioritySupported(isPrioritizedMessages());
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
             command.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             store(command, isEnableJournalDiskSyncs() && message.isResponseRequired(), new IndexAware() {
                 // sync add? (for async, future present from getFutureOrSequenceLong)
                 Object possibleFuture = message.getMessageId().getFutureOrSequenceLong();
@@ -587,12 +623,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         @Override
         public void updateMessage(Message message) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
             if (LOG.isTraceEnabled()) {
                 LOG.trace("updating: " + message.getMessageId() + " with deliveryCount: " + message.getRedeliveryCounter());
             }
             KahaUpdateMessageCommand updateMessageCommand = new KahaUpdateMessageCommand();
             KahaAddMessageCommand command = new KahaAddMessageCommand();
             command.setDestination(dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
             command.setMessageId(message.getMessageId().toProducerKey());
             command.setPriority(message.getPriority());
             command.setPrioritySupported(prioritizedMessages);
@@ -606,6 +645,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
             command.setDestination(dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
             command.setMessageId(ack.getLastMessageId().toProducerKey());
             command.setTransactionInfo(TransactionIdConversion.convert(transactionIdTransformer.transform(ack.getTransactionId())));
 
@@ -624,14 +664,19 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         @Override
         public Message getMessage(MessageId identity) throws IOException {
             final String key = identity.toProducerKey();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
 
             // Hopefully one day the page file supports concurrent read
             // operations... but for now we must
             // externally synchronize...
             Location location;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             indexLock.writeLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
                 location = findMessageLocation(key, dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
             } finally {
                 indexLock.writeLock().unlock();
             }
@@ -644,6 +689,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         @Override
         public boolean isEmpty() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             indexLock.writeLock().lock();
             try {
                 return pageFile.tx().execute(new Transaction.CallableClosure<Boolean, IOException>() {
@@ -652,6 +698,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         // Iterate through all index entries to get a count of
                         // messages in the destination.
                         StoredDestination sd = getStoredDestination(dest, tx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2512
                         return sd.locationIndex.isEmpty(tx);
                     }
                 });
@@ -669,9 +716,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     @Override
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
                         recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, Integer.MAX_VALUE, listener);
                         sd.orderIndex.resetCursorPosition();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); listener.hasSpace() && iterator
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                                 .hasNext(); ) {
                             Entry<Long, MessageKeys> entry = iterator.next();
                             Set ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
@@ -683,6 +733,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         }
                     }
                 });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
             } finally {
                 indexLock.writeLock().unlock();
             }
@@ -698,16 +749,22 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Entry<Long, MessageKeys> entry = null;
                         int counter = recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, maxReturned, listener);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
                         Set ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext(); ) {
                             entry = iterator.next();
                             if (ackedAndPrepared != null && ackedAndPrepared.contains(entry.getValue().messageId)) {
                                 continue;
                             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                             Message msg = loadMessage(entry.getValue().location);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                             msg.getMessageId().setFutureOrSequenceLong(entry.getKey());
                             listener.recoverMessage(msg);
                             counter++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7126
                             if (counter >= maxReturned || !listener.canRecoveryNextMessage()) {
                                 break;
                             }
@@ -716,6 +773,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     }
                 });
             } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
                 indexLock.writeLock().unlock();
             }
         }
@@ -723,7 +781,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         protected int recoverRolledBackAcks(String recoveredTxStateMapKey, StoredDestination sd, Transaction tx, int maxReturned, MessageRecoveryListener listener) throws Exception {
             int counter = 0;
             String id;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
             Set rolledBackAcks = rolledBackAcksMap.get(recoveredTxStateMapKey);
             if (rolledBackAcks == null) {
                 return counter;
@@ -736,6 +797,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     if (sd.orderIndex.alreadyDispatched(sequence)) {
                         listener.recoverMessage(loadMessage(sd.orderIndex.get(tx, sequence).location));
                         counter++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
                         if (counter >= maxReturned) {
                             break;
                         }
@@ -746,6 +808,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     LOG.warn("Failed to locate rolled back ack message {} in {}", id, sd);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
             if (rolledBackAcks.isEmpty()) {
                 rolledBackAcksMap.remove(recoveredTxStateMapKey);
             }
@@ -755,8 +818,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         @Override
         public void resetBatching() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if (pageFile.isLoaded()) {
                 indexLock.writeLock().lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
                 try {
                     pageFile.tx().execute(new Transaction.Closure<Exception>() {
                         @Override
@@ -782,7 +847,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     @Override
                     public void execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
                         Long location = (Long) identity.getFutureOrSequenceLong();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
                         Long pending = sd.orderIndex.minPendingAdd();
                         if (pending != null) {
                             location = Math.min(location, pending-1);
@@ -790,6 +859,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         sd.orderIndex.setBatch(tx, location);
                     }
                 });
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             } finally {
                 indexLock.writeLock().unlock();
             }
@@ -809,6 +879,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         protected void lockAsyncJobQueue() {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 if (!this.localDestinationSemaphore.tryAcquire(this.maxAsyncJobs, 60, TimeUnit.SECONDS)) {
                     throw new TimeoutException(this +" timeout waiting for localDestSem:" + this.localDestinationSemaphore);
                 }
@@ -835,6 +907,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         @Override
         public String toString(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
             return "permits:" + this.localDestinationSemaphore.availablePermits() + ",sd=" + storedDestinations.get(key(dest));
         }
 
@@ -849,6 +923,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         @Override
                         public MessageStoreStatistics execute(Transaction tx) throws IOException {
                             MessageStoreStatistics statistics = getStoredMessageStoreStatistics(dest, tx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
 
                             // Iterate through all index entries to get the size of each message
                             if (statistics == null) {
@@ -863,12 +938,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             return statistics;
                         }
                     });
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
                     Set ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
                     if (ackedAndPrepared != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
                         recoveredStatistics.getMessageCount().subtract(ackedAndPrepared.size());
                     }
                     getMessageStoreStatistics().getMessageCount().setCount(recoveredStatistics.getMessageCount().getCount());
                     getMessageStoreStatistics().getMessageSize().setTotalSize(recoveredStatistics.getMessageSize().getTotalSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                 } finally {
                     indexLock.writeLock().unlock();
                 }
@@ -884,8 +962,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 new MessageStoreSubscriptionStatistics(isEnableSubscriptionStatistics());
 
         public KahaDBTopicMessageStore(ActiveMQTopic destination) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1842
             super(destination);
             this.subscriptionCount.set(getAllSubscriptions().length);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5762
             if (isConcurrentStoreAndDispatchTopics()) {
                 asyncTopicMaps.add(asyncTaskMap);
             }
@@ -901,6 +981,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         public ListenableFuture<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message)
                 throws IOException {
             if (isConcurrentStoreAndDispatchTopics()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6256
+//IC see: https://issues.apache.org/jira/browse/AMQ-6256
                 message.beforeMarshall(wireFormat);
                 StoreTopicTask result = new StoreTopicTask(this, context, message, subscriptionCount.get());
                 result.aquireLocks();
@@ -913,7 +995,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         @Override
         public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
                                 MessageId messageId, MessageAck ack) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             String subscriptionKey = subscriptionKey(clientId, subscriptionName).toString();
             if (isConcurrentStoreAndDispatchTopics()) {
                 AsyncJobKey key = new AsyncJobKey(messageId, getDestination());
@@ -943,11 +1027,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
             command.setDestination(dest);
             command.setSubscriptionKey(subscriptionKey);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
             command.setMessageId(messageId.toProducerKey());
             command.setTransactionInfo(ack != null ? TransactionIdConversion.convert(transactionIdTransformer.transform(ack.getTransactionId())) : null);
             if (ack != null && ack.isUnmatchedAck()) {
                 command.setAck(UNMATCHED);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
                 org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(ack);
                 command.setAck(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
             }
@@ -960,10 +1048,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     .getSubscriptionName());
             KahaSubscriptionCommand command = new KahaSubscriptionCommand();
             command.setDestination(dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             command.setSubscriptionKey(subscriptionKey.toString());
             command.setRetroactive(retroactive);
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(subscriptionInfo);
             command.setSubscriptionInfo(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             store(command, isEnableJournalDiskSyncs() && true, null, null);
             this.subscriptionCount.incrementAndGet();
         }
@@ -972,7 +1062,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
             KahaSubscriptionCommand command = new KahaSubscriptionCommand();
             command.setDestination(dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             command.setSubscriptionKey(subscriptionKey(clientId, subscriptionName).toString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             store(command, isEnableJournalDiskSyncs() && true, null, null);
             this.subscriptionCount.decrementAndGet();
         }
@@ -988,6 +1080,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     public void execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         for (Iterator<Entry<String, KahaSubscriptionCommand>> iterator = sd.subscriptions.iterator(tx); iterator
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                                 .hasNext();) {
                             Entry<String, KahaSubscriptionCommand> entry = iterator.next();
                             SubscriptionInfo info = (SubscriptionInfo) wireFormat.unmarshal(new DataInputStream(entry
@@ -1009,6 +1103,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         @Override
         public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             indexLock.writeLock().lock();
             try {
                 return pageFile.tx().execute(new Transaction.CallableClosure<SubscriptionInfo, IOException>() {
@@ -1036,12 +1131,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 return (int)this.messageStoreSubStats.getMessageCount(subscriptionKey).getCount();
             } else {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
                 indexLock.writeLock().lock();
                 try {
                     return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
                         @Override
                         public Integer execute(Transaction tx) throws IOException {
                             StoredDestination sd = getStoredDestination(dest, tx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                             LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
                             if (cursorPos == null) {
                                 // The subscription might not exist.
@@ -1066,6 +1164,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             } else {
                 indexLock.writeLock().lock();
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6483
                     return pageFile.tx().execute(new Transaction.CallableClosure<Long, IOException>() {
                         @Override
                         public Long execute(Transaction tx) throws IOException {
@@ -1095,6 +1194,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         public void execute(Transaction tx) throws IOException {
                             StoredDestination sd = getStoredDestination(dest, tx);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7136
                             List<String> subscriptionKeys = new ArrayList<>();
                             for (Iterator<Entry<String, KahaSubscriptionCommand>> iterator = sd.subscriptions
                                     .iterator(tx); iterator.hasNext();) {
@@ -1137,7 +1237,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     @Override
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                         LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7129
                         SequenceSet subAckPositions = getSequenceSet(tx, sd, subscriptionKey);
                         //If we have ackPositions tracked then compare the first one as individual acknowledge mode
                         //may have bumped lastAck even though there are earlier messages to still consume
@@ -1149,8 +1251,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             subAckPositions = null;
                             sd.orderIndex.setBatch(tx, cursorPos);
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
                         recoverRolledBackAcks(subscriptionKey, sd, tx, Integer.MAX_VALUE, listener);
                         Set ackedAndPrepared = ackedAndPreparedMap.get(subscriptionKey);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
@@ -1159,6 +1263,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             }
                             //If subAckPositions is set then verify the sequence set contains the message still
                             //and if it doesn't skip it
+//IC see: https://issues.apache.org/jira/browse/AMQ-7129
                             if (subAckPositions != null && !subAckPositions.contains(entry.getKey())) {
                                 continue;
                             }
@@ -1177,7 +1282,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 final MessageRecoveryListener listener) throws Exception {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
             @SuppressWarnings("unused")
+//IC see: https://issues.apache.org/jira/browse/AMQ-2870
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
             final SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-3357
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             indexLock.writeLock().lock();
             try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
@@ -1186,8 +1296,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         StoredDestination sd = getStoredDestination(dest, tx);
                         sd.orderIndex.resetCursorPosition();
                         MessageOrderCursor moc = sd.subscriptionCursors.get(subscriptionKey);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7129
                         SequenceSet subAckPositions = null;
                         if (moc == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                             LastAck pos = getLastAck(tx, sd, subscriptionKey);
                             if (pos == null) {
                                 // sub deleted
@@ -1211,8 +1323,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
                         Entry<Long, MessageKeys> entry = null;
                         int counter = recoverRolledBackAcks(subscriptionKey, sd, tx, maxReturned, listener);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
                         Set ackedAndPrepared = ackedAndPreparedMap.get(subscriptionKey);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, moc); iterator
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                                 .hasNext();) {
                             entry = iterator.next();
                             if (ackedAndPrepared != null && ackedAndPrepared.contains(entry.getValue().messageId)) {
@@ -1220,12 +1335,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             }
                             //If subAckPositions is set then verify the sequence set contains the message still
                             //and if it doesn't skip it
+//IC see: https://issues.apache.org/jira/browse/AMQ-7129
                             if (subAckPositions != null && !subAckPositions.contains(entry.getKey())) {
                                 continue;
                             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2580
                             if (listener.recoverMessage(loadMessage(entry.getValue().location))) {
                                 counter++;
                             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
                             if (counter >= maxReturned || listener.hasSpace() == false) {
                                 break;
                             }
@@ -1248,6 +1366,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
                 indexLock.writeLock().lock();
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                     pageFile.tx().execute(new Transaction.Closure<IOException>() {
                         @Override
                         public void execute(Transaction tx) throws IOException {
@@ -1334,12 +1455,16 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     public Set<ActiveMQDestination> getDestinations() {
         try {
             final HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3167
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             indexLock.writeLock().lock();
             try {
                 pageFile.tx().execute(new Transaction.Closure<IOException>() {
                     @Override
                     public void execute(Transaction tx) throws IOException {
                         for (Iterator<Entry<String, StoredDestination>> iterator = metadata.destinations.iterator(tx); iterator
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                                 .hasNext();) {
                             Entry<String, StoredDestination> entry = iterator.next();
                             //Removing isEmpty topic check - see AMQ-5875
@@ -1347,7 +1472,19 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         }
                     }
                 });
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             }finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3167
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
                 indexLock.writeLock().unlock();
             }
             return rc;
@@ -1363,16 +1500,39 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
     @Override
     public long getLastProducerSequenceId(ProducerId id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5984
         indexLock.writeLock().lock();
         try {
             return metadata.producerSequenceIdTracker.getLastSeqId(id);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-3357
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             indexLock.writeLock().unlock();
         }
     }
 
     @Override
     public long size() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3973
         try {
             return journalSize.get() + getPageFile().getDiskSize();
         } catch (IOException e) {
@@ -1395,6 +1555,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
     @Override
     public void checkpoint(boolean sync) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         super.checkpointCleanup(sync);
     }
 
@@ -1408,6 +1569,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
      * @throws IOException
      */
     Message loadMessage(Location location) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6372
         try {
             JournalCommand<?> command = load(location);
             KahaAddMessageCommand addMessage = null;
@@ -1415,6 +1577,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 case KAHA_UPDATE_MESSAGE_COMMAND:
                     addMessage = ((KahaUpdateMessageCommand) command).getMessage();
                     break;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6670
                 case KAHA_ADD_MESSAGE_COMMAND:
                     addMessage = (KahaAddMessageCommand) command;
                     break;
@@ -1449,6 +1612,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         KahaDestination rc = new KahaDestination();
         rc.setName(dest.getPhysicalName());
         switch (dest.getDestinationType()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         case ActiveMQDestination.QUEUE_TYPE:
             rc.setType(DestinationType.QUEUE);
             return rc;
@@ -1473,6 +1638,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         }
         int type = Integer.parseInt(dest.substring(0, p));
         String name = dest.substring(p + 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3473
         return convert(type, name);
     }
 
@@ -1482,6 +1648,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
     private ActiveMQDestination convert(int type, String name) {
         switch (KahaDestination.DestinationType.valueOf(type)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         case QUEUE:
             return new ActiveMQQueue(name);
         case TOPIC:
@@ -1504,6 +1672,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     }
 
     static class AsyncJobKey {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         MessageId id;
         ActiveMQDestination destination;
 
@@ -1562,6 +1732,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         @Override
         public boolean cancel() {
             if (this.done.compareAndSet(false, true)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                 return this.future.cancel(false);
             }
             return false;
@@ -1603,6 +1775,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             + (this.store.canceledTasks / this.store.doneTasks) * 100);
                     this.store.canceledTasks = this.store.doneTasks = 0;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6688
             } catch (Throwable t) {
                 this.future.setException(t);
                 removeQueueTask(this.store, this.message.getMessageId());
@@ -1632,11 +1805,13 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
             @Override
             public void done() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
                 fireListener();
             }
 
             @Override
             public void addListener(Runnable listener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6524
                 this.listenerRef.set(listener);
                 if (isDone()) {
                     fireListener();
@@ -1723,6 +1898,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             + (this.store.canceledTasks / this.store.doneTasks) * 100);
                     this.store.canceledTasks = this.store.doneTasks = 0;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6688
             } catch (Throwable t) {
                 this.future.setException(t);
                 removeTopicTask(this.topicStore, this.message.getMessageId());
@@ -1733,6 +1909,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     public class StoreTaskExecutor extends ThreadPoolExecutor {
 
         public StoreTaskExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit timeUnit, BlockingQueue<Runnable> queue, ThreadFactory threadFactory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3272
             super(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue, threadFactory);
         }
 
@@ -1741,6 +1918,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             super.afterExecute(runnable, throwable);
 
             if (runnable instanceof StoreTask) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                ((StoreTask)runnable).releaseLocks();
             }
         }
@@ -1748,6 +1926,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         return new JobSchedulerStoreImpl();
     }
 
@@ -1757,6 +1936,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     @Override
     public boolean isPersistNoLocal() {
         // Prior to v11 the broker did not store the noLocal value for durable subs.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
         return brokerService.getStoreOpenWireVersion() >= 11;
     }
 }

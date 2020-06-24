@@ -90,6 +90,7 @@ public class PersistenceAdapterSupport {
      * @throws IOException if an error occurs while reading the destinations.
      */
     static public List<ActiveMQQueue> listQueues(PersistenceAdapter adapter) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         return listQueues(adapter, MATCH_ALL);
     }
 

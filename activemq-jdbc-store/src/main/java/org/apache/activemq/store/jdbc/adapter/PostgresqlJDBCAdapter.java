@@ -43,6 +43,7 @@ public class PostgresqlJDBCAdapter extends BytesJDBCAdapter {
     @Override
     public void setStatements(Statements statements) {
         statements.setBinaryDataType("BYTEA");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3075
         statements.setDropAckPKAlterStatementEnd("DROP CONSTRAINT \"" + getAcksPkName() + "\"");
         super.setStatements(statements);
     }
@@ -57,6 +58,7 @@ public class PostgresqlJDBCAdapter extends BytesJDBCAdapter {
 
     @Override
     public String limitQuery(String query) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7368
         return query + " LIMIT " + getMaxRows();
     }
 

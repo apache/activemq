@@ -180,6 +180,7 @@ public class NetworkOfTwentyBrokersTest extends JmsMultipleBrokersTestSupport {
 
 
     private void verifyPeerBrokerInfo(BrokerItem brokerItem, final int max) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
         final BrokerService broker = brokerItem.broker;
         final RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
         Wait.waitFor(new Wait.Condition() {

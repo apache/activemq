@@ -226,6 +226,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     }
 
     public long readLong() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         if (pos + 8 > buf.length ) {
             throw new EOFException();
         }
@@ -261,6 +262,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
 
     public String readUTF() throws IOException {
         int length = readUnsignedShort();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6651
         if (pos + length > buf.length) {
             throw new UTFDataFormatException("bad string");
         }

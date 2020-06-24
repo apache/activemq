@@ -47,6 +47,7 @@ public class MQTTSslTransportFactory extends SslTransportFactory implements Brok
     @SuppressWarnings("rawtypes")
 
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4896
         transport = new MQTTTransportFilter(transport, format, brokerService);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
@@ -54,6 +55,7 @@ public class MQTTSslTransportFactory extends SslTransportFactory implements Brok
 
     @Override
     protected SslTransportServer createSslTransportServer(URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         final SslTransportServer server = super.createSslTransportServer(location, serverSocketFactory);
         server.setAllowLinkStealing(true);
         return server;
@@ -72,6 +74,7 @@ public class MQTTSslTransportFactory extends SslTransportFactory implements Brok
     }
 
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4896
         this.brokerService = brokerService;
     }
 

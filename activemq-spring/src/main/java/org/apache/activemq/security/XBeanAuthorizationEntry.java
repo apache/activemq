@@ -52,6 +52,8 @@ public class XBeanAuthorizationEntry extends AuthorizationEntry implements Initi
      */
     @PostConstruct
     private void postConstruct() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             afterPropertiesSet();
         } catch (Exception ex) {
@@ -81,6 +83,7 @@ public class XBeanAuthorizationEntry extends AuthorizationEntry implements Initi
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         return "XBeanAuthEntry:" + adminRoles + "," + writeRoles + "," + readRoles;
     }
 }

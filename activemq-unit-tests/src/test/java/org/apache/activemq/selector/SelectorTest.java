@@ -47,6 +47,7 @@ public class SelectorTest extends TestCase {
 
         message.setJMSType("xml");
         message.setText("<root><a key='first' num='1'/><b key='second' num='2'>b</b></root>");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2179
 
         assertSelector(message, "XPATH 'root/a'", true);
         assertSelector(message, "XPATH '//root/b'", true);
@@ -114,9 +115,11 @@ public class SelectorTest extends TestCase {
     }
 
     public void testPropertyTypes() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-715
         Message message = createMessage();
         assertSelector(message, "byteProp = 123", true);
         assertSelector(message, "byteProp = 10", false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-715
         assertSelector(message, "byteProp2 = 33", true);
         assertSelector(message, "byteProp2 = 10", false);
 
@@ -323,6 +326,7 @@ public class SelectorTest extends TestCase {
     }
 
     public void testSpecialEscapeLiteral() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6137
         Message message = createMessage();
         assertSelector(message, "foo LIKE '%_%' ESCAPE '%'", true);
         assertSelector(message, "endingUnderScore LIKE '_D7xlJIQn$_' ESCAPE '$'", true);
@@ -342,11 +346,13 @@ public class SelectorTest extends TestCase {
         assertInvalidSelector(message, "3+5");
         assertInvalidSelector(message, "True AND 3+5");
         assertInvalidSelector(message, "=TEST 'test'");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6325
         assertInvalidSelector(message, "prop1 = prop2 foo AND string = 'Test'");
         assertInvalidSelector(message, "a = 1 AMD  b = 2");
     }
 
     public void testFunctionSelector() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3097
         Message message = createMessage();
         assertSelector(message, "REGEX('1870414179', SessionserverId)", false);
         message.setLongProperty("SessionserverId", 1870414179);
@@ -385,6 +391,7 @@ public class SelectorTest extends TestCase {
         message.setStringProperty("foo", "_foo");
         message.setStringProperty("punctuation", "!#$&()*+,-./:;<=>?@[\\]^`{|}~");
         message.setStringProperty("endingUnderScore", "XD7xlJIQn_");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6137
 
         message.setBooleanProperty("trueProp", true);
         message.setBooleanProperty("falseProp", false);
@@ -393,6 +400,7 @@ public class SelectorTest extends TestCase {
 
     protected void assertInvalidSelector(Message message, String text) throws JMSException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
             SelectorParser.parse(text);
             fail("Created a valid selector");
         } catch (InvalidSelectorException e) {
@@ -405,6 +413,8 @@ public class SelectorTest extends TestCase {
         MessageEvaluationContext context = new MessageEvaluationContext();
         context.setMessageReference((org.apache.activemq.command.Message)message);
         boolean value = selector.matches(context);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
         context.clear();
         assertEquals("Selector for: " + text, expected, value);
         assertEquals("ref 0", 0, ((ActiveMQMessage)message).getReferenceCount());

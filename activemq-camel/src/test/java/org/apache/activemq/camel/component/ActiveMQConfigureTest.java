@@ -40,6 +40,7 @@ public class ActiveMQConfigureTest extends CamelTestSupport {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo");
         JmsProducer producer = (JmsProducer) endpoint.createProducer();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2130
         JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getInOutTemplate());
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
         assertIsInstanceOf(PooledConnectionFactory.class, template.getConnectionFactory());
@@ -50,6 +51,7 @@ public class ActiveMQConfigureTest extends CamelTestSupport {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?useSingleConnection=true");
         JmsProducer producer = (JmsProducer) endpoint.createProducer();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2130
         JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getInOutTemplate());
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
         SingleConnectionFactory connectionFactory = assertIsInstanceOf(SingleConnectionFactory.class, template.getConnectionFactory());
@@ -58,6 +60,7 @@ public class ActiveMQConfigureTest extends CamelTestSupport {
 
     @Test
     public void testSessionTransactedWithoutTransactionManager() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3861
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?transacted=true&lazyCreateTransactionManager=false");
         JmsConfiguration configuration = endpoint.getConfiguration();
         
@@ -74,7 +77,11 @@ public class ActiveMQConfigureTest extends CamelTestSupport {
     public void testJmsTemplateDoesNotUsePoolingConnectionFactory() throws Exception {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?usePooledConnection=false");
         JmsProducer producer = (JmsProducer) endpoint.createProducer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3184
+//IC see: https://issues.apache.org/jira/browse/AMQ-3184
+//IC see: https://issues.apache.org/jira/browse/AMQ-3184
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2130
         JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getInOutTemplate());
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
         assertIsInstanceOf(ActiveMQConnectionFactory.class, template.getConnectionFactory());
@@ -84,6 +91,7 @@ public class ActiveMQConfigureTest extends CamelTestSupport {
     public void testListenerContainerUsesSpringConnectionFactory() throws Exception {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:topic:test.foo");
         JmsConsumer consumer = endpoint.createConsumer(new CamelLogProcessor());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
 
         AbstractMessageListenerContainer listenerContainer = consumer.getListenerContainer();
         assertEquals("pubSubDomain", true, listenerContainer.isPubSubDomain());

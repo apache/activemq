@@ -71,6 +71,7 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
     }
 
     public void setCollisionAvoidancePercent(short collisionAvoidancePercent) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-747
         this.collisionAvoidanceFactor = collisionAvoidancePercent * 0.01d;
     }
 
@@ -83,6 +84,7 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
     }
 
     public long getMaximumRedeliveryDelay() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3045
         return maximumRedeliveryDelay;
     }
 
@@ -100,9 +102,12 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
 
     public long getNextRedeliveryDelay(long previousDelay) {
         long nextDelay = redeliveryDelay;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5087
+//IC see: https://issues.apache.org/jira/browse/AMQ-5674
 
         if (previousDelay > 0 && useExponentialBackOff && backOffMultiplier > 1) {
             nextDelay = (long) (previousDelay * backOffMultiplier);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3045
             if(maximumRedeliveryDelay != -1 && nextDelay > maximumRedeliveryDelay) {
                 // in case the user made max redelivery delay less than redelivery delay for some reason.
                 nextDelay = Math.max(maximumRedeliveryDelay, redeliveryDelay);
@@ -116,6 +121,7 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
              */
             Random random = getRandomNumberGenerator();
             double variance = (random.nextBoolean() ? collisionAvoidanceFactor : -collisionAvoidanceFactor) * random.nextDouble();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1847
             nextDelay += nextDelay * variance;
         }
 
@@ -139,6 +145,7 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
     }
 
     protected static synchronized Random getRandomNumberGenerator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-747
         if (randomNumberGenerator == null) {
             randomNumberGenerator = new Random();
         }
@@ -146,6 +153,7 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
     }
 
     public void setRedeliveryDelay(long redeliveryDelay) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1847
         this.redeliveryDelay = redeliveryDelay;
     }
 
@@ -155,10 +163,12 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3894
         return IntrospectionSupport.toString(this, DestinationMapEntry.class, null);
     }
 
     public void setPreDispatchCheck(boolean preDispatchCheck) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
         this.preDispatchCheck = preDispatchCheck;
     }
 

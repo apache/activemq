@@ -56,6 +56,7 @@ public class Page<T> {
         this.type = other.type;
         this.next = other.next;
         this.data = other.data;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
         return this;
     }
 

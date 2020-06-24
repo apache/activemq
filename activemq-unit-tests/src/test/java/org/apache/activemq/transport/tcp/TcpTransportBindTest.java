@@ -58,6 +58,7 @@ public class TcpTransportBindTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testReceiveThrowsException() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2195
         Connection connection = new ActiveMQConnectionFactory(addr).createConnection();
         connection.start();
         Session sess = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

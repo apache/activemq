@@ -71,6 +71,7 @@ public class NetworkFailoverTest extends TestCase {
         remoteConsumer.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message msg) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4285
                 final TextMessage textMsg = (TextMessage)msg;
                 try {
                     String payload = "REPLY: " + textMsg.getText() + ", " + textMsg.getJMSMessageID();
@@ -103,6 +104,7 @@ public class NetworkFailoverTest extends TestCase {
         MessageConsumer requestConsumer = localSession.createConsumer(tempQueue);
 
         // track remote dlq for forward failures
+//IC see: https://issues.apache.org/jira/browse/AMQ-4285
         MessageConsumer dlqconsumer = remoteSession.createConsumer(new ActiveMQQueue(SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME));
         dlqconsumer.setMessageListener(new MessageListener() {
             @Override
@@ -180,6 +182,7 @@ public class NetworkFailoverTest extends TestCase {
 
         remoteBroker = createRemoteBroker();
         remoteBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4285
         remoteBroker.setCacheTempDestinations(true);
         remoteBroker.start();
 

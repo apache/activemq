@@ -62,6 +62,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
 
     @Parameters(name="{0}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return Arrays.asList(new Object[][] {
             {"amqp", false},
             {"amqp+ws", false},
@@ -76,6 +77,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
 
     @Override
     protected String getAdditionalConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6675
         return "&wireFormat.maxAmqpFrameSize=1048576";
     }
 
@@ -90,6 +92,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
 
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6672
         Connection protonConnection = connection.getConnection();
         org.apache.qpid.proton.engine.Transport protonTransport = protonConnection.getTransport();
 
@@ -135,6 +138,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
                     markAsInvalid("Broker did not indicate it support anonymous relay");
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6410
                 if (!contains(offered, DELAYED_DELIVERY)) {
                     markAsInvalid("Broker did not indicate it support delayed message delivery");
                 }
@@ -148,6 +152,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
                     markAsInvalid("Broker did not send a queue prefix value");
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5845
                 if (!properties.containsKey(PRODUCT)) {
                     markAsInvalid("Broker did not send a queue product name value");
                 }
@@ -177,10 +182,12 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testConnectionCarriesContainerId() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6304
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
         client.setValidator(new AmqpValidator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
 
             @Override
             public void inspectOpenedResource(Connection connection) {
@@ -193,11 +200,15 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         connection.getStateInspector().assertValid();
         connection.close();
 
@@ -209,6 +220,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection1 = trackConnection(client.createConnection());
         AmqpConnection connection2 = trackConnection(client.createConnection());
 
@@ -233,6 +245,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection1 = trackConnection(client.createConnection());
         AmqpConnection connection2 = trackConnection(client.createConnection());
 
@@ -243,6 +256,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
 
         connection2.setStateInspector(new AmqpValidator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
 
             @Override
             public void inspectOpenedResource(Connection connection) {
@@ -254,6 +268,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
             @Override
             public void inspectClosedResource(Connection connection) {
                 ErrorCondition remoteError = connection.getRemoteCondition();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6309
                 if (remoteError == null || remoteError.getCondition() == null) {
                     markAsInvalid("Broker did not add error condition for duplicate client ID");
                 } else {
@@ -289,6 +304,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         }
 
         connection2.getStateInspector().assertValid();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
 
@@ -299,6 +315,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSimpleSendOneReceive() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();

@@ -50,6 +50,7 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
      * Initialize default prefetch policies
      */
     public ActiveMQPrefetchPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1846
         this.queuePrefetch = DEFAULT_QUEUE_PREFETCH;
         this.queueBrowserPrefetch = DEFAULT_QUEUE_BROWSER_PREFETCH;
         this.topicPrefetch = DEFAULT_TOPIC_PREFETCH;
@@ -168,6 +169,7 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
                    this.queueBrowserPrefetch == other.queueBrowserPrefetch &&
                    this.topicPrefetch == other.topicPrefetch &&
                    this.durableTopicPrefetch == other.durableTopicPrefetch &&
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
                    this.optimizeDurableTopicPrefetch == other.optimizeDurableTopicPrefetch;
         }
         return false;

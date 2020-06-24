@@ -60,7 +60,9 @@ public class JMSClientContext {
 
     public Connection createConnection(URI remoteURI, String username, String password, String clientId, boolean syncPublish) throws JMSException {
         ConnectionFactory factory = createConnectionFactory(remoteURI, username, password, syncPublish);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         Connection connection = factory.createConnection();
         connection.setExceptionListener(new ExceptionListener() {
             @Override
@@ -97,7 +99,9 @@ public class JMSClientContext {
 
     public TopicConnection createTopicConnection(URI remoteURI, String username, String password, String clientId, boolean syncPublish) throws JMSException {
         TopicConnectionFactory factory = createTopicConnectionFactory(remoteURI, username, password, syncPublish);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         TopicConnection connection = factory.createTopicConnection();
         connection.setExceptionListener(new ExceptionListener() {
             @Override
@@ -134,7 +138,9 @@ public class JMSClientContext {
 
     public QueueConnection createQueueConnection(URI remoteURI, String username, String password, String clientId, boolean syncPublish) throws JMSException {
         QueueConnectionFactory factory = createQueueConnectionFactory(remoteURI, username, password, syncPublish);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         QueueConnection connection = factory.createQueueConnection();
         connection.setExceptionListener(new ExceptionListener() {
             @Override
@@ -144,6 +150,9 @@ public class JMSClientContext {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         if (clientId != null && !clientId.isEmpty()) {
             connection.setClientID(clientId);
         }
@@ -168,6 +177,7 @@ public class JMSClientContext {
     private ConnectionFactory createConnectionFactory(
         URI remoteURI, String username, String password, boolean syncPublish) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         String clientScheme;
         boolean useSSL = false;
 
@@ -212,6 +222,7 @@ public class JMSClientContext {
 
         factory.setUsername(username);
         factory.setPassword(password);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         factory.setForceSyncSend(syncPublish);
         factory.setTopicPrefix("topic://");
         factory.setQueuePrefix("queue://");

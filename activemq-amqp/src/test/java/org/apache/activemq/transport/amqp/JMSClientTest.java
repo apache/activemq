@@ -103,6 +103,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     @Test(timeout = 60000)
     public void testSendJMSMapMessage() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
 
         connection = createConnection();
         {
@@ -237,6 +238,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         int totalCount = 5;
         int consumeBeforeRollback = 2;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5467
         connection = createConnection();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Queue queue = session.createQueue(getDestinationName());
@@ -247,6 +249,7 @@ public class JMSClientTest extends JMSClientTestSupport {
 
         MessageConsumer consumer = session.createConsumer(queue);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         for (int i = 1; i <= consumeBeforeRollback; i++) {
             Message message = consumer.receive(1000);
             assertNotNull(message);
@@ -258,7 +261,9 @@ public class JMSClientTest extends JMSClientTestSupport {
         assertEquals(totalCount, proxy.getQueueSize());
 
         // Consume again..check we receive all the messages.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         Set<Integer> messageNumbers = new HashSet<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         for (int i = 1; i <= totalCount; i++) {
             messageNumbers.add(i);
         }
@@ -281,8 +286,12 @@ public class JMSClientTest extends JMSClientTestSupport {
 
         ActiveMQAdmin.enableJMSFrameTracing();
         final int msgCount = 300;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
 
         connection = createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5467
+//IC see: https://issues.apache.org/jira/browse/AMQ-5467
+//IC see: https://issues.apache.org/jira/browse/AMQ-5467
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Queue queue = session.createQueue(getDestinationName());
         sendMessages(connection, queue, msgCount);
@@ -305,6 +314,7 @@ public class JMSClientTest extends JMSClientTestSupport {
             }
 
             session.commit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4651
             consumer.close();
             session.close();
         }
@@ -355,6 +365,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     @Test(timeout=30000)
     public void testSelectorsWithJMSType() throws Exception{
         ActiveMQAdmin.enableJMSFrameTracing();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5637
 
         connection = createConnection();
         {
@@ -385,6 +396,7 @@ public class JMSClientTest extends JMSClientTestSupport {
 
             MessageConsumer consumer = session.createConsumer(queue, "JMSType = '"+ type +"'");
             Message msg = consumer.receive(TestConfig.TIMEOUT);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4559
             assertNotNull(msg);
             assertTrue(msg instanceof TextMessage);
             assertEquals("Unexpected JMSType value", type, msg.getJMSType());
@@ -516,6 +528,8 @@ public class JMSClientTest extends JMSClientTestSupport {
                         synchronized (consumer) {
                             consumer.notifyAll();
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5073
+//IC see: https://issues.apache.org/jira/browse/AMQ-5062
                         TimeUnit.MILLISECONDS.sleep(1000 + (i * 100));
                     }
                     msg = "Should have thrown an IllegalStateException";
@@ -642,6 +656,7 @@ public class JMSClientTest extends JMSClientTestSupport {
             producer.send(m);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         MessageConsumer consumer=session.createConsumer(queue);
         for(int i = 0; i < count; i++) {
             Message message = consumer.receive(5000);
@@ -654,6 +669,7 @@ public class JMSClientTest extends JMSClientTestSupport {
 
     @Test(timeout=30000)
     public void testSyncSends() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4741
         ActiveMQAdmin.enableJMSFrameTracing();
         connection = createConnection(true);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -707,6 +723,8 @@ public class JMSClientTest extends JMSClientTestSupport {
     public void testDurableConsumerSync() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
         String durableClientId = getDestinationName() + "-ClientId";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
 
         connection = createConnection(durableClientId);
         {
@@ -730,6 +748,7 @@ public class JMSClientTest extends JMSClientTestSupport {
                     return msg.get() != null;
                 }
             }, TimeUnit.SECONDS.toMillis(25), TimeUnit.MILLISECONDS.toMillis(200)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
 
             assertNotNull("Should have received a message by now.", msg.get());
             assertTrue("Should be an instance of TextMessage", msg.get() instanceof TextMessage);
@@ -741,6 +760,8 @@ public class JMSClientTest extends JMSClientTestSupport {
         ActiveMQAdmin.enableJMSFrameTracing();
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Message> received = new AtomicReference<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
 
         connection = createConnection();
         {
@@ -788,6 +809,8 @@ public class JMSClientTest extends JMSClientTestSupport {
             message.setText("hello");
             producer.send(message);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
             final AtomicReference<Message> msg = new AtomicReference<>();
             assertTrue(Wait.waitFor(new Wait.Condition() {
 
@@ -811,6 +834,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         LOG.info("Current number of Connections is: {}", connector.connectionCount());
 
         ArrayList<Connection> connections = new ArrayList<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
 
         for (int i = 0; i < 10; i++) {
             connections.add(createConnection(null));
@@ -856,6 +880,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         });
 
         // This makes sure the connection is completely up and connected
+//IC see: https://issues.apache.org/jira/browse/AMQ-5405
         Destination destination = s.createTemporaryQueue();
         MessageProducer producer = s.createProducer(destination);
         assertNotNull(producer);
@@ -870,6 +895,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         ActiveMQAdmin.enableJMSFrameTracing();
 
         connection = createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5467
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Queue queue = session.createQueue(getDestinationName());
 
@@ -883,6 +909,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
 
         // No commit in place, so no message should be dispatched.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         QueueViewMBean queueView = getProxyToQueue(getDestinationName());
         assertEquals(0, queueView.getQueueSize());
 
@@ -916,6 +943,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         MessageConsumer consumer = session.createConsumer(queue);
 
         // No commit in place, so no message should be dispatched.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         QueueViewMBean queueView = getProxyToQueue(getDestinationName());
         assertEquals(0, queueView.getQueueSize());
 
@@ -926,6 +954,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     }
 
     private String createLargeString(int sizeInBytes) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5093
         byte[] base = {1, 2, 3, 4, 5, 6, 7, 8, 9, 0};
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < sizeInBytes; i++) {
@@ -962,6 +991,7 @@ public class JMSClientTest extends JMSClientTestSupport {
 
     @Test(timeout=30*1000)
     public void testDurableTopicStateAfterSubscriberClosed() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         String durableClientId = getDestinationName() + "-ClientId";
         String durableSubscriberName = getDestinationName() + "-SubscriptionName";
 
@@ -971,6 +1001,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         LOG.debug(">>>> At Start, durable Subscribers {} inactiveDurableSubscribers {}", durableSubscribersAtStart, inactiveSubscribersAtStart);
 
         TopicConnection subscriberConnection =
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
             JMSClientContext.INSTANCE.createTopicConnection(getBrokerURI(), "admin", "password");
         subscriberConnection.setClientID(durableClientId);
         TopicSession subscriberSession = subscriberConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -1043,6 +1074,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     @Test(timeout=30000)
     public void testDurableConsumerUnsubscribeWhileNoSubscription() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5401
 
         final BrokerViewMBean broker = getProxyToBroker();
 
@@ -1059,6 +1091,7 @@ public class JMSClientTest extends JMSClientTestSupport {
                        broker.getDurableTopicSubscribers().length == 0;
             }
         }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(250)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
 
         try {
             session.unsubscribe("DurbaleTopic");
@@ -1071,6 +1104,8 @@ public class JMSClientTest extends JMSClientTestSupport {
     public void testDurableConsumerUnsubscribeWhileActive() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
         String durableClientId = getDestinationName() + "-ClientId";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
 
         final BrokerViewMBean broker = getProxyToBroker();
 
@@ -1089,6 +1124,10 @@ public class JMSClientTest extends JMSClientTestSupport {
                        broker.getDurableTopicSubscribers().length == 1;
             }
         }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(250)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
 
         try {
             session.unsubscribe("DurbaleTopic");
@@ -1099,6 +1138,7 @@ public class JMSClientTest extends JMSClientTestSupport {
 
     @Test(timeout=30000)
     public void testRedeliveredHeader() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5379
         connection = createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(getDestinationName());
@@ -1124,6 +1164,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     @Test(timeout=30000)
     public void testCreateTemporaryQueue() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5593
 
         connection = createConnection();
         {
@@ -1209,9 +1250,11 @@ public class JMSClientTest extends JMSClientTestSupport {
 
     @Test(timeout = 60000)
     public void testZeroPrefetchWithTwoConsumers() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         JmsConnectionFactory cf = new JmsConnectionFactory(getAmqpURI("jms.prefetchPolicy.all=0"));
         connection = cf.createConnection();
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6147
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(getDestinationName());
@@ -1237,6 +1280,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     @Test(timeout=30000)
     public void testRetroactiveConsumerSupported() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6359
 
         connection = createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -1296,6 +1340,7 @@ public class JMSClientTest extends JMSClientTestSupport {
 
     @Test(timeout = 30000)
     public void testProduceAndConsumeLargeNumbersOfTopicMessagesClientAck() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         doTestProduceAndConsumeLargeNumbersOfMessages(true, Session.CLIENT_ACKNOWLEDGE);
     }
 

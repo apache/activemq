@@ -30,6 +30,7 @@ import org.slf4j.Logger;
  */
 public class DefaultLogWriter implements LogWriter {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6446
     String prefix = "";
     @Override
     public void setPrefix(String prefix) {
@@ -43,6 +44,7 @@ public class DefaultLogWriter implements LogWriter {
 
     // doc comment inherited from LogWriter
     public void logRequest (Logger log, Object command) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6446
         log.debug(prefix + "SENDING REQUEST: "+command);
     }
 

@@ -35,6 +35,7 @@ public class AmqpWireFormatFactory implements WireFormatFactory {
     @Override
     public WireFormat createWireFormat() {
         AmqpWireFormat wireFormat = new AmqpWireFormat();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
 
         wireFormat.setMaxFrameSize(getMaxFrameSize());
         wireFormat.setMaxAmqpFrameSize(getMaxAmqpFrameSize());
@@ -42,6 +43,7 @@ public class AmqpWireFormatFactory implements WireFormatFactory {
         wireFormat.setProducerCredit(getProducerCredit());
         wireFormat.setTransformer(getTransformer());
         wireFormat.setAllowNonSaslConnections(isAllowNonSaslConnections());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
 
         return wireFormat;
     }
@@ -87,6 +89,7 @@ public class AmqpWireFormatFactory implements WireFormatFactory {
     }
 
     public boolean isAllowNonSaslConnections() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
         return allowNonSaslConnections;
     }
 

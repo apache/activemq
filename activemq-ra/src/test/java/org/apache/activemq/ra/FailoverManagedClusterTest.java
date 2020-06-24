@@ -97,6 +97,7 @@ public class FailoverManagedClusterTest {
         master = new BrokerService();
         master.setDeleteAllMessagesOnStartup(true);
         master.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         master.setDataDirectory(KAHADB_DIRECTORY);
         master.setBrokerName("BROKER");
         masterConnectionUri = master.addConnector(MASTER_BIND_ADDRESS).getPublishableConnectString();
@@ -107,6 +108,7 @@ public class FailoverManagedClusterTest {
     private void createAndStartSlave() throws Exception {
         slave = new BrokerService();
         slave.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         slave.setDataDirectory(KAHADB_DIRECTORY);
         slave.setBrokerName("BROKER");
         slaveConnectionUri = slave.addConnector(SLAVE_BIND_ADDRESS).getPublishableConnectString();

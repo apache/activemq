@@ -47,6 +47,7 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("ID of the Subscription.")
     long getSubscriptionId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4855
 
     /**
      * @return the destination name
@@ -65,6 +66,7 @@ public interface SubscriptionViewMBean {
      * operation is not supported for persistent topics.
      */
     void setSelector(@MBeanInfo("selector") String selector) throws InvalidSelectorException, UnsupportedOperationException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * @return true if the destination is a Queue
@@ -117,6 +119,7 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("Number of messages that sent to the client.")
     long getDispatchedCounter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3084
 
     /**
      * @return number of messages that matched the subscription
@@ -187,6 +190,7 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("The name of the subscription (durable subscriptions only).")
     String getSubscriptionName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4855
 
     /**
      * Returns true if this subscription (which may be using wildcards) matches the given queue name
@@ -222,6 +226,7 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("User Name used to authorize creation of this Subscription")
     String getUserName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
 
     /**
      * Returns the ObjectName of the Connection that created this Subscription.
@@ -231,9 +236,11 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("ObjectName of the Connection that created this Subscription")
     ObjectName getConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1907
 
     @MBeanInfo("Resets statistics.")
     void resetStatistics();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4916
 
     @MBeanInfo("Messages consumed")
     long getConsumedCount();

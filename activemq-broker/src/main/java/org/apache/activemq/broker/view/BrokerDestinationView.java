@@ -126,6 +126,7 @@ public class BrokerDestinationView {
      * @return Gets the temp usage as a percentage for this Destination.
      */
     public int getTempPercentUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7085
         return destination.getTempUsage().getPercentUsage();
     }
 
@@ -164,6 +165,7 @@ public class BrokerDestinationView {
      * @return the average size of a message (bytes)
      */
     public double getAverageMessageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4697
         return destination.getDestinationStatistics().getMessageSize().getAverageSize();
     }
 
@@ -186,6 +188,7 @@ public class BrokerDestinationView {
      * @return true if the destination is a Dead Letter Queue
      */
     public boolean isDLQ() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4483
         return destination.getActiveMQDestination().isDLQ();
     }
 

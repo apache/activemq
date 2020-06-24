@@ -69,6 +69,7 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
         consumer = createConsumer();
         consumer.setMessageListener(this);
         startConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1253
 
         LOG.info("Created connection: " + connection);
     }

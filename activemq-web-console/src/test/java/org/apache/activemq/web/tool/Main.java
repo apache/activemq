@@ -48,14 +48,17 @@ public final class Main {
         }
 
         System.out.println("Starting Web Server on port: " + port);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7486
         System.setProperty("jetty.port", "" + port);
         Server server = new Server(port);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
 
         //System.setProperty("webconsole.type","properties");
         //System.setProperty("webconsole.jms.url","tcp://localhost:61616");
         //System.setProperty("webconsole.jmx.url","service:jmx:rmi:///jndi/rmi://localhost:1099/karaf-root");
 
         WebAppContext context = new WebAppContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         ContextHandlerCollection handlers = new ContextHandlerCollection();
         handlers.setHandlers(new WebAppContext[] {context});
 

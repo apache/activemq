@@ -218,6 +218,7 @@ public class DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest extends org
             assertTrue("no leak of pages, always use just 11", Wait.waitFor(new Wait.Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
                     return 12 == store.getPageFile().getPageCount() -
                             store.getPageFile().getFreePageCount();
                 }

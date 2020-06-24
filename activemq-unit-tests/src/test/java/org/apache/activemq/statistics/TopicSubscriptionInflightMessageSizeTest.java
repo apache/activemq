@@ -39,6 +39,7 @@ import org.junit.runners.Parameterized;
 public class TopicSubscriptionInflightMessageSizeTest extends AbstractInflightMessageSizeTest {
 
     public TopicSubscriptionInflightMessageSizeTest(int ackType, boolean optimizeAcknowledge, boolean useTopicSubscriptionInflightStats) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         super(ackType, optimizeAcknowledge, useTopicSubscriptionInflightStats);
     }
 
@@ -64,6 +65,7 @@ public class TopicSubscriptionInflightMessageSizeTest extends AbstractInflightMe
 
     @Test(timeout=15000)
     public void testInflightMessageSizeDisabled() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         Assume.assumeFalse(useTopicSubscriptionInflightStats);
         sendMessages(10);
 

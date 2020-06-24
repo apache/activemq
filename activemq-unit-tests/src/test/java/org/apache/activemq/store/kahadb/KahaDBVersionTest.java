@@ -52,6 +52,8 @@ public class KahaDBVersionTest extends TestCase {
     }
 
     static final Logger LOG = LoggerFactory.getLogger(KahaDBVersionTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
     final static File VERSION_1_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion1");
     final static File VERSION_2_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion2");
     final static File VERSION_3_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion3");
@@ -59,6 +61,7 @@ public class KahaDBVersionTest extends TestCase {
     final static File VERSION_5_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion5");
     final static File VERSION_6_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion6");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
 
     BrokerService broker = null;
 
@@ -78,6 +81,7 @@ public class KahaDBVersionTest extends TestCase {
     }
 
     public void XtestCreateStore() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2789
         KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
         File dir = new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion5");
         IOHelper.deleteFile(dir);
@@ -97,6 +101,8 @@ public class KahaDBVersionTest extends TestCase {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("test.topic");
         Queue queue = session.createQueue("test.queue");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
         MessageConsumer consumer = session.createDurableSubscriber(topic, "test");
         consumer.close();
         MessageProducer producer = session.createProducer(topic);
@@ -135,6 +141,7 @@ public class KahaDBVersionTest extends TestCase {
     }
 
     public void testVersion6Conversion() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
         doConvertRestartCycle(VERSION_6_DB);
     }
 
@@ -179,6 +186,7 @@ public class KahaDBVersionTest extends TestCase {
                 TextMessage msg = (TextMessage) topicConsumer.receive(10000);
                 count++;
                 // System.err.println(msg.getText());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4212
                 assertNotNull("" + count, msg);
             }
             LOG.info("Consumed " + count + " from topic");

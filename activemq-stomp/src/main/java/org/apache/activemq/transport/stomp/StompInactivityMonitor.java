@@ -42,6 +42,7 @@ public class StompInactivityMonitor extends AbstractInactivityMonitor {
     public void startMonitoring() throws IOException {
         this.isConfigured = true;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         stopConnectCheckTask();
         startMonitorThreads();
     }

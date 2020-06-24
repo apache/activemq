@@ -31,6 +31,7 @@ public class DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest extends DbRestartJDBC
     @Override
     protected void configureBroker(BrokerService brokerService) {
         // master and slave survive db restart and retain master/slave status
+//IC see: https://issues.apache.org/jira/browse/AMQ-5174
         LeaseLockerIOExceptionHandler stopConnectors = new LeaseLockerIOExceptionHandler();
         brokerService.setIoExceptionHandler(stopConnectors);
     }
@@ -53,6 +54,7 @@ public class DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest extends DbRestartJDBC
     protected void verifyExpectedBroker(int inflightMessageCount) {
         if (inflightMessageCount == 0  || (inflightMessageCount == failureCount + 10 && restartDelay <= 500)) {
             assertEquals("connected to master", master.getBrokerName(), ((ActiveMQConnection)sendConnection).getBrokerName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
         } else {
             // lease expired while DB was offline, either or master/slave can grab it so assert is not deterministic
             // but we still need to validate sent == received

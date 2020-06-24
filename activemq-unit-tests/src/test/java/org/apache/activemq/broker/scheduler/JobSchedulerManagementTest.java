@@ -59,7 +59,9 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
 
     @Override
     protected BrokerService createBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7221
         BrokerService brokerService = createBroker(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7221
         if (isPersistent()) {
             ((JobSchedulerStoreImpl) brokerService.getJobSchedulerStore()).setCleanupInterval(500);
             ((JobSchedulerStoreImpl) brokerService.getJobSchedulerStore()).setJournalMaxFileLength(100 * 1024);
@@ -105,7 +107,9 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         latch.await(10, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), COUNT);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7221
         if (isPersistent()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7221
             assertEquals(1, getNumberOfJournalFiles());
         }
 
@@ -158,6 +162,7 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         // Send the remove request
         MessageProducer producer = session.createProducer(management);
         Message request = session.createMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION, ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL);
         request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION_START_TIME, Long.toString(start));
         request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION_END_TIME, Long.toString(end));
@@ -353,6 +358,8 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
             Message message = browser.receive(2000);
             assertNotNull(message);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
             try {
                 Message remove = session.createMessage();
                 remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION, ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVE);
@@ -411,12 +418,14 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
 
         // Create the "Browser"
         MessageConsumer browser = session.createConsumer(browseDest, ScheduledMessage.AMQ_SCHEDULED_DELAY + " = 45000");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
 
         connection.start();
 
         // Send the browse request
         MessageProducer producer = session.createProducer(requestBrowse);
         Message request = session.createMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION, ScheduledMessage.AMQ_SCHEDULER_ACTION_BROWSE);
         request.setJMSReplyTo(browseDest);
         producer.send(request);
@@ -428,6 +437,7 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
 
         // Verify that original destination was preserved
         assertEquals(destination, ((ActiveMQMessage) message).getOriginalDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6808
 
         // Now check if there are anymore, there shouldn't be
         message = browser.receive(5000);
@@ -446,6 +456,7 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         TextMessage message = session.createTextMessage("test msg");
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, delay);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         for (int i = 0; i < count; ++i) {
             producer.send(message);
         }
@@ -454,6 +465,7 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
     }
 
     private int getNumberOfJournalFiles() throws IOException, InterruptedException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7221
         Collection<DataFile> files = ((JobSchedulerStoreImpl) broker.getJobSchedulerStore()).getJournal().getFileMap().values();
         int reality = 0;
         for (DataFile file : files) {

@@ -97,6 +97,7 @@ public class AutoTransportConnectionsTest {
     @After
     public void tearDown() throws Exception {
         executor.shutdown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6505
 
         service.stop();
         service.waitUntilStopped();
@@ -119,6 +120,7 @@ public class AutoTransportConnectionsTest {
     @Test
     public void testMaxConnectionControl() throws Exception {
         configureConnectorAndStart(transportType + "://0.0.0.0:0?maxConnectionThreadPoolSize=10&maximumConnections="+maxConnections);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6505
 
         final ConnectionFactory cf = createConnectionFactory();
         final CountDownLatch startupLatch = new CountDownLatch(1);
@@ -167,6 +169,7 @@ public class AutoTransportConnectionsTest {
     @Test
     public void testConcurrentConnections() throws Exception {
         configureConnectorAndStart(transportType + "://0.0.0.0:0");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6505
 
         int connectionAttempts = 50;
         ConnectionFactory factory = createConnectionFactory();

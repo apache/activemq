@@ -38,6 +38,7 @@ public class MQTTNIOSSLTransport extends NIOSSLTransport {
     }
 
     public MQTTNIOSSLTransport(WireFormat wireFormat, Socket socket) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         super(wireFormat, socket, null, null, null);
     }
 
@@ -48,6 +49,7 @@ public class MQTTNIOSSLTransport extends NIOSSLTransport {
 
     @Override
     protected void initializeStreams() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5781
         codec = new MQTTCodec(this, (MQTTWireFormat) getWireFormat());
         super.initializeStreams();
         if (inputBuffer.position() != 0 && inputBuffer.hasRemaining()) {
@@ -68,12 +70,14 @@ public class MQTTNIOSSLTransport extends NIOSSLTransport {
      */
     @Override
     protected void doInit() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         if (initBuffer != null) {
             nextFrameSize = -1;
             receiveCounter += initBuffer.readSize;
             initBuffer.buffer.flip();
             processCommand(initBuffer.buffer);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
         super.doInit();
     }
 

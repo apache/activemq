@@ -61,9 +61,12 @@ public class ResponseCorrelator extends TransportFilter {
     }
 
     public FutureResponse asyncRequest(Object o, ResponseCallback responseCallback) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2439
         Command command = (Command) o;
         command.setCommandId(sequenceGenerator.getNextSequenceId());
         command.setResponseRequired(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
         FutureResponse future = new FutureResponse(responseCallback, this);
         IOException priorError = null;
         synchronized (requestMap) {
@@ -122,6 +125,8 @@ public class ResponseCorrelator extends TransportFilter {
      * any of current requests. Lets let them know of the problem.
      */
     public void onException(IOException error) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
         dispose(new TransportDisposedIOException("Disposed due to prior exception", error));
         super.onException(error);
     }

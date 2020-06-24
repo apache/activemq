@@ -140,6 +140,7 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
     @Override
     public void remotelyClosed(AmqpConnection connection) {
         Exception error = AmqpSupport.convertToException(getEndpoint().getRemoteCondition());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
 
         if (endpoint != null) {
             // TODO: if this is a producer/consumer link then we may only be detached,
@@ -154,6 +155,7 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
 
     @Override
     public void locallyClosed(AmqpConnection connection, Exception error) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         if (endpoint != null) {
             // TODO: if this is a producer/consumer link then we may only be detached,
             // rather than fully closed, and should respond appropriately.
@@ -179,6 +181,7 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
 
     public void setStateInspector(AmqpValidator stateInspector) {
         if (stateInspector == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
             stateInspector = new AmqpValidator();
         }
 
@@ -231,6 +234,7 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
             LOG.warn("Open of {} failed: ", this);
             Exception openError;
             if (hasRemoteError()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
                 openError = AmqpSupport.convertToException(getEndpoint().getRemoteCondition());
             } else {
                 openError = getOpenAbortException();
@@ -275,6 +279,7 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
      * must implement this and do a detach if its resource supports that.
      */
     protected void doDetach() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         throw new UnsupportedOperationException("Endpoint cannot be detached.");
     }
 

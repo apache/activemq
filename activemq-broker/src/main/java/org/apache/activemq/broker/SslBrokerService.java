@@ -91,9 +91,11 @@ public class SslBrokerService extends BrokerService {
             // it to use the given key and trust managers.
             SslTransportFactory transportFactory = new SslTransportFactory();
             
+//IC see: https://issues.apache.org/jira/browse/AMQ-1749
             SslContext ctx = new SslContext(km, tm, random);
             SslContext.setCurrentSslContext(ctx);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
                 return transportFactory.doBind(brokerURI);
             } finally {
                 SslContext.setCurrentSslContext(null);

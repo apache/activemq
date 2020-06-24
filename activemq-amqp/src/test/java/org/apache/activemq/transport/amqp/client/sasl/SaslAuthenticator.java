@@ -59,6 +59,7 @@ public class SaslAuthenticator {
         this.sasl = sasl;
         this.username = username;
         this.password = password;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         this.authzid = authzid;
         this.mechanismRestriction = mechanismRestriction;
     }
@@ -98,6 +99,7 @@ public class SaslAuthenticator {
                 if (mechanism != null) {
                     mechanism.setUsername(username);
                     mechanism.setPassword(password);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
                     mechanism.setAuthzid(authzid);
                     // TODO - set additional options from URI.
                     // TODO - set a host value.
@@ -126,11 +128,13 @@ public class SaslAuthenticator {
         List<Mechanism> found = new ArrayList<Mechanism>();
 
         for (String remoteMechanism : remoteMechanisms) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
             if(mechanismRestriction != null && !mechanismRestriction.equals(remoteMechanism)) {
                 LOG.debug("Skipping {} mechanism because it is not the configured mechanism restriction {}", remoteMechanism, mechanismRestriction);
                 continue;
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
             Mechanism mechanism = null;
             if (remoteMechanism.equalsIgnoreCase("PLAIN")) {
                 mechanism = new PlainMechanism();

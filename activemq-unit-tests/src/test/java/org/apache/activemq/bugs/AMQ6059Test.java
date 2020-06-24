@@ -110,6 +110,7 @@ public class AMQ6059Test {
 
     @Test
     public void testSetDlqFlag() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6691
         final ActiveMQQueue toFlp = new ActiveMQQueue("QNameToFlip");
         sendMessage(toFlp);
 

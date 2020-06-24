@@ -37,6 +37,7 @@ public class LevelDbVmConcurrentDispatchTest extends AbstractVmConcurrentDispatc
 
           for (MessageType mt : MessageType.values()) {
               for (boolean rmfVal : reduceMemoryFootPrintVals) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6323
                   for (boolean tpVal : useTopicVals) {
                       values.add(new Object[] {mt, rmfVal, tpVal});
                   }
@@ -53,6 +54,7 @@ public class LevelDbVmConcurrentDispatchTest extends AbstractVmConcurrentDispatc
      */
     public LevelDbVmConcurrentDispatchTest(MessageType messageType, boolean reduceMemoryFootPrint,
             boolean useTopic) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6323
         super(messageType, reduceMemoryFootPrint, useTopic);
     }
 

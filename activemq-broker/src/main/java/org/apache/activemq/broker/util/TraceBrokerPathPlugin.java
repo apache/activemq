@@ -39,6 +39,7 @@ public class TraceBrokerPathPlugin extends BrokerPluginSupport {
     private static final Logger LOG = LoggerFactory.getLogger(TraceBrokerPathPlugin.class);
 
     public String getStampProperty() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3524
         return stampProperty;
     }
 
@@ -58,6 +59,7 @@ public class TraceBrokerPathPlugin extends BrokerPluginSupport {
                     brokerStamp += "," + getBrokerName();
                 }
                 messageDispatch.getMessage().setProperty(getStampProperty(), brokerStamp);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3817
                 messageDispatch.getMessage().setMarshalledProperties(null);
             }
         } catch (IOException ioe) {

@@ -64,6 +64,7 @@ public class AjaxServlet extends MessageListenerServlet {
 
             byte[] data = jsCache.get(resource);
             if (data == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
                 try(InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource)) {
                     if (in != null) {
                         try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {

@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
  */
 public class KahaDBTransactionStore implements TransactionStore {
     static final Logger LOG = LoggerFactory.getLogger(KahaDBTransactionStore.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
     ConcurrentMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
     private final KahaDBStore theStore;
 
@@ -70,6 +71,7 @@ public class KahaDBTransactionStore implements TransactionStore {
     }
 
     private WireFormat wireFormat(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
       return this.theStore.wireFormat;
     }
 
@@ -89,6 +91,7 @@ public class KahaDBTransactionStore implements TransactionStore {
         public Message[] getMessages() {
             Message rc[] = new Message[messages.size()];
             int count = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
                 AddMessageCommand cmd = iter.next();
                 rc[count++] = cmd.getMessage();
@@ -99,6 +102,7 @@ public class KahaDBTransactionStore implements TransactionStore {
         public MessageAck[] getAcks() {
             MessageAck rc[] = new MessageAck[acks.size()];
             int count = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext();) {
                 RemoveMessageCommand cmd = iter.next();
                 rc[count++] = cmd.getMessageAck();
@@ -113,6 +117,7 @@ public class KahaDBTransactionStore implements TransactionStore {
         public List<Future<Object>> commit() throws IOException {
             List<Future<Object>> results = new ArrayList<Future<Object>>();
             // Do all the message adds.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
                 AddMessageCommand cmd = iter.next();
                 results.add(cmd.run());
@@ -163,6 +168,7 @@ public class KahaDBTransactionStore implements TransactionStore {
 
             @Override
             public void addMessage(ConnectionContext context, final Message send, boolean canOptimize) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
                 KahaDBTransactionStore.this.addMessage(context, getDelegate(), send);
             }
 
@@ -197,6 +203,7 @@ public class KahaDBTransactionStore implements TransactionStore {
 
             @Override
             public void addMessage(ConnectionContext context, final Message send, boolean canOptimize) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
                 KahaDBTransactionStore.this.addMessage(context, getDelegate(), send);
             }
 
@@ -222,6 +229,8 @@ public class KahaDBTransactionStore implements TransactionStore {
 
             @Override
             public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3238
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                             MessageId messageId, MessageAck ack) throws IOException {
                 KahaDBTransactionStore.this.acknowledge(context, (TopicMessageStore)getDelegate(), clientId,
                         subscriptionName, messageId, ack);
@@ -238,6 +247,7 @@ public class KahaDBTransactionStore implements TransactionStore {
     public void prepare(TransactionId txid) throws IOException {
         KahaTransactionInfo info = getTransactionInfo(txid);
         if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             theStore.store(new KahaPrepareCommand().setTransactionInfo(info), true, null, null);
         } else {
             Tx tx = inflightTransactions.remove(txid);
@@ -250,6 +260,7 @@ public class KahaDBTransactionStore implements TransactionStore {
     public Tx getTx(Object txid) {
         Tx tx = inflightTransactions.get(txid);
         if (tx == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
             synchronized (inflightTransactions) {
                 tx = inflightTransactions.get(txid);
                 if (tx == null) {
@@ -280,6 +291,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                             theStore.brokerService.handleIOException(new IOException(e.getMessage()));
                         } catch (ExecutionException e) {
                             theStore.brokerService.handleIOException(new IOException(e.getMessage()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
                         }catch(CancellationException e) {
                         }
                         if (!result.isCancelled()) {
@@ -302,10 +314,14 @@ public class KahaDBTransactionStore implements TransactionStore {
 
             } else {
                 KahaTransactionInfo info = getTransactionInfo(txid);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 if (preCommit != null) {
                     preCommit.run();
                 }
                 theStore.store(new KahaCommitCommand().setTransactionInfo(info), theStore.isEnableJournalDiskSyncs(), null, postCommit);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
                 forgetRecoveredAcks(txid, false);
             }
         }else {
@@ -319,9 +335,12 @@ public class KahaDBTransactionStore implements TransactionStore {
      */
     @Override
     public void rollback(TransactionId txid) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2982
         if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
             KahaTransactionInfo info = getTransactionInfo(txid);
             theStore.store(new KahaRollbackCommand().setTransactionInfo(info), theStore.isEnableJournalDiskSyncs(), null, null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
             forgetRecoveredAcks(txid, true);
         } else {
             inflightTransactions.remove(txid);
@@ -351,8 +370,11 @@ public class KahaDBTransactionStore implements TransactionStore {
             ArrayList<MessageAck> ackList = new ArrayList<MessageAck>();
 
             for (Operation op : entry.getValue()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 if (op.getClass() == MessageDatabase.AddOperation.class) {
                     MessageDatabase.AddOperation addOp = (MessageDatabase.AddOperation) op;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
                     Message msg = (Message) wireFormat().unmarshal(new DataInputStream(addOp.getCommand().getMessage()
                             .newInput()));
                     messageList.add(msg);
@@ -361,6 +383,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                     Buffer ackb = rmOp.getCommand().getAck();
                     MessageAck ack = (MessageAck) wireFormat().unmarshal(new DataInputStream(ackb.newInput()));
                     // allow the ack to be tracked back to its durable sub
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
                     ConsumerId subKey = new ConsumerId();
                     subKey.setConnectionId(rmOp.getCommand().getSubscriptionKey());
                     ack.setConsumerId(subKey);
@@ -372,6 +395,7 @@ public class KahaDBTransactionStore implements TransactionStore {
             MessageAck[] acks = new MessageAck[ackList.size()];
             messageList.toArray(addedMessages);
             ackList.toArray(acks);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
             xid.setPreparedAcks(ackList);
             theStore.trackRecoveredAcks(ackList);
             listener.recover(xid, addedMessages, acks);
@@ -408,10 +432,12 @@ public class KahaDBTransactionStore implements TransactionStore {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
     ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, final MessageStore destination, final Message message)
             throws IOException {
 
         if (message.getTransactionId() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if (message.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
                 destination.addMessage(context, message);
                 return AbstractMessageStore.FUTURE;
@@ -435,10 +461,12 @@ public class KahaDBTransactionStore implements TransactionStore {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
     ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, final MessageStore destination, final Message message)
             throws IOException {
 
         if (message.getTransactionId() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if (message.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()==false) {
                 destination.addMessage(context, message);
                 return AbstractMessageStore.FUTURE;
@@ -470,6 +498,7 @@ public class KahaDBTransactionStore implements TransactionStore {
             throws IOException {
 
         if (ack.isInTransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()== false) {
                 destination.removeMessage(context, ack);
             } else {
@@ -496,6 +525,7 @@ public class KahaDBTransactionStore implements TransactionStore {
             throws IOException {
 
         if (ack.isInTransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()==false) {
                 destination.removeAsyncMessage(context, ack);
             } else {
@@ -514,14 +544,17 @@ public class KahaDBTransactionStore implements TransactionStore {
                 });
             }
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
             destination.removeAsyncMessage(context, ack);
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3238
     final void acknowledge(ConnectionContext context, final TopicMessageStore destination, final String clientId, final String subscriptionName,
                            final MessageId messageId, final MessageAck ack) throws IOException {
 
         if (ack.isInTransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
             if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()== false) {
                 destination.acknowledge(context, clientId, subscriptionName, messageId, ack);
             } else {

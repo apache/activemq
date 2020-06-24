@@ -297,6 +297,7 @@ public class FailoverDurableSubTransactionTest {
         final Session receiveSession = connection.createSession(true, Session.SESSION_TRANSACTED);
         consumer = receiveSession.createDurableSubscriber(destination, "DS");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
         final AtomicBoolean success = new AtomicBoolean(false);
         final HashSet<Integer> dupCheck = new HashSet<Integer>();
         final AtomicInteger receivedCount = new AtomicInteger();

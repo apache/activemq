@@ -45,6 +45,7 @@ public class ZooKeeperPartitionBroker extends PartitionBroker {
 
     @Override
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
         super.start();
         // Lets block a bit until we get our config.. Otherwise just keep
         // on going.. not a big deal if we get our config later.  Perhaps
@@ -108,6 +109,7 @@ public class ZooKeeperPartitionBroker extends PartitionBroker {
                     monitorWakeup();
                 }
             }, stat);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4788
             configAcquired.countDown();
             reloadConfigOnPoll = false;
         } catch (Exception e) {

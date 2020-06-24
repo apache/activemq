@@ -65,8 +65,10 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
         if (!useJournal) {
             return jdbcPersistenceAdapter;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3573
         JournalPersistenceAdapter result =  new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
         result.setDirectory(getDataDirectoryFile());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4399
         result.setCheckpointInterval(getCheckpointInterval());
         return result;
 
@@ -109,6 +111,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
     }
 
     public long getCheckpointInterval() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4399
         return checkpointInterval;
     }
 
@@ -127,6 +130,8 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
     }
 
     public boolean isUseDedicatedTaskRunner() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
         return useDedicatedTaskRunner;
     }
     
@@ -159,6 +164,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
 
     public File getJournalArchiveDirectory() {
         if (journalArchiveDirectory == null && useQuickJournal) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-825
             journalArchiveDirectory = new File(getDataDirectoryFile(), "journal");
         }
         return journalArchiveDirectory;
@@ -202,6 +208,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
      * JDBC Master/Slave. Enabled by default.
      */
     public void setUseDatabaseLock(boolean useDatabaseLock) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         jdbcPersistenceAdapter.setUseLock(useDatabaseLock);
     }
 
@@ -231,6 +238,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
      * @throws IOException
      */
     protected void createJournal() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-825
         File journalDir = new File(getDataDirectoryFile(), "journal").getCanonicalFile();
         if (failIfJournalIsLocked) {
             journal = new JournalImpl(journalDir, journalLogFiles, journalLogFileSize,
@@ -255,6 +263,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
 
     @Override
     public Locker createDefaultLocker() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         return null;
     }
 

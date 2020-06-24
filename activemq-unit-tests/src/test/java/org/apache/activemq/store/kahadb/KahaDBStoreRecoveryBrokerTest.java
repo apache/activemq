@@ -46,11 +46,13 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
     public static final String KAHADB_DIR_BASE = "target/activemq-data/kahadb";
     public static String kahaDbDirectoryName;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4907
     enum CorruptionType { None, FailToLoad, LoadInvalid, LoadCorrupt, LoadOrderIndex0 };
     public CorruptionType  failTest = CorruptionType.None;
 
     @Override
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4384
         kahaDbDirectoryName = KAHADB_DIR_BASE + "/" + System.currentTimeMillis();
         super.setUp();
     }
@@ -81,10 +83,13 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
     protected BrokerService createRestartedBroker() throws Exception {
 
         // corrupting index
+//IC see: https://issues.apache.org/jira/browse/AMQ-4384
         File index = new File(kahaDbDirectoryName + "/db.data");
         RandomAccessFile raf = new RandomAccessFile(index, "rw");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3634
         switch (failTest) {
             case FailToLoad:
+//IC see: https://issues.apache.org/jira/browse/AMQ-3634
                 index.delete();
                 raf = new RandomAccessFile(index, "rw");
                 raf.seek(index.length());
@@ -101,6 +106,7 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
                 raf.seek(8*1024 + 57);
                 raf.writeLong(Integer.MAX_VALUE-10);
                 break;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4907
             case LoadOrderIndex0:
                 // loadable but invalid metadata
                 // location of order index default priority index size
@@ -118,9 +124,12 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
         // starting broker
         BrokerService broker = new BrokerService();
         KahaDBStore kaha = new KahaDBStore();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4907
+//IC see: https://issues.apache.org/jira/browse/AMQ-4907
         kaha.setCheckForCorruptJournalFiles(failTest == CorruptionType.LoadOrderIndex0);
         // uncomment if you want to test archiving
         //kaha.setArchiveCorruptedIndex(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4384
         kaha.setDirectory(new File(kahaDbDirectoryName));
         broker.setPersistenceAdapter(kaha);
         return broker;
@@ -135,6 +144,7 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
     }
 
     public void initCombosForTestLargeQueuePersistentMessagesNotLostOnRestart() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4907
         this.addCombinationValues("failTest", new CorruptionType[]{CorruptionType.FailToLoad, CorruptionType.LoadInvalid, CorruptionType.LoadCorrupt, CorruptionType.LoadOrderIndex0} );
     }
 

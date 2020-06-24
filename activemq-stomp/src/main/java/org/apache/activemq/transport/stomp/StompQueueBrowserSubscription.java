@@ -29,6 +29,7 @@ import org.apache.activemq.command.TransactionId;
 public class StompQueueBrowserSubscription extends StompSubscription {
 
     public StompQueueBrowserSubscription(ProtocolConverter stompTransport, String subscriptionId, ConsumerInfo consumerInfo, String transformation, Map<String, StompAckEntry> pendingAcks) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
         super(stompTransport, subscriptionId, consumerInfo, transformation, pendingAcks);
     }
 

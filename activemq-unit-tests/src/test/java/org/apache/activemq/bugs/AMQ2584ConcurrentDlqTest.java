@@ -56,6 +56,7 @@ public class AMQ2584ConcurrentDlqTest extends org.apache.activemq.TestSupport {
     ActiveMQTopic topic;
 
     ActiveMQConnection consumerConnection = null, producerConnection = null, dlqConnection = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2584
     Session consumerSession;
     Session producerSession;
     MessageProducer producer;
@@ -225,6 +226,7 @@ public class AMQ2584ConcurrentDlqTest extends org.apache.activemq.TestSupport {
         properties.put("maxFileLength", maxFileLengthVal);
         properties.put("cleanupInterval", "2000");
         properties.put("checkpointInterval", "2000");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         properties.put("preallocationScope", Journal.PreallocationScope.ENTIRE_JOURNAL.name());
         // there are problems with duplicate dispatch in the cursor, which maintain
         // a map of messages. A dup dispatch can be dropped.

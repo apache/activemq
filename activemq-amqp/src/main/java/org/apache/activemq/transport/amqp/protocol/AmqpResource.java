@@ -25,6 +25,7 @@ public interface AmqpResource {
      * Request from the remote peer to open this resource.
      */
     void open();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
 
     /**
      * Request from the remote peer to close this resource.

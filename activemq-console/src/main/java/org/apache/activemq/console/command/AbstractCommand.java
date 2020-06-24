@@ -36,6 +36,7 @@ public abstract class AbstractCommand implements Command {
     protected CommandContext context;
 
     public void setCommandContext(CommandContext context) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         this.context = context;
     }
     
@@ -57,6 +58,7 @@ public abstract class AbstractCommand implements Command {
             // Print the AMQ version
         } else if (isPrintVersion) {
             context.printVersion(ActiveMQConnectionMetaData.PROVIDER_VERSION);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
 
             // Run the specified task
         } else {
@@ -116,6 +118,7 @@ public abstract class AbstractCommand implements Command {
             }
             System.setProperty(key, value);
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
             if (token.startsWith("--")) {
                 String prop = token.substring(2);
                 if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
@@ -125,6 +128,7 @@ public abstract class AbstractCommand implements Command {
                 }
             }
             // Token is unrecognized
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
             context.printInfo("Unrecognized option: " + token);
             isPrintHelp = true;
         }
@@ -144,6 +148,7 @@ public abstract class AbstractCommand implements Command {
     protected abstract void printHelp();
 
     protected void printHelpFromFile() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
         BufferedReader reader = null;
         try {
             InputStream is = getClass().getResourceAsStream(getName() + ".txt");
@@ -162,6 +167,7 @@ public abstract class AbstractCommand implements Command {
     }
 
     protected void handleException(Exception exception, String serviceUrl) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
         Throwable cause = exception.getCause();
         while (true) {
             Throwable next = cause.getCause();
@@ -173,6 +179,7 @@ public abstract class AbstractCommand implements Command {
         if (cause instanceof ConnectException) {
             context.printInfo("Broker not available at: " + serviceUrl);
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
             context.printInfo("Failed to execute " + getName() + " task.");
             throw exception;
         }

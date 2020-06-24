@@ -33,6 +33,7 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
 
     @Test
     public void testModifiable() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         final String brokerConfig =  "SpringBeanTest-broker";
         applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-bean");
         startBroker(brokerConfig);
@@ -70,6 +71,7 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
     @Test
     public void testAddPropertyRef() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         System.setProperty("network.uri", "static:(tcp://localhost:8888)");
         final String brokerConfig = "SpringPropertyTest-broker";
         applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property");
@@ -119,6 +121,7 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
     @Test
     public void testAddPropertyRefFromFileAsList() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         System.setProperty("network.uri", "static:(tcp://localhost:8888)");
         System.setProperty("props.base", "classpath:");
         final String brokerConfig = "SpringPropertyTestFileList-broker";
@@ -127,6 +130,7 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
         assertTrue("broker alive", brokerService.isStarted());
 
         ObjectName objectName =
+//IC see: https://issues.apache.org/jira/browse/AMQ-4821
                 new ObjectName(brokerService.getBrokerObjectName().toString() +
                         RuntimeConfigurationBroker.objectNamePropsAppendage);
         RuntimeConfigurationViewMBean runtimeConfigurationView =

@@ -148,6 +148,7 @@ public class AmqpWritableBuffer implements WritableBuffer {
 
     @Override
     public void put(ReadableBuffer src) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6909
         ensureCapacity(position);
         src.get(this);
     }

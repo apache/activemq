@@ -65,6 +65,7 @@ import static org.apache.activemq.broker.jmx.BrokerMBeanSupport.createPersistenc
  */
 public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter,
     JournaledStore, TransactionIdTransformerAware, NoLocalSubscriptionAware {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
 
     private final KahaDBStore letter = new KahaDBStore();
 
@@ -85,6 +86,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      */
     @Override
     public void checkpoint(boolean cleanup) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7086
         this.letter.checkpoint(cleanup);
     }
 
@@ -160,11 +162,15 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
 
     @Override
     public long getLastProducerSequenceId(ProducerId id) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         return this.letter.getLastProducerSequenceId(id);
     }
 
     @Override
     public void allowIOResumption() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
         this.letter.allowIOResumption();
     }
 
@@ -220,6 +226,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      */
     @Override
     public long size() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
         return this.letter.isStarted() ? this.letter.size() : 0l;
     }
 
@@ -247,6 +254,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
             });
 
             view.setPersistenceAdapterStatistics(letter.persistenceAdapterStatistics);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7159
 
             AnnotatedMBean.registerMBean(brokerService.getManagementContext(), view,
                     createPersistenceAdapterName(brokerService.getBrokerObjectName().toString(), toString()));
@@ -260,7 +268,9 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public void doStop(ServiceStopper stopper) throws Exception {
         this.letter.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4265
         if (brokerService != null && brokerService.isUseJmx()) {
             ObjectName brokerObjectName = brokerService.getBrokerObjectName();
             brokerService.getManagementContext().unregisterMBean(createPersistenceAdapterName(brokerObjectName.toString(), toString()));
@@ -291,6 +301,9 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * Set the max number of producers (LRU cache) to track for duplicate sends
      */
     public void setMaxFailoverProducersToTrack(int maxFailoverProducersToTrack) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         this.letter.setMaxFailoverProducersToTrack(maxFailoverProducersToTrack);
     }
 
@@ -307,6 +320,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     public int getFailoverProducersAuditDepth() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3639
         return this.letter.getFailoverProducersAuditDepth();
     }
 
@@ -413,6 +427,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @return the persistenceAdapterStatistics
      */
     public PersistenceAdapterStatistics getPersistenceAdapterStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7159
         return this.letter.getPersistenceAdapterStatistics();
     }
 
@@ -439,6 +454,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @return the currently configured location of the KahaDB index files.
      */
     public File getIndexDirectory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5072
         return this.letter.getIndexDirectory();
     }
 
@@ -476,10 +492,12 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @return
      */
     public String getJournalDiskSyncStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         return letter.getJournalDiskSyncStrategy();
     }
 
     public JournalDiskSyncStrategy getJournalDiskSyncStrategyEnum() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6377
         return letter.getJournalDiskSyncStrategyEnum();
     }
 
@@ -510,6 +528,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @return the indexCacheSize
      */
     public int getIndexCacheSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2338
         return this.letter.getIndexCacheSize();
     }
 
@@ -544,6 +563,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     public boolean isChecksumJournalFiles() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2405
         return letter.isChecksumJournalFiles();
     }
 
@@ -560,6 +580,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     public String getPurgeRecoveredXATransactionStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7015
         return letter.getPurgeRecoveredXATransactionStrategy();
     }
 
@@ -569,11 +590,15 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4108
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         super.setBrokerService(brokerService);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
         letter.setBrokerService(brokerService);
     }
 
     public String getPreallocationScope() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         return letter.getPreallocationScope();
     }
 
@@ -639,10 +664,12 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      */
     @Deprecated
     public void setDatabaseLockedWaitDelay(int databaseLockedWaitDelay) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
        getLocker().setLockAcquireSleepInterval(databaseLockedWaitDelay);
     }
 
     public boolean getForceRecoverIndex() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2832
         return letter.getForceRecoverIndex();
     }
 
@@ -651,6 +678,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     public boolean isArchiveCorruptedIndex() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3634
         return letter.isArchiveCorruptedIndex();
     }
 
@@ -659,6 +687,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     public float getIndexLFUEvictionFactor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3618
         return letter.getIndexLFUEvictionFactor();
     }
 
@@ -695,10 +724,12 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     public boolean isEnableIndexPageCaching() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3639
         return letter.isEnableIndexPageCaching();
     }
 
     public int getCompactAcksAfterNoGC() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         return letter.getCompactAcksAfterNoGC();
     }
 
@@ -737,6 +768,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @return enableAckCompaction
      */
     public boolean isEnableAckCompaction() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         return letter.isEnableAckCompaction();
     }
 
@@ -770,10 +802,12 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     public KahaDBStore getStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2736
         return letter;
     }
 
     public KahaTransactionInfo createTransactionInfo(TransactionId txid) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         if (txid == null) {
             return null;
         }
@@ -783,6 +817,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
             LocalTransactionId t = (LocalTransactionId) txid;
             KahaLocalTransactionId kahaTxId = new KahaLocalTransactionId();
             kahaTxId.setConnectionId(t.getConnectionId().getValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3849
             kahaTxId.setTransactionId(t.getValue());
             rc.setLocalTransactionId(kahaTxId);
         } else {
@@ -809,6 +844,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public String toString() {
         String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
+//IC see: https://issues.apache.org/jira/browse/AMQ-6520
         return "KahaDBPersistenceAdapter[" + path + (getIndexDirectory() != null ? ",Index:" + getIndexDirectory().getAbsolutePath() : "") +  "]";
     }
 
@@ -819,6 +855,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
 
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         return this.letter.createJobSchedulerStore();
     }
 
@@ -827,6 +864,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      */
     @Override
     public boolean isPersistNoLocal() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
         return this.letter.isPersistNoLocal();
     }
 
@@ -834,6 +872,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * When set, ensure that the cleanup/gc operation is executed during the stop procedure
      */
     public void setCleanupOnStop(boolean cleanupOnStop) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7086
         this.letter.setCleanupOnStop(cleanupOnStop);
     }
 

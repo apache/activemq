@@ -95,6 +95,7 @@ public class DuplicateFromStoreTest {
         // configure <systemUsage>
         MemoryUsage memoryUsage = new MemoryUsage();
         memoryUsage.setPercentOfJvmHeap(50);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
 
         StoreUsage storeUsage = new StoreUsage();
         storeUsage.setLimit(8 * 1024 * 1024 * 1024); // 8 gb
@@ -234,6 +235,7 @@ public class DuplicateFromStoreTest {
                 // send message
                 while (totalMessagesToSend.decrementAndGet() >= 0) {
                     producer.send(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
                     totalMessagesSent.incrementAndGet();
                     log.debug("Sent message: " + counter);
                     counter++;
@@ -244,6 +246,7 @@ public class DuplicateFromStoreTest {
                     Thread.sleep(PRODUCER_SLEEP);
                 }
             } catch (Exception ex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
                 log.error(ex.toString());
                 return;
             } finally {
@@ -316,6 +319,7 @@ public class DuplicateFromStoreTest {
                         TextMessage textMessage = (TextMessage) message2;
                         String text = textMessage.getText();
                         log.debug("Received: " + text.substring(0, 50));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
                     } else if (totalReceived.get() < NUM_MSGS) {
                         log.error("Received message of unsupported type. Expecting TextMessage. count: " + totalReceived.get());
                     } else {

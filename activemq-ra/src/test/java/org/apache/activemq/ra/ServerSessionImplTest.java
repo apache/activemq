@@ -76,6 +76,7 @@ public class ServerSessionImplTest {
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         context = new Mockery() {
             {
                 setImposteriser(ClassImposteriser.INSTANCE);
@@ -103,6 +104,7 @@ public class ServerSessionImplTest {
         messageEndpoint = context.mock(MessageEndpointProxy.class);
 
         serverSession = new ServerSessionImpl(pool, session, workManager, messageEndpoint, false, 10);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         con.close();
         context.checking(new Expectations() {
@@ -126,6 +128,7 @@ public class ServerSessionImplTest {
         workManager = context.mock(WorkManager.class);
         final MessageActivationSpec messageActivationSpec = context.mock(MessageActivationSpec.class);
         final BootstrapContext boostrapContext = context.mock(BootstrapContext.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         context.checking(new Expectations() {
             {
                 allowing(boostrapContext).getWorkManager();
@@ -224,6 +227,7 @@ public class ServerSessionImplTest {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -241,6 +245,7 @@ public class ServerSessionImplTest {
     @Test
     public void testGetWhenClosed() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
         final int maxMessages = 2000;
         final AtomicReference<CountDownLatch> messageCountRef = new AtomicReference<CountDownLatch>();
 
@@ -283,6 +288,7 @@ public class ServerSessionImplTest {
                 allowing(messageEndpointFactory).createEndpoint(with(any(XAResource.class)));
                 will(returnValue(messageEndpoint));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6478
                 allowing(workManager).scheduleWork((Work) with(Matchers.instanceOf(Work.class)), with(any(long.class)), with(any(ExecutionContext.class)),
                         with(any(WorkListener.class)));
                 will(new Action() {
@@ -312,6 +318,7 @@ public class ServerSessionImplTest {
                     }
                 });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6478
                 allowing(messageEndpoint).beforeDelivery((Method) with(Matchers.instanceOf(Method.class)));
                 allowing(messageEndpoint).onMessage(with(any(javax.jms.Message.class)));
                 will(new Action() {
@@ -367,8 +374,10 @@ public class ServerSessionImplTest {
                     try {
                         // preload the session dispatch queue to keep the session active
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
                         for (int i = 0; i < maxMessages; i++) {
                             MessageDispatch messageDispatch = new MessageDispatch();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
                             ActiveMQMessage message = new ActiveMQTextMessage();
                             message.setMessageId(new MessageId("0:0:0:" + i));
                             message.getMessageId().setBrokerSequenceId(i);
@@ -410,6 +419,7 @@ public class ServerSessionImplTest {
             final CountDownLatch closeDone = new CountDownLatch(1);
             final CountDownLatch closeSuccess = new CountDownLatch(1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {

@@ -48,11 +48,13 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     protected int numProducers = 1;
 
     public void testConcurrentProducerRequestReply() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1995
         numProducers = 10;
         testLoadRequestReply();
     }
 
     public void testLoadRequestReply() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4731
         for (int i = 0; i < numConsumers; i++) {
             serverSession.createConsumer(serverDestination).setMessageListener(new MessageListener() {
                 @Override
@@ -82,9 +84,11 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
             @Override
             public void run() {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4731
                     Session session = clientConnection.createSession(clientTransactional, clientTransactional ?
                         Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
                     MessageProducer producer = session.createProducer(serverDestination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1995
 
                     for (int i = 0; i < numToSend; i++) {
                         TemporaryQueue replyTo = session.createTemporaryQueue();
@@ -100,6 +104,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
                             session.commit();
                         }
                         consumer.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1979
                         if (deleteTempQueue) {
                             replyTo.delete();
                         } else {
@@ -112,6 +117,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
             }
         }
         Vector<Thread> threads = new Vector<Thread>(numProducers);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4731
         for (int i = 0; i < numProducers; i++) {
             threads.add(new Producer(messagesToSend / numProducers));
         }
@@ -123,6 +129,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
         serverConnection.close();
 
         AdvisoryBroker ab = (AdvisoryBroker) broker.getBroker().getAdaptor(AdvisoryBroker.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4731
 
         // The server destination will be left
         assertTrue(ab.getAdvisoryDestinations().size() == 1);
@@ -136,6 +143,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     }
 
     private void startAndJoinThreads(Vector<Thread> threads) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4731
         for (Thread thread : threads) {
             thread.start();
         }
@@ -149,6 +157,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
         super.setUp();
         serverConnection = createConnection();
         serverConnection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1919
         serverSession = serverConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         clientConnection = createConnection();
         clientConnection.start();

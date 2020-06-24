@@ -78,7 +78,9 @@ public class StompTest extends StompTestSupport {
     protected XStream xstream;
 
     private final String xmlObject = "<pojo>\n"
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
             + "  <name>Dejan</name>\n"
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
             + "  <city>Belgrade</city>\n"
             + "</pojo>";
 
@@ -108,8 +110,10 @@ public class StompTest extends StompTestSupport {
     @Override
     public void setUp() throws Exception {
         // The order of the entries is different when using ibm jdk 5.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2442
         if (System.getProperty("java.vendor").equals("IBM Corporation")
             && System.getProperty("java.version").startsWith("1.5")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
             xmlMap = "<map>\n"
                 + "  <entry>\n"
                 + "    <string>city</string>\n"
@@ -128,6 +132,7 @@ public class StompTest extends StompTestSupport {
                 + "}}";
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5513
         queue = new ActiveMQQueue(getQueueName());
         super.setUp();
 
@@ -136,6 +141,7 @@ public class StompTest extends StompTestSupport {
         connection = cf.createConnection("system", "manager");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         xstream = new XStream();
         xstream.processAnnotations(SamplePojo.class);
     }
@@ -181,6 +187,7 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testConnect() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String connectFrame = "CONNECT\n" + "login:system\n" + "passcode:manager\n" + "request-id:1\n" + "\n" + Stomp.NULL;
         stompConnection.sendFrame(connectFrame);
 
@@ -210,6 +217,7 @@ public class StompTest extends StompTestSupport {
 
         // Make sure that the timestamp is valid - should
         // be very close to the current time.
+//IC see: https://issues.apache.org/jira/browse/AMQ-664
         long tnow = System.currentTimeMillis();
         long tmsg = message.getJMSTimestamp();
         assertTrue(Math.abs(tnow - tmsg) < 1000);
@@ -220,6 +228,7 @@ public class StompTest extends StompTestSupport {
 
         MessageConsumer consumer = session.createConsumer(queue);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -230,6 +239,7 @@ public class StompTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
         TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertEquals("TEST", ((ActiveMQTextMessage)message).getGroupID());
@@ -261,6 +271,7 @@ public class StompTest extends StompTestSupport {
     public void testSendMessageWithDelay() throws Exception {
 
         MessageConsumer consumer = session.createConsumer(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2646
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -294,6 +305,8 @@ public class StompTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
         TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
@@ -312,6 +325,7 @@ public class StompTest extends StompTestSupport {
     public void testSendMessageWithNoPriorityReceivesDefault() throws Exception {
 
         MessageConsumer consumer = session.createConsumer(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3006
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -333,6 +347,7 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testSendFrameWithInvalidAction() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6168
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -359,6 +374,7 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testReceipts() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1817
         StompConnection receiver = new StompConnection();
         receiver.open(createSocket());
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
@@ -403,6 +419,7 @@ public class StompTest extends StompTestSupport {
         assertTrue(frame.startsWith("RECEIPT"));
         assertTrue("Receipt contains correct receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
         TextMessage message = (TextMessage)consumer.receive(10000);
         assertNotNull(message);
         assertNull("JMS Message does not contain receipt request", message.getStringProperty(Stomp.Headers.RECEIPT_REQUESTED));
@@ -417,12 +434,15 @@ public class StompTest extends StompTestSupport {
         do {
             StompConnection sender = new StompConnection();
             sender.open(createSocket());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
             String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
             sender.sendFrame(frame);
 
             frame = sender.receiveFrame();
             assertTrue(frame.startsWith("CONNECTED"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
             frame = "SEND\n" + "destination:/queue/" + getQueueName()  + "\n"  + "receipt: " + (receiptId++) + "\n" + "Hello World:" + (count++) + "\n\n" +  Stomp.NULL;
             sender.sendFrame(frame);
             frame = sender.receiveFrame();
@@ -433,12 +453,15 @@ public class StompTest extends StompTestSupport {
             StompConnection receiver = new StompConnection();
             receiver.open(createSocket());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
             frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
             receiver.sendFrame(frame);
 
             frame = receiver.receiveFrame();
             assertTrue(frame.startsWith("CONNECTED"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3497
             frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n"  + "receipt: " +  (receiptId++)  + "\n\n" + Stomp.NULL;
             receiver.sendFrame(frame);
 
@@ -517,6 +540,7 @@ public class StompTest extends StompTestSupport {
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2883
 
         StompFrame message = stompConnection.receive();
         assertTrue(message.getAction().startsWith("MESSAGE"));
@@ -531,9 +555,11 @@ public class StompTest extends StompTestSupport {
     public void testSendMultipleBytesMessages() throws Exception {
 
         final int MSG_COUNT = 50;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2822
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
@@ -545,6 +571,7 @@ public class StompTest extends StompTestSupport {
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         for( int ix = 0; ix < MSG_COUNT; ix++) {
             StompFrame message = stompConnection.receive();
@@ -562,12 +589,14 @@ public class StompTest extends StompTestSupport {
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         MessageProducer producer = session.createProducer(queue);
         TextMessage message = session.createTextMessage("Hello World");
@@ -598,6 +627,7 @@ public class StompTest extends StompTestSupport {
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         for (int i = 0; i < ctr; ++i) {
             data[i] = getName() + i;
@@ -611,6 +641,7 @@ public class StompTest extends StompTestSupport {
 
         // sleep a while before publishing another set of messages
         TimeUnit.MILLISECONDS.sleep(500);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
         for (int i = 0; i < ctr; ++i) {
             data[i] = getName() + ":second:" + i;
@@ -634,6 +665,7 @@ public class StompTest extends StompTestSupport {
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "selector: foo = 'zzz'\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         sendMessage("Ignored message", "foo", "1234");
         sendMessage("Real message", "foo", "zzz");
@@ -648,6 +680,7 @@ public class StompTest extends StompTestSupport {
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1942
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
@@ -738,6 +771,8 @@ public class StompTest extends StompTestSupport {
 
         // message should be received since message was not acknowledged
         MessageConsumer consumer = session.createConsumer(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
         TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertTrue(message.getJMSRedelivered());
@@ -748,6 +783,8 @@ public class StompTest extends StompTestSupport {
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
@@ -767,6 +804,7 @@ public class StompTest extends StompTestSupport {
         StompFrame ack = new StompFrame("ACK", ackHeaders);
         stompConnection.sendFrame(ack.format());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
         final QueueViewMBean queueView = getProxyToQueue(getQueueName());
         assertTrue("dequeue complete", Wait.waitFor(new Wait.Condition(){
             @Override
@@ -775,6 +813,7 @@ public class StompTest extends StompTestSupport {
                 return queueView.getDequeueCount() == 1;
             }
         }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
         stompDisconnect();
 
@@ -794,6 +833,7 @@ public class StompTest extends StompTestSupport {
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         // send a message to our queue
         sendMessage("first message");
@@ -803,9 +843,11 @@ public class StompTest extends StompTestSupport {
         assertTrue(frame.startsWith("MESSAGE"));
 
         // remove suscription
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
         frame = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "receipt:1" +  "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
         frame = stompConnection.receiveFrame();
         assertTrue("" + frame, frame.startsWith("RECEIPT"));
 
@@ -839,6 +881,7 @@ public class StompTest extends StompTestSupport {
         frame = "COMMIT\n" + "transaction: tx1\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
         TextMessage message = (TextMessage)consumer.receive(10000);
         assertNotNull("Should have received a message", message);
     }
@@ -871,8 +914,10 @@ public class StompTest extends StompTestSupport {
 
         frame = "COMMIT\n" + "transaction: tx1\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         // only second msg should be received since first msg was rolled back
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
         TextMessage message = (TextMessage)consumer.receive(10000);
         assertNotNull(message);
         assertEquals("second message", message.getText().trim());
@@ -895,11 +940,13 @@ public class StompTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testConnectNotAuthenticatedWrongUser() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String frame = "CONNECT\n" + "login: dejanb\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         try {
             String f = stompConnection.receiveFrame();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
             assertTrue(f.startsWith("ERROR"));
             assertFalse("no stack trace impl leak:" + f, f.contains("at "));
         } catch (IOException socketMayBeClosedFirstByBroker) {}
@@ -908,12 +955,15 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testConnectNotAuthenticatedWrongPassword() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String frame = "CONNECT\n" + "login:system\n" + "passcode: dejanb\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         try {
             String f = stompConnection.receiveFrame();
             assertTrue(f.startsWith("ERROR"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7209
+//IC see: https://issues.apache.org/jira/browse/AMQ-7209
             assertFalse("no stack trace impl leak:" + f, f.contains("at "));
         } catch (IOException socketMayBeClosedFirstByBroker) {}
     }
@@ -932,6 +982,7 @@ public class StompTest extends StompTestSupport {
         stompConnection.sendFrame(frame);
         String f = stompConnection.receiveFrame();
         assertTrue(f.startsWith("ERROR"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7209
         assertFalse("no stack trace impl leak:" + f, f.contains("at "));
     }
 
@@ -947,6 +998,7 @@ public class StompTest extends StompTestSupport {
         frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
 
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3895
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("ERROR"));
         assertFalse("no stack trace impl leak:" + frame, frame.contains("at "));
@@ -955,6 +1007,8 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testSubscribeWithReceiptNotAuthorized() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String frame = "CONNECT\n" + "login:guest\n" + "passcode:password\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -968,6 +1022,8 @@ public class StompTest extends StompTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("ERROR"));
         assertTrue("Error Frame did not contain receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7209
+//IC see: https://issues.apache.org/jira/browse/AMQ-7209
         assertFalse("no stack trace impl leak:" + frame, frame.contains("at "));
     }
 
@@ -1003,6 +1059,7 @@ public class StompTest extends StompTestSupport {
 
         TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
         assertEquals("Hello World", message.getText());
     }
 
@@ -1017,12 +1074,18 @@ public class StompTest extends StompTestSupport {
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:" + Stomp.Transformations.JMS_OBJECT_XML + "\n\n" + "Hello World" + Stomp.NULL;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
 
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
         TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertNotNull(message.getStringProperty(Stomp.Headers.TRANSFORMATION_ERROR));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
         assertEquals("Hello World", message.getText());
     }
 
@@ -1037,6 +1100,7 @@ public class StompTest extends StompTestSupport {
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:" + Stomp.Transformations.JMS_OBJECT_XML + "\n\n" + xmlObject + Stomp.NULL;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
 
         stompConnection.sendFrame(frame);
 
@@ -1062,9 +1126,12 @@ public class StompTest extends StompTestSupport {
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:" + Stomp.Transformations.JMS_OBJECT_JSON + "\n\n" + jsonObject + Stomp.NULL;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
 
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
         ObjectMessage message = (ObjectMessage)consumer.receive(2500);
         assertNotNull(message);
         SamplePojo object = (SamplePojo)message.getObject();
@@ -1115,6 +1182,7 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testTransformationReceiveXMLObject() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2098
         MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
         ObjectMessage message = session.createObjectMessage(new SamplePojo("Dejan", "Belgrade"));
         producer.send(message);
@@ -1146,6 +1214,7 @@ public class StompTest extends StompTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
         frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_OBJECT_XML + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -1179,6 +1248,7 @@ public class StompTest extends StompTestSupport {
         assertTrue(frame.trim().endsWith(xmlObject));
 
         StompFrame xmlFrame = stompConnection.receive();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
 
         Map<String, String> map = createMapFromXml(xmlFrame.getBody());
 
@@ -1209,6 +1279,7 @@ public class StompTest extends StompTestSupport {
         frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_JSON + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         StompFrame json = stompConnection.receive();
         LOG.info("Transformed frame: {}", json);
 
@@ -1244,6 +1315,7 @@ public class StompTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         StompFrame xmlFrame = stompConnection.receive();
         LOG.info("Received Frame: {}", xmlFrame.getBody());
 
@@ -1274,6 +1346,7 @@ public class StompTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         StompFrame json = stompConnection.receive();
         LOG.info("Received Frame: {}", json.getBody());
 
@@ -1299,13 +1372,16 @@ public class StompTest extends StompTestSupport {
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_XML + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("MESSAGE"));
 
@@ -1321,6 +1397,7 @@ public class StompTest extends StompTestSupport {
     public void testTransformationNotOverrideSubscription() throws Exception {
         MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
         ObjectMessage message = session.createObjectMessage(new SamplePojo("Dejan", "Belgrade"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
         message.setStringProperty("transformation",	Stomp.Transformations.JMS_OBJECT_XML.toString());
         producer.send(message);
 
@@ -1392,6 +1469,8 @@ public class StompTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
+//IC see: https://issues.apache.org/jira/browse/AMQ-2282
         MapMessage message = (MapMessage) consumer.receive(2500);
         assertNotNull(message);
         assertEquals(message.getString("name"), "Dejan");
@@ -1415,6 +1494,7 @@ public class StompTest extends StompTestSupport {
         frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto\n" + "transformation:" + Stomp.Transformations.JMS_MAP_XML + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         StompFrame xmlFrame = stompConnection.receive();
         LOG.info("Received Frame: {}", xmlFrame.getBody());
 
@@ -1444,7 +1524,9 @@ public class StompTest extends StompTestSupport {
 
         frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto\n" + "transformation:" + Stomp.Transformations.JMS_MAP_JSON + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         StompFrame json = stompConnection.receive();
         LOG.info("Received Frame: {}", json.getBody());
         assertNotNull(json);
@@ -1493,6 +1575,7 @@ public class StompTest extends StompTestSupport {
         frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -1503,12 +1586,14 @@ public class StompTest extends StompTestSupport {
         //reconnect
         stompConnect();
         // connect
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         frame = "CONNECT\n" + "login:system\n" + "passcode:manager\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         // unsubscribe
+//IC see: https://issues.apache.org/jira/browse/AMQ-3802
         frame = "UNSUBSCRIBE\n" + "destination:/topic/" + getQueueName() + "\n" + "activemq.subscriptionName:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
@@ -1520,8 +1605,10 @@ public class StompTest extends StompTestSupport {
                 return view.getDurableTopicSubscribers().length == 0 && view.getInactiveDurableTopicSubscribers().length == 0;
             }
         }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
 
         assertEquals(view.getDurableTopicSubscribers().length, 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3802
         assertEquals(view.getInactiveDurableTopicSubscribers().length, 0);
     }
 
@@ -1529,13 +1616,17 @@ public class StompTest extends StompTestSupport {
     public void testDurableSubAttemptOnQueueFails() throws Exception {
         // get broker JMX view
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3852
         String domain = "org.apache.activemq";
         ObjectName brokerName = new ObjectName(domain + ":type=Broker,brokerName=localhost");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         BrokerViewMBean view = (BrokerViewMBean)
                 brokerService.getManagementContext().newProxyInstance(brokerName, BrokerViewMBean.class, true);
 
         // connect
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -1569,6 +1660,7 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testPrefetchSizeOfOneClientAck() throws Exception {
         stompConnection.connect("system", "manager");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3835
 
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("activemq.prefetchSize", "1");
@@ -1649,6 +1741,7 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testPrefetchSize() throws Exception {
         stompConnection.connect("system", "manager");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1807
 
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("activemq.prefetchSize", "1");
@@ -1671,19 +1764,23 @@ public class StompTest extends StompTestSupport {
         assertEquals(frame1.getBody(), "message 2");
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
             StompFrame frame2 = stompConnection.receive(500);
             if (frame2 != null) {
                 fail("Should not have received the second message");
             }
         } catch (SocketTimeoutException soe) {}
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1807
         stompConnection.ack(frame1, "tx1");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1807
         Thread.sleep(1000);
         stompConnection.abort("tx1");
 
         stompConnection.begin("tx2");
 
         // Previously delivered message need to get re-acked...
+//IC see: https://issues.apache.org/jira/browse/AMQ-1807
         stompConnection.ack(frame, "tx2");
         stompConnection.ack(frame1, "tx2");
 
@@ -1710,6 +1807,7 @@ public class StompTest extends StompTestSupport {
     public void testTransactionsWithMultipleDestinations() throws Exception {
 
         stompConnection.connect("system", "manager");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2280
 
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("activemq.prefetchSize", "1");
@@ -1756,6 +1854,7 @@ public class StompTest extends StompTestSupport {
     public void testJMSXUserIDIsSetInMessage() throws Exception {
 
         MessageConsumer consumer = session.createConsumer(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -1766,7 +1865,12 @@ public class StompTest extends StompTestSupport {
         frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World" + Stomp.NULL;
 
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
         TextMessage message = (TextMessage)consumer.receive(5000);
         assertNotNull(message);
         assertEquals("system", message.getStringProperty(Stomp.Headers.Message.USERID));
@@ -1787,12 +1891,14 @@ public class StompTest extends StompTestSupport {
         frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2490
         StompFrame message = stompConnection.receive(5000);
         assertEquals("system", message.getHeaders().get(Stomp.Headers.Message.USERID));
     }
 
     @Test(timeout = 60000)
     public void testClientSetMessageIdIsIgnored() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2817
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put(Stomp.Headers.Message.MESSAGE_ID, "Thisisnotallowed");
         headers.put(Stomp.Headers.Message.TIMESTAMP, "1234");
@@ -1812,6 +1918,7 @@ public class StompTest extends StompTestSupport {
 
         assertFalse("Thisisnotallowed".equals(mess_headers.get(Stomp.Headers.Message.MESSAGE_ID)
                 ));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4468
         assertTrue("1234".equals(mess_headers.get(Stomp.Headers.Message.TIMESTAMP)));
         assertNull(mess_headers.get(Stomp.Headers.Message.REDELIVERED));
         assertNull(mess_headers.get(Stomp.Headers.Message.SUBSCRIPTION));
@@ -1821,6 +1928,7 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testExpire() throws Exception {
         stompConnection.connect("system", "manager");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3146
 
         HashMap<String, String> headers = new HashMap<String, String>();
         long timestamp = System.currentTimeMillis() - 100;
@@ -1838,6 +1946,7 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testDefaultJMSReplyToDest() throws Exception {
         stompConnection.connect("system", "manager");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3496
 
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put(Stomp.Headers.Send.REPLY_TO, "JustAString");
@@ -1848,12 +1957,14 @@ public class StompTest extends StompTestSupport {
         stompConnection.subscribe("/queue/" + getQueueName());
         StompFrame stompMessage = stompConnection.receive(1000);
         assertNotNull(stompMessage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3496
         assertEquals(""  + stompMessage, stompMessage.getHeaders().get(Stomp.Headers.Send.REPLY_TO), "JustAString");
     }
 
     @Test(timeout = 60000)
     public void testPersistent() throws Exception {
         stompConnection.connect("system", "manager");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3475
 
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put(Stomp.Headers.Message.PERSISTENT, "true");
@@ -1888,6 +1999,7 @@ public class StompTest extends StompTestSupport {
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
@@ -1946,6 +2058,7 @@ public class StompTest extends StompTestSupport {
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
         final QueueViewMBean queueView = getProxyToQueue(getQueueName());
         Wait.waitFor(new Wait.Condition(){
             @Override
@@ -1960,6 +2073,8 @@ public class StompTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testReplytoModification() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3496
+//IC see: https://issues.apache.org/jira/browse/AMQ-3653
         String replyto = "some destination";
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -1983,6 +2098,7 @@ public class StompTest extends StompTestSupport {
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3543
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
@@ -1995,6 +2111,7 @@ public class StompTest extends StompTestSupport {
     public void testSendNullBodyTextMessage() throws Exception {
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3742
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
@@ -2067,6 +2184,7 @@ public class StompTest extends StompTestSupport {
 
         StompConnection responder = new StompConnection();
         stompConnect(responder);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         responder.sendFrame(frame);
 
@@ -2081,6 +2199,7 @@ public class StompTest extends StompTestSupport {
         stompConnection.subscribe(tempDest);
 
         // Subscribe to the destination, this is where we get our request.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4291
         HashMap<String, String> properties = new HashMap<String, String>();
         properties.put(Stomp.Headers.RECEIPT_REQUESTED, "subscribe-1");
         responder.subscribe(dest, null, properties);
@@ -2133,6 +2252,7 @@ public class StompTest extends StompTestSupport {
             public boolean isSatisified() throws Exception {
                 return brokerService.getBroker().getClients().length == expected;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
         }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100));
         org.apache.activemq.broker.Connection[] clients = brokerService.getBroker().getClients();
         int actual = clients.length;
@@ -2142,6 +2262,7 @@ public class StompTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testDisconnectDoesNotDeadlockBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
         for (int i = 0; i < 20; ++i) {
             doTestConnectionLeak();
         }
@@ -2150,8 +2271,11 @@ public class StompTest extends StompTestSupport {
     private void doTestConnectionLeak() throws Exception {
         stompConnect();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
@@ -2173,6 +2297,8 @@ public class StompTest extends StompTestSupport {
 
         frame = "SUBSCRIBE\n" + "destination:/queue/test.DEV-3485\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         stompConnection.sendFrame(test);
 
@@ -2196,6 +2322,7 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testHeaderValuesAreTrimmed1_0() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
         String connectFrame = "CONNECT\n" +
                 "login:system\n" +
                 "passcode:manager\n" +
@@ -2236,9 +2363,70 @@ public class StompTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testSendReceiveBigMessage() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
+//IC see: https://issues.apache.org/jira/browse/AMQ-4095
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
@@ -2267,6 +2455,8 @@ public class StompTest extends StompTestSupport {
         frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + bigBody + Stomp.NULL;
 
         stompConnection.sendFrame(frame);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
 
         sframe = stompConnection.receive(5000);
         assertNotNull(sframe);
@@ -2276,6 +2466,7 @@ public class StompTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testAckInTransactionTopic() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
         doTestAckInTransaction(true);
     }
 
@@ -2287,7 +2478,14 @@ public class StompTest extends StompTestSupport {
     public void doTestAckInTransaction(boolean topic) throws Exception {
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3823
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
+//IC see: https://issues.apache.org/jira/browse/AMQ-1323
         stompConnection.sendFrame(frame);
         stompConnection.receive();
         String destination = (topic ? "/topic" : "/queue") + "/test";
@@ -2360,6 +2558,7 @@ public class StompTest extends StompTestSupport {
 
 
     protected SamplePojo createObjectFromJson(String data) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         HierarchicalStreamReader in = new JettisonMappedXmlDriver().createReader(new StringReader(data));
         return createObject(in);
     }

@@ -38,16 +38,19 @@ public class PrefixDestinationFilter extends DestinationFilter {
     public PrefixDestinationFilter(String[] prefixes, byte destinationType) {
         // collapse duplicate '>' at the end of the path
         int lastIndex = prefixes.length - 1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5074
         while (lastIndex >= 0 && ANY_DESCENDENT.equals(prefixes[lastIndex])) {
             lastIndex--;
         }
         this.prefixes = new String[lastIndex + 2];
         System.arraycopy(prefixes, 0, this.prefixes, 0, this.prefixes.length);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2360
         this.destinationType = destinationType;
     }
 
 
     public boolean matches(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4884
         if (destination.getDestinationType() != destinationType) return false;
         String[] path = DestinationPath.getDestinationPaths(destination.getPhysicalName());
 
@@ -65,6 +68,7 @@ public class PrefixDestinationFilter extends DestinationFilter {
             //want to look for the case where A matches A.>
             boolean match = true;
             for (int i = 0; (i < path.length && match); i++){
+//IC see: https://issues.apache.org/jira/browse/AMQ-5074
                    match = matches(prefixes[i], path[i]);
             }
             //paths get compacted - e.g. A.*.> will be compacted to A.> and by definition - the last element on

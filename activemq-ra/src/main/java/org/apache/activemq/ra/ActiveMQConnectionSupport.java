@@ -50,6 +50,7 @@ public class ActiveMQConnectionSupport {
      */
     protected ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo connectionRequestInfo, MessageActivationSpec activationSpec) {
         // ActiveMQSslConnectionFactory defaults to TCP anyway
+//IC see: https://issues.apache.org/jira/browse/AMQ-5782
         ActiveMQConnectionFactory factory = new ActiveMQSslConnectionFactory();
         connectionRequestInfo.configure(factory, activationSpec);
         return factory;
@@ -67,6 +68,7 @@ public class ActiveMQConnectionSupport {
      *         if the connection could not be established
      */
     public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo connectionRequestInfo) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5782
         return makeConnection(connectionRequestInfo, createConnectionFactory(connectionRequestInfo, null));
     }
 
@@ -83,6 +85,7 @@ public class ActiveMQConnectionSupport {
      *         if the connection could not be established
      */
     public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo connectionRequestInfo, ActiveMQConnectionFactory connectionFactory)
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         throws JMSException {
         String userName = connectionRequestInfo.getUserName();
         String password = connectionRequestInfo.getPassword();
@@ -112,6 +115,7 @@ public class ActiveMQConnectionSupport {
      */
     protected void setInfo(ActiveMQConnectionRequestInfo connectionRequestInfo) {
         info = connectionRequestInfo;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug(this + ", setting [info] to: " + info);
         }
@@ -122,6 +126,7 @@ public class ActiveMQConnectionSupport {
     }
 
     protected String emptyToNull(String value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (value == null || value.length() == 0) {
             return null;
         } else {
@@ -153,7 +158,9 @@ public class ActiveMQConnectionSupport {
      * @param clientid
      */
     public void setClientid(String clientid) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
             log.debug(this + ", setting [clientid] to: " + clientid);
         }
         info.setClientid(clientid);
@@ -170,7 +177,9 @@ public class ActiveMQConnectionSupport {
      * @param password
      */
     public void setPassword(String password) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
             log.debug(this + ", setting [password] property");
         }
         info.setPassword(password);
@@ -187,24 +196,29 @@ public class ActiveMQConnectionSupport {
      * @param url
      */
     public void setServerUrl(String url) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
             log.debug(this + ", setting [serverUrl] to: " + url);
         }
         info.setServerUrl(url);
     }
 
     public String getTrustStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6970
         return info.getTrustStore();
     }
 
     public void setTrustStore(String trustStore) {
         if (log.isDebugEnabled()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5782
             log.debug(this + ", setting [trustStore] to: " + trustStore);
         }
         info.setTrustStore(trustStore);
     }
 
     public String getTrustStorePassword() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6970
         return info.getTrustStorePassword();
     }
 
@@ -216,6 +230,7 @@ public class ActiveMQConnectionSupport {
     }
 
     public String getKeyStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6970
         return info.getKeyStore();
     }
 
@@ -227,6 +242,7 @@ public class ActiveMQConnectionSupport {
     }
 
     public String getKeyStorePassword() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6970
         return info.getKeyStorePassword();
     }
 
@@ -238,6 +254,7 @@ public class ActiveMQConnectionSupport {
     }
 
     public String getKeyStoreKeyPassword() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6970
         return info.getKeyStoreKeyPassword();
     }
 
@@ -259,6 +276,7 @@ public class ActiveMQConnectionSupport {
      * @param userid
      */
     public void setUserName(String userid) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [userName] to: " + userid);
         }
@@ -276,7 +294,9 @@ public class ActiveMQConnectionSupport {
      * @param optimizeDurableTopicPrefetch
      */
     public void setOptimizeDurableTopicPrefetch(Integer optimizeDurableTopicPrefetch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3986
             log.debug("setting [optimizeDurableTopicPrefetch] to: " + optimizeDurableTopicPrefetch);
         }
         info.setOptimizeDurableTopicPrefetch(optimizeDurableTopicPrefetch);
@@ -293,6 +313,7 @@ public class ActiveMQConnectionSupport {
      * @param durableTopicPrefetch
      */
     public void setDurableTopicPrefetch(Integer durableTopicPrefetch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [durableTopicPrefetch] to: " + durableTopicPrefetch);
         }
@@ -310,6 +331,7 @@ public class ActiveMQConnectionSupport {
      * @param value
      */
     public void setInitialRedeliveryDelay(Long value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [initialRedeliveryDelay] to: " + value);
         }
@@ -320,6 +342,7 @@ public class ActiveMQConnectionSupport {
      * @return initial redelivery delay
      */
     public Long getMaximumRedeliveryDelay() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3205
         return info.getMaximumRedeliveryDelay();
     }
 
@@ -327,6 +350,7 @@ public class ActiveMQConnectionSupport {
      * @param value
      */
     public void setMaximumRedeliveryDelay(Long value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [maximumRedeliveryDelay] to: " + value);
         }
@@ -338,6 +362,7 @@ public class ActiveMQConnectionSupport {
      */
     @Deprecated
     public Integer getInputStreamPrefetch() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         return 0;
     }
 
@@ -352,6 +377,7 @@ public class ActiveMQConnectionSupport {
      * @param value
      */
     public void setMaximumRedeliveries(Integer value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [maximumRedeliveries] to: " + value);
         }
@@ -369,6 +395,7 @@ public class ActiveMQConnectionSupport {
      * @param queueBrowserPrefetch
      */
     public void setQueueBrowserPrefetch(Integer queueBrowserPrefetch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [queueBrowserPrefetch] to: " + queueBrowserPrefetch);
         }
@@ -386,6 +413,7 @@ public class ActiveMQConnectionSupport {
      * @param queuePrefetch
      */
     public void setQueuePrefetch(Integer queuePrefetch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [queuePrefetch] to: " + queuePrefetch);
         }
@@ -403,6 +431,7 @@ public class ActiveMQConnectionSupport {
      * @param value
      */
     public void setRedeliveryBackOffMultiplier(Double value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [redeliveryBackOffMultiplier] to: " + value);
         }
@@ -420,6 +449,7 @@ public class ActiveMQConnectionSupport {
      * @param value
      */
     public void setRedeliveryUseExponentialBackOff(Boolean value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [redeliveryUseExponentialBackOff] to: " + value);
         }
@@ -437,6 +467,7 @@ public class ActiveMQConnectionSupport {
      * @param topicPrefetch
      */
     public void setTopicPrefetch(Integer topicPrefetch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [topicPrefetch] to: " + topicPrefetch);
         }
@@ -468,6 +499,7 @@ public class ActiveMQConnectionSupport {
      * @param useInboundSession
      */
     public void setUseInboundSession(Boolean useInboundSession) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug("setting [useInboundSession] to: " + useInboundSession);
         }
@@ -493,6 +525,7 @@ public class ActiveMQConnectionSupport {
      * @param useSessionArgs
      */
     public void setUseSessionArgs(Boolean useSessionArgs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5596
         if (log.isDebugEnabled()) {
             log.debug(this + ", setting [useSessionArgs] to: " + useSessionArgs);
         }

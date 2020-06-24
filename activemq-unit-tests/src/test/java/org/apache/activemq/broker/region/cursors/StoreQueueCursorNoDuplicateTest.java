@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
  **/
 public class StoreQueueCursorNoDuplicateTest extends TestCase {
     static final Logger LOG = LoggerFactory.getLogger(StoreQueueCursorNoDuplicateTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5515
             ActiveMQQueue destination = new ActiveMQQueue("queue-"
             + StoreQueueCursorNoDuplicateTest.class.getSimpleName());
     BrokerService brokerService;
@@ -81,7 +82,11 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
 
         queueMessageStore.start();
         queueMessageStore.registerIndexListener(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
         SystemUsage systemUsage = new SystemUsage();
         // ensure memory limit is reached
@@ -90,6 +95,8 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
         underTest.setEnableAudit(false);
         underTest.start();
         assertTrue("cache enabled", underTest.isUseCache() && underTest.isCacheEnabled());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3149
+//IC see: https://issues.apache.org/jira/browse/AMQ-3145
 
         final ConnectionContext contextNotInTx = new ConnectionContext();
         for (int i = 0; i < count; i++) {
@@ -100,6 +107,8 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
             underTest.addMessageLast(msg);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3149
+//IC see: https://issues.apache.org/jira/browse/AMQ-3145
         assertTrue("cache is disabled as limit reached", !underTest.isCacheEnabled());
         int dequeueCount = 0;
 
@@ -107,9 +116,11 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
         underTest.reset();
         while (underTest.hasNext() && dequeueCount < count) {
             MessageReference ref = underTest.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
             ref.decrementReferenceCount();
             underTest.remove();
             LOG.info("Received message: {} with body: {}",
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
                      ref.getMessageId(), ((ActiveMQTextMessage)ref.getMessage()).getText());
             assertEquals(dequeueCount++, ref.getMessageId().getProducerSequenceId());
         }

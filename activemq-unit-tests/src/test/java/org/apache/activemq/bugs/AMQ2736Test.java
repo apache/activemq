@@ -55,9 +55,11 @@ public class AMQ2736Test {
         KahaDBStore store = pa.getStore();
 
         assertNotNull("last tx location is present " + store.getInProgressTxLocationRange()[1]);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4172
 
         // test hack, close the journal to ensure no further journal updates when broker stops
         // mimic kill -9 in terms of no normal shutdown sequence
+//IC see: https://issues.apache.org/jira/browse/AMQ-2922
         store.getJournal().close();
         try {
             store.close();
@@ -75,6 +77,7 @@ public class AMQ2736Test {
 
         // inflight non xa tx should be rolledback on recovery
         assertNull("in progress tx location is present ", store.getInProgressTxLocationRange()[0]);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4172
 
     }
 

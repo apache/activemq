@@ -51,6 +51,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     public StompTransportFilter(Transport next, WireFormat wireFormat, BrokerContext brokerContext) {
         super(next);
         this.protocolConverter = new ProtocolConverter(this, brokerContext);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
 
         if (wireFormat instanceof StompWireFormat) {
             this.wireFormat = (StompWireFormat) wireFormat;
@@ -59,6 +60,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
 
     @Override
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         if (monitor != null) {
             monitor.startConnectCheckTask(getConnectAttemptTimeout());
         }
@@ -68,6 +70,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     @Override
     public void oneway(Object o) throws IOException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-976
             final Command command = (Command) o;
             protocolConverter.onActiveMQCommand(command);
         } catch (JMSException e) {
@@ -79,9 +82,11 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     public void onCommand(Object command) {
         try {
             if (trace) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3511
                 TRACE.trace("Received: \n" + command);
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
             protocolConverter.onStompCommand((StompFrame) command);
         } catch (IOException e) {
             onException(e);
@@ -101,6 +106,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     @Override
     public void sendToStomp(StompFrame command) throws IOException {
         if (trace) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3511
             TRACE.trace("Sending: \n" + command);
         }
         Transport n = next;
@@ -119,6 +125,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
 
     @Override
     public StompInactivityMonitor getInactivityMonitor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         return monitor;
     }
 
@@ -132,6 +139,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     }
 
     public String getDefaultHeartBeat() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3603
         return protocolConverter != null ? protocolConverter.getDefaultHeartBeat() : null;
     }
 
@@ -145,6 +153,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
      * @return the hbGracePeriodMultiplier
      */
     public float getHbGracePeriodMultiplier() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4674
         return protocolConverter != null ? protocolConverter.getHbGracePeriodMultiplier() : null;
     }
 
@@ -172,6 +181,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
      *        size in bytes of the maximum data portion of a STOMP frame.
      */
     public void setMaxDataLength(int maxDataLength) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5573
         wireFormat.setMaxDataLength(maxDataLength);
     }
 
@@ -180,6 +190,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     }
 
     public void setMaxFrameSize(int maxFrameSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
         wireFormat.setMaxFrameSize(maxFrameSize);
     }
 
@@ -188,6 +199,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     }
 
     public long getConnectAttemptTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         return wireFormat.getConnectionAttemptTimeout();
     }
 

@@ -54,6 +54,7 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
     private final ProducerId producerId = createProducerId();
 
     public SubscriptionRecoveryPolicy copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-714
         QueryBasedSubscriptionRecoveryPolicy rc = new QueryBasedSubscriptionRecoveryPolicy();
         rc.setQuery(query);
         return rc;

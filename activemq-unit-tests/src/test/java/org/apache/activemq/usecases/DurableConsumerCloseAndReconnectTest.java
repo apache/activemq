@@ -122,6 +122,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
         dummyConnection.close();
 
         // now lets try again without one connection open
+//IC see: https://issues.apache.org/jira/browse/AMQ-2755
         consumeMessagesDeliveredWhileConsumerClosed();       
     }
 

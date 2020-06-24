@@ -58,6 +58,7 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
     private String group = "default";
     private final CopyOnWriteArrayList<ServiceInfo> serviceInfos =
         new CopyOnWriteArrayList<ServiceInfo>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5171
 
     // DiscoveryAgent interface
     // -------------------------------------------------------------------------
@@ -97,6 +98,7 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
                 @Override
                 public void run() {
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4056
                         if (JmDNSFactory.onClose(getLocalAddress())) {
                             closeTarget.close();
                         };
@@ -115,6 +117,7 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
 
     @Override
     public void registerService(String name) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5171
         ServiceInfo si = createServiceInfo(name, new HashMap<String, Object>());
         serviceInfos.add(si);
         getJmdns().registerService(si);
@@ -206,6 +209,7 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
         int port = MapHelper.getInt(map, "port", 0);
         String type = getType();
         LOG.debug("Registering service type: {} name: {} details: {}", new Object[]{type, name, map});
+//IC see: https://issues.apache.org/jira/browse/AMQ-4056
         return ServiceInfo.create(type, name + "." + type, port, weight, priority, "");
     }
 
@@ -234,6 +238,7 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
     }
 
     public void setType(String typeSuffix) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5171
         this.typeSuffix = typeSuffix;
     }
 

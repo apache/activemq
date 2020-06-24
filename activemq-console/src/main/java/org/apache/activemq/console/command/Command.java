@@ -27,6 +27,7 @@ public interface Command {
 
     String getOneLineDescription();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
     void setCommandContext( CommandContext context );
     
     /**

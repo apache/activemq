@@ -79,6 +79,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
             }
 
             persistenceAdapter.commitTransaction(ctx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
 
         } catch ( IOException e ) {
             persistenceAdapter.rollbackTransaction(ctx);
@@ -90,6 +91,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
         ArrayList<AddMessageCommand> updateFromPreparedStateCommands = new ArrayList<AddMessageCommand>();
         for (Iterator<AddMessageCommand> iter = tx.messages.iterator(); iter.hasNext();) {
             final AddMessageCommand addMessageCommand = iter.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5567
             updateFromPreparedStateCommands.add(new CommitAddOutcome(addMessageCommand));
         }
         tx.messages = updateFromPreparedStateCommands;
@@ -98,6 +100,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
     }
 
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5567
     class CommitAddOutcome implements AddMessageCommand {
         final Message message;
         JDBCMessageStore jdbcMessageStore;
@@ -127,6 +130,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
             final Long preparedEntrySequence = (Long) message.getMessageId().getEntryLocator();
             TransactionContext c = jdbcPersistenceAdapter.getTransactionContext(context);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
             long newSequence;
             synchronized (jdbcMessageStore.pendingAdditions) {
                 newSequence = jdbcPersistenceAdapter.getNextSequenceId();
@@ -144,6 +148,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
             jdbcPersistenceAdapter.commitAdd(context, message.getMessageId(), preparedEntrySequence, newSequence);
             jdbcMessageStore.onAdd(message, (Long)message.getMessageId().getEntryLocator(), message.getPriority());
         }
@@ -178,10 +183,12 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                             ((LastAckCommand)removeMessageCommand).rollback(ctx);
                         } else {
                             MessageId messageId = removeMessageCommand.getMessageAck().getLastMessageId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
                             long sequence = (Long)messageId.getEntryLocator();
                             // need to unset the txid flag on the existing row
                             ((JDBCPersistenceAdapter) persistenceAdapter).commitAdd(ctx, messageId, sequence, sequence);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
                             if (removeMessageCommand instanceof RecoveredRemoveMessageCommand) {
                                 ((JDBCMessageStore) removeMessageCommand.getMessageStore()).trackRollbackAck(((RecoveredRemoveMessageCommand) removeMessageCommand).getMessage());
                             }
@@ -204,15 +211,23 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
 
     public void recoverAdd(long id, byte[] messageBytes) throws IOException {
         final Message message = (Message) ((JDBCPersistenceAdapter)persistenceAdapter).getWireFormat().unmarshal(new ByteSequence(messageBytes));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         message.getMessageId().setFutureOrSequenceLong(id);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4529
+//IC see: https://issues.apache.org/jira/browse/AMQ-5567
         message.getMessageId().setEntryLocator(id);
         Tx tx = getPreparedTx(message.getTransactionId());
         tx.add(new CommitAddOutcome(null, message));
     }
 
     public void recoverAck(long id, byte[] xid, byte[] message) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
         final Message msg = (Message) ((JDBCPersistenceAdapter)persistenceAdapter).getWireFormat().unmarshal(new ByteSequence(message));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         msg.getMessageId().setFutureOrSequenceLong(id);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4529
         msg.getMessageId().setEntryLocator(id);
         Tx tx = getPreparedTx(new XATransactionId(xid));
         final MessageAck ack = new MessageAck(msg, MessageAck.STANDARD_ACK_TYPE, 1);
@@ -229,6 +244,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
             }
 
             public Message getMessage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
                 return msg;
             }
 
@@ -294,6 +310,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
 
             @Override
             public void rollback(ConnectionContext context) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7311
                 ((JDBCPersistenceAdapter)persistenceAdapter).rollbackLastAck(context, jdbcTopicMessageStore.isPrioritizedMessages() ? priority : 0, jdbcTopicMessageStore.getDestination(), subName, clientId);
                 jdbcTopicMessageStore.complete(clientId, subName);
             }
@@ -331,6 +348,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
         for (RemoveMessageCommand removeMessageCommand: tx.acks) {
             if (removeMessageCommand instanceof LastAckCommand) {
                 LastAckCommand lastAckCommand = (LastAckCommand) removeMessageCommand;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
                 JDBCTopicMessageStore jdbcTopicMessageStore = (JDBCTopicMessageStore) findMessageStore(lastAckCommand.getMessageAck().getDestination());
                 jdbcTopicMessageStore.pendingCompletion(lastAckCommand.getClientId(), lastAckCommand.getSubName(), lastAckCommand.getSequence(), lastAckCommand.getPriority());
                 lastAckCommand.setMessageStore(jdbcTopicMessageStore);

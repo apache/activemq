@@ -38,6 +38,7 @@ public interface AmqpProtocolConverter {
      * @throws Exception if an error occurs processing the incoming data packet.
      */
     void onAMQPData(Object data) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
 
     /**
      * Called when the transport detects an exception that the converter
@@ -75,5 +76,6 @@ public interface AmqpProtocolConverter {
      * @throws IOException if an error occurs on writing heart-beats to the wire.
      */
     long keepAlive() throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
 
 }

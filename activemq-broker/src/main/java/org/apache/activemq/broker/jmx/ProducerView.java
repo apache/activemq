@@ -32,6 +32,7 @@ public class ProducerView implements ProducerViewMBean {
     public ProducerView(ProducerInfo info, String clientId, String userName, ManagedRegionBroker broker) {
         this.info = info;
         this.clientId = clientId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         this.userName = userName;
         this.broker = broker;
     }
@@ -59,6 +60,7 @@ public class ProducerView implements ProducerViewMBean {
 
     @Override
     public String getProducerId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         if (info != null) {
             return info.getProducerId().toString();
         }
@@ -67,6 +69,7 @@ public class ProducerView implements ProducerViewMBean {
 
     @Override
     public String getDestinationName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         if (info != null && info.getDestination() != null) {
             ActiveMQDestination dest = info.getDestination();
             return dest.getPhysicalName();
@@ -79,6 +82,7 @@ public class ProducerView implements ProducerViewMBean {
     @Override
     public boolean isDestinationQueue() {
         if (info != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
             if (info.getDestination() != null) {
                 ActiveMQDestination dest = info.getDestination();
                 return dest.isQueue();
@@ -92,6 +96,7 @@ public class ProducerView implements ProducerViewMBean {
     @Override
     public boolean isDestinationTopic() {
         if (info != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
             if (info.getDestination() != null) {
                 ActiveMQDestination dest = info.getDestination();
                 return dest.isTopic();
@@ -105,6 +110,7 @@ public class ProducerView implements ProducerViewMBean {
     @Override
     public boolean isDestinationTemporary() {
         if (info != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
             if (info.getDestination() != null) {
                 ActiveMQDestination dest = info.getDestination();
                 return dest.isTemporary();
@@ -140,17 +146,20 @@ public class ProducerView implements ProducerViewMBean {
     /**
      * Set the last used Destination name for a Dynamic Destination Producer.
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
     void setLastUsedDestinationName(ActiveMQDestination destinationName) {
         this.lastUsedDestination = destinationName;
     }
 
     @Override
     public String getUserName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         return userName;
     }
 
     @Override
     public boolean isProducerBlocked() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
         ProducerBrokerExchange producerBrokerExchange = broker.getBrokerService().getProducerBrokerExchange(info);
         if (producerBrokerExchange != null){
             return producerBrokerExchange.isBlockedForFlowControl();
@@ -186,7 +195,9 @@ public class ProducerView implements ProducerViewMBean {
 
     @Override
     public void resetStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4916
        if (info != null){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4927
            info.resetSentCount();
        }
     }

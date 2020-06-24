@@ -156,6 +156,7 @@ public abstract class SingleSourceGenerator extends OpenWireGenerator {
     }
 
     public boolean isAbstractClass() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         return jclass != null && jclass.isAbstract();
     }
 

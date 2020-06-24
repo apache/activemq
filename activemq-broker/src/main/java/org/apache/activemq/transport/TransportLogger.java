@@ -40,6 +40,8 @@ public class TransportLogger extends TransportFilter {
         // that will be used to write the messages.
         super(next);
         this.log = log;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
         this.logging = startLogging;
         this.logWriter = logWriter;
     }
@@ -66,6 +68,7 @@ public class TransportLogger extends TransportFilter {
         // being active, instead of logging the message directly.
         if (logging)
             logWriter.logRequest(log, command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-976
         Object rc = super.request(command);
         if (logging)
             logWriter.logResponse(log, command);
@@ -147,6 +150,7 @@ public class TransportLogger extends TransportFilter {
 
     @Override
     public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4182
         super.stop();
         if (view != null) {
             view.unregister();

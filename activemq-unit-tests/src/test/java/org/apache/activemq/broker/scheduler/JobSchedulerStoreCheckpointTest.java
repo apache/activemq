@@ -49,6 +49,7 @@ public class JobSchedulerStoreCheckpointTest {
 
         // investigate gc issue - store usage not getting released
         org.apache.log4j.Logger.getLogger(JobSchedulerStoreImpl.class).setLevel(Level.TRACE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6152
 
         File directory = new File("target/test/ScheduledJobsDB");
         IOHelper.mkdirs(directory);
@@ -130,6 +131,7 @@ public class JobSchedulerStoreCheckpointTest {
 
     @Test
     public void testColocatedAddRemoveCleanup() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6152
         final CountDownLatch latch = new CountDownLatch(1);
         scheduler.addListener(new JobListener() {
             @Override

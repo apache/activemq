@@ -28,6 +28,8 @@ import org.apache.activemq.command.NetworkBridgeFilter;
  */
 public class DefaultNetworkBridgeFilterFactory implements NetworkBridgeFilterFactory {
     public NetworkBridgeFilter create(ConsumerInfo info, BrokerId[] remoteBrokerPath, int messageTTL, int consumerTTL) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         return new NetworkBridgeFilter(info, remoteBrokerPath[0], messageTTL, consumerTTL);
     }
 }

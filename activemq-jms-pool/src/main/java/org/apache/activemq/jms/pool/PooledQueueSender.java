@@ -43,10 +43,12 @@ public class PooledQueueSender extends PooledProducer implements QueueSender {
 
     @Override
     public Queue getQueue() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
         return (Queue) getDestination();
     }
 
     protected QueueSender getQueueSender() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         return (QueueSender) getMessageProducer();
     }
 }

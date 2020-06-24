@@ -59,6 +59,7 @@ public class XAConnectionPoolTest extends TestSupport {
         ActiveMQTopic topic = new ActiveMQTopic("test");
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
 
         final Xid xid = createXid();
         // simple TM that is in a tx and will track syncs
@@ -185,10 +186,12 @@ public class XAConnectionPoolTest extends TestSupport {
     }
 
     public void testAckModeOfPoolNonXAWithTM() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
         final Vector<Synchronization> syncs = new Vector<Synchronization>();
         ActiveMQTopic topic = new ActiveMQTopic("test");
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false&jms.xaAckMode=" + Session.CLIENT_ACKNOWLEDGE));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
 
         // simple TM that is in a tx and will track syncs
         pcf.setTransactionManager(new TransactionManager() {
@@ -283,6 +286,7 @@ public class XAConnectionPoolTest extends TestSupport {
     }
 
     public void testInstanceOf() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         assertTrue(pcf instanceof QueueConnectionFactory);
         assertTrue(pcf instanceof TopicConnectionFactory);
@@ -290,7 +294,9 @@ public class XAConnectionPoolTest extends TestSupport {
 
     public void testBindable() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
         assertTrue(pcf instanceof ObjectFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
         assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, null) instanceof XaPooledConnectionFactory);
         assertTrue(pcf.isTmFromJndi());
     }
@@ -305,8 +311,10 @@ public class XAConnectionPoolTest extends TestSupport {
     }
 
     public void testSenderAndPublisherDest() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
 
         QueueConnection connection = pcf.createQueueConnection();
         QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -324,9 +332,12 @@ public class XAConnectionPoolTest extends TestSupport {
     }
 
     public void testSessionArgsIgnoredWithTm() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4426
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
         pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
         // simple TM that with no tx
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
         pcf.setTransactionManager(new TransactionManager() {
             @Override
             public void begin() throws NotSupportedException, SystemException {
@@ -335,6 +346,7 @@ public class XAConnectionPoolTest extends TestSupport {
 
             @Override
             public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
                 SystemException {
                 throw new IllegalStateException("NoTx");
             }

@@ -90,6 +90,7 @@ public class AuditLogEntry {
     */
     public static Object[] sanitizeArguments(Object[] arguments, Method method)
     {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5729
        Object[] sanitizedArguments = arguments.clone();
        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 

@@ -122,6 +122,9 @@ public abstract class StoreOrderTest {
     
     @Test
     public void testCompositeSendReceiveAfterRestart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         destination = new ActiveMQQueue("StoreOrderTest,SecondStoreOrderTest");
         enqueueOneMessage();
         
@@ -265,6 +268,9 @@ public abstract class StoreOrderTest {
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setMemoryLimit(1024*3);
         defaultEntry.setCursorMemoryHighWaterMark(68);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         defaultEntry.setExpireMessagesPeriod(0);
         map.setDefaultEntry(defaultEntry);
         brokerService.setDestinationPolicy(map);

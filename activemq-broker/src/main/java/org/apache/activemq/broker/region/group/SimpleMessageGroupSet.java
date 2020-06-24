@@ -37,6 +37,7 @@ public class SimpleMessageGroupSet implements MessageGroupSet {
     }
 
     protected Set<String> getUnderlyingSet(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4766
         return set;
     }
 

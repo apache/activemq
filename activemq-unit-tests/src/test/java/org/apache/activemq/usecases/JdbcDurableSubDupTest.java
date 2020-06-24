@@ -77,6 +77,8 @@ public class JdbcDurableSubDupTest {
         broker.setAdvisorySupport(false);
         broker.setPersistenceAdapter(new JDBCPersistenceAdapter());
         PolicyEntry policyEntry = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
         policyEntry.setMaxAuditDepth(3000);
         policyEntry.setMaxPageSize(150);
         policyEntry.setPrioritizedMessages(true);

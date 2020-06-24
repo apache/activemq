@@ -94,6 +94,7 @@ public class MQTTCodecTest {
     @Test
     public void testConnectThenSubscribe() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5308
         CONNECT connect = new CONNECT();
         connect.cleanSession(true);
         connect.clientId(new UTF8Buffer(""));
@@ -229,6 +230,7 @@ public class MQTTCodecTest {
     @Test
     public void testMessageDecoding() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5308
         byte[] CONTENTS = new byte[MESSAGE_SIZE];
         for (int i = 0; i < MESSAGE_SIZE; i++) {
             CONTENTS[i] = 'a';
@@ -260,6 +262,7 @@ public class MQTTCodecTest {
     @Test
     public void testMessageDecodingCorrupted() throws Exception {
         UNSUBSCRIBE unsubscribe = new UNSUBSCRIBE();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7166
 
         MQTTFrame frame = unsubscribe.encode();
 

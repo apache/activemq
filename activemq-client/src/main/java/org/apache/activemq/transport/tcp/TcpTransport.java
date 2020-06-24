@@ -152,6 +152,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public TcpTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation,
                         URI localLocation) throws UnknownHostException, IOException {
         this.wireFormat = wireFormat;
+//IC see: https://issues.apache.org/jira/browse/AMQ-933
         this.socketFactory = socketFactory;
         try {
             this.socket = socketFactory.createSocket();
@@ -160,6 +161,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         }
         this.remoteLocation = remoteLocation;
         this.localLocation = localLocation;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         this.initBuffer = null;
         setDaemon(false);
     }
@@ -172,6 +174,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws IOException
      */
     public TcpTransport(WireFormat wireFormat, Socket socket) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         this(wireFormat, socket, null);
     }
 
@@ -189,6 +192,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     @Override
     public void oneway(Object command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-976
         checkStarted();
         wireFormat.marshal(command, dataOut);
         dataOut.flush();
@@ -209,6 +213,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     @Override
     public void run() {
         LOG.trace("TCP consumer thread for " + this + " starting");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1491
         this.runnerThread=Thread.currentThread();
         try {
             while (!isStopped()) {
@@ -217,8 +222,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         } catch (IOException e) {
             stoppedLatch.get().countDown();
             onException(e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1852
         } catch (Throwable e){
             stoppedLatch.get().countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5472
             IOException ioe=new IOException("Unexpected error occurred: " + e);
             ioe.initCause(e);
             onException(ioe);
@@ -246,6 +253,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         // This is the value requested by the user by setting the Tcp Transport
         // options. If the socket hasn't been created, then this value may not
         // reflect the value returned by Socket.getTrafficClass().
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         return Integer.toString(this.trafficClass);
     }
 
@@ -275,6 +283,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     public String getLogWriterName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
+//IC see: https://issues.apache.org/jira/browse/AMQ-1361
         return logWriterName;
     }
 
@@ -350,6 +360,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     public int getConnectionTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-607
         return connectionTimeout;
     }
 
@@ -376,6 +387,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @param soLinger enabled if > -1, disabled if == -1, system default otherwise
      */
     public void setSoLinger(int soLinger) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3315
         this.soLinger = soLinger;
     }
 
@@ -412,6 +424,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @return the closeAsync
      */
     public boolean isCloseAsync() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1739
         return closeAsync;
     }
 
@@ -426,6 +439,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     // -------------------------------------------------------------------------
     protected String resolveHostName(String host) throws UnknownHostException {
         if (isUseLocalHost()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2965
             String localName = InetAddressUtil.getLocalHostName();
             if (localName != null && localName.equals(host)) {
                 return "localhost";
@@ -445,6 +459,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         if (socketOptions != null) {
             // copy the map as its used values is being removed when calling setProperties
             // and we need to be able to set the options again in case socket is re-initailized
+//IC see: https://issues.apache.org/jira/browse/AMQ-4433
             Map<String, Object> copy = new HashMap<String, Object>(socketOptions);
             IntrospectionSupport.setProperties(socket, copy);
             if (!copy.isEmpty()) {
@@ -454,6 +469,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
         try {
             //only positive values are legal
+//IC see: https://issues.apache.org/jira/browse/AMQ-6153
             if (socketBufferSize > 0) {
                 sock.setReceiveBufferSize(socketBufferSize);
                 sock.setSendBufferSize(socketBufferSize);
@@ -470,6 +486,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             sock.setKeepAlive(keepAlive.booleanValue());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3315
         if (soLinger > -1) {
             sock.setSoLinger(true, soLinger);
         } else if (soLinger == -1) {
@@ -478,6 +495,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         if (tcpNoDelay != null) {
             sock.setTcpNoDelay(tcpNoDelay.booleanValue());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         if (!this.trafficClassSet) {
             this.trafficClassSet = setTrafficClass(sock);
         }
@@ -486,6 +504,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     @Override
     protected void doStart() throws Exception {
         connect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1349
         stoppedLatch.set(new CountDownLatch(1));
         super.doStart();
     }
@@ -511,6 +530,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         // Set the traffic class before the socket is connected when possible so
         // that the connection packets are given the correct traffic class.
         this.trafficClassSet = setTrafficClass(socket);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
 
         if (socket != null) {
 
@@ -558,6 +578,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                 final CountDownLatch latch = new CountDownLatch(1);
 
                 // need a async task for this
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                 final TaskRunnerFactory taskRunnerFactory = new TaskRunnerFactory();
                 taskRunnerFactory.execute(new Runnable() {
                     @Override
@@ -567,6 +588,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                             socket.close();
                             LOG.debug("Closed socket {}", socket);
                         } catch (IOException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2526
                             if (LOG.isDebugEnabled()) {
                                 LOG.debug("Caught exception closing socket " + socket + ". This exception will be ignored.", e);
                             }
@@ -580,6 +602,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                     latch.await(1,TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                 } finally {
                     taskRunnerFactory.shutdownNow();
                 }
@@ -604,14 +627,17 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     @Override
     public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1349
         super.stop();
         CountDownLatch countDownLatch = stoppedLatch.get();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1491
         if (countDownLatch != null && Thread.currentThread() != this.runnerThread) {
             countDownLatch.await(1,TimeUnit.SECONDS);
         }
     }
 
     protected void initializeStreams() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         TcpBufferedInputStream buffIn = new TcpBufferedInputStream(socket.getInputStream(), ioBufferSize) {
             @Override
             public int read() throws IOException {
@@ -636,10 +662,12 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         };
         //Unread the initBuffer that was used for protocol detection if it exists
         //so the stream can start over
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         if (initBuffer != null) {
             buffIn.unread(initBuffer.buffer.array());
         }
         this.dataIn = new DataInputStream(buffIn);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2737
         TcpBufferedOutputStream outputStream = new TcpBufferedOutputStream(socket.getOutputStream(), ioBufferSize);
         this.dataOut = new DataOutputStream(outputStream);
         this.buffOut = outputStream;
@@ -662,10 +690,12 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     @Override
     public String getRemoteAddress() {
         if (socket != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
             SocketAddress address = socket.getRemoteSocketAddress();
             if (address instanceof InetSocketAddress) {
                 return "tcp://" + ((InetSocketAddress)address).getAddress().getHostAddress() + ":" + ((InetSocketAddress)address).getPort();
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-753
                 return "" + socket.getRemoteSocketAddress();
             }
         }
@@ -674,8 +704,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     @Override
     public <T> T narrow(Class<T> target) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1156
         if (target == Socket.class) {
             return target.cast(socket);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2737
         } else if ( target == TimeStampStream.class) {
             return target.cast(buffOut);
         }
@@ -684,6 +716,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     @Override
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         return receiveCounter;
     }
 
@@ -692,6 +725,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         public final ByteBuffer buffer;
 
         public InitBuffer(int readSize, ByteBuffer buffer) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             if (buffer == null) {
                 throw new IllegalArgumentException("Null buffer not allowed.");
             }
@@ -710,6 +744,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      *         connection.
      */
     private boolean setTrafficClass(Socket sock) throws SocketException,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
             IllegalArgumentException {
         if (sock == null
             || (!this.diffServChosen && !this.typeOfServiceChosen)) {
@@ -724,6 +759,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         sock.setTrafficClass(this.trafficClass);
 
         int resultTrafficClass = sock.getTrafficClass();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         if (this.trafficClass != resultTrafficClass) {
             // In the case where the user has specified the ECN bits (e.g. in
             // Type of Service) but the system won't allow the ECN bits to be
@@ -753,11 +789,13 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     @Override
     public WireFormat getWireFormat() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
         return wireFormat;
     }
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return null;
     }
 

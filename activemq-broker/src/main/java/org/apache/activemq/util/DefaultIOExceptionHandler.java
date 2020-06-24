@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
  public class DefaultIOExceptionHandler implements IOExceptionHandler {
 
     private static final Logger LOG = LoggerFactory
+//IC see: https://issues.apache.org/jira/browse/AMQ-3177
             .getLogger(DefaultIOExceptionHandler.class);
     protected BrokerService broker;
     private boolean ignoreAllErrors = false;
@@ -51,18 +52,23 @@ import org.slf4j.LoggerFactory;
 
     @Override
     public void handle(IOException exception) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
         if (!broker.isStarted() || ignoreAllErrors) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
             allowIOResumption();
             LOG.info("Ignoring IO exception, " + exception, exception);
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
         if (ignoreNoSpaceErrors) {
             Throwable cause = exception;
             while (cause != null && cause instanceof IOException) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3649
                 String message = cause.getMessage();
                 if (message != null && message.contains(noSpaceMessage)) {
                     LOG.info("Ignoring no space left exception, " + exception, exception);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
                     allowIOResumption();
                     return;
                 }
@@ -73,6 +79,7 @@ import org.slf4j.LoggerFactory;
         if (ignoreSQLExceptions) {
             Throwable cause = exception;
             while (cause != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5758
                 if (cause instanceof SQLException) {
                     String message = cause.getMessage();
 
@@ -90,6 +97,7 @@ import org.slf4j.LoggerFactory;
         }
 
         if (stopStartConnectors) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
             if (handlingException.compareAndSet(false, true)) {
                 LOG.info("Initiating stop/restart of transports on " + broker + " due to IO exception, " + exception, exception);
 
@@ -108,18 +116,22 @@ import org.slf4j.LoggerFactory;
                                 @Override
                                 public void run() {
                                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
                                         allowIOResumption();
                                         while (hasLockOwnership() && isPersistenceAdapterDown()) {
                                             LOG.info("waiting for broker persistence adapter checkpoint to succeed before restarting transports");
                                             TimeUnit.MILLISECONDS.sleep(resumeCheckSleepPeriod);
                                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4904
                                         if (hasLockOwnership()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4934
                                             Map<ActiveMQDestination, Destination> destinations = ((RegionBroker)broker.getRegionBroker()).getDestinationMap();
                                             for (Destination destination : destinations.values()) {
 
                                                 if (destination instanceof Queue) {
                                                     Queue queue = (Queue)destination;
                                                     if (queue.isResetNeeded()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
                                                         queue.clearPendingMessages(0);
                                                     }
                                                 }
@@ -156,6 +168,7 @@ import org.slf4j.LoggerFactory;
         }
 
         if (handlingException.compareAndSet(false, true)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
             stopBroker(exception);
         }
 
@@ -166,7 +179,9 @@ import org.slf4j.LoggerFactory;
     }
 
     protected void allowIOResumption() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
             if (broker.getPersistenceAdapter() != null) {
                 broker.getPersistenceAdapter().allowIOResumption();
             }
@@ -181,9 +196,11 @@ import org.slf4j.LoggerFactory;
             @Override
             public void run() {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4526
                     if( broker.isRestartAllowed() ) {
                         broker.requestRestart();
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6065
                     broker.setSystemExitOnShutdown(isSystemExitOnShutdown());
                     broker.stop();
                 } catch (Exception e) {
@@ -194,6 +211,7 @@ import org.slf4j.LoggerFactory;
     }
 
     protected boolean hasLockOwnership() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
         return true;
     }
 
@@ -211,6 +229,7 @@ import org.slf4j.LoggerFactory;
     }
 
     public boolean isIgnoreNoSpaceErrors() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
         return ignoreNoSpaceErrors;
     }
 
@@ -227,6 +246,7 @@ import org.slf4j.LoggerFactory;
     }
 
     public boolean isIgnoreSQLExceptions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1780
         return ignoreSQLExceptions;
     }
 
@@ -259,6 +279,7 @@ import org.slf4j.LoggerFactory;
     }
 
     public void setSystemExitOnShutdown(boolean systemExitOnShutdown) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6065
         this.systemExitOnShutdown = systemExitOnShutdown;
     }
 

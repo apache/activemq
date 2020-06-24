@@ -56,6 +56,7 @@ public interface Subscription extends SubscriptionRecovery {
      * Allows a consumer to pull a message on demand
      */
     Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
 
     /**
      * Returns true if this subscription is a Wildcard subscription.
@@ -144,6 +145,7 @@ public interface Subscription extends SubscriptionRecovery {
     long getDequeueCounter();
 
     SubscriptionStatistics getSubscriptionStatistics();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
 
     /**
      * @return the JMS selector on the current subscription
@@ -206,6 +208,7 @@ public interface Subscription extends SubscriptionRecovery {
      * @return the size in bytes of the messages awaiting acknowledgement
      */
     long getInFlightMessageSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
 
     /**
      * @return the in flight messages as a percentage of the prefetch size
@@ -239,6 +242,7 @@ public interface Subscription extends SubscriptionRecovery {
     boolean isSlowConsumer();
 
     void unmatched(MessageReference node) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2870
 
     /**
      * Returns the time since the last Ack message was received by this subscription.
@@ -249,8 +253,10 @@ public interface Subscription extends SubscriptionRecovery {
      * @return time of last received Ack message or Subscription create time if no Acks.
      */
     long getTimeOfLastMessageAck();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
 
     long  getConsumedCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4927
 
     void incrementConsumedCount();
 

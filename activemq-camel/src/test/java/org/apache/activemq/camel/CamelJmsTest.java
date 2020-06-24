@@ -73,6 +73,7 @@ public class CamelJmsTest extends CamelSpringTestSupport {
         // lets create a message
         Destination destination = getMandatoryBean(Destination.class, "consumeFrom");
         ConnectionFactory factory = getMandatoryBean(ConnectionFactory.class, "connectionFactory");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2370
         ProducerTemplate template = getMandatoryBean(ProducerTemplate.class, "camelTemplate");
         assertNotNull("template is valid", template);
         
@@ -88,6 +89,7 @@ public class CamelJmsTest extends CamelSpringTestSupport {
 
         Message message = consumer.receive(5000);
         assertNotNull("Should have received a message from destination: " + destination, message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3417
 
         TextMessage textMessage = assertIsInstanceOf(TextMessage.class, message);
         assertEquals("Message body", expectedBody, textMessage.getText());

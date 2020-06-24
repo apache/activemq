@@ -42,10 +42,12 @@ public class AuthorizationEntry extends DestinationMapEntry {
     private String groupClass;
 
     public String getGroupClass() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-908
         return groupClass;
     }
 
     private Set<Object> emptySet() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7423
         return Collections.emptySet();
     }
 
@@ -105,6 +107,7 @@ public class AuthorizationEntry extends DestinationMapEntry {
         StringTokenizer iter = new StringTokenizer(roles, ",");
         while (iter.hasMoreTokens()) {
             String name = iter.nextToken().trim();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3883
             String groupClass = (this.groupClass != null ? this.groupClass : DefaultAuthorizationMap.DEFAULT_GROUP_CLASS);
             answer.add(DefaultAuthorizationMap.createGroupPrincipal(name, groupClass));
         }
@@ -113,11 +116,13 @@ public class AuthorizationEntry extends DestinationMapEntry {
 
     @Override
     public boolean equals(Object o) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5697
         if (this == o) return true;
         if (!(o instanceof AuthorizationEntry)) return false;
 
         AuthorizationEntry that = (AuthorizationEntry) o;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5697
         if (adminACLs != null ? !adminACLs.equals(that.adminACLs) : that.adminACLs != null) return false;
         if (adminRoles != null ? !adminRoles.equals(that.adminRoles) : that.adminRoles != null) return false;
         if (groupClass != null ? !groupClass.equals(that.groupClass) : that.groupClass != null) return false;
@@ -132,6 +137,7 @@ public class AuthorizationEntry extends DestinationMapEntry {
     @Override
     public int hashCode() {
         int result = readACLs != null ? readACLs.hashCode() : 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5697
         result = 31 * result + (writeACLs != null ? writeACLs.hashCode() : 0);
         result = 31 * result + (adminACLs != null ? adminACLs.hashCode() : 0);
         result = 31 * result + (adminRoles != null ? adminRoles.hashCode() : 0);

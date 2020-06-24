@@ -37,6 +37,7 @@ public class LockFileTest {
 
         // will fail on windows b/c the file is open
         if ( lockFile.delete() ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5568
 
             assertFalse("no longer valid", underTest.keepAlive());
 
@@ -54,6 +55,8 @@ public class LockFileTest {
     public void testDeleteOnUnlockIfLocked() throws Exception {
 
         File lockFile = new File(IOHelper.getDefaultDataDirectory(), "lockToTest2");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5568
+//IC see: https://issues.apache.org/jira/browse/AMQ-5568
         IOHelper.mkdirs(lockFile.getParentFile());
         lockFile.createNewFile();
 

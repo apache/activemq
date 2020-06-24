@@ -174,13 +174,22 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             public void onMessage(Message msg) {
                 incThroughput();
                 sleep();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
 
                 recvCount.incrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3187
                 synchronized (recvCount) {
                     recvCount.notify();
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3283
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
                     commitTxIfNecessary();
                 } catch (JMSException ex) {
                     LOG.error("Error committing transaction: " + ex.getMessage());
@@ -193,6 +202,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             LOG.info("Starting to asynchronously receive " + client.getRecvCount() + " messages...");
             try {
                 while (recvCount.get() < count) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3187
                     synchronized (recvCount) {
                         recvCount.wait();
                     }
@@ -212,6 +222,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
 
     public MessageConsumer createJmsConsumer() throws JMSException {
         Destination[] dest = createDestinations(destCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5306
 
         Destination consumedDestination = dest[0];
         if (dest.length > 1) {
@@ -277,7 +288,9 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
      * configured via recvDelay property.
      */
     protected void sleep() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3186
         if (client.getRecvDelay() > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
             try {
                 LOG.trace("Sleeping for " + client.getRecvDelay() + " milliseconds");
                 Thread.sleep(client.getRecvDelay());

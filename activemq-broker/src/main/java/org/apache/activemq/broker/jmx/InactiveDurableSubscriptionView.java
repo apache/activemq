@@ -44,6 +44,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
      * @param subscription
      */
     public InactiveDurableSubscriptionView(ManagedRegionBroker broker, BrokerService brokerService, String clientId, SubscriptionInfo subInfo, Subscription subscription) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         super(broker, brokerService, clientId, null, subscription);
         this.broker = broker;
         this.subscriptionInfo = subInfo;
@@ -62,6 +63,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
      */
     @Override
     public String getDestinationName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-811
         return subscriptionInfo.getDestination().getPhysicalName();
     }
 
@@ -94,6 +96,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
      */
     @Override
     public String getSubscriptionName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1305
         return subscriptionInfo.getSubscriptionName();
     }
 
@@ -108,6 +111,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
     @Override
     protected ConsumerInfo getConsumerInfo() {
         // when inactive, consumer info is stale
+//IC see: https://issues.apache.org/jira/browse/AMQ-3442
         return null;
     }
 
@@ -145,6 +149,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
         context.setClientId(clientId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         brokerService.getBroker().removeSubscription(context, info);
     }
 
@@ -155,11 +160,13 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
 
     @Override
     public String getSelector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3459
         return subscriptionInfo.getSelector();
     }
 
     @Override
     public void removeMessage(@MBeanInfo("messageId") String messageId) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5938
         broker.remove(this, messageId);
     }
 

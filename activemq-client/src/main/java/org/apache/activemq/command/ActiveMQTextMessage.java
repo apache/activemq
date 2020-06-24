@@ -66,6 +66,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     @Override
     public String getJMSXMimeType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return "jms/text-message";
     }
 
@@ -79,10 +80,12 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     @Override
     public String getText() throws JMSException {
         ByteSequence content = getContent();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5857
 
         if (text == null && content != null) {
             text = decodeContent(content);
             setContent(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2929
             setCompressed(false);
         }
         return text;
@@ -118,11 +121,13 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     @Override
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
         super.beforeMarshall(wireFormat);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5857
         storeContentAndClear();
     }
 
     @Override
     public void storeContentAndClear() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         storeContent();
         text=null;
     }
@@ -131,6 +136,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     public void storeContent() {
         try {
             ByteSequence content = getContent();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5857
             String text = this.text;
             if (content == null && text != null) {
                 ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
@@ -141,6 +147,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
                     os = new DeflaterOutputStream(os);
                 }
                 DataOutputStream dataOut = new DataOutputStream(os);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5857
                 MarshallingSupport.writeUTF8(dataOut, text);
                 dataOut.close();
                 setContent(bytesOut.toByteSequence());
@@ -160,6 +167,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     @Override
     public boolean isContentMarshalled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6811
         return content != null || text == null;
     }
 
@@ -182,12 +190,14 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     @Override
     public int getSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5857
         String text = this.text;
         if (size == 0 && content == null && text != null) {
             size = getMinimumMessageSize();
             if (marshalledProperties != null) {
                 size += marshalledProperties.getLength();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2585
             size += text.length() * 2;
         }
         return super.getSize();
@@ -195,9 +205,11 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1978
         try {
             String text = this.text;
             if( text == null ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5857
                 text = decodeContent(getContent());
             }
             if (text != null) {

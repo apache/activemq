@@ -43,6 +43,7 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
 
     public ActiveMQDestination getDeadLetterQueueFor(Message message, Subscription subscription) {
         if (message.getDestination().isQueue()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4065
             return createDestination(message, queuePrefix, queueSuffix, useQueueForQueueMessages, subscription);
         } else {
             return createDestination(message, topicPrefix, topicSuffix, useQueueForTopicMessages, subscription);
@@ -75,6 +76,7 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
     }
 
     public String getQueueSuffix() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4065
         return queueSuffix;
     }
 
@@ -138,6 +140,7 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
     // -------------------------------------------------------------------------
     protected ActiveMQDestination createDestination(Message message,
                                                     String prefix,
+//IC see: https://issues.apache.org/jira/browse/AMQ-4065
                                                     String suffix,
                                                     boolean useQueue,
                                                     Subscription subscription ) {
@@ -157,6 +160,7 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
             name += "." + ((DurableTopicSubscription)subscription).getSubscriptionKey();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4065
         if (suffix != null && !suffix.isEmpty()) {
             name += suffix;
         }

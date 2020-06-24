@@ -56,6 +56,8 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
     @Override
     protected SslTransportServer createSslTransportServer(final URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         return new SslTransportServer(this, location, serverSocketFactory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4126
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
 
             @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
@@ -80,6 +82,7 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
     @Override
     public SslTransport createTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer)
             throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6418
 
         return new SslTransport(wireFormat, (SSLSocket)socket, initBuffer) {
 
@@ -100,6 +103,7 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
     @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         transport = new StompTransportFilter(transport, format, brokerContext);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
@@ -109,6 +113,7 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
     @Override
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
         transport = super.serverConfigure(transport, format, options);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
 
         MutexTransport mutex = transport.narrow(MutexTransport.class);
         if (mutex != null) {
@@ -126,6 +131,7 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
     @Override
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
         StompInactivityMonitor monitor = new StompInactivityMonitor(transport, format);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3897
 
         StompTransportFilter filter = (StompTransportFilter) transport.narrow(StompTransportFilter.class);
         filter.setInactivityMonitor(monitor);

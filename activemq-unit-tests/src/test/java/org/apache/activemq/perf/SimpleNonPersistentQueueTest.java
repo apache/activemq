@@ -48,6 +48,7 @@ public class SimpleNonPersistentQueueTest extends SimpleQueueTest {
     @Override
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
         PerfConsumer result =  new PerfConsumer(fac, dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
         result.setInitialDelay(10*1000);
         boolean enableAudit = numberOfConsumers <= 1;
         System.err.println("Enable Audit = " + enableAudit);

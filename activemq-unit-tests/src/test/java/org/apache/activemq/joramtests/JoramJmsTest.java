@@ -45,11 +45,13 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 public class JoramJmsTest extends TestCase {
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util,java.lang");
     }
 
     public static Test suite() {
         TestSuite suite = new TestSuite();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4146
         suite.addTestSuite(SelectorTest.class);
         suite.addTestSuite(ConnectionTest.class);
         suite.addTestSuite(TopicConnectionTest.class);
@@ -65,8 +67,11 @@ public class JoramJmsTest extends TestCase {
         suite.addTestSuite(SessionTest.class);
         suite.addTestSuite(TopicSessionTest.class);
         suite.addTestSuite(TemporaryTopicTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3944
         suite.addTestSuite(UnifiedSessionTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3945
         suite.addTestSuite(QueueBrowserTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3947
         suite.addTestSuite(MessagePropertyTest.class);
         return suite;
     }

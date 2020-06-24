@@ -31,6 +31,7 @@ public class TwoBrokerFailoverClusterTest extends FailoverClusterTestSupport {
         getBroker(BROKER_B_NAME).waitUntilStarted();
 
         Thread.sleep(2000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
         setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")?randomize=false&jms.watchTopicAdvisories=false");
         createClients();
 
@@ -46,6 +47,7 @@ public class TwoBrokerFailoverClusterTest extends FailoverClusterTestSupport {
 
         Thread.sleep(1000);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
         assertAllConnected(NUMBER_OF_CLIENTS);
         assertAllConnectedTo(BROKER_B_CLIENT_TC_ADDRESS);
 

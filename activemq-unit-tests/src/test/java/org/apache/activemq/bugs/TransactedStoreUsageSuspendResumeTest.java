@@ -87,6 +87,7 @@ public class TransactedStoreUsageSuspendResumeTest {
                 do {
                     Message message = consumer.receive(5000);
                     if (message != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
                         session.commit();
                         messagesReceivedCountDown.countDown();
                     }
@@ -115,8 +116,10 @@ public class TransactedStoreUsageSuspendResumeTest {
         broker.setPersistent(true);
 
         KahaDBPersistenceAdapter kahaDB = new KahaDBPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5542
         kahaDB.setJournalMaxFileLength(256 * 1024);
         kahaDB.setCleanupInterval(10*1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         kahaDB.setCompactAcksAfterNoGC(5);
         broker.setPersistenceAdapter(kahaDB);
 
@@ -148,6 +151,7 @@ public class TransactedStoreUsageSuspendResumeTest {
         });
         sendExecutor.shutdown();
         sendExecutor.awaitTermination(10, TimeUnit.MINUTES);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
 
         boolean allMessagesReceived = messagesReceivedCountDown.await(10, TimeUnit.MINUTES);
         if (!allMessagesReceived) {
@@ -161,6 +165,7 @@ public class TransactedStoreUsageSuspendResumeTest {
         assertTrue("Got all messages: " + messagesReceivedCountDown, allMessagesReceived);
 
         // give consumers a chance to exit gracefully
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         TimeUnit.SECONDS.sleep(5);
     }
 
@@ -178,6 +183,7 @@ public class TransactedStoreUsageSuspendResumeTest {
         BytesMessage message = session.createBytesMessage();
         message.writeBytes(new byte[10]);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5542
         for (int i=0; i<1240; i++) {
             // mostly fill the store with retained messages
             // so consumer only has a small bit of store usage to work with

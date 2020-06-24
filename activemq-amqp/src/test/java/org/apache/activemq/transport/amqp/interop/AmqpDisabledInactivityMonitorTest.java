@@ -52,6 +52,7 @@ public class AmqpDisabledInactivityMonitorTest extends AmqpClientTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
 
@@ -64,6 +65,7 @@ public class AmqpDisabledInactivityMonitorTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.createConnection());
         connection.setIdleTimeout(TEST_IDLE_TIMEOUT);
         assertNotNull(connection);

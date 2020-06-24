@@ -92,6 +92,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
     public void close() {
         if (!isClosed() && isOpened()) {
             sendToActiveMQ(new RemoveInfo(getProducerId()), new ResponseHandler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6341
 
                 @Override
                 public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
@@ -138,7 +139,9 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
     protected InboundTransformer getTransformer() {
         if (inboundTransformer == null) {
             String transformer = session.getConnection().getConfiguredTransformer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5737
             if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_JMS)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
                 inboundTransformer = new JMSMappingInboundTransformer();
             } else if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_NATIVE)) {
                 inboundTransformer = new AMQPNativeInboundTransformer();
@@ -159,6 +162,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
 
             InboundTransformer transformer = getTransformer();
             ActiveMQMessage message = transformer.transform(em);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
             current = null;
 
@@ -199,6 +203,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
 
             final DeliveryState remoteState = delivery.getRemoteState();
             if (remoteState != null && remoteState instanceof TransactionalState) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5847
                 TransactionalState txState = (TransactionalState) remoteState;
                 TransactionId txId = new LocalTransactionId(session.getConnection().getConnectionId(), toLong(txState.getTxnId()));
                 session.enlist(txId);
@@ -208,6 +213,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
             message.onSend();
 
             sendsInFlight++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6498
 
             sendToActiveMQ(message, createResponseHandler(delivery));
         }
@@ -220,6 +226,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
             public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
                 if (!delivery.remotelySettled()) {
                     if (response.isException()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6015
                         ExceptionResponse error = (ExceptionResponse) response;
                         Rejected rejected = new Rejected();
                         ErrorCondition condition = new ErrorCondition();
@@ -254,6 +261,8 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
                     getEndpoint().flow((int) (getConfiguredReceiverCredit() * .7));
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5723
+//IC see: https://issues.apache.org/jira/browse/AMQ-5723
                 delivery.settle();
                 session.pumpProtonToSocket();
             }

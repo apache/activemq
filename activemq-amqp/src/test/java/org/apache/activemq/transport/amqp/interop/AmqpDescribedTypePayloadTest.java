@@ -133,6 +133,9 @@ public class AmqpDescribedTypePayloadTest extends AmqpClientTestSupport {
     public void testDescribedTypeMessageRoundTrips() throws Exception {
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 

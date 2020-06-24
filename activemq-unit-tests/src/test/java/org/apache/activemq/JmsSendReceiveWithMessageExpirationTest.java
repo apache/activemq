@@ -115,6 +115,7 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
 
      public void testConsumeExpiredQueueAndDlq() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2876
          MessageProducer producerNormal = createProducer(0);
          MessageProducer producerExpire = createProducer(500);
 
@@ -156,6 +157,8 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
          };
 
          assertEquals("got all (normal plus one with ttl) messages", messageCount + 1, messages.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5274
+//IC see: https://issues.apache.org/jira/browse/AMQ-2876
 
          Vector<Message> dlqMessages = new Vector<Message>();
          while ((received = dlqConsumer.receive(1000)) != null) {
@@ -165,6 +168,8 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
          assertEquals("got dlq messages", data.length - 1, dlqMessages.size());
 
          final DestinationStatistics view = getDestinationStatistics(BrokerRegistry.getInstance().findFirst(), ActiveMQDestination.transform(consumerDestination));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5274
+//IC see: https://issues.apache.org/jira/browse/AMQ-2876
 
          // wait for all to inflight to expire
          assertTrue("all inflight messages expired ", Wait.waitFor(new Wait.Condition() {

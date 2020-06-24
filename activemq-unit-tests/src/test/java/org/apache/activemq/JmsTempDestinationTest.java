@@ -262,6 +262,7 @@ public class JmsTempDestinationTest extends TestCase {
         connections.add(tempConnection);
         Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final TemporaryQueue queue = tempSession.createTemporaryQueue();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3985
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         connection.start();
@@ -322,6 +323,7 @@ public class JmsTempDestinationTest extends TestCase {
     }
 
     public void testSlowConsumerDoesNotBlockFastTempUsers() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3985
         ActiveMQConnectionFactory advisoryConnFactory = new ActiveMQConnectionFactory("vm://localhost?asyncQueueDepth=20");
         Connection connection = advisoryConnFactory.createConnection();
         connections.add(connection);

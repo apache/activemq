@@ -59,7 +59,9 @@ public class BrokerXmlConfigStartTest {
     public static Collection<String[]> getTestParameters() throws IOException {
         List<String[]> configUrls = new ArrayList<String[]>();
         configUrls.add(new String[]{"xbean:src/release/conf/activemq.xml", "activemq.xml"});
+//IC see: https://issues.apache.org/jira/browse/AMQ-4606
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5216
         String osName=System.getProperty("os.name");
         LOG.info("os.name {} ", osName);
         File sampleConfDir = new File("target/conf");
@@ -93,6 +95,7 @@ public class BrokerXmlConfigStartTest {
         LOG.info("Broker config: " + configUrl);
         System.err.println("Broker config: " + configUrl);
         broker = BrokerFactory.createBroker(configUrl);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4606
         if ("activemq-leveldb-replicating.xml".equals(shortName)) {
             try {
                 broker.start();
@@ -128,6 +131,7 @@ public class BrokerXmlConfigStartTest {
         } finally {
             if (broker != null) {
                 broker.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4254
                 broker.waitUntilStopped();
                 broker = null;
             }

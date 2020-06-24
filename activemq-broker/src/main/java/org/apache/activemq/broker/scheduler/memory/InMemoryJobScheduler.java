@@ -165,6 +165,7 @@ public class InMemoryJobScheduler implements JobScheduler {
 
     @Override
     public List<Job> getNextScheduleJobs() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
         List<Job> result = new ArrayList<>();
         lock.readLock().lock();
         try {
@@ -194,6 +195,8 @@ public class InMemoryJobScheduler implements JobScheduler {
 
     @Override
     public List<Job> getAllJobs(long start, long finish) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
         final List<Job> result = new ArrayList<>();
         this.lock.readLock().lock();
         try {
@@ -224,6 +227,7 @@ public class InMemoryJobScheduler implements JobScheduler {
         long executionTime = 0;
         // round startTime - so we can schedule more jobs at the same time
         startTime = ((startTime + 500) / 500) * 500;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
 
         if (cronEntry != null && cronEntry.length() > 0) {
             try {
@@ -274,6 +278,7 @@ public class InMemoryJobScheduler implements JobScheduler {
     private void doReschedule(InMemoryJob job, long nextExecutionTime) {
         job.setNextTime(nextExecutionTime);
         job.incrementExecutionCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6159
         if (!job.isCron()) {
             job.decrementRepeatCount();
         }
@@ -385,6 +390,7 @@ public class InMemoryJobScheduler implements JobScheduler {
          * @return a Collection containing all the managed jobs for this task.
          */
         public Collection<InMemoryJob> getAllJobs() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
             return new ArrayList<>(jobs.values());
         }
 

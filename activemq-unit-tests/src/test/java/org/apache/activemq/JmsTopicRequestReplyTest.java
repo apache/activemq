@@ -93,6 +93,7 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
         } else {
             fail("Should have received a reply by now");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2716
         replyConsumer.close();
         deleteTemporaryDestination(replyDestination);
 
@@ -212,6 +213,7 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
     }
     
     protected void deleteTemporaryDestination(Destination dest) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2716
         if (topic) {
             ((TemporaryTopic)dest).delete();
         } else {

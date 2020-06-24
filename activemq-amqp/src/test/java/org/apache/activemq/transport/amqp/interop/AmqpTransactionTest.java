@@ -61,6 +61,8 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 30000)
     public void testBeginAndRollbackTransaction() throws Exception {
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
         assertNotNull(session);
@@ -154,6 +156,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testReceiveAfterConnectionClose() throws Exception {
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -287,6 +290,8 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     public void testMultipleSessionReceiversInSingleTXNWithRollback() throws Exception {
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
 
         // Load up the Queue with some messages
         {
@@ -422,6 +427,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testAcceptedButNotSettledInTXRemainsAquiredCanBeAccepted() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
         doTestAcceptedButNotSettledInTXRemainsAquired(Accepted.getInstance());
     }
 
@@ -783,6 +789,12 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
 
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
 
         // Root TXN session controls all TXN send lifetimes.
         AmqpSession txnSession = connection.createSession();
@@ -860,6 +872,13 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
 
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
 
         // Root TXN session controls all TXN send lifetimes.
         AmqpSession txnSession = connection.createSession();
@@ -910,6 +929,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
 
         // Should be ten message available for dispatch given that we sent and committed one, and
         // releases another we had previously received.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
         receiver.flow(10);
         for (int i = 1; i <= NUM_MESSAGES; ++i) {
             AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);

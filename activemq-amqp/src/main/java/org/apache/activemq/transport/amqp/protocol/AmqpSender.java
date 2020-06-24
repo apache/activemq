@@ -108,6 +108,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
         // We don't support second so enforce it as First and let remote decide what to do
         this.endpoint.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
 
         // Match what the sender mode is
         this.endpoint.setSenderSettleMode(endpoint.getRemoteSenderSettleMode());
@@ -118,8 +119,10 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
     @Override
     public void open() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5738
         if (!isClosed()) {
             session.registerSender(getConsumerId(), this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
             subscription = (AbstractSubscription)session.getConnection().lookupPrefetchSubscription(consumerInfo);
             prefetchExtension = subscription.getPrefetchExtension();
         }
@@ -134,6 +137,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
 
             sendToActiveMQ(removeCommand, new ResponseHandler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6341
 
                 @Override
                 public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
@@ -153,6 +157,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
 
             sendToActiveMQ(removeCommand, new ResponseHandler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6341
 
                 @Override
                 public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
@@ -162,9 +167,11 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                         rsi.setSubscriptionName(getEndpoint().getName());
                         rsi.setClientId(session.getConnection().getClientId());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
                         sendToActiveMQ(rsi);
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5738
                     session.unregisterSender(getConsumerId());
                     AmqpSender.super.close();
                 }
@@ -180,6 +187,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         if (LOG.isTraceEnabled()) {
             LOG.trace("Flow: draining={}, drain={} credit={}, currentCredit={}, senderDeliveryCount={} - Sub={}",
                     draining, endpoint.getDrain(),
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
                     endpoint.getCredit(), currentCreditRequest, logicalDeliveryCount, subscription);
         }
 
@@ -198,6 +206,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 pullRequest.setTimeout(-1);
                 pullRequest.setAlwaysSignalDone(true);
                 pullRequest.setQuantity(endpointCredit);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
 
                 LOG.trace("Pull case -> consumer pull request quantity = {}", endpointCredit);
 
@@ -208,6 +217,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 pumpOutbound();
                 getEndpoint().drained();
                 session.pumpProtonToSocket();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
                 currentCreditRequest = 0;
                 logicalDeliveryCount = 0;
             }
@@ -253,6 +263,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 Outcome outcome = txState.getOutcome();
                 if (outcome instanceof Accepted) {
                     TransactionId txId = new LocalTransactionId(session.getConnection().getConnectionId(), toLong(txState.getTxnId()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
 
                     // Store the message sent in this TX we might need to re-send on rollback
                     // and we need to ACK it on commit.
@@ -280,6 +291,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 // the DLQ.  If a custom redelivery policy is used on the broker the message
                 // can still be redelivered based on the configation of that policy.
                 LOG.trace("onDelivery: Rejected state = {}, message poisoned.", state);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6464
                 settle(delivery, MessageAck.POSION_ACK_TYPE);
             } else if (state instanceof Released) {
                 LOG.trace("onDelivery: Released state = {}", state);
@@ -287,6 +299,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 settle(delivery, -1);
             } else if (state instanceof Modified) {
                 Modified modified = (Modified) state;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5890
                 if (Boolean.TRUE.equals(modified.getDeliveryFailed())) {
                     // increment delivery counter..
                     md.setRedeliveryCounter(md.getRedeliveryCounter() + 1);
@@ -309,6 +322,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     @Override
     public void commit(LocalTransactionId txnId) throws Exception {
         if (!dispatchedInTx.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
             for (final Delivery delivery : dispatchedInTx) {
                 MessageDispatch dispatch = (MessageDispatch) delivery.getContext();
 
@@ -343,6 +357,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
             LOG.trace("Rolling back {} messages for redelivery. ", dispatchedInTx.size());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
             for (Delivery delivery : dispatchedInTx) {
                 // Only settled deliveries should be re-dispatched, unsettled deliveries
                 // remain acquired on the remote end and can be accepted again in a new
@@ -389,6 +404,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
      *        The ConsumerControl command to process.
      */
     public void onConsumerControl(ConsumerControl control) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5707
         if (control.isClose()) {
             close(new ErrorCondition(AmqpError.INTERNAL_ERROR, "Receiver forcably closed"));
             session.pumpProtonToSocket();
@@ -419,6 +435,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     //----- Internal Implementation ------------------------------------------//
 
     public void pumpOutbound() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5738
         while (!isClosed()) {
             while (currentBuffer != null) {
                 int sent = getEndpoint().send(currentBuffer.data, currentBuffer.offset, currentBuffer.length);
@@ -432,6 +449,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                         }
                         currentBuffer = null;
                         currentDelivery = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
                         logicalDeliveryCount++;
                     }
                 } else {
@@ -448,6 +467,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
                 ActiveMQMessage temp = null;
                 if (md.getMessage() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7001
                     temp = (ActiveMQMessage) md.getMessage().copy();
                 }
 
@@ -457,6 +477,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     // It's the end of browse signal in response to a MessagePull
                     getEndpoint().drained();
                     draining = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
                     currentCreditRequest = 0;
                     logicalDeliveryCount = 0;
                 } else {
@@ -470,6 +491,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                         LOG.trace("Sender:[{}] browse complete.", getEndpoint().getName());
                         getEndpoint().drained();
                         draining = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
                         currentCreditRequest = 0;
                         logicalDeliveryCount = 0;
                     }
@@ -486,6 +508,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                             currentDelivery = getEndpoint().delivery(tag, 0, tag.length);
                         }
                         currentDelivery.setContext(md);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
                         currentDelivery.setMessageFormat((int) amqp.getMessageFormat());
                     } else {
                         // TODO: message could not be generated what now?
@@ -524,10 +547,12 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
                     if (response.isException()) {
                         if (response.isException()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6309
                             Throwable exception = ((ExceptionResponse) response).getException();
                             exception.printStackTrace();
                             getEndpoint().close();
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
                     } else {
                         delivery.settle();
                     }

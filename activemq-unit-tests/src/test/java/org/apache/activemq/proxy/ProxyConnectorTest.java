@@ -79,6 +79,7 @@ public class ProxyConnectorTest extends ProxyTestSupport {
         // Give broker enough time to receive and register the consumer info
         // Either that or make consumer retroactive
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1895
             Thread.sleep(2000);
         } catch (Exception e) {
             e.printStackTrace();

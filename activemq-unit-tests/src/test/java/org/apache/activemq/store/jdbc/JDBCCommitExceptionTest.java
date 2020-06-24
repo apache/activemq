@@ -80,6 +80,7 @@ public class JDBCCommitExceptionTest extends TestCase {
         int count = 0;
         WireFormat wireFormat = new OpenWireFormat();
         java.sql.Connection conn = ((JDBCPersistenceAdapter) broker.getPersistenceAdapter()).getDataSource().getConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
         PreparedStatement statement = conn.prepareStatement("SELECT ID, XID, MSG FROM ACTIVEMQ_MSGS");
         ResultSet result = statement.executeQuery();
         LOG.info("Messages left in broker after test");
@@ -155,9 +156,11 @@ public class JDBCCommitExceptionTest extends TestCase {
     protected BrokerService createBroker() throws Exception {
 
         BrokerService broker = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         broker.setAdvisorySupport(false);
         jdbc = new BrokenPersistenceAdapter();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         jdbc.setUseLock(false);
         jdbc.deleteAllMessages();
 

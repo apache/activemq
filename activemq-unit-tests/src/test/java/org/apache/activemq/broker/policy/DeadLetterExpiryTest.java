@@ -66,6 +66,7 @@ public class DeadLetterExpiryTest extends DeadLetterTest {
         pMap.put(new ActiveMQQueue("loop"), buggyLoopingDLQPolicy);
         pMap.put(new ActiveMQQueue("DLQ.loop"), buggyLoopingDLQPolicy);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6702
         SharedDeadLetterStrategy auditConfigured = new SharedDeadLetterStrategy();
         auditConfigured.setDeadLetterQueue(new ActiveMQQueue("DLQ.auditConfigured"));
         auditConfigured.setProcessNonPersistent(true);
@@ -143,6 +144,7 @@ public class DeadLetterExpiryTest extends DeadLetterTest {
     }
 
     public void testAuditConfigured() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6702
         destination = new ActiveMQQueue("Comp.One,Comp.Two");
         connection.start();
 
@@ -214,6 +216,7 @@ public class DeadLetterExpiryTest extends DeadLetterTest {
 
     protected void setUp() throws Exception {
         transactedMode = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6702
         deliveryMode = DeliveryMode.PERSISTENT;
         timeToLive = 0;
         super.setUp();

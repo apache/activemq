@@ -96,6 +96,7 @@ public class PropertiesViewFilter implements QueryFilter {
         Map<Object, Object> newData;
         try {
             // Lets try to use the same class as the original
+//IC see: https://issues.apache.org/jira/browse/AMQ-5724
             newData = new LinkedHashMap(data.getClass().newInstance());
         } catch (Exception e) {
             // Lets use a default HashMap

@@ -123,6 +123,7 @@ public class MQTTTest extends MQTTTestSupport {
         String topic = "foo/bah";
 
         subscriptionProvider.subscribe(topic, AT_MOST_ONCE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5108
 
         final CountDownLatch latch = new CountDownLatch(NUM_MESSAGES / 2);
 
@@ -150,12 +151,14 @@ public class MQTTTest extends MQTTTestSupport {
         for (int i = 0; i < NUM_MESSAGES; i++) {
             String payload = "Message " + i;
             if (i == NUM_MESSAGES / 2) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5530
                 latch.await(20, TimeUnit.SECONDS);
                 subscriptionProvider.unsubscribe(topic);
             }
             publishProvider.publish(topic, payload.getBytes(), AT_LEAST_ONCE);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         latch.await(20, TimeUnit.SECONDS);
         assertEquals(0, latch.getCount());
         subscriptionProvider.disconnect();
@@ -186,10 +189,12 @@ public class MQTTTest extends MQTTTestSupport {
     public void testSendAtLeastOnceReceiveExactlyOnce() throws Exception {
         final MQTTClientProvider provider = getMQTTClientProvider();
         initializeConnection(provider);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         provider.subscribe("foo", EXACTLY_ONCE);
         for (int i = 0; i < NUM_MESSAGES; i++) {
             String payload = "Test Message: " + i;
             provider.publish("foo", payload.getBytes(), AT_LEAST_ONCE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
             byte[] message = provider.receive(2000);
             assertNotNull("Should get a message", message);
             assertEquals(payload, new String(message));
@@ -216,6 +221,7 @@ public class MQTTTest extends MQTTTestSupport {
     public void testSendAndReceiveAtMostOnce() throws Exception {
         final MQTTClientProvider provider = getMQTTClientProvider();
         initializeConnection(provider);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         provider.subscribe("foo", AT_MOST_ONCE);
         for (int i = 0; i < NUM_MESSAGES; i++) {
             String payload = "Test Message: " + i;
@@ -231,6 +237,7 @@ public class MQTTTest extends MQTTTestSupport {
     public void testSendAndReceiveAtLeastOnce() throws Exception {
         final MQTTClientProvider provider = getMQTTClientProvider();
         initializeConnection(provider);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         provider.subscribe("foo", AT_LEAST_ONCE);
         for (int i = 0; i < NUM_MESSAGES; i++) {
             String payload = "Test Message: " + i;
@@ -250,6 +257,7 @@ public class MQTTTest extends MQTTTestSupport {
         final MQTTClientProvider subscriber = getMQTTClientProvider();
         initializeConnection(subscriber);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         subscriber.subscribe("foo", EXACTLY_ONCE);
         for (int i = 0; i < NUM_MESSAGES; i++) {
             String payload = "Test Message: " + i;
@@ -274,6 +282,7 @@ public class MQTTTest extends MQTTTestSupport {
         final MQTTClientProvider subscriber = getMQTTClientProvider();
         initializeConnection(subscriber);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         subscriber.subscribe("foo", AT_LEAST_ONCE);
         for (int i = 0; i < 10; i++) {
             publisher.publish("foo", payload, AT_LEAST_ONCE);
@@ -296,8 +305,10 @@ public class MQTTTest extends MQTTTestSupport {
 
         String RETAINED = "retained";
         publisher.publish("foo", RETAINED.getBytes(), AT_LEAST_ONCE, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5066
 
         List<String> messages = new ArrayList<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         for (int i = 0; i < 10; i++) {
             messages.add("TEST MESSAGE:" + i);
         }
@@ -314,6 +325,7 @@ public class MQTTTest extends MQTTTestSupport {
         for (int i = 0; i < 10; i++) {
             msg = subscriber.receive(5000);
             assertNotNull(msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5066
             assertEquals(messages.get(i), new String(msg));
         }
         subscriber.disconnect();
@@ -333,6 +345,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 30 * 1000)
     public void testConnectWithUserButNoPassword() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5881
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("test");
         mqtt.setUserName("foo");
@@ -361,6 +374,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 2 *  60 * 1000)
     public void testMQTTWildcard() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5377
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("");
         mqtt.setCleanSession(true);
@@ -380,6 +394,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 2 *  60 * 1000)
     public void testMQTTCompositeDestinations() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6253
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("");
         mqtt.setCleanSession(true);
@@ -417,13 +432,16 @@ public class MQTTTest extends MQTTTestSupport {
         connection.connect();
 
         final String RETAINED = "RETAINED";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         String[] topics = { "TopicA", "/TopicA", "/", "TopicA/", "//" };
         for (String topic : topics) {
             // test retained message
             connection.publish(topic, (RETAINED + topic).getBytes(), QoS.AT_LEAST_ONCE, true);
 
             connection.subscribe(new Topic[] { new Topic(topic, QoS.AT_LEAST_ONCE) });
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
             Message msg = connection.receive(5, TimeUnit.SECONDS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
             assertNotNull("No message for " + topic, msg);
             assertEquals(RETAINED + topic, new String(msg.getPayload()));
             msg.ack();
@@ -450,6 +468,7 @@ public class MQTTTest extends MQTTTestSupport {
             assertNotEquals("Subscribe failed " + wildcard, (byte)0x80, qos[0]);
 
             // test retained messages
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
             Message msg = connection.receive(2, TimeUnit.SECONDS);
             do {
                 assertNotNull("RETAINED null " + wildcard, msg);
@@ -466,6 +485,7 @@ public class MQTTTest extends MQTTTestSupport {
             msg = connection.receive(1000, TimeUnit.MILLISECONDS);
             do {
                 assertNotNull("Non-retained Null " + wildcard, msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
                 assertTrue("Non-retained matching " + wildcard + " " + msg.getTopic(), pattern.matcher(msg.getTopic()).matches());
                 msg.ack();
                 msg = connection.receive(1000, TimeUnit.MILLISECONDS);
@@ -501,6 +521,7 @@ public class MQTTTest extends MQTTTestSupport {
             connection.connect();
             connection.publish(topic, topic.getBytes(), QoS.EXACTLY_ONCE, true);
             connection.subscribe(new Topic[]{new Topic(topic, QoS.valueOf(topic))});
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
 
             final Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
             assertNotNull(msg);
@@ -512,7 +533,9 @@ public class MQTTTest extends MQTTTestSupport {
             }
             assertEquals(i, actualQoS[0]);
             msg.ack();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5074
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
             connection.unsubscribe(new String[]{topic});
             connection.disconnect();
         }
@@ -524,6 +547,8 @@ public class MQTTTest extends MQTTTestSupport {
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("foo");
         mqtt.setKeepAlive((short) 2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
 
         final int[] actualQoS = { -1 };
         mqtt.setTracer(new Tracer() {
@@ -531,6 +556,8 @@ public class MQTTTest extends MQTTTestSupport {
             public void onReceive(MQTTFrame frame) {
                 // validate the QoS
                 if (frame.messageType() == PUBLISH.TYPE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5074
+//IC see: https://issues.apache.org/jira/browse/AMQ-5074
                     actualQoS[0] = frame.qos().ordinal();
                 }
             }
@@ -545,10 +572,12 @@ public class MQTTTest extends MQTTTestSupport {
         QoS[] qoss = { QoS.AT_MOST_ONCE, QoS.AT_MOST_ONCE, QoS.AT_LEAST_ONCE, QoS.EXACTLY_ONCE };
         for (QoS qos : qoss) {
             connection.subscribe(new Topic[]{new Topic("TopicA", qos)});
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
 
             final Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
             assertNotNull("No message for " + qos, msg);
             assertEquals(RETAIN, new String(msg.getPayload()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5074
             msg.ack();
             int waitCount = 0;
             while (actualQoS[0] == -1 && waitCount < 10) {
@@ -556,9 +585,11 @@ public class MQTTTest extends MQTTTestSupport {
                 waitCount++;
             }
             assertEquals(qos.ordinal(), actualQoS[0]);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
             actualQoS[0] = -1;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         connection.unsubscribe(new String[] { "TopicA" });
         connection.disconnect();
 
@@ -566,6 +597,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 120 * 1000)
     public void testRetainedMessage() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5303
         doTestRetainedMessages("TopicA");
     }
 
@@ -575,12 +607,14 @@ public class MQTTTest extends MQTTTestSupport {
     }
 
     public void doTestRetainedMessages(String topicName) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive((short) 60);
 
         final String RETAIN = "RETAIN";
         final String TOPICA = topicName;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         final String[] clientIds = { null, "foo", "durable" };
         for (String clientId : clientIds) {
             boolean cleanSession = !"durable".equals(clientId);
@@ -609,6 +643,7 @@ public class MQTTTest extends MQTTTestSupport {
             msg.ack();
             assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
             connection.unsubscribe(new String[]{TOPICA});
+//IC see: https://issues.apache.org/jira/browse/AMQ-5298
 
             // clear retained message and check that we don't receive it
             connection.publish(TOPICA, "".getBytes(), QoS.AT_MOST_ONCE, true);
@@ -640,6 +675,7 @@ public class MQTTTest extends MQTTTestSupport {
             assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
 
             LOG.info("Test now unsubscribing from: {} for the last time", TOPICA);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5298
             connection.unsubscribe(new String[]{TOPICA});
             connection.disconnect();
         }
@@ -649,6 +685,7 @@ public class MQTTTest extends MQTTTestSupport {
     public void testUniqueMessageIds() throws Exception {
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("foo");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5108
         mqtt.setKeepAlive((short) 2);
         mqtt.setCleanSession(true);
 
@@ -684,6 +721,7 @@ public class MQTTTest extends MQTTTestSupport {
         // publish retained message
         connection.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         String[] subs = { TOPIC, "TopicA/#", "TopicA/+" };
         for (int i = 0; i < qoss.length; i++) {
             connection.subscribe(new Topic[] { new Topic(subs[i], qoss[i]) });
@@ -693,6 +731,7 @@ public class MQTTTest extends MQTTTestSupport {
         connection.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
         int received = 0;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         Message msg = connection.receive(2000, TimeUnit.MILLISECONDS);
         do {
             assertNotNull(msg);
@@ -703,6 +742,7 @@ public class MQTTTest extends MQTTTestSupport {
                 Thread.sleep(1000);
                 waitCount++;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
             msg = connection.receive(2000, TimeUnit.MILLISECONDS);
         } while (msg != null && received++ < subs.length * 2);
         assertEquals("Unexpected number of messages", subs.length * 2, received + 1);
@@ -734,6 +774,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testResendMessageId() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5108
         final MQTT mqtt = createMQTTConnection("resend", false);
         mqtt.setKeepAlive((short) 5);
 
@@ -759,9 +800,11 @@ public class MQTTTest extends MQTTTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5092
         BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
         final String TOPIC = "TopicA/";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         final String[] topics = new String[] { TOPIC, "TopicA/+" };
         connection.subscribe(new Topic[] { new Topic(topics[0], QoS.AT_LEAST_ONCE), new Topic(topics[1], QoS.EXACTLY_ONCE) });
 
@@ -773,6 +816,7 @@ public class MQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return publishList.size() == 2;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(100));
         assertEquals(2, publishList.size());
 
@@ -786,10 +830,12 @@ public class MQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return publishList.size() == 4;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(100));
         assertEquals(4, publishList.size());
 
         // make sure we received duplicate message ids
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         assertTrue(publishList.get(0).messageId() == publishList.get(2).messageId() || publishList.get(0).messageId() == publishList.get(3).messageId());
         assertTrue(publishList.get(1).messageId() == publishList.get(3).messageId() || publishList.get(1).messageId() == publishList.get(2).messageId());
         assertTrue(publishList.get(2).dup() && publishList.get(3).dup());
@@ -833,6 +879,7 @@ public class MQTTTest extends MQTTTestSupport {
         connection.connect();
         final String TOPIC = "TopicA/";
         connection.subscribe(new Topic[] { new Topic(TOPIC, QoS.EXACTLY_ONCE) });
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
 
         // publish non-retained messages
         final int TOTAL_MESSAGES = 10;
@@ -873,6 +920,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 90 * 1000)
     public void testPacketIdGeneratorCleanSession() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         final String[] cleanClientIds = new String[] { "", "clean-packetid", null };
         final Map<Short, PUBLISH> publishMap = new ConcurrentHashMap<Short, PUBLISH>();
         MQTT[] mqtts = new MQTT[cleanClientIds.length];
@@ -912,6 +960,7 @@ public class MQTTTest extends MQTTTestSupport {
             connection.connect();
             final String TOPIC = "TopicA/";
             connection.subscribe(new Topic[] { new Topic(TOPIC, QoS.EXACTLY_ONCE) });
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
 
             // publish non-retained message
             connection.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
@@ -932,6 +981,7 @@ public class MQTTTest extends MQTTTestSupport {
     @Test(timeout = 60 * 1000)
     public void testClientConnectionFailure() throws Exception {
         MQTT mqtt = createMQTTConnection("reconnect", false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5112
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
         Wait.waitFor(new Wait.Condition() {
@@ -942,14 +992,17 @@ public class MQTTTest extends MQTTTestSupport {
         });
 
         final String TOPIC = "TopicA";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         final byte[] qos = connection.subscribe(new Topic[] { new Topic(TOPIC, QoS.EXACTLY_ONCE) });
         assertEquals(QoS.EXACTLY_ONCE.ordinal(), qos[0]);
         connection.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
         // kill transport
         connection.kill();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5112
         final BlockingConnection newConnection = mqtt.blockingConnection();
         newConnection.connect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -967,9 +1020,11 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testNoClientId() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5511
         final MQTT mqtt = createMQTTConnection("", true);
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -995,6 +1050,7 @@ public class MQTTTest extends MQTTTestSupport {
         BlockingConnection notClean = mqttNotClean.blockingConnection();
         final String TOPIC = "TopicA";
         notClean.connect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         notClean.subscribe(new Topic[] { new Topic(TOPIC, QoS.EXACTLY_ONCE) });
         notClean.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
         notClean.disconnect();
@@ -1013,8 +1069,10 @@ public class MQTTTest extends MQTTTestSupport {
         final MQTT mqttClean = createMQTTConnection(CLIENTID, true);
         final BlockingConnection clean = mqttClean.blockingConnection();
         clean.connect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         msg = clean.receive(2000, TimeUnit.MILLISECONDS);
         assertNull(msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         clean.subscribe(new Topic[] { new Topic(TOPIC, QoS.EXACTLY_ONCE) });
         clean.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
         clean.disconnect();
@@ -1029,6 +1087,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testSendMQTTReceiveJMS() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         doTestSendMQTTReceiveJMS("foo.*");
     }
 
@@ -1037,6 +1096,7 @@ public class MQTTTest extends MQTTTestSupport {
         initializeConnection(provider);
 
         // send retained message
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         final String RETAINED = "RETAINED";
         provider.publish("foo/bah", RETAINED.getBytes(), AT_LEAST_ONCE, true);
 
@@ -1045,10 +1105,12 @@ public class MQTTTest extends MQTTTestSupport {
         activeMQConnection.setUseRetroactiveConsumer(true);
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         javax.jms.Topic jmsTopic = s.createTopic(destinationName);
         MessageConsumer consumer = s.createConsumer(jmsTopic);
 
         // check whether we received retained message on JMS subscribe
+//IC see: https://issues.apache.org/jira/browse/AMQ-4112
         ActiveMQMessage message = (ActiveMQMessage) consumer.receive(5000);
         assertNotNull("Should get retained message", message);
         ByteSequence bs = message.getContent();
@@ -1070,6 +1132,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 2 * 60 * 1000)
     public void testSendJMSReceiveMQTT() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         doTestSendJMSReceiveMQTT("foo.far");
     }
 
@@ -1078,9 +1141,11 @@ public class MQTTTest extends MQTTTestSupport {
         initializeConnection(provider);
 
         ActiveMQConnection activeMQConnection = (ActiveMQConnection) cf.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         activeMQConnection.setUseRetroactiveConsumer(true);
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         javax.jms.Topic jmsTopic = s.createTopic(destinationName);
         MessageProducer producer = s.createProducer(jmsTopic);
 
@@ -1093,6 +1158,7 @@ public class MQTTTest extends MQTTTestSupport {
         sendMessage.setIntProperty(MQTTProtocolConverter.QOS_PROPERTY_NAME, 0);
         producer.send(sendMessage);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         provider.subscribe("foo/+", AT_MOST_ONCE);
         byte[] message = provider.receive(10000);
         assertNotNull("Should get retained message", message);
@@ -1132,6 +1198,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testTurnOffInactivityMonitor() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5292
         stopBroker();
         protocolConfig = "transport.useInactivityMonitor=false";
         startBroker();
@@ -1166,6 +1233,7 @@ public class MQTTTest extends MQTTTestSupport {
         connection.subscribe(new Topic[] { new Topic(DOLLAR_TOPIC, QoS.EXACTLY_ONCE)});
         connection.publish(DOLLAR_TOPIC, DOLLAR_TOPIC.getBytes(), QoS.EXACTLY_ONCE, true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         Message message = connection.receive(3, TimeUnit.SECONDS);
         assertNull("Publish enabled for $ Topics by default", message);
 
@@ -1194,6 +1262,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testPublishWildcard31() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5882
         testPublishWildcard("3.1");
     }
 
@@ -1245,6 +1314,7 @@ public class MQTTTest extends MQTTTestSupport {
                 return connection1.isConnected();
             }
         }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
 
         assertTrue("Old client still connected", Wait.waitFor(new Wait.Condition() {
             @Override
@@ -1284,6 +1354,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testRepeatedLinkStealing() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5385
         final String clientId = "duplicateClient";
         final AtomicReference<BlockingConnection> oldConnection = new AtomicReference<BlockingConnection>();
         final String TOPICA = "TopicA";
@@ -1304,6 +1375,7 @@ public class MQTTTest extends MQTTTestSupport {
                     return connection.isConnected();
                 }
             }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(200)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
 
             if (oldConnection.get() != null) {
                 assertTrue("Old client still connected", Wait.waitFor(new Wait.Condition() {
@@ -1323,6 +1395,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 30 * 10000)
     public void testJmsMapping() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         doTestJmsMapping("test.foo");
     }
 
@@ -1337,6 +1410,9 @@ public class MQTTTest extends MQTTTestSupport {
         // set up mqtt producer
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("foo3");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         mqtt.setKeepAlive((short) 2);
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
@@ -1369,6 +1445,7 @@ public class MQTTTest extends MQTTTestSupport {
     @Test(timeout = 30 * 10000)
     public void testSubscribeWithLargeTopicFilter() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5880
         byte[] payload = new byte[1024 * 32];
         for (int i = 0; i < payload.length; i++) {
             payload[i] = '2';
@@ -1399,6 +1476,9 @@ public class MQTTTest extends MQTTTestSupport {
     @Test(timeout = 30 * 10000)
     public void testSubscribeWithZeroLengthTopic() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5883
+//IC see: https://issues.apache.org/jira/browse/AMQ-5884
+//IC see: https://issues.apache.org/jira/browse/AMQ-5885
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("MQTT-Client");
         mqtt.setCleanSession(false);
@@ -1601,6 +1681,7 @@ public class MQTTTest extends MQTTTestSupport {
     @Test(timeout = 30 * 10000)
     public void testSubscribeMultipleTopics() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4576
         byte[] payload = new byte[1024 * 32];
         for (int i = 0; i < payload.length; i++) {
             payload[i] = '2';
@@ -1613,6 +1694,7 @@ public class MQTTTest extends MQTTTestSupport {
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         Topic[] topics = { new Topic("Topic/A", QoS.EXACTLY_ONCE), new Topic("Topic/B", QoS.EXACTLY_ONCE) };
         Topic[] wildcardTopic = { new Topic("Topic/#", QoS.AT_LEAST_ONCE) };
         connection.subscribe(wildcardTopic);
@@ -1645,6 +1727,7 @@ public class MQTTTest extends MQTTTestSupport {
         int numberOfRuns = 10;
         int messagesPerRun = 2;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5108
         final MQTT mqttPub = createMQTTConnection("MQTT-Pub-Client", true);
         final MQTT mqttSub = createMQTTConnection("MQTT-Sub-Client", false);
 
@@ -1673,6 +1756,7 @@ public class MQTTTest extends MQTTTestSupport {
 
         try {
             for (int j = 0; j < numberOfRuns; j++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
 
                 for (int i = 0; i < messagesPerRun; ++i) {
                     connectionPub.publish(topics[0].name().toString(), payload, QoS.AT_LEAST_ONCE, false);
@@ -1700,11 +1784,14 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testReceiveMessageSentWhileOfflineAndBrokerRestart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5390
         stopBroker();
         this.persistent = true;
         startBroker();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5108
         final byte[] payload = new byte[1024 * 32];
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         for (int i = 0; i < payload.length; i++) {
             payload[i] = '2';
         }
@@ -1712,6 +1799,7 @@ public class MQTTTest extends MQTTTestSupport {
         int messagesPerRun = 10;
 
         Topic[] topics = { new Topic("TopicA", QoS.EXACTLY_ONCE) };
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
 
         {
             // Establish a durable subscription.
@@ -1733,6 +1821,7 @@ public class MQTTTest extends MQTTTestSupport {
         connectionPub.disconnect();
 
         restartBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
 
         MQTT mqttSub = createMQTTConnection("MQTT-Sub-Client", false);
         BlockingConnection connectionSub = mqttSub.blockingConnection();
@@ -1742,6 +1831,8 @@ public class MQTTTest extends MQTTTestSupport {
         for (int i = 0; i < messagesPerRun; ++i) {
             Message message = connectionSub.receive(5, TimeUnit.SECONDS);
             assertNotNull(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5108
+//IC see: https://issues.apache.org/jira/browse/AMQ-5108
             assertTrue(Arrays.equals(payload, message.getPayload()));
             message.ack();
         }
@@ -1756,6 +1847,7 @@ public class MQTTTest extends MQTTTestSupport {
 
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("foo");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
         mqtt.setKeepAlive((short) 0);
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
@@ -1778,6 +1870,7 @@ public class MQTTTest extends MQTTTestSupport {
             BlockingConnection connection = mqtt.blockingConnection();
             connection.connect();
             connection.disconnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
             Thread.sleep(500);
         }
         {
@@ -1791,6 +1884,7 @@ public class MQTTTest extends MQTTTestSupport {
     @Test(timeout = 60 * 1000)
     public void testNoMessageReceivedAfterUnsubscribeMQTT() throws Exception {
         Topic[] topics = { new Topic("TopicA", QoS.EXACTLY_ONCE) };
+//IC see: https://issues.apache.org/jira/browse/AMQ-5127
 
         MQTT mqttPub = createMQTTConnection("MQTTPub-Client", true);
         // mqttPub.setVersion("3.1.1");
@@ -1815,6 +1909,7 @@ public class MQTTTest extends MQTTTestSupport {
         connectionSub.connect();
 
         int received = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         for (int i = 0; i < 5; ++i) {
             Message message = connectionSub.receive(5, TimeUnit.SECONDS);
             assertNotNull("Missing message " + i, message);
@@ -1828,6 +1923,7 @@ public class MQTTTest extends MQTTTestSupport {
         connectionSub.unsubscribe(new String[]{"TopicA"});
 
         // send more messages
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         for (int i = 0; i < 5; i++) {
             String payload = "Message " + i;
             connectionPub.publish(topics[0].name().toString(), payload.getBytes(), QoS.EXACTLY_ONCE, false);
@@ -1835,6 +1931,7 @@ public class MQTTTest extends MQTTTestSupport {
 
         // these should not be received
         assertNull(connectionSub.receive(2, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
 
         connectionSub.disconnect();
         connectionPub.disconnect();
@@ -1853,6 +1950,7 @@ public class MQTTTest extends MQTTTestSupport {
     @Test(timeout = 60 * 1000)
     public void testActiveMQRecoveryPolicy() throws Exception {
         // test with ActiveMQ LastImageSubscriptionRecoveryPolicy
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         final PolicyMap policyMap = new PolicyMap();
         final PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setSubscriptionRecoveryPolicy(new LastImageSubscriptionRecoveryPolicy());
@@ -1899,6 +1997,7 @@ public class MQTTTest extends MQTTTestSupport {
     @Test(timeout = 60 * 1000)
     public void testSendMQTTReceiveJMSVirtualTopic() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
         final MQTTClientProvider provider = getMQTTClientProvider();
         initializeConnection(provider);
         final String DESTINATION_NAME = "Consumer.jms.VirtualTopic.TopicA";
@@ -1957,6 +2056,10 @@ public class MQTTTest extends MQTTTestSupport {
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
         assertTrue("KeepAlive didn't work properly", Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4123
+//IC see: https://issues.apache.org/jira/browse/AMQ-4123
+//IC see: https://issues.apache.org/jira/browse/AMQ-4123
+//IC see: https://issues.apache.org/jira/browse/AMQ-4123
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -1969,6 +2072,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test
     public void testConnectWithLargePassword() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6661
        for (String version : Arrays.asList("3.1", "3.1.1")) {
           String longString = new String(new char[65535]);
 

@@ -97,6 +97,7 @@ public class XaPooledConnectionFactory extends org.apache.activemq.jms.pool.XaPo
                         synchronized (this) {
                             setHasExpired(true);
                             // only log if not stopped
+//IC see: https://issues.apache.org/jira/browse/AMQ-5312
                             if (!stopped.get()) {
                                 LOG.info("Expiring connection " + connection + " on IOException: " + error.getMessage());
                                 // log stacktrace at debug level
@@ -162,6 +163,7 @@ public class XaPooledConnectionFactory extends org.apache.activemq.jms.pool.XaPo
     }
 
     public void setBrokerUrl(String url) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         if (brokerUrl == null || !brokerUrl.equals(url)) {
             brokerUrl = url;
             setConnectionFactory(new ActiveMQXAConnectionFactory(brokerUrl));

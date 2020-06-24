@@ -60,6 +60,7 @@ public class RemoveInfo extends BaseCommand {
      * @openwire:property version=5 cache=false
      */
     public long getLastDeliveredSequenceId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         return lastDeliveredSequenceId;
     }
 

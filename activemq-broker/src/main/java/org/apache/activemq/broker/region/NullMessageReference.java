@@ -36,6 +36,7 @@ public final class NullMessageReference implements QueueMessageReference {
 
     @Override
     public synchronized boolean dropIfLive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6293
         throw new RuntimeException("not implemented");
     }
 
@@ -56,6 +57,7 @@ public final class NullMessageReference implements QueueMessageReference {
 
     @Override
     public boolean lock(LockOwner subscription) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
         return true;
     }
 
@@ -81,6 +83,7 @@ public final class NullMessageReference implements QueueMessageReference {
 
     @Override
     public String getGroupID() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
         return null;
     }
 
@@ -141,6 +144,7 @@ public final class NullMessageReference implements QueueMessageReference {
 
     @Override
     public boolean isExpired() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
         return false;
     }
 
@@ -156,6 +160,10 @@ public final class NullMessageReference implements QueueMessageReference {
 
     @Override
     public boolean canProcessAsExpired() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
+//IC see: https://issues.apache.org/jira/browse/AMQ-6361
         return false;
     }
 

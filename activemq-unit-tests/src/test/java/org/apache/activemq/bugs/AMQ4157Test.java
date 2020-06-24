@@ -169,6 +169,7 @@ public class AMQ4157Test {
         broker.addConnector("tcp://0.0.0.0:0");
         broker.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5146
         String options = "?jms.redeliveryPolicy.maximumRedeliveries=-1&jms.prefetchPolicy.all=1000&jms.watchTopicAdvisories=false&jms.useAsyncSend=true&jms.alwaysSessionAsync=false&jms.dispatchAsync=false&socketBufferSize=131072&ioBufferSize=16384&wireFormat.tightEncodingEnabled=false&wireFormat.cacheSize=8192";
         connectionFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri() + options);
     }

@@ -44,6 +44,7 @@ public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         return new NIOSSLTransportServer(context, this, location, serverSocketFactory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4133
 
             @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
@@ -67,6 +68,7 @@ public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
 
     @Override
     public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer)
             throws IOException {
         return new StompNIOSSLTransport(wireFormat, socket, engine, initBuffer, inputBuffer);
@@ -74,6 +76,8 @@ public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
 
     @Override
     public TransportServer doBind(URI location) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
+//IC see: https://issues.apache.org/jira/browse/AMQ-4133
         if (SslContext.getCurrentSslContext() != null) {
             try {
                 context = SslContext.getCurrentSslContext().getSSLContext();

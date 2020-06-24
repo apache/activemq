@@ -63,7 +63,9 @@ import org.slf4j.LoggerFactory;
 public class MultiKahaDBTransactionStore implements TransactionStore {
     static final Logger LOG = LoggerFactory.getLogger(MultiKahaDBTransactionStore.class);
     final MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
     final ConcurrentMap<TransactionId, Tx> inflightTransactions = new ConcurrentHashMap<TransactionId, Tx>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
     final ConcurrentMap<TransactionId, Tx> pendingCommit = new ConcurrentHashMap<TransactionId, Tx>();
     private Journal journal;
     private int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
@@ -87,6 +89,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
             @Override
             public void addMessage(ConnectionContext context, final Message send, boolean canOptimizeHint) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
                 MultiKahaDBTransactionStore.this.addMessage(transactionStore, context, getDelegate(), send);
             }
 
@@ -112,6 +115,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
             @Override
             public void registerIndexListener(IndexListener indexListener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
                 getDelegate().registerIndexListener(indexListener);
                 try {
                     if (indexListener instanceof BaseDestination) {
@@ -138,6 +142,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         return new ProxyTopicMessageStore(messageStore) {
             @Override
             public void addMessage(ConnectionContext context, final Message send, boolean canOptimizeHint) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
                 MultiKahaDBTransactionStore.this.addMessage(transactionStore, context, getDelegate(), send);
             }
 
@@ -196,6 +201,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     }
 
     public void setJournalCleanupInterval(long journalCleanupInterval) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
         this.journalCleanupInterval = journalCleanupInterval;
     }
 
@@ -204,6 +210,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     }
 
     public void setCheckForCorruption(boolean checkForCorruption) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7488
         this.checkForCorruption = checkForCorruption;
     }
 
@@ -216,6 +223,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         private int prepareLocationId = 0;
 
         public void trackStore(TransactionStore store, XATransactionId xid) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             stores.put(store, xid);
         }
 
@@ -271,6 +279,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
         Tx tx = getTx(txid);
         if (wasPrepared) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             for (Map.Entry<TransactionStore, TransactionId> storeTx : tx.getStoresMap().entrySet()) {
                 TransactionId recovered = storeTx.getValue();
                 if (recovered != null) {
@@ -305,6 +314,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     public void persistOutcome(Tx tx, TransactionId txid) throws IOException {
         tx.trackPrepareLocation(store(new KahaPrepareCommand().setTransactionInfo(TransactionIdConversion.convert(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid)))));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
         pendingCommit.put(txid, tx);
     }
 
@@ -327,6 +337,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     public void rollback(TransactionId txid) throws IOException {
         Tx tx = removeTx(txid);
         if (tx != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             for (Map.Entry<TransactionStore, TransactionId> storeTx : tx.getStoresMap().entrySet()) {
                 TransactionId recovered = storeTx.getValue();
                 if (recovered != null) {
@@ -340,6 +351,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     @Override
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6250
         if (started.compareAndSet(false, true)) {
             journal = new Journal() {
                 @Override
@@ -351,7 +363,9 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             journal.setDirectory(getDirectory());
             journal.setMaxFileLength(journalMaxFileLength);
             journal.setWriteBatchSize(journalWriteBatchSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
             journal.setCleanupInterval(journalCleanupInterval);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7488
             journal.setCheckForCorruptionOnStartup(checkForCorruption);
             journal.setChecksum(checkForCorruption);
             IOHelper.mkdirs(journal.getDirectory());
@@ -374,6 +388,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         for (Tx tx : inflightTransactions.values()) {
             knownDataFileIds.remove(tx.getPreparedLocationId());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
         for (Tx tx : pendingCommit.values()) {
             knownDataFileIds.remove(tx.getPreparedLocationId());
         }
@@ -390,6 +405,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     @Override
     public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6250
         if (started.compareAndSet(true, false) && journal != null) {
             journal.close();
             journal = null;
@@ -398,6 +414,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     private void recoverPendingLocalTransactions() throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7488
         if (checkForCorruption) {
             for (DataFile dataFile: journal.getFileMap().values()) {
                 if (!dataFile.getCorruptedBlocks().isEmpty()) {
@@ -411,6 +428,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             try {
                 location = journal.getNextLocation(null);
                 while (location != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
                     process(location, load(location));
                     location = journal.getNextLocation(location);
                 }
@@ -418,6 +436,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
                 LOG.error("Corrupt journal record; unexpected exception on transaction journal replay of location:" + location, oops);
                 corruptJournalDetected.set(true);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
             pendingCommit.putAll(inflightTransactions);
             LOG.info("pending local transactions: " + pendingCommit.keySet());
         }
@@ -439,6 +458,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         switch (command.type()) {
             case KAHA_PREPARE_COMMAND:
                 KahaPrepareCommand prepareCommand = (KahaPrepareCommand) command;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
                 getTx(TransactionIdConversion.convert(prepareCommand.getTransactionInfo())).trackPrepareLocation(location);
                 break;
             case KAHA_COMMIT_COMMAND:
@@ -461,6 +481,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
                 @Override
                 public void recover(XATransactionId xid, Message[] addedMessages, MessageAck[] acks) {
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
                         getTx(xid).trackStore(adapter.createTransactionStore(), xid);
                     } catch (IOException e) {
                         LOG.error("Failed to access transaction store: " + adapter + " for prepared xa tid: " + xid, e);
@@ -476,6 +497,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             // force completion of local xa
             for (TransactionId txid : broker.getPreparedTransactions(null)) {
                 if (multiKahaDBPersistenceAdapter.isLocalXid(txid)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7488
                     recoveryWorkPending = true;
                     if (corruptJournalDetected.get()) {
                         // not having a record is meaningless once our tx store is corrupt; we need a heuristic decision
@@ -483,6 +505,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
                         logSomeContext(txid);
                     } else {
                         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7225
                             if (pendingCommit.keySet().contains(txid)) {
                                 // we recorded the commit outcome, finish the job
                                 LOG.info("delivering pending commit outcome for tid: " + txid);
@@ -535,6 +558,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         destination.addMessage(context, message);
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
     ListenableFuture<Object> asyncAddQueueMessage(final TransactionStore transactionStore, ConnectionContext context, final MessageStore destination, final Message message)
             throws IOException {
         if (message.getTransactionId() != null) {
@@ -546,6 +570,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
     ListenableFuture<Object> asyncAddTopicMessage(final TransactionStore transactionStore, ConnectionContext context, final MessageStore destination, final Message message)
             throws IOException {
 

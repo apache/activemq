@@ -44,6 +44,7 @@ public class MessageEndpointProxyTest {
 
     @Before
     public void setUp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
         context = new Mockery();
         mockEndpoint = context.mock(MessageEndpoint.class);
         context.mock(MessageListener.class);
@@ -75,6 +76,7 @@ public class MessageEndpointProxyTest {
 
     @Test(timeout = 60000)
     public void testBeforeDeliveryFailure() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
         context.checking(new Expectations() {{
             oneOf (mockEndpointAndListener).beforeDelivery(with(any(Method.class)));
             will(throwException(new ResourceException()));
@@ -102,6 +104,7 @@ public class MessageEndpointProxyTest {
     public void testOnMessageFailure() throws Exception {
         setupBeforeDeliverySuccessful();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
         context.checking(new Expectations() {{
             oneOf (mockEndpointAndListener).onMessage(with(same(stubMessage)));
             will(throwException(new RuntimeException()));
@@ -125,6 +128,7 @@ public class MessageEndpointProxyTest {
         setupBeforeDeliverySuccessful();
         setupOnMessageSuccessful();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
         context.checking(new Expectations() {{
             oneOf (mockEndpointAndListener).afterDelivery(); will(throwException(new ResourceException()));
         }});
@@ -151,6 +155,7 @@ public class MessageEndpointProxyTest {
     }
 
     private void setupAfterDeliverySuccessful() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
         context.checking(new Expectations() {{
             oneOf (mockEndpointAndListener).afterDelivery();
         }});
@@ -184,6 +189,7 @@ public class MessageEndpointProxyTest {
 
     private void doOnMessageExpectSuccess() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
             endpointProxy.onMessage(stubMessage);
         } catch (Exception e) {
             fail("No exception should have been thrown");
@@ -211,6 +217,7 @@ public class MessageEndpointProxyTest {
 
     private void doOnMessageExpectInvalidMessageEndpointException() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
             endpointProxy.onMessage(stubMessage);
             fail("An InvalidMessageEndpointException should have been thrown");
         } catch (InvalidMessageEndpointException e) {

@@ -68,8 +68,10 @@ public class PortfolioPublishServlet extends MessageServletSupport {
                 if (refreshRate == null || refreshRate.length() == 0) {
                     refreshRate = "1";
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4398
                 out.print(escape(refreshRate));
                 out.println("'/></head>");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4115
                 out.println("<body>Published <b>" + escape(Integer.toString(count)) + "</b> of " + escape(Integer.toString(total))
                         + " price messages.  Refresh = " + escape(refreshRate) + "s");
                 out.println("</body></html>");
@@ -132,6 +134,7 @@ public class PortfolioPublishServlet extends MessageServletSupport {
     }
 
     protected String escape(String text) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4115
         return java.net.URLEncoder.encode(text, "UTF-8");
     }
 }

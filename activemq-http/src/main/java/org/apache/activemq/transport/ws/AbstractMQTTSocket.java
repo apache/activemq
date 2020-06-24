@@ -55,7 +55,9 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
 
     @Override
     public void oneway(Object command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6346
         protocolLock.lock();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5856
         try {
             getProtocolConverter().onActiveMQCommand((Command)command);
         } catch (Exception e) {
@@ -120,11 +122,13 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
 
     @Override
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5856
         return receiveCounter;
     }
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6029
         return peerCertificates;
     }
 
@@ -142,8 +146,10 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
 
     protected MQTTProtocolConverter getProtocolConverter() {
         if (protocolConverter == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5870
             synchronized(this) {
                 if (protocolConverter == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7439
                     MQTTProtocolConverter newProtocolConverter = new MQTTProtocolConverter(this, brokerService);
                     IntrospectionSupport.setProperties(newProtocolConverter, transportOptions);
                     protocolConverter = newProtocolConverter;
@@ -158,6 +164,7 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
     }
 
     public void setTransportOptions(Map<String, Object> transportOptions) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6259
         this.transportOptions = transportOptions;
     }
 }

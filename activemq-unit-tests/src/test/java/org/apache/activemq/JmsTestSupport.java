@@ -96,12 +96,14 @@ public class JmsTestSupport extends CombinationTestSupport {
 
     protected void sendMessages(Session session, Destination destination, int count) throws JMSException {
         MessageProducer producer = session.createProducer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3954
         sendMessages(session, producer, count);
         producer.close();
     }
 
     protected void sendMessages(Session session, MessageProducer producer, int count) throws JMSException {
         for (int i = 0; i < count; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2737
             producer.send(session.createTextMessage(messageTextPrefix  + i));
         }
     }
@@ -134,6 +136,7 @@ public class JmsTestSupport extends CombinationTestSupport {
 
     @Override
     protected void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3954
         for (Iterator<Connection> iter = connections.iterator(); iter.hasNext();) {
             Connection conn = iter.next();
             try {

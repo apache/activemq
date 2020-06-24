@@ -174,6 +174,7 @@ public class BrokerBroadcaster extends BrokerFilter {
 
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean createIfTemporary) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         Destination result = next.addDestination(context, destination,createIfTemporary);
         Broker brokers[] = getListeners();
         for (int i = 0; i < brokers.length; i++) {

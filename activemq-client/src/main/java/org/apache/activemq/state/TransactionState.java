@@ -94,6 +94,7 @@ public class TransactionState {
     }
 
     public long getCreatedAt() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5054
         return createdAt;
     }
 }

@@ -282,6 +282,7 @@ public class ReflectionUtilTest extends TestCase {
         }
 
         public TestClass3 getRecursiveData() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4289
             return this;
         }
     }

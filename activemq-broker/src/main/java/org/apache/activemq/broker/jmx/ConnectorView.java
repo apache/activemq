@@ -62,6 +62,7 @@ public class ConnectorView implements ConnectorViewMBean {
      */
     @Override
     public void enableStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-894
         connector.getStatistics().setEnabled(true);
     }
 
@@ -98,6 +99,7 @@ public class ConnectorView implements ConnectorViewMBean {
      */
     @Override
     public boolean isUpdateClusterClients() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6208
         return this.connector.isUpdateClusterClients();
     }
 
@@ -108,6 +110,7 @@ public class ConnectorView implements ConnectorViewMBean {
      */
     @Override
     public boolean isRebalanceClusterClients() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4818
         return this.connector.isRebalanceClusterClients();
     }
 

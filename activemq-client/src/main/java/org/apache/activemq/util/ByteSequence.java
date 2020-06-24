@@ -74,7 +74,10 @@ public class ByteSequence {
     }
 
     public void reset() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         length = remaining();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6831
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         if (length > 0) {
             System.arraycopy(data, offset, data, 0, length);
         } else {
@@ -116,6 +119,7 @@ public class ByteSequence {
     }
 
     public boolean startsWith(final byte[] bytes) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         if (length - offset < bytes.length) {
             return false;
         }

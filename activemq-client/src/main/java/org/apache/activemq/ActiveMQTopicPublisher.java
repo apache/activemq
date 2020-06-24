@@ -85,6 +85,7 @@ public class ActiveMQTopicPublisher extends ActiveMQMessageProducer implements
         TopicPublisher {
 
     protected ActiveMQTopicPublisher(ActiveMQSession session,
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
                                      ActiveMQDestination destination, int sendTimeout) throws JMSException {
         super(session, session.getNextProducerId(), destination,sendTimeout);
     }

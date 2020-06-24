@@ -54,6 +54,7 @@ public class AmqpNioTransport extends TcpTransport {
     public AmqpNioTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5475
         frameReader.setWireFormat((AmqpWireFormat) wireFormat);
     }
 
@@ -65,6 +66,7 @@ public class AmqpNioTransport extends TcpTransport {
 
     public AmqpNioTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer) throws IOException {
         super(wireFormat, socket, initBuffer);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
 
         frameReader.setWireFormat((AmqpWireFormat) wireFormat);
     }
@@ -98,6 +100,7 @@ public class AmqpNioTransport extends TcpTransport {
         this.dataOut = new DataOutputStream(outPutStream);
         this.buffOut = outPutStream;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         try {
             if (initBuffer != null) {
                 processBuffer(initBuffer.buffer, initBuffer.readSize);
@@ -130,6 +133,7 @@ public class AmqpNioTransport extends TcpTransport {
                     break;
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
                 processBuffer(inputBuffer, readSize);
             }
         } catch (IOException e) {
@@ -141,6 +145,8 @@ public class AmqpNioTransport extends TcpTransport {
 
     protected void processBuffer(ByteBuffer buffer, int readSize) throws Exception {
         receiveCounter += readSize;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4106
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
 
         buffer.flip();
         frameReader.parse(buffer);

@@ -42,6 +42,7 @@ public abstract class TextWireFormat implements WireFormat {
     public abstract String marshalText(Object command) throws IOException;
 
     public void marshal(Object command, DataOutput out) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1308
         String text = marshalText(command);
         byte[] utf8 = text.getBytes("UTF-8");
         out.writeInt(utf8.length);
@@ -72,6 +73,8 @@ public abstract class TextWireFormat implements WireFormat {
 
     public boolean inReceive() {
         // TODO Implement for inactivity monitor
+//IC see: https://issues.apache.org/jira/browse/AMQ-2088
+//IC see: https://issues.apache.org/jira/browse/AMQ-1308
         return false;
     }
 

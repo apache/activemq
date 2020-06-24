@@ -59,6 +59,7 @@ public class TestMapTransformFilter extends TestCase {
     }
 
     public void testOriginaDest() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6645
         MapTransformFilter filter = new MapTransformFilter(null);
         ActiveMQMessage mqMessage = new ActiveMQMessage();
         mqMessage.setOriginalDestination(new ActiveMQQueue("O"));

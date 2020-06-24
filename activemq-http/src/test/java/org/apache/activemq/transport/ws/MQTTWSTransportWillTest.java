@@ -78,6 +78,7 @@ public class MQTTWSTransportWillTest extends WSTransportTestSupport {
         //turn off advisory support
         broker = createBroker(true, false);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
         wsClient = new WebSocketClient(new SslContextFactory.Client(true));
         wsClient.start();
 

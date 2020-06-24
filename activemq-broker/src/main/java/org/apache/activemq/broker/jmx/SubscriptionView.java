@@ -49,6 +49,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     public SubscriptionView(String clientId, String userName, Subscription subs) {
         this.clientId = clientId;
         this.subscription = subs;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         this.userName = userName;
     }
 
@@ -66,6 +67,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     @Override
     public ObjectName getConnection() {
         ObjectName result = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1907
 
         if (clientId != null && subscription != null) {
             ConnectionContext ctx = subscription.getContext();
@@ -75,6 +77,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
                 if (managementCtx != null) {
 
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
                         ObjectName query = createConnectionQuery(managementCtx, service.getBrokerName());
                         Set<ObjectName> names = managementCtx.queryNames(query, null);
                         if (names.size() == 1) {
@@ -149,6 +152,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
 
     @Override
     public String getSelector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-625
         if (subscription != null) {
             return subscription.getSelector();
         }
@@ -235,6 +239,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
      */
     @Override
     public boolean isRetroactive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-663
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.isRetroactive() : false;
     }
@@ -271,6 +276,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
      */
     @Override
     public boolean isDispatchAsync() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6183
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.isDispatchAsync() : false;
     }
@@ -400,16 +406,19 @@ public class SubscriptionView implements SubscriptionViewMBean {
 
     @Override
     public boolean isSlowConsumer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3378
         return subscription.isSlowConsumer();
     }
 
     @Override
     public String getUserName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         return userName;
     }
 
     @Override
     public void resetStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6102
         if (subscription != null && subscription.getSubscriptionStatistics() != null){
             subscription.getSubscriptionStatistics().reset();
         }

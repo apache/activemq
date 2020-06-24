@@ -53,6 +53,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
 
     @Test
     public void testCron() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         final int COUNT = 10;
         final AtomicInteger count = new AtomicInteger();
         Connection connection = createConnection();
@@ -111,6 +112,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         });
 
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         long time = 5000;
         MessageProducer producer = session.createProducer(destination);
         TextMessage message = session.createTextMessage("test msg");
@@ -182,6 +184,8 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
             @Override
             public void onMessage(Message message) {
                 count.incrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6159
+//IC see: https://issues.apache.org/jira/browse/AMQ-6159
                 latch.countDown();
                 LOG.info("Received scheduled message, waiting for {} more", latch.getCount());
             }
@@ -190,6 +194,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         connection.start();
         MessageProducer producer = session.createProducer(destination);
         TextMessage message = session.createTextMessage("test msg");
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         long time = 1000;
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 500);
@@ -207,6 +212,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
 
     @Test
     public void testScheduleRestart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7196
         testScheduleRestart(RestartType.NORMAL);
     }
 
@@ -234,6 +240,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         registerLogAppender(appender);
 
         // send a messages
+//IC see: https://issues.apache.org/jira/browse/AMQ-2897
         Connection connection = createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         connection.start();
@@ -277,12 +284,14 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         MessageProducer producer = session.createProducer(destination);
         TextMessage message = session.createTextMessage("test msg");
         long time = 5000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2646
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
         producer.send(message);
         producer.close();
 
         //restart broker
         restartBroker(restartType);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7196
 
         // consume the message
         connection = createConnection();
@@ -293,6 +302,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         assertNotNull("Didn't receive the message", msg);
 
         //send another message
+//IC see: https://issues.apache.org/jira/browse/AMQ-2954
         producer = session.createProducer(destination);
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
         producer.send(message);
@@ -305,6 +315,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
 
         // Shrink the store limit down so we get the producer to block
         broker.getSystemUsage().getJobSchedulerUsage().setLimit(10 * 1024);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         Connection connection = factory.createConnection();

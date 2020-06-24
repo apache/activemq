@@ -97,6 +97,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
      */
     @Test
     public void testModFilterProperties() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
         BrokerService brokerService = new BrokerService();
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry entry = new PolicyEntry();
@@ -235,6 +236,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
     @Test
     public void testModNewPolicyObject() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6088
         BrokerService brokerService = new BrokerService();
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry entry = new PolicyEntry();
@@ -408,6 +410,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
     @Test
     public void testModWithMultipleChildPolicies() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6109
         BrokerService brokerService = new BrokerService();
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry entry = new PolicyEntry();
@@ -459,6 +462,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
     @Test
     public void testModWithChildWildcardPolicies() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6901
         BrokerService brokerService = new BrokerService();
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry entry = new PolicyEntry();
@@ -579,6 +583,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
     @Test
     public void testAddNdModWithMultiplePolicies() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6088
         BrokerService brokerService = new BrokerService();
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry entry = new PolicyEntry();
@@ -626,6 +631,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
     @Test
     public void testAllQueuePropertiesApplied() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
         testAllQueuePropertiesAppliedFilter(null);
     }
 
@@ -758,6 +764,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             session.createConsumer(session.createQueue(dest));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
             assertEquals(memoryLimit, getQueue(dest).getMemoryUsage().getLimit());
         } finally {
             connection.close();
@@ -771,6 +778,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             session.createConsumer(session.createTopic(dest));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
             assertEquals(memoryLimit, getTopic(dest).getMemoryUsage().getLimit());
         } finally {
             connection.close();

@@ -141,6 +141,7 @@ public class FailoverConsumerOutstandingCommitTest {
 
         final CountDownLatch commitDoneLatch = new CountDownLatch(1);
         final CountDownLatch messagesReceived = new CountDownLatch(2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
 
         final MessageConsumer testConsumer = consumerSession.createConsumer(destination);
         testConsumer.setMessageListener(new MessageListener() {
@@ -183,6 +184,7 @@ public class FailoverConsumerOutstandingCommitTest {
 
         assertTrue("consumer added through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
         assertTrue("another message was recieved after failover", messagesReceived.await(20, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
 
         connection.close();
     }
@@ -263,17 +265,22 @@ public class FailoverConsumerOutstandingCommitTest {
                     gotCommitException.set(true);
                 }
                 commitDoneLatch.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
                 messagesReceived.countDown();
                 LOG.info("done commit");
             }
         });
 
         // may block if broker shutdown happens quickly
+//IC see: https://issues.apache.org/jira/browse/AMQ-2626
+//IC see: https://issues.apache.org/jira/browse/AMQ-2626
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
                 LOG.info("producer started");
                 try {
                     produceMessage(producerSession, destination, prefetch * 2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
                 } catch (javax.jms.IllegalStateException SessionClosedExpectedOnShutdown) {
                 } catch (JMSException e) {
                     e.printStackTrace();
@@ -292,6 +299,7 @@ public class FailoverConsumerOutstandingCommitTest {
         assertTrue("commit failed", gotCommitException.get());
         assertTrue("another message was received after failover", messagesReceived.await(20, TimeUnit.SECONDS));
         int receivedIndex = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4665
         assertEquals("get message 0 first", MESSAGE_TEXT + "0", receivedMessages.get(receivedIndex++).getText());
         if (!doActualBrokerCommit) {
             // it will be redelivered and not tracked as a duplicate

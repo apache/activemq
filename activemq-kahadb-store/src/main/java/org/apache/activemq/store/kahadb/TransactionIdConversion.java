@@ -33,6 +33,7 @@ public class TransactionIdConversion {
         LocalTransactionId t = (LocalTransactionId) tx;
         KahaLocalTransactionId kahaTxId = new KahaLocalTransactionId();
         kahaTxId.setConnectionId(t.getConnectionId().getValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3849
         kahaTxId.setTransactionId(t.getValue());
         rc.setLocalTransactionId(kahaTxId);
         return rc;
@@ -53,6 +54,7 @@ public class TransactionIdConversion {
             kahaTxId.setBranchQualifier(new Buffer(t.getBranchQualifier()));
             kahaTxId.setGlobalTransactionId(new Buffer(t.getGlobalTransactionId()));
             kahaTxId.setFormatId(t.getFormatId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3849
             rc.setXaTransactionId(kahaTxId);
         }
         return rc;

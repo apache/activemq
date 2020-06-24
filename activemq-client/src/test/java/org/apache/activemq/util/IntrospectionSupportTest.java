@@ -46,6 +46,7 @@ public class IntrospectionSupportTest {
 
         DummyClass dummyClass = new DummyClass(false);
         dummyClass.setTrace(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         // dummy field expects a primitive
         IntrospectionSupport.setProperty(dummyClass, "trace", value);

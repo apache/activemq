@@ -40,6 +40,7 @@ public class MultiKahaDbVmConcurrentDispatchTest extends AbstractVmConcurrentDis
           for (MessageType mt : MessageType.values()) {
               for (boolean rmfVal : reduceMemoryFootPrintVals) {
                   for (boolean cdVal : concurrentDispatchVals) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6323
                       for (boolean tpVal : useTopicVals) {
                           values.add(new Object[] {mt, rmfVal, cdVal, tpVal});
                       }
@@ -57,6 +58,7 @@ public class MultiKahaDbVmConcurrentDispatchTest extends AbstractVmConcurrentDis
      */
     public MultiKahaDbVmConcurrentDispatchTest(MessageType messageType, boolean reduceMemoryFootPrint,
             boolean concurrentDispatch, boolean useTopic) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6323
         super(messageType, reduceMemoryFootPrint, useTopic);
         this.concurrentDispatch = concurrentDispatch;
     }
@@ -68,6 +70,7 @@ public class MultiKahaDbVmConcurrentDispatchTest extends AbstractVmConcurrentDis
         persistenceAdapter.setDirectory(dataFileDir.getRoot());
 
         KahaDBPersistenceAdapter kahaStore = new KahaDBPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6323
         if (useTopic) {
             kahaStore.setConcurrentStoreAndDispatchTopics(concurrentDispatch);
         } else {

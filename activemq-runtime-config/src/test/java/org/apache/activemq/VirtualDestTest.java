@@ -68,6 +68,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
 
     @Test
     public void testNewComposite() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4843
         final String brokerConfig = configurationSeed + "-new-composite-vd-broker";
         applyNewConfig(brokerConfig, RuntimeConfigTestSupport.EMPTY_UPDATABLE_CONFIG);
         startBroker(brokerConfig);
@@ -80,6 +81,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
 
     @Test
     public void testModComposite() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4995
         final String brokerConfig = configurationSeed + "-mod-composite-vd-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-add-composite-vd");
         startBroker(brokerConfig);
@@ -94,6 +96,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
 
     @Test
     public void testNewNoDefaultVirtualTopicSupport() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         final String brokerConfig = configurationSeed + "-no-vd-vt-broker";
         applyNewConfig(brokerConfig, RuntimeConfigTestSupport.EMPTY_UPDATABLE_CONFIG);
         brokerService = createBroker(brokerConfig);
@@ -126,6 +129,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
 
     @Test
     public void testNewWithMirrorQueueSupport() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         final String brokerConfig = configurationSeed + "-no-vd-mq-broker";
         applyNewConfig(brokerConfig, RuntimeConfigTestSupport.EMPTY_UPDATABLE_CONFIG);
         brokerService = createBroker(brokerConfig);
@@ -134,6 +138,8 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         brokerService.waitUntilStarted();
 
         TimeUnit.SECONDS.sleep(SLEEP);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
         assertTrue("broker alive", brokerService.isStarted());
 
@@ -153,11 +159,15 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
 
         // apply again - ensure no change
         applyNewConfig(brokerConfig, configurationSeed + "-one-vd");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         assertSame("same instance", newValue, brokerService.getDestinationInterceptors()[0]);
     }
 
     @Test
     public void testRemove() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         final String brokerConfig = configurationSeed + "-one-vd-rm-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-one-vd");
         startBroker(brokerConfig);
@@ -174,6 +184,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         exerciseVirtualTopic("A.Default");
 
         applyNewConfig(brokerConfig, RuntimeConfigTestSupport.EMPTY_UPDATABLE_CONFIG, SLEEP);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
         // update will happen on addDestination
         forceAddDestination("AnyDest");
@@ -198,6 +209,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
 
     @Test
     public void testMod() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         final String brokerConfig = configurationSeed + "-one-vd-mod-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-one-vd");
         startBroker(brokerConfig);
@@ -215,6 +227,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
 
     @Test
     public void testModWithMirroredQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         final String brokerConfig = configurationSeed + "-one-vd-mq-mod-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-one-vd");
         brokerService = createBroker(brokerConfig);
@@ -223,6 +236,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         brokerService.waitUntilStarted();
 
         TimeUnit.SECONDS.sleep(SLEEP);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
         assertEquals("one interceptor", 1, brokerService.getDestinationInterceptors().length);
         exerciseVirtualTopic("A.Default");
@@ -235,6 +249,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
 
     @Test
     public void testNewFilteredComposite() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5895
         final String brokerConfig = configurationSeed + "-new-filtered-composite-vd-broker";
         applyNewConfig(brokerConfig, RuntimeConfigTestSupport.EMPTY_UPDATABLE_CONFIG);
         startBroker(brokerConfig);

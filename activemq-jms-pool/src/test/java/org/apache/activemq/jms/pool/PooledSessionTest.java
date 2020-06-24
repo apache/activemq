@@ -47,6 +47,7 @@ public class PooledSessionTest extends JmsPoolTestSupport {
     @Before
     public void setUp() throws Exception {
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
@@ -59,6 +60,7 @@ public class PooledSessionTest extends JmsPoolTestSupport {
 
         connectionUri = connector.getPublishableConnectString();
         factory = new ActiveMQConnectionFactory(connectionUri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         pooledFactory = new PooledConnectionFactory();
         pooledFactory.setConnectionFactory(factory);
         pooledFactory.setMaxConnections(1);
@@ -89,11 +91,13 @@ public class PooledSessionTest extends JmsPoolTestSupport {
         assertEquals(1, connection.getNumtIdleSessions());
         assertEquals(1, connection.getNumSessions());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
         connection.close();
     }
 
     @Test(timeout = 60000)
     public void testMessageProducersAreAllTheSame() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4968
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -105,6 +109,7 @@ public class PooledSessionTest extends JmsPoolTestSupport {
 
         assertSame(producer1.getMessageProducer(), producer2.getMessageProducer());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
         connection.close();
     }
 
@@ -130,6 +135,7 @@ public class PooledSessionTest extends JmsPoolTestSupport {
         } catch (Exception ex) {
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
         connection.close();
     }
 
@@ -145,6 +151,7 @@ public class PooledSessionTest extends JmsPoolTestSupport {
         PooledTopicPublisher publisher2 = (PooledTopicPublisher) session.createPublisher(topic2);
 
         assertSame(publisher1.getMessageProducer(), publisher2.getMessageProducer());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
         connection.close();
     }
 
@@ -160,6 +167,7 @@ public class PooledSessionTest extends JmsPoolTestSupport {
         PooledQueueSender sender2 = (PooledQueueSender) session.createSender(queue2);
 
         assertSame(sender1.getMessageProducer(), sender2.getMessageProducer());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
         connection.close();
     }
 
@@ -177,6 +185,7 @@ public class PooledSessionTest extends JmsPoolTestSupport {
         session.close();
 
         assertEquals(1, brokerService.getAdminView().getDynamicDestinationProducers().length);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         for (int i = 0; i < 20; ++i) {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -186,6 +195,7 @@ public class PooledSessionTest extends JmsPoolTestSupport {
         }
 
         assertEquals(1, brokerService.getAdminView().getDynamicDestinationProducers().length);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         connection.close();
         pooledFactory.clear();

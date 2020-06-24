@@ -26,6 +26,7 @@ import java.io.RandomAccessFile;
  */
 public class ReadOnlyDataFile extends DataFile {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
     ReadOnlyDataFile(File file, int number) {
         super(file, number);
     }

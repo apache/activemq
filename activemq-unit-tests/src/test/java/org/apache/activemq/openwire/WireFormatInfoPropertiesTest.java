@@ -48,6 +48,7 @@ public class WireFormatInfoPropertiesTest {
 
     @Before
     public void before() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6871
         service = new BrokerService();
         connector = service.addConnector("tcp://localhost:0");
         brokerUri = connector.getPublishableConnectString();

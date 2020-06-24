@@ -34,6 +34,7 @@ public class JcaConnectionPool extends XaConnectionPool {
 
     @Override
     protected XAResource createXaResource(PooledSession session) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         XAResource xares = ((XASession)session.getInternalSession()).getXAResource();
         if (name != null) {
             xares = new WrapperNamedXAResource(xares, name);

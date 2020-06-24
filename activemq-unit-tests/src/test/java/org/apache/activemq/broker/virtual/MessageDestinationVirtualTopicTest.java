@@ -82,6 +82,7 @@ public class MessageDestinationVirtualTopicTest {
 
         // Create listener on Broker B1 for VT T2 witout setOriginalDest
         Queue consumer3Queue = session1.createQueue("Consumer.A.VirtualTopic.T2");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6100
 
         // Bind listener on queue for consumer D
         MessageConsumer consumerD = session1.createConsumer(consumer3Queue);
@@ -104,6 +105,7 @@ public class MessageDestinationVirtualTopicTest {
         init();
 
         // Create a monitor
+//IC see: https://issues.apache.org/jira/browse/AMQ-6100
         CountDownLatch monitor = new CountDownLatch(3);
         listener1.setCountDown(monitor);
         listener2.setCountDown(monitor);
@@ -123,6 +125,7 @@ public class MessageDestinationVirtualTopicTest {
         String lastJMSDestination1 = listener1.getLastJMSDestination();
         System.err.println(lastJMSDestination1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6100
         String lastJMSDestination3 = listener3.getLastJMSDestination();
         System.err.println(lastJMSDestination3);
 

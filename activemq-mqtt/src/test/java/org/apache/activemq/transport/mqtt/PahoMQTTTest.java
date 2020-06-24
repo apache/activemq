@@ -52,6 +52,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(PahoMQTTTest.class);
 
     protected MessageConsumer createConsumer(Session s, String topic) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6002
         return s.createConsumer(s.createTopic(topic));
     }
 
@@ -65,6 +66,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = createConsumer(s, "test");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6002
 
         final AtomicInteger receiveCounter = new AtomicInteger();
         consumer.setMessageListener(new MessageListener() {
@@ -84,6 +86,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
                 @Override
                 public void run() {
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
                         MqttClient client = new MqttClient("tcp://localhost:" + getPort(), Thread.currentThread().getName(), new MemoryPersistence());
                         client.connect();
                         connectedDoneLatch.countDown();
@@ -131,6 +134,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = createConsumer(s, "test");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6002
 
         MqttClient client = new MqttClient("tcp://localhost:" + getPort(), "clientid", new MemoryPersistence());
         client.connect();
@@ -151,6 +155,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         MqttClient client = createClient(false, "receive", listener);
 
         final String ACCOUNT_PREFIX = "test/";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
 
         client.subscribe(ACCOUNT_PREFIX + "1/2/3");
         client.subscribe(ACCOUNT_PREFIX + "a/+/#");
@@ -169,6 +174,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         client.publish(ACCOUNT_PREFIX + "a/1/2", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
 
         // One delivery for topic  ACCOUNT_PREFIX + "a/1/2"
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
         result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
         // One delivery for topic  ACCOUNT_PREFIX + "#"
@@ -209,6 +215,8 @@ public class PahoMQTTTest extends MQTTTestSupport {
         String expectedResult = "hello mqtt broker on hash";
         client.publish(ACCOUNT_PREFIX + "a/b/c", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
         String result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
         assertTrue(client.getPendingDeliveryTokens().length == 0);
@@ -230,6 +238,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         client.publish(ACCOUNT_PREFIX + "1/2/3", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
 
         // One message from topic subscription on ACCOUNT_PREFIX + "#"
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
         result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
 
@@ -241,6 +250,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
 
         expectedResult = "hello mqtt broker on some other topic";
         client.publish(ACCOUNT_PREFIX + "a/b/c/d/e", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
         result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
         assertTrue(client.getPendingDeliveryTokens().length == 0);
@@ -253,6 +263,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
 
         expectedResult = "this should not come back...";
         client.publish(ACCOUNT_PREFIX + "1/2/3/4", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
         assertNull(listener.messageQ.poll(3, TimeUnit.SECONDS));
         assertTrue(client.getPendingDeliveryTokens().length == 0);
 
@@ -267,6 +278,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 90000)
     public void testCleanSession() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5399
         String topic = "test";
         final DefaultListener listener = new DefaultListener();
 
@@ -301,6 +313,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         LOG.info("Subscribing durable subscriber...");
         client3.subscribe(topic, 1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -350,6 +363,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         String message = "Message from client: " + clientId;
         client1.publish(topic, message.getBytes(StandardCharsets.UTF_8), 1, false);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
         String result = client1MqttCallback.messageQ.poll(10, TimeUnit.SECONDS).getValue();
         assertEquals(message, result);
         assertEquals(1, client1MqttCallback.received.get());
@@ -385,6 +399,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 300000)
     public void testActiveMQWildCards1() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
         final DefaultListener listener = new DefaultListener();
         MqttClient client = createClient(false, "receive", listener);
         final String ACCOUNT_PREFIX = "test/";
@@ -414,6 +429,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return client.isConnected();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(100));
         return client;
     }
@@ -426,6 +442,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return !client.isConnected();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(100));
     }
 
@@ -443,6 +460,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
 
         final AtomicInteger received = new AtomicInteger();
         final BlockingQueue<AbstractMap.SimpleEntry<String, String>> messageQ = new ArrayBlockingQueue<AbstractMap.SimpleEntry<String, String>>(10);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
 
         @Override
         public void connectionLost(Throwable cause) {
@@ -452,6 +470,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         public void messageArrived(String topic, MqttMessage message) throws Exception {
             LOG.info("Received: {}", message);
             received.incrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6859
             messageQ.put(new AbstractMap.SimpleEntry(topic, new String(message.getPayload(), StandardCharsets.UTF_8)));
         }
 

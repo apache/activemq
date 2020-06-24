@@ -24,6 +24,7 @@ class Listener {
     public static void main(String[] args) throws JMSException {
 
         final String TOPIC_PREFIX = "topic://";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5918
 
         String user = env("ACTIVEMQ_USER", "admin");
         String password = env("ACTIVEMQ_PASSWORD", "password");

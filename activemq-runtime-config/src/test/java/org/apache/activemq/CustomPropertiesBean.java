@@ -20,6 +20,7 @@ import java.util.Properties;
 import org.springframework.beans.factory.FactoryBean;
 
 public class CustomPropertiesBean implements FactoryBean<Properties> {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4821
     Properties properties = new Properties();
     public CustomPropertiesBean() {
         properties.put("custom", "isKing");

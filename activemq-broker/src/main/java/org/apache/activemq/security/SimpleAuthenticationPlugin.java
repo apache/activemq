@@ -56,6 +56,7 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
     }
 
     public Broker installPlugin(Broker parent) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2081
         SimpleAuthenticationBroker broker = new SimpleAuthenticationBroker(parent, userPasswords, userGroups);
         broker.setAnonymousAccessAllowed(anonymousAccessAllowed);
         broker.setAnonymousUser(anonymousUser);
@@ -73,13 +74,17 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
      * @org.apache.xbean.ElementType class="org.apache.activemq.security.AuthenticationUser"
      */
     public void setUsers(List<?> users) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5608
         userPasswords.clear();
         userGroups.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
         for (Iterator<?> it = users.iterator(); it.hasNext();) {
             AuthenticationUser user = (AuthenticationUser)it.next();
             userPasswords.put(user.getUsername(), user.getPassword());
             Set<Principal> groups = new HashSet<Principal>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7412
             if (user.getGroups() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1010
                 StringTokenizer iter = new StringTokenizer(user.getGroups(), ",");
                 while (iter.hasMoreTokens()) {
                     String name = iter.nextToken().trim();
@@ -92,10 +97,12 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
 
 
     public void setAnonymousAccessAllowed(boolean anonymousAccessAllowed) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2081
         this.anonymousAccessAllowed = anonymousAccessAllowed;
     }
 
     public boolean isAnonymousAccessAllowed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4849
         return anonymousAccessAllowed;
     }
 

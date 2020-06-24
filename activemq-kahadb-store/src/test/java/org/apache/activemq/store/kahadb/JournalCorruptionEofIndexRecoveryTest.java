@@ -74,6 +74,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
     private final String KAHADB_DIRECTORY = "target/activemq-data/";
     private final String payload = new String(new byte[1024]);
     File brokerDataDir = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
 
     protected void startBroker() throws Exception {
         doStartBroker(true, false);
@@ -90,6 +91,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         }
 
         if (whackIndex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
             File indexToDelete = new File(brokerDataDir, "db.data");
             LOG.info("Whacking index: " + indexToDelete);
             indexToDelete.delete();
@@ -102,6 +104,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
     private void doStartBroker(boolean delete, boolean forceRecoverIndex) throws Exception {
         broker = new BrokerService();
         broker.setDataDirectory(KAHADB_DIRECTORY);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
 
         if (delete) {
             IOHelper.deleteChildren(broker.getPersistenceAdapter().getDirectory());
@@ -118,6 +121,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         cf = new ActiveMQConnectionFactory(connectionUri);
 
         broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         brokerDataDir = broker.getPersistenceAdapter().getDirectory();
         LOG.info("Starting broker..");
     }
@@ -131,6 +135,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         adapter.setJournalMaxFileLength(1024 * 20);
 
         adapter.setJournalMaxWriteBatchSize(journalMaxBatchSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
 
         // speed up the test case, checkpoint an cleanup early and often
         adapter.setCheckpointInterval(5000);
@@ -138,7 +143,9 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
         adapter.setCheckForCorruptJournalFiles(true);
         adapter.setIgnoreMissingJournalfiles(ignoreMissingJournalFiles);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6083
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         adapter.setPreallocationStrategy(Journal.PreallocationStrategy.ZEROS.name());
         adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL_ASYNC.name());
     }
@@ -153,7 +160,9 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     @Before
     public void reset() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6083
         ignoreMissingJournalFiles = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         journalMaxBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     }
 
@@ -199,6 +208,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
     @Test
     public void testRecoveryAfterCorruptionMetadataLocation() throws Exception {
         startBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6815
 
         produceMessagesToConsumeMultipleDataFiles(50);
 
@@ -297,8 +307,10 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     @Test
     public void testRecoverIndexWithSmallBatch() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         journalMaxBatchSize = 2 * 1024;
         startBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
 
         final int numToSend = 4;
         produceMessagesToConsumeMultipleDataFiles(numToSend);
@@ -312,6 +324,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     @Test
     public void testRecoveryAfterProducerAuditLocationCorrupt() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6378
+//IC see: https://issues.apache.org/jira/browse/AMQ-6376
         doTestRecoveryAfterLocationCorrupt(false);
     }
 
@@ -379,6 +393,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         corruptOrderIndex(id, size);
 
         randomAccessFile.getChannel().force(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         dataFile.closeRandomAccessFile(randomAccessFile);
     }
 
@@ -449,6 +464,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
     }
 
     private int getNumberOfJournalFiles() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         Collection<DataFile> files = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
         int reality = 0;
         for (DataFile file : files) {
@@ -461,6 +477,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     private int produceMessages(Destination destination, int numToSend) throws Exception {
         int sent = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
         connection.start();
         try {
@@ -486,6 +503,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
     }
 
     private int drainQueue(int max) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6378
+//IC see: https://issues.apache.org/jira/browse/AMQ-6376
         return drain(cf, destination, max);
     }
 
@@ -495,6 +514,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = null;
         int count = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6372
         try {
             consumer = session.createConsumer(destination);
             while (count < max && consumer.receive(4000) != null) {

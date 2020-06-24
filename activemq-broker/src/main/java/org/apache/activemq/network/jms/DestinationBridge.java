@@ -85,6 +85,9 @@ public abstract class DestinationBridge implements Service, MessageListener {
     @Override
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
             createConsumer();
             createProducer();
         }
@@ -100,8 +103,12 @@ public abstract class DestinationBridge implements Service, MessageListener {
 
         int attempt = 0;
         final int maxRetries = jmsConnector.getReconnectionPolicy().getMaxSendRetries();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
 
         while (started.get() && message != null && (maxRetries == ReconnectionPolicy.INFINITE || attempt <= maxRetries)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5949
 
             try {
 
@@ -147,6 +154,7 @@ public abstract class DestinationBridge implements Service, MessageListener {
 
                 // if we got here then it made it out and was ack'd
                 return;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
 
             } catch (Exception e) {
                 LOG.info("failed to forward message on attempt: {} reason: {} message: {}", new Object[]{ attempt, e, message });

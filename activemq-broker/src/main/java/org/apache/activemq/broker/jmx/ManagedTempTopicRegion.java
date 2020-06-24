@@ -41,6 +41,7 @@ public class ManagedTempTopicRegion extends TempTopicRegion {
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-511
         Subscription sub = super.createSubscription(context, info);
         ObjectName name = regionBroker.registerSubscription(context, sub);
         sub.setObjectName(name);

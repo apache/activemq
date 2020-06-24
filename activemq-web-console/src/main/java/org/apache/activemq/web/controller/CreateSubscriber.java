@@ -40,6 +40,7 @@ public class CreateSubscriber extends DurableSubscriberFacade implements Control
     }
 
     public void setSelector(String selector) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1540
         if (selector != null) {
             selector = selector.trim();
         }
@@ -55,6 +56,7 @@ public class CreateSubscriber extends DurableSubscriberFacade implements Control
     }
     
 	public String[] getSupportedHttpMethods() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2613
 		return new String[]{"POST"};
 	}
 

@@ -204,6 +204,7 @@ public abstract class AbstractKahaDBStore extends LockableServiceSupport {
     }
 
     public void setCleanupOnStop(boolean cleanupOnStop) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7086
         this.cleanupOnStop = cleanupOnStop;
     }
 

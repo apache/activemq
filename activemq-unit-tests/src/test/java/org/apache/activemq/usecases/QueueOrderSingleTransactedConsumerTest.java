@@ -50,6 +50,7 @@ public class QueueOrderSingleTransactedConsumerTest {
     public void testSingleConsumerTxRepeat() throws Exception {
 
         // effect the broker sequence id that is region wide
+//IC see: https://issues.apache.org/jira/browse/AMQ-6286
         ActiveMQQueue dummyDest = new ActiveMQQueue("AnotherQueue");
         publishMessagesWithOrderProperty(10, 0, dest);
         publishMessagesWithOrderProperty(1, 0, dummyDest);
@@ -71,6 +72,7 @@ public class QueueOrderSingleTransactedConsumerTest {
     public void testSingleSessionXConsumerTxRepeat() throws Exception {
 
         publishMessagesWithOrderProperty(50);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6286
 
         Connection connection = getConnectionFactory().createConnection();
         connection.start();
@@ -205,6 +207,7 @@ public class QueueOrderSingleTransactedConsumerTest {
 
 
     private ActiveMQConnectionFactory getConnectionFactory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6286
         return new ActiveMQConnectionFactory(broker.getTransportConnectorByScheme("tcp").getPublishableConnectString());
     }
 

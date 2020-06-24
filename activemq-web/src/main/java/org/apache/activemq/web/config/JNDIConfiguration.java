@@ -43,6 +43,7 @@ public class JNDIConfiguration extends AbstractConfiguration {
     private InitialContext context;
 
     public JNDIConfiguration() throws NamingException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2352
         this.context = new InitialContext();
     }
 

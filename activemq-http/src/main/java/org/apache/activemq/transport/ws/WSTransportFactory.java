@@ -40,12 +40,16 @@ public class WSTransportFactory extends TransportFactory implements BrokerServic
 
     @Override
     public TransportServer doBind(URI location) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3880
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             WSTransportServer result = new WSTransportServer(location);
             Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3980
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5237
             IntrospectionSupport.setProperties(result, transportOptions);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
             result.setBrokerService(brokerService);
             result.setTransportOption(transportOptions);
             result.setHttpOptions(httpOptions);
@@ -57,6 +61,7 @@ public class WSTransportFactory extends TransportFactory implements BrokerServic
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         this.brokerService = brokerService;
     }
 }

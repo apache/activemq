@@ -145,6 +145,7 @@ public class XStreamTransformTest extends TestCase {
         org.apache.activemq.util.oxm.XStreamMessageTransformer transformer = new org.apache.activemq.util.oxm.XStreamMessageTransformer();
         transformer.setTransformType(ADAPTIVE);
         connectionFactory.setTransformer(transformer);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1208
         connection = connectionFactory.createConnection();
         connection.start();
 
@@ -228,6 +229,7 @@ public class XStreamTransformTest extends TestCase {
     public void testStreamDriverTransform() throws Exception {
     	org.apache.activemq.util.oxm.XStreamMessageTransformer transformer = new org.apache.activemq.util.oxm.XStreamMessageTransformer();
         transformer.setTransformType(ADAPTIVE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1494
     	transformer.setStreamDriver(new JettisonMappedXmlDriver());
         connectionFactory.setTransformer(transformer);
         connection = connectionFactory.createConnection();

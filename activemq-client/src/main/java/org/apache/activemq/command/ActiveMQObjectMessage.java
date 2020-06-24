@@ -86,6 +86,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     }
 
     private void copy(ActiveMQObjectMessage copy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2622
         ActiveMQConnection connection = getConnection();
         if (connection == null || !connection.isObjectMessageSerializationDefered()) {
             storeContent();
@@ -130,6 +131,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
 
     @Override
     public boolean isContentMarshalled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6811
         return content != null || object == null;
     }
 
@@ -140,6 +142,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
 
     @Override
     public String getJMSXMimeType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return "jms/object-message";
     }
 
@@ -204,12 +207,15 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
                     is = new InflaterInputStream(is);
                 }
                 DataInputStream dataIn = new DataInputStream(is);
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
                 ClassLoadingAwareObjectInputStream objIn = new ClassLoadingAwareObjectInputStream(dataIn);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
                 objIn.setTrustedPackages(trustedPackages);
                 objIn.setTrustAllPackages(trustAllPackages);
                 try {
                     object = (Serializable)objIn.readObject();
                 } catch (ClassNotFoundException ce) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2154
                     throw JMSExceptionSupport.create("Failed to build body from content. Serializable class not available to broker. Reason: " + ce, ce);
                 } finally {
                     dataIn.close();
@@ -223,6 +229,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
 
     @Override
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2622
         super.beforeMarshall(wireFormat);
         // may have initiated on vm transport with deferred marshalling
         storeContent();
@@ -237,6 +244,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     @Override
     public void onMessageRolledBack() {
         super.onMessageRolledBack();
+//IC see: https://issues.apache.org/jira/browse/AMQ-519
 
         // lets force the object to be deserialized again - as we could have
         // changed the object
@@ -245,6 +253,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
 
     @Override
     public void compress() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         storeContent();
         super.compress();
     }
@@ -259,6 +268,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     }
 
     public List<String> getTrustedPackages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         return trustedPackages;
     }
 
@@ -276,6 +286,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
 
     @Override
     public void initTransients() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         trustedPackages = Arrays.asList(ClassLoadingAwareObjectInputStream.serializablePackages);
         trustAllPackages = false;
     }

@@ -39,6 +39,7 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
 
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         Destination answer = super.addDestination(context, destination,create);
         generateFile();
         return answer;
@@ -79,6 +80,7 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         writer.println("}");
         writer.println();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2697
         writer.println("subgraph temp queues {");
         writer.println("  node [fillcolor=red];     ");
         writer.println("  label = \"TempQueues\"");
@@ -95,6 +97,7 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         writer.println("}");
         writer.println();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2697
         writer.println("subgraph temp topics {");
         writer.println("  node [fillcolor=green];     ");
         writer.println("  label = \"TempTopics\"");

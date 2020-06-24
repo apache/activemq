@@ -36,6 +36,8 @@ public class CronParser {
     public static long getNextScheduledTime(final String cronEntry, long currentTime) throws MessageFormatException {
 
         long result = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3199
+//IC see: https://issues.apache.org/jira/browse/AMQ-3200
 
         if (cronEntry == null || cronEntry.length() == 0) {
             return result;
@@ -43,8 +45,10 @@ public class CronParser {
 
         // Handle the once per minute case "* * * * *"
         // starting the next event at the top of the minute.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4397
         if (cronEntry.equals("* * * * *")) {
             result = currentTime + 60 * 1000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4591
             result = result / 60000 * 60000;
             return result;
         }
@@ -60,6 +64,7 @@ public class CronParser {
         CronEntry dayOfMonth = entries.get(DAY_OF_MONTH);
         CronEntry month = entries.get(MONTH);
         CronEntry dayOfWeek = entries.get(DAY_OF_WEEK);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3036
 
         // Start at the top of the next minute, cron is only guaranteed to be
         // run on the minute.
@@ -288,6 +293,8 @@ public class CronParser {
             int value = Integer.parseInt(entry.token);
             result.add(value);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3199
+//IC see: https://issues.apache.org/jira/browse/AMQ-3200
         Collections.sort(result);
         return result;
     }
@@ -305,6 +312,7 @@ public class CronParser {
     }
 
     protected static boolean isAll(String token) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3306
         return token != null && token.length() == 1 && (token.charAt(0) == '*' || token.charAt(0) == '?');
     }
 
@@ -327,11 +335,14 @@ public class CronParser {
         List<CronEntry> result = new ArrayList<CronEntry>();
 
         CronEntry minutes = new CronEntry("Minutes", tokens.get(MINUTES), 0, 60);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3199
+//IC see: https://issues.apache.org/jira/browse/AMQ-3200
         minutes.currentWhen = calculateValues(minutes);
         result.add(minutes);
         CronEntry hours = new CronEntry("Hours", tokens.get(HOURS), 0, 24);
         hours.currentWhen = calculateValues(hours);
         result.add(hours);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5645
         CronEntry dayOfMonth = new CronEntry("DayOfMonth", tokens.get(DAY_OF_MONTH), 1, 32);
         dayOfMonth.currentWhen = calculateValues(dayOfMonth);
         result.add(dayOfMonth);

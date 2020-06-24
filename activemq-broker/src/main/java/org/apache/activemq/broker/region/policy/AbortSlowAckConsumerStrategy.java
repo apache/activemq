@@ -72,6 +72,9 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
         }
 
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7079
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
         List<Subscription> subscribersDestroyed  = new LinkedList<Subscription>();
         // check for removed consumers also
         for (Map.Entry<Subscription, SlowConsumerEntry> entry : slowConsumers.entrySet()) {
@@ -91,6 +94,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
         List<Destination> disposed = new ArrayList<Destination>();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5421
         for (Destination destination : destinations.values()) {
             if (destination.isDisposed()) {
                 disposed.add(destination);
@@ -104,6 +108,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
         }
 
         // Clean up an disposed destinations to save space.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5421
         for (Destination destination : disposed) {
             destinations.remove(destination.getName());
         }
@@ -113,6 +118,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
     private void updateSlowConsumersList(List<Subscription> subscribers) {
         for (Subscription subscriber : subscribers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
             if (isIgnoreNetworkSubscriptions() && subscriber.getConsumerInfo().isNetworkSubscription()) {
                 if (slowConsumers.remove(subscriber) != null) {
                     LOG.info("network sub: {} is no longer slow", subscriber.getConsumerInfo().getConsumerId());
@@ -136,11 +142,16 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
                     LOG.debug("sub: {} is now slow", subscriber.getConsumerInfo().getConsumerId());
                     SlowConsumerEntry entry = new SlowConsumerEntry(subscriber.getContext());
                     entry.mark(); // mark consumer on first run
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
                     if (subscriber instanceof AbstractSubscription) {
                         AbstractSubscription abstractSubscription = (AbstractSubscription) subscriber;
                         if (!abstractSubscription.isSlowConsumer()) {
                             abstractSubscription.setSlowConsumer(true);
                             for (Destination destination: abstractSubscription.getDestinations()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7079
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
                                destination.slowConsumer(broker.getAdminConnectionContext(), abstractSubscription);
                             }
                         }
@@ -184,6 +195,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
     @Override
     public void addDestination(Destination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5421
         this.destinations.put(destination.getName(), destination);
     }
 

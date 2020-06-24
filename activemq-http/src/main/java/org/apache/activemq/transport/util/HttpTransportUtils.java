@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 public class HttpTransportUtils {
 
     public static String generateWsRemoteAddress(HttpServletRequest request) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5865
         if (request == null) {
             throw new IllegalArgumentException("HttpServletRequest must not be null.");
         }
@@ -35,6 +36,7 @@ public class HttpTransportUtils {
     }
 
     public static String generateWsRemoteAddress(HttpServletRequest request, String schemePrefix) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         if (request == null) {
             throw new IllegalArgumentException("HttpServletRequest must not be null.");
         }

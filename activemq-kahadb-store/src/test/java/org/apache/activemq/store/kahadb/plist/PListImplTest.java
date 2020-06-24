@@ -37,6 +37,7 @@ public class PListImplTest extends PListTestSupport {
 
     @Override
     protected PListStoreImpl createPListStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         return new PListStoreImpl();
     }
 
@@ -79,6 +80,7 @@ public class PListImplTest extends PListTestSupport {
 
     @Test
     public void testIndexDir() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6403
         PListStoreImpl pListStore = (PListStoreImpl)store;
         assertEquals(pListStore.getDirectory(), pListStore.getIndexDirectory());
     }
@@ -89,6 +91,7 @@ public class PListImplTest extends PListTestSupport {
         final File directory = pListStore.getDirectory();
         pListStore.stop();
         pListStore = createPListStore();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6436
         pListStore.setDirectory(directory);
         pListStore.setLazyInit(false);
         pListStore.setIndexDirectory(new File(directory, "indexDir"));

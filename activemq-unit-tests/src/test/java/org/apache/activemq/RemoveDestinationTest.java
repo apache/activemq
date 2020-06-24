@@ -48,9 +48,11 @@ public class RemoveDestinationTest {
     private static final String VM_BROKER_URL = "vm://localhost?create=false";
 
     BrokerService broker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(true);
@@ -68,6 +70,7 @@ public class RemoveDestinationTest {
     }
 
     private Connection createConnection(final boolean start) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(VM_BROKER_URL);
         Connection conn = cf.createConnection();
         if (start) {
@@ -120,6 +123,7 @@ public class RemoveDestinationTest {
 
         ActiveMQConnection amqConnection = (ActiveMQConnection) createConnection(true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         final DestinationSource destinationSource = amqConnection.getDestinationSource();
         Session session = amqConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TEST.FOO");
@@ -213,6 +217,7 @@ public class RemoveDestinationTest {
         }
 
         assertTrue("Destination never registered", Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
             @Override
             public boolean isSatisified() throws Exception {

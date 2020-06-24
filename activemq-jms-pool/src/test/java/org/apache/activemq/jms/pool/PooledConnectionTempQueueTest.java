@@ -41,6 +41,7 @@ public class PooledConnectionTempQueueTest extends JmsPoolTestSupport {
 
     @Test(timeout = 60000)
     public void testTempQueueIssue() throws JMSException, InterruptedException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
             "vm://localhost?broker.persistent=false&broker.useJmx=false");
         final PooledConnectionFactory cf = new PooledConnectionFactory();
@@ -85,6 +86,7 @@ public class PooledConnectionTempQueueTest extends JmsPoolTestSupport {
 
         // This sleep also seems to matter
         Thread.sleep(3000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         MessageConsumer consumer = session.createConsumer(tempQueue);
         Message replyMsg = consumer.receive();

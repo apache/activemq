@@ -68,6 +68,7 @@ class ProxyConnection implements Service {
                     shutdown = true;
                 }
                 // skipping WireFormat infos
+//IC see: https://issues.apache.org/jira/browse/AMQ-3119
                 if (command.getClass() == WireFormatInfo.class) {
                     return;
                 }
@@ -94,6 +95,7 @@ class ProxyConnection implements Service {
             public void onCommand(Object command) {
                 try {
                     // skipping WireFormat infos
+//IC see: https://issues.apache.org/jira/browse/AMQ-3119
                     if (command.getClass() == WireFormatInfo.class) {
                         return;
                     }
@@ -121,6 +123,7 @@ class ProxyConnection implements Service {
         shuttingDown.set(true);
         ServiceStopper ss = new ServiceStopper();
         ss.stop(remoteTransport);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4889
         ss.stop(localTransport);
         ss.throwFirstException();
     }

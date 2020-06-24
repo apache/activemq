@@ -52,6 +52,7 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
     }
 
     public XATransactionId(byte[] encodedBytes) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         encodedXidBytes = encodedBytes;
         initFromEncodedBytes();
     }
@@ -103,6 +104,7 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
         if (transactionKey == null) {
             StringBuffer s = new StringBuffer();
             s.append("XID:[" + formatId + ",globalId=");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
             s.append(stringForm(formatId, globalTransactionId));
             s.append(",branchId=");
             s.append(stringForm(formatId, branchQualifier));
@@ -200,6 +202,7 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
     public int hashCode() {
         if (hash == 0) {
             hash = formatId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7013
             JenkinsHash jh = JenkinsHash.getInstance();
             hash = jh.hash(globalTransactionId, hash);
             hash = jh.hash(branchQualifier, hash);
@@ -228,6 +231,7 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
     }
 
     public void setPreparedAcks(ArrayList<MessageAck> preparedAcks) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         this.preparedAcks = preparedAcks;
     }
 

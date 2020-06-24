@@ -133,6 +133,7 @@ public class AMQ3166Test {
             fail("Expect TransactionRolledBackException");
         } catch (JMSException expected) {
             assertTrue(expected.getCause() instanceof XAException);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
             assertTrue(expected.getCause().getCause() instanceof TransactionRolledBackException);
             assertTrue(expected.getCause().getCause().getCause() instanceof RuntimeException);
         }

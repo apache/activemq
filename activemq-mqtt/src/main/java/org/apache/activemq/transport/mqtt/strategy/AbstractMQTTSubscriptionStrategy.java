@@ -96,6 +96,7 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
     @Override
     public byte onSubscribe(final Topic topic) throws MQTTProtocolException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         final String destinationName = topic.name().toString();
         final QoS requestedQoS = topic.qos();
 
@@ -139,6 +140,7 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
 
         // use actual client id used to create connection to lookup connection
         // context
+//IC see: https://issues.apache.org/jira/browse/AMQ-5511
         String connectionInfoClientId = protocol.getClientId();
         // for zero-byte client ids we used connection id
         if (connectionInfoClientId == null || connectionInfoClientId.isEmpty()) {
@@ -191,6 +193,7 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
 
     @Override
     public MQTTSubscription getSubscription(ConsumerId consumerId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         return subscriptionsByConsumerId.get(consumerId);
     }
 
@@ -216,7 +219,9 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
                     LOG.warn("Error subscribing to {}", topicName, throwable);
                     // version 3.1 don't supports silent fail
                     // version 3.1.1 send "error" qos
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
                     if (protocol.version == MQTTProtocolConverter.V3_1_1) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5734
                         qos[0] = SUBSCRIBE_ERROR;
                     } else {
                         qos[0] = (byte) qoS.ordinal();
@@ -255,6 +260,7 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
     //----- Durable Subscription management methods --------------------------//
 
     protected void deleteDurableSubs(List<SubscriptionInfo> subs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5303
         try {
             for (SubscriptionInfo sub : subs) {
                 RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();

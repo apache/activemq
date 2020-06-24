@@ -103,6 +103,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         remoteConn.connect();
         remoteConn.subscribe(new Topic[]{new Topic("foo/bar", QoS.AT_LEAST_ONCE)});
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         assertTrue("No destination detected!", consumerNetworked.await(1, TimeUnit.SECONDS));
         assertQueueExistsOn(remoteBroker, "Consumer.foo_AT_LEAST_ONCE.VirtualTopic.foo.bar");
         assertQueueExistsOn(broker, "Consumer.foo_AT_LEAST_ONCE.VirtualTopic.foo.bar");
@@ -122,6 +123,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         // now we should see that message on the local broker because the subscription
         // should have been properly networked... we'll give a sec of grace for the
         // networking and forwarding to have happened properly
+//IC see: https://issues.apache.org/jira/browse/AMQ-5365
         org.fusesource.mqtt.client.Message msg = localConn.receive(100, TimeUnit.SECONDS);
         assertNotNull(msg);
         msg.ack();
@@ -134,6 +136,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         // would effectively give us duplicates in a distributed topic scenario:
         remoteConn.subscribe(new Topic[]{new Topic("foo/bar", QoS.AT_LEAST_ONCE)});
         msg = remoteConn.receive(500, TimeUnit.MILLISECONDS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         assertNull("We have duplicate messages across the cluster for a distributed topic", msg);
     }
 
@@ -144,6 +147,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
 
         final ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(brokerUri.toASCIIString());
         final Connection connection = cf.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         connection.start();
         final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination dest = session.createTopic("ActiveMQ.Advisory.Consumer.Queue.Consumer.foo:AT_LEAST_ONCE.VirtualTopic.foo.bar");
@@ -171,6 +175,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
     }
 
     private void assertQueueExistsOn(BrokerService broker, String queueName) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         BrokerViewMBean brokerView = broker.getAdminView();
         ObjectName[] queueNames = brokerView.getQueues();
         assertEquals(1, queueNames.length);
@@ -200,6 +205,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         broker.setBrokerName("local");
         broker.setDataDirectory("target/activemq-data");
         broker.setDeleteAllMessagesOnStartup(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         TransportConnector tc = broker.addConnector(getDefaultMQTTTransportConnectorUri());
         localBrokerMQTTPort = tc.getConnectUri().getPort();
         return broker;
@@ -211,12 +217,14 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         broker.setPersistent(true);
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setDataDirectory("target/activemq-data");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         TransportConnector tc = broker.addConnector(getDefaultMQTTTransportConnectorUri());
         remoteBrokerMQTTPort = tc.getConnectUri().getPort();
         return broker;
     }
 
     private String getDefaultMQTTTransportConnectorUri(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         return "mqtt://localhost:0?transport.subscriptionStrategy=mqtt-virtual-topic-subscriptions";
     }
 

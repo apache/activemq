@@ -91,6 +91,7 @@ public class MQTTProtocolSupport {
      * @return a destination name formatted for MQTT.
      */
     public static String convertActiveMQToMQTT(String destinationName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5377
         char[] chars = destinationName.toCharArray();
         for (int i = 0; i < chars.length; i++) {
             switch(chars[i]) {
@@ -128,6 +129,7 @@ public class MQTTProtocolSupport {
      * @return a string value for the given command type.
      */
     public static String commandType(byte header) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5307
         byte messageType = (byte) ((header & 0xF0) >>> 4);
         switch (messageType) {
             case PINGREQ.TYPE:
@@ -166,6 +168,9 @@ public class MQTTProtocolSupport {
      */
     public static void validate(String topicName) throws MQTTProtocolException {
         int topicLen = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5883
+//IC see: https://issues.apache.org/jira/browse/AMQ-5884
+//IC see: https://issues.apache.org/jira/browse/AMQ-5885
         try {
             topicLen = topicName.getBytes("UTF-8").length;
         } catch (UnsupportedEncodingException e) {

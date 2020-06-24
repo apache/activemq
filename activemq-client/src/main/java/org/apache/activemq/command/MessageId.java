@@ -71,6 +71,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         if (p >= 0) {
             producerSequenceId = Long.parseLong(messageKey.substring(p + 1));
             messageKey = messageKey.substring(0, p);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         } else {
             throw new NumberFormatException();
         }
@@ -82,6 +83,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
      * is only for in-JVM changes to accommodate foreign JMS message IDs
      */
     public void setTextView(String key) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         this.textView = key;
     }
 
@@ -121,6 +123,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
 
     public String toProducerKey() {
         if (textView == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
             return toString();
         } else {
             return producerId.toString() + ":" + producerSequenceId;
@@ -185,8 +188,12 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         MessageId copy = new MessageId(producerId, producerSequenceId);
         copy.key = key;
         copy.brokerSequenceId = brokerSequenceId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4529
         copy.dataLocator = dataLocator;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         copy.entryLocator = entryLocator;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         copy.futureOrSequenceLong = futureOrSequenceLong;
         copy.plistLocator = plistLocator;
         copy.textView = textView;
@@ -222,6 +229,8 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     }
 
     public Object getFutureOrSequenceLong() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         return futureOrSequenceLong;
     }
 
@@ -238,6 +247,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     }
 
     public Object getPlistLocator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         return plistLocator;
     }
 
@@ -246,6 +256,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     }
 
     private Object readResolve() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5816
         dataLocator = new AtomicReference<Object>();
         return this;
     }

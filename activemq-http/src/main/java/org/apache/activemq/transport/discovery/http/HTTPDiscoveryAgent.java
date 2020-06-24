@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
 
     static enum UpdateState {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4723
         SUSPENDED,
         RESUMING,
         RESUMED
@@ -94,6 +95,7 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
     }
 
     public void registerService(String service) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3521
         synchronized (registeredServices) {
             registeredServices.add(service);
         }
@@ -103,6 +105,7 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
     synchronized private void doRegister(String service) {
         String url = registryURL;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3521
             HttpPut method = new HttpPut(url);
             method.addHeader("service", service);
             ResponseHandler<String> handler = new BasicResponseHandler();
@@ -231,6 +234,7 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
     }
 
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3521
         if (startCounter.addAndGet(1) == 1) {
             if (startEmbeddRegistry) {
                 jetty = createEmbeddedJettyServer();
@@ -247,6 +251,7 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
                     while (running.get()) {
                         try {
                             update();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4723
                             synchronized (updateMutex) {
                                 do {
                                     if( updateState == UpdateState.RESUMING ) {
@@ -275,6 +280,7 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
      * @throws Exception
      */
     private Service createEmbeddedJettyServer() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3521
         Class<?> clazz = HTTPDiscoveryAgent.class.getClassLoader().loadClass("org.apache.activemq.transport.discovery.http.EmbeddedJettyServer");
         return (Service) clazz.newInstance();
     }
@@ -322,7 +328,9 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
     }
 
     public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3521
         if (startCounter.decrementAndGet() == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4723
             resume();
             running.set(false);
             if (thread != null) {
@@ -363,6 +371,7 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
 
     @Override
     public void suspend() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4723
         synchronized (updateMutex) {
             updateState = UpdateState.SUSPENDED;
         }

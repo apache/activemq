@@ -38,6 +38,7 @@ public abstract class AbstractSaslMechanism implements SaslMechanism {
 
     @Override
     public boolean isFailed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         return failed;
     }
 

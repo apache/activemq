@@ -123,12 +123,14 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     @Override
     public void storeContent() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4182
         if (dataOut != null) {
             try {
                 dataOut.close();
                 ByteSequence bs = bytesOut.toByteSequence();
                 setContent(bs);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5381
                 ActiveMQConnection connection = getConnection();
                 if (connection != null && connection.isUseCompression()) {
                     doCompress();
@@ -153,6 +155,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     @Override
     public boolean isContentMarshalled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6811
         return content != null || dataOut == null;
     }
 
@@ -163,6 +166,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     @Override
     public String getJMSXMimeType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return "jms/bytes-message";
     }
 
@@ -812,6 +816,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     public void reset() throws JMSException {
         storeContent();
         setReadOnlyBody(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4182
         try {
             if (bytesOut != null) {
                 bytesOut.close();
@@ -832,6 +837,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     private void initializeWriting() throws JMSException {
         checkReadOnlyBody();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7291
         initializeWritingNoCheck();
     }
 
@@ -852,6 +858,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
             try {
                 ByteSequence toRestore = this.content;
                 if (isCompressed()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4182
                     toRestore = new ByteSequence(decompress(this.content));
                     compressed = false;
                 }
@@ -875,6 +882,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     private void initializeReading() throws JMSException {
         checkWriteOnlyBody();
         if (dataIn == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4182
             try {
                 ByteSequence data = getContent();
                 if (data == null) {
@@ -918,8 +926,10 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     @Override
     public void setObjectProperty(String name, Object value) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7291
         checkReadOnlyProperties();
         initializeWritingNoCheck();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7291
         super.setObjectProperty(name, value);
     }
 
@@ -932,6 +942,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     protected void doCompress() throws IOException {
         compressed = true;
         ByteSequence bytes = getContent();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4182
         if (bytes != null) {
             int length = bytes.getLength();
             ByteArrayOutputStream compressed = new ByteArrayOutputStream();
@@ -951,6 +962,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
                 bytes.offset = 0;
                 setContent(bytes);
             } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3062
                 deflater.end();
                 compressed.close();
             }

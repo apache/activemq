@@ -73,6 +73,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         Message answer = consumer.receive(5000);
         assertNotNull("Should have received a message!", answer);
         // check if method will return at all and will return a null
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
         answer = consumer.receive(1);
         assertNull("Should have not received a message!", answer);
         answer = consumer.receiveNoWait();
@@ -175,6 +176,8 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
 
     private void doTestManyMessageConsumer(boolean transacted) throws Exception {
         Session session = connection.createSession(transacted, transacted ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5476
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
 
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Msg1"));
@@ -247,6 +250,8 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testManyMessageConsumerWithTxSendPrioritySupport() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5476
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
         ((ActiveMQConnection)connection).setMessagePrioritySupported(true);
         doTestManyMessageConsumerWithSend(true);
     }

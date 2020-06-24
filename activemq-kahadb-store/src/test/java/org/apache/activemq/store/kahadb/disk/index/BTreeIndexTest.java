@@ -61,6 +61,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         BTreeIndex<String, Long> index = new BTreeIndex<String,Long>(pf, id);
         index.setKeyMarshaller(StringMarshaller.INSTANCE);
         index.setValueMarshaller(LongMarshaller.INSTANCE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7084
         index.load(tx);
         tx.commit();
 
@@ -165,6 +166,8 @@ public class BTreeIndexTest extends IndexTestSupport {
 
     @Test(timeout=60000)
     public void testLimitedIteration() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         createPageFileAndIndex(500);
         BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
         this.index.load(tx);
@@ -181,6 +184,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         // BTree should iterate it in sorted order up to limit
         int counter=0;
         for (Iterator<Map.Entry<String,Long>> i = index.iterator(tx, key(0), key(500)); i.hasNext();) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
             Map.Entry<String,Long> entry = i.next();
             assertEquals(key(counter),entry.getKey());
             assertEquals(counter,(long)entry.getValue());
@@ -370,6 +374,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         tx.commit();
 
         tx =  pf.tx();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3466
         String val = new String(new byte[1024]);
         final long numMessages = 10;
         final int numConsumers = 200;
@@ -381,6 +386,7 @@ public class BTreeIndexTest extends IndexTestSupport {
             }
             test.put(tx, i, hs);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3466
         tx.commit();
         tx =  pf.tx();
         for (long i=0; i<numMessages; i++) {
@@ -508,6 +514,10 @@ public class BTreeIndexTest extends IndexTestSupport {
 
         final int NUM_ITERATIONS = 50;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
+//IC see: https://issues.apache.org/jira/browse/AMQ-4158
         pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         //pf.setEnablePageCaching(false);

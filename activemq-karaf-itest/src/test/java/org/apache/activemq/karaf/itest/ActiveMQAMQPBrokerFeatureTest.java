@@ -31,6 +31,8 @@ public class ActiveMQAMQPBrokerFeatureTest extends AbstractFeatureTest {
     public static Option[] configure() {
         return new Option[] //
         {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6630
+//IC see: https://issues.apache.org/jira/browse/AMQ-6493
          CoreOptions.mavenBundle("org.apache.geronimo.specs","geronimo-jms_2.0_spec").version("1.0-alpha-2"),
          configure("activemq", "activemq-amqp-client"), //
          configureBrokerStart()
@@ -39,6 +41,7 @@ public class ActiveMQAMQPBrokerFeatureTest extends AbstractFeatureTest {
 
     @Test(timeout = 5 * 60 * 1000)
     public void testProduceConsume() throws Throwable {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
     	JMSTester tester = new JMSTester(getQPIDConnection());
     	tester.produceAndConsume(sessionFactory);
     	tester.close();

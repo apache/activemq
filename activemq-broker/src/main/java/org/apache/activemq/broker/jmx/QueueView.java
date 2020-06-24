@@ -42,8 +42,10 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     }
 
     public CompositeData getMessage(String messageId) throws OpenDataException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3934
     	CompositeData result = null;
     	QueueMessageReference ref = ((Queue)destination).getMessage(messageId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3193
 
         if (ref != null) {
 	        Message rc = ref.getMessage();
@@ -58,6 +60,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
 
     public synchronized void purge() throws Exception {
         final long originalMessageCount = destination.getDestinationStatistics().getMessages().getCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5743
 
         ((Queue)destination).purge();
 
@@ -77,6 +80,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     }
 
     public synchronized boolean copyMessageTo(String messageId, String destinationName) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2970
         ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).copyMessageTo(context, messageId, toDestination);
@@ -113,6 +117,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     }
 
     public synchronized int retryMessages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4483
         ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         return ((Queue)destination).retryMessages(context, Integer.MAX_VALUE);
     }
@@ -121,7 +126,9 @@ public class QueueView extends DestinationView implements QueueViewMBean {
      * Moves a message back to its original destination
      */
     public boolean retryMessage(String messageId) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1908
         Queue queue = (Queue) destination;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3193
         QueueMessageReference ref = queue.getMessage(messageId);
         if (ref == null) {
             throw new JMSException("Could not find message reference: "+ messageId);
@@ -130,9 +137,11 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         if (rc != null) {
             ActiveMQDestination originalDestination = rc.getOriginalDestination();
             if (originalDestination != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2970
                 ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
                 return queue.moveMessageTo(context, ref, originalDestination);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
             else {
                 throw new JMSException("No original destination for message: "+ messageId);
             }
@@ -143,6 +152,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     }
 
     public int cursorSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1755
         Queue queue = (Queue) destination;
         if (queue.getMessages() != null){
             return queue.getMessages().size();
@@ -195,6 +205,8 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     }
 
     public boolean isCacheEnabled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3149
+//IC see: https://issues.apache.org/jira/browse/AMQ-3145
         Queue queue = (Queue) destination;
         if (queue.getMessages() != null){
             return queue.getMessages().isCacheEnabled();
@@ -207,6 +219,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
      */
     @Override
     public Map<String, String> getMessageGroups() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4766
         Queue queue = (Queue) destination;
         return queue.getMessageGroupOwners().getGroups();
     }
@@ -240,6 +253,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
 
     @Override
     public void pause() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5229
         Queue queue = (Queue) destination;
         queue.pauseDispatch();
     }

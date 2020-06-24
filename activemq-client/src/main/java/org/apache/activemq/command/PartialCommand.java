@@ -141,6 +141,8 @@ public class PartialCommand implements Command {
 
     @Override
     public boolean isConsumerControl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
+//IC see: https://issues.apache.org/jira/browse/AMQ-5707
         return false;
     }
 

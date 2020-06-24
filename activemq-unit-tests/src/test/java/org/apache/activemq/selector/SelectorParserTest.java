@@ -36,6 +36,7 @@ public class SelectorParserTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(SelectorParserTest.class);
 
     public void testFunctionCall() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3097
         Object filter = parse("REGEX('sales.*', group)");
         assertTrue("expected type", filter instanceof BooleanFunctionCallExpr);
         LOG.info("function exp:" + filter);
@@ -83,6 +84,7 @@ public class SelectorParserTest extends TestCase {
     }
 
     protected BooleanExpression parse(String text) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
         return SelectorParser.parse(text);
     }
 }

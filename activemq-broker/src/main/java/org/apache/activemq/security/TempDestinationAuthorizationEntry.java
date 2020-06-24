@@ -27,6 +27,7 @@ package org.apache.activemq.security;
 public class TempDestinationAuthorizationEntry extends AuthorizationEntry {
 
     public void afterPropertiesSet() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5304
         if (adminRoles != null) {
             setAdminACLs(parseACLs(adminRoles));
         }

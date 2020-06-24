@@ -43,6 +43,7 @@ public class MyObject implements Serializable {
     }
 
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2622
         writeObjectCalled.incrementAndGet();
         out.defaultWriteObject();
     }

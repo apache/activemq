@@ -79,6 +79,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             this.localAndXATransaction = new LocalAndXATransaction(transactionContext) {
                 public void setInManagedTx(boolean inManagedTx) throws JMSException {
                     super.setInManagedTx(inManagedTx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1777
                     for (ManagedConnectionProxy proxy:proxyConnections) {
                         proxy.setUseSharedTxContext(inManagedTx);
                     }
@@ -141,6 +142,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
 
     private void fireBeginEvent() {
         ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.LOCAL_TRANSACTION_STARTED);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1777
         for(ConnectionEventListener l:listeners) {
             l.localTransactionStarted(event);
         }
@@ -164,6 +166,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
         ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.CONNECTION_CLOSED);
         event.setConnectionHandle(proxy);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1777
         for(ConnectionEventListener l:listeners) {
             l.connectionClosed(event);
         }
@@ -181,6 +184,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      *      javax.resource.spi.ConnectionRequestInfo)
      */
     public Object getConnection(Subject subject, ConnectionRequestInfo info) throws ResourceException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5264
         ManagedConnectionProxy proxy = new ManagedConnectionProxy(this, info);
         proxyConnections.add(proxy);
         return proxy;
@@ -202,6 +206,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
         }
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
             cleanup();
         } finally {
             try {
@@ -226,17 +231,22 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1777
         for (ManagedConnectionProxy proxy:proxyConnections) {
             proxy.cleanup();
         }
         proxyConnections.clear();
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6068
             physicalConnection.doCleanup(physicalConnection.isUserSpecifiedClientID());
         } catch (JMSException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5710
             throw new ResourceException("Could not cleanup the ActiveMQ connection: " + e, e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
         } finally {
             // defer transaction cleanup till after close so that close is aware of the current tx
+//IC see: https://issues.apache.org/jira/browse/AMQ-2128
             localAndXATransaction.cleanup();
         }
     }
@@ -385,6 +395,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
         LOG.warn("Connection failed: " + e);
         LOG.debug("Cause: ", e);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1777
         for (ManagedConnectionProxy proxy:proxyConnections) {
             proxy.onException(e);
         }
@@ -401,6 +412,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
         return "[" + super.toString() + "," + physicalConnection +"]";
     }
 

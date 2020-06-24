@@ -36,6 +36,8 @@ public class ActiveMQBrokerRuntimeConfigTest extends AbstractFeatureTest {
 
 	@Configuration
 	public static Option[] configure() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
 		return new Option[] //
 		{ //
 				configure("activemq"), //
@@ -51,6 +53,7 @@ public class ActiveMQBrokerRuntimeConfigTest extends AbstractFeatureTest {
     	assertBrokerStarted();
 
         assertMemoryLimit("334338458");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7076
 
         // ensure update will be reflected in OS fs modified window
         TimeUnit.SECONDS.sleep(4);
@@ -62,10 +65,12 @@ public class ActiveMQBrokerRuntimeConfigTest extends AbstractFeatureTest {
         copyFile(new File(karafDir + "/data/tmp/modified-config.xml"), target);
         System.err.println("new mod at: " + new Date(target.lastModified()));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         assertMemoryLimit("4194304");
     }
 
 	private void assertMemoryLimit(String limit) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
 		withinReason(new Runnable() {
             public void run() {
                 assertTrue("3MB limit", executeCommand("activemq:query").trim().contains("MemoryLimit = "+ limit));

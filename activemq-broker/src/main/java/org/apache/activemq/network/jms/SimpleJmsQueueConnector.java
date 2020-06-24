@@ -124,6 +124,9 @@ public class SimpleJmsQueueConnector extends JmsConnector {
      * @return Returns the localQueueConnection.
      */
     public QueueConnection getLocalQueueConnection() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
         return (QueueConnection) localConnection.get();
     }
 
@@ -159,6 +162,7 @@ public class SimpleJmsQueueConnector extends JmsConnector {
     protected void initializeForeignConnection() throws NamingException, JMSException {
 
         QueueConnection newConnection = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6334
 
         try {
             if (foreignConnection.get() == null) {
@@ -169,12 +173,16 @@ public class SimpleJmsQueueConnector extends JmsConnector {
                         outboundQueueConnectionFactory = jndiOutboundTemplate
                             .lookup(outboundQueueConnectionFactoryName, QueueConnectionFactory.class);
                         if (outboundUsername != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
                             newConnection = outboundQueueConnectionFactory
                                 .createQueueConnection(outboundUsername, outboundPassword);
                         } else {
                             newConnection = outboundQueueConnectionFactory.createQueueConnection();
                         }
                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
                         throw new JMSException("Cannot create foreignConnection - no information");
                     }
                 } else {
@@ -238,6 +246,9 @@ public class SimpleJmsQueueConnector extends JmsConnector {
                             localQueueConnectionFactory = jndiLocalTemplate
                                 .lookup(localConnectionFactoryName, QueueConnectionFactory.class);
                             if (localUsername != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
                                 newConnection = localQueueConnectionFactory
                                     .createQueueConnection(localUsername, localPassword);
                             } else {
@@ -352,6 +363,9 @@ public class SimpleJmsQueueConnector extends JmsConnector {
     }
 
     protected void initializeOutboundDestinationBridgesLocalSide(QueueConnection connection) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
         if (outboundQueueBridges != null) {
             QueueSession localSession =
                     connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -449,6 +463,7 @@ public class SimpleJmsQueueConnector extends JmsConnector {
     protected Queue createForeignQueue(QueueSession session, String queueName) throws JMSException {
         Queue result = null;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3298
         if (preferJndiDestinationLookup) {
             try {
                 // look-up the Queue

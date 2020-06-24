@@ -48,6 +48,7 @@ public class StubBroker extends EmptyBroker {
     }
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6787
         for (AddConnectionData data : addConnectionData) {
             if (data.connectionInfo.getClientId() != null && data.connectionInfo.getClientId().equals(info.getClientId())) {
                 throw new InvalidClientIDException("ClientID already exists");

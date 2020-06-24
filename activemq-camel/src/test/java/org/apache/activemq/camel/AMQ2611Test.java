@@ -51,6 +51,7 @@ public class AMQ2611Test extends TestCase {
     private void createCamelContext() throws Exception {
         log.info("creating context and sending message");
         camelContext = new DefaultCamelContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         camelContext.addComponent("activemq", ActiveMQComponent.activeMQComponent(BROKER_URL));
         final String queueEndpointName = "activemq:queue" + QUEUE_NAME;
         camelContext.addRoutes(new RouteBuilder() {
@@ -60,6 +61,7 @@ public class AMQ2611Test extends TestCase {
             }
         });
         camelContext.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         final ProducerTemplate producerTemplate = camelContext.createProducerTemplate();
         producerTemplate.sendBody(queueEndpointName, "message");
     }

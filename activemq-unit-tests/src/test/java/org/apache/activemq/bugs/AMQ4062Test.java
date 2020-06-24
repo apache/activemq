@@ -97,6 +97,7 @@ public class AMQ4062Test {
         service.setPersistent(true);
         service.setUseJmx(false);
         service.setKeepDurableSubsActive(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4062
 
         KahaDBPersistenceAdapter pa=new KahaDBPersistenceAdapter();
         File dataFile=new File("createData");
@@ -180,6 +181,7 @@ public class AMQ4062Test {
         TopicRegion region=(TopicRegion)regionBroker.getTopicRegion();
         Field field=TopicRegion.class.getDeclaredField("durableSubscriptions");
         field.setAccessible(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
         durableSubscriptions=(ConcurrentMap<SubscriptionKey, DurableTopicSubscription>)field.get(region);
         return durableSubscriptions;
     }

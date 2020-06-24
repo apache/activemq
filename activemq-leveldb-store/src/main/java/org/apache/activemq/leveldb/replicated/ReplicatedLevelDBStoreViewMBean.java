@@ -34,6 +34,7 @@ public interface ReplicatedLevelDBStoreViewMBean {
     @MBeanInfo("The path in ZooKeeper to hold master elections.")
     String getZkPath();
     @MBeanInfo("The ZooKeeper session timeout.")
+//IC see: https://issues.apache.org/jira/browse/AMQ-5506
     String getZkSessionTimeout();
     @MBeanInfo("The address and port the master will bind for the replication protocol.")
     String getBind();

@@ -81,7 +81,9 @@ public class ActiveMQXAConnectionFactory extends ActiveMQConnectionFactory imple
     }
 
     protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
         ActiveMQXAConnection connection = new ActiveMQXAConnection(transport, getClientIdGenerator(), getConnectionIdGenerator(), stats);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         configureXAConnection(connection);
         return connection;
     }

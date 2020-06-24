@@ -31,10 +31,12 @@ public class QualityOfServiceUtils {
     private static final int MAX_DIFF_SERV = 63;
     private static final int MIN_DIFF_SERV = 0;
     private static final Map<String, Integer> DIFF_SERV_NAMES
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         = new HashMap<String, Integer>();
     /** Common names used for Differentiated Services values. */
     static {
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         DIFF_SERV_NAMES.put("CS0", 0);
         DIFF_SERV_NAMES.put("CS1", 8);
         DIFF_SERV_NAMES.put("CS2", 16);
@@ -55,6 +57,7 @@ public class QualityOfServiceUtils {
         DIFF_SERV_NAMES.put("AF41", 34);
         DIFF_SERV_NAMES.put("AF42", 36);
         DIFF_SERV_NAMES.put("AF43", 38);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         DIFF_SERV_NAMES.put("EF", 46);
     }
 
@@ -72,6 +75,7 @@ public class QualityOfServiceUtils {
         int intValue = -1;
 
         // Check the names first.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
         if (DIFF_SERV_NAMES.containsKey(value)) {
             intValue = DIFF_SERV_NAMES.get(value);
         } else {
@@ -130,6 +134,7 @@ public class QualityOfServiceUtils {
             int systemTrafficClass = socket.getTrafficClass();
             // The 1st and 2nd bits of the system traffic class are the ECN
             // bits.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2636
             return (dscp << 2) | (systemTrafficClass & 3);
         } catch (SocketException e) {
             throw new IllegalArgumentException("Setting Differentiated Services"

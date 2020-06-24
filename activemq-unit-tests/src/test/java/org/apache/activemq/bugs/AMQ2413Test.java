@@ -86,6 +86,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
         broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "AMQ2401Test");
         broker.setDeleteAllMessagesOnStartup(true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3167
         KahaDBPersistenceAdapter kahaDb = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
         kahaDb.setConcurrentStoreAndDispatchQueues(false);
         broker.addConnector("tcp://0.0.0.0:2401");
@@ -166,6 +167,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
         if (count.incrementAndGet() % 100 == 0) {
             LOG.info("Received message " + count);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3167
         track(message);
         if (RECEIVER_THINK_TIME > 0) {
             try {
@@ -178,6 +180,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     }
 
     HashMap<ProducerId, boolean[]> tracker = new HashMap<ProducerId, boolean[]>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3167
 
     private synchronized void track(Message message) {
         try {
@@ -209,6 +212,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
                 if (!receivedMessages.tryAcquire(HANG_THRESHOLD, TimeUnit.SECONDS)) {
                     if (count.get() == SEND_COUNT)
                         break;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3167
                     verifyTracking();
                     throw new TimeoutException("@count=" + count.get() + " Message not received for more than " + HANG_THRESHOLD + " seconds");
                 }
@@ -219,6 +223,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     }
 
     private void verifyTracking() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3167
         Vector<MessageId> missing = new Vector<MessageId>();
         for (ProducerId pid : tracker.keySet()) {
             boolean[] ids = tracker.get(pid);

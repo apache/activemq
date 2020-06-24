@@ -58,6 +58,7 @@ public class JmsJdbcXATest extends CamelSpringTestSupport {
                         "messageContent varchar(2048) NOT NULL, " +
                         "PRIMARY KEY (id) )";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         java.sql.Connection conn = getJDBCConnection();
         try {
             conn.createStatement().execute(createStatement);
@@ -76,6 +77,7 @@ public class JmsJdbcXATest extends CamelSpringTestSupport {
 
     private java.sql.Connection getJDBCConnection() throws Exception {
         DataSource dataSource = getMandatoryBean(DataSource.class, "managedDataSourceWithRecovery");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         return dataSource.getConnection();
     }
 
@@ -95,6 +97,7 @@ public class JmsJdbcXATest extends CamelSpringTestSupport {
     @Test
     public void testRecoveryCommit() throws Exception {
         java.sql.Connection jdbcConn = initDb();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
 
         sendJMSMessageToKickOffRoute();
         LOG.info("waiting for route to kick in, it will kill the broker on first 2pc commit");
@@ -198,6 +201,7 @@ public class JmsJdbcXATest extends CamelSpringTestSupport {
                         }
                     }
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
             });
             broker.start();
         } catch (Exception e) {

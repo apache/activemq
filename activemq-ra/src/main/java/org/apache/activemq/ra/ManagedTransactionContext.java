@@ -114,6 +114,7 @@ public class ManagedTransactionContext extends TransactionContext {
     }
 
     public boolean isRollbackOnly() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7485
         return sharedContext.isRollbackOnly() || super.isRollbackOnly();
     }
 

@@ -98,6 +98,7 @@ public class JournalFdRecoveryTest {
         broker.setDataDirectory(KAHADB_DIRECTORY);
         broker.addConnector("tcp://localhost:0");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6372
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setUseCache(false);
@@ -115,6 +116,7 @@ public class JournalFdRecoveryTest {
 
         // ensure there are a bunch of data files but multiple entries in each
         adapter.setJournalMaxFileLength(maxJournalSizeBytes);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
 
         // speed up the test case, checkpoint an cleanup early and often
         adapter.setCheckpointInterval(5000);
@@ -136,6 +138,7 @@ public class JournalFdRecoveryTest {
 
     @Before
     public void initPayLoad() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         payload = new String(new byte[1024]);
         maxJournalSizeBytes = 1024 * 20;
     }
@@ -144,6 +147,7 @@ public class JournalFdRecoveryTest {
     @Test
     public void testStopOnPageInIOError() throws Exception {
         startBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6372
 
         int sent = produceMessagesToConsumeMultipleDataFiles(50);
 
@@ -246,6 +250,7 @@ public class JournalFdRecoveryTest {
 
     @Test
     public void testRecoveryCheckSpeedSmallMessages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         maxJournalSizeBytes = Journal.DEFAULT_MAX_FILE_LENGTH;
         doCreateBroker(true);
         broker.start();
@@ -279,6 +284,7 @@ public class JournalFdRecoveryTest {
     }
 
     private void whackIndex(File dataDir) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6372
         whackFile(dataDir, "db.data");
     }
 
@@ -318,6 +324,8 @@ public class JournalFdRecoveryTest {
     }
 
     private int tryConsume(Destination destination, int numToGet) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6378
+//IC see: https://issues.apache.org/jira/browse/AMQ-6376
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
         return  drain(cf, destination, numToGet);
     }

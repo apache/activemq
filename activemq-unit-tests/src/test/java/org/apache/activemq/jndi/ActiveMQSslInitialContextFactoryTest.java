@@ -46,6 +46,7 @@ public class ActiveMQSslInitialContextFactoryTest {
 
     @Parameters(name = "isXa={0}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
         return Arrays.asList(new Object[][] {
                 {true},
                 {false}
@@ -74,6 +75,7 @@ public class ActiveMQSslInitialContextFactoryTest {
         environment.put("connection.ConnectionFactory.trustStorePassword", "test");
         environment.put("connection.ConnectionFactory.trustStoreType", "JKS");
         environment.put("xa", Boolean.toString(isXa));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6489
 
         context = factory.getInitialContext(environment);
         assertTrue("No context created", context != null);

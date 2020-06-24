@@ -56,12 +56,14 @@ public class MQTTCompositeQueueRetainedTest extends MQTTTestSupport {
 
     @Override
     protected BrokerService createBroker(boolean deleteAllOnStart) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
         BrokerService brokerService = new BrokerService();
         brokerService.setPersistent(isPersistent());
         brokerService.setAdvisorySupport(false);
         brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
         brokerService.setPopulateJMSXUserID(true);
         brokerService.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
 
         final CompositeTopic compositeTopic = new CompositeTopic();
         compositeTopic.setName(COMPOSITE_TOPIC);
@@ -76,6 +78,7 @@ public class MQTTCompositeQueueRetainedTest extends MQTTTestSupport {
         destinationInterceptor.setVirtualDestinations(new VirtualDestination[] {compositeTopic} );
         brokerService.setDestinationInterceptors(new DestinationInterceptor[] { destinationInterceptor });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
         return brokerService;
     }
 

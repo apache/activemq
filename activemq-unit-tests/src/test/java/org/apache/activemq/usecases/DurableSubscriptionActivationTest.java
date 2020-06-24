@@ -47,6 +47,7 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
 
     protected void setUp() throws Exception {
         topic = (ActiveMQTopic) createDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3921
         createBroker(true);
         super.setUp();
     }
@@ -58,6 +59,7 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
 
     protected void restartBroker() throws Exception {
         destroyBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3921
         createBroker(false);
     }
 
@@ -77,6 +79,7 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
 
         broker.start();
         broker.waitUntilStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2665
 
         connection = createConnection();
     }
@@ -84,6 +87,7 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
     private void destroyBroker() throws Exception {
         if (connection != null)
             connection.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2665
         if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();
@@ -92,6 +96,7 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
 
     public void testActivateWithExistingTopic() throws Exception {
         // create durable subscription
+//IC see: https://issues.apache.org/jira/browse/AMQ-3921
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createDurableSubscriber(topic, "SubsId");
 
@@ -101,6 +106,7 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
         // restart the broker
         restartBroker();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2665
         d = broker.getDestination(topic);
         assertTrue("More than one consumer found: " + d.getConsumers().size(), d.getConsumers().size() == 1);
 
@@ -109,6 +115,7 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
         session.createDurableSubscriber(topic, "SubsId");
 
         assertTrue("More than one consumer found: " + d.getConsumers().size(), d.getConsumers().size() == 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3921
 
         // re-activate
         connection.close();

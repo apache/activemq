@@ -388,6 +388,7 @@ public class DurableSubscriptionOffline3Test extends DurableSubscriptionOfflineT
         // test offline subs
         con = createConnection("offCli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
         consumer = session.createDurableSubscriber(topic, "SubsId", null, false);
         consumer.setMessageListener(listener);
 

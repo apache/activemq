@@ -38,6 +38,8 @@ public class XBeanAuthorizationMap extends DefaultAuthorizationMap implements In
      */
     @PostConstruct
     private void postConstruct() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             afterPropertiesSet();
         } catch (Exception ex) {
@@ -61,10 +63,12 @@ public class XBeanAuthorizationMap extends DefaultAuthorizationMap implements In
         // also check group class of temp destination ACL
         // use the group class of the <authorizationMap> entry if this temp
         // destination entry has no group class specified.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5304
         if (getTempDestinationAuthorizationEntry() != null) {
             if (getTempDestinationAuthorizationEntry().getGroupClass() == null) {
                 getTempDestinationAuthorizationEntry().setGroupClass(groupClass);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5304
             getTempDestinationAuthorizationEntry().afterPropertiesSet();
         }
 

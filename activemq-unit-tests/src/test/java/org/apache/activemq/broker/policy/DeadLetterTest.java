@@ -53,12 +53,15 @@ public class DeadLetterTest extends DeadLetterTestSupport {
             consumeAndRollback(i);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4483
         verifyIsDlq((Queue) dlqDestination);
         for (int i = 0; i < messageCount; i++) {
             Message msg = dlqConsumer.receive(1000);
             assertMessage(msg, i);
             assertNotNull("Should be a DLQ message for loop: " + i, msg);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2566
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
         session.commit();
     }
 

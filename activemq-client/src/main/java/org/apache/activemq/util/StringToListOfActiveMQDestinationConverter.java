@@ -42,6 +42,7 @@ public class StringToListOfActiveMQDestinationConverter {
         String text = value.toString();
         if (text.startsWith("[") && text.endsWith("]")) {
             text = text.substring(1, text.length() - 1).trim();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4484
 
             if (text.isEmpty()) {
                 return null;
@@ -61,6 +62,8 @@ public class StringToListOfActiveMQDestinationConverter {
     }
 
     public static String convertFromActiveMQDestination(Object value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         return convertFromActiveMQDestination(value, false);
     }
 
@@ -76,6 +79,8 @@ public class StringToListOfActiveMQDestinationConverter {
                 Object e = list.get(i);
                 if (e instanceof ActiveMQDestination) {
                     ActiveMQDestination destination = (ActiveMQDestination) e;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
                     if (includeOptions && destination.getOptions() != null) {
                         try {
                             //Reapply the options as URI parameters

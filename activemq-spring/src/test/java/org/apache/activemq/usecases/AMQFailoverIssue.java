@@ -91,6 +91,7 @@ public class AMQFailoverIssue extends org.apache.activemq.test.TestSupport {
             assertTrue(doneLatch.await(45, TimeUnit.SECONDS));
             executor.shutdown();
             // Thread.sleep(30000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4437
             assertEquals(TOTAL_MESSAGES, messageCount.get());
         } finally {
             container1.stop();

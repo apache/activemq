@@ -48,6 +48,7 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
 
         consumerSession1 = createProducer();
         assertProducerEvent(1, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
 
         consumerSession2 = createProducer();
         assertProducerEvent(2, true);
@@ -66,6 +67,7 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
         consumerSession2 = createProducer();
 
         producerEventSource.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4906
         assertProducerEvent(2, true);
         assertProducerEvent(2, true);
 

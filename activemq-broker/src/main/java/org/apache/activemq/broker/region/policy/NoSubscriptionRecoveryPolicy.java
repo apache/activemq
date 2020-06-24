@@ -34,6 +34,7 @@ public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy 
 
     public SubscriptionRecoveryPolicy copy() {
         // This object is immutable
+//IC see: https://issues.apache.org/jira/browse/AMQ-714
         return this;
     }
 

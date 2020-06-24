@@ -35,6 +35,7 @@ public class KahaDBXARecoveryBrokerTest  extends XARecoveryBrokerTest {
     @Override
     protected void configureBroker(BrokerService broker) throws Exception {
         super.configureBroker(broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7052
 
         KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
         broker.setPersistenceAdapter(persistenceAdapter);

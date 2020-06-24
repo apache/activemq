@@ -197,6 +197,7 @@ public class LinkedNode<T extends LinkedNode<T>> {
 
     public void linkToHead(LinkedNodeList<T> target) {
         if (list != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
             throw new IllegalArgumentException("This node is already linked to a list");
         }
 

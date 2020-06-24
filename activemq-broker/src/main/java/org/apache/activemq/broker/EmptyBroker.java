@@ -66,6 +66,7 @@ public class EmptyBroker implements Broker {
 
     @Override
     public Broker getAdaptor(Class<?> type) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6497
         return type.isInstance(this) ? this : null;
     }
 
@@ -278,7 +279,13 @@ public class EmptyBroker implements Broker {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                                          Subscription subscription, Throwable poisonCause) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1160
+//IC see: https://issues.apache.org/jira/browse/AMQ-1072
+//IC see: https://issues.apache.org/jira/browse/AMQ-936
+//IC see: https://issues.apache.org/jira/browse/AMQ-567
         return false;
     }
 
@@ -289,6 +296,7 @@ public class EmptyBroker implements Broker {
 
     @Override
     public long getBrokerSequenceId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1656
         return -1l;
     }
 
@@ -346,11 +354,14 @@ public class EmptyBroker implements Broker {
 
     @Override
     public Scheduler getScheduler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         return null;
     }
 
     @Override
     public ThreadPoolExecutor getExecutor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
         return null;
     }
 

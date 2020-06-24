@@ -78,6 +78,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
     @Override
     public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
         this.peristenceAdapter.checkpoint(true, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4885
         longTermStore.addSubscription(subscriptionInfo, retroactive);
     }
 
@@ -90,6 +91,8 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
      */
     @Override
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                             final MessageId messageId, MessageAck originalAck) throws IOException {
         final boolean debug = LOG.isDebugEnabled();
 
@@ -148,6 +151,8 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         try {
             SubscriptionInfo sub = longTermStore.lookupSubscription(clientId, subscritionName);
             if (sub != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                 longTermStore.acknowledge(context, clientId, subscritionName, messageId, null);
             }
         } catch (Throwable e) {

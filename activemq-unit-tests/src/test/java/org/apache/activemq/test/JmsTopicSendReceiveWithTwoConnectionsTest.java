@@ -80,6 +80,7 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
         LOG.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
         LOG.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-715
         consumer = createConsumer();
         consumer.setMessageListener(this);
 

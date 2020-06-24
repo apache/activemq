@@ -111,6 +111,7 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
     }
 
     public TransportConnection getDuplexBridgeConnectionFromRemote() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4822
         TransportConnector transportConnector = remoteBroker.getTransportConnectorByScheme("tcp");
         CopyOnWriteArrayList<TransportConnection> transportConnections = transportConnector.getConnections();
         TransportConnection duplexBridgeConnectionFromRemote = transportConnections.get(0);
@@ -121,6 +122,7 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
     protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {
 
         final NetworkBridge localBridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
 
         assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override

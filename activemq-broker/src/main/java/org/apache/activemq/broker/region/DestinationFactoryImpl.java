@@ -47,6 +47,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
     private final BrokerService brokerService;
 
     public DestinationFactoryImpl(BrokerService brokerService, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1606
         this.brokerService = brokerService;
         this.taskRunnerFactory = taskRunnerFactory;
         if (persistenceAdapter == null) {
@@ -83,6 +84,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
             } else {
                 MessageStore store = persistenceAdapter.createQueueMessageStore((ActiveMQQueue)destination);
                 Queue queue = new Queue(brokerService, destination, store, destinationStatistics, taskRunnerFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4091
                 configureQueue(queue, destination);
                 queue.initialize();
                 return queue;
@@ -90,6 +92,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         } else if (destination.isTemporary()) {
             
             Topic topic = new Topic(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4091
             configureTopic(topic, destination);
             topic.initialize();
             return topic;
@@ -98,8 +101,10 @@ public class DestinationFactoryImpl extends DestinationFactory {
             if (!AdvisorySupport.isAdvisoryTopic(destination)) {
                 store = persistenceAdapter.createTopicMessageStore((ActiveMQTopic)destination);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1606
             Topic topic = new Topic(brokerService, destination, store, destinationStatistics, taskRunnerFactory);
             configureTopic(topic, destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1510
             topic.initialize();
             return topic;
         }
@@ -107,6 +112,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
 
     @Override
     public void removeDestination(Destination dest) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2053
         ActiveMQDestination destination = dest.getActiveMQDestination();
         if (!destination.isTemporary()) {
             if (destination.isQueue()) {
@@ -125,6 +131,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         if (broker.getDestinationPolicy() != null) {
             PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
             if (entry != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1562
                 entry.configure(broker,queue);
             }
         }
@@ -137,6 +144,8 @@ public class DestinationFactoryImpl extends DestinationFactory {
         if (broker.getDestinationPolicy() != null) {
             PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
             if (entry != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                 entry.configure(broker,topic);
             }
         }

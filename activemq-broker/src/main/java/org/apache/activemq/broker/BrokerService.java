@@ -275,10 +275,12 @@ public class BrokerService implements Service {
 
     static {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4520
         try {
             ClassLoader loader = BrokerService.class.getClassLoader();
             Class<?> clazz = loader.loadClass("org.bouncycastle.jce.provider.BouncyCastleProvider");
             Provider bouncycastle = (Provider) clazz.newInstance();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7142
             Integer bouncyCastlePosition = Integer.getInteger("org.apache.activemq.broker.BouncyCastlePosition");
             int ret = 0;
             if (bouncyCastlePosition != null) {
@@ -293,6 +295,7 @@ public class BrokerService implements Service {
 
         String localHostName = "localhost";
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2965
             localHostName =  InetAddressUtil.getLocalHostName();
         } catch (UnknownHostException e) {
             LOG.error("Failed to resolve localhost");
@@ -300,6 +303,7 @@ public class BrokerService implements Service {
         LOCAL_HOST_NAME = localHostName;
 
         String version = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try(InputStream in = BrokerService.class.getResourceAsStream("/org/apache/activemq/version.txt")) {
             if (in != null) {
                 try(InputStreamReader isr = new InputStreamReader(in);
@@ -319,6 +323,7 @@ public class BrokerService implements Service {
     }
 
     private String getBrokerVersion() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3991
         String version = ActiveMQConnectionMetaData.PROVIDER_VERSION;
         if (version == null) {
             version = BROKER_VERSION;
@@ -344,6 +349,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public TransportConnector addConnector(URI bindAddress) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         return addConnector(createTransportConnector(bindAddress));
     }
 
@@ -354,6 +360,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public TransportConnector addConnector(TransportServer transport) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         return addConnector(new TransportConnector(transport));
     }
 
@@ -378,6 +385,7 @@ public class BrokerService implements Service {
     public boolean removeConnector(TransportConnector connector) throws Exception {
         boolean rc = transportConnectors.remove(connector);
         if (rc) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-922
             unregisterConnectorMBean(connector);
         }
         return rc;
@@ -432,7 +440,9 @@ public class BrokerService implements Service {
      * network
      */
     public NetworkConnector addNetworkConnector(NetworkConnector connector) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
         connector.setBrokerService(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5830
         connector.setLocalUri(getVmConnectorURI());
         // Set a connection filter so that the connector does not establish loop
         // back connections.
@@ -515,7 +525,9 @@ public class BrokerService implements Service {
         } else {
             LOG.warn("Master Failed - starting all connectors");
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4165
                 startAllConnectors();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1541
                 broker.nowMasterBroker();
             } catch (Exception e) {
                 LOG.error("Failed to startAllConnectors", e);
@@ -525,6 +537,7 @@ public class BrokerService implements Service {
 
     public String getUptime() {
         long delta = getUptimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5505
 
         if (delta == 0) {
             return "not started";
@@ -560,6 +573,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public void start(boolean force) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2245
         forceStart = force;
         stopped.set(false);
         started.set(false);
@@ -570,6 +584,7 @@ public class BrokerService implements Service {
     // -------------------------------------------------------------------------
 
     protected boolean shouldAutostart() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2813
         return true;
     }
 
@@ -580,6 +595,8 @@ public class BrokerService implements Service {
      */
     @PostConstruct
     private void postConstruct() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             autoStart();
         } catch (Exception ex) {
@@ -594,12 +611,15 @@ public class BrokerService implements Service {
      */
     public void autoStart() throws Exception {
         if(shouldAutostart()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3696
             start();
         }
     }
 
     @Override
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2071
+//IC see: https://issues.apache.org/jira/browse/AMQ-2070
         if (stopped.get() || !started.compareAndSet(false, true)) {
             // lets just ignore redundant start() calls
             // as its way too easy to not be completely sure if start() has been
@@ -609,14 +629,21 @@ public class BrokerService implements Service {
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
         setStartException(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4044
         stopping.set(false);
         preShutdownHooksInvoked.set(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4015
         startDate = new Date();
         MDC.put("activemq.broker", brokerName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3219
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6084
             checkMemorySystemUsageLimits();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2486
+//IC see: https://issues.apache.org/jira/browse/AMQ-3339
             if (systemExitOnShutdown && useShutdownHook) {
                 throw new ConfigurationException("'useShutdownHook' property cannot be be used with 'systemExitOnShutdown', please turn it off (useShutdownHook=false)");
             }
@@ -624,9 +651,11 @@ public class BrokerService implements Service {
             if (isUseJmx()) {
                 // need to remove MDC during starting JMX, as that would otherwise causes leaks, as spawned threads inheirt the MDC and
                 // we cannot cleanup clear that during shutdown of the broker.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4008
                 MDC.remove("activemq.broker");
                 try {
                     startManagementContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4609
                     for (NetworkConnector connector : getNetworkConnectors()) {
                         registerNetworkConnectorMBean(connector);
                     }
@@ -636,16 +665,22 @@ public class BrokerService implements Service {
             }
 
             // in jvm master slave, lets not publish over existing broker till we get the lock
+//IC see: https://issues.apache.org/jira/browse/AMQ-3696
             final BrokerRegistry brokerRegistry = BrokerRegistry.getInstance();
             if (brokerRegistry.lookup(getBrokerName()) == null) {
                 brokerRegistry.bind(getBrokerName(), BrokerService.this);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3696
             startPersistenceAdapter(startAsync);
             startBroker(startAsync);
             brokerRegistry.bind(getBrokerName(), BrokerService.this);
         } catch (Exception e) {
             LOG.error("Failed to start Apache ActiveMQ ({}, {})", getBrokerName(), brokerId, e);
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2071
+//IC see: https://issues.apache.org/jira/browse/AMQ-2070
+//IC see: https://issues.apache.org/jira/browse/AMQ-2071
+//IC see: https://issues.apache.org/jira/browse/AMQ-2070
                 if (!stopped.get()) {
                     stop();
                 }
@@ -666,8 +701,10 @@ public class BrokerService implements Service {
                     try {
                         doStartPersistenceAdapter();
                     } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
                         setStartException(e);
                     } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5599
                         synchronized (persistenceAdapterStarted) {
                             persistenceAdapterStarted.set(true);
                             persistenceAdapterStarted.notifyAll();
@@ -681,6 +718,7 @@ public class BrokerService implements Service {
     }
 
     private void doStartPersistenceAdapter() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
         PersistenceAdapter persistenceAdapterToStart = getPersistenceAdapter();
         if (persistenceAdapterToStart == null) {
             checkStartException();
@@ -694,6 +732,7 @@ public class BrokerService implements Service {
         }
         persistenceAdapterToStart.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6005
         getTempDataStore();
         if (tempDataStore != null) {
             try {
@@ -707,6 +746,7 @@ public class BrokerService implements Service {
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5746
         getJobSchedulerStore();
         if (jobSchedulerStore != null) {
             try {
@@ -726,6 +766,7 @@ public class BrokerService implements Service {
                 @Override
                 public void run() {
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5599
                         synchronized (persistenceAdapterStarted) {
                             if (!persistenceAdapterStarted.get()) {
                                 persistenceAdapterStarted.wait();
@@ -733,6 +774,7 @@ public class BrokerService implements Service {
                         }
                         doStartBroker();
                     } catch (Throwable t) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
                         setStartException(t);
                     }
                 }
@@ -743,6 +785,7 @@ public class BrokerService implements Service {
     }
 
     private void doStartBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
         checkStartException();
         startDestinations();
         addShutdownHook();
@@ -754,10 +797,14 @@ public class BrokerService implements Service {
         LOG.info("Apache ActiveMQ {} ({}, {}) is starting", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId });
         broker.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2306
         if (isUseJmx()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2513
+//IC see: https://issues.apache.org/jira/browse/AMQ-3339
             if (getManagementContext().isCreateConnector() && !getManagementContext().isConnectorStarted()) {
                 // try to restart management context
                 // typical for slaves that use the same ports as master
+//IC see: https://issues.apache.org/jira/browse/AMQ-2306
                 managementContext.stop();
                 startManagementContext();
             }
@@ -766,10 +813,13 @@ public class BrokerService implements Service {
             adminView.setBroker(managedBroker);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
         if (ioExceptionHandler == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3339
             setIoExceptionHandler(new DefaultIOExceptionHandler());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5213
         if (isUseJmx() && Log4JConfigView.isLog4JAvailable()) {
             ObjectName objectName = BrokerMBeanSupport.createLog4JConfigViewName(getBrokerObjectName().toString());
             Log4JConfigView log4jConfigView = new Log4JConfigView();
@@ -777,12 +827,15 @@ public class BrokerService implements Service {
         }
 
         startAllConnectors();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4369
 
         LOG.info("Apache ActiveMQ {} ({}, {}) started", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId});
         LOG.info("For help or more information please see: http://activemq.apache.org");
 
         getBroker().brokerServiceStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6084
         checkStoreSystemUsageLimits();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3696
         startedLatch.countDown();
         getBroker().nowMasterBroker();
     }
@@ -794,6 +847,8 @@ public class BrokerService implements Service {
      */
     @PreDestroy
     private void preDestroy () {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             stop();
         } catch (Exception ex) {
@@ -824,15 +879,20 @@ public class BrokerService implements Service {
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4044
         if (!stopping.compareAndSet(false, true)) {
             LOG.trace("Broker already stopping/stopped");
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
         setStartException(new BrokerStoppedException("Stop invoked"));
         MDC.put("activemq.broker", brokerName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3219
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2486
         if (systemExitOnShutdown) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3339
             new Thread() {
                 @Override
                 public void run() {
@@ -844,8 +904,11 @@ public class BrokerService implements Service {
         LOG.info("Apache ActiveMQ {} ({}, {}) is shutting down", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId} );
 
         removeShutdownHook();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3634
         if (this.scheduler != null) {
             this.scheduler.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
             this.scheduler = null;
         }
         if (services != null) {
@@ -854,33 +917,42 @@ public class BrokerService implements Service {
             }
         }
         stopAllConnectors(stopper);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4330
         this.slave = true;
         // remove any VMTransports connected
         // this has to be done after services are stopped,
         // to avoid timing issue with discovery (spinning up a new instance)
+//IC see: https://issues.apache.org/jira/browse/AMQ-1690
         BrokerRegistry.getInstance().unbind(getBrokerName());
         VMTransportFactory.stopped(getBrokerName());
         if (broker != null) {
             stopper.stop(broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
             broker = null;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
         if (jobSchedulerStore != null) {
             jobSchedulerStore.stop();
             jobSchedulerStore = null;
         }
         if (tempDataStore != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
             tempDataStore.stop();
             tempDataStore = null;
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
             stopper.stop(getPersistenceAdapter());
             persistenceAdapter = null;
             if (isUseJmx()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
                 stopper.stop(managementContext);
                 managementContext = null;
             }
             // Clear SelectorParser cache to free memory
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
             SelectorParser.clearCache();
         } finally {
             started.set(false);
@@ -893,6 +965,7 @@ public class BrokerService implements Service {
             this.taskRunnerFactory = null;
         }
         if (this.executor != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
             ThreadPoolUtils.shutdownNow(executor);
             this.executor = null;
         }
@@ -900,6 +973,7 @@ public class BrokerService implements Service {
         this.destinationInterceptors = null;
         this.destinationFactory = null;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
         if (startDate != null) {
             LOG.info("Apache ActiveMQ {} ({}, {}) uptime {}", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId, getUptime()});
         }
@@ -916,14 +990,19 @@ public class BrokerService implements Service {
         }
 
         MDC.remove("activemq.broker");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3219
+//IC see: https://issues.apache.org/jira/browse/AMQ-3219
 
         // and clear start date
         startDate = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4015
 
         stopper.throwFirstException();
     }
 
     public boolean checkQueueSize(String queueName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2071
+//IC see: https://issues.apache.org/jira/browse/AMQ-2070
         long count = 0;
         long queueSize = 0;
         Map<ActiveMQDestination, Destination> destinationMap = regionBroker.getDestinationMap();
@@ -931,6 +1010,7 @@ public class BrokerService implements Service {
             if (entry.getKey().isQueue()) {
                 if (entry.getValue().getName().matches(queueName)) {
                     queueSize = entry.getValue().getDestinationStatistics().getMessages().getCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2070
                     count += queueSize;
                     if (queueSize > 0) {
                         LOG.info("Queue has pending message: {} queueSize is: {}", entry.getValue().getName(), queueSize);
@@ -966,6 +1046,7 @@ public class BrokerService implements Service {
                 pollInterval = 30;
             }
             LOG.info("Stop gracefully with connectorName: {} queueName: {} timeout: {} pollInterval: {}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                     connectorName, queueName, timeout, pollInterval
             });
             TransportConnector connector;
@@ -1008,6 +1089,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isStopped() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4923
         return stopped.get();
     }
 
@@ -1016,6 +1098,7 @@ public class BrokerService implements Service {
      * @return boolean true if wait succeeded false if broker was not started or was stopped
      */
     public boolean waitUntilStarted() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
         return waitUntilStarted(DEFAULT_START_TIMEOUT);
     }
 
@@ -1029,9 +1112,11 @@ public class BrokerService implements Service {
      */
     public boolean waitUntilStarted(long timeout) {
         boolean waitSucceeded = isStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
         long expiration = Math.max(0, timeout + System.currentTimeMillis());
         while (!isStarted() && !stopped.get() && !waitSucceeded && expiration > System.currentTimeMillis()) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
                 if (getStartException() != null) {
                     return waitSucceeded;
                 }
@@ -1049,6 +1134,7 @@ public class BrokerService implements Service {
      */
     public Broker getBroker() throws Exception {
         if (broker == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
             checkStartException();
             broker = createBroker();
         }
@@ -1086,6 +1172,7 @@ public class BrokerService implements Service {
         if (brokerName == null) {
             throw new NullPointerException("The broker name cannot be null");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6171
         String str = brokerName.replaceAll(brokerNameReplacedCharsRegExp, "_");
         if (!str.equals(brokerName)) {
             LOG.error("Broker Name: {} contained illegal characters matching regExp: {} - replaced with {}", brokerName, brokerNameReplacedCharsRegExp, str);
@@ -1185,25 +1272,32 @@ public class BrokerService implements Service {
             if (systemUsage == null) {
 
                 systemUsage = new SystemUsage("Main", getPersistenceAdapter(), getTempDataStore(), getJobSchedulerStore());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                 systemUsage.setExecutor(getExecutor());
                 systemUsage.getMemoryUsage().setLimit(1024L * 1024 * 1024 * 1); // 1 GB
                 systemUsage.getTempUsage().setLimit(1024L * 1024 * 1024 * 50); // 50 GB
                 systemUsage.getStoreUsage().setLimit(1024L * 1024 * 1024 * 100); // 100 GB
                 systemUsage.getJobSchedulerUsage().setLimit(1024L * 1024 * 1024 * 50); // 50 GB
+//IC see: https://issues.apache.org/jira/browse/AMQ-1467
                 addService(this.systemUsage);
             }
             return systemUsage;
         } catch (IOException e) {
             LOG.error("Cannot create SystemUsage", e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
             throw new RuntimeException("Fatally failed to create SystemUsage" + e.getMessage(), e);
         }
     }
 
     public void setSystemUsage(SystemUsage memoryManager) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1467
         if (this.systemUsage != null) {
             removeService(this.systemUsage);
         }
         this.systemUsage = memoryManager;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         if (this.systemUsage.getExecutor()==null) {
             this.systemUsage.setExecutor(getExecutor());
         }
@@ -1233,6 +1327,7 @@ public class BrokerService implements Service {
      *            the storeSystemUsage to set
      */
     public void setConsumerSystemUsage(SystemUsage consumerSystemUsage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1467
         if (this.consumerSystemUsage != null) {
             removeService(this.consumerSystemUsage);
         }
@@ -1250,6 +1345,7 @@ public class BrokerService implements Service {
                 producerSystemUsage = new SystemUsage(getSystemUsage(), "Producer");
                 float portion = producerSystemUsagePortion / 100f;
                 producerSystemUsage.getMemoryUsage().setUsagePortion(portion);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1467
                 addService(producerSystemUsage);
             } else {
                 producerSystemUsage = getSystemUsage();
@@ -1263,6 +1359,7 @@ public class BrokerService implements Service {
      *            the producerUsageManager to set
      */
     public void setProducerSystemUsage(SystemUsage producerUsageManager) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1467
         if (this.producerSystemUsage != null) {
             removeService(this.producerSystemUsage);
         }
@@ -1271,8 +1368,10 @@ public class BrokerService implements Service {
     }
 
     public synchronized PersistenceAdapter getPersistenceAdapter() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
         if (persistenceAdapter == null && !hasStartException()) {
             persistenceAdapter = createPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-831
             configureService(persistenceAdapter);
             this.persistenceAdapter = registerPersistenceAdapterMBean(persistenceAdapter);
         }
@@ -1290,14 +1389,17 @@ public class BrokerService implements Service {
             return;
         }
         this.persistenceAdapter = persistenceAdapter;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1507
         configureService(this.persistenceAdapter);
         this.persistenceAdapter = registerPersistenceAdapterMBean(persistenceAdapter);
     }
 
     public TaskRunnerFactory getTaskRunnerFactory() {
         if (this.taskRunnerFactory == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4067
             this.taskRunnerFactory = new TaskRunnerFactory("ActiveMQ BrokerService["+getBrokerName()+"] Task", getTaskRunnerPriority(), true, 1000,
                     isDedicatedTaskRunner());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5417
             this.taskRunnerFactory.setThreadClassLoader(this.getClass().getClassLoader());
         }
         return this.taskRunnerFactory;
@@ -1310,6 +1412,8 @@ public class BrokerService implements Service {
     public TaskRunnerFactory getPersistenceTaskRunnerFactory() {
         if (taskRunnerFactory == null) {
             persistenceTaskRunnerFactory = new TaskRunnerFactory("Persistence Adaptor Task", persistenceThreadPriority,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
                     true, 1000, isDedicatedTaskRunner());
         }
         return persistenceTaskRunnerFactory;
@@ -1324,6 +1428,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isEnableStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-894
         return enableStatistics;
     }
 
@@ -1359,6 +1464,7 @@ public class BrokerService implements Service {
 
     public ManagementContext getManagementContext() {
         if (managementContext == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
             checkStartException();
             managementContext = new ManagementContext();
         }
@@ -1371,6 +1477,7 @@ public class BrokerService implements Service {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
     synchronized private boolean hasStartException() {
         return startException != null;
     }
@@ -1410,13 +1517,16 @@ public class BrokerService implements Service {
     }
 
     public Map<String, String> getTransportConnectorURIsAsMap() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6549
         Map<String, String> answer = new HashMap<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2378
         for (TransportConnector connector : transportConnectors) {
             try {
                 URI uri = connector.getConnectUri();
                 if (uri != null) {
                     String scheme = uri.getScheme();
                     if (scheme != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4012
                         answer.put(scheme.toLowerCase(Locale.ENGLISH), uri.toString());
                     }
                 }
@@ -1429,6 +1539,7 @@ public class BrokerService implements Service {
 
     public ProducerBrokerExchange getProducerBrokerExchange(ProducerInfo producerInfo){
         ProducerBrokerExchange result = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
 
         for (TransportConnector connector : transportConnectors) {
             for (TransportConnection tc: connector.getConnections()){
@@ -1465,6 +1576,7 @@ public class BrokerService implements Service {
     }
 
     public Service[] getServices() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         return services.toArray(new Service[0]);
     }
 
@@ -1472,6 +1584,7 @@ public class BrokerService implements Service {
      * Sets the services associated with this broker.
      */
     public void setServices(Service[] services) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1467
         this.services.clear();
         if (services != null) {
             for (int i = 0; i < services.length; i++) {
@@ -1485,6 +1598,7 @@ public class BrokerService implements Service {
      * lifecycle
      */
     public void addService(Service service) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1467
         services.add(service);
     }
 
@@ -1518,6 +1632,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isAdvisorySupport() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-794
         return advisorySupport;
     }
 
@@ -1531,6 +1646,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isAnonymousProducerAdvisorySupport() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7352
         return anonymousProducerAdvisorySupport;
     }
 
@@ -1539,6 +1655,7 @@ public class BrokerService implements Service {
     }
 
     public List<TransportConnector> getTransportConnectors() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6549
         return new ArrayList<>(transportConnectors);
     }
 
@@ -1550,6 +1667,7 @@ public class BrokerService implements Service {
      *                            nestedType="org.apache.activemq.broker.TransportConnector"
      */
     public void setTransportConnectors(List<TransportConnector> transportConnectors) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4246
         for (TransportConnector connector : transportConnectors) {
             addConnector(connector);
         }
@@ -1557,6 +1675,7 @@ public class BrokerService implements Service {
 
     public TransportConnector getTransportConnectorByName(String name){
         for (TransportConnector transportConnector : transportConnectors){
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
            if (name.equals(transportConnector.getName())){
                return transportConnector;
            }
@@ -1565,6 +1684,7 @@ public class BrokerService implements Service {
     }
 
     public TransportConnector getTransportConnectorByScheme(String scheme){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4246
         for (TransportConnector transportConnector : transportConnectors){
             if (scheme.equals(transportConnector.getUri().getScheme())){
                 return transportConnector;
@@ -1574,6 +1694,7 @@ public class BrokerService implements Service {
     }
 
     public List<NetworkConnector> getNetworkConnectors() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6549
         return new ArrayList<>(networkConnectors);
     }
 
@@ -1589,6 +1710,7 @@ public class BrokerService implements Service {
      *                            nestedType="org.apache.activemq.network.NetworkConnector"
      */
     public void setNetworkConnectors(List<?> networkConnectors) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4246
         for (Object connector : networkConnectors) {
             addNetworkConnector((NetworkConnector) connector);
         }
@@ -1599,6 +1721,7 @@ public class BrokerService implements Service {
      * other brokers in a federated network
      */
     public void setProxyConnectors(List<?> proxyConnectors) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4246
         for (Object connector : proxyConnectors) {
             addProxyConnector((ProxyConnector) connector);
         }
@@ -1629,6 +1752,7 @@ public class BrokerService implements Service {
     }
 
     public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-591
         return messageAuthorizationPolicy;
     }
 
@@ -1650,6 +1774,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isDeleteAllMessagesOnStartup() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-831
         return deleteAllMessagesOnStartup;
     }
 
@@ -1665,6 +1790,7 @@ public class BrokerService implements Service {
     public URI getVmConnectorURI() {
         if (vmConnectorURI == null) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6171
                 vmConnectorURI = new URI("vm://" + getBrokerName());
             } catch (URISyntaxException e) {
                 LOG.error("Badly formed URI from {}", getBrokerName(), e);
@@ -1678,7 +1804,9 @@ public class BrokerService implements Service {
     }
 
     public String getDefaultSocketURIString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4246
         if (started.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3685
             if (this.defaultSocketURIString == null) {
                 for (TransportConnector tc:this.transportConnectors) {
                     String result = null;
@@ -1689,6 +1817,7 @@ public class BrokerService implements Service {
                     }
                     if (result != null) {
                         // find first publishable uri
+//IC see: https://issues.apache.org/jira/browse/AMQ-3685
                         if (tc.isUpdateClusterClients() || tc.isRebalanceClusterClients()) {
                             this.defaultSocketURIString = result;
                             break;
@@ -1723,6 +1852,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isKeepDurableSubsActive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-669
         return keepDurableSubsActive;
     }
 
@@ -1749,6 +1879,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isUseMirroredQueues() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1435
         return useMirroredQueues;
     }
 
@@ -1770,6 +1901,7 @@ public class BrokerService implements Service {
     }
 
     public ActiveMQDestination[] getDestinations() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-828
         return destinations;
     }
 
@@ -1784,11 +1916,14 @@ public class BrokerService implements Service {
      * @return the tempDataStore
      */
     public synchronized PListStore getTempDataStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
         if (tempDataStore == null && !hasStartException()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1382
             if (!isPersistent()) {
                 return null;
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
             try {
                 PersistenceAdapter pa = getPersistenceAdapter();
                 if( pa!=null && pa instanceof PListStore) {
@@ -1803,6 +1938,7 @@ public class BrokerService implements Service {
                 this.tempDataStore = (PListStore) getClass().getClassLoader().loadClass(clazz).newInstance();
                 this.tempDataStore.setDirectory(getTmpDataDirectory());
                 configureService(tempDataStore);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6788
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException("Kahadb class PListStoreImpl not found. Add activemq-kahadb jar or set persistent to false on BrokerService.", e);
             } catch (Exception e) {
@@ -1818,6 +1954,7 @@ public class BrokerService implements Service {
      */
     public void setTempDataStore(PListStore tempDataStore) {
         this.tempDataStore = tempDataStore;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6403
         if (tempDataStore != null) {
             if (tmpDataDirectory == null) {
                 tmpDataDirectory = tempDataStore.getDirectory();
@@ -1825,6 +1962,8 @@ public class BrokerService implements Service {
                 tempDataStore.setDirectory(tmpDataDirectory);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3310
+//IC see: https://issues.apache.org/jira/browse/AMQ-3310
         configureService(tempDataStore);
     }
 
@@ -1859,6 +1998,7 @@ public class BrokerService implements Service {
      * JMS name
      */
     public Destination getDestination(ActiveMQDestination destination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         return getBroker().addDestination(getAdminConnectionContext(), destination,false);
     }
 
@@ -1931,6 +2071,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isUseTempMirroredQueues() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1654
         return useTempMirroredQueues;
     }
 
@@ -1941,6 +2082,7 @@ public class BrokerService implements Service {
     public synchronized JobSchedulerStore getJobSchedulerStore() {
 
         // If support is off don't allow any scheduler even is user configured their own.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4689
         if (!isSchedulerSupport()) {
             return null;
         }
@@ -1948,8 +2090,10 @@ public class BrokerService implements Service {
         // If the user configured their own we use it even if persistence is disabled since
         // we don't know anything about their implementation.
         if (jobSchedulerStore == null && !hasStartException()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
 
             if (!isPersistent()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5271
                 this.jobSchedulerStore = new InMemoryJobSchedulerStore();
                 configureService(jobSchedulerStore);
                 return this.jobSchedulerStore;
@@ -1957,6 +2101,7 @@ public class BrokerService implements Service {
 
             try {
                 PersistenceAdapter pa = getPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
                 if (pa != null) {
                     this.jobSchedulerStore = pa.createJobSchedulerStore();
                     jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
@@ -1986,6 +2131,7 @@ public class BrokerService implements Service {
             // included at runtime, otherwise this will fail.  User should disable
             // scheduler support if this fails.
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
                 String clazz = "org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter";
                 PersistenceAdapter adaptor = (PersistenceAdapter)getClass().getClassLoader().loadClass(clazz).newInstance();
                 jobSchedulerStore = adaptor.createJobSchedulerStore();
@@ -2043,6 +2189,10 @@ public class BrokerService implements Service {
         if (getPersistenceAdapter() != null) {
             PersistenceAdapter adapter = getPersistenceAdapter();
             checkUsageLimit(adapter.getDirectory(), usage.getStoreUsage(), usage.getStoreUsage().getPercentLimit());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5964
+//IC see: https://issues.apache.org/jira/browse/AMQ-5965
+//IC see: https://issues.apache.org/jira/browse/AMQ-5969
 
             long maxJournalFileSize = 0;
             long storeLimit = usage.getStoreUsage().getLimit();
@@ -2051,6 +2201,8 @@ public class BrokerService implements Service {
                 maxJournalFileSize = ((JournaledStore) adapter).getJournalMaxFileLength();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3573
+//IC see: https://issues.apache.org/jira/browse/AMQ-2834
             if (storeLimit > 0 && storeLimit < maxJournalFileSize) {
                 LOG.error("Store limit is " + storeLimit / (1024 * 1024) +
                           " mb, whilst the max journal file size for the store is: " +
@@ -2072,6 +2224,10 @@ public class BrokerService implements Service {
 
         if (tmpDir != null) {
             checkUsageLimit(tmpDir, usage.getTempUsage(), usage.getTempUsage().getPercentLimit());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5964
+//IC see: https://issues.apache.org/jira/browse/AMQ-5965
+//IC see: https://issues.apache.org/jira/browse/AMQ-5969
 
             if (isPersistent()) {
                 long maxJournalFileSize;
@@ -2083,7 +2239,13 @@ public class BrokerService implements Service {
                     maxJournalFileSize = DEFAULT_MAX_FILE_LENGTH;
                 }
                 long storeLimit = usage.getTempUsage().getLimit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5964
+//IC see: https://issues.apache.org/jira/browse/AMQ-5965
+//IC see: https://issues.apache.org/jira/browse/AMQ-5969
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3573
+//IC see: https://issues.apache.org/jira/browse/AMQ-2834
                 if (storeLimit > 0 && storeLimit < maxJournalFileSize) {
                     LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
                               " mb, whilst the max journal file size for the temporary store is: " +
@@ -2100,6 +2262,7 @@ public class BrokerService implements Service {
             String storeName = storeUsage instanceof StoreUsage ? "Store" : "Temporary Store";
             long storeLimit = storeUsage.getLimit();
             long storeCurrent = storeUsage.getUsage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6441
             long totalSpace = storeUsage.getTotal() > 0 ? storeUsage.getTotal() : dir.getTotalSpace();
             long totalUsableSpace = (storeUsage.getTotal() > 0 ? storeUsage.getTotal() : dir.getUsableSpace()) + storeCurrent;
             if (totalUsableSpace < 0 || totalSpace < 0) {
@@ -2116,6 +2279,7 @@ public class BrokerService implements Service {
             //Changes in partition size (total space) as well as changes in usable space should
             //be detected here
             if (diskUsageCheckRegrowThreshold > -1 && percentLimit > 0
+//IC see: https://issues.apache.org/jira/browse/AMQ-6441
                     && storeUsage.getTotal() == 0
                     && storeLimit < bytePercentLimit && storeLimit < totalUsableSpace){
 
@@ -2134,6 +2298,7 @@ public class BrokerService implements Service {
 
             //check if the limit is too large for the amount of usable space
             } else if (storeLimit > totalUsableSpace) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6084
                 final String message = storeName + " limit is " +  storeLimit / oneMeg
                         + " mb (current store usage is " + storeCurrent / oneMeg
                         + " mb). The data directory: " + dir.getAbsolutePath()
@@ -2153,6 +2318,7 @@ public class BrokerService implements Service {
                             + " previous usage limit check) is set to (" + storeLimit / oneMeg + " mb)"
                             + " but only " + totalUsableSpace * 100 / totalSpace + "% (" + totalUsableSpace / oneMeg + " mb)"
                             + " is available - resetting limit");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6084
                 } else {
                     LOG.warn(message + " - resetting to maximum available disk space: " +
                             totalUsableSpace / oneMeg + " mb");
@@ -2175,6 +2341,8 @@ public class BrokerService implements Service {
                 public void run() {
                     try {
                         checkStoreUsageLimits();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6979
+//IC see: https://issues.apache.org/jira/browse/AMQ-5129
                     } catch (Throwable e) {
                         LOG.error("Failed to check persistent disk usage limits", e);
                     }
@@ -2196,6 +2364,7 @@ public class BrokerService implements Service {
         long jvmLimit = Runtime.getRuntime().maxMemory();
 
         if (memLimit > jvmLimit) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6084
             final String message = "Memory Usage for the Broker (" + memLimit / (1024 * 1024)
                     + "mb) is more than the maximum available for the JVM: " + jvmLimit / (1024 * 1024);
 
@@ -2232,6 +2401,7 @@ public class BrokerService implements Service {
                 while (schedulerDir != null && !schedulerDir.isDirectory()) {
                     schedulerDir = schedulerDir.getParentFile();
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4819
                 long schedulerLimit = usage.getJobSchedulerUsage().getLimit();
                 long dirFreeSpace = schedulerDir.getUsableSpace();
                 if (schedulerLimit > dirFreeSpace) {
@@ -2274,9 +2444,11 @@ public class BrokerService implements Service {
             ObjectName objectName = createConnectorObjectName(connector);
             connector = connector.asManagedConnector(getManagementContext(), objectName);
             ConnectorViewMBean view = new ConnectorView(connector);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
             AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
             return connector;
         } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5515
             throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e, e);
         }
     }
@@ -2288,6 +2460,7 @@ public class BrokerService implements Service {
                 getManagementContext().unregisterMBean(objectName);
             } catch (Throwable e) {
                 throw IOExceptionSupport.create(
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
                         "Transport Connector could not be unregistered in JMX: " + e.getMessage(), e);
             }
         }
@@ -2298,6 +2471,7 @@ public class BrokerService implements Service {
     }
 
     protected void unregisterPersistenceAdapterMBean(PersistenceAdapter adaptor) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4246
         if (isUseJmx()) {}
     }
 
@@ -2309,9 +2483,12 @@ public class BrokerService implements Service {
         NetworkConnectorViewMBean view = new NetworkConnectorView(connector);
         try {
             ObjectName objectName = createNetworkConnectorObjectName(connector);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
             connector.setObjectName(objectName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
             AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
         } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-922
             throw IOExceptionSupport.create("Network Connector could not be registered in JMX: " + e.getMessage(), e);
         }
     }
@@ -2349,6 +2526,9 @@ public class BrokerService implements Service {
         JmsConnectorView view = new JmsConnectorView(connector);
         try {
             ObjectName objectName = BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "jmsConnectors", connector.getName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
             AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
@@ -2361,11 +2541,13 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     protected Broker createBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1606
         regionBroker = createRegionBroker();
         Broker broker = addInterceptors(regionBroker);
         // Add a filter that will stop access to the broker once stopped
         broker = new MutableBrokerFilter(broker) {
             Broker old;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2245
 
             @Override
             public void stop() throws Exception {
@@ -2396,12 +2578,14 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     protected Broker createRegionBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1435
         if (destinationInterceptors == null) {
             destinationInterceptors = createDefaultDestinationInterceptor();
         }
         configureServices(destinationInterceptors);
         DestinationInterceptor destinationInterceptor = new CompositeDestinationInterceptor(destinationInterceptors);
         if (destinationFactory == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1606
             destinationFactory = new DestinationFactoryImpl(this, getTaskRunnerFactory(), getPersistenceAdapter());
         }
         return createRegionBroker(destinationInterceptor);
@@ -2411,7 +2595,10 @@ public class BrokerService implements Service {
         RegionBroker regionBroker;
         if (isUseJmx()) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4246
                 regionBroker = new ManagedRegionBroker(this, getManagementContext(), getBrokerObjectName(),
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                     getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory, destinationInterceptor,getScheduler(),getExecutor());
             } catch(MalformedObjectNameException me){
                 LOG.warn("Cannot create ManagedRegionBroker due " + me.getMessage(), me);
@@ -2422,10 +2609,14 @@ public class BrokerService implements Service {
                     destinationInterceptor,getScheduler(),getExecutor());
         }
         destinationFactory.setRegionBroker(regionBroker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-669
         regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
         regionBroker.setBrokerName(getBrokerName());
         regionBroker.getDestinationStatistics().setEnabled(enableStatistics);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         regionBroker.setAllowTempAutoCreationOnSend(isAllowTempAutoCreationOnSend());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2927
         if (brokerId != null) {
             regionBroker.setBrokerId(brokerId);
         }
@@ -2436,7 +2627,9 @@ public class BrokerService implements Service {
      * Create the default destination interceptor
      */
     protected DestinationInterceptor[] createDefaultDestinationInterceptor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6549
         List<DestinationInterceptor> answer = new ArrayList<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1435
         if (isUseVirtualTopics()) {
             VirtualDestinationInterceptor interceptor = new VirtualDestinationInterceptor();
             VirtualTopic virtualTopic = new VirtualTopic();
@@ -2461,7 +2654,9 @@ public class BrokerService implements Service {
      */
     protected Broker addInterceptors(Broker broker) throws Exception {
         if (isSchedulerSupport()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
             SchedulerBroker sb = new SchedulerBroker(this, broker, getJobSchedulerStore());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7458
             sb.setMaxRepeatAllowed(maxSchedulerRepeatAllowed);
             if (isUseJmx()) {
                 JobSchedulerViewMBean view = new JobSchedulerView(sb.getJobScheduler());
@@ -2486,13 +2681,16 @@ public class BrokerService implements Service {
                         + e.getMessage(), e);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-794
         if (isAdvisorySupport()) {
             broker = new AdvisoryBroker(broker);
         }
         broker = new CompositeDestinationBroker(broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2183
         broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         if (isPopulateJMSXUserID()) {
             UserIDBroker userIDBroker = new UserIDBroker(broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3183
             userIDBroker.setUseAuthenticatePrincipal(isUseAuthenticatedPrincipalForJMSXUserID());
             broker = userIDBroker;
         }
@@ -2535,6 +2733,7 @@ public class BrokerService implements Service {
 
     protected TransportConnector createTransportConnector(URI brokerURI) throws Exception {
         TransportServer transport = TransportFactorySupport.bind(this, brokerURI);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         return new TransportConnector(transport);
     }
 
@@ -2578,6 +2777,7 @@ public class BrokerService implements Service {
      * @org.apache.xbean.Property
      */
     public void setShutdownHooks(List<Runnable> hooks) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2574
         for (Runnable hook : hooks) {
             addShutdownHook(hook);
         }
@@ -2620,9 +2820,11 @@ public class BrokerService implements Service {
             ConnectionContext adminConnectionContext = getAdminConnectionContext();
             for (int i = 0; i < destinations.length; i++) {
                 ActiveMQDestination destination = destinations[i];
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                 getBroker().addDestination(adminConnectionContext, destination,true);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
         if (isUseVirtualTopics()) {
             startVirtualConsumerDestinations();
         }
@@ -2633,14 +2835,18 @@ public class BrokerService implements Service {
      * configuring the broker at startup
      */
     public ConnectionContext getAdminConnectionContext() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2970
         return BrokerSupport.getConnectionContext(getBroker());
     }
 
     protected void startManagementContext() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4008
         getManagementContext().setBrokerName(brokerName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2306
         getManagementContext().start();
         adminView = new BrokerView(this, null);
         ObjectName objectName = getBrokerObjectName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
         AnnotatedMBean.registerMBean(getManagementContext(), adminView, objectName);
     }
 
@@ -2650,7 +2856,9 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public void startAllConnectors() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
         final Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6549
         List<TransportConnector> al = new ArrayList<>();
         for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
             TransportConnector connector = iter.next();
@@ -2662,12 +2870,15 @@ public class BrokerService implements Service {
             this.transportConnectors.clear();
             setTransportConnectors(al);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4330
         this.slave = false;
         if (!stopped.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3195
             ThreadPoolExecutor networkConnectorStartExecutor = null;
             if (isNetworkConnectorStartAsync()) {
                 // spin up as many threads as needed
                 networkConnectorStartExecutor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+//IC see: https://issues.apache.org/jira/browse/AMQ-4246
                     10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
                     new ThreadFactory() {
                         int count=0;
@@ -2683,10 +2894,12 @@ public class BrokerService implements Service {
             for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 final NetworkConnector connector = iter.next();
                 connector.setLocalUri(getVmConnectorURI());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
                 startNetworkConnector(connector, durableDestinations, networkConnectorStartExecutor);
             }
             if (networkConnectorStartExecutor != null) {
                 // executor done when enqueued tasks are complete
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
                 ThreadPoolUtils.shutdown(networkConnectorStartExecutor);
             }
 
@@ -2707,15 +2920,19 @@ public class BrokerService implements Service {
 
     public void startNetworkConnector(final NetworkConnector connector,
             final ThreadPoolExecutor networkConnectorStartExecutor) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
         startNetworkConnector(connector, getBroker().getDurableDestinations(), networkConnectorStartExecutor);
     }
 
     public void startNetworkConnector(final NetworkConnector connector,
             final Set<ActiveMQDestination> durableDestinations,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
             final ThreadPoolExecutor networkConnectorStartExecutor) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-568
         connector.setBrokerName(getBrokerName());
         //set the durable destinations to match the broker if not set on the connector
         if (connector.getDurableDestinations() == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1709
             connector.setDurableDestinations(durableDestinations);
         }
         String defaultSocketURI = getDefaultSocketURIString();
@@ -2751,15 +2968,20 @@ public class BrokerService implements Service {
     }
 
     public TransportConnector startTransportConnector(TransportConnector connector) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
+//IC see: https://issues.apache.org/jira/browse/AMQ-5317
         connector.setBrokerService(this);
         connector.setTaskRunnerFactory(getTaskRunnerFactory());
+//IC see: https://issues.apache.org/jira/browse/AMQ-591
         MessageAuthorizationPolicy policy = getMessageAuthorizationPolicy();
         if (policy != null) {
             connector.setMessageAuthorizationPolicy(policy);
         }
         if (isUseJmx()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-922
             connector = registerConnectorMBean(connector);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3918
         connector.getStatistics().setEnabled(enableStatistics);
         connector.start();
         return connector;
@@ -2769,6 +2991,7 @@ public class BrokerService implements Service {
      * Perform any custom dependency injection
      */
     protected void configureServices(Object[] services) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1435
         for (Object service : services) {
             configureService(service);
         }
@@ -2778,6 +3001,7 @@ public class BrokerService implements Service {
      * Perform any custom dependency injection
      */
     protected void configureService(Object service) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-831
         if (service instanceof BrokerServiceAware) {
             BrokerServiceAware serviceAware = (BrokerServiceAware) service;
             serviceAware.setBrokerService(this);
@@ -2785,6 +3009,7 @@ public class BrokerService implements Service {
     }
 
     public void handleIOException(IOException exception) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
         if (ioExceptionHandler != null) {
             ioExceptionHandler.handle(exception);
          } else {
@@ -2793,7 +3018,9 @@ public class BrokerService implements Service {
     }
 
     protected void startVirtualConsumerDestinations() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
         checkStartException();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
         ConnectionContext adminConnectionContext = getAdminConnectionContext();
         Set<ActiveMQDestination> destinations = destinationFactory.getDestinations();
         DestinationFilter filter = getVirtualTopicConsumerDestinationFilter();
@@ -2809,7 +3036,9 @@ public class BrokerService implements Service {
     private DestinationFilter getVirtualTopicConsumerDestinationFilter() {
         // created at startup, so no sync needed
         if (virtualConsumerDestinationFilter == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6549
             Set <ActiveMQQueue> consumerDestinations = new HashSet<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4045
             if (destinationInterceptors != null) {
                 for (DestinationInterceptor interceptor : destinationInterceptors) {
                     if (interceptor instanceof VirtualDestinationInterceptor) {
@@ -2818,6 +3047,7 @@ public class BrokerService implements Service {
                             if (virtualDestination instanceof VirtualTopic) {
                                 consumerDestinations.add(new ActiveMQQueue(((VirtualTopic) virtualDestination).getPrefix() + DestinationFilter.ANY_DESCENDENT));
                             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
                             if (isUseVirtualDestSubs()) {
                                 try {
                                     broker.virtualDestinationAdded(getAdminConnectionContext(), virtualDestination);
@@ -2838,14 +3068,18 @@ public class BrokerService implements Service {
     }
 
     protected synchronized ThreadPoolExecutor getExecutor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         if (this.executor == null) {
             this.executor = new ThreadPoolExecutor(1, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3718
 
                 private long i = 0;
 
                 @Override
                 public Thread newThread(Runnable runnable) {
                     this.i++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4067
                     Thread thread = new Thread(runnable, "ActiveMQ BrokerService.worker." + this.i);
                     thread.setDaemon(true);
                     thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -2885,6 +3119,7 @@ public class BrokerService implements Service {
     }
 
     public Broker getRegionBroker() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1606
         return regionBroker;
     }
 
@@ -2898,6 +3133,7 @@ public class BrokerService implements Service {
 
     public void addShutdownHook(Runnable hook) {
         synchronized (shutdownHooks) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1720
             shutdownHooks.add(hook);
         }
     }
@@ -2920,6 +3156,7 @@ public class BrokerService implements Service {
     }
 
     public int getSystemExitOnShutdownExitCode() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1724
         return systemExitOnShutdownExitCode;
     }
 
@@ -2936,6 +3173,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isShutdownOnSlaveFailure() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-596
         return shutdownOnSlaveFailure;
     }
 
@@ -2958,6 +3196,8 @@ public class BrokerService implements Service {
     }
 
     public long getWaitForSlaveTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2527
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         return this.waitForSlaveTimeout;
     }
 
@@ -2970,6 +3210,7 @@ public class BrokerService implements Service {
      * @return the passiveSlave
      */
     public boolean isPassiveSlave() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2387
         return this.passiveSlave;
     }
 
@@ -2989,7 +3230,9 @@ public class BrokerService implements Service {
      * @param ioExceptionHandler
      */
     public void setIoExceptionHandler(IOExceptionHandler ioExceptionHandler) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1780
         configureService(ioExceptionHandler);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
         this.ioExceptionHandler = ioExceptionHandler;
     }
 
@@ -3001,6 +3244,8 @@ public class BrokerService implements Service {
      * @return the schedulerSupport
      */
     public boolean isSchedulerSupport() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
+//IC see: https://issues.apache.org/jira/browse/AMQ-5271
         return this.schedulerSupport;
     }
 
@@ -3017,6 +3262,7 @@ public class BrokerService implements Service {
      */
     public File getSchedulerDirectoryFile() {
         if (this.schedulerDirectoryFile == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2897
             this.schedulerDirectoryFile = new File(getBrokerDataDirectory(), "scheduler");
         }
         return schedulerDirectoryFile;
@@ -3034,6 +3280,7 @@ public class BrokerService implements Service {
     }
 
     public int getSchedulePeriodForDestinationPurge() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2821
         return this.schedulePeriodForDestinationPurge;
     }
 
@@ -3050,6 +3297,10 @@ public class BrokerService implements Service {
     }
 
     public int getDiskUsageCheckRegrowThreshold() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5964
+//IC see: https://issues.apache.org/jira/browse/AMQ-5965
+//IC see: https://issues.apache.org/jira/browse/AMQ-5969
         return diskUsageCheckRegrowThreshold;
     }
 
@@ -3062,6 +3313,7 @@ public class BrokerService implements Service {
     }
 
     public int getMaxPurgedDestinationsPerSweep() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3339
         return this.maxPurgedDestinationsPerSweep;
     }
 
@@ -3070,6 +3322,7 @@ public class BrokerService implements Service {
     }
 
     public BrokerContext getBrokerContext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2702
         return brokerContext;
     }
 
@@ -3078,10 +3331,12 @@ public class BrokerService implements Service {
     }
 
     public void setBrokerId(String brokerId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2927
         this.brokerId = new BrokerId(brokerId);
     }
 
     public boolean isUseAuthenticatedPrincipalForJMSXUserID() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3183
         return useAuthenticatedPrincipalForJMSXUserID;
     }
 
@@ -3096,6 +3351,7 @@ public class BrokerService implements Service {
      * @return true if user names should be exposed in MBeans
      */
     public boolean isPopulateUserNameInMBeans() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         return this.populateUserNameInMBeans;
     }
 
@@ -3114,6 +3370,7 @@ public class BrokerService implements Service {
      * @return timeout in milliseconds before MBean calls fail, (default is 0 or no timeout).
      */
     public long getMbeanInvocationTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3877
         return mbeanInvocationTimeout;
     }
 
@@ -3129,6 +3386,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isNetworkConnectorStartAsync() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3195
         return networkConnectorStartAsync;
     }
 
@@ -3137,6 +3395,8 @@ public class BrokerService implements Service {
     }
 
     public boolean isAllowTempAutoCreationOnSend() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         return allowTempAutoCreationOnSend;
     }
 
@@ -3169,15 +3429,19 @@ public class BrokerService implements Service {
     }
 
     public boolean shouldRecordVirtualDestination(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
         return isUseVirtualTopics() && destination.isQueue() &&
+//IC see: https://issues.apache.org/jira/browse/AMQ-4246
                getVirtualTopicConsumerDestinationFilter().matches(destination);
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6086
     synchronized public Throwable getStartException() {
         return startException;
     }
 
     public boolean isStartAsync() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3696
         return startAsync;
     }
 
@@ -3186,10 +3450,12 @@ public class BrokerService implements Service {
     }
 
     public boolean isSlave() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4330
         return this.slave;
     }
 
     public boolean isStopping() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4505
         return this.stopping.get();
     }
 
@@ -3197,6 +3463,7 @@ public class BrokerService implements Service {
      * @return true if the broker allowed to restart on shutdown.
      */
     public boolean isRestartAllowed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4526
         return restartAllowed;
     }
 
@@ -3224,6 +3491,7 @@ public class BrokerService implements Service {
     }
 
     public int getStoreOpenWireVersion() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         return storeOpenWireVersion;
     }
 
@@ -3235,6 +3503,7 @@ public class BrokerService implements Service {
      * @return the current number of connections on this Broker.
      */
     public int getCurrentConnections() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
         return this.currentConnections.get();
     }
 
@@ -3258,6 +3527,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isRejectDurableConsumers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5630
         return rejectDurableConsumers;
     }
 
@@ -3266,6 +3536,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isUseVirtualDestSubs() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         return useVirtualDestSubs;
     }
 
@@ -3284,6 +3555,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isAdjustUsageLimits() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6084
         return adjustUsageLimits;
     }
 
@@ -3292,6 +3564,7 @@ public class BrokerService implements Service {
     }
 
     public void setRollbackOnlyOnAsyncException(boolean rollbackOnlyOnAsyncException) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
         this.rollbackOnlyOnAsyncException = rollbackOnlyOnAsyncException;
     }
 
@@ -3300,6 +3573,7 @@ public class BrokerService implements Service {
     }
 
     public int getMaxSchedulerRepeatAllowed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7458
         return maxSchedulerRepeatAllowed;
     }
 

@@ -71,6 +71,7 @@ public class AMQ2314Test extends CombinationTestSupport {
 
         final long origTempUsage = broker.getSystemUsage().getTempUsage().getUsage();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         factory.setAlwaysSyncSend(true);
 
@@ -158,7 +159,9 @@ public class AMQ2314Test extends CombinationTestSupport {
         broker.setAdvisorySupport(false);
         broker.setDeleteAllMessagesOnStartup(true);
         broker.getSystemUsage().getMemoryUsage().setLimit(1024l*1024*64);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4798
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();
 

@@ -125,6 +125,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public JournalPersistenceAdapter(Journal journal, PersistenceAdapter longTermPersistence, TaskRunnerFactory taskRunnerFactory) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2599
         setJournal(journal);
         setTaskRunnerFactory(taskRunnerFactory);
         setPersistenceAdapter(longTermPersistence);
@@ -143,6 +144,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         this.longTermPersistence = longTermPersistence;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-827
+//IC see: https://issues.apache.org/jira/browse/AMQ-909
     final Runnable createPeriodicCheckpointTask() {
         return new Runnable() {
             @Override
@@ -213,6 +216,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      */
     @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2053
         queues.remove(destination);
     }
 
@@ -257,10 +261,12 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         if( brokerService!=null ) {
           wireFormat.setVersion(brokerService.getStoreOpenWireVersion());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2599
         checkpointTask = taskRunnerFactory.createTaskRunner(new Task() {
             @Override
             public boolean iterate() {
@@ -291,6 +297,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         recover();
 
         // Do a checkpoint periodically.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         this.scheduler = new Scheduler("Journal Scheduler");
         this.scheduler.start();
         this.scheduler.executePeriodically(periodicCheckpointTask, checkpointInterval / 10);
@@ -305,12 +313,15 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         this.scheduler.cancel(periodicCheckpointTask);
         this.scheduler.stop();
 
         // Take one final checkpoint and stop checkpoint processing.
         checkpoint(true, true);
         checkpointTask.shutdown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
         ThreadPoolUtils.shutdown(checkpointExecutor);
         checkpointExecutor = null;
 
@@ -384,6 +395,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                 latch.await();
             }
         } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
             Thread.currentThread().interrupt();
             LOG.warn("Request to start checkpoint failed: " + e, e);
         }
@@ -666,10 +678,14 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      */
     public RecordLocation writeCommand(DataStructure command, boolean sync) throws IOException {
         if (started.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2038
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
                 return journal.write(toPacket(wireFormat.marshal(command)), sync);
             } catch (IOException ioe) {
                 LOG.error("Cannot write to the journal", ioe);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2042
                 brokerService.handleIOException(ioe);
                 throw ioe;
             }
@@ -702,6 +718,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         try {
             JournalTrace trace = new JournalTrace();
             trace.setMessage("DELETED");
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
             RecordLocation location = journal.write(toPacket(wireFormat.marshal(trace)), false);
             journal.setMark(location, true);
             LOG.info("Journal deleted: ");
@@ -734,6 +751,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public long getCheckpointInterval() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4399
         return checkpointInterval;
     }
 
@@ -752,6 +770,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public Packet toPacket(ByteSequence sequence) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
         return new ByteArrayPacket(new org.apache.activeio.packet.ByteSequence(sequence.data, sequence.offset, sequence.length));
     }
 
@@ -767,11 +786,13 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4399
         return "JournalPersistenceAdapter(" + longTermPersistence + ")";
     }
 
     @Override
     public void setDirectory(File dir) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3573
         this.directory=dir;
     }
 
@@ -796,16 +817,21 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     @Override
     public long getLastProducerSequenceId(ProducerId id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         return -1;
     }
 
     @Override
     public void allowIOResumption() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
         longTermPersistence.allowIOResumption();
     }
 
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         return longTermPersistence.createJobSchedulerStore();
     }
 

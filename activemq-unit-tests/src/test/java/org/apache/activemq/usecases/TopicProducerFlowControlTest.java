@@ -61,6 +61,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
     private BrokerService broker;
 
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7234
         produced.set(0);
         consumed.set(0);
         // Setup and start the broker
@@ -83,8 +84,10 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         tpe.setAdvisoryWhenFull(true);
         tpe.setBlockedProducerWarningInterval(2000);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3233
 
         pm.setPolicyEntries(Arrays.asList(new PolicyEntry[]{tpe}));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6199
 
         setDestinationPolicy(broker, pm);
 
@@ -109,6 +112,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         connectionFactory.setAlwaysSyncSend(true);
         connectionFactory.setProducerWindowSize(1024);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4091
         ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
         prefetchPolicy.setAll(5000);
         connectionFactory.setPrefetchPolicy(prefetchPolicy);
@@ -123,6 +127,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         listenerSession.createConsumer(new ActiveMQTopic(AdvisorySupport.FULL_TOPIC_PREFIX + ">")).setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6199
                 try {
                     if (blockedCounter.get() % 100 == 0) {
                         LOG.info("Got full advisory, usageName: " +
@@ -140,6 +145,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3233
         final AtomicInteger warnings = new AtomicInteger();
         Appender appender = new DefaultTestAppender() {
             @Override
@@ -195,6 +201,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
 
             assertTrue("Producer got blocked", Wait.waitFor(new Wait.Condition() {
                 public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4091
                     return blockedCounter.get() > 0;
                 }
             }, 5 * 1000));
@@ -210,6 +217,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
 
 
     public void testTransactedProducerBlockedAndClosedWillRelease() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7234
         doTestTransactedProducerBlockedAndClosedWillRelease(false);
     }
 
@@ -239,6 +247,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         Appender appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4261
                 if (event.getLevel().equals(Level.WARN) && event.getMessage().toString().contains("Usage Manager memory limit reached")) {
                     LOG.info("received  log message: " + event.getMessage());
                     warnings.incrementAndGet();
@@ -315,6 +324,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
 
             // verify no pending sends completed in rolledback tx
             // temp dest should not exist
+//IC see: https://issues.apache.org/jira/browse/AMQ-7298
             if (!ActiveMQDestination.transform(destination).isTemporary()) {
                 assertEquals("nothing sent during close", enqueueCountWhenBlocked, broker.getDestination(ActiveMQDestination.transform(destination)).getDestinationStatistics().getEnqueues().getCount());
             }
@@ -331,6 +341,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
     public void onMessage(Message message) {
         long count = consumed.incrementAndGet();
         if (count % 100 == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3900
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {

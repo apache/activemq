@@ -57,6 +57,7 @@ public class OXMMessageTransformer extends AbstractXMLMessageTransformer {
 	protected String marshall(Session session, ObjectMessage objectMessage)
 			throws JMSException {
 		try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4060
             StringWriter writer = new StringWriter();
             Result result = new StreamResult(writer);
             marshaller.marshal(objectMessage.getObject(), result);
@@ -74,6 +75,7 @@ public class OXMMessageTransformer extends AbstractXMLMessageTransformer {
 	protected Object unmarshall(Session session, TextMessage textMessage)
 			throws JMSException {
 		try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4060
             String text = textMessage.getText();
             Source source = new StreamSource(new StringReader(text));
 			return marshaller.unmarshal(source);

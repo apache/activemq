@@ -51,7 +51,9 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
     TopicSessionTest.class,
+//IC see: https://issues.apache.org/jira/browse/AMQ-4978
     MessageHeaderTest.class,
     QueueBrowserTest.class,
     MessageTypeTest.class,

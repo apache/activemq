@@ -71,6 +71,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     protected String keyStoreKeyPassword;
 
     public ActiveMQSslConnectionFactory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3192
         super();
     }
 
@@ -108,12 +109,14 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
      */
     @Override
     protected Transport createTransport() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3785
         SslContext existing = SslContext.getCurrentSslContext();
         try {
             if (keyStore != null || trustStore != null) {
                 keyManager = createKeyManager();
                 trustManager = createTrustManager();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3989
             if (keyManager != null || trustManager != null) {
                 SslContext.setCurrentSslContext(new SslContext(keyManager, trustManager, secureRandom));
             }
@@ -128,9 +131,11 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     protected TrustManager[] createTrustManager() throws Exception {
         TrustManager[] trustStoreManagers = null;
         KeyStore trustedCertStore = KeyStore.getInstance(getTrustStoreType());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5789
 
         if (trustStore != null) {
             try(InputStream tsStream = getInputStream(trustStore)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
 
                 trustedCertStore.load(tsStream, trustStorePassword.toCharArray());
                 TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -143,20 +148,25 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     }
 
     protected KeyManager[] createKeyManager() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4227
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5789
         KeyStore ks = KeyStore.getInstance(getKeyStoreType());
         KeyManager[] keystoreManagers = null;
         if (keyStore != null) {
             byte[] sslCert = loadClientCredential(keyStore);
 
             if (sslCert != null && sslCert.length > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
                 try(ByteArrayInputStream bin = new ByteArrayInputStream(sslCert)) {
                     ks.load(bin, keyStorePassword.toCharArray());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5495
                     kmf.init(ks, keyStoreKeyPassword !=null ? keyStoreKeyPassword.toCharArray() : keyStorePassword.toCharArray());
                     keystoreManagers = kmf.getKeyManagers();
                 }
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3981
         return keystoreManagers;
     }
 
@@ -164,6 +174,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         if (fileName == null) {
             return null;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try(InputStream in = getInputStream(fileName);
             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             byte[] buf = new byte[512];
@@ -177,6 +188,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     }
 
     protected InputStream getInputStream(String urlOrResource) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4227
         try {
             File ifile = new File(urlOrResource);
             // only open the file if and only if it exists
@@ -187,6 +199,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         }
 
         InputStream ins = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3981
 
         try {
             URL url = new URL(urlOrResource);
@@ -210,6 +223,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     }
 
     public String getTrustStoreType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5789
         return trustStoreType;
     }
 
@@ -249,6 +263,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     }
 
     public String getKeyStoreType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5789
         return keyStoreType;
     }
 
@@ -292,6 +307,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
 
 
     public String getKeyStoreKeyPassword() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5495
         return keyStoreKeyPassword;
     }
 

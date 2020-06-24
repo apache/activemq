@@ -51,6 +51,7 @@ public class AMQ5035Test {
         brokerService = BrokerFactory.createBroker(xbean + confBase + "/activemq.xml");
         connectionUri = brokerService.getTransportConnectorByScheme("tcp").getPublishableConnectString();
         brokerService.setDeleteAllMessagesOnStartup(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         brokerService.getManagementContext().setCreateConnector(false);
         brokerService.start();
         brokerService.waitUntilStarted();
@@ -74,6 +75,7 @@ public class AMQ5035Test {
         consumer.close();
 
         BrokerViewMBean brokerView = getBrokerView(DURABLE_SUB_NAME);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5035
         try {
             brokerView.destroyDurableSubscriber(CLIENT_ID, DURABLE_SUB_NAME);
         } catch (JMSException okAsCloseIsAsync) {

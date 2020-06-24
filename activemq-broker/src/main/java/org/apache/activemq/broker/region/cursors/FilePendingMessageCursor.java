@@ -72,7 +72,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * @param prioritizedMessages
      */
     public FilePendingMessageCursor(Broker broker, String name, boolean prioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         super(prioritizedMessages);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3596
         if (this.prioritizedMessages) {
             this.memoryList = new PrioritizedPendingList();
         } else {
@@ -88,9 +90,12 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     @Override
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
             if( this.broker != null) {
                 wireFormat.setVersion(this.broker.getBrokerService().getStoreOpenWireVersion());
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1452
+//IC see: https://issues.apache.org/jira/browse/AMQ-729
             super.start();
             if (systemUsage != null) {
                 systemUsage.getMemoryUsage().addUsageListener(this);
@@ -113,7 +118,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     @Override
     public synchronized boolean isEmpty() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
         if (memoryList.isEmpty() && isDiskListEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1251
+//IC see: https://issues.apache.org/jira/browse/AMQ-1748
             return true;
         }
         for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
@@ -137,6 +145,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     public synchronized void reset() {
         iterating = true;
         last = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
         if (isDiskListEmpty()) {
             this.iter = this.memoryList.iterator();
         } else {
@@ -147,6 +156,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     @Override
     public synchronized void release() {
         iterating = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         if (iter instanceof DiskIterator) {
            ((DiskIterator)iter).release();
         };
@@ -157,6 +167,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             }
         }
         // ensure any memory ref is released
+//IC see: https://issues.apache.org/jira/browse/AMQ-4248
         iter = null;
     }
 
@@ -164,7 +175,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     public synchronized void destroy() throws Exception {
         stop();
         for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext();) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4283
             MessageReference node = i.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3507
             node.decrementReferenceCount();
         }
         memoryList.clear();
@@ -172,7 +185,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     private void destroyDiskList() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         if (diskList != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
             store.removePList(name);
             diskList = null;
         }
@@ -184,6 +199,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         int count = 0;
         for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext() && count < maxItems;) {
             MessageReference ref = i.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
             ref.incrementReferenceCount();
             result.add(ref);
             count++;
@@ -192,6 +208,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             for (Iterator<MessageReference> i = new DiskIterator(); i.hasNext() && count < maxItems;) {
                 Message message = (Message) i.next();
                 message.setRegionDestination(regionDestination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
                 message.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
                 message.incrementReferenceCount();
                 result.add(message);
@@ -213,6 +231,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             try {
                 regionDestination = (Destination) node.getMessage().getRegionDestination();
                 if (isDiskListEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
                     if (hasSpace() || this.store == null) {
                         memoryList.addMessageLast(node);
                         node.incrementReferenceCount();
@@ -224,6 +243,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     if (isDiskListEmpty()) {
                         expireOldMessages();
                         if (hasSpace()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3596
+//IC see: https://issues.apache.org/jira/browse/AMQ-3596
                             memoryList.addMessageLast(node);
                             node.incrementReferenceCount();
                             return true;
@@ -244,6 +265,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 throw new RuntimeException(e);
             }
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3507
             discardExpiredMessage(node);
         }
         //message expired
@@ -262,8 +284,11 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 regionDestination = (Destination) node.getMessage().getRegionDestination();
                 if (isDiskListEmpty()) {
                     if (hasSpace()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3596
                         memoryList.addMessageFirst(node);
                         node.incrementReferenceCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
                         setCacheEnabled(true);
                         return;
                     }
@@ -272,6 +297,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     if (isDiskListEmpty()) {
                         expireOldMessages();
                         if (hasSpace()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3596
                             memoryList.addMessageFirst(node);
                             node.incrementReferenceCount();
                             return;
@@ -283,6 +309,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 systemUsage.getTempUsage().waitForSpace();
                 node.decrementReferenceCount();
                 ByteSequence bs = getByteSequence(node.getMessage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
                 Object locator = getDiskList().addFirst(node.getMessageId().toString(), bs);
                 node.getMessageId().setPlistLocator(locator);
 
@@ -290,6 +317,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 LOG.error("Caught an Exception adding a message: {} first to FilePendingMessageCursor ", node, e);
                 throw new RuntimeException(e);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
         } else {
             discardExpiredMessage(node);
         }
@@ -308,6 +336,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     @Override
     public synchronized MessageReference next() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
         MessageReference reference = iter.next();
         last = reference;
         if (!isDiskListEmpty()) {
@@ -324,8 +353,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     @Override
     public synchronized void remove() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1748
         iter.remove();
         if (last != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
             last.decrementReferenceCount();
         }
     }
@@ -336,11 +367,14 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     @Override
     public synchronized void remove(MessageReference node) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3596
         if (memoryList.remove(node) != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
             node.decrementReferenceCount();
         }
         if (!isDiskListEmpty()) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
                 getDiskList().remove(node.getMessageId().getPlistLocator());
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -353,11 +387,13 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     @Override
     public synchronized int size() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         return memoryList.size() + (isDiskListEmpty() ? 0 : (int)getDiskList().size());
     }
 
     @Override
     public synchronized long messageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6352
         return memoryList.messageSize() + (isDiskListEmpty() ? 0 : getDiskList().messageSize());
     }
 
@@ -368,6 +404,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     public synchronized void clear() {
         memoryList.clear();
         if (!isDiskListEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
             try {
                 getDiskList().destroy();
             } catch (IOException e) {
@@ -395,12 +432,16 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     @Override
     public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         if (newPercentUsage >= getMemoryUsageHighWaterMark()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5785
             List<MessageReference> expiredMessages = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1748
             synchronized (this) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3474
                 if (!flushRequired && size() != 0) {
                     flushRequired =true;
                     if (!iterating) {
                         expiredMessages = expireOldMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
                         if (!hasSpace()) {
                             flushToDisk();
                             flushRequired = false;
@@ -409,8 +450,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5785
             if (expiredMessages != null) {
                 for (MessageReference node : expiredMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3507
                     discardExpiredMessage(node);
                 }
             }
@@ -419,12 +462,15 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     @Override
     public boolean isTransient() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1449
         return true;
     }
 
     private synchronized List<MessageReference> expireOldMessages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5785
         List<MessageReference> expired = new ArrayList<MessageReference>();
         if (!memoryList.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3596
             for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
                 MessageReference node = iterator.next();
                 if (node.isExpired()) {
@@ -439,13 +485,16 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     protected synchronized void flushToDisk() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         if (!memoryList.isEmpty() && store != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
             long start = 0;
             if (LOG.isTraceEnabled()) {
                 start = System.currentTimeMillis();
                 LOG.trace("{}, flushToDisk() mem list size: {} {}", new Object[] { name, memoryList.size(),
                     (systemUsage != null ? systemUsage.getMemoryUsage() : "") });
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3596
             for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
                 MessageReference node = iterator.next();
                 node.decrementReferenceCount();
@@ -460,6 +509,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
             }
             memoryList.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
             setCacheEnabled(false);
             LOG.trace("{}, flushToDisk() done - {} ms {}", new Object[]{ name, (System.currentTimeMillis() - start), (systemUsage != null ? systemUsage.getMemoryUsage() : "") });
         }
@@ -483,7 +533,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     private void discardExpiredMessage(MessageReference reference) {
         LOG.debug("Discarding expired message {}", reference);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6361
         if (reference.isExpired() && broker.isExpired(reference)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
             ConnectionContext context = new ConnectionContext();
             context.setBroker(broker);
             ((Destination)reference.getRegionDestination()).messageExpired(context, null, new IndirectMessageReference(reference.getMessage()));
@@ -521,6 +574,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         public MessageReference next() {
             try {
                 PListEntry entry = iterator.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
                 Message message = getMessage(entry.getByteSequence());
                 message.getMessageId().setPlistLocator(entry.getLocator());
                 return message;
@@ -532,10 +586,12 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
         @Override
         public void remove() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
             iterator.remove();
         }
 
         public void release() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
             iterator.release();
         }
     }

@@ -68,6 +68,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
         ActiveMQTopic topic = new ActiveMQTopic("test");
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         pcf.setConnectionFactory(new XAConnectionFactoryOnly(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false")));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
 
         final Xid xid = createXid();
 
@@ -205,6 +206,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
         final Vector<Synchronization> syncs = new Vector<Synchronization>();
         ActiveMQTopic topic = new ActiveMQTopic("test");
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         pcf.setConnectionFactory(new XAConnectionFactoryOnly(new ActiveMQXAConnectionFactory(
             "vm://test?broker.persistent=false&broker.useJmx=false&jms.xaAckMode=" + Session.CLIENT_ACKNOWLEDGE)));
 
@@ -332,6 +334,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
     @Test(timeout = 60000)
     public void testSenderAndPublisherDest() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         pcf.setConnectionFactory(new ActiveMQXAConnectionFactory(
             "vm://test?broker.persistent=false&broker.useJmx=false"));
 
@@ -354,6 +357,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
     @Test(timeout = 60000)
     public void testSessionArgsIgnoredWithTm() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         pcf.setConnectionFactory(new ActiveMQXAConnectionFactory(
             "vm://test?broker.persistent=false&broker.useJmx=false"));
 
@@ -415,6 +419,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
     static class XAConnectionFactoryOnly implements XAConnectionFactory {
         private final XAConnectionFactory connectionFactory;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
         XAConnectionFactoryOnly(XAConnectionFactory connectionFactory) {
             this.connectionFactory = connectionFactory;
         }

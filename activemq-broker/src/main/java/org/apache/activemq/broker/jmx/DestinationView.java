@@ -94,6 +94,7 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public long getForwardCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
         return destination.getDestinationStatistics().getForwards().getCount();
     }
 
@@ -104,11 +105,13 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public long getInFlightCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1560
         return destination.getDestinationStatistics().getInflight().getCount();
     }
 
     @Override
     public long getExpiredCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         return destination.getDestinationStatistics().getExpired().getCount();
     }
 
@@ -134,11 +137,13 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public int getMemoryPercentUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1510
         return destination.getMemoryUsage().getPercentUsage();
     }
 
     @Override
     public long getMemoryUsageByteCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4119
         return destination.getMemoryUsage().getUsage();
     }
 
@@ -159,6 +164,7 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public int getTempUsagePercentUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7085
         return destination.getTempUsage().getPercentUsage();
     }
 
@@ -188,6 +194,7 @@ public class DestinationView implements DestinationViewMBean {
     @Override
     public long getAverageMessageSize() {
         // we are okay with the size without decimals so cast to long
+//IC see: https://issues.apache.org/jira/browse/AMQ-5521
         return (long) destination.getDestinationStatistics().getMessageSize().getAverageSize();
     }
 
@@ -196,6 +203,7 @@ public class DestinationView implements DestinationViewMBean {
      */
     @Override
     public long getMaxMessageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4697
         return destination.getDestinationStatistics().getMessageSize().getMaxSize();
     }
 
@@ -210,6 +218,7 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public boolean isPrioritizedMessages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         return destination.isPrioritizedMessages();
     }
 
@@ -278,8 +287,10 @@ public class DestinationView implements DestinationViewMBean {
         for (int i = 0; i < messages.length; i++) {
             try {
                 Message message = messages[i];
+//IC see: https://issues.apache.org/jira/browse/AMQ-4177
                 message.setReadOnlyBody(true);
                 if (selectorExpression == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3023
                     answer.add(message);
                 } else {
                     ctx.setMessageReference(message);
@@ -312,9 +323,18 @@ public class DestinationView implements DestinationViewMBean {
         TabularType tt = new TabularType("MessageList", "MessageList", ct, new String[] { "JMSMessageID" });
         TabularDataSupport rc = new TabularDataSupport(tt);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
+//IC see: https://issues.apache.org/jira/browse/AMQ-7035
+//IC see: https://issues.apache.org/jira/browse/AMQ-6465
         NonCachedMessageEvaluationContext ctx = new NonCachedMessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
         BooleanExpression selectorExpression = selector == null ? null : SelectorParser.parse(selector);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
 
         for (int i = 0; i < messages.length; i++) {
             try {
@@ -376,6 +396,7 @@ public class DestinationView implements DestinationViewMBean {
             MessageProducer producer = session.createProducer(dest);
             ActiveMQTextMessage msg = (ActiveMQTextMessage) session.createTextMessage(body);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5959
             for (Iterator<Entry<String, String>> iter = headers.entrySet().iterator(); iter.hasNext();) {
                 Entry<String, String> entry = iter.next();
                 msg.setObjectProperty(entry.getKey(), entry.getValue());
@@ -383,6 +404,7 @@ public class DestinationView implements DestinationViewMBean {
 
             producer.setDeliveryMode(msg.getJMSDeliveryMode());
             producer.setPriority(msg.getPriority());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4522
             long ttl = 0;
             if (msg.getExpiration() != 0) {
                 ttl = msg.getExpiration() - System.currentTimeMillis();
@@ -398,6 +420,7 @@ public class DestinationView implements DestinationViewMBean {
             return msg.getJMSMessageID();
 
         } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5959
             if (connection != null) {
                 connection.close();
             }
@@ -406,6 +429,7 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public int getMaxAuditDepth() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1510
         return destination.getMaxAuditDepth();
     }
 
@@ -459,6 +483,8 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public boolean isAlwaysRetroactive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2911
+//IC see: https://issues.apache.org/jira/browse/AMQ-3023
         return destination.isAlwaysRetroactive();
     }
 
@@ -492,6 +518,7 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public int getMaxPageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1755
         return destination.getMaxPageSize();
     }
 
@@ -514,6 +541,7 @@ public class DestinationView implements DestinationViewMBean {
     public ObjectName[] getSubscriptions() throws IOException, MalformedObjectNameException {
         List<Subscription> subscriptions = destination.getConsumers();
         ObjectName[] answer = new ObjectName[subscriptions.size()];
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName brokerObjectName = broker.getBrokerService().getBrokerObjectName();
         int index = 0;
         for (Subscription subscription : subscriptions) {
@@ -525,6 +553,7 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public ObjectName getSlowConsumerStrategy() throws IOException, MalformedObjectNameException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
         ObjectName result = null;
         SlowConsumerStrategy strategy = destination.getSlowConsumerStrategy();
         if (strategy != null && strategy instanceof AbortSlowConsumerStrategy) {
@@ -535,6 +564,7 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public String getOptions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4162
         Map<String, String> options = destination.getActiveMQDestination().getOptions();
         String optionsString = "";
         try {
@@ -547,16 +577,19 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public boolean isDLQ() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4483
         return destination.getActiveMQDestination().isDLQ();
     }
 
     @Override
     public void setDLQ(boolean val) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6691
          destination.getActiveMQDestination().setDLQ(val);
     }
 
     @Override
     public long getBlockedSends() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
         return destination.getDestinationStatistics().getBlockedSends().getCount();
     }
 

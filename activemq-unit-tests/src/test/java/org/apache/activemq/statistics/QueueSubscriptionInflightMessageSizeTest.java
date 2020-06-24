@@ -36,6 +36,7 @@ public class QueueSubscriptionInflightMessageSizeTest extends AbstractInflightMe
 
     public QueueSubscriptionInflightMessageSizeTest(int ackType, boolean optimizeAcknowledge,
             boolean useTopicSubscriptionInflightStats) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6940
         super(ackType, optimizeAcknowledge, useTopicSubscriptionInflightStats);
     }
 

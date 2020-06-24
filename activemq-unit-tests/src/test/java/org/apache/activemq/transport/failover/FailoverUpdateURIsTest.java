@@ -40,6 +40,7 @@ public class FailoverUpdateURIsTest extends TestCase {
     private static final String QUEUE_NAME = "test.failoverupdateuris";
     private static final Logger LOG = Logger.getLogger(FailoverUpdateURIsTest.class);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3124
     String firstTcpUri = "tcp://localhost:61616";
     String secondTcpUri = "tcp://localhost:61626";
     Connection connection = null;

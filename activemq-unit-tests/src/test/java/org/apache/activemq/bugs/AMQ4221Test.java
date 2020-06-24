@@ -76,6 +76,7 @@ public class AMQ4221Test extends TestSupport {
     ExecutorService executorService = Executors.newCachedThreadPool();
     final AtomicBoolean done = new AtomicBoolean(false);
     final LinkedList<String> errorsInLog = new LinkedList<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6004
 
     public static Test suite() {
         return suite(AMQ4221Test.class);
@@ -91,6 +92,7 @@ public class AMQ4221Test extends TestSupport {
                 if (event.getLevel().isGreaterOrEqual(Level.ERROR)) {
                     System.err.println("Fail on error in log: " + event.getMessage());
                     done.set(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6004
                     errorsInLog.add(event.getRenderedMessage());
                 }
             }
@@ -186,6 +188,7 @@ public class AMQ4221Test extends TestSupport {
 
         assertTrue("no exceptions:" + exceptions, exceptions.isEmpty());
         assertTrue("No ERROR in log:" + errorsInLog, errorsInLog.isEmpty());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6004
 
     }
 

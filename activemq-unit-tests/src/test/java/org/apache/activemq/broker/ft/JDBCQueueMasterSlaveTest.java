@@ -42,7 +42,9 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
 
     protected void setUp() throws Exception {
         // startup db
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         sharedDs = new SyncCreateDataSource((EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1885
         super.setUp();
         findStatement = ((JDBCPersistenceAdapter) master.getPersistenceAdapter()).getStatements().getFindMessageStatement();
     }
@@ -54,6 +56,7 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
 
     protected void createMaster() throws Exception {
         master = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
         master.setBrokerName("master");
         master.addConnector(MASTER_URL);
         master.setUseJmx(false);
@@ -68,6 +71,7 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
     }
 
     protected void configureBroker(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
         DefaultIOExceptionHandler stopBrokerOnStoreException = new DefaultIOExceptionHandler();
         // we want any store io exception to stop the broker
         stopBrokerOnStoreException.setIgnoreSQLExceptions(false);
@@ -81,6 +85,7 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
             public void run() {
                 try {
                     BrokerService broker = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
                     broker.setBrokerName("slave");
                     TransportConnector connector = new TransportConnector();
                     connector.setUri(new URI(SLAVE_URL));
@@ -93,6 +98,7 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
                     persistenceAdapter.setDataSource(getExistingDataSource());
                     persistenceAdapter.setCreateTablesOnStartup(false);
                     broker.setPersistenceAdapter(persistenceAdapter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
                     configureJdbcPersistenceAdapter(persistenceAdapter);
                     configureBroker(broker);
                     broker.start();
@@ -108,7 +114,9 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
     }
 
     protected void configureJdbcPersistenceAdapter(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
         persistenceAdapter.setLockKeepAlivePeriod(500);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         persistenceAdapter.getLocker().setLockAcquireSleepInterval(500);
     }
 

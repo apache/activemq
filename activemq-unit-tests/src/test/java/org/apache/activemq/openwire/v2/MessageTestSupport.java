@@ -55,6 +55,7 @@ public abstract class MessageTestSupport extends BaseCommandTestSupport {
         info.setTimestamp(2);
         info.setType("Type:10");
         {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1981
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream dataOut = new DataOutputStream(baos);
             MarshallingSupport.writeUTF8(dataOut, "Content:11");

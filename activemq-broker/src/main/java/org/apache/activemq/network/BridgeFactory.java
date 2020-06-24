@@ -35,5 +35,6 @@ public interface BridgeFactory {
      * @return the NetworkBridge
      */
     DemandForwardingBridge createNetworkBridge(NetworkBridgeConfiguration configuration, Transport localTransport, Transport remoteTransport, final NetworkBridgeListener listener);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6861
 
 }

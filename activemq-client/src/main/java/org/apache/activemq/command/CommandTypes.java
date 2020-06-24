@@ -25,15 +25,18 @@ public interface CommandTypes {
 
     // What is the latest version of the openwire protocol
     byte PROTOCOL_VERSION = 12;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
 
     // What is the latest version of the openwire protocol used in the stores
     byte PROTOCOL_STORE_VERSION = 11;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
 
     // What is the legacy version that old KahaDB store's most commonly used
     byte PROTOCOL_LEGACY_STORE_VERSION = 6;
 
     // What is the first version that BROKER_SUBSCRIPTION_INFO is supported
     byte PROTOCOL_VERSION_DURABLE_SYNC = 12;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
 
     // A marshaling layer can use this type to specify a null object.
     byte NULL = 0;
@@ -145,6 +148,7 @@ public interface CommandTypes {
     byte MESSAGE_DISPATCH_NOTIFICATION = 90;
     byte NETWORK_BRIDGE_FILTER = 91;
     byte BROKER_SUBSCRIPTION_INFO = 92;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
 
     // /////////////////////////////////////////////////
     //

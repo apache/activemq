@@ -124,6 +124,7 @@ public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursor
         //The expected value is only 100 because for durables a LRUCache is being used
         //with a max size of 100
         verifyStoreStats(dest, 0, publishedMessageSize.get());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
 
         connection.stop();
     }

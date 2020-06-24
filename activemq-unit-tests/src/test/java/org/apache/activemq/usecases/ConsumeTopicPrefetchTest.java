@@ -65,7 +65,9 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
         }
 
         validateConsumerPrefetch(this.getSubject(), prefetchSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2566
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5089
         LinkedList<TextMessage> consumed = new LinkedList<TextMessage>();
         // lets consume them in two fetch batches
         int batchSize = messageCount/2;
@@ -100,6 +102,7 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
         assertTrue("Should be a TextMessage: " + message, message instanceof TextMessage);
         TextMessage textMessage = (TextMessage) message;
         assertEquals("Message content", messageTexts[i], textMessage.getText());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2566
         return textMessage;
     }
 
@@ -112,6 +115,7 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
     }
 
     private void validateConsumerPrefetchGreaterOrEqual(String subject, long min) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5089
         doValidateConsumerPrefetch(subject, min, true);
     }
 
@@ -120,6 +124,7 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
     }
 
     protected void doValidateConsumerPrefetch(String destination, final long expectedCount, final boolean greaterOrEqual) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2566
         RegionBroker regionBroker = (RegionBroker) BrokerRegistry.getInstance().lookup("localhost").getRegionBroker();
         for (org.apache.activemq.broker.region.Destination dest : regionBroker.getTopicRegion().getDestinationMap().values()) {
             final org.apache.activemq.broker.region.Destination target = dest;
@@ -129,6 +134,7 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
                         public boolean isSatisified() throws Exception {
                             DestinationStatistics stats = target.getDestinationStatistics();
                             LOG.info("inflight for : " + target.getName() + ": " +  stats.getInflight().getCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5089
                             if (greaterOrEqual) {
                                 return stats.getInflight().getCount() >= expectedCount;
                             } else {
@@ -141,6 +147,7 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
                 }
                 DestinationStatistics stats = dest.getDestinationStatistics();
                 LOG.info("inflight for : " + dest.getName() + ": " + stats.getInflight().getCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5089
                 if (greaterOrEqual) {
                     assertTrue("inflight for: " + dest.getName() + ": " + stats.getInflight().getCount() + " > " + stats.getInflight().getCount(),
                                              stats.getInflight().getCount() >= expectedCount);

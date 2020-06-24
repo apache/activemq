@@ -93,6 +93,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         if (name != null) {
             maximumMessages = (int)asLong(name);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2948
         clientCleanupTimer.schedule( new ClientCleaner(), 5000, 60000 );
     }
 
@@ -119,6 +120,7 @@ public class MessageListenerServlet extends MessageServletSupport {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         // lets turn the HTTP post into a JMS Message
+//IC see: https://issues.apache.org/jira/browse/AMQ-2948
         AjaxWebClient client = getAjaxWebClient( request );
         String messageIds = "";
 
@@ -159,12 +161,14 @@ public class MessageListenerServlet extends MessageServletSupport {
                     messages++;
 
                     if ("listen".equals(type)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2948
                         AjaxListener listener = client.getListener();
                         Map<MessageAvailableConsumer, String> consumerIdMap = client.getIdMap();
                         Map<MessageAvailableConsumer, String> consumerDestinationNameMap = client.getDestinationNameMap();
                         client.closeConsumer(destination); // drop any existing
                         // consumer.
                         MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.selectorName));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1547
 
                         consumer.setAvailableListener(listener);
                         consumerIdMap.put(consumer, message);
@@ -174,8 +178,10 @@ public class MessageListenerServlet extends MessageServletSupport {
                         }
                     } else if ("unlisten".equals(type)) {
                         Map<MessageAvailableConsumer, String> consumerIdMap = client.getIdMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3514
                         Map<MessageAvailableConsumer, String> consumerDestinationNameMap = client.getDestinationNameMap();
                         MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.selectorName));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1547
 
                         consumer.setAvailableListener(null);
                         consumerIdMap.remove(consumer);
@@ -242,6 +248,7 @@ public class MessageListenerServlet extends MessageServletSupport {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2948
             AjaxWebClient client = getAjaxWebClient(request);
             if (LOG.isDebugEnabled()) {
                 LOG.debug("GET client=" + client + " session=" + request.getSession().getId() + " clientId="+ request.getParameter("clientId") + " uri=" + request.getRequestURI() + " query=" + request.getQueryString());
@@ -274,6 +281,7 @@ public class MessageListenerServlet extends MessageServletSupport {
 
         // this is non-null if we're resuming the continuation.
         // attributes set in AjaxListener
+//IC see: https://issues.apache.org/jira/browse/AMQ-3123
         UndeliveredAjaxMessage undelivered_message = null;
         Message message = null;
         undelivered_message = (UndeliveredAjaxMessage)request.getAttribute("undelivered_message");
@@ -283,12 +291,14 @@ public class MessageListenerServlet extends MessageServletSupport {
 
         synchronized (client) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3514
             List<MessageConsumer> consumers = client.getConsumers();
             MessageAvailableConsumer consumer = null;
             if( undelivered_message != null ) {
                 consumer = (MessageAvailableConsumer)undelivered_message.getConsumer();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
             if (message == null) {
                 // Look for a message that is ready to go
                 for (int i = 0; message == null && i < consumers.size(); i++) {
@@ -306,9 +316,11 @@ public class MessageListenerServlet extends MessageServletSupport {
             }
 
             // prepare the response
+//IC see: https://issues.apache.org/jira/browse/AMQ-2948
             response.setContentType("text/xml");
             response.setHeader("Cache-Control", "no-cache");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3123
             if (message == null && client.getListener().getUndeliveredMessages().size() == 0) {
                 Continuation continuation = ContinuationSupport.getContinuation(request);
 
@@ -341,17 +353,22 @@ public class MessageListenerServlet extends MessageServletSupport {
                     writer.flush();
                     String m = swriter.toString();
                     response.getWriter().println(m);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3514
 
                     return;
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2600
                 continuation.setTimeout(timeout);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2600
                 continuation.suspend();
                 LOG.debug( "Suspending continuation " + continuation );
 
                 // Fetch the listeners
+//IC see: https://issues.apache.org/jira/browse/AMQ-2948
                 AjaxListener listener = client.getListener();
                 listener.access();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3094
 
                 // register this continuation with our listener.
                 listener.setContinuation(continuation);
@@ -373,14 +390,17 @@ public class MessageListenerServlet extends MessageServletSupport {
                 String destinationName = consumerDestinationNameMap.get(consumer);
                 LOG.debug( "sending pre-existing message" );
                 writeMessageResponse(writer, message, id, destinationName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
 
                 messages++;
             }
 
             // send messages buffered while continuation was unavailable.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3123
             LinkedList<UndeliveredAjaxMessage> undeliveredMessages = ((AjaxListener)consumer.getAvailableListener()).getUndeliveredMessages();
             LOG.debug("Send " + undeliveredMessages.size() + " unconsumed messages");
             synchronized( undeliveredMessages ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4589
                 for (Iterator<UndeliveredAjaxMessage> it = undeliveredMessages.iterator(); it.hasNext();) {
                     messages++;
                     UndeliveredAjaxMessage undelivered = it.next();
@@ -413,8 +433,10 @@ public class MessageListenerServlet extends MessageServletSupport {
                     }
                     messages++;
                     String id = consumerIdMap.get(consumer);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1270
                     String destinationName = consumerDestinationNameMap.get(consumer);
                     LOG.debug( "sending final available messages" );
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
                     writeMessageResponse(writer, message, id, destinationName);
                 }
             }
@@ -428,6 +450,7 @@ public class MessageListenerServlet extends MessageServletSupport {
     }
 
     protected void writeMessageResponse(PrintWriter writer, Message message, String id, String destinationName) throws JMSException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
         writer.print("<response id='");
         writer.print(id);
         writer.print("'");
@@ -438,6 +461,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         if (message instanceof TextMessage) {
             TextMessage textMsg = (TextMessage)message;
             String txt = textMsg.getText();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3856
             if (txt != null) {
                 if (txt.startsWith("<?")) {
                     txt = txt.substring(txt.indexOf("?>") + 2);
@@ -451,6 +475,7 @@ public class MessageListenerServlet extends MessageServletSupport {
                 writer.print(object.toString());
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2728
         writer.println("</response>");
     }
 
@@ -461,6 +486,8 @@ public class MessageListenerServlet extends MessageServletSupport {
     protected AjaxWebClient getAjaxWebClient( HttpServletRequest request ) {
         HttpSession session = request.getSession(true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2948
+//IC see: https://issues.apache.org/jira/browse/AMQ-3514
         String clientId = request.getParameter( "clientId" );
         // if user doesn't supply a 'clientId', we'll just use a default.
         if( clientId == null ) {
@@ -468,6 +495,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         }
         String sessionKey = session.getId() + '-' + clientId;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3776
         AjaxWebClient client = null;
         synchronized (ajaxWebClients) {
             client = ajaxWebClients.get( sessionKey );
@@ -507,11 +535,13 @@ public class MessageListenerServlet extends MessageServletSupport {
     private class ClientCleaner extends TimerTask {
         @Override
         public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2948
             if( LOG.isDebugEnabled() ) {
                 LOG.debug( "Cleaning up expired web clients." );
             }
 
             synchronized( ajaxWebClients ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3514
                 Iterator<Map.Entry<String, AjaxWebClient>> it = ajaxWebClients.entrySet().iterator();
                 while ( it.hasNext() ) {
                     Map.Entry<String,AjaxWebClient> e = it.next();
@@ -535,6 +565,7 @@ public class MessageListenerServlet extends MessageServletSupport {
     @Override
     public void destroy() {
         // make sure we cancel the timer
+//IC see: https://issues.apache.org/jira/browse/AMQ-3514
         clientCleanupTimer.cancel();
         super.destroy();
     }

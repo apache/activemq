@@ -237,6 +237,7 @@ public class StompCompositeDestinationTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testSendMessageToCompositeQueueNoPrefixes() throws Exception {
         stompConnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6246
 
         String destinationA = "StompA.Queue";
         String destinationB = "StompB.Queue";

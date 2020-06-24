@@ -58,6 +58,7 @@ public class ActiveMQMapMessageTest {
         msg.setInt("int", 1);
         msg.setLong("long", 1);
         msg.setObject("object", "stringObj");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
         msg.setShort("short", (short) 1);
         msg.setString("string", "string");
 
@@ -81,8 +82,10 @@ public class ActiveMQMapMessageTest {
         assertEquals(msg.getInt("int"), 1);
         assertEquals(msg.getLong("long"), 1);
         assertEquals(msg.getObject("object"), "stringObj");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
         assertEquals(msg.getShort("short"), (short) 1);
         assertEquals(msg.getString("string"), "string");
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
         assertEquals(msg.getString("bigString"), bigString);
     }
 
@@ -96,6 +99,8 @@ public class ActiveMQMapMessageTest {
         msg.setString(name, "true");
 
         msg = (ActiveMQMapMessage) msg.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
 
         assertTrue(msg.getBoolean(name));
     }
@@ -104,6 +109,7 @@ public class ActiveMQMapMessageTest {
     public void testGetByte() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setByte(this.name, (byte) 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
         msg = (ActiveMQMapMessage) msg.copy();
         assertTrue(msg.getByte(this.name) == (byte) 1);
     }
@@ -112,6 +118,7 @@ public class ActiveMQMapMessageTest {
     public void testGetShort() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setShort(this.name, (short) 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
         msg = (ActiveMQMapMessage) msg.copy();
         assertTrue(msg.getShort(this.name) == (short) 1);
     }
@@ -120,6 +127,7 @@ public class ActiveMQMapMessageTest {
     public void testGetChar() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setChar(this.name, 'a');
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
         msg = (ActiveMQMapMessage) msg.copy();
         assertTrue(msg.getChar(this.name) == 'a');
     }
@@ -128,6 +136,7 @@ public class ActiveMQMapMessageTest {
     public void testGetInt() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setInt(this.name, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
         msg = (ActiveMQMapMessage) msg.copy();
         assertTrue(msg.getInt(this.name) == 1);
     }
@@ -136,6 +145,7 @@ public class ActiveMQMapMessageTest {
     public void testGetLong() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setLong(this.name, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
         msg = (ActiveMQMapMessage) msg.copy();
         assertTrue(msg.getLong(this.name) == 1);
     }
@@ -144,6 +154,7 @@ public class ActiveMQMapMessageTest {
     public void testGetFloat() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setFloat(this.name, 1.5f);
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
         msg = (ActiveMQMapMessage) msg.copy();
         assertTrue(msg.getFloat(this.name) == 1.5f);
     }
@@ -152,12 +163,14 @@ public class ActiveMQMapMessageTest {
     public void testGetDouble() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setDouble(this.name, 1.5);
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
         msg = (ActiveMQMapMessage) msg.copy();
         assertTrue(msg.getDouble(this.name) == 1.5);
     }
 
     @Test(timeout = 10000)
     public void testGetDoubleWithMaxValue() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5628
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setDouble(this.name, Double.MAX_VALUE);
         msg = (ActiveMQMapMessage) msg.copy();
@@ -177,6 +190,7 @@ public class ActiveMQMapMessageTest {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         String str = "test";
         msg.setString(this.name, str);
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
         msg = (ActiveMQMapMessage) msg.copy();
         assertEquals(msg.getString(this.name), str);
     }
@@ -234,6 +248,8 @@ public class ActiveMQMapMessageTest {
         }
 
         msg = (ActiveMQMapMessage) msg.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
 
         assertTrue(msg.getObject("boolean") instanceof Boolean);
         assertEquals(msg.getObject("boolean"), booleanValue);
@@ -242,6 +258,7 @@ public class ActiveMQMapMessageTest {
         assertEquals(msg.getObject("byte"), byteValue);
         assertEquals(msg.getByte("byte"), byteValue.byteValue());
         assertTrue(msg.getObject("bytes") instanceof byte[]);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
         assertEquals(((byte[]) msg.getObject("bytes")).length, bytesValue.length);
         assertEquals(msg.getBytes("bytes").length, bytesValue.length);
         assertTrue(msg.getObject("char") instanceof Character);
@@ -279,6 +296,7 @@ public class ActiveMQMapMessageTest {
     public void testGetMapNames() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setBoolean("boolean", true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
         msg.setByte("byte", (byte) 1);
         msg.setBytes("bytes1", new byte[1]);
         msg.setBytes("bytes2", new byte[3], 0, 2);
@@ -288,10 +306,12 @@ public class ActiveMQMapMessageTest {
         msg.setInt("int", 1);
         msg.setLong("long", 1);
         msg.setObject("object", "stringObj");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
         msg.setShort("short", (short) 1);
         msg.setString("string", "string");
 
         msg = (ActiveMQMapMessage) msg.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
 
         Enumeration<String> mapNamesEnum = msg.getMapNames();
         List<String> mapNamesList = Collections.list(mapNamesEnum);
@@ -318,6 +338,8 @@ public class ActiveMQMapMessageTest {
         mapMessage.setString("exists", "test");
 
         mapMessage = (ActiveMQMapMessage) mapMessage.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
 
         assertTrue(mapMessage.itemExists("exists"));
         assertFalse(mapMessage.itemExists("doesntExist"));
@@ -332,11 +354,14 @@ public class ActiveMQMapMessageTest {
 
         mapMessage.onSend();
         mapMessage.setContent(mapMessage.getContent());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         assertNull(mapMessage.getString("String"));
         mapMessage.clearBody();
         mapMessage.setString("String", "String");
 
         mapMessage = (ActiveMQMapMessage) mapMessage.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-788
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
 
         mapMessage.getString("String");
     }
@@ -380,6 +405,7 @@ public class ActiveMQMapMessageTest {
         } catch (MessageNotWriteableException mnwe) {
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
             msg.setByte("byte", (byte) 1);
             fail("should throw exception");
         } catch (MessageNotWriteableException mnwe) {
@@ -425,6 +451,7 @@ public class ActiveMQMapMessageTest {
         } catch (MessageNotWriteableException mnwe) {
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
             msg.setShort("short", (short) 1);
             fail("should throw exception");
         } catch (MessageNotWriteableException mnwe) {
@@ -442,6 +469,8 @@ public class ActiveMQMapMessageTest {
         msg.setReadOnlyBody(false);
 
         msg.setBoolean("boolean", true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
         msg.setByte("byte", (byte) 1);
         msg.setBytes("bytes", new byte[1]);
         msg.setBytes("bytes2", new byte[3], 0, 2);
@@ -451,6 +480,8 @@ public class ActiveMQMapMessageTest {
         msg.setInt("int", 1);
         msg.setLong("long", 1);
         msg.setObject("object", "stringObj");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
+//IC see: https://issues.apache.org/jira/browse/AMQ-5632
         msg.setShort("short", (short) 1);
         msg.setString("string", "string");
 

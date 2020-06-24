@@ -52,12 +52,14 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     protected X509Certificate[] certificates;
 
     public AbstractStompSocket(String remoteAddress) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5865
         super();
         this.remoteAddress = remoteAddress;
     }
 
     @Override
     public void oneway(Object command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6046
         protocolLock.lock();
         try {
             protocolConverter.onActiveMQCommand((Command)command);
@@ -81,6 +83,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         stompInactivityMonitor.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5755
         handleStopped();
     }
 
@@ -88,6 +91,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     protected void doStart() throws Exception {
         socketTransportStarted.countDown();
         stompInactivityMonitor.setTransportListener(getTransportListener());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         stompInactivityMonitor.startConnectCheckTask();
     }
 
@@ -118,6 +122,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
 
     @Override
     public String getRemoteAddress() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5865
         return remoteAddress;
     }
 
@@ -138,6 +143,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6046
         protocolLock.lock();
         try {
             if (data != null) {
@@ -147,12 +153,14 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
                     stompInactivityMonitor.onCommand(new KeepAliveInfo());
                 } else {
                     StompFrame frame = (StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8")));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
                     frame.setTransportContext(getPeerCertificates());
                     protocolConverter.onStompCommand(frame);
                 }
             }
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6046
         } finally {
             protocolLock.unlock();
         }

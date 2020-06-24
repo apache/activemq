@@ -515,6 +515,7 @@ public class JMSMessageTest extends JmsTestSupport {
             message.setStringProperty("test", "value");
             long timeToLive = 10000L;
             long start = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
             producer.send(message, deliveryMode, 7, timeToLive);
             long end = System.currentTimeMillis();
 

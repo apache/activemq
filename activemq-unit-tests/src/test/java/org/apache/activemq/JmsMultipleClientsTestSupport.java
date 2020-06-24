@@ -129,6 +129,7 @@ public class JmsMultipleClientsTestSupport {
     }
 
     protected void sendMessages(Connection connection, Destination destination, int count) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
         connections.add(connection);
         connection.start();
 
@@ -186,6 +187,7 @@ public class JmsMultipleClientsTestSupport {
     protected MessageConsumer createMessageConsumer(Connection conn, Destination dest) throws Exception {
         connections.add(conn);
         conn.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2910
 
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final MessageConsumer consumer = sess.createConsumer(dest);
@@ -211,6 +213,7 @@ public class JmsMultipleClientsTestSupport {
     protected ActiveMQDestination createDestination() throws JMSException {
         String name = "." + getClass().getName() + "." + getName();
         // ensure not inadvertently composite because of combos
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
         name = name.replace(' ','_');
         name = name.replace(',','&');
         if (topic) {
@@ -245,6 +248,8 @@ public class JmsMultipleClientsTestSupport {
             } catch (Throwable e) {
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4286
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
         if (broker !=null ) { // FIXME remove
         broker.stop();
         allMessagesList.flushMessages();
@@ -302,6 +307,8 @@ public class JmsMultipleClientsTestSupport {
 
 
     public String getName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4286
+//IC see: https://issues.apache.org/jira/browse/AMQ-5001
         return getName(false);
     }
 
@@ -313,6 +320,7 @@ public class JmsMultipleClientsTestSupport {
     }
 
     public void assertDestinationMemoryUsageGoesToZero() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         assertEquals("destination memory is back to 0", 0,
                 TestSupport.getDestination(broker, ActiveMQDestination.transform(destination)).getMemoryUsage().getPercentUsage());
     }

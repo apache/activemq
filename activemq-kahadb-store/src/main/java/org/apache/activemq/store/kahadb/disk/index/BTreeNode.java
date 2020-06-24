@@ -89,6 +89,8 @@ public final class BTreeNode<Key,Value> {
             this.tx = tx;
             this.current = current;
             this.nextIndex=nextIndex;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             this.endKey = endKey;
             if (endKey != null && endKey.equals(0l)) {
                 Thread.dumpStack();
@@ -106,6 +108,7 @@ public final class BTreeNode<Key,Value> {
                         // we need to roll to the next leaf..
                         if( current.next >= 0 ) {
                             current = index.loadNode(tx, current.next, null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2757
                             assert !current.isBranch() : "Should have linked to the next leaf node.";
                             nextIndex=0;
                         } else {
@@ -243,8 +246,10 @@ public final class BTreeNode<Key,Value> {
      * @throws IOException
      */
     private BTreeNode<Key,Value> getRightLeaf(Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2757
         BTreeNode<Key,Value> cur = this;
         while(cur.isBranch()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2863
             cur = cur.getChild(tx, cur.keys.length);
         }
         return cur;
@@ -307,6 +312,7 @@ public final class BTreeNode<Key,Value> {
                     // The child was a leaf. Then we need to actually remove it from this branch node..
                     // and relink the previous leaf to skip to the next leaf.
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2757
                     BTreeNode<Key, Value> previousLeaf = null;
                     if( idx > 0 ) {
                         // easy if we this node hold the previous child.
@@ -341,6 +347,8 @@ public final class BTreeNode<Key,Value> {
                         children = child.children;
                         values = child.values;
                         // free up the page..
+//IC see: https://issues.apache.org/jira/browse/AMQ-4094
+//IC see: https://issues.apache.org/jira/browse/AMQ-4094
                         tx.free(child.getPage());
                     }
                     
@@ -579,6 +587,7 @@ public final class BTreeNode<Key,Value> {
     }
     
     public boolean isEmpty(final Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2512
         return keys.length==0;
     }
 
@@ -644,6 +653,8 @@ public final class BTreeNode<Key,Value> {
             return iterator(tx);
         }
         if( isBranch() ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             return getLeafNode(tx, this, startKey).iterator(tx, startKey, endKey);
         } else {
             int idx = Arrays.binarySearch(keys, startKey);

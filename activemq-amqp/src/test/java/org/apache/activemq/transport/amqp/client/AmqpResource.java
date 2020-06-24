@@ -63,6 +63,7 @@ public interface AmqpResource extends AmqpEventSink {
      *        The initiating request that triggered this detach call.
      */
     void detach(AsyncResult request);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
 
     /**
      * @return if the resource has moved to the closed state on the remote.
@@ -102,6 +103,7 @@ public interface AmqpResource extends AmqpEventSink {
      *        The error that triggered the local close of this resource.
      */
     void locallyClosed(AmqpConnection connection, Exception error);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
 
     /**
      * Sets the failed state for this Resource and triggers a failure signal for

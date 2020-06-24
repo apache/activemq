@@ -122,6 +122,7 @@ public class AMQ3445Test {
 
     private QueueViewMBean getProxyToQueueViewMBean() throws Exception {
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
                 + ":destinationType=Queue,destinationName=" + queueName
                 + ",type=Broker,brokerName=localhost");
         QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext()

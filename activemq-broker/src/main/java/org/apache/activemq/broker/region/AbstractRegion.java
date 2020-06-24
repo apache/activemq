@@ -76,14 +76,17 @@ public abstract class AbstractRegion implements Region {
     protected boolean started;
 
     public AbstractRegion(RegionBroker broker, DestinationStatistics destinationStatistics, SystemUsage memoryManager,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
         if (broker == null) {
             throw new IllegalArgumentException("null broker");
         }
         this.broker = broker;
         this.destinationStatistics = destinationStatistics;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         this.usageManager = memoryManager;
         this.taskRunnerFactory = taskRunnerFactory;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3426
         if (destinationFactory == null) {
             throw new IllegalArgumentException("null destinationFactory");
         }
@@ -100,11 +103,15 @@ public abstract class AbstractRegion implements Region {
 
             ConnectionContext context = new ConnectionContext();
             context.setBroker(broker.getBrokerService().getBroker());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1157
             context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             context.getBroker().addDestination(context, dest, false);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         destinationsLock.readLock().lock();
         try{
+//IC see: https://issues.apache.org/jira/browse/AMQ-1255
             for (Iterator<Destination> i = destinations.values().iterator(); i.hasNext();) {
                 Destination dest = i.next();
                 dest.start();
@@ -142,10 +149,12 @@ public abstract class AbstractRegion implements Region {
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,
             boolean createIfTemporary) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         destinationsLock.writeLock().lock();
         try {
             Destination dest = destinations.get(destination);
             if (dest == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                 if (destination.isTemporary() == false || createIfTemporary) {
                     // Limit the number of destinations that can be created if
                     // maxDestinations has been set on a policy
@@ -159,12 +168,15 @@ public abstract class AbstractRegion implements Region {
                         dest = destinationInterceptor.intercept(dest);
                     }
                     dest.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
                     addSubscriptionsForDestination(context, dest);
                     destinations.put(destination, dest);
                     updateRegionDestCounts(destination, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
                     destinationMap.unsynchronizedPut(destination, dest);
                 }
                 if (dest == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
                     throw new DestinationDoesNotExistException(destination.getQualifiedName());
                 }
             }
@@ -175,6 +187,7 @@ public abstract class AbstractRegion implements Region {
     }
 
     public Map<ConsumerId, Subscription> getSubscriptions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2030
         return subscriptions;
     }
 
@@ -217,6 +230,7 @@ public abstract class AbstractRegion implements Region {
                 // If a destination isn't specified, then just count up
                 // non-advisory destinations (ie count all destinations)
                 int destinationSize = (int) (entry.getDestination() != null ?
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
                         destinationMap.unsynchronizedGet(entry.getDestination()).size() : regionStatistics.getDestinations().getCount());
                 if (destinationSize >= entry.getMaxDestinations()) {
                     if (entry.getDestination() != null) {
@@ -240,9 +254,11 @@ public abstract class AbstractRegion implements Region {
             Subscription sub = iter.next();
             if (sub.matches(dest.getActiveMQDestination())) {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5814
                     ConnectionContext originalContext = sub.getContext() != null ? sub.getContext() : context;
                     dest.addSubscription(originalContext, sub);
                     rc.add(sub);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
                 } catch (SecurityException e) {
                     if (sub.isWildcard()) {
                         LOG.debug("Subscription denied for " + sub + " to destination " +
@@ -260,6 +276,7 @@ public abstract class AbstractRegion implements Region {
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
             throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
 
         // No timeout.. then try to shut down right way, fails if there are
         // current subscribers.
@@ -267,6 +284,7 @@ public abstract class AbstractRegion implements Region {
             for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
                 Subscription sub = iter.next();
                 if (sub.matches(destination) ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
                     throw new JMSException("Destination still has an active subscription: " + destination);
                 }
             }
@@ -282,6 +300,7 @@ public abstract class AbstractRegion implements Region {
 
         LOG.debug("{} removing destination: {}", broker.getBrokerName(), destination);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         destinationsLock.writeLock().lock();
         try {
             Destination dest = destinations.remove(destination);
@@ -293,14 +312,18 @@ public abstract class AbstractRegion implements Region {
                 for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
                     Subscription sub = iter.next();
                     if (sub.matches(destination)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
                         dest.removeSubscription(context, sub, 0l);
                     }
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
                 destinationMap.unsynchronizedRemove(destination, dest);
                 if (dest instanceof Queue){
                     ((Queue) dest).purge();
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                 dispose(context, dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1672
                 DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
                 if (destinationInterceptor != null) {
                     destinationInterceptor.remove(dest);
@@ -309,6 +332,8 @@ public abstract class AbstractRegion implements Region {
             } else {
                 LOG.debug("Cannot remove a destination that doesn't exist: {}", destination);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         } finally {
             destinationsLock.writeLock().unlock();
         }
@@ -322,8 +347,10 @@ public abstract class AbstractRegion implements Region {
     @Override
     @SuppressWarnings("unchecked")
     public Set<Destination> getDestinations(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         destinationsLock.readLock().lock();
         try{
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
             return destinationMap.unsynchronizedGet(destination);
         } finally {
             destinationsLock.readLock().unlock();
@@ -332,6 +359,10 @@ public abstract class AbstractRegion implements Region {
 
     @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
+//IC see: https://issues.apache.org/jira/browse/AMQ-5212
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         return destinations;
     }
 
@@ -388,12 +419,15 @@ public abstract class AbstractRegion implements Region {
             // Add the subscription to all the matching queues.
             // But copy the matches first - to prevent deadlocks
             List<Destination> addList = new ArrayList<Destination>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
             destinationsLock.readLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
                 for (Destination dest : (Set<Destination>) destinationMap.unsynchronizedGet(info.getDestination())) {
                     addList.add(dest);
                 }
                 // ensure sub visible to any new dest addSubscriptionsForDestination
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
                 subscriptions.put(info.getConsumerId(), sub);
             } finally {
                 destinationsLock.readLock().unlock();
@@ -404,6 +438,7 @@ public abstract class AbstractRegion implements Region {
                 try {
                     dest.addSubscription(context, sub);
                     removeList.add(dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
                 } catch (SecurityException e){
                     if (sub.isWildcard()) {
                         LOG.debug("Subscription denied for " + sub + " to destination " +
@@ -417,6 +452,7 @@ public abstract class AbstractRegion implements Region {
                                 LOG.error("Error unsubscribing " + sub + " from " + remove + ": " + ex.getMessage(), ex);
                             }
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
                         subscriptions.remove(info.getConsumerId());
                         removeList.clear();
                         throw e;
@@ -448,6 +484,7 @@ public abstract class AbstractRegion implements Region {
      */
     protected Set<ActiveMQDestination> getInactiveDestinations() {
         Set<ActiveMQDestination> inactiveDests = destinationFactory.getDestinations();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         destinationsLock.readLock().lock();
         try {
             inactiveDests.removeAll(destinations.keySet());
@@ -468,8 +505,10 @@ public abstract class AbstractRegion implements Region {
 
             // remove the subscription from all the matching queues.
             List<Destination> removeList = new ArrayList<Destination>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
             destinationsLock.readLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
                 for (Destination dest : (Set<Destination>) destinationMap.unsynchronizedGet(info.getDestination())) {
                     removeList.add(dest);
                 }
@@ -477,11 +516,14 @@ public abstract class AbstractRegion implements Region {
                 destinationsLock.readLock().unlock();
             }
             for (Destination dest : removeList) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
                 dest.removeSubscription(context, sub, info.getLastDeliveredSequenceId());
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-511
             destroySubscription(sub);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-889
         synchronized (consumerChangeMutexMap) {
             consumerChangeMutexMap.remove(info.getConsumerId());
         }
@@ -501,6 +543,7 @@ public abstract class AbstractRegion implements Region {
         final ConnectionContext context = producerExchange.getConnectionContext();
 
         if (producerExchange.isMutable() || producerExchange.getRegionDestination() == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             final Destination regionDestination = lookup(context, messageSend.getDestination(),false);
             producerExchange.setRegionDestination(regionDestination);
         }
@@ -508,6 +551,7 @@ public abstract class AbstractRegion implements Region {
         producerExchange.getRegionDestination().send(producerExchange, messageSend);
 
         if (producerExchange.getProducerState() != null && producerExchange.getProducerState().getInfo() != null){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4927
             producerExchange.getProducerState().getInfo().incrementSentCount();
         }
     }
@@ -543,6 +587,8 @@ public abstract class AbstractRegion implements Region {
     protected Destination lookup(ConnectionContext context, ActiveMQDestination destination,boolean createTemporary) throws Exception {
         Destination dest = null;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         destinationsLock.readLock().lock();
         try {
             dest = destinations.get(destination);
@@ -555,6 +601,7 @@ public abstract class AbstractRegion implements Region {
                 // Try to auto create the destination... re-invoke broker
                 // from the
                 // top so that the proper security checks are performed.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
                 dest = context.getBroker().addDestination(context, destination, createTemporary);
             }
 
@@ -572,6 +619,7 @@ public abstract class AbstractRegion implements Region {
             sub.processMessageDispatchNotification(messageDispatchNotification);
         } else {
             throw new JMSException("Slave broker out of sync with master - Subscription: "
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
                     + messageDispatchNotification.getConsumerId() + " on "
                     + messageDispatchNotification.getDestination() + " does not exist for dispatch of message: "
                     + messageDispatchNotification.getMessageId());
@@ -586,6 +634,7 @@ public abstract class AbstractRegion implements Region {
     protected void processDispatchNotificationViaDestination(MessageDispatchNotification messageDispatchNotification)
             throws Exception {
         Destination dest = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         destinationsLock.readLock().lock();
         try {
             dest = destinations.get(messageDispatchNotification.getDestination());
@@ -595,7 +644,9 @@ public abstract class AbstractRegion implements Region {
 
         if (dest != null) {
             dest.processDispatchNotification(messageDispatchNotification);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1255
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             throw new JMSException("Slave broker out of sync with master - Destination: "
                     + messageDispatchNotification.getDestination() + " does not exist for consumer "
                     + messageDispatchNotification.getConsumerId() + " with message: "
@@ -605,6 +656,7 @@ public abstract class AbstractRegion implements Region {
 
     @Override
     public void gc() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         for (Subscription sub : subscriptions.values()) {
             sub.gc();
         }
@@ -622,6 +674,7 @@ public abstract class AbstractRegion implements Region {
     protected abstract Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws Exception;
 
     protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination)
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             throws Exception {
         return destinationFactory.createDestination(context, destination, destinationStatistics);
     }
@@ -637,8 +690,10 @@ public abstract class AbstractRegion implements Region {
     @Override
     @SuppressWarnings("unchecked")
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         destinationsLock.readLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
             for (Destination dest : (Set<Destination>) destinationMap.unsynchronizedGet(info.getDestination())) {
                 dest.addProducer(context, info);
             }
@@ -658,8 +713,10 @@ public abstract class AbstractRegion implements Region {
     @Override
     @SuppressWarnings("unchecked")
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3454
         destinationsLock.readLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7021
             for (Destination dest : (Set<Destination>) destinationMap.unsynchronizedGet(info.getDestination())) {
                 dest.removeProducer(context, info);
             }
@@ -671,6 +728,7 @@ public abstract class AbstractRegion implements Region {
     protected void dispose(ConnectionContext context, Destination dest) throws Exception {
         dest.dispose(context);
         dest.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2053
         destinationFactory.removeDestination(dest);
     }
 
@@ -678,6 +736,7 @@ public abstract class AbstractRegion implements Region {
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
         Subscription sub = subscriptions.get(control.getConsumerId());
         if (sub != null && sub instanceof AbstractSubscription) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             ((AbstractSubscription) sub).setPrefetchSize(control.getPrefetch());
             if (broker.getDestinationPolicy() != null) {
                 PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(control.getDestination());
@@ -696,8 +755,10 @@ public abstract class AbstractRegion implements Region {
 
     @Override
     public void reapplyInterceptor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4995
         destinationsLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4995
             DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
             Map<ActiveMQDestination, Destination> map = getDestinationMap();
             for (ActiveMQDestination key : map.keySet()) {

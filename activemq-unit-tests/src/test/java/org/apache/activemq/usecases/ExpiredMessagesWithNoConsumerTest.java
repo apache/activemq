@@ -73,6 +73,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
     }
 
     protected void createBrokerWithMemoryLimit() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3507
         createBrokerWithMemoryLimit(800);
     }
 
@@ -94,10 +95,12 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setOptimizedDispatch(optimizedDispatch);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3507
         defaultEntry.setExpireMessagesPeriod(expireMessagesPeriod);
         defaultEntry.setMaxExpirePageSize(800);
 
         defaultEntry.setPendingQueuePolicy(pendingQueuePolicy);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
 
         if (memoryLimit) {
             // so memory is not consumed by DLQ turn if off
@@ -117,6 +120,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
     public void testExpiredNonPersistentMessagesWithNoConsumer() throws Exception {
 
         createBrokerWithMemoryLimit(2000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3507
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         connection = factory.createConnection();
@@ -191,7 +195,9 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
 
     public void initCombosForTestExpiredMessagesWithNoConsumer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         addCombinationValues("optimizedDispatch", new Object[] {Boolean.TRUE, Boolean.FALSE});
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         addCombinationValues("pendingQueuePolicy", new Object[] {null, new VMPendingQueueMessageStoragePolicy(), new FilePendingQueueMessageStoragePolicy()});
     }
 
@@ -203,9 +209,11 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         connection = factory.createConnection();
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         producer = session.createProducer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         producer.setTimeToLive(1000);
         connection.start();
         final long sendCount = 2000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
 
         final Thread producingThread = new Thread("Producing Thread") {
             @Override
@@ -241,6 +249,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
             @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
+//IC see: https://issues.apache.org/jira/browse/AMQ-2481
                         + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
                         + ", size= " + view.getQueueSize());
                 return sendCount == view.getExpiredCount();
@@ -256,7 +265,10 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
     // first ack delivered after expiry
     public void testExpiredMessagesWithVerySlowConsumer() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         createBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5274
+//IC see: https://issues.apache.org/jira/browse/AMQ-2876
         final long queuePrefetch = 5;
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
                 connectionUri + "?jms.prefetchPolicy.queuePrefetch=" + queuePrefetch);
@@ -266,6 +278,8 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         final int ttl = 4000;
         producer.setTimeToLive(ttl);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5274
+//IC see: https://issues.apache.org/jira/browse/AMQ-2876
         final long sendCount = 10;
         final CountDownLatch receivedOneCondition = new CountDownLatch(1);
         final CountDownLatch waitCondition = new CountDownLatch(1);
@@ -349,6 +363,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4083
                 return 0 == view.getInFlightCount();
             }
         });
@@ -370,11 +385,13 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
             }
         });
         assertEquals("inflight goes to zero on close", 0, view.getInFlightCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4083
 
         LOG.info("done: " + getName());
     }
 
     public void testExpiredMessagesWithVerySlowConsumerCanContinue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2908
         createBroker();
         final long queuePrefetch = 600;
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
@@ -385,6 +402,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         final int ttl = 4000;
         producer.setTimeToLive(ttl);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         final long sendCount = 1500;
         final CountDownLatch receivedOneCondition = new CountDownLatch(1);
         final CountDownLatch waitCondition = new CountDownLatch(1);
@@ -414,6 +432,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         connection.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         final Thread producingThread = new Thread("Producing Thread") {
             @Override
             public void run() {
@@ -449,10 +468,15 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         assertTrue("Not all dispatched up to default prefetch ", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2489
                 return queuePrefetch == view.getDispatchCount();
             }
         }));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5274
+//IC see: https://issues.apache.org/jira/browse/AMQ-2876
+//IC see: https://issues.apache.org/jira/browse/AMQ-5274
+//IC see: https://issues.apache.org/jira/browse/AMQ-2876
         assertTrue("all non inflight have expired ", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -474,8 +498,10 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4083
                 return 0 == view.getInFlightCount();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         });
         LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
                 + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
@@ -513,11 +539,13 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
             }
         });
         assertEquals("inflight did not go to zero on close", 0, view.getInFlightCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4083
 
         LOG.info("done: " + getName());
     }
 
     public void testExpireMessagesForDurableSubscriber() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
         createBroker();
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         connection = factory.createConnection();
@@ -550,6 +578,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         LOG.info("expired=" + view.getExpiredCount() + " " +  view.getEnqueueCount());
         assertEquals(10, view.getExpiredCount());
         assertEquals(10, view.getEnqueueCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4516
 
         final AtomicLong received = new AtomicLong();
         sub = session.createDurableSubscriber(destination, "mySub");

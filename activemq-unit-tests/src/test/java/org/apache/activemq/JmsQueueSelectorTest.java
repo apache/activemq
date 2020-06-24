@@ -30,6 +30,7 @@ public class JmsQueueSelectorTest extends JmsTopicSelectorTest {
 
     public void testRedeliveryWithSelectors() throws Exception {
         consumer = createConsumer("");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5689
 
         // send a message that would go to this consumer, but not to the next consumer we open
         TextMessage message = session.createTextMessage("1");

@@ -52,6 +52,7 @@ public class TransportConnectorMBeanTest {
 
     @Test
     public void verifyClientIdNetwork() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4852
         doVerifyClientIdNetwork(false);
     }
 
@@ -88,6 +89,8 @@ public class TransportConnectorMBeanTest {
         createBroker(allowRemoteAddress);
         ActiveMQConnection connection = createConnection();
         Set<ObjectName> registeredMbeans = getRegisteredMbeans();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         assertEquals("presence of mbean with clientId", true, match(connection.getClientID(), registeredMbeans));
         assertEquals("presence of mbean with local port", allowRemoteAddress, match(extractLocalPort(connection), registeredMbeans));
     }
@@ -122,6 +125,7 @@ public class TransportConnectorMBeanTest {
     }
 
     private ActiveMQConnection createConnection() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
         final String opts = "?jms.watchTopicAdvisories=false";
         ActiveMQConnection connection = (ActiveMQConnection)
                 new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri() + opts).createConnection();

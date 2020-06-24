@@ -90,6 +90,7 @@ public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
         assertEquals("one dynamically included", 1, networkConnector.getDynamicallyIncludedDestinations().size());
         assertEquals("one durable", 1, networkConnector.getDurableDestinations().size());
         assertFalse(networkConnector.getBrokerName().isEmpty());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
 
         assertNotNull(brokerService.getManagementContext().getObjectInstance(
                 brokerService.createNetworkConnectorObjectName(networkConnector)));
@@ -113,6 +114,7 @@ public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
         // track the original
         NetworkConnector networkConnector = brokerService.getNetworkConnectors().get(0);
         assertEquals("network ttl is default", 1, networkConnector.getNetworkTTL());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
         assertNotNull(networkConnector.getBrokerName());
         assertNotNull(networkConnector.getBrokerURL());
 
@@ -129,6 +131,7 @@ public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
         assertEquals("no new network connectors", 1, brokerService.getNetworkConnectors().size());
         assertSame("same instance", modNetworkConnector, brokerService.getNetworkConnectors().get(0));
         assertFalse(modNetworkConnector.getBrokerName().isEmpty());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
 
         assertNotNull(brokerService.getManagementContext().getObjectInstance(
                 brokerService.createNetworkConnectorObjectName(modNetworkConnector)));
@@ -150,6 +153,7 @@ public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
         nc2.setUri(new URI("static:(tcp://localhost:5555)"));
         nc2.setNetworkTTL(1);
         nc2.setName("two");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
 
         javaConfigBroker.addNetworkConnector(nc1);
         javaConfigBroker.addNetworkConnector(nc2);
@@ -169,6 +173,7 @@ public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
         NetworkConnector remainingNetworkConnector = brokerService.getNetworkConnectors().get(0);
         assertEquals("name match", "one", remainingNetworkConnector.getName());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
         try {
             brokerService.getManagementContext().getObjectInstance(
                 brokerService.createNetworkConnectorObjectName(nc2));

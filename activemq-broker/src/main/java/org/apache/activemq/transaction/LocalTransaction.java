@@ -44,6 +44,7 @@ public class LocalTransaction extends Transaction {
 
     @Override
     public void commit(boolean onePhase) throws XAException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
         if (LOG.isDebugEnabled()) {
             LOG.debug("commit: "  + xid
                     + " syncCount: " + size());
@@ -58,6 +59,7 @@ public class LocalTransaction extends Transaction {
             LOG.warn("COMMIT FAILED: ", e);
             rollback();
             // Let them know we rolled back.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
             XAException xae = new XAException("COMMIT FAILED: Transaction rolled back");
             xae.errorCode = XAException.XA_RBOTHER;
             xae.initCause(e);
@@ -67,6 +69,7 @@ public class LocalTransaction extends Transaction {
         setState(Transaction.FINISHED_STATE);
         context.getTransactions().remove(xid);
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
             transactionStore.commit(getTransactionId(), false, preCommitTask, postCommitTask);
             this.waitPostCommitDone(postCommitTask);
         } catch (Throwable t) {
@@ -82,12 +85,15 @@ public class LocalTransaction extends Transaction {
     @Override
     public void rollback() throws XAException, IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
         if (LOG.isDebugEnabled()) {
             LOG.debug("rollback: "  + xid
                     + " syncCount: " + size());
         }
         setState(Transaction.FINISHED_STATE);
         context.getTransactions().remove(xid);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5815
+//IC see: https://issues.apache.org/jira/browse/AMQ-2594
         transactionStore.rollback(getTransactionId());
         try {
             fireAfterRollback();
@@ -102,6 +108,7 @@ public class LocalTransaction extends Transaction {
 
     @Override
     public int prepare() throws XAException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
         XAException xae = new XAException("Prepare not implemented on Local Transactions");
         xae.errorCode = XAException.XAER_RMERR;
         throw xae;

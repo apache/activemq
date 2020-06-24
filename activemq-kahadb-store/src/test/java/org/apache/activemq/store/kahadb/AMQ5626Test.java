@@ -64,6 +64,7 @@ public class AMQ5626Test {
 
     @After
     public void teardown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         try {
             brokerService.stop();
         } catch (Exception ex) {
@@ -92,6 +93,7 @@ public class AMQ5626Test {
         transportConnector.setName("openwire");
         transportConnector.setUri(new URI("tcp://0.0.0.0:0"));
         brokerService.addConnector(transportConnector);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         brokerService.setDataDirectory(KAHADB_DIRECTORY);
         brokerService.setDeleteAllMessagesOnStartup(deleteMessagesOnStart);
         brokerService.getManagementContext().setCreateConnector(false);

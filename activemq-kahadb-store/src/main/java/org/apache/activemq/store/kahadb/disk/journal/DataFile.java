@@ -38,6 +38,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     protected final SequenceSet corruptedBlocks = new SequenceSet();
     protected RecoverableRandomAccessFile appendRandomAccessFile;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
     DataFile(File file, int number) {
         this.file = file;
         this.dataFileId = Integer.valueOf(number);
@@ -53,6 +54,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     public int getTypeCode() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         return typeCode;
     }
 
@@ -73,6 +75,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     public synchronized void decrementLength(int size) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6606
         length -= size;
     }
 
@@ -82,6 +85,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     public synchronized RecoverableRandomAccessFile appendRandomAccessFile() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         if (appendRandomAccessFile == null) {
             appendRandomAccessFile = new RecoverableRandomAccessFile(file.getCanonicalPath(), "rw");
         }
@@ -89,6 +93,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     public synchronized RecoverableRandomAccessFile openRandomAccessFile() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3725
         return new RecoverableRandomAccessFile(file.getCanonicalPath(), "rw");
     }
 
@@ -104,6 +109,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     public synchronized void move(File targetDirectory) throws IOException{
+//IC see: https://issues.apache.org/jira/browse/AMQ-5438
         IOHelper.moveFile(file, targetDirectory);
     }
 

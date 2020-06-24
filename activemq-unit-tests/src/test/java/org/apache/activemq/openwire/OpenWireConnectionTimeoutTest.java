@@ -81,6 +81,7 @@ public class OpenWireConnectionTimeoutTest {
                 {"tcp"},
                 {"ssl"},
                 {"nio"},
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
                 {"nio+ssl"},
                 {"auto"},
                 {"auto+ssl"},
@@ -123,6 +124,7 @@ public class OpenWireConnectionTimeoutTest {
     }
 
     public String getAdditionalConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
         return "?transport.connectAttemptTimeout=1200&protocolDetectionTimeOut=1200";
     }
 
@@ -149,6 +151,7 @@ public class OpenWireConnectionTimeoutTest {
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
              @Override
              public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
                  TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByScheme(getConnectorScheme()).getServer();
                  return 1 == server.getCurrentTransportCount().get();
              }
@@ -158,6 +161,7 @@ public class OpenWireConnectionTimeoutTest {
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
                 TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByScheme(getConnectorScheme()).getServer();
                 return 0 == server.getCurrentTransportCount().get();
             }
@@ -171,6 +175,7 @@ public class OpenWireConnectionTimeoutTest {
 
         switch (connectorScheme) {
             case "tcp":
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
             case "auto":
             case "nio":
             case "auto+nio":
@@ -179,6 +184,7 @@ public class OpenWireConnectionTimeoutTest {
             case "auto+ssl":
             case "nio+ssl":
             case "auto+nio+ssl":
+//IC see: https://issues.apache.org/jira/browse/AMQ-6698
                 useSsl = true;
                 break;
             default:
@@ -233,6 +239,7 @@ public class OpenWireConnectionTimeoutTest {
             case "nio+ssl":
                 connector = brokerService.addConnector("nio+ssl://0.0.0.0:0" + getAdditionalConfig());
                 break;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
             case "auto":
                 connector = brokerService.addConnector("auto://0.0.0.0:0" + getAdditionalConfig());
                 break;

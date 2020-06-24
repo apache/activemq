@@ -47,6 +47,7 @@ public class StreamJDBCAdapter extends DefaultJDBCAdapter {
     @Override
     protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try (InputStream is = rs.getBinaryStream(index);
              ByteArrayOutputStream os = new ByteArrayOutputStream(1024 * 4)) {
 

@@ -66,10 +66,12 @@ public abstract class BaseCommand implements Command {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1978
         return toString(null);
     }
 
     public String toString(Map<String, Object> overrideFields) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5707
         return IntrospectionSupport.toString(this, BaseCommand.class, overrideFields);
     }
 
@@ -125,6 +127,7 @@ public abstract class BaseCommand implements Command {
 
     @Override
     public boolean isConsumerControl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return false;
     }
 

@@ -59,12 +59,14 @@ public class AmqpInactivityMonitor extends TransportFilter {
         public void run() {
             long now = System.currentTimeMillis();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
             if ((now - startTime) >= connectionTimeout && connectCheckerTask != null && !ASYNC_TASKS.isShutdown()) {
                 LOG.debug("No connection attempt made in time for {}! Throwing InactivityIOException.", AmqpInactivityMonitor.this.toString());
                 try {
                     ASYNC_TASKS.execute(new Runnable() {
                         @Override
                         public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
                             onException(new InactivityIOException(
                                 "Channel was inactive for too (>" + (connectionTimeout) + ") long: " + next.getRemoteAddress()));
                         }
@@ -84,6 +86,7 @@ public class AmqpInactivityMonitor extends TransportFilter {
 
         @Override
         public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
             if (keepAliveTask != null && !ASYNC_TASKS.isShutdown()) {
                 try {
                     ASYNC_TASKS.execute(new Runnable() {
@@ -126,6 +129,7 @@ public class AmqpInactivityMonitor extends TransportFilter {
 
     @Override
     public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
         stopConnectionTimeoutChecker();
         stopKeepAliveTask();
         next.stop();
@@ -158,7 +162,9 @@ public class AmqpInactivityMonitor extends TransportFilter {
             long connectionCheckInterval = Math.min(connectionTimeout, 1000);
 
             synchronized (AbstractInactivityMonitor.class) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
                 if (CONNECTION_CHECK_TASK_COUNTER == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
                     if (ASYNC_TASKS == null || ASYNC_TASKS.isShutdown()) {
                         ASYNC_TASKS = createExecutor();
                     }
@@ -182,6 +188,7 @@ public class AmqpInactivityMonitor extends TransportFilter {
 
             synchronized (AbstractInactivityMonitor.class) {
                 if (KEEPALIVE_TASK_COUNTER == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
                     if (ASYNC_TASKS == null || ASYNC_TASKS.isShutdown()) {
                         ASYNC_TASKS = createExecutor();
                     }
@@ -235,6 +242,7 @@ public class AmqpInactivityMonitor extends TransportFilter {
     };
 
     private ThreadPoolExecutor createExecutor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
         ThreadPoolExecutor exec = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 90, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
         exec.allowCoreThreadTimeOut(true);
         return exec;

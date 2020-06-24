@@ -37,6 +37,7 @@ public final class DefaultThreadPools {
      * close and stopped, eg: when un deploying from web container.
      */
     public static void shutdown() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2852
         DEFAULT_TASK_RUNNER_FACTORY.shutdown();
     }
     

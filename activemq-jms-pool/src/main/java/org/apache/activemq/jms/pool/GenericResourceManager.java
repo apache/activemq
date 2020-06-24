@@ -151,6 +151,7 @@ public class GenericResourceManager {
                     @Override
                     public NamedXAResource getNamedXAResource() throws SystemException {
                         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
                             final XAConnection xaConnection;
                             if (rm.getUserName() != null && rm.getPassword() != null) {
                                 xaConnection = connFactory.createXAConnection(rm.getUserName(), rm.getPassword());

@@ -67,6 +67,7 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
 
     @Override
     public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             InitBuffer initBuffer) throws IOException {
         return new AmqpNioTransport(wireFormat, socket, initBuffer);
     }
@@ -88,6 +89,7 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         AmqpTransportFilter amqpTransport = new AmqpTransportFilter(transport, format, brokerService);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5698
 
         Map<String, Object> wireFormatOptions = IntrospectionSupport.extractProperties(options, "wireFormat.");
 
@@ -99,6 +101,7 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
 
     @Override
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5587
         AmqpInactivityMonitor monitor = new AmqpInactivityMonitor(transport, format);
         AmqpTransportFilter filter = transport.narrow(AmqpTransportFilter.class);
         filter.setInactivityMonitor(monitor);

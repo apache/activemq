@@ -34,6 +34,7 @@ public class LevelDBXARecoveryBrokerTest extends XARecoveryBrokerTest {
 
     @Override
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4385
         levelDbDirectoryName = LEVELDB_DIR_BASE + "/" + System.currentTimeMillis();
         super.setUp();
     }
@@ -61,6 +62,7 @@ public class LevelDBXARecoveryBrokerTest extends XARecoveryBrokerTest {
     protected void configureBroker(BrokerService broker) throws Exception {
         super.configureBroker(broker);
         LevelDBStore store = new LevelDBStore();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4385
         store.setDirectory(new File(levelDbDirectoryName));
         broker.setPersistenceAdapter(store);
     }

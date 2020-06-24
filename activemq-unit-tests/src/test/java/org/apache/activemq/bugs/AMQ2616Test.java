@@ -55,6 +55,7 @@ public class AMQ2616Test {
 
     @Test(timeout = 90000)
     public void testQueueResourcesReleased() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(connectionUri);
         Connection tempConnection = fac.createConnection();
         tempConnection.start();
@@ -62,6 +63,7 @@ public class AMQ2616Test {
         Queue tempQueue = tempSession.createTemporaryQueue();
 
         Connection testConnection = fac.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         final long startUsage = brokerService.getSystemUsage().getMemoryUsage().getUsage();
         Session testSession = testConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer testProducer = testSession.createProducer(tempQueue);
@@ -114,9 +116,11 @@ public class AMQ2616Test {
         brokerService.addConnector(ACTIVEMQ_BROKER_BIND);
         brokerService.start();
         brokerService.waitUntilStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
 
         connectionUri = brokerService.getTransportConnectors().get(0).getPublishableConnectString();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         new ActiveMQQueue(test.getMethodName());
     }
 

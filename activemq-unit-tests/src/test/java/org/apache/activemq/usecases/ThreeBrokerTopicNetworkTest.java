@@ -79,11 +79,14 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         assertEquals(MESSAGE_COUNT * 2, msgsB.getMessageCount());
         assertEquals(MESSAGE_COUNT * 2, msgsC.getMessageCount());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
         assertEquals("Correct forwards from A", MESSAGE_COUNT,
                 brokers.get("BrokerA").broker.getDestination(ActiveMQDestination.transform(dest)).getDestinationStatistics().getForwards().getCount());
     }
 
     public void initCombosForTestABandBCbrokerNetworkWithSelectors() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
+//IC see: https://issues.apache.org/jira/browse/AMQ-1509
         addCombinationValues("dynamicOnly", new Object[] {true, false});
     }
 
@@ -259,6 +262,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         int networkTTL = 2;
         boolean conduitSubs = true;
         // Setup ring broker networks
+//IC see: https://issues.apache.org/jira/browse/AMQ-2704
         bridgeBrokers("BrokerA", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
         bridgeBrokers("BrokerB", "BrokerA", dynamicOnly, networkTTL, conduitSubs);
         bridgeBrokers("BrokerB", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
@@ -394,6 +398,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2704
         String options = new String("?persistent=false&useJmx=false");
         createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA" + options));
         createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB" + options));
@@ -402,10 +407,13 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
 
     @Override
     protected void configureBroker(BrokerService broker) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
         broker.setBrokerId(broker.getBrokerName());
     }
 
     public static Test suite() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
+//IC see: https://issues.apache.org/jira/browse/AMQ-1509
         return suite(ThreeBrokerTopicNetworkTest.class);
     }
 }

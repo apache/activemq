@@ -43,6 +43,7 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
                     return Boolean.TRUE;
                 }
                 Boolean rv = (Boolean)right.evaluate(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5281
                 if (rv != null && rv.booleanValue()) {
                     return Boolean.TRUE;
                 }
@@ -65,6 +66,7 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
 
                 Boolean lv = (Boolean)left.evaluate(message);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5281
                 if (lv != null && !lv.booleanValue()) {
                     return Boolean.FALSE;
                 }

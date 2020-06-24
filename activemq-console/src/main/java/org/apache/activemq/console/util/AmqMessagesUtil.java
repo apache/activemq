@@ -49,6 +49,7 @@ public final class AmqMessagesUtil {
     }
 
     public static List getMessages(ConnectionFactory connectionFactory, Destination dest, String selector) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
         return createMessageQueryFilter(connectionFactory, dest).query(selector);
     }
 
@@ -69,6 +70,7 @@ public final class AmqMessagesUtil {
     }
 
     public static QueryFilter createMessageQueryFilter(ConnectionFactory connectionFactory, Destination dest) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
         return new WildcardToMsgSelectorTransformFilter(new AmqMessagesQueryFilter(connectionFactory, dest));
     }
 }

@@ -43,6 +43,7 @@ public class ActiveMQCommandSupport extends OsgiCommandSupport {
         try {
             currentCommand.setCommandContext(context2);
             // must be added first
+//IC see: https://issues.apache.org/jira/browse/AMQ-5121
             if (command instanceof AbstractJmxCommand) {
                 arguments.add(0, "--jmxlocal");
             }

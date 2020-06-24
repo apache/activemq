@@ -40,6 +40,7 @@ import org.springframework.core.io.ClassPathResource;
 /**
  * Test failover for Queues
  */
+//IC see: https://issues.apache.org/jira/browse/AMQ-4165
 abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWithTwoConnectionsTest {
     private static final transient Logger LOG = LoggerFactory.getLogger(QueueMasterSlaveTestSupport.class);
 
@@ -52,6 +53,8 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
 
     @Override
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5164
+//IC see: https://issues.apache.org/jira/browse/AMQ-4842
         slaveStarted = new CountDownLatch(1);
         slave.set(null);
         setMaxTestTime(TimeUnit.MINUTES.toMillis(10));
@@ -60,6 +63,7 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
             File file = new File(".");
             System.setProperty("basedir", file.getAbsolutePath());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1585
         super.messageCount = 500;
         failureCount = super.messageCount / 2;
         super.topic = isTopic();
@@ -98,6 +102,7 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
 
     @Override
     protected void messageSent() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1885
         if (++inflightMessageCount == failureCount) {
             Thread.sleep(1000);
             LOG.error("MASTER STOPPED!@!!!!");
@@ -110,6 +115,7 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
     }
 
     protected void createMaster() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1507
         BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
         brokerFactory.afterPropertiesSet();
         master = brokerFactory.getBroker();
@@ -127,6 +133,7 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
 
     public void testVirtualTopicFailover() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
         MessageConsumer qConsumer = session.createConsumer(new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
         assertNull("No message there yet", qConsumer.receive(1000));
         qConsumer.close();
@@ -142,7 +149,9 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
 
         // dest must survive failover - consumer created after send
         qConsumer = session.createConsumer(new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4842
         javax.jms.Message message = qConsumer.receive(10000);
         assertNotNull("Get message after failover", message);
         assertEquals("correct message", text, ((TextMessage)message).getText());

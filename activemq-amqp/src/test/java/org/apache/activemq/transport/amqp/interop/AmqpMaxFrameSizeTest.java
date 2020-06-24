@@ -56,6 +56,7 @@ public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
                 { "amqp-> MFS < MAFS", "amqp", false, 2048, 1024 },
                 { "amqp+nio-> MFS > MAFS", "amqp+nio", false, 1024, 2048 },
                 { "amqp+nio-> MFS < MAFS", "amqp+nio", false, 2048, 1024 },
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
                 { "amqp+ws-> MFS > MAFS", "amqp+ws", false, 1024, 2048 },
                 { "amqp+ws-> MFS < MAFS", "amqp+ws", false, 2048, 1024 },
             });
@@ -71,6 +72,7 @@ public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
 
     @Override
     protected String getAdditionalConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
         return "&wireFormat.maxAmqpFrameSize=" + maxAmqpFrameSize +
                "&wireFormat.maxFrameSize=" + maxFrameSize;
     }
@@ -84,6 +86,7 @@ public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
         final CountDownLatch failed = new CountDownLatch(1);
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.createConnection());
         connection.setListener(new AmqpConnectionListener() {
 
@@ -93,6 +96,7 @@ public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         connection.setIdleTimeout(TEST_IDLE_TIMEOUT);
         connection.connect();
 
@@ -110,6 +114,7 @@ public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
         sender.send(message);
 
         assertTrue("Connection should have failed", failed.await(30, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
 
         assertNotNull(getProxyToQueue(getTestName()));
         assertEquals(0, getProxyToQueue(getTestName()).getQueueSize());

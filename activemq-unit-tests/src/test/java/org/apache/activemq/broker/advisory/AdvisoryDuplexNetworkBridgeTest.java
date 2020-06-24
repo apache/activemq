@@ -42,6 +42,7 @@ public class AdvisoryDuplexNetworkBridgeTest extends AdvisoryNetworkBridgeTest {
     }
 
     public void assertCreatedByDuplex(boolean createdByDuplex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3109
         assertTrue(createdByDuplex);
     }
 }

@@ -258,6 +258,7 @@ public class AMQ1925Test extends TestCase implements ExceptionListener {
 	public void testAMQ1925_TXBegin() throws Exception {
 		Connection connection = cf.createConnection();
 		connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2004
 		connection.setExceptionListener(this);
 		Session session = connection.createSession(true,
 				Session.SESSION_TRANSACTED);
@@ -295,6 +296,7 @@ public class AMQ1925Test extends TestCase implements ExceptionListener {
 		connection.close();
 
 		assertQueueEmpty();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2004
 		assertNull("no exception on connection listener: " + exception, exception);
 	}
 
@@ -383,6 +385,7 @@ public class AMQ1925Test extends TestCase implements ExceptionListener {
 	}
 
 	protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2004
 	    exception = null;
 		bs = new BrokerService();
 		bs.setDeleteAllMessagesOnStartup(true);
@@ -402,6 +405,7 @@ public class AMQ1925Test extends TestCase implements ExceptionListener {
 	}
 
     public void onException(JMSException exception) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2004
         this.exception = exception;    
     }
 

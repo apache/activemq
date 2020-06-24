@@ -51,6 +51,7 @@ public class ManagedTransportConnector extends TransportConnector {
     protected Connection createConnection(Transport transport) throws IOException {
         // prefer to use task runner from broker service as stop task runner, as we can then
         // tie it to the lifecycle of the broker service
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         return new ManagedTransportConnection(this, transport, getBroker(), isDisableAsyncDispatch() ? null : getTaskRunnerFactory(),
                 getBrokerService().getTaskRunnerFactory(), managementContext, connectorName);
     }

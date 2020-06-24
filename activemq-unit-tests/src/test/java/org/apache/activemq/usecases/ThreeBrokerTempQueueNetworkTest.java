@@ -91,6 +91,7 @@ public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSuppo
 
     public void testTempDisable() throws Exception {
         enableTempDestinationBridging = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-887
         try {
             testTempQueueCleanup();
         } catch (Throwable e) {
@@ -110,7 +111,10 @@ public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSuppo
     }
 
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly, int networkTTL) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
+//IC see: https://issues.apache.org/jira/browse/AMQ-1509
         NetworkConnector connector = super.bridgeBrokers(localBrokerName, remoteBrokerName, dynamicOnly, networkTTL, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-887
         connector.setBridgeTempDestinations(enableTempDestinationBridging);
         return connector;
     }

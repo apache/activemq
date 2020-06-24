@@ -35,9 +35,11 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class AMQ3410Test extends TestCase {
 	@SuppressWarnings("unused")
 	private static final Logger LOG = LoggerFactory
+//IC see: https://issues.apache.org/jira/browse/AMQ-4333
 			.getLogger(PurgeCommandTest.class);
 	private static final Collection<String> DEFAULT_OPTIONS = Arrays
 			.asList(new String[] { "--amqurl", "tcp://localhost:61616", });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
 
 	private static final Collection<String> DEFAULT_TOKENS = Arrays
 			.asList(new String[] { "FOO.QUEUE" });
@@ -72,6 +74,7 @@ public class AMQ3410Test extends TestCase {
 		command.setCommandContext(context);
 
 		List<String> tokens = new ArrayList<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
 		tokens.addAll(DEFAULT_OPTIONS);
 		tokens.addAll(DEFAULT_TOKENS);
 
@@ -89,6 +92,7 @@ public class AMQ3410Test extends TestCase {
 		command.setCommandContext(context);
 
 		List<String> tokens = new ArrayList<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
 		tokens.addAll(DEFAULT_OPTIONS);
 		tokens.add("--factory");
 		tokens.add(DummyConnectionFactory.class.getCanonicalName());
@@ -111,6 +115,7 @@ public class AMQ3410Test extends TestCase {
 		command.setCommandContext(context);
 
 		List<String> tokens = new ArrayList<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
 		tokens.addAll(DEFAULT_OPTIONS);
 		tokens.add("--factory");
 		tokens
@@ -138,6 +143,7 @@ public class AMQ3410Test extends TestCase {
 		command.setCommandContext(context);
 
 		List<String> tokens = new ArrayList<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
 		tokens.addAll(DEFAULT_OPTIONS);
 		tokens.add("--factory");
 		tokens.add(InvalidConnectionFactory.class.getCanonicalName());

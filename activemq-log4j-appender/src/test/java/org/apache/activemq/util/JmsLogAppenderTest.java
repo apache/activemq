@@ -41,6 +41,7 @@ public class JmsLogAppenderTest extends TestCase {
         MessageConsumer debug;
         MessageConsumer warn;
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&broker.useJmx=false");
+//IC see: https://issues.apache.org/jira/browse/AMQ-935
         Connection conn = factory.createConnection();
         conn.start();
 

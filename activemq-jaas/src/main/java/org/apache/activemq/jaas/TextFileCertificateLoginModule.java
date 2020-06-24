@@ -61,7 +61,9 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
         super.initialize(subject, callbackHandler, sharedState, options);
 
         usersByDn = load(USER_FILE_PROP_NAME, "", options).invertedPropertiesMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7230
         regexpByUser = load(USER_FILE_PROP_NAME, "", options).regexpPropertiesMap();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5876
         groupsByUser = load(GROUP_FILE_PROP_NAME, "", options).invertedPropertiesValuesMap();
      }
 
@@ -80,6 +82,8 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
         if (certs == null) {
             throw new LoginException("Client certificates not found. Cannot authenticate.");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-960
+//IC see: https://issues.apache.org/jira/browse/AMQ-7230
         String dn = getDistinguishedName(certs);
         return usersByDn.containsKey(dn) ? usersByDn.get(dn) : getUserByRegexp(dn);
     }
@@ -94,6 +98,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
      */
     @Override
     protected Set<String> getUserGroups(String username) throws LoginException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5876
         Set<String> userGroups = groupsByUser.get(username);
         if (userGroups == null) {
             userGroups = Collections.emptySet();
@@ -102,6 +107,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
     }
 
     private synchronized String getUserByRegexp(String dn) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7230
         String name = null;
         for (Map.Entry<String, Pattern> val : regexpByUser.entrySet()) {
             if (val.getValue().matcher(dn).matches()) {

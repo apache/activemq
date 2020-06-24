@@ -75,6 +75,7 @@ public class AMQ1866 extends TestCase {
         brokerService.addConnector(ACTIVEMQ_BROKER_BIND);
         brokerService.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         ACTIVEMQ_BROKER_URI = brokerService.getTransportConnectors().get(0).getPublishableConnectString();
         destination = new ActiveMQQueue(getName());
     }
@@ -91,6 +92,7 @@ public class AMQ1866 extends TestCase {
     }
 
     public void testConsumerSlowDownPrefetch0() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         ACTIVEMQ_BROKER_URI = ACTIVEMQ_BROKER_URI + "?jms.prefetchPolicy.queuePrefetch=0";
         doTestConsumerSlowDown();
     }
@@ -139,7 +141,10 @@ public class AMQ1866 extends TestCase {
             Thread.sleep(1000);
             long c1Counter = c1.counter.getAndSet(0);
             long c2Counter = c2.counter.getAndSet(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
             log.debug("c1: "+c1Counter+", c2: "+c2Counter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1902
+//IC see: https://issues.apache.org/jira/browse/AMQ-1866
             totalReceived += c1Counter;
             totalReceived += c2Counter;
 
@@ -202,9 +207,12 @@ public class AMQ1866 extends TestCase {
                         if (getName().equals("Consumer-1")) {
                             sleepingTime = 1000 * 1000;
                         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
                             sleepingTime = 1;
                         }
                         counter.incrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1902
+//IC see: https://issues.apache.org/jira/browse/AMQ-1866
                         Thread.sleep(sleepingTime);
                     }
                 }

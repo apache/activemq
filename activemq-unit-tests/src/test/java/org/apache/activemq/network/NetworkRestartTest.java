@@ -55,6 +55,8 @@ public class NetworkRestartTest extends TestSupport {
 
         // wait for ack back to localbroker with concurrent store and dispatch, dispatch occurs first
         Thread.sleep(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
 
         NetworkConnector connector = localBroker.getNetworkConnectorByName("networkConnector");
 
@@ -76,6 +78,7 @@ public class NetworkRestartTest extends TestSupport {
     }
 
     public void testConnectorReAdd() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3347
         MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
         MessageProducer localProducer = localSession.createProducer(included);
 
@@ -88,6 +91,8 @@ public class NetworkRestartTest extends TestSupport {
 
         // wait for ack back to localbroker with concurrent store and dispatch, dispatch occurs first
         Thread.sleep(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
 
         NetworkConnector connector = localBroker.getNetworkConnectorByName("networkConnector");
 

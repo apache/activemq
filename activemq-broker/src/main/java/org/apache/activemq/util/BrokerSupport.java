@@ -35,6 +35,7 @@ public final class BrokerSupport {
     }
 
     public static void resendNoCopy(final ConnectionContext context, Message originalMessage, ActiveMQDestination deadLetterDestination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         doResend(context, originalMessage, deadLetterDestination, false);
     }
 
@@ -45,6 +46,7 @@ public final class BrokerSupport {
      * @throws Exception
      */
     public static void resend(final ConnectionContext context, Message originalMessage, ActiveMQDestination deadLetterDestination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         doResend(context, originalMessage, deadLetterDestination, true);
     }
 
@@ -54,8 +56,11 @@ public final class BrokerSupport {
         message.setOriginalTransactionId(message.getTransactionId());
         message.setDestination(deadLetterDestination);
         message.setTransactionId(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2487
         message.setMemoryUsage(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3193
         message.setRedeliveryCounter(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6059
         message.getMessageId().setDataLocator(null);
         boolean originalFlowControl = context.isProducerFlowControl();
         try {
@@ -77,6 +82,7 @@ public final class BrokerSupport {
      * configuring the broker at startup
      */
     public static ConnectionContext getConnectionContext(Broker broker) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2970
         ConnectionContext adminConnectionContext = broker.getAdminConnectionContext();
         if (adminConnectionContext == null) {
             adminConnectionContext = createAdminConnectionContext(broker);

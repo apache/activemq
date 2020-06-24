@@ -36,6 +36,8 @@ public class AbortSlowAckConsumer1Test extends AbortSlowConsumer1Test {
 
     @Parameterized.Parameters(name = "abortConnection({0})-isTopic({1})")
     public static Collection<Object[]> getTestParameters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
         return Arrays.asList(new Object[][]{
                 {Boolean.TRUE, Boolean.TRUE},
                 {Boolean.FALSE, Boolean.TRUE},

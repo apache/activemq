@@ -56,6 +56,7 @@ public class VirtualTopicFanoutPerfTest {
                 for (VirtualDestination virtualDestination : ((VirtualDestinationInterceptor) destinationInterceptor).getVirtualDestinations()) {
                     if (virtualDestination instanceof VirtualTopic) {
                         ((VirtualTopic) virtualDestination).setConcurrentSend(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
                         ((VirtualTopic) virtualDestination).setTransactedSend(true);
                 }
             }
@@ -76,6 +77,7 @@ public class VirtualTopicFanoutPerfTest {
     @Ignore("comparison test - concurrentSend=true virtual topic, use transaction")
     public void testFanoutDuration() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         Connection connection1 = connectionFactory.createConnection();
         connection1.start();
 
@@ -97,6 +99,7 @@ public class VirtualTopicFanoutPerfTest {
         }
         LOG.info("Done producer, duration: " + (System.currentTimeMillis() - start) );
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         try {
             connection1.close();
         } catch (Exception ex) {}

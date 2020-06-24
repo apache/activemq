@@ -61,6 +61,7 @@ public class BrokerFilter implements Broker {
     }
 
     public Broker getNext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6497
         return next;
     }
 
@@ -363,6 +364,7 @@ public class BrokerFilter implements Broker {
 
     @Override
     public void virtualDestinationAdded(ConnectionContext context,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
             VirtualDestination virtualDestination) {
         getNext().virtualDestinationAdded(context, virtualDestination);
     }
@@ -380,6 +382,7 @@ public class BrokerFilter implements Broker {
 
     @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
             ConsumerControl control) {
         getNext().processConsumerControl(consumerExchange, control);
     }

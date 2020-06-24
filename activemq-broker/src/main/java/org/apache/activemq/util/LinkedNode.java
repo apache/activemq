@@ -132,6 +132,7 @@ public class LinkedNode {
     public void unlink() {
         // If we are allready unlinked...
         if (prev == this) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1683
             reset();
             return;
         }
@@ -145,6 +146,7 @@ public class LinkedNode {
         prev.next = next;
 
         // Update our links..
+//IC see: https://issues.apache.org/jira/browse/AMQ-1683
         reset();
     }
 

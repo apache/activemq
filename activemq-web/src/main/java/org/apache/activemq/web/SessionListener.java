@@ -31,6 +31,7 @@ public class SessionListener implements HttpSessionListener {
     }
 
     public void sessionDestroyed(HttpSessionEvent se) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1933
         WebClient client = WebClient.getWebClient(se.getSession());
         if (client != null) {
             client.close();

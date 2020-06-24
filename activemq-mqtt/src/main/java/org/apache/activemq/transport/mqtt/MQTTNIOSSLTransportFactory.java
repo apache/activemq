@@ -44,6 +44,7 @@ public class MQTTNIOSSLTransportFactory extends MQTTNIOTransportFactory {
 
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6021
         NIOSSLTransportServer result = new NIOSSLTransportServer(context, this, location, serverSocketFactory) {
             @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
@@ -58,6 +59,7 @@ public class MQTTNIOSSLTransportFactory extends MQTTNIOTransportFactory {
                 return transport;
             }
         };
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         result.setAllowLinkStealing(true);
         return result;
     }
@@ -69,6 +71,7 @@ public class MQTTNIOSSLTransportFactory extends MQTTNIOTransportFactory {
 
     @Override
     public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer)
             throws IOException {
         return new MQTTNIOSSLTransport(wireFormat, socket, engine, initBuffer, inputBuffer);

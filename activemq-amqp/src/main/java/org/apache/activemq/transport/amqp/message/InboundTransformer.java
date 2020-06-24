@@ -64,6 +64,7 @@ public abstract class InboundTransformer {
     public final ActiveMQMessage transform(EncodedMessage amqpMessage) throws Exception {
         InboundTransformer transformer = this;
         ActiveMQMessage message = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         while (transformer != null) {
             try {
@@ -86,11 +87,13 @@ public abstract class InboundTransformer {
     @SuppressWarnings("unchecked")
     protected void populateMessage(ActiveMQMessage jms, org.apache.qpid.proton.message.Message amqp) throws Exception {
         Header header = amqp.getHeader();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         if (header != null) {
             jms.setBooleanProperty(JMS_AMQP_HEADER, true);
 
             if (header.getDurable() != null) {
                 jms.setPersistent(header.getDurable().booleanValue());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7189
             } else {
                 jms.setPersistent(false);
             }
@@ -110,6 +113,7 @@ public abstract class InboundTransformer {
             }
         } else {
             jms.setPriority((byte) Message.DEFAULT_PRIORITY);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6486
             jms.setPersistent(false);
         }
 
@@ -117,12 +121,14 @@ public abstract class InboundTransformer {
         if (ma != null) {
             for (Map.Entry<?, ?> entry : ma.getValue().entrySet()) {
                 String key = entry.getKey().toString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6037
                 if ("x-opt-delivery-time".equals(key) && entry.getValue() != null) {
                     long deliveryTime = ((Number) entry.getValue()).longValue();
                     long delay = deliveryTime - System.currentTimeMillis();
                     if (delay > 0) {
                         jms.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, delay);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6037
                 } else if ("x-opt-delivery-delay".equals(key) && entry.getValue() != null) {
                     long delay = ((Number) entry.getValue()).longValue();
                     if (delay > 0) {
@@ -145,12 +151,14 @@ public abstract class InboundTransformer {
                     }
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
                 setProperty(jms, JMS_AMQP_MESSAGE_ANNOTATION_PREFIX + key, entry.getValue());
             }
         }
 
         final ApplicationProperties ap = amqp.getApplicationProperties();
         if (ap != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6872
             for (Map.Entry<String, Object> entry : ((Map<String, Object>) ap.getValue()).entrySet()) {
                 setProperty(jms,  entry.getKey(), entry.getValue());
             }
@@ -160,6 +168,7 @@ public abstract class InboundTransformer {
         if (properties != null) {
             jms.setBooleanProperty(JMS_AMQP_PROPERTIES, true);
             if (properties.getMessageId() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6263
                 jms.setJMSMessageID(AMQPMessageIdHelper.INSTANCE.toBaseMessageIdString(properties.getMessageId()));
             }
             Binary userId = properties.getUserId();
@@ -218,6 +227,7 @@ public abstract class InboundTransformer {
         if (fp != null) {
             for (Map.Entry<Object, Object> entry : (Set<Map.Entry<Object, Object>>) fp.getValue().entrySet()) {
                 String key = entry.getKey().toString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
                 setProperty(jms, JMS_AMQP_FOOTER_PREFIX + key, entry.getValue());
             }
         }

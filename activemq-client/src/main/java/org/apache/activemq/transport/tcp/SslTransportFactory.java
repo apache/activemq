@@ -58,8 +58,11 @@ public class SslTransportFactory extends TcpTransportFactory {
     public TransportServer doBind(final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
 
             ServerSocketFactory serverSocketFactory = createServerSocketFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4126
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
             SslTransportServer server = createSslTransportServer(location, (SSLServerSocketFactory)serverSocketFactory);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
@@ -84,6 +87,8 @@ public class SslTransportFactory extends TcpTransportFactory {
      * @throws URISyntaxException
      */
     protected SslTransportServer createSslTransportServer(final URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4126
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         return new SslTransportServer(this, location, serverSocketFactory);
     }
 
@@ -97,6 +102,7 @@ public class SslTransportFactory extends TcpTransportFactory {
         SslTransport sslTransport = transport.narrow(SslTransport.class);
         IntrospectionSupport.setProperties(sslTransport, options);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3300
         return super.compositeConfigure(transport, format, options);
     }
 
@@ -131,6 +137,7 @@ public class SslTransportFactory extends TcpTransportFactory {
      */
     @Override
     protected ServerSocketFactory createServerSocketFactory() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1749
         if( SslContext.getCurrentSslContext()!=null ) {
             SslContext ctx = SslContext.getCurrentSslContext();
             try {
@@ -167,6 +174,7 @@ public class SslTransportFactory extends TcpTransportFactory {
     @Override
     public SslTransport createTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer)
             throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6418
 
         return new SslTransport(wireFormat, (SSLSocket)socket, initBuffer);
     }

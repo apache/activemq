@@ -47,6 +47,7 @@ public class JournalTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         dataManager.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
         IOHelper.delete(dir);
     }
 
@@ -73,6 +74,8 @@ public class JournalTest extends TestCase {
         for (int i=0; i<iterations; i++) {
             dataManager.write(data, new Runnable() {
                 public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
                     latch.countDown();
                 }
             });
@@ -97,6 +100,7 @@ public class JournalTest extends TestCase {
         final CountDownLatch latch = new CountDownLatch(iterations);
         Runnable done = new Runnable() {
             public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3702
                 latch.countDown();
             }
         };

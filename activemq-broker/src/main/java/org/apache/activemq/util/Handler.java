@@ -19,5 +19,6 @@ package org.apache.activemq.util;
 public interface Handler<T> {
 	
 	void handle(T e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1972
 
 }

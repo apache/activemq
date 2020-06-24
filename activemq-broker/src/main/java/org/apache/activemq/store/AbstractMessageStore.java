@@ -75,6 +75,7 @@ abstract public class AbstractMessageStore implements MessageStore {
 
     @Override
     public void setPrioritizedMessages(boolean prioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
         this.prioritizedMessages = prioritizedMessages;
     }
 
@@ -85,6 +86,7 @@ abstract public class AbstractMessageStore implements MessageStore {
 
     @Override
     public void addMessage(final ConnectionContext context, final Message message, final boolean canOptimizeHint) throws IOException{
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
         addMessage(context, message);
     }
 
@@ -109,6 +111,7 @@ abstract public class AbstractMessageStore implements MessageStore {
     @Override
     public ListenableFuture<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message) throws IOException {
         addMessage(context, message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         return new InlineListenableFuture();
     }
 
@@ -119,19 +122,25 @@ abstract public class AbstractMessageStore implements MessageStore {
 
     @Override
     public void updateMessage(Message message) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         throw new IOException("update is not supported by: " + this);
     }
 
     @Override
     public void registerIndexListener(IndexListener indexListener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         this.indexListener = indexListener;
     }
 
     public IndexListener getIndexListener() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5567
         return indexListener;
     }
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
        FUTURE = new InlineListenableFuture();
     }
 

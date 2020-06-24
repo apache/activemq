@@ -51,6 +51,7 @@ public class JMSLargeMessageSendRecvTest extends AmqpClientTestSupport {
 
     @Parameters(name="{0}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         return Arrays.asList(new Object[][] {
             {"amqp", false},
             {"amqp+ws", false},
@@ -68,6 +69,7 @@ public class JMSLargeMessageSendRecvTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testSendSmallerTextMessage() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7065
         doTestSendTextMessageOfGivenSize(1024);
     }
 
@@ -125,6 +127,7 @@ public class JMSLargeMessageSendRecvTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testSendSmallerBytesMessage() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7065
         doTestSendBytesMessageOfGivenSize(1024);
     }
 
@@ -152,6 +155,7 @@ public class JMSLargeMessageSendRecvTest extends AmqpClientTestSupport {
         byte[] payload = createLargeByteArray(expectedSize);
         assertEquals(expectedSize, payload.length);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         Connection connection = JMSClientContext.INSTANCE.createConnection(getBrokerAmqpConnectionURI());
         long startTime = System.currentTimeMillis();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

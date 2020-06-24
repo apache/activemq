@@ -58,6 +58,7 @@ public class ObjectMessageTest extends CamelSpringTestSupport {
         assertCorrectObjectReceived(resultTrusted);
 
         MockEndpoint resultCamel = resolveMandatoryEndpoint("mock:result-camel", MockEndpoint.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         resultCamel.expectedMessageCount(1);
         resultCamel.assertIsNotSatisfied();
 

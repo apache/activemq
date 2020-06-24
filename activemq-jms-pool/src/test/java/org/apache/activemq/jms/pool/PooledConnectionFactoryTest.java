@@ -56,6 +56,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
 
     @Test(timeout = 60000)
     public void testInstanceOf() throws  Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
         PooledConnectionFactory pcf = new PooledConnectionFactory();
         assertTrue(pcf instanceof QueueConnectionFactory);
         assertTrue(pcf instanceof TopicConnectionFactory);
@@ -64,6 +65,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
 
     @Test(timeout = 120000)
     public void testConnectionTimeout() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7131
         ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
@@ -138,6 +140,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
     @Test(timeout = 60000)
     public void testFactoryStopStart() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6350
         ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
             "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
         PooledConnectionFactory cf = new PooledConnectionFactory();
@@ -166,6 +169,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
 
         ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
             "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(10);
@@ -178,6 +182,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
         }
 
         for (int i = 0; i < 100; ++i) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
             Connection current = ((PooledConnection) cf.createConnection()).getConnection();
             assertNotSame(previous, current);
             previous = current;
@@ -190,6 +195,9 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
     public void testConnectionsArePooled() throws Exception {
 
         ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(1);
@@ -212,6 +220,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
 
         final ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
             "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         final PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(1);
@@ -235,6 +244,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
             });
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         assertTrue("All connections should have been created.", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -282,6 +292,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
             cf.setCreateConnectionOnStartup(createOnStart);
             cf.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
             final ConcurrentMap<ConnectionId, Connection> connections = new ConcurrentHashMap<ConnectionId, Connection>();
             final ExecutorService executor = Executors.newFixedThreadPool(numConnections);
 
@@ -325,6 +336,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
         // start test runner thread
         ExecutorService executor = Executors.newSingleThreadExecutor();
         final Future<Boolean> result = executor.submit(new TestRunner());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         boolean testPassed = Wait.waitFor(new Wait.Condition() {
 
@@ -335,6 +347,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
         }, TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(50));
 
         if (!testPassed) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4437
             PooledConnectionFactoryTest.LOG.error("2nd call to createSession() " +
                                                   "is blocking but should have returned an error instead.");
             executor.shutdownNow();
@@ -360,11 +373,13 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
 
             // wait at most 5 seconds for the call to createSession
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
                 ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
                     "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
                 cf = new PooledConnectionFactory();
                 cf.setConnectionFactory(amq);
                 cf.setMaxConnections(3);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4004
                 cf.setMaximumActiveSessionPerConnection(1);
                 cf.setBlockIfSessionPoolIsFull(false);
 
@@ -378,6 +393,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
                     two.close();
 
                     LOG.error("Expected JMSException wasn't thrown.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4437
                     fail("seconds call to Connection.createSession() was supposed" +
                          "to raise an JMSException as internal session pool" +
                          "is exhausted. This did not happen and indiates a problem");

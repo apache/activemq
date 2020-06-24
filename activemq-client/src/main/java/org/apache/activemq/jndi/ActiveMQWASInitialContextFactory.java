@@ -64,10 +64,12 @@ public class ActiveMQWASInitialContextFactory extends ActiveMQInitialContextFact
 
         while (it.hasNext()) {
             Map.Entry entry = (Map.Entry)it.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3803
             if (entry.getKey() instanceof String && entry.getValue() instanceof String) {
                 String key = (String)entry.getKey();
                 String value = (String)entry.getValue();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4153
                 if (key.startsWith("java.naming.queue.")) {
                     String key1 = key.substring("java.naming.queue.".length());
                     key1 = key1.replace('.', '/');

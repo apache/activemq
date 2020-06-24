@@ -92,6 +92,7 @@ public class ActiveMQEndpointWorker {
 
         connectWork = new Work() {
             long currentReconnectDelay = INITIAL_RECONNECT_DELAY;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1779
 
             public void release() {
                 //
@@ -99,7 +100,9 @@ public class ActiveMQEndpointWorker {
 
             public void run() {
                 currentReconnectDelay = INITIAL_RECONNECT_DELAY;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1147
                 MessageActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3986
                 if (LOG.isInfoEnabled()) {
                     LOG.info("Establishing connection to broker [" + adapter.getInfo().getServerUrl() + "]");
                 }
@@ -116,6 +119,7 @@ public class ActiveMQEndpointWorker {
                                     if (connecting.compareAndSet(false, true)) {
                                         synchronized (connectWork) {
                                             disconnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5038
                                             serverSessionPool.closeSessions();
                                             connect();
                                         }
@@ -129,6 +133,7 @@ public class ActiveMQEndpointWorker {
                         connection.start();
 
                         if (activationSpec.isDurableSubscription()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4226
                             consumer = (ActiveMQConnectionConsumer) connection.createDurableConnectionConsumer(
                                     (Topic) dest,
                                     activationSpec.getSubscriptionName(),
@@ -137,6 +142,7 @@ public class ActiveMQEndpointWorker {
                                     connection.getPrefetchPolicy().getDurableTopicPrefetch(),
                                     activationSpec.getNoLocalBooleanValue());
                         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4226
                             consumer = (ActiveMQConnectionConsumer) connection.createConnectionConsumer(
                                     dest,
                                     emptyToNull(activationSpec.getMessageSelector()),
@@ -154,6 +160,7 @@ public class ActiveMQEndpointWorker {
                             LOG.error("Could not release connection lock");
                         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4226
                         if (consumer.getConsumerInfo().getCurrentPrefetchSize() == 0) {
                             LOG.error("Endpoint " + endpointActivationKey.getActivationSpec() + " will not receive any messages due to broker 'zero prefetch' configuration for: " + dest);
                         }
@@ -200,7 +207,9 @@ public class ActiveMQEndpointWorker {
             }
         };
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1147
         MessageActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4305
         if (activationSpec.isUseJndi()) {
             try {
                 InitialContext initialContext = new InitialContext();
@@ -257,6 +266,7 @@ public class ActiveMQEndpointWorker {
      * 
      */
     public void start() throws ResourceException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1779
         synchronized (connectWork) {
             if (running)
             return;
@@ -278,11 +288,13 @@ public class ActiveMQEndpointWorker {
     public void stop() throws InterruptedException {
         synchronized (shutdownMutex) {
             if (!running)
+//IC see: https://issues.apache.org/jira/browse/AMQ-2069
                 return;
             running = false;
             LOG.info("Stopping");
             // wake up pausing reconnect attempt
             shutdownMutex.notifyAll();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
             try {
                 serverSessionPool.close();
             } catch (Throwable ignored) {
@@ -315,6 +327,7 @@ public class ActiveMQEndpointWorker {
      * 
      */
     private void disconnect() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1779
         synchronized ( connectWork ) {
         safeClose(consumer);
         consumer = null;
@@ -333,6 +346,7 @@ public class ActiveMQEndpointWorker {
 
     // for testing
     public void setConnection(ActiveMQConnection activeMQConnection) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5038
         this.connection = activeMQConnection;
     }
 
@@ -341,6 +355,7 @@ public class ActiveMQEndpointWorker {
         // in particular make sure that we do not return null
         // after the resource adapter got disconnected from
         // the broker via the disconnect() method
+//IC see: https://issues.apache.org/jira/browse/AMQ-1779
         synchronized ( connectWork ) {
             return connection;
         }

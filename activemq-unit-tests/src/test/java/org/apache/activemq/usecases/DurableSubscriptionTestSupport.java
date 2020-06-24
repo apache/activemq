@@ -75,6 +75,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     }
 
     private void createBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2696
         broker = new BrokerService();
         broker.setBrokerName("durable-broker");
         broker.setDeleteAllMessagesOnStartup(true);
@@ -234,6 +235,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     public void testDurableSubscriptionBrokerRestart() throws Exception {
 
         // Create the durable sub.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2696
         connection.start();
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
 
@@ -291,6 +293,8 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     public void testDurableSubscriptionRetroactive() throws Exception {
 
         // Create the durable sub.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
         connection.start();
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
 
@@ -322,6 +326,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
         // Create the durable sub.
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3238
 
         session = connection.createSession(true, javax.jms.Session.SESSION_TRANSACTED);
         Topic topic = session.createTopic("TestTopic");
@@ -433,6 +438,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         consumer = session.createDurableSubscriber(topic, "sub1");
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5163
         assertEquals("Message 1", ((TextMessage) msg).getText());
     }
 
@@ -463,6 +469,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         consumer = session.createDurableSubscriber(topic, "sub1");
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5163
         assertEquals("Message 1", ((TextMessage) msg).getText());
     }
 
@@ -528,6 +535,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     private void assertTextMessageEquals(String string, Message message) throws JMSException {
         assertNotNull("Message was null", message);
         assertTrue("Message is not a TextMessage", message instanceof TextMessage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5163
         assertEquals(string, ((TextMessage) message).getText());
     }
 

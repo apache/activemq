@@ -95,6 +95,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
      * @param classes interfaces we want to track
      */
     private void cachePackageCapabilities(Class<?> ... classes) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5821
         BundleWiring ourWiring = bundleContext.getBundle().adapt(BundleWiring.class);
         Set<String> packageNames = new HashSet<String>();
         for (Class<?> clazz: classes) {
@@ -137,6 +138,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     protected void register(final Bundle bundle) {
         debug("checking bundle " + bundle.getBundleId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5821
         if (isOurBundle(bundle) || isImportingUs(bundle) ) {
             debug("Registering bundle for extension resolution: "+ bundle.getBundleId());
             bundleWrappers.put(bundle.getBundleId(), new BundleWrapper(bundle));
@@ -172,6 +174,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     @Override
     public Object create(String path) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5821
         Class<?> clazz = serviceCache.get(path);
         if (clazz == null) {
             StringBuffer warnings = new StringBuffer();
@@ -248,6 +251,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
      * @return true if the bundle is improting.
      */
     private boolean isImportingUs(Bundle bundle) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5821
         BundleWiring wiring = bundle.adapt(BundleWiring.class);
         List<BundleWire> imports = wiring.getRequiredWires(PACKAGE_NAMESPACE);
         for (BundleWire importWire : imports) {

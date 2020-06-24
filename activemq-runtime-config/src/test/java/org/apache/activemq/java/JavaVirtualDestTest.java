@@ -108,6 +108,7 @@ public class JavaVirtualDestTest extends AbstractVirtualDestTest {
 
     @Test
     public void testNewCompositeApplyImmediately() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6035
         startBroker(new BrokerService());
         assertTrue("broker alive", brokerService.isStarted());
 
@@ -290,6 +291,7 @@ public class JavaVirtualDestTest extends AbstractVirtualDestTest {
 
     @Test
     public void testModApplyImmediately() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6035
         final BrokerService brokerService = new BrokerService();
         brokerService.setDestinationInterceptors(new DestinationInterceptor[] {
                 buildInterceptor(new VirtualDestination[]{buildVirtualTopic("A.>", false)})});

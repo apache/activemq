@@ -85,6 +85,7 @@ public class StompTestSupport {
         s.port = 5676;
         s.nioPort = 5677;
         s.nioSslPort = 5678;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         s.autoPort = 5679;
         s.autoSslPort = 5680;
         s.autoNioPort = 5681;
@@ -120,6 +121,7 @@ public class StompTestSupport {
 
     public void startBroker() throws Exception {
         createBroker(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         XStreamBrokerContext context = new XStreamBrokerContext();
         brokerService.setBrokerContext(context);
@@ -139,6 +141,7 @@ public class StompTestSupport {
         sslContext.afterPropertiesSet();
         brokerService.setSslContext(sslContext);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         System.setProperty("javax.net.ssl.trustStore", keyStore.getCanonicalPath());
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
@@ -162,6 +165,7 @@ public class StompTestSupport {
         }
 
         addAdditionalPlugins(plugins);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5220
 
         if (!plugins.isEmpty()) {
             BrokerPlugin[] array = new BrokerPlugin[plugins.size()];
@@ -173,6 +177,7 @@ public class StompTestSupport {
     }
 
     public void stopBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         if (brokerService != null) {
             brokerService.stop();
             brokerService.waitUntilStopped();
@@ -200,6 +205,7 @@ public class StompTestSupport {
         brokerService.setPopulateJMSXUserID(true);
         brokerService.setSchedulerSupport(true);
         brokerService.setUseJmx(isUseJmx());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
         brokerService.getManagementContext().setCreateConnector(false);
         brokerService.getManagementContext().setCreateMBeanServer(false);
     }
@@ -268,6 +274,7 @@ public class StompTestSupport {
         entry.setAdmin("guests,users");
         authorizationEntries.add(entry);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4704
         TempDestinationAuthorizationEntry tempEntry = new TempDestinationAuthorizationEntry();
         tempEntry.setRead("admins");
         tempEntry.setWrite("admins");
@@ -285,6 +292,7 @@ public class StompTestSupport {
     }
 
     public void addOpenWireConnector() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         cf = new ActiveMQConnectionFactory(jmsUri);
     }
 
@@ -315,6 +323,7 @@ public class StompTestSupport {
             nioSslPort = connector.getConnectUri().getPort();
             LOG.debug("Using stomp+nio+ssl port " + nioSslPort);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         if (isUseAutoConnector()) {
             connector = brokerService.addConnector(
                 "auto://0.0.0.0:" + autoPort + getAdditionalConfig());
@@ -366,6 +375,7 @@ public class StompTestSupport {
     }
 
     protected boolean isUseAutoConnector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         return false;
     }
 
@@ -412,6 +422,7 @@ public class StompTestSupport {
 
     protected void stompDisconnect() throws Exception {
         if (stompConnection != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
             stompConnection.disconnect();
             stompConnection.close();
             stompConnection = null;

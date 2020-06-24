@@ -96,6 +96,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     private boolean reportAdvertizeFailed = true;
     private ExecutorService executor = null;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
     class RemoteBrokerData extends DiscoveryEvent {
         long lastHeartBeat;
         long recoveryTime;
@@ -258,6 +259,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     }
     
     public void setInterface(String mcInterface) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2381
         this.mcInterface = mcInterface;
     }
     
@@ -266,6 +268,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     }
     
     public void setJoinNetworkInterface(String mcJoinNetwrokInterface) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2842
     	this.mcJoinNetworkInterface = mcJoinNetwrokInterface;
     }
     
@@ -276,6 +279,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
      */
     public void start() throws Exception {
     	
+//IC see: https://issues.apache.org/jira/browse/AMQ-1489
         if (started.compareAndSet(false, true)) {        	
         	         	
             if (group == null || group.length() == 0) {
@@ -320,14 +324,17 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             mcast = new MulticastSocket(myPort);
             mcast.setLoopbackMode(loopBackMode);
             mcast.setTimeToLive(getTimeToLive());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2842
             if (mcJoinNetworkInterface != null) {
                 mcast.joinGroup(sockAddress, NetworkInterface.getByName(mcJoinNetworkInterface));
             }
             else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5520
                 mcast.setNetworkInterface(findNetworkInterface());
             	mcast.joinGroup(inetAddress);
             }
             mcast.setSoTimeout((int)keepAliveInterval);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2381
             if (mcInterface != null) {
                 mcast.setInterface(InetAddress.getByName(mcInterface));
             }
@@ -343,16 +350,20 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     }
     
     private NetworkInterface findNetworkInterface() throws SocketException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5520
         Enumeration<NetworkInterface> ifcs = NetworkInterface.getNetworkInterfaces();
         List<NetworkInterface> possibles = new ArrayList<NetworkInterface>();
         while (ifcs.hasMoreElements()) {
             NetworkInterface ni = ifcs.nextElement();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5520
             try {
                 if (ni.supportsMulticast()
                         && ni.isUp()) {
                     for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6297
                         if (ia != null && ia.getAddress() instanceof java.net.Inet4Address
                                 && !ia.getAddress().isLoopbackAddress()
+//IC see: https://issues.apache.org/jira/browse/AMQ-6297
                                 && (ni.getDisplayName()==null || !ni.getDisplayName().startsWith("vnic"))) {
                             possibles.add(ni);
                         }
@@ -374,9 +385,12 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             if (mcast != null) {
                 mcast.close();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
             if (runner != null) {
                 runner.interrupt();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
             if (executor != null) {
                 ThreadPoolUtils.shutdownNow(executor);
                 executor = null;
@@ -416,6 +430,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 if (payload.startsWith(ALIVE)) {
                     String brokerName = getBrokerName(payload.substring(ALIVE.length()));
                     String service = payload.substring(ALIVE.length() + brokerName.length() + 2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1477
                     processAlive(brokerName, service);
                 } else {
                     String brokerName = getBrokerName(payload.substring(DEAD.length()));
@@ -441,6 +456,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         if (selfService != null) {
             String payload = getType();
             payload += started.get() ? ALIVE : DEAD;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1477
             payload += DELIMITER + "localhost" + DELIMITER;
             payload += selfService;
             try {
@@ -494,6 +510,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         for (Iterator<RemoteBrokerData> i = brokersByService.values().iterator(); i.hasNext();) {
             RemoteBrokerData data = i.next();
             if (data.getLastHeartBeat() < expireTime) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
                 processDead(data.getServiceName());
             }
         }
@@ -525,6 +542,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 public void run() {
                     DiscoveryListener discoveryListener = MulticastDiscoveryAgent.this.discoveryListener;
                     if (discoveryListener != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
                         discoveryListener.onServiceRemove(data);
                     }
                 }
@@ -542,6 +560,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 public void run() {
                     DiscoveryListener discoveryListener = MulticastDiscoveryAgent.this.discoveryListener;
                     if (discoveryListener != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
                         discoveryListener.onServiceAdd(data);
                     }
                 }
@@ -604,6 +623,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     }
 
     public void setGroup(String group) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1477
         this.group = group;
     }
     

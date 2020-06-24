@@ -58,6 +58,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-643
         startTransportServer();
     }
 
@@ -66,6 +67,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
      * @throws URISyntaxException
      */
     private void startClient() throws Exception, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         clientTransport = TransportFactory.connect(new URI("tcp://localhost:" + serverPort + "?trace=true&wireFormat.maxInactivityDuration=1000"));
         clientTransport.setTransportListener(new TransportListener() {
             @Override
@@ -103,6 +105,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
      * @throws Exception
      */
     private void startTransportServer() throws IOException, URISyntaxException, Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         server = TransportFactory.bind(new URI("tcp://localhost:0?trace=true&wireFormat.maxInactivityDuration=1000"));
         server.setAcceptListener(this);
         server.start();
@@ -204,6 +207,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
         clientTransport.start();
         WireFormatInfo info = new WireFormatInfo();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         info.setVersion(OpenWireFormat.DEFAULT_LEGACY_VERSION);
         info.setMaxInactivityDuration(1000);
         clientTransport.oneway(info);
@@ -221,6 +225,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
     public void testNoClientHang() throws Exception {
         startClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-643
 
         assertEquals(0, serverErrorCount.get());
         assertEquals(0, clientErrorCount.get());

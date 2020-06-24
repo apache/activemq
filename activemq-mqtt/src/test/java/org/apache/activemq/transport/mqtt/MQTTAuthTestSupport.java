@@ -35,6 +35,7 @@ import org.apache.activemq.security.TempDestinationAuthorizationEntry;
 public class MQTTAuthTestSupport extends MQTTTestSupport {
 
     public MQTTAuthTestSupport() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5307
         super();
     }
 

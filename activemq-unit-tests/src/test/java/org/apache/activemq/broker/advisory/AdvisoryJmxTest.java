@@ -45,6 +45,7 @@ public class AdvisoryJmxTest extends EmbeddedBrokerTestSupport {
     }
 
     protected BrokerViewMBean getProxyToBroker() throws MalformedObjectNameException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         ObjectName brokerViewMBean = new ObjectName(
             "org.apache.activemq:type=Broker,brokerName=localhost");
         BrokerViewMBean proxy = (BrokerViewMBean) broker.getManagementContext()
@@ -62,6 +63,7 @@ public class AdvisoryJmxTest extends EmbeddedBrokerTestSupport {
 
         brokerMbean.addQueue("test");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         ActiveMQMessage msg = (ActiveMQMessage) consumer.receive(1000);
         assertNotNull(msg);
         assertTrue(msg.getDataStructure() instanceof DestinationInfo);

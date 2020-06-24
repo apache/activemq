@@ -59,6 +59,8 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     }
 
     public WebConsoleConfiguration getConfiguration() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1324
+//IC see: https://issues.apache.org/jira/browse/AMQ-4869
         return configuration;
     }
 
@@ -76,6 +78,7 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     @Override
     public BrokerViewMBean getBrokerAdmin() throws Exception {
         MBeanServerConnection connection = getMBeanServerConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1324
 
         Set<ObjectName> brokers = findBrokers(connection);
         if (brokers.size() == 0) {
@@ -88,6 +91,7 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 
     @Override
     public String getBrokerName() throws Exception, MalformedObjectNameException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1324
         return getBrokerAdmin().getBrokerName();
     }
 
@@ -122,6 +126,7 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     protected JMXConnector createConnection() {
 
         Map<String, Object> env = new HashMap<String, Object>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4869
         if (this.configuration.getJmxUser() != null) {
             env.put("jmx.remote.credentials", new String[] { this.configuration.getJmxUser(), this.configuration.getJmxPassword() });
         }
@@ -178,6 +183,7 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     protected Set<ObjectName> findBrokers(MBeanServerConnection connection) throws IOException, MalformedObjectNameException {
         ObjectName name;
         if (this.brokerName == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4034
             name = new ObjectName("org.apache.activemq:type=Broker,brokerName=*");
         } else {
             name = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + this.brokerName);
@@ -228,6 +234,7 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 
     @Override
     public Set queryNames(ObjectName name, QueryExp query) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2570
         return getMBeanServerConnection().queryNames(name, query);
     }
 

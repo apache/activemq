@@ -104,6 +104,7 @@ public class MessageGroupLateArrivalsTest {
         int[] counters = {perBatch, perBatch, perBatch};
 
         CountDownLatch startSignal = new CountDownLatch(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4260
         CountDownLatch doneSignal = new CountDownLatch(3);
         CountDownLatch worker1Started = new CountDownLatch(1);
         CountDownLatch worker2Started = new CountDownLatch(1);
@@ -139,6 +140,7 @@ public class MessageGroupLateArrivalsTest {
 
         // wait for presence before new group
         worker3Started.await();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4260
 
         for (int i = 0; i < perBatch; i++) {
             Message msgc = session.createTextMessage("hello c");
@@ -148,6 +150,7 @@ public class MessageGroupLateArrivalsTest {
 
         doneSignal.await();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4260
         List<String> workers = new ArrayList<String>(messageCount.keySet());
         Collections.sort(workers);
         for (String worker : workers) {
@@ -169,6 +172,7 @@ public class MessageGroupLateArrivalsTest {
         int[] counters = {perBatch, perBatch, perBatch};
 
         CountDownLatch startSignal = new CountDownLatch(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4260
         CountDownLatch doneSignal = new CountDownLatch(2);
         CountDownLatch worker1Started = new CountDownLatch(1);
         CountDownLatch worker2Started = new CountDownLatch(1);
@@ -197,6 +201,7 @@ public class MessageGroupLateArrivalsTest {
 
         // wait for presence before new group
         worker2Started.await();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4260
 
         for (int i = 0; i < perBatch; i++) {
             Message msgc = session.createTextMessage("hello a");
@@ -240,6 +245,7 @@ public class MessageGroupLateArrivalsTest {
             this.counters = counters;
             this.messageCount = messageCount;
             this.messageGroups = messageGroups;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4260
             this.workerStarted = workerStarted;
         }
 
@@ -260,6 +266,7 @@ public class MessageGroupLateArrivalsTest {
                 Session sess = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
                 MessageConsumer consumer = sess.createConsumer(queueName);
                 workerStarted.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4260
 
                 while (true) {
                     if (counters[0] == 0 && counters[1] == 0 && counters[2] == 0) {
@@ -276,6 +283,7 @@ public class MessageGroupLateArrivalsTest {
 
                     String group = msg.getStringProperty("JMSXGroupID");
                     msg.getBooleanProperty("JMSXGroupFirstForConsumer");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4260
 
                     if ("A".equals(group)) {
                         --counters[0];

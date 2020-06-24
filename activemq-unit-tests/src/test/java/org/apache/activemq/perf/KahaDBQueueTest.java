@@ -35,6 +35,7 @@ public class KahaDBQueueTest extends SimpleQueueTest {
     protected void configureBroker(BrokerService answer,String uri) throws Exception {
 
         File dataFileDir = new File("target/test-amq-data/perfTest/kahadb");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
         File archiveDir = new File(dataFileDir,"archive");
         KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
         kaha.setDirectory(dataFileDir);
@@ -52,6 +53,7 @@ public class KahaDBQueueTest extends SimpleQueueTest {
         //kaha.setIndexWriteBatchSize(100);
         // do the index write in a separate thread
         kaha.setEnableIndexWriteAsync(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         kaha.setIndexCacheSize(10000);
         
         answer.setPersistenceAdapter(kaha);

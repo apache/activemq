@@ -28,9 +28,11 @@ public class SimplePojo {
     int age;
     boolean enabled;
     URI uri;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2086
     List<ActiveMQDestination> favorites = new ArrayList<ActiveMQDestination>();
     List<ActiveMQDestination> nonFavorites = new ArrayList<ActiveMQDestination>();
     List<ActiveMQDestination> others = new ArrayList<ActiveMQDestination>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
     String[] systems;
     
     public int getAge() {
@@ -58,6 +60,7 @@ public class SimplePojo {
         this.uri = uri;
     }
 	public List<ActiveMQDestination> getFavorites() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2086
 		return favorites;
 	}
 	public void setFavorites(List<ActiveMQDestination> favorites) {
@@ -76,6 +79,7 @@ public class SimplePojo {
 		this.others = others;
 	}
     public String[] getSystems() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
         return systems;
     }
     public void setSystems(String[] systems) {

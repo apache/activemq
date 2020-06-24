@@ -30,6 +30,7 @@ public class CraigsBugTest extends EmbeddedBrokerTestSupport {
     private String connectionUri;
 
     public void testConnectionFactory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         final ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(connectionUri);
         final ActiveMQQueue queue = new ActiveMQQueue("testqueue");
         final Connection conn = cf.createConnection();
@@ -58,6 +59,7 @@ public class CraigsBugTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         bindAddress = "tcp://localhost:0";
         super.setUp();
 

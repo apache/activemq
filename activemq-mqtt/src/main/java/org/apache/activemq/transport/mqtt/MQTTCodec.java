@@ -40,10 +40,12 @@ public class MQTTCodec {
      * Sink for newly decoded MQTT Frames.
      */
     public interface MQTTFrameSink {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5308
         void onFrame(MQTTFrame mqttFrame);
     }
 
     public MQTTCodec(MQTTFrameSink sink) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5781
         this(sink, null);
     }
 
@@ -78,6 +80,7 @@ public class MQTTCodec {
 
     private void processCommand() throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5308
         Buffer frameContents = null;
         if (currentBuffer == scratch) {
             frameContents = scratch.deepCopy();
@@ -91,6 +94,7 @@ public class MQTTCodec {
     }
 
     private int getMaxFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5781
         return wireFormat != null ? wireFormat.getMaxFrameSize() : MQTTWireFormat.MAX_MESSAGE_LENGTH;
     }
 
@@ -116,6 +120,7 @@ public class MQTTCodec {
     private interface FrameParser {
 
         void parse(DataByteArrayInputStream data, int readSize) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5308
 
         void reset() throws IOException;
     }
@@ -124,6 +129,8 @@ public class MQTTCodec {
 
         @Override
         public void parse(DataByteArrayInputStream data, int readSize) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5389
+//IC see: https://issues.apache.org/jira/browse/AMQ-5387
             while (readSize-- > 0) {
                 byte b = data.readByte();
                 // skip repeating nulls
@@ -166,6 +173,7 @@ public class MQTTCodec {
                         processCommand();
                         currentParser = initializeHeaderParser();
                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5781
                         if (length > getMaxFrameSize()) {
                             throw new IOException("The maximum message length was exceeded");
                         }
@@ -174,7 +182,10 @@ public class MQTTCodec {
                         contentLength = length;
                     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5308
                     readSize = readSize - i;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5389
+//IC see: https://issues.apache.org/jira/browse/AMQ-5387
                     if (readSize > 0) {
                         currentParser.parse(data, readSize);
                     }
@@ -197,6 +208,7 @@ public class MQTTCodec {
 
         @Override
         public void parse(DataByteArrayInputStream data, int readSize) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5308
             if (currentBuffer == null) {
                 if (contentLength < scratch.length()) {
                     currentBuffer = scratch;
@@ -212,6 +224,8 @@ public class MQTTCodec {
             if (payLoadRead == contentLength) {
                 processCommand();
                 currentParser = initializeHeaderParser();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5389
+//IC see: https://issues.apache.org/jira/browse/AMQ-5387
                 readSize = readSize - length;
                 if (readSize > 0) {
                     currentParser.parse(data, readSize);

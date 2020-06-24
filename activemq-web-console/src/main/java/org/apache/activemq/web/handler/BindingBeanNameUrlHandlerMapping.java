@@ -48,6 +48,8 @@ public class BindingBeanNameUrlHandlerMapping extends BeanNameUrlHandlerMapping 
 
         if (object != null) {
             // prevent CSRF attacks
+//IC see: https://issues.apache.org/jira/browse/AMQ-2613
+//IC see: https://issues.apache.org/jira/browse/AMQ-2740
             if (object instanceof DestinationFacade) {
                 // check supported methods
                 if (!Arrays.asList(((DestinationFacade)object).getSupportedHttpMethods()).contains(request.getMethod())) {

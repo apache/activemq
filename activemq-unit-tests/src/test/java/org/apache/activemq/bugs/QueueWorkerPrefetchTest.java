@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
  * consumers.
  */
 public class QueueWorkerPrefetchTest extends TestCase implements
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         MessageListener {
     private static final Logger LOG = LoggerFactory
             .getLogger(QueueWorkerPrefetchTest.class);
@@ -92,6 +93,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
             return "Work: " + id;
         }
     }
@@ -119,6 +121,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements
 
         public Worker(Session session) throws JMSException {
             this.session = session;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
             masterItemProducer = session.createProducer(session
                     .createQueue("master-item"));
             Queue workItemQueue = session.createQueue("work-item");
@@ -172,6 +175,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         broker.addConnector(BROKER_BIND_ADDRESS);
         broker.start();
         broker.waitUntilStarted();
@@ -212,6 +216,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements
 
         // Send a message to the work queue, and wait for the BATCH_SIZE acks
         // from the workers.
+//IC see: https://issues.apache.org/jira/browse/AMQ-1251
         acksReceived.set(0);
         latch.set(new CountDownLatch(BATCH_SIZE));
         workItemProducer.send(masterSession

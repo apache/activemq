@@ -139,6 +139,7 @@ public class DurableSubscriberNonPersistentMessageTest extends TestCase {
             createConsumer(interest, cleanupMsgCount);
 
             String brokerVersion = (String) mbeanServer.getAttribute(new ObjectName("org.apache.activemq:brokerName=localhost,type=Broker"), "BrokerVersion");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
             LOG.info("Test run on: " + brokerVersion);
             final String theJmxObject = "org.apache.activemq:type=Broker,brokerName=localhost," +

@@ -61,6 +61,7 @@ public abstract class Usage<T extends Usage> implements Service {
         this.parent = parent;
         this.usagePortion = portion;
         if (parent != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4798
             this.limiter.setLimit((long) (parent.getLimit() * (double)portion));
             name = parent.name + ":" + name;
         }
@@ -91,6 +92,7 @@ public abstract class Usage<T extends Usage> implements Service {
                 return false;
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.writeLock().lock();
         try {
             percentUsage = caclPercentUsage();
@@ -121,6 +123,7 @@ public abstract class Usage<T extends Usage> implements Service {
         if (parent != null && parent.isFull(highWaterMark)) {
             return true;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.writeLock().lock();
         try {
             percentUsage = caclPercentUsage();
@@ -139,10 +142,12 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     public int getNumUsageListeners() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4814
         return listeners.size();
     }
 
     public long getLimit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.readLock().lock();
         try {
             return limiter.getLimit();
@@ -162,6 +167,7 @@ public abstract class Usage<T extends Usage> implements Service {
         if (percentUsageMinDelta < 0) {
             throw new IllegalArgumentException("percentUsageMinDelta must be greater or equal to 0");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.writeLock().lock();
         try {
             this.limiter.setLimit(limit);
@@ -175,8 +181,10 @@ public abstract class Usage<T extends Usage> implements Service {
     protected void onLimitChange() {
         // We may need to calculate the limit
         if (usagePortion > 0 && parent != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
             usageLock.writeLock().lock();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4798
                 this.limiter.setLimit((long) (parent.getLimit() * (double) usagePortion));
             } finally {
                 usageLock.writeLock().unlock();
@@ -245,6 +253,7 @@ public abstract class Usage<T extends Usage> implements Service {
             throw new IllegalArgumentException("percentUsageMinDelta must be greater than 0");
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.writeLock().lock();
         try {
             this.percentUsageMinDelta = percentUsageMinDelta;
@@ -280,6 +289,7 @@ public abstract class Usage<T extends Usage> implements Service {
         if (limiter.getLimit() == 0) {
             return 0;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         return (int) ((((retrieveUsage() * 100) / limiter.getLimit()) / percentUsageMinDelta) * percentUsageMinDelta);
     }
 
@@ -294,6 +304,7 @@ public abstract class Usage<T extends Usage> implements Service {
                 waitForSpaceCondition.signalAll();
                 if (!callbacks.isEmpty()) {
                     for (Runnable callback : callbacks) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1475
                         getExecutor().execute(callback);
                     }
                     callbacks.clear();
@@ -304,12 +315,15 @@ public abstract class Usage<T extends Usage> implements Service {
                 Runnable listenerNotifier = new Runnable() {
                     @Override
                     public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
                         for (UsageListener listener : listeners) {
                             listener.onUsageChanged(Usage.this, oldPercentUsage, newPercentUsage);
                         }
                     }
                 };
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                 if (started.get()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1467
                     getExecutor().execute(listenerNotifier);
                 } else {
                     LOG.warn("Not notifying memory usage change to listeners on shutdown");
@@ -324,6 +338,7 @@ public abstract class Usage<T extends Usage> implements Service {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         return "Usage(" + getName() + ") percentUsage=" + percentUsage + "%, usage=" + retrieveUsage() + ", limit=" + limiter.getLimit()
             + ", percentUsageMinDelta=" + percentUsageMinDelta + "%" + (parent != null ? ";Parent:" + parent.toString() : "");
     }
@@ -347,6 +362,7 @@ public abstract class Usage<T extends Usage> implements Service {
     @Override
     @SuppressWarnings("unchecked")
     public void stop() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         if (started.compareAndSet(true, false)) {
             if (parent != null) {
                 parent.removeChild(this);
@@ -391,6 +407,7 @@ public abstract class Usage<T extends Usage> implements Service {
 
                 @Override
                 public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
                     usageLock.writeLock().lock();
                     try {
                         if (percentUsage >= 100) {
@@ -407,6 +424,7 @@ public abstract class Usage<T extends Usage> implements Service {
                 return true;
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         usageLock.writeLock().lock();
         try {
             if (percentUsage >= 100) {
@@ -415,6 +433,7 @@ public abstract class Usage<T extends Usage> implements Service {
             } else {
                 return false;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4512
         } finally {
             usageLock.writeLock().unlock();
         }
@@ -471,6 +490,7 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     public boolean isStarted() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4361
         return started.get();
     }
 }

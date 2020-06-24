@@ -115,6 +115,7 @@ public class NonBlockingConsumerRedeliveryTest {
     @Test
     public void testMessageDeleiveredInCorrectOrder() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4464
         final LinkedHashSet<Message> received = new LinkedHashSet<Message>();
         final LinkedHashSet<Message> beforeRollback = new LinkedHashSet<Message>();
         final LinkedHashSet<Message> afterRollback = new LinkedHashSet<Message>();

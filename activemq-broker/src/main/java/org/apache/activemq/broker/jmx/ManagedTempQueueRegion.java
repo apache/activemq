@@ -36,11 +36,13 @@ public class ManagedTempQueueRegion extends TempQueueRegion {
 
     public ManagedTempQueueRegion(ManagedRegionBroker broker, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                                   DestinationFactory destinationFactory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4091
         super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
         this.regionBroker = broker;
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-511
         Subscription sub = super.createSubscription(context, info);
         ObjectName name = regionBroker.registerSubscription(context, sub);
         sub.setObjectName(name);

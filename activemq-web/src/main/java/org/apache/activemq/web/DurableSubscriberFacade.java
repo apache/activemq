@@ -34,6 +34,7 @@ public class DurableSubscriberFacade extends DestinationFacade {
     }
 
     public void setClientId(String clientId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1540
         if (clientId != null) {
             clientId = clientId.trim();
         }
@@ -45,6 +46,7 @@ public class DurableSubscriberFacade extends DestinationFacade {
     }
 
     public void setSubscriberName(String subscriberName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1540
         if (subscriberName != null) {
             subscriberName = subscriberName.trim();
         }

@@ -79,6 +79,7 @@ public class JaasDualAuthenticationNetworkBridgeTest {
             throw e;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6665
         broker2.start();
         broker1.start();
     }
@@ -129,6 +130,7 @@ public class JaasDualAuthenticationNetworkBridgeTest {
             Collection<NetworkBridge> bridges = nc.activeBridges();
             Assert.assertFalse("Network bridge not established to broker 2", bridges.isEmpty());
             Assert.assertTrue("Network bridge not established to broker 2", bridges.size() == 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6665
             for (NetworkBridge nb : bridges) {
                 Assert.assertTrue(nb.getRemoteBrokerId() != null);
             }

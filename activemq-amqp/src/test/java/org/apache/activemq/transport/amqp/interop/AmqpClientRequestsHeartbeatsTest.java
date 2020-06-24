@@ -48,6 +48,7 @@ public class AmqpClientRequestsHeartbeatsTest extends AmqpClientTestSupport {
 
     @Parameters(name="connector={0}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return Arrays.asList(new Object[][] {
             {"amqp", false},
             {"amqp+ws", false},
@@ -76,6 +77,7 @@ public class AmqpClientRequestsHeartbeatsTest extends AmqpClientTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
 
@@ -91,6 +93,7 @@ public class AmqpClientRequestsHeartbeatsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.createConnection());
         connection.setIdleTimeout(TEST_IDLE_TIMEOUT);
         assertNotNull(connection);
@@ -106,6 +109,7 @@ public class AmqpClientRequestsHeartbeatsTest extends AmqpClientTestSupport {
         connection.connect();
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         assertFalse(disconnected.await(5, TimeUnit.SECONDS));
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
 

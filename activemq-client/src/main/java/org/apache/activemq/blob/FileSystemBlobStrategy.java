@@ -65,6 +65,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
      * @see org.apache.activemq.blob.BlobUploadStrategy#uploadFile(org.apache.activemq.command.ActiveMQBlobMessage, java.io.File)
      */
     public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try(FileInputStream fis = new FileInputStream(file)) {
             return uploadStream(message, fis);
         }
@@ -76,6 +77,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
      */
     public URL uploadStream(ActiveMQBlobMessage message, InputStream in) throws JMSException, IOException {
         File f = getFile(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try(FileOutputStream out = new FileOutputStream(f)) {
             byte[] buffer = new byte[policy.getBufferSize()];
             for (int c = in.read(buffer); c != -1; c = in.read(buffer)) {
@@ -130,6 +132,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
             }
     	}
         //replace all : with _ to make windows more happy
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         String fileName = message.getJMSMessageID().replaceAll(":", "_");
         return new File(rootFile, fileName);
 

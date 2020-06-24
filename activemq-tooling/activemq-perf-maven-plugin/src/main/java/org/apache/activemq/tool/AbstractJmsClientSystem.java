@@ -74,6 +74,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
 
         // set up performance samplers indicated by the user
         List<PerformanceSampler> samplers = new ArrayList<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
 
         Set<String> requestedSamplers = getSysTest().getSamplersSet();
         if (requestedSamplers.contains(JmsClientSystemProperties.SAMPLER_TP)) {
@@ -236,6 +237,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
 
     protected ConnectionFactory loadJmsFactory(String spiClass, Properties factorySettings) throws JMSException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
             Class<?> spi = Class.forName(spiClass);
             SPIConnectionFactory spiFactory = (SPIConnectionFactory)spi.newInstance();
             ConnectionFactory jmsFactory = spiFactory.createConnectionFactory(factorySettings);
@@ -252,6 +254,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
         props.setJmsVersion(metaData.getJMSVersion());
 
         String jmsProperties = "";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
         Enumeration<?> jmsProps = metaData.getJMSXPropertyNames();
         while (jmsProps.hasMoreElements()) {
             jmsProperties += jmsProps.nextElement().toString() + ",";
@@ -294,6 +297,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
         Properties fileProps = new Properties();
         try {
             if (configFile != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
                 try(FileInputStream inputStream = new FileInputStream(configFile)) {
                     LOG.info("Loading properties file: " + configFile.getAbsolutePath());
                     fileProps.load(inputStream);

@@ -37,6 +37,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     private Iterator<MessageReference> iter;
 
     public VMPendingMessageCursor(boolean prioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         super(prioritizedMessages);
         if (this.prioritizedMessages) {
             this.list= new PrioritizedPendingList();
@@ -91,6 +92,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized void reset() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         iter = list.iterator();
         last = null;
     }
@@ -104,6 +106,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     @Override
     public synchronized boolean tryAddMessageLast(MessageReference node, long maxWait) {
         node.incrementReferenceCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         list.addMessageLast(node);
         return true;
     }
@@ -117,6 +120,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     @Override
     public synchronized void addMessageFirst(MessageReference node) {
         node.incrementReferenceCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         list.addMessageFirst(node);
     }
 
@@ -135,7 +139,9 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized MessageReference next() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2616
         last = iter.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         if (last != null) {
             last.incrementReferenceCount();
         }
@@ -174,6 +180,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized void clear() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2616
         for (Iterator<MessageReference> i = list.iterator(); i.hasNext();) {
             MessageReference ref = i.next();
             ref.decrementReferenceCount();
@@ -184,6 +191,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized void remove(MessageReference node) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         list.remove(node);
         node.decrementReferenceCount();
     }
@@ -197,7 +205,9 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
 
     @Override
     public LinkedList<MessageReference> pageInList(int maxItems) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2626
         LinkedList<MessageReference> result = new LinkedList<MessageReference>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         for (Iterator<MessageReference>i = list.iterator();i.hasNext();) {
             MessageReference ref = i.next();
             ref.incrementReferenceCount();
@@ -212,12 +222,14 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
 
     @Override
     public boolean isTransient() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1449
         return true;
     }
 
 
     @Override
     public void destroy() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2616
         super.destroy();
         clear();
     }

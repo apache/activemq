@@ -79,6 +79,8 @@ public class BrokerServiceTest extends TestCase {
         BrokerService service = new BrokerService();
         service.setPersistent(false);
         service.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1489
+//IC see: https://issues.apache.org/jira/browse/AMQ-1489
         NetworkConnector connector = service.addNetworkConnector("multicast://default?group=group-"+System.currentTimeMillis());
         service.start();
 
@@ -89,6 +91,7 @@ public class BrokerServiceTest extends TestCase {
     
     public void testSystemUsage() {
         BrokerService service = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4798
         assertEquals( 1024 * 1024 * 1024, service.getSystemUsage().getMemoryUsage().getLimit() );
         assertEquals( 1024L * 1024 * 1024 * 50, service.getSystemUsage().getTempUsage().getLimit() );
         assertEquals( 1024L * 1024 * 1024 * 100, service.getSystemUsage().getStoreUsage().getLimit() );
@@ -104,6 +107,7 @@ public class BrokerServiceTest extends TestCase {
         persistenceAdapter.setDirectory(dataDirectory);
         service.setPersistenceAdapter(persistenceAdapter);
         service.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6441
 
         mockStatic(StoreUtil.class);
 

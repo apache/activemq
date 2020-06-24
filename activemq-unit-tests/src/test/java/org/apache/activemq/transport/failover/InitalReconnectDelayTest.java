@@ -45,6 +45,7 @@ public class InitalReconnectDelayTest {
     @Test
     public void testInitialReconnectDelay() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4785
         String uriString = "failover://(tcp://localhost:" +
             broker1.getTransportConnectors().get(0).getConnectUri().getPort() +
             ",tcp://localhost:" +
@@ -81,6 +82,7 @@ public class InitalReconnectDelayTest {
     @Test
     public void testNoSuspendedCallbackOnNoReconnect() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4785
         String uriString = "failover://(tcp://localhost:" +
             broker1.getTransportConnectors().get(0).getConnectUri().getPort() +
             ",tcp://localhost:" +
@@ -147,6 +149,7 @@ public class InitalReconnectDelayTest {
         broker1.setBrokerName("broker1");
         broker1.setDeleteAllMessagesOnStartup(true);
         broker1.setDataDirectory(dataDir);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4785
         broker1.addConnector("tcp://localhost:0");
         broker1.setUseJmx(false);
         broker1.start();
@@ -156,6 +159,7 @@ public class InitalReconnectDelayTest {
         broker2.setBrokerName("broker2");
         broker2.setDataDirectory(dataDir);
         broker2.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4785
         broker2.addConnector("tcp://localhost:0");
         broker2.start();
         broker2.waitUntilStarted();

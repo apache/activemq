@@ -32,6 +32,7 @@ import org.junit.Ignore;
 
 public class JDBCTestMemory extends TestCase {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2563
     ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
     Connection conn;
     Session sess;

@@ -31,6 +31,7 @@ public class ConnectionView implements ConnectionViewMBean {
     private String userName;
 
     public ConnectionView(Connection connection) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1905
         this(connection, null);
     }
 
@@ -83,6 +84,7 @@ public class ConnectionView implements ConnectionViewMBean {
 
     @Override
     public int getDispatchQueueSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3356
         return connection.getDispatchQueueSize();
     }
 
@@ -96,20 +98,27 @@ public class ConnectionView implements ConnectionViewMBean {
 
     @Override
     public String getRemoteAddress() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-753
         return connection.getRemoteAddress();
     }
 
     @Override
     public String getClientId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         return connection.getConnectionId();
     }
 
     public String getConnectionId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1172
+//IC see: https://issues.apache.org/jira/browse/AMQ-1174
+//IC see: https://issues.apache.org/jira/browse/AMQ-1175
         return connection.getConnectionId();
     }
 
     @Override
     public String getUserName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         return userName;
     }
 
@@ -120,6 +129,7 @@ public class ConnectionView implements ConnectionViewMBean {
     @Override
     public ObjectName[] getConsumers() {
         ObjectName[] result = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1905
 
         if (connection != null && managementContext != null) {
 
@@ -169,6 +179,7 @@ public class ConnectionView implements ConnectionViewMBean {
 
     @Override
     public int getActiveTransactionCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5054
         return connection.getActiveTransactionCount();
     }
 

@@ -45,6 +45,7 @@ public abstract class Transaction {
     public static final byte FINISHED_STATE = 3;
     boolean committed = false;
     Throwable rollackOnlyCause = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
 
     private final ArrayList<Synchronization> synchronizations = new ArrayList<Synchronization>();
     private byte state = START_STATE;
@@ -70,6 +71,7 @@ public abstract class Transaction {
     }
 
     public boolean isCommitted() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4535
         return committed;
     }
 
@@ -78,6 +80,7 @@ public abstract class Transaction {
     }
 
     public void addSynchronization(Synchronization r) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
         synchronized (synchronizations) {
             synchronizations.add(r);
         }
@@ -88,6 +91,8 @@ public abstract class Transaction {
 
     public Synchronization findMatching(Synchronization r) {
         int existing = synchronizations.indexOf(r);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         if (existing != -1) {
             return synchronizations.get(existing);
         }
@@ -107,10 +112,12 @@ public abstract class Transaction {
         case IN_USE_STATE:
             break;
         default:
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
             XAException xae = newXAException("Prepare cannot be called now", XAException.XAER_PROTO);
             throw xae;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
         if (isRollbackOnly()) {
             XAException xae = newXAException("COMMIT FAILED: Transaction marked rollback only", XAException.XA_RBROLLBACK);
             TransactionRolledBackException transactionRolledBackException = new TransactionRolledBackException(xae.getLocalizedMessage());
@@ -144,6 +151,7 @@ public abstract class Transaction {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
         return "Local-" + getTransactionId() + "[synchronizations=" + synchronizations + "]";
     }
 
@@ -189,6 +197,7 @@ public abstract class Transaction {
             // I guess this could happen. Post commit task failed
             // to execute properly.
             getLog().warn("PRE COMMIT FAILED: ", e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
             XAException xae = newXAException("PRE COMMIT FAILED", XAException.XAER_RMERR);
             xae.initCause(e);
             throw xae;
@@ -197,12 +206,14 @@ public abstract class Transaction {
 
     protected void doPostCommit() throws XAException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4535
             setCommitted(true);
             fireAfterCommit();
         } catch (Throwable e) {
             // I guess this could happen. Post commit task failed
             // to execute properly.
             getLog().warn("POST COMMIT FAILED: ", e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
             XAException xae = newXAException("POST COMMIT FAILED",  XAException.XAER_RMERR);
             xae.initCause(e);
             throw xae;
@@ -216,6 +227,7 @@ public abstract class Transaction {
     }
 
     public void setRollbackOnly(Throwable cause) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3166
         if (!isRollbackOnly()) {
             getLog().trace("setting rollback only, cause:", cause);
             rollackOnlyCause = cause;

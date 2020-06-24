@@ -53,6 +53,7 @@ public class BrokerTest extends BrokerTestSupport {
     public void testQueueOnlyOnceDeliveryWith2Consumers() throws Exception {
 
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1337
 
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -259,6 +260,7 @@ public class BrokerTest extends BrokerTestSupport {
         
         List<Message> messages = new ArrayList<Message>();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
         for (int i = 0; i < 4; i++) {
             Message m1 = receiveMessage(connection1);
             assertNotNull("m1 is null for index: " + i, m1);
@@ -267,6 +269,7 @@ public class BrokerTest extends BrokerTestSupport {
 
         // a browse is a snapshot - only guarantee to see messages produced before
         // the browser
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
         for (int i = 0; i < 1; i++) {
             Message m1 = messages.get(i);
             Message m2 = receiveMessage(connection2);
@@ -277,6 +280,7 @@ public class BrokerTest extends BrokerTestSupport {
 
         assertNoMessagesLeft(connection1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4181
         connection1.request(closeConnectionInfo(connectionInfo1));
         connection1.stop();
         connection2.request(closeConnectionInfo(connectionInfo2));
@@ -1081,6 +1085,7 @@ public class BrokerTest extends BrokerTestSupport {
         }
 
         // give the async ack a chance to perculate and validate all are currently consumed
+//IC see: https://issues.apache.org/jira/browse/AMQ-2075
         Message msg = receiveMessage(connection1, MAX_NULL_WAIT);
         assertNull("all messages were received " + msg, msg);
         
@@ -1142,6 +1147,7 @@ public class BrokerTest extends BrokerTestSupport {
         // Send another message, connection1 should not get the message.
         connection2.request(createMessage(producerInfo2, destination, deliveryMode));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2075
         Message msg = receiveMessage(connection1,MAX_NULL_WAIT);
         assertNull("no message received from connection1 after session close", msg);
     }
@@ -1191,6 +1197,7 @@ public class BrokerTest extends BrokerTestSupport {
 
         // give the async ack a chance to perculate and validate all are currently consumed
         // use receive rather than poll as broker info is sent async and may still need to be dequeued
+//IC see: https://issues.apache.org/jira/browse/AMQ-2075
         Message result = receiveMessage(connection1, MAX_NULL_WAIT);
         assertNull("no more messages " + result, result);
  
@@ -1200,6 +1207,7 @@ public class BrokerTest extends BrokerTestSupport {
         // Send another message, connection1 should not get the message.
         connection2.request(createMessage(producerInfo2, destination, deliveryMode));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2075
         result = receiveMessage(connection1, MAX_NULL_WAIT);
         assertNull("no message received after close " + result, result);
     }
@@ -1350,6 +1358,7 @@ public class BrokerTest extends BrokerTestSupport {
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
         long lastDeliveredSeq = -1;
         // Get the messages
         for (int i = 0; i < 4; i++) {
@@ -1703,6 +1712,7 @@ public class BrokerTest extends BrokerTestSupport {
     }
 
     public void testGetServices() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2321
         assertTrue(broker.getServices().length != 0);
     }
     

@@ -254,10 +254,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         setTransactionContext(new TransactionContext(connection));
         stats = new JMSSessionStatsImpl(producers, consumers);
         this.connection.asyncSendPacket(info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1053
         setTransformer(connection.getTransformer());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         setBlobTransferPolicy(connection.getBlobTransferPolicy());
         this.connectionExecutor=connection.getExecutor();
         this.executor = new ActiveMQSessionExecutor(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2872
+//IC see: https://issues.apache.org/jira/browse/AMQ-3486
         connection.addSession(this);
         if (connection.isStarted()) {
             start();
@@ -387,6 +391,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
         ActiveMQObjectMessage message = new ActiveMQObjectMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         configureMessage(message);
         message.setObject(object);
         return message;
@@ -495,7 +500,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public BlobMessage createBlobMessage(File file) throws JMSException {
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
         configureMessage(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         message.setBlobUploader(new BlobUploader(getBlobTransferPolicy(), file));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1744
         message.setBlobDownloader(new BlobDownloader((getBlobTransferPolicy())));
         message.setDeletedByBroker(true);
         message.setName(file.getName());
@@ -523,8 +530,17 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public BlobMessage createBlobMessage(InputStream in) throws JMSException {
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         configureMessage(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         message.setBlobUploader(new BlobUploader(getBlobTransferPolicy(), in));
+//IC see: https://issues.apache.org/jira/browse/AMQ-1744
+//IC see: https://issues.apache.org/jira/browse/AMQ-1744
         message.setBlobDownloader(new BlobDownloader(getBlobTransferPolicy()));
         message.setDeletedByBroker(true);
         return message;
@@ -635,7 +651,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void close() throws JMSException {
         if (!closed) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
             if (getTransactionContext().isInXATransaction()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
                 if (!synchronizationRegistered) {
                     synchronizationRegistered = true;
                     getTransactionContext().addSynchronization(new Synchronization() {
@@ -662,12 +680,15 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     private void doClose() throws JMSException {
         dispose();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         RemoveInfo removeCommand = info.createRemoveCommand();
         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
         connection.asyncSendPacket(removeCommand);
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
     final AtomicInteger clearRequestsCounter = new AtomicInteger(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
     void clearMessagesInProgress(AtomicInteger transportInterruptionProcessingComplete) {
         clearRequestsCounter.incrementAndGet();
         executor.clearMessagesInProgress();
@@ -680,14 +701,18 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         // We must be careful though not to allow multiple calls to this method from a
         // connection that is having issue becoming fully established from causing a large
         // build up of scheduled tasks to clear the same consumers over and over.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5003
         if (consumers.isEmpty()) {
             return;
         }
 
         if (clearInProgress.compareAndSet(false, true)) {
             for (final ActiveMQMessageConsumer consumer : consumers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2693
                 consumer.inProgressClearRequired();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
                 transportInterruptionProcessingComplete.incrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3714
                 try {
                     connection.getScheduler().executeAfterDelay(new Runnable() {
                         @Override
@@ -726,8 +751,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
                 for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
                     ActiveMQMessageConsumer consumer = iter.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2195
                     consumer.setFailureError(connection.getFirstFailureError());
                     consumer.dispose();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
                     lastDeliveredSequenceId = Math.max(lastDeliveredSequenceId, consumer.getLastDeliveredSequenceId());
                 }
                 consumers.clear();
@@ -757,6 +784,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Checks that the session is not closed then configures the message
      */
     protected void configureMessage(ActiveMQMessage message) throws IllegalStateException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         checkClosed();
         message.setConnection(connection);
     }
@@ -779,6 +807,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @return true if the session is closed, false otherwise.
      */
     public boolean isClosed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3430
         return closed;
     }
 
@@ -862,6 +891,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         // only check for closed if we set a new listener, as we allow to clear
         // the listener, such as when an application is shutting down, and is
         // no longer using a message listener on this session
+//IC see: https://issues.apache.org/jira/browse/AMQ-3988
         if (listener != null) {
             checkClosed();
         }
@@ -885,6 +915,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             final MessageDispatch md = messageDispatch;
 
             // subset of org.apache.activemq.ActiveMQMessageConsumer.createActiveMQMessage
+//IC see: https://issues.apache.org/jira/browse/AMQ-7464
             final ActiveMQMessage message = (ActiveMQMessage)md.getMessage().copy();
             if (message.getDataStructureType()==CommandTypes.ACTIVEMQ_BLOB_MESSAGE) {
                 ((ActiveMQBlobMessage)message).setBlobDownloader(new BlobDownloader(getBlobTransferPolicy()));
@@ -894,8 +925,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 ((ActiveMQObjectMessage)message).setTrustedPackages(getConnection().getTrustedPackages());
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
             MessageAck earlyAck = null;
             if (message.isExpired()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5089
                 earlyAck = new MessageAck(md, MessageAck.EXPIRED_ACK_TYPE, 1);
                 earlyAck.setFirstMessageId(message.getMessageId());
             } else if (connection.isDuplicate(ActiveMQSession.this, message)) {
@@ -915,6 +948,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1732
             if (isClientAcknowledge()||isIndividualAcknowledge()) {
                 message.setAcknowledgeCallback(new Callback() {
                     @Override
@@ -929,14 +963,18 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
             md.setDeliverySequenceId(getNextDeliveryId());
             lastDeliveredSequenceId = message.getMessageId().getBrokerSequenceId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
 
             final MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4634
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5400
             final AtomicBoolean afterDeliveryError = new AtomicBoolean(false);
             /*
             * The redelivery guard is to allow the endpoint lifecycle to complete before the messsage is dispatched.
             * We dont want the after deliver being called after the redeliver as it may cause some weird stuff.
             * */
+//IC see: https://issues.apache.org/jira/browse/AMQ-5400
             synchronized (redeliveryGuard) {
                 try {
                     ack.setFirstMessageId(md.getMessage().getMessageId());
@@ -946,6 +984,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                         getTransactionContext().addSynchronization(new Synchronization() {
 
                             final int clearRequestCount = (clearRequestsCounter.get() == Integer.MAX_VALUE ? clearRequestsCounter.incrementAndGet() : clearRequestsCounter.get());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
 
                             @Override
                             public void beforeEnd() throws Exception {
@@ -981,6 +1020,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                 RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
                                 int redeliveryCounter = md.getMessage().getRedeliveryCounter();
                                 if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
+//IC see: https://issues.apache.org/jira/browse/AMQ-5674
                                         && redeliveryCounter >= redeliveryPolicy.getMaximumRedeliveries()) {
                                     // We need to NACK the messages so that they get
                                     // sent to the
@@ -988,18 +1028,22 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                     // Acknowledge the last message.
                                     MessageAck ack = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
                                     ack.setFirstMessageId(md.getMessage().getMessageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4634
                                     ack.setPoisonCause(new Throwable("Exceeded ra redelivery policy limit:" + redeliveryPolicy));
                                     LOG.trace("Exceeded redelivery with count: {}, Ack: {}", redeliveryCounter, ack);
                                     asyncSendPacket(ack);
 
                                 } else {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1038
                                     MessageAck ack = new MessageAck(md, MessageAck.REDELIVERED_ACK_TYPE, 1);
                                     ack.setFirstMessageId(md.getMessage().getMessageId());
                                     asyncSendPacket(ack);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4634
 
                                     // Figure out how long we should wait to resend
                                     // this message.
+//IC see: https://issues.apache.org/jira/browse/AMQ-1847
                                     long redeliveryDelay = redeliveryPolicy.getInitialRedeliveryDelay();
                                     for (int i = 0; i < redeliveryCounter; i++) {
                                         redeliveryDelay = redeliveryPolicy.getNextRedeliveryDelay(redeliveryDelay);
@@ -1015,12 +1059,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                     }
 
                                     connection.getScheduler().executeAfterDelay(new Runnable() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3714
 
                                         @Override
                                         public void run() {
                                             /*
                                             * wait for the first delivery to be complete, i.e. after delivery has been called.
                                             * */
+//IC see: https://issues.apache.org/jira/browse/AMQ-5400
                                             synchronized (redeliveryGuard) {
                                                 /*
                                                 * If its non blocking then we can just dispatch in a new session.
@@ -1045,6 +1091,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                         }
                                     }, redeliveryDelay);
                                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5674
                                 md.getMessage().onMessageRolledBack();
                             }
                         });
@@ -1052,14 +1099,17 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
                     LOG.trace("{} onMessage({})", this, message.getMessageId());
                     messageListener.onMessage(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4634
 
                 } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
                     if (!isClosed()) {
                         LOG.error("{} error dispatching message: {} ", this, message.getMessageId(), e);
                     }
 
                     if (getTransactionContext() != null && getTransactionContext().isInXATransaction()) {
                         LOG.debug("Marking transaction: {} rollbackOnly", getTransactionContext());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6548
                         getTransactionContext().setRollbackOnly(true);
                     }
 
@@ -1075,6 +1125,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                         try {
                             asyncSendPacket(ack);
                         } catch (Throwable e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
                             connection.onClientInternalException(e);
                         }
                     }
@@ -1086,6 +1137,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     } catch (Throwable t) {
                         LOG.debug("Unable to call after delivery", t);
                         afterDeliveryError.set(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5400
                         throw new RuntimeException(t);
                     }
                 }
@@ -1129,6 +1181,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             return customDestination.createProducer(this);
         }
         int timeSendOut = connection.getSendTimeout();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
         return new ActiveMQMessageProducer(this, getNextProducerId(), ActiveMQMessageTransformation.transformDestination(destination),timeSendOut);
     }
 
@@ -1321,6 +1374,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
         ActiveMQDestination activemqDestination = ActiveMQMessageTransformation.transformDestination(destination);
         return new ActiveMQMessageConsumer(this, getNextConsumerId(), activemqDestination, null, messageSelector,
+//IC see: https://issues.apache.org/jira/browse/AMQ-1646
                 prefetch, prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, isAsyncDispatch(), messageListener);
     }
 
@@ -1347,6 +1401,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public Queue createQueue(String queueName) throws JMSException {
         checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1142
         if (queueName.startsWith(ActiveMQDestination.TEMP_DESTINATION_NAME_PREFIX)) {
             return new ActiveMQTempQueue(queueName);
         }
@@ -1376,6 +1431,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public Topic createTopic(String topicName) throws JMSException {
         checkClosed();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1142
         if (topicName.startsWith(ActiveMQDestination.TEMP_DESTINATION_NAME_PREFIX)) {
             return new ActiveMQTempTopic(topicName);
         }
@@ -1619,6 +1675,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             return customDestination.createSender(this);
         }
         int timeSendOut = connection.getSendTimeout();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
         return new ActiveMQQueueSender(this, ActiveMQMessageTransformation.transformDestination(queue),timeSendOut);
     }
 
@@ -1719,6 +1776,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             return customDestination.createPublisher(this);
         }
         int timeSendOut = connection.getSendTimeout();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
         return new ActiveMQTopicPublisher(this, ActiveMQMessageTransformation.transformDestination(topic),timeSendOut);
     }
 
@@ -1752,7 +1810,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         try {
             executor.execute(messageDispatch);
         } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
             Thread.currentThread().interrupt();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
             connection.onClientInternalException(e);
         }
     }
@@ -1909,14 +1970,17 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
                         MemoryUsage producerWindow, int sendTimeout, AsyncCallback onComplete) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3769
 
         checkClosed();
         if (destination.isTemporary() && connection.isDeleted(destination)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1651
             throw new InvalidDestinationException("Cannot publish to a deleted Destination: " + destination);
         }
         synchronized (sendMutex) {
             // tell the Broker we are about to start a new transaction
             doStartTransaction();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7485
             if (transactionContext.isRollbackOnly()) {
                 throw new IllegalStateException("transaction marked rollback only");
             }
@@ -1924,6 +1988,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             long sequenceNumber = producer.getMessageSequence();
 
             //Set the "JMS" header fields on the original message, see 1.1 spec section 3.4.11
+//IC see: https://issues.apache.org/jira/browse/AMQ-2029
             message.setJMSDeliveryMode(deliveryMode);
             long expiration = 0L;
             if (!producer.getDisableMessageTimestamp()) {
@@ -1950,17 +2015,21 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             }
             //clear the brokerPath in case we are re-sending this message
             msg.setBrokerPath(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1661
 
             msg.setTransactionId(txid);
             if (connection.isCopyMessageOnSend()) {
                 msg = (ActiveMQMessage)msg.copy();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1140
             msg.setConnection(connection);
             msg.onSend();
             msg.setProducerId(msg.getMessageId().getProducerId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
             if (LOG.isTraceEnabled()) {
                 LOG.trace(getSessionId() + " sending message: " + msg);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3769
             if (onComplete==null && sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
                 this.connection.asyncSendPacket(msg);
                 if (producerWindow != null) {
@@ -1975,6 +2044,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     producerWindow.increaseUsage(size);
                 }
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3769
                 if (sendTimeout > 0 && onComplete==null) {
                     this.connection.syncSendPacket(msg,sendTimeout);
                 }else {
@@ -2002,6 +2072,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @return true - if there are unconsumed messages.
      */
     public boolean hasUncomsumedMessages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-662
         return executor.hasUncomsumedMessages();
     }
 
@@ -2042,6 +2113,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     public boolean isIndividualAcknowledge(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-1732
+//IC see: https://issues.apache.org/jira/browse/AMQ-3486
         return acknowledgementMode == ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE;
     }
 
@@ -2155,6 +2228,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     public BlobTransferPolicy getBlobTransferPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return blobTransferPolicy;
     }
 
@@ -2172,6 +2246,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7000
         return "ActiveMQSession {id=" + info.getSessionId() + ",started=" + started.get() + ",closed=" + closed + "} " + sendMutex;
     }
 
@@ -2181,6 +2256,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
         for (Iterator<ActiveMQMessageConsumer> i = consumers.iterator(); i.hasNext();) {
             ActiveMQMessageConsumer consumer = i.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4791
             if (consumer.hasMessageListener()) {
                 throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
             }
@@ -2235,10 +2311,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @return lastDeliveredSequenceId
      */
     public long getLastDeliveredSequenceId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         return lastDeliveredSequenceId;
     }
 
     protected void sendAck(MessageAck ack) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1735
         sendAck(ack,false);
     }
 
@@ -2251,6 +2329,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     protected Scheduler getScheduler() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3714
         return this.connection.getScheduler();
     }
 

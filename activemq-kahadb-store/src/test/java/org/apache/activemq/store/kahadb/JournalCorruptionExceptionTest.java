@@ -69,6 +69,7 @@ public class JournalCorruptionExceptionTest {
     public static Iterable<Object[]> parameters() {
         // corruption can be valid record type values
         return Arrays.asList(new Object[][]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-6670
                 {Byte.valueOf("0"), 6},
                 {Byte.valueOf("1"), 8},
                 {Byte.valueOf("-1"), 6},
@@ -94,6 +95,7 @@ public class JournalCorruptionExceptionTest {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setUseCache(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6670
         defaultEntry.setExpireMessagesPeriod(0);
         policyMap.setDefaultEntry(defaultEntry);
         broker.setDestinationPolicy(policyMap);
@@ -148,6 +150,7 @@ public class JournalCorruptionExceptionTest {
 
         RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6670
         final ByteSequence header = new ByteSequence(Journal.BATCH_CONTROL_RECORD_HEADER);
         byte data[] = new byte[1024 * 20];
         ByteSequence bs = new ByteSequence(data, 0, randomAccessFile.read(data, 0, data.length));

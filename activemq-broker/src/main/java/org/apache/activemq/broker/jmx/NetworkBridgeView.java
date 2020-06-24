@@ -28,6 +28,7 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
     private List<NetworkDestinationView> networkDestinationViewList = new CopyOnWriteArrayList<NetworkDestinationView>();
 
     public NetworkBridgeView(NetworkBridge bridge) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
         this.bridge = bridge;
     }
 
@@ -59,6 +60,7 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
 
     @Override
     public String getRemoteBrokerId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4825
         return bridge.getRemoteBrokerId();
     }
 
@@ -79,11 +81,13 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
 
     @Override
     public long getReceivedCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6129
         return bridge.getNetworkBridgeStatistics().getReceivedCount().getCount();
     }
 
     @Override
     public boolean isCreatedByDuplex() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3109
         return createByDuplex;
     }
 
@@ -93,7 +97,9 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
 
     @Override
     public void resetStats(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         bridge.resetStats();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         for (NetworkDestinationView networkDestinationView:networkDestinationViewList){
             networkDestinationView.resetStats();
         }

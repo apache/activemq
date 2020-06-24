@@ -59,6 +59,7 @@ public class ActiveMQJmsHeaderRouteTest extends CamelTestSupport {
         template.sendBodyAndHeader("activemq:test.a", expectedBody, "cheese", 123);
 
         resultEndpoint.assertIsSatisfied();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3967
 
         List<Exchange> list = resultEndpoint.getReceivedExchanges();
         Exchange exchange = list.get(0);
@@ -71,6 +72,7 @@ public class ActiveMQJmsHeaderRouteTest extends CamelTestSupport {
     protected CamelContext createCamelContext() throws Exception {
         CamelContext camelContext = super.createCamelContext();
         camelContext.setTracing(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3960
 
         // START SNIPPET: example
         camelContext.addComponent("activemq", activeMQComponent("vm://localhost?broker.persistent=false"));
@@ -85,6 +87,7 @@ public class ActiveMQJmsHeaderRouteTest extends CamelTestSupport {
                 from("activemq:test.a").process(new Processor() {
                     public void process(Exchange exchange) throws Exception {
                         // lets set the custom JMS headers using the Camel API
+//IC see: https://issues.apache.org/jira/browse/AMQ-3967
                         exchange.getIn().setHeader("JMSReplyTo", replyQueue);
                         exchange.getIn().setHeader("JMSCorrelationID", correlationID);
                         exchange.getIn().setHeader("JMSType", messageType);

@@ -65,6 +65,7 @@ public class DestinationRemoveRestartTest extends CombinationTestSupport {
         
         ActiveMQDestination amqDestination = 
             ActiveMQDestination.createDestination(destinationName, destinationType);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         broker.getRegionBroker().addDestination(broker.getAdminConnectionContext(), amqDestination,true);
         
         final ActiveMQDestination[] list = broker.getRegionBroker().getDestinations();

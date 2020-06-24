@@ -109,6 +109,7 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
 
     @Override
     public void removeAllJobsAtScheduledTime(String time) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         long removeAtTime = JobSupport.getDataTime(time);
         this.jobScheduler.remove(removeAtTime);
     }

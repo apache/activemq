@@ -30,6 +30,7 @@ public class StompWireFormatFactory implements WireFormatFactory {
     @Override
     public WireFormat createWireFormat() {
         StompWireFormat wireFormat = new StompWireFormat();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
 
         wireFormat.setMaxDataLength(getMaxDataLength());
         wireFormat.setMaxFrameSize(getMaxFrameSize());

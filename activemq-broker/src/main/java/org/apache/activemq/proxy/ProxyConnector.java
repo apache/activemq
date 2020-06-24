@@ -58,6 +58,7 @@ public class ProxyConnector implements Service {
         this.getServer().setAcceptListener(new TransportAcceptListener() {
             @Override
             public void onAccept(Transport localTransport) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4889
                 ProxyConnection connection = null;
                 try {
                     Transport remoteTransport = createRemoteTransport(localTransport);
@@ -143,13 +144,16 @@ public class ProxyConnector implements Service {
         if (bind == null) {
             throw new IllegalArgumentException("You must specify either a server or the bind property");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         return TransportFactory.bind(bind);
     }
 
     private Transport createRemoteTransport(final Transport local) throws Exception {
         Transport transport = TransportFactory.compositeConnect(remote);
         CompositeTransport ct = transport.narrow(CompositeTransport.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2767
         if (ct != null && localUri != null && proxyToLocalBroker) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4889
             ct.add(false, new URI[] { localUri });
         }
 
@@ -159,6 +163,7 @@ public class ProxyConnector implements Service {
             public void stop() throws Exception {
                 LOG.info("Stopping proxy.");
                 super.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4889
                 ProxyConnection dummy = new ProxyConnection(local, this);
                 LOG.debug("Removing proxyConnection {}", dummy.toString());
                 connections.remove(dummy);
@@ -170,6 +175,7 @@ public class ProxyConnector implements Service {
     public String getName() {
         if (name == null) {
             if (server != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-522
                 name = server.getConnectURI().toString();
             } else {
                 name = "proxy";
@@ -183,6 +189,7 @@ public class ProxyConnector implements Service {
     }
 
     public boolean isProxyToLocalBroker() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2767
         return proxyToLocalBroker;
     }
 
@@ -191,6 +198,7 @@ public class ProxyConnector implements Service {
     }
 
     protected Integer getConnectionCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4889
         return connections.size();
     }
 }

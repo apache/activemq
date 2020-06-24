@@ -63,6 +63,7 @@ public class JMSClientSimpleAuthTest {
 
     @After
     public void stopBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         if (connection != null) {
             try {
                 connection.close();
@@ -88,6 +89,9 @@ public class JMSClientSimpleAuthTest {
             connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "", "");
             connection.start();
             fail("Expected JMSException");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
         } catch (JMSSecurityException ex) {
             LOG.debug("Failed to authenticate connection with no user / password.");
         }
@@ -96,6 +100,7 @@ public class JMSClientSimpleAuthTest {
     @Test(timeout = 10000)
     public void testUnknownUser() throws Exception {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
             connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "nosuchuser", "blah");
             connection.start();
             fail("Expected JMSException");
@@ -135,8 +140,10 @@ public class JMSClientSimpleAuthTest {
 
     @Test(timeout = 30000)
     public void testSendReceive() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "user", "userPassword");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5593
         Queue queue = session.createQueue("USERS.txQueue");
         MessageProducer p = session.createProducer(queue);
         TextMessage message = null;
@@ -158,6 +165,7 @@ public class JMSClientSimpleAuthTest {
 
     @Test(timeout = 30000)
     public void testProducerNotAuthorized() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6015
         connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "guest", "guestPassword");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue("USERS.txQueue");
@@ -188,6 +196,7 @@ public class JMSClientSimpleAuthTest {
     public void testCreateTemporaryQueueNotAuthorized() throws JMSException {
         connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "user", "userPassword");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5593
 
         try {
             session.createTemporaryQueue();
@@ -202,6 +211,8 @@ public class JMSClientSimpleAuthTest {
 
     @Test(timeout = 30000)
     public void testCreateTemporaryTopicNotAuthorized() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "user", "userPassword");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -228,6 +239,7 @@ public class JMSClientSimpleAuthTest {
     public void startBroker() throws Exception {
         brokerService = createBroker();
         brokerService.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         amqpURI = brokerService.getTransportConnectorByName("amqp").getPublishableConnectURI();
         brokerService.waitUntilStarted();
     }

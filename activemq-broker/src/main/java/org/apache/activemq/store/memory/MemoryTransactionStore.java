@@ -92,6 +92,7 @@ public class MemoryTransactionStore implements TransactionStore {
          * @throws IOException
          */
         public void commit() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1886
             ConnectionContext ctx = new ConnectionContext();
             persistenceAdapter.beginTransaction(ctx);
             try {
@@ -108,7 +109,9 @@ public class MemoryTransactionStore implements TransactionStore {
                 }
 
                 persistenceAdapter.commitTransaction(ctx);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
             } catch (IOException e) {
                 persistenceAdapter.rollbackTransaction(ctx);
                 throw e;
@@ -120,9 +123,12 @@ public class MemoryTransactionStore implements TransactionStore {
         Message getMessage();
 
         MessageStore getMessageStore();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
 
         void run(ConnectionContext context) throws IOException;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
         void setMessageStore(MessageStore messageStore);
     }
 
@@ -131,17 +137,22 @@ public class MemoryTransactionStore implements TransactionStore {
 
         void run(ConnectionContext context) throws IOException;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         MessageStore getMessageStore();
     }
 
     public MemoryTransactionStore(PersistenceAdapter persistenceAdapter) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
         this.persistenceAdapter = persistenceAdapter;
     }
 
     public MessageStore proxy(MessageStore messageStore) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
         ProxyMessageStore proxyMessageStore = new ProxyMessageStore(messageStore) {
             @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5665
                 MemoryTransactionStore.this.addMessage(context, getDelegate(), send);
             }
 
@@ -153,6 +164,7 @@ public class MemoryTransactionStore implements TransactionStore {
             @Override
             public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
                 MemoryTransactionStore.this.addMessage(context, getDelegate(), message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
                 return new InlineListenableFuture();
             }
 
@@ -172,6 +184,8 @@ public class MemoryTransactionStore implements TransactionStore {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
             }
         };
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
         onProxyQueueStore(proxyMessageStore);
         return proxyMessageStore;
     }
@@ -180,9 +194,11 @@ public class MemoryTransactionStore implements TransactionStore {
     }
 
     public TopicMessageStore proxy(TopicMessageStore messageStore) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         ProxyTopicMessageStore proxyTopicMessageStore = new ProxyTopicMessageStore(messageStore) {
             @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5665
                 MemoryTransactionStore.this.addMessage(context, getDelegate(), send);
             }
 
@@ -194,6 +210,7 @@ public class MemoryTransactionStore implements TransactionStore {
             @Override
             public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
                 MemoryTransactionStore.this.addMessage(context, getDelegate(), message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
                 return new InlineListenableFuture();
             }
 
@@ -215,10 +232,12 @@ public class MemoryTransactionStore implements TransactionStore {
 
             @Override
             public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId, MessageAck ack)
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
                 throws IOException {
                 MemoryTransactionStore.this.acknowledge((TopicMessageStore) getDelegate(), clientId, subscriptionName, messageId, ack);
             }
         };
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         onProxyTopicStore(proxyTopicMessageStore);
         return proxyTopicMessageStore;
     }
@@ -241,6 +260,7 @@ public class MemoryTransactionStore implements TransactionStore {
     public Tx getTx(Object txid) {
         Tx tx = inflightTransactions.get(txid);
         if (tx == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6849
             synchronized (inflightTransactions) {
                 tx = inflightTransactions.get(txid);
                 if ( tx == null) {
@@ -253,6 +273,7 @@ public class MemoryTransactionStore implements TransactionStore {
     }
 
     public Tx getPreparedTx(TransactionId txid) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         Tx tx = preparedTransactions.get(txid);
         if (tx == null) {
             tx = new Tx();
@@ -268,14 +289,18 @@ public class MemoryTransactionStore implements TransactionStore {
         }
         Tx tx;
         if (wasPrepared) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             tx = preparedTransactions.get(txid);
         } else {
             tx = inflightTransactions.remove(txid);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2868
         if (tx != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2868
             tx.commit();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         if (wasPrepared) {
             preparedTransactions.remove(txid);
         }
@@ -310,7 +335,9 @@ public class MemoryTransactionStore implements TransactionStore {
             for (Iterator<TransactionId> iter = preparedTransactions.keySet().iterator(); iter.hasNext();) {
                 Object txid = iter.next();
                 Tx tx = preparedTransactions.get(txid);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
                 listener.recover((XATransactionId) txid, tx.getMessages(), tx.getAcks());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                 onRecovered(tx);
             }
         } finally {
@@ -326,6 +353,7 @@ public class MemoryTransactionStore implements TransactionStore {
      * @throws IOException
      */
     void addMessage(final ConnectionContext context, final MessageStore destination, final Message message) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5665
 
         if (doingRecover) {
             return;
@@ -336,6 +364,8 @@ public class MemoryTransactionStore implements TransactionStore {
             tx.add(new AddMessageCommand() {
                 @SuppressWarnings("unused")
                 MessageStore messageStore = destination;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
 
                 @Override
                 public Message getMessage() {
@@ -344,21 +374,26 @@ public class MemoryTransactionStore implements TransactionStore {
 
                 @Override
                 public MessageStore getMessageStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                     return destination;
                 }
 
                 @Override
                 public void run(ConnectionContext ctx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1886
                     destination.addMessage(ctx, message);
                 }
 
                 @Override
                 public void setMessageStore(MessageStore messageStore) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
                     this.messageStore = messageStore;
                 }
 
             });
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5665
             destination.addMessage(context, message);
         }
     }
@@ -382,11 +417,13 @@ public class MemoryTransactionStore implements TransactionStore {
 
                 @Override
                 public void run(ConnectionContext ctx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1886
                     destination.removeMessage(ctx, ack);
                 }
 
                 @Override
                 public MessageStore getMessageStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                     return destination;
                 }
             });
@@ -396,7 +433,9 @@ public class MemoryTransactionStore implements TransactionStore {
     }
 
     public void acknowledge(final TopicMessageStore destination, final String clientId, final String subscriptionName, final MessageId messageId,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
         final MessageAck ack) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3238
         if (doingRecover) {
             return;
         }
@@ -416,6 +455,7 @@ public class MemoryTransactionStore implements TransactionStore {
 
                 @Override
                 public MessageStore getMessageStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                     return destination;
                 }
             });

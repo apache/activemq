@@ -143,6 +143,7 @@ public class JournalMetaDataCheckpointTest {
         // verify metadata is correct on disk
         final MessageDatabase.Metadata[] fromDiskMetaData = new MessageDatabase.Metadata[1];
         final KahaDBStore messageStore = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6652
 
         // need to avoid cache and in-progress writes of existing pageFile
         PageFile fromDiskPageFile = new PageFile(messageStore.getIndexDirectory(), "db");

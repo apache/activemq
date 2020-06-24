@@ -104,10 +104,13 @@ public class ManagedRegionBroker extends RegionBroker {
     private final long mbeanTimeout;
 
     public ManagedRegionBroker(BrokerService brokerService, ManagementContext context, ObjectName brokerObjectName, TaskRunnerFactory taskRunnerFactory, SystemUsage memoryManager,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
                                DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor,Scheduler scheduler,ThreadPoolExecutor executor) throws IOException {
         super(brokerService, taskRunnerFactory, memoryManager, destinationFactory, destinationInterceptor,scheduler,executor);
         this.managementContext = context;
         this.brokerObjectName = brokerObjectName;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3877
         this.mbeanTimeout = brokerService.getMbeanInvocationTimeout();
         this.asyncInvokeService = mbeanTimeout > 0 ? executor : null;;
     }
@@ -143,6 +146,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     @Override
     protected Region createTempQueueRegion(SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4091
         return new ManagedTempQueueRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
@@ -200,10 +204,13 @@ public class ManagedRegionBroker extends RegionBroker {
                 info.setSubscriptionName(sub.getConsumerInfo().getSubscriptionName());
                 info.setDestination(sub.getConsumerInfo().getDestination());
                 info.setSelector(sub.getSelector());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3442
+//IC see: https://issues.apache.org/jira/browse/AMQ-3459
                 addInactiveSubscription(key, info, sub);
             } else {
                 String userName = brokerService.isPopulateUserNameInMBeans() ? context.getUserName() : null;
                 if (sub.getConsumerInfo().isDurable()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
                     view = new DurableSubscriptionView(this, brokerService, context.getClientId(), userName, sub);
                 } else {
                     if (sub instanceof TopicSubscription) {
@@ -224,6 +231,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4754
         super.addConnection(context, info);
         this.contextBroker.getBrokerService().incrementCurrentConnections();
         this.contextBroker.getBrokerService().incrementTotalConnections();
@@ -237,6 +245,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3013
         Subscription sub = super.addConsumer(context, info);
         SubscriptionKey subscriptionKey = new SubscriptionKey(sub.getContext().getClientId(), sub.getConsumerInfo().getSubscriptionName());
         ObjectName inactiveName = subscriptionKeys.get(subscriptionKey);
@@ -263,6 +272,7 @@ public class ManagedRegionBroker extends RegionBroker {
         super.addProducer(context, info);
         String connectionClientId = context.getClientId();
         ObjectName objectName = BrokerMBeanSupport.createProducerName(brokerObjectName, context.getClientId(), info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         String userName = brokerService.isPopulateUserNameInMBeans() ? context.getUserName() : null;
         ProducerView view = new ProducerView(info, connectionClientId, userName, this);
         registerProducer(objectName, info.getDestination(), view);
@@ -277,6 +287,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     @Override
     public void send(ProducerBrokerExchange exchange, Message message) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         if (exchange != null && exchange.getProducerState() != null && exchange.getProducerState().getInfo() != null) {
             ProducerInfo info = exchange.getProducerState().getInfo();
             if (info.getDestination() == null && info.getProducerId() != null) {
@@ -298,6 +309,7 @@ public class ManagedRegionBroker extends RegionBroker {
         if (name != null) {
             try {
                 SubscriptionKey subscriptionKey = new SubscriptionKey(sub.getContext().getClientId(), sub.getConsumerInfo().getSubscriptionName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5783
                 ObjectName inactiveName = subscriptionKeys.remove(subscriptionKey);
                 if (inactiveName != null) {
                     inactiveDurableTopicSubscribers.remove(inactiveName);
@@ -335,6 +347,8 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected void unregisterDestination(ObjectName key) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3737
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
         DestinationView view = removeAndRemember(topics, key, null);
         view = removeAndRemember(queues, key, view);
         view = removeAndRemember(temporaryQueues, key, view);
@@ -347,6 +361,7 @@ public class ManagedRegionBroker extends RegionBroker {
                 LOG.debug("Failure reason: ", e);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
         if (view != null) {
             key = view.getSlowConsumerStrategy();
             if (key!= null && registeredMBeans.remove(key)) {
@@ -362,7 +377,9 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected void registerProducer(ObjectName key, ActiveMQDestination dest, ProducerView view) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         if (dest != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
             if (dest.isQueue()) {
                 if (dest.isTemporary()) {
                     temporaryQueueProducers.put(key, view);
@@ -376,6 +393,7 @@ public class ManagedRegionBroker extends RegionBroker {
                     topicProducers.put(key, view);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         } else {
             dynamicDestinationProducers.put(key, view);
         }
@@ -395,6 +413,7 @@ public class ManagedRegionBroker extends RegionBroker {
         topicProducers.remove(key);
         temporaryQueueProducers.remove(key);
         temporaryTopicProducers.remove(key);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         dynamicDestinationProducers.remove(key);
         if (registeredMBeans.remove(key)) {
             try {
@@ -411,6 +430,8 @@ public class ManagedRegionBroker extends RegionBroker {
         if (candidate != null && view == null) {
             view = candidate;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3737
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
         return candidate != null ? candidate : view;
     }
 
@@ -433,7 +454,9 @@ public class ManagedRegionBroker extends RegionBroker {
                         ObjectName inactiveName = subscriptionKeys.get(subscriptionKey);
                         if (inactiveName != null) {
                             inactiveDurableTopicSubscribers.remove(inactiveName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-585
                             registeredMBeans.remove(inactiveName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3081
                             managementContext.unregisterMBean(inactiveName);
                         }
                     } catch (Throwable e) {
@@ -446,7 +469,12 @@ public class ManagedRegionBroker extends RegionBroker {
         }
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
             if (AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key) != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-585
+//IC see: https://issues.apache.org/jira/browse/AMQ-585
                 registeredMBeans.add(key);
             }
         } catch (Throwable e) {
@@ -472,12 +500,15 @@ public class ManagedRegionBroker extends RegionBroker {
         if (view != null) {
             // need to put this back in the inactive list
             SubscriptionKey subscriptionKey = new SubscriptionKey(view.getClientId(), view.getSubscriptionName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3013
             if (addToInactive) {
                 SubscriptionInfo info = new SubscriptionInfo();
                 info.setClientId(subscriptionKey.getClientId());
                 info.setSubscriptionName(subscriptionKey.getSubscriptionName());
                 info.setDestination(new ActiveMQTopic(view.getDestinationName()));
                 info.setSelector(view.getSelector());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3442
+//IC see: https://issues.apache.org/jira/browse/AMQ-3459
                 addInactiveSubscription(subscriptionKey, info, (brokerService.isKeepDurableSubsActive() ? view.subscription : null));
             }
         }
@@ -485,9 +516,12 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected void buildExistingSubscriptions() throws Exception {
         Map<SubscriptionKey, SubscriptionInfo> subscriptions = new HashMap<SubscriptionKey, SubscriptionInfo>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         Set<ActiveMQDestination> destinations = destinationFactory.getDestinations();
         if (destinations != null) {
             for (ActiveMQDestination dest : destinations) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2691
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
                 if (dest.isTopic()) {
                     SubscriptionInfo[] infos = destinationFactory.getAllDurableSubscriptions((ActiveMQTopic)dest);
                     if (infos != null) {
@@ -504,6 +538,7 @@ public class ManagedRegionBroker extends RegionBroker {
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         for (Map.Entry<SubscriptionKey, SubscriptionInfo> entry : subscriptions.entrySet()) {
             addInactiveSubscription(entry.getKey(), entry.getValue(), null);
         }
@@ -521,9 +556,12 @@ public class ManagedRegionBroker extends RegionBroker {
             ConsumerInfo offlineConsumerInfo = subscription != null ? subscription.getConsumerInfo() : ((TopicRegion)getTopicRegion()).createInactiveConsumerInfo(info);
             ObjectName objectName = BrokerMBeanSupport.createSubscriptionName(brokerObjectName, info.getClientId(), offlineConsumerInfo);
             SubscriptionView view = new InactiveDurableSubscriptionView(this, brokerService, key.getClientId(), info, subscription);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
 
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
                 if (AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName) != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-585
                     registeredMBeans.add(objectName);
                 }
             } catch (Throwable e) {
@@ -539,6 +577,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     public CompositeData[] browse(SubscriptionView view) throws OpenDataException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5938
         Message[] messages = getSubscriberMessages(view);
         CompositeData c[] = new CompositeData[messages.length];
         for (int i = 0; i < c.length; i++) {
@@ -553,6 +592,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     public TabularData browseAsTable(SubscriptionView view) throws OpenDataException {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(ActiveMQMessage.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5938
         Message[] messages = getSubscriberMessages(view);
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("MessageList", "MessageList", ct, new String[] {"JMSMessageID"});
@@ -566,6 +606,7 @@ public class ManagedRegionBroker extends RegionBroker {
     public void remove(SubscriptionView view, String messageId)  throws Exception {
         ActiveMQDestination destination = getTopicDestination(view);
         if (destination != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5938
             final Destination topic = getTopicRegion().getDestinationMap().get(destination);
             final MessageAck messageAck = new MessageAck();
             messageAck.setMessageID(new MessageId(messageId));
@@ -589,6 +630,7 @@ public class ManagedRegionBroker extends RegionBroker {
     protected Message[] getSubscriberMessages(SubscriptionView view) {
         ActiveMQDestination destination = getTopicDestination(view);
         if (destination != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5938
             Destination topic = getTopicRegion().getDestinationMap().get(destination);
             return topic.browse();
 
@@ -609,6 +651,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     private ObjectName[] onlyNonSuppressed (Set<ObjectName> set){
+//IC see: https://issues.apache.org/jira/browse/AMQ-6175
         List<ObjectName> nonSuppressed = new ArrayList<ObjectName>();
         for(ObjectName key : set){
             if (managementContext.isAllowedToRegister(key)){
@@ -709,6 +752,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected ObjectName[] getTopicProducers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         Set<ObjectName> set = topicProducers.keySet();
         return set.toArray(new ObjectName[set.size()]);
     }
@@ -745,6 +789,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected ObjectName[] getDynamicDestinationProducers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         Set<ObjectName> set = dynamicDestinationProducers.keySet();
         return set.toArray(new ObjectName[set.size()]);
     }
@@ -767,6 +812,7 @@ public class ManagedRegionBroker extends RegionBroker {
             objectName = BrokerMBeanSupport.createAbortSlowConsumerStrategyName(brokerObjectName, strategy);
             if (!registeredMBeans.contains(objectName))  {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
                 AbortSlowConsumerStrategyView view = null;
                 if (strategy instanceof AbortSlowAckConsumerStrategy) {
                     view = new AbortSlowAckConsumerStrategyView(this, (AbortSlowAckConsumerStrategy) strategy);
@@ -774,6 +820,7 @@ public class ManagedRegionBroker extends RegionBroker {
                     view = new AbortSlowConsumerStrategyView(this, strategy);
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
                 if (AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName) != null) {
                     registeredMBeans.add(objectName);
                 }
@@ -782,6 +829,7 @@ public class ManagedRegionBroker extends RegionBroker {
             LOG.warn("Failed to register MBean {}", strategy);
             LOG.debug("Failure reason: ", e);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3337
         return objectName;
     }
 
@@ -790,6 +838,7 @@ public class ManagedRegionBroker extends RegionBroker {
             ObjectName objectName = BrokerMBeanSupport.createXATransactionName(brokerObjectName, transaction);
             if (!registeredMBeans.contains(objectName))  {
                 RecoveredXATransactionView view = new RecoveredXATransactionView(this, transaction);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
                 if (AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName) != null) {
                     registeredMBeans.add(objectName);
                 }
@@ -832,10 +881,12 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     public Map<ObjectName, DestinationView> getQueueViews() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4191
         return queues;
     }
 
     public Map<ObjectName, DestinationView> getTopicViews() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6435
         return topics;
     }
 
@@ -845,6 +896,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     public Set<ObjectName> getRegisteredMbeans() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7102
         return registeredMBeans;
     }
 }

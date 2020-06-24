@@ -94,6 +94,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      *        The unique ID assigned to this receiver.
      */
     public AmqpReceiver(AmqpSession session, String address, String receiverId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         this(session, address, receiverId, null, null);
     }
 
@@ -113,14 +114,17 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      */
     public AmqpReceiver(AmqpSession session, String address, String receiverId, SenderSettleMode senderMode, ReceiverSettleMode receiverMode) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         if (address != null && address.isEmpty()) {
             throw new IllegalArgumentException("Address cannot be empty.");
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         this.userSpecifiedSource = null;
         this.session = session;
         this.address = address;
         this.receiverId = receiverId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         this.userSpecifiedSenderSettlementMode = senderMode;
         this.userSpecifiedReceiverSettlementMode = receiverMode;
     }
@@ -137,6 +141,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      */
     public AmqpReceiver(AmqpSession session, Source source, String receiverId) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
         if (source == null) {
             throw new IllegalArgumentException("User specified Source cannot be null");
         }
@@ -145,6 +150,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         this.userSpecifiedSource = source;
         this.address = source.getAddress();
         this.receiverId = receiverId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         this.userSpecifiedSenderSettlementMode = null;
         this.userSpecifiedReceiverSettlementMode = null;
     }
@@ -179,6 +185,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      * @throws IOException if an error occurs while closing the receiver.
      */
     public void detach() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         if (closed.compareAndSet(false, true)) {
             final ClientFuture request = new ClientFuture();
             session.getScheduler().execute(new Runnable() {
@@ -261,6 +268,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      * @throws IOException if an error occurs
      */
     public AmqpMessage pull() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         return pull(-1, TimeUnit.MILLISECONDS);
     }
 
@@ -419,6 +427,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      * @throws IOException if an error occurs while sending the drain.
      */
     public void stop() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         checkClosed();
         final ClientFuture request = new ClientFuture();
         session.getScheduler().execute(new Runnable() {
@@ -521,6 +530,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                 checkClosed();
                 try {
                     if (!delivery.isSettled()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
                         if (session.isInTransaction()) {
                             Binary txnId = session.getTransactionId().getRemoteTxId();
                             if (txnId != null) {
@@ -654,6 +664,13 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                     if (!delivery.isSettled()) {
                         delivery.disposition(new Rejected());
                         delivery.settle();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
                         session.pumpToProtonTransport(request);
                     }
                     request.onSuccess();
@@ -670,6 +687,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      * @return an unmodifiable view of the underlying Receiver instance.
      */
     public Receiver getReceiver() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6672
         return UnmodifiableProxy.receiverProxy(getEndpoint());
     }
 
@@ -712,6 +730,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     public long getDrainTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         return session.getConnection().getDrainTimeout();
     }
 
@@ -720,9 +739,11 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     @Override
     protected void doOpen() {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
         Source source = userSpecifiedSource;
         Target target = new Target();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         if (source == null && address != null) {
             source = new Source();
             source.setAddress(address);
@@ -741,6 +762,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         receiver.setSource(source);
         receiver.setTarget(target);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         if (userSpecifiedSenderSettlementMode != null) {
             receiver.setSenderSettleMode(userSpecifiedSenderSettlementMode);
             if (SenderSettleMode.SETTLED.equals(userSpecifiedSenderSettlementMode)) {
@@ -778,6 +800,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
 
     @Override
     protected void doClose() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         getEndpoint().close();
     }
 
@@ -826,7 +849,9 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     protected void configureSource(Source source) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
         Map<Symbol, DescribedType> filters = new HashMap<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5699
         Symbol[] outcomes = new Symbol[]{Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL,
                                          Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
 
@@ -848,6 +873,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         source.setDefaultOutcome(modified);
 
         if (isNoLocal()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
             filters.put(NO_LOCAL_NAME, AmqpNoLocalFilter.NO_LOCAL);
         }
 
@@ -878,6 +904,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                     LOG.trace("{} has a partial incoming Message(s), deferring.", this);
                     incoming = null;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
             } else {
                 // We have exhausted the locally queued messages on this link.
                 // Check if we tried to stop and have now run out of credit.
@@ -895,6 +922,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
 
     private void processDelivery(Delivery incoming) throws Exception {
         doDeliveryInspection(incoming);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6485
 
         Message message = null;
         try {
@@ -912,6 +940,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
 
         // We processed a message, signal completion
         // of a message pull request if there is one.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         if (pullRequest != null) {
             pullRequest.onSuccess();
             pullRequest = null;
@@ -919,6 +948,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     private void doDeliveryInspection(Delivery delivery) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6485
         try {
             getStateInspector().inspectDelivery(getReceiver(), delivery);
         } catch (Throwable error) {
@@ -984,6 +1014,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     private void stop(final AsyncResult request) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
         Receiver receiver = getEndpoint();
         if (receiver.getRemoteCredit() <= 0) {
             if (receiver.getQueued() == 0) {
@@ -1051,6 +1082,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
 
     //----- Internal Transaction state callbacks -----------------------------//
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6044
     void preCommit() {
     }
 
@@ -1071,6 +1103,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         private final AsyncResult origRequest;
 
         public ScheduledRequest(ScheduledFuture<?> completionTask, AsyncResult origRequest) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
             this.sheduledTask = completionTask;
             this.origRequest = origRequest;
         }

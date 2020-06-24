@@ -51,6 +51,7 @@ public class ActiveMQAdmin implements Admin {
             // Use the jetty JNDI context since it's mutable.
             final Hashtable<String, String> env = new Hashtable<String, String>();
             env.put("java.naming.factory.initial", "org.eclipse.jetty.jndi.InitialContextFactory");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
             env.put("java.naming.factory.url.pkgs", "org.eclipse.jetty.jndi");
             ;
             context = new InitialContext(env);
@@ -77,6 +78,7 @@ public class ActiveMQAdmin implements Admin {
 
                 @Override
                 public void close() throws SecurityException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4640
                     out.close();
                 }
             };
@@ -90,6 +92,7 @@ public class ActiveMQAdmin implements Admin {
     }
 
     protected BrokerService createBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
         return BrokerFactory.createBroker(new URI("broker://()/localhost" + "?persistent=false&useJmx=false&advisorySupport=false&schedulerSupport=false"));
     }
 
@@ -103,6 +106,7 @@ public class ActiveMQAdmin implements Admin {
 
     @Override
     public void startServer() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
         if (broker != null) {
             stopServer();
         }
@@ -111,6 +115,7 @@ public class ActiveMQAdmin implements Admin {
             System.setProperty("basedir", file.getAbsolutePath());
         }
         broker = createBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4640
         TransportConnector connector = broker.addConnector(getConnectorURI());
         broker.start();
         port = connector.getConnectUri().getPort();
@@ -142,6 +147,7 @@ public class ActiveMQAdmin implements Admin {
     @Override
     public void createQueue(String name) {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
             context.bind(name, new JmsQueue(name));
         } catch (NamingException e) {
             throw new RuntimeException(e);
@@ -151,6 +157,7 @@ public class ActiveMQAdmin implements Admin {
     @Override
     public void createTopic(String name) {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
             context.bind(name, new JmsTopic(name));
         } catch (NamingException e) {
             throw new RuntimeException(e);
@@ -178,6 +185,7 @@ public class ActiveMQAdmin implements Admin {
     @Override
     public void createConnectionFactory(String name) {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5606
             final JmsConnectionFactory factory = new JmsConnectionFactory("amqp://localhost:" + port);
             context.bind(name, factory);
         } catch (NamingException e) {

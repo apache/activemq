@@ -37,6 +37,7 @@ public class DiscoveryEvent implements DataStructure {
     }
 
     protected DiscoveryEvent(DiscoveryEvent copy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4159
     	serviceName = copy.serviceName;
     	brokerName = copy.brokerName;
     }

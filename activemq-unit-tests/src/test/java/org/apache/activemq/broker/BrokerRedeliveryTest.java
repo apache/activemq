@@ -44,14 +44,17 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
     final ActiveMQQueue destination = new ActiveMQQueue("Redelivery");
     final String data = "hi";
     final long redeliveryDelayMillis = 2000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5087
     long initialRedeliveryDelayMillis = 4000;
     int maxBrokerRedeliveries = 2;
 
     public void testScheduledRedelivery() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4362
         doTestScheduledRedelivery(maxBrokerRedeliveries, true);
     }
 
     public void testInfiniteRedelivery() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5087
         initialRedeliveryDelayMillis = redeliveryDelayMillis;
         maxBrokerRedeliveries = RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES;
         doTestScheduledRedelivery(RedeliveryPolicy.DEFAULT_MAXIMUM_REDELIVERIES + 1, false);
@@ -61,6 +64,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
         startBroker(true);
         sendMessage(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4166
 
         ActiveMQConnection consumerConnection = (ActiveMQConnection) createConnection();
         RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
@@ -78,6 +82,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         for (int i = 0; i < maxBrokerRedeliveriesToValidate; i++) {
             Message shouldBeNull = consumer.receive(500);
             assertNull("did not get message early: " + shouldBeNull, shouldBeNull);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
 
             TimeUnit.SECONDS.sleep(4);
 
@@ -86,10 +91,12 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
             assertNotNull("got message via broker redelivery after delay", brokerRedeliveryMessage);
             assertEquals("message matches", message.getStringProperty("data"), brokerRedeliveryMessage.getStringProperty("data"));
             assertEquals("has expiryDelay specified - iteration:" + i, i == 0 ? initialRedeliveryDelayMillis : redeliveryDelayMillis, brokerRedeliveryMessage.getLongProperty(RedeliveryPlugin.REDELIVERY_DELAY));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5674
 
             consumerSession.rollback();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4362
         if (validateDLQ) {
             MessageConsumer dlqConsumer = consumerSession.createConsumer(new ActiveMQQueue(SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME));
             Message dlqMessage = dlqConsumer.receive(2000);
@@ -109,10 +116,12 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
     public void testNoScheduledRedeliveryOfExpired() throws Exception {
         startBroker(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4166
         ActiveMQConnection consumerConnection = (ActiveMQConnection) createConnection();
         consumerConnection.start();
         Session consumerSession = consumerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         MessageConsumer consumer = consumerSession.createConsumer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5053
         sendMessage(1500);
         Message message = consumer.receive(1000);
         assertNotNull("got message", message);
@@ -134,6 +143,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
     public void testNoScheduledRedeliveryOfDuplicates() throws Exception {
         broker = createBroker(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7062
 
         PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setUseCache(false); // disable the cache such that duplicates are not suppressed on send
@@ -195,6 +205,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
     }
 
     private void startBroker(boolean deleteMessages) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7062
         broker = createBroker(false);
         if (deleteMessages) {
             broker.setDeleteAllMessagesOnStartup(true);
@@ -211,6 +222,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
         RedeliveryPolicy brokerRedeliveryPolicy = new RedeliveryPolicy();
         brokerRedeliveryPolicy.setRedeliveryDelay(redeliveryDelayMillis);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5087
         brokerRedeliveryPolicy.setInitialRedeliveryDelay(initialRedeliveryDelayMillis);
         brokerRedeliveryPolicy.setMaximumRedeliveries(maxBrokerRedeliveries);
 
@@ -219,6 +231,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         redeliveryPlugin.setRedeliveryPolicyMap(redeliveryPolicyMap);
 
         broker.setPlugins(new BrokerPlugin[]{redeliveryPlugin});
+//IC see: https://issues.apache.org/jira/browse/AMQ-7062
         return broker;
     }
 

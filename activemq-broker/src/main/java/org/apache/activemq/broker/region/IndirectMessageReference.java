@@ -44,6 +44,7 @@ public class IndirectMessageReference implements QueueMessageReference {
      */
     public IndirectMessageReference(final Message message) {
         this.message = message;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         this.messageId = message.getMessageId().copy();
         message.getMessageId();
         message.getGroupID();
@@ -77,6 +78,7 @@ public class IndirectMessageReference implements QueueMessageReference {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         return "Message " + message.getMessageId() + " dropped=" + dropped + " acked=" + acked + " locked=" + (lockOwner != null);
     }
 
@@ -93,6 +95,7 @@ public class IndirectMessageReference implements QueueMessageReference {
     @Override
     public synchronized void drop() {
         dropped = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-847
         lockOwner = null;
         message.decrementReferenceCount();
     }
@@ -105,6 +108,7 @@ public class IndirectMessageReference implements QueueMessageReference {
      */
     @Override
     public synchronized boolean dropIfLive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6293
         if (isDropped()) {
             return false;
         } else {
@@ -116,6 +120,7 @@ public class IndirectMessageReference implements QueueMessageReference {
     @Override
     public boolean lock(LockOwner subscription) {
         synchronized (this) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1957
             if (dropped || lockOwner != null) {
                 return false;
             }
@@ -143,6 +148,7 @@ public class IndirectMessageReference implements QueueMessageReference {
 
     @Override
     public MessageId getMessageId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         return messageId;
     }
 
@@ -202,11 +208,15 @@ public class IndirectMessageReference implements QueueMessageReference {
 
     @Override
     public boolean isAdvisory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
        return message.isAdvisory();
     }
 
     @Override
     public boolean canProcessAsExpired() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6361
         return message.canProcessAsExpired();
     }
 }

@@ -54,6 +54,7 @@ public class AmqpNioSslTransportFactory extends AmqpNioTransportFactory {
 
             @Override
             public boolean isSslServer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
                 return true;
             }
         };
@@ -66,6 +67,7 @@ public class AmqpNioSslTransportFactory extends AmqpNioTransportFactory {
 
     @Override
     public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer)
             throws IOException {
         return new AmqpNioSslTransport(wireFormat, socket, engine, initBuffer, inputBuffer);

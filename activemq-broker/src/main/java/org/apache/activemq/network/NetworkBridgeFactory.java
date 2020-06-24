@@ -41,6 +41,7 @@ public final class NetworkBridgeFactory implements BridgeFactory {
 
     @Override
     public DemandForwardingBridge createNetworkBridge(NetworkBridgeConfiguration configuration, Transport localTransport, Transport remoteTransport, NetworkBridgeListener listener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6861
         if (configuration.isConduitSubscriptions()) {
             // dynamicOnly determines whether durables are auto bridged
             return attachListener(new DurableConduitBridge(configuration, localTransport, remoteTransport), listener);
@@ -68,6 +69,7 @@ public final class NetworkBridgeFactory implements BridgeFactory {
     public static DemandForwardingBridge createBridge(NetworkBridgeConfiguration configuration,
                                                       Transport localTransport, Transport remoteTransport,
                                                       final NetworkBridgeListener listener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6861
         return INSTANCE.createNetworkBridge(configuration, localTransport, remoteTransport, listener);
     }
 

@@ -44,6 +44,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
     public void doStart() throws Exception {
 
         LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4841
         String sql = getStatements().getLockCreateStatement();
         LOG.debug("Locking Query is "+sql);
         
@@ -51,11 +52,14 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
             try {
                 connection = dataSource.getConnection();
                 connection.setAutoCommit(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3681
                 lockCreateStatement = connection.prepareStatement(sql);
                 lockCreateStatement.execute();
                 break;
             } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1972
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
                     if (isStopping()) {
                         throw new Exception(
                                 "Cannot start broker as being asked to shut down. " 
@@ -70,6 +74,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
                                     + exceptionHandler.getClass().getCanonicalName()
                                     + " threw this exception: "
                                     + handlerException
+//IC see: https://issues.apache.org/jira/browse/AMQ-1780
                                     + " while trying to handle this exception: "
                                     + e, handlerException);
                         }
@@ -97,6 +102,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
                     }
                 }
             } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3681
                 if (null != lockCreateStatement) {
                     try {
                         lockCreateStatement.close();
@@ -108,7 +114,9 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
             }
 
             LOG.info("Failed to acquire lock.  Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again...");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2074
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1972
                 Thread.sleep(lockAcquireSleepInterval);
             } catch (InterruptedException ie) {
                 LOG.warn("Master lock retry sleep interrupted", ie);
@@ -120,6 +128,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
 
     public void doStop(ServiceStopper stopper) throws Exception {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3681
             if (lockCreateStatement != null) {
                 lockCreateStatement.cancel();    			
             }
@@ -139,6 +148,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
         // it is important to close the connection so that we don't leak
         // connections
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3994
         if (connection != null) {
             try {
                 connection.rollback();
@@ -150,6 +160,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
                 } catch (SQLException ignored) {
                     LOG.debug("Exception while closing connection on shutdown. This exception is ignored.", ignored);
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3681
                 lockCreateStatement = null;
             }
         }
@@ -158,8 +169,10 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
     public boolean keepAlive() throws IOException {
         boolean result = false;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4841
             lockUpdateStatement = connection.prepareStatement(getStatements().getLockUpdateStatement());
             lockUpdateStatement.setLong(1, System.currentTimeMillis());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
             setQueryTimeout(lockUpdateStatement);
             int rows = lockUpdateStatement.executeUpdate();
             if (rows == 1) {
@@ -181,6 +194,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
     }
  
     public long getLockAcquireSleepInterval() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1931
         return lockAcquireSleepInterval;
     }
 
@@ -189,6 +203,8 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
     }
     
     public Handler getExceptionHandler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1972
+//IC see: https://issues.apache.org/jira/browse/AMQ-1972
         return exceptionHandler;
     }
 

@@ -95,6 +95,7 @@ public class FilesystemBlobTest extends EmbeddedBrokerTestSupport {
     @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
             connection.close();
         }
         super.tearDown();

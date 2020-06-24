@@ -104,6 +104,7 @@ public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements Con
         connection.start();
 
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1926
 
         tempTopic = (ActiveMQTempTopic)session.createTemporaryTopic();
         topicConsumerEventSource = new ConsumerEventSource(connection, tempTopic);

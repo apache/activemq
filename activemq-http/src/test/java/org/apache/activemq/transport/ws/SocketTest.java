@@ -28,8 +28,10 @@ public class SocketTest {
     public void testStompSocketRemoteAddress() {
 
         StompSocket stompSocketJetty8 = new StompSocket("ws://localhost:8080");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
 
         assertEquals("ws://localhost:8080", stompSocketJetty8.getRemoteAddress());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5865
 
         org.apache.activemq.transport.ws.jetty9.StompSocket stompSocketJetty9 =
                 new org.apache.activemq.transport.ws.jetty9.StompSocket("ws://localhost:8080");
@@ -41,6 +43,7 @@ public class SocketTest {
     public void testMqttSocketRemoteAddress() {
 
         MQTTSocket mqttSocketJetty8 = new MQTTSocket("ws://localhost:8080");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
 
         assertEquals("ws://localhost:8080", mqttSocketJetty8.getRemoteAddress());
 

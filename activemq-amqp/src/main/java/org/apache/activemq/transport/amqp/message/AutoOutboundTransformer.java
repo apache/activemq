@@ -29,6 +29,7 @@ public class AutoOutboundTransformer extends JMSMappingOutboundTransformer {
 
     @Override
     public EncodedMessage transform(ActiveMQMessage message) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         if (message == null) {
             return null;
         }

@@ -61,6 +61,7 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport  {
 
     @Parameterized.Parameters
     public static Collection<PersistenceAdapterChoice[]> getTestParameters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4415
         String osName = System.getProperty("os.name");
         LOG.info("Running on [" + osName + "]");
         PersistenceAdapterChoice[] kahaDb = {PersistenceAdapterChoice.KahaDB};
@@ -178,6 +179,7 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport  {
             broker.setDeleteAllMessagesOnStartup(true);
         }
         LOG.info("Starting broker with persistenceAdapterChoice " + persistenceAdapterChoice.toString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4415
         setPersistenceAdapter(broker, persistenceAdapterChoice);
         configurePersistenceAdapter(broker.getPersistenceAdapter());
         broker.getSystemUsage().getStoreUsage().setLimit(100 * 1000 * 1000);

@@ -113,6 +113,7 @@ public class JmsRedeliveredTest extends TestCase {
 
     public void testQueueSessionCloseMarksUnAckedMessageRedelivered() throws JMSException {
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
 
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         Queue queue = session.createQueue("queue-" + getName());
@@ -405,6 +406,7 @@ public class JmsRedeliveredTest extends TestCase {
     }
 
     public void testNoReceiveConsumerDisconnectDoesIncrementRedelivery() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5513
         connection.setClientID(getName());
         connection.start();
 
@@ -437,6 +439,7 @@ public class JmsRedeliveredTest extends TestCase {
         assertNotNull(msg);
         msg.acknowledge();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
         assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
         session.close();
         keepBrokerAliveConnection.close();
@@ -489,6 +492,7 @@ public class JmsRedeliveredTest extends TestCase {
     }
 
     public void testNoReceiveConsumerDoesNotIncrementRedelivery() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5513
         connection.setClientID(getName());
         connection.start();
 
@@ -542,6 +546,7 @@ public class JmsRedeliveredTest extends TestCase {
      * @throws JMSException
      */
     private TextMessage createTextMessage(Session session) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         return createTextMessage(session, "Hello");
     }
 

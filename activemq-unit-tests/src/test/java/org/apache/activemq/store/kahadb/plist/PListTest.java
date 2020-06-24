@@ -46,12 +46,15 @@ public class PListTest {
     static final Logger LOG = LoggerFactory.getLogger(PListTest.class);
     private PListStoreImpl store;
     private PListImpl plist;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3325
     final ByteSequence payload = new ByteSequence(new byte[400]);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
     final String idSeed = new String("Seed" + new byte[1024]);
     final Vector<Throwable> exceptions = new Vector<Throwable>();
     ExecutorService executor;
 
     private PListEntry getFirst(PList plist) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
         PList.PListIterator iterator = plist.iterator();
         try {
             if (iterator.hasNext()) {
@@ -75,6 +78,7 @@ public class PListTest {
             plist.addLast(test, bs);
         }
         assertEquals(plist.size(), COUNT);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6352
         assertTrue(plist.messageSize() > 0);
         int count = 0;
         for (ByteSequence bs : map.values()) {
@@ -97,7 +101,9 @@ public class PListTest {
             plist.addFirst(test, bs);
         }
         assertEquals(plist.size(), COUNT);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6352
         assertTrue(plist.messageSize() > 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         long count = plist.size() - 1;
         for (ByteSequence bs : map.values()) {
             String origStr = new String(bs.getData(), bs.getOffset(), bs.getLength());
@@ -124,6 +130,7 @@ public class PListTest {
         assertEquals(plist.size(), COUNT);
         PListEntry entry = plist.getFirst();
         while (entry != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
             plist.remove(entry.getId());
             entry = plist.getFirst();
         }
@@ -151,6 +158,9 @@ public class PListTest {
         }
         plist.destroy();
         assertEquals(0, plist.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6352
+//IC see: https://issues.apache.org/jira/browse/AMQ-6352
+//IC see: https://issues.apache.org/jira/browse/AMQ-6352
         assertEquals(0, plist.messageSize());
     }
 
@@ -167,9 +177,11 @@ public class PListTest {
     @Test
     public void testRemoveSingleEntry() throws Exception {
         plist.addLast("First", new ByteSequence("A".getBytes()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
 
         Iterator<PListEntry> iterator = plist.iterator();
         while (iterator.hasNext()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3982
             iterator.next();
             iterator.remove();
         }
@@ -182,6 +194,7 @@ public class PListTest {
 
         assertTrue(plist.remove(1));
         assertTrue(plist.remove(0));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         assertFalse(plist.remove(0));
     }
 
@@ -195,6 +208,7 @@ public class PListTest {
         store.setCleanupInterval(400);
         store.setDirectory(directory);
         store.setJournalMaxFileLength(1024 * 5);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3490
         store.setLazyInit(false);
         store.start();
 
@@ -247,6 +261,8 @@ public class PListTest {
                         Thread.currentThread().setName("ALRF:" + candidate.getName());
                         synchronized (plistLocks(candidate)) {
                             Object locator = candidate.addLast(String.valueOf(i), payload);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
                             getFirst(candidate);
                             assertTrue(candidate.remove(locator));
                         }
@@ -286,6 +302,7 @@ public class PListTest {
 
         final int numThreads = 20;
         final int iterations = 1000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         executor = Executors.newFixedThreadPool(100);
         for (int i = 0; i < numThreads; i++) {
             new Job(i, PListTest.TaskType.ADD, iterations).run();
@@ -332,6 +349,7 @@ public class PListTest {
         store.setDirectory(directory);
         store.setJournalMaxFileLength(1024 * 5);
         store.setCleanupInterval(5000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3982
         store.setIndexWriteBatchSize(500);
         store.start();
 
@@ -362,6 +380,7 @@ public class PListTest {
 
         LOG.info("check empty");
         for (int i = 0; i < numLists; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
             assertEquals("empty " + i, 0, store.getPList("List-" + i).size());
         }
 
@@ -539,6 +558,7 @@ public class PListTest {
 
                         for (int j = 0; j < iterations; j++) {
                             synchronized (plistLocks(plist)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3982
                                 if (exceptions.isEmpty()) {
                                     plist.addLast("PL>" + id + idSeed + "-" + j, payload);
                                 } else {
@@ -569,6 +589,7 @@ public class PListTest {
                         plist = store.getPList(String.valueOf(id));
                         int iterateCount = 0;
                         synchronized (plistLocks(plist)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3982
                             if (exceptions.isEmpty()) {
                                 Iterator<PListEntry> iterator = plist.iterator();
                                 while (iterator.hasNext() && exceptions.isEmpty()) {
@@ -597,6 +618,7 @@ public class PListTest {
                             Iterator<PListEntry> removeIterator = plist.iterator();
 
                             while (removeIterator.hasNext()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3982
                                 removeIterator.next();
                                 removeIterator.remove();
                                 if (removeCount++ > iterations) {
@@ -640,6 +662,7 @@ public class PListTest {
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3982
         File directory = new File("target/test/PlistDB");
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
@@ -651,6 +674,7 @@ public class PListTest {
         store = new PListStoreImpl();
         store.setDirectory(directory);
         store.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         plist = store.getPList("main");
     }
 
@@ -660,6 +684,7 @@ public class PListTest {
             executor.shutdownNow();
         }
         store.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3325
         exceptions.clear();
     }
 

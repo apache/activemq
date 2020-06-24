@@ -190,6 +190,7 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
 
             sample();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
             log.debug("Sampler end");
             onSamplerEnd();
             if (perfEventListener != null) {

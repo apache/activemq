@@ -167,6 +167,8 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
 
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         Destination destination = session.createQueue(queueName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5541
+//IC see: https://issues.apache.org/jira/browse/AMQ-5541
         populateDestination(10, destination, connection, true);
         TextMessage msg = null;
         MessageConsumer consumer = session.createConsumer(destination);
@@ -202,6 +204,8 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
             msg = (TextMessage) consumer.receive(4000);
             LOG.info("redelivered? got: " + msg);
             assertNotNull("got the message again", msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5513
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
             assertEquals("re delivery flag on:" + i, true, msg.getJMSRedelivered());
             assertTrue("redelivery count survives reconnect for:" + i, msg.getLongProperty("JMSXDeliveryCount") > 1);
             msg.acknowledge();
@@ -223,6 +227,7 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
     @org.junit.Test
     public void testValidateRedeliveryFlagOnNonPersistentAfterTransientFailureConnectionDrop() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5541
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString()
             + "?jms.prefetchPolicy.all=0");
         connection = (ActiveMQConnection) connectionFactory.createConnection();
@@ -286,6 +291,7 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
     private void populateDestination(final int nbMessages, final Destination destination, javax.jms.Connection connection, boolean persistent) throws JMSException {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5541
         producer.setDeliveryMode(persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT);
         for (int i = 1; i <= nbMessages; i++) {
             producer.send(session.createTextMessage("<hello id='" + i + "'/>"));
@@ -419,6 +425,7 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
 
         @Override
         public void allowIOResumption() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
             kahaDB.allowIOResumption();
         }
 

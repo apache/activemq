@@ -169,6 +169,7 @@ public class NettyTransportOptions implements Cloneable {
      * @return true if the transport should enable byte tracing
      */
     public boolean isTraceBytes() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6673
         return traceBytes;
     }
 
@@ -183,6 +184,7 @@ public class NettyTransportOptions implements Cloneable {
     }
 
     public boolean isSSL() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return false;
     }
 

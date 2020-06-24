@@ -79,6 +79,7 @@ public class DataByteArrayInputStreamTest {
 
     @Test
     public void testReadLong() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6771
         DataByteArrayOutputStream out = new DataByteArrayOutputStream(8);
         out.writeLong(Long.MAX_VALUE);
         out.close();

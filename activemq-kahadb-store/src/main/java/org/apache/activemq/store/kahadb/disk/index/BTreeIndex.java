@@ -220,6 +220,7 @@ public class BTreeIndex<Key,Value> implements Index<Key,Value> {
         pw.flush();
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2512
     synchronized public boolean isEmpty(final Transaction tx) throws IOException {
         return getRoot(tx).isEmpty(tx);
     }
@@ -229,6 +230,8 @@ public class BTreeIndex<Key,Value> implements Index<Key,Value> {
     }
     
     synchronized public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx, Key initialKey) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         return getRoot(tx).iterator(tx, initialKey, null);
     }
 

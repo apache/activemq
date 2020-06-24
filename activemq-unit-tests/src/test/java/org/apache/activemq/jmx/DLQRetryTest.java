@@ -151,6 +151,7 @@ public class DLQRetryTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7094
         System.setProperty("org.apache.activemq.audit", "all");
         bindAddress = "tcp://localhost:0";
         useTopic = false;

@@ -70,6 +70,7 @@ public class DestinationFilter implements Destination {
 
     @Override
     public boolean isDisposed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2524
         return next.isDisposed();
     }
 
@@ -80,6 +81,7 @@ public class DestinationFilter implements Destination {
 
     @Override
     public void markForGC(long timeStamp) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3157
         next.markForGC(timeStamp);
     }
 
@@ -90,6 +92,7 @@ public class DestinationFilter implements Destination {
 
     @Override
     public long getInactiveTimeoutBeforeGC() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5253
         return next.getInactiveTimeoutBeforeGC();
     }
 
@@ -115,21 +118,26 @@ public class DestinationFilter implements Destination {
 
     @Override
     public MemoryUsage getMemoryUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1510
         return next.getMemoryUsage();
     }
 
     @Override
     public void setMemoryUsage(MemoryUsage memoryUsage) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4121
+//IC see: https://issues.apache.org/jira/browse/AMQ-4356
         next.setMemoryUsage(memoryUsage);
     }
 
     @Override
     public TempUsage getTempUsage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7085
         return next.getTempUsage();
     }
 
     @Override
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         next.removeSubscription(context, sub, lastDeliveredSequenceId);
     }
 
@@ -172,6 +180,7 @@ public class DestinationFilter implements Destination {
 
     @Override
     public MessageStore getMessageStore() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1356
         return next.getMessageStore();
     }
 
@@ -187,6 +196,8 @@ public class DestinationFilter implements Destination {
 
     @Override
     public boolean isAlwaysRetroactive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2911
+//IC see: https://issues.apache.org/jira/browse/AMQ-3157
         return next.isAlwaysRetroactive();
     }
 
@@ -217,6 +228,7 @@ public class DestinationFilter implements Destination {
 
     @Override
     public int getMaxAuditDepth() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1510
         return next.getMaxAuditDepth();
     }
 
@@ -326,6 +338,7 @@ public class DestinationFilter implements Destination {
 
     @Override
     public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
         next.messageDiscarded(context, sub, messageReference);
     }
 
@@ -341,6 +354,8 @@ public class DestinationFilter implements Destination {
 
     @Override
     public int getMaxBrowsePageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1909
+//IC see: https://issues.apache.org/jira/browse/AMQ-1914
         return next.getMaxBrowsePageSize();
     }
 
@@ -356,6 +371,7 @@ public class DestinationFilter implements Destination {
 
     @Override
     public int getCursorMemoryHighWaterMark() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
         return next.getCursorMemoryHighWaterMark();
     }
 
@@ -366,16 +382,19 @@ public class DestinationFilter implements Destination {
 
     @Override
     public boolean isPrioritizedMessages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         return next.isPrioritizedMessages();
     }
 
     @Override
     public SlowConsumerStrategy getSlowConsumerStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
         return next.getSlowConsumerStrategy();
     }
 
     @Override
     public boolean isDoOptimzeMessageStorage() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
         return next.isDoOptimzeMessageStorage();
     }
 
@@ -386,11 +405,13 @@ public class DestinationFilter implements Destination {
 
     @Override
     public void clearPendingMessages(int pendingAdditionsCount) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         next.clearPendingMessages(pendingAdditionsCount);
     }
 
     @Override
     public void duplicateFromStore(Message message, Subscription subscription) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
         next.duplicateFromStore(message, subscription);
     }
 
@@ -405,10 +426,12 @@ public class DestinationFilter implements Destination {
     }
 
     public Destination getNext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         return next;
     }
 
     public <T> T getAdaptor(Class <? extends T> clazz) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
         if (clazz.isInstance(this)) {
             return clazz.cast(this);
         } else if (next != null && clazz.isInstance(next)) {

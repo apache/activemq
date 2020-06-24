@@ -50,6 +50,7 @@ public class DoSTest extends JmsTestSupport {
         // A failed to authenticated but idle connection (dos style) is aborted by the inactivity monitor
         // since useKeepAlive=false
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3294
         final AtomicBoolean done = new AtomicBoolean(false);
         Thread thread = new Thread() {
             Connection connection = null;

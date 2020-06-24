@@ -59,8 +59,10 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
     @Override
     protected void doStart() throws Exception {
         createServer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
 
         if (connector == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
             connector = socketConnectorFactory.createConnector(server);
         }
 
@@ -75,6 +77,7 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
         configureTraceMethod((ConstraintSecurityHandler) contextHandler.getSecurityHandler(),
                 httpOptions.isEnableTrace());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3980
         Map<String, Object> webSocketOptions = IntrospectionSupport.extractProperties(transportOptions, "websocket.");
         for(Map.Entry<String,Object> webSocketEntry : webSocketOptions.entrySet()) {
             Object value = webSocketEntry.getValue();
@@ -94,6 +97,7 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
         // was set to zero so that we report the actual port we are listening on.
 
         int port = getConnectorLocalPort();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         if (port == -1) {
             port = boundTo.getPort();
         }
@@ -110,6 +114,7 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
     }
 
     private Servlet createWSServlet() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         servlet = new WSServlet();
         servlet.setTransportOptions(transportOptions);
         servlet.setBrokerService(brokerService);
@@ -118,6 +123,7 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
     }
 
     private int getConnectorLocalPort() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         return (Integer)connector.getClass().getMethod("getLocalPort").invoke(connector);
     }
 
@@ -140,25 +146,30 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
     }
 
     protected void setConnector(Connector connector) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3880
         this.connector = connector;
     }
 
     @Override
     public void setTransportOption(Map<String, Object> transportOptions) {
         // String transport from options and
+//IC see: https://issues.apache.org/jira/browse/AMQ-3980
         Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(transportOptions, "transport.");
         socketConnectorFactory.setTransportOptions(socketOptions);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
         transportOptions.putAll(socketOptions);
         super.setTransportOption(transportOptions);
     }
 
     @Override
     public boolean isSslServer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         return false;
     }
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         this.brokerService = brokerService;
         if (servlet != null) {
             servlet.setBrokerService(brokerService);

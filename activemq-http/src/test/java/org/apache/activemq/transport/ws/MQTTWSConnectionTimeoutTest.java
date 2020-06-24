@@ -46,6 +46,7 @@ public class MQTTWSConnectionTimeoutTest extends WSTransportTestSupport {
 
         ClientUpgradeRequest request = new ClientUpgradeRequest();
         request.setSubProtocols("mqttv3.1");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6073
 
         wsClient.connect(wsMQTTConnection, wsConnectUri, request);
 

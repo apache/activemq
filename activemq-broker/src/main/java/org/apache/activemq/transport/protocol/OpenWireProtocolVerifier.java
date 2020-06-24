@@ -27,6 +27,7 @@ public class OpenWireProtocolVerifier implements ProtocolVerifier {
     protected final boolean sizePrefixDisabled;
 
     public OpenWireProtocolVerifier(final boolean sizePrefixDisabled) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7191
         this.sizePrefixDisabled = sizePrefixDisabled;
     }
 

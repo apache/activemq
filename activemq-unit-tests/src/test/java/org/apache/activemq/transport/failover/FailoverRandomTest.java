@@ -40,6 +40,7 @@ public class FailoverRandomTest extends TestCase {
     }
 
     protected String getBrokerUrl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         return "tcp://localhost:0";
     }
 

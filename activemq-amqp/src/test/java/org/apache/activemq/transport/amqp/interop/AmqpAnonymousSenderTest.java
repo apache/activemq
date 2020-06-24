@@ -41,6 +41,7 @@ public class AmqpAnonymousSenderTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         client.setTraceFrames(false);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 

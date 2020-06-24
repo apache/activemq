@@ -47,6 +47,7 @@ public class ProxyMessageStore implements MessageStore {
 
     @Override
     public void addMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
         delegate.addMessage(context,message,canOptimizeHint);
     }
 
@@ -82,6 +83,7 @@ public class ProxyMessageStore implements MessageStore {
 
     @Override
     public void dispose(ConnectionContext context) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1842
         delegate.dispose(context);
     }
 
@@ -122,6 +124,7 @@ public class ProxyMessageStore implements MessageStore {
 
     @Override
     public boolean isEmpty() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2512
        return delegate.isEmpty();
     }
 
@@ -142,6 +145,7 @@ public class ProxyMessageStore implements MessageStore {
 
     @Override
     public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5686
         return delegate.asyncAddTopicMessage(context,message,canOptimizeHint);
     }
 
@@ -152,6 +156,7 @@ public class ProxyMessageStore implements MessageStore {
 
     @Override
     public void setPrioritizedMessages(boolean prioritizedMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
         delegate.setPrioritizedMessages(prioritizedMessages);
     }
 
@@ -162,16 +167,22 @@ public class ProxyMessageStore implements MessageStore {
 
     @Override
     public void updateMessage(Message message) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
         delegate.updateMessage(message);
     }
 
     @Override
     public void registerIndexListener(IndexListener indexListener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         delegate.registerIndexListener(indexListener);
     }
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
         return delegate.toString();
     }
 

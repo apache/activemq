@@ -81,6 +81,7 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertMessageToAmqpMessageWithNoBody() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6374
         ActiveMQMessage outbound = createMessage();
         outbound.onSend();
         outbound.storeContent();
@@ -98,11 +99,13 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertTextMessageToAmqpMessageWithNoBodyOriginalEncodingWasNull() throws Exception {
         ActiveMQTextMessage outbound = createTextMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_NULL);
         outbound.onSend();
         outbound.storeContent();
 
         JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         EncodedMessage encoded = transformer.transform(outbound);
         assertNotNull(encoded);
@@ -236,6 +239,8 @@ public class JMSMappingOutboundTransformerTest {
     public void testConvertCompressedBytesMessageToAmqpMessageWithAmqpValueBody() throws Exception {
         byte[] expectedPayload = new byte[] { 8, 16, 24, 32 };
         ActiveMQBytesMessage outbound = createBytesMessage(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.writeBytes(expectedPayload);
         outbound.storeContent();
@@ -282,6 +287,7 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertMapMessageToAmqpMessageWithByteArrayValueInBody() throws Exception {
         final byte[] byteArray = new byte[] { 1, 2, 3, 4, 5 };
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         ActiveMQMapMessage outbound = createMapMessage();
         outbound.setBytes("bytes", byteArray);
@@ -428,6 +434,8 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertCompressedStreamMessageToAmqpMessageWithAmqpSequencey() throws Exception {
         ActiveMQStreamMessage outbound = createStreamMessage(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_SEQUENCE);
         outbound.writeBoolean(false);
         outbound.writeString("test");
@@ -557,6 +565,9 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertObjectMessageToAmqpMessageWithAmqpValueBody() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
         ActiveMQObjectMessage outbound = createObjectMessage(TEST_OBJECT_VALUE);
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.onSend();
@@ -603,7 +614,11 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertCompressedObjectMessageToAmqpMessageUnknownEncodingGetsDataSection() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
         ActiveMQObjectMessage outbound = createObjectMessage(TEST_OBJECT_VALUE, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_UNKNOWN);
         outbound.onSend();
         outbound.storeContent();
@@ -626,7 +641,13 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertCompressedObjectMessageToAmqpMessageWithAmqpValueBody() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
         ActiveMQObjectMessage outbound = createObjectMessage(TEST_OBJECT_VALUE, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.onSend();
         outbound.storeContent();
@@ -694,6 +715,7 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertTextMessageContentNotStoredCreatesBodyUsingOriginalEncodingWithDataSection() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6404
         String contentString = "myTextMessageContent";
         ActiveMQTextMessage outbound = createTextMessage(contentString);
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_DATA);
@@ -736,6 +758,7 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertTextMessageContentNotStoredCreatesAmqpValueStringBody() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6404
         String contentString = "myTextMessageContent";
         ActiveMQTextMessage outbound = createTextMessage(contentString);
         outbound.onSend();
@@ -756,11 +779,19 @@ public class JMSMappingOutboundTransformerTest {
     public void testConvertCompressedTextMessageCreatesDataSectionBody() throws Exception {
         String contentString = "myTextMessageContent";
         ActiveMQTextMessage outbound = createTextMessage(contentString, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_DATA);
         outbound.onSend();
         outbound.storeContent();
 
         JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         EncodedMessage encoded = transformer.transform(outbound);
         assertNotNull(encoded);
@@ -778,6 +809,7 @@ public class JMSMappingOutboundTransformerTest {
     
     @Test 
     public void testConvertConnectionInfo() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7068
     	String connectionId = "myConnectionId";
     	String clientId = "myClientId";
 
@@ -831,6 +863,14 @@ public class JMSMappingOutboundTransformerTest {
     	outbound.storeContent();
     	
     	JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         EncodedMessage encoded = transformer.transform(outbound);
         assertNotNull(encoded);
@@ -861,6 +901,7 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertMessageWithJMSDestinationQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         doTestConvertMessageWithJMSDestination(createMockDestination(QUEUE_TYPE), QUEUE_TYPE);
     }
 
@@ -894,6 +935,7 @@ public class JMSMappingOutboundTransformerTest {
         MessageAnnotations ma = amqp.getMessageAnnotations();
         Map<Symbol, Object> maMap = ma == null ? null : ma.getValue();
         if (maMap != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5648
             Object actualValue = maMap.get(JMS_DEST_TYPE_MSG_ANNOTATION);
             assertEquals("Unexpected annotation value", expectedAnnotationValue, actualValue);
         } else if (expectedAnnotationValue != null) {
@@ -901,6 +943,7 @@ public class JMSMappingOutboundTransformerTest {
         }
 
         if (jmsDestination != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             assertEquals("Unexpected 'to' address", jmsDestination.getQualifiedName(), amqp.getAddress());
         }
     }
@@ -914,6 +957,7 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertMessageWithJMSReplyToQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         doTestConvertMessageWithJMSReplyTo(createMockDestination(QUEUE_TYPE), QUEUE_TYPE);
     }
 
@@ -947,6 +991,7 @@ public class JMSMappingOutboundTransformerTest {
         MessageAnnotations ma = amqp.getMessageAnnotations();
         Map<Symbol, Object> maMap = ma == null ? null : ma.getValue();
         if (maMap != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5648
             Object actualValue = maMap.get(JMS_REPLY_TO_TYPE_MSG_ANNOTATION);
             assertEquals("Unexpected annotation value", expectedAnnotationValue, actualValue);
         } else if (expectedAnnotationValue != null) {
@@ -954,6 +999,7 @@ public class JMSMappingOutboundTransformerTest {
         }
 
         if (jmsReplyTo != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             assertEquals("Unexpected 'reply-to' address", jmsReplyTo.getQualifiedName(), amqp.getReplyTo());
         }
     }
@@ -961,9 +1007,11 @@ public class JMSMappingOutboundTransformerTest {
     //----- Utility Methods used for this Test -------------------------------//
 
     private ActiveMQTextMessage createMockTextMessage() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6374
         ActiveMQTextMessage mockTextMessage = Mockito.mock(ActiveMQTextMessage.class);
         Mockito.when(mockTextMessage.getPropertyNames()).thenReturn(Collections.enumeration(Collections.emptySet()));
         Mockito.when(mockTextMessage.getPriority()).thenReturn((byte) Message.DEFAULT_PRIORITY);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
 
         return mockTextMessage;
     }
@@ -974,6 +1022,7 @@ public class JMSMappingOutboundTransformerTest {
             case QUEUE_TYPE:
                 mockDestination = Mockito.mock(ActiveMQQueue.class);
                 Mockito.when(mockDestination.getQualifiedName()).thenReturn("queue://" + TEST_ADDRESS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6444
                 Mockito.when(mockDestination.isQueue()).thenReturn(true);
                 break;
             case TOPIC_TYPE:

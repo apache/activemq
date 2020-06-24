@@ -160,6 +160,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
         MessageProducer producer = session.createProducer(queue);
         List<TextMessage> senderList = new ArrayList<TextMessage>();
         for (int i = 0; i < MESSAGE_COUNT; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2563
             TextMessage msg = session.createTextMessage(i + " " + formatter.format(new Date()));
             senderList.add(msg);
             producer.send(msg);
@@ -180,6 +181,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
 
         // FLUSH THE QUEUE
         final CountDownLatch latch1 = new CountDownLatch(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         final CountDownLatch latch2 = new CountDownLatch(1);
         Connection[] consumerConnections1 = new Connection[NUM_CONSUMERS];
         List<Message> consumerList1 = new ArrayList<Message>();
@@ -215,6 +217,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
             @Override
             public boolean isSatisified() throws Exception {
                 boolean done = latch2.await(10, TimeUnit.SECONDS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2868
                 if(DEBUG){
                     System.out.println("");
                     System.out.println("Queue1 Size = "+proxyQueue1.getQueueSize());
@@ -268,6 +271,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
 
     private QueueViewMBean getProxyToQueueViewMBean(Queue queue) throws MalformedObjectNameException, JMSException {
         final String prefix = "org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
         ObjectName queueViewMBeanName = new ObjectName(prefix + queue.getQueueName());
         QueueViewMBean proxy = (QueueViewMBean)
@@ -295,6 +299,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
         super.tearDown();
         if (broker != null) {
             broker.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2563
             broker.waitUntilStopped();
         }
     }
@@ -313,6 +318,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
         BrokerService answer = new BrokerService();
         configureBroker(answer);
         answer.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2563
         answer.waitUntilStarted();
         bindAddress = answer.getTransportConnectors().get(0).getConnectUri().toString();
         return answer;
@@ -320,6 +326,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
 
     protected void configureBroker(BrokerService answer) throws Exception {
         PolicyEntry policy = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         policy.setMemoryLimit(QUEUE_MEMORY_LIMIT);
         policy.setPendingQueuePolicy(new StorePendingQueueMessageStoragePolicy());
 
@@ -336,6 +343,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
         answer.addConnector("tcp://localhost:0");
 
         MemoryUsage memoryUsage = new MemoryUsage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         memoryUsage.setLimit(MEMORY_USAGE);
         memoryUsage.setPercentUsageMinDelta(20);
 

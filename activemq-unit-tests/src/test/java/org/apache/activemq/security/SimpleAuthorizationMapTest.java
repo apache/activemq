@@ -28,6 +28,7 @@ public class SimpleAuthorizationMapTest extends AuthorizationMapTest {
     }
 
     protected void addABEntry(AuthorizationMap map) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5697
         SimpleAuthorizationMap simpleMap = (SimpleAuthorizationMap) map;
         simpleMap.getReadACLs().put(new ActiveMQQueue("QUEUEA"), USERS);
         simpleMap.getReadACLs().put(new ActiveMQQueue("QUEUEB"), USERS);

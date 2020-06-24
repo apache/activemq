@@ -158,6 +158,7 @@ public class MDBTest {
                 xaresource.end(xid, 0);
                 xaresource.prepare(xid);
                 xaresource.commit(xid, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5400
                 xid = null;
             } catch (Throwable e) {
                 LOG.info("afterDelivery, messageCount: " + messageCount + " ex", e);
@@ -178,6 +179,7 @@ public class MDBTest {
 
     @Test(timeout = 90000)
     public void testDestinationInJndi() throws Exception{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4305
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         Connection connection = factory.createConnection();
         connection.start();
@@ -249,6 +251,7 @@ public class MDBTest {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         Connection connection = factory.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3986
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -291,6 +294,7 @@ public class MDBTest {
         // Activate an Endpoint
         adapter.endpointActivation(messageEndpointFactory, activationSpec);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3986
         ActiveMQMessage msg = (ActiveMQMessage)advisory.receive(1000);
         if (msg != null) {
             assertEquals("Prefetch size hasn't been set", 1, ((ConsumerInfo)msg.getDataStructure()).getPrefetchSize());
@@ -315,9 +319,11 @@ public class MDBTest {
     @Test
     public void testParallelMessageDelivery() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5400
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         Connection connection = factory.createConnection();
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1919
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
         adapter.setServerUrl("vm://localhost?broker.persistent=false&create=false");
@@ -466,6 +472,7 @@ public class MDBTest {
     @Test(timeout = 90000)
     public void testErrorOnNoMessageDeliveryBrokerZeroPrefetchConfig() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4226
         final BrokerService brokerService = new BrokerService();
         final String brokerUrl = "vm://zeroPrefetch?create=false";
         brokerService.setBrokerName("zeroPrefetch");
@@ -539,6 +546,7 @@ public class MDBTest {
         };
 
         LogManager.getRootLogger().addAppender(testAppender);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = factory.createConnection();
@@ -583,6 +591,7 @@ public class MDBTest {
         // Activate an Endpoint
         adapter.endpointActivation(messageEndpointFactory, activationSpec);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
         ActiveMQMessage msg = (ActiveMQMessage)advisory.receive(4000);
         if (msg != null) {
             assertEquals("Prefetch size hasn't been set", 0, ((ConsumerInfo)msg.getDataStructure()).getPrefetchSize());
@@ -605,6 +614,7 @@ public class MDBTest {
 
         assertNotNull("We got an error message", errorMessage.get());
         assertTrue("correct message: " +  errorMessage.get(), errorMessage.get().contains("zero"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
 
         LogManager.getRootLogger().removeAppender(testAppender);
         brokerService.stop();
@@ -613,6 +623,7 @@ public class MDBTest {
     @Test
     public void testMessageExceptionReDelivery() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2034
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         Connection connection = factory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -621,6 +632,7 @@ public class MDBTest {
         adapter.setServerUrl("vm://localhost?broker.persistent=false?create=false");
         adapter.start(new StubBootstrapContext());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5674
         final CountDownLatch messageDelivered = new CountDownLatch(5);
         final AtomicLong timeReceived = new AtomicLong();
         final AtomicBoolean failed = new AtomicBoolean(false);
@@ -715,6 +727,7 @@ public class MDBTest {
     @Test(timeout = 90000)
     public void testOrderOfMessageExceptionReDelivery() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5400
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         Connection connection = factory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -762,6 +775,7 @@ public class MDBTest {
         ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
         activationSpec.setDestinationType(Queue.class.getName());
         activationSpec.setDestination("TEST");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5674
         activationSpec.setInitialRedeliveryDelay(100);
         activationSpec.setMaxSessions("1");
         activationSpec.setResourceAdapter(adapter);
@@ -818,6 +832,7 @@ public class MDBTest {
     @Test(timeout = 90000)
     public void testXaTimeoutRedelivery() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4634
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         Connection connection = factory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -909,6 +924,7 @@ public class MDBTest {
     @Test(timeout = 90000)
     public void testXaOnMessageExceptionRollback() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6548
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         Connection connection = factory.createConnection();
         connection.start();
@@ -1012,6 +1028,7 @@ public class MDBTest {
 
             @Override
             public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5400
                 return "DummyIdXID:" + lid;
             }
         };

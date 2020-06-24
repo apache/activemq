@@ -40,6 +40,7 @@ public class MessageSender {
     }
     
     public MessageProducer getProducer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1895
         return producer;
     }
 }

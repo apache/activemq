@@ -67,7 +67,10 @@ public interface SubscriptionRecoveryPolicy extends Service {
      * Used to copy the policy object.
      * @return the copy
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-714
     SubscriptionRecoveryPolicy copy();
     
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
     void setBroker(Broker broker);
 }

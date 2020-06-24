@@ -46,6 +46,7 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
         info.setPrefetchSize(1000);
         info.setNoLocal(true);
         info.setDispatchAsync(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3985
 
         this.connection.addDispatcher(info.getConsumerId(), this);
         this.connection.syncSendPacket(this.info);
@@ -73,6 +74,7 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
                 connection.asyncSendPacket(ack);
                 deliveredCounter = 0;
             } catch (JMSException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
                 connection.onClientInternalException(e);
             }
         }
@@ -97,6 +99,7 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
 
         ActiveMQTempDestination tempDest = (ActiveMQTempDestination)dest;
         if (dinfo.getOperationType() == DestinationInfo.ADD_OPERATION_TYPE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3488
             if (tempDest.getConnection() != null) {
                 tempDest = (ActiveMQTempDestination) tempDest.createDestination(tempDest.getPhysicalName());
             }

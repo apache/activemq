@@ -131,6 +131,7 @@ public class ActiveMQTextMessageTest extends TestCase {
     }
     
     public void testShortText() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1978
         String shortText = "Content";
     	ActiveMQTextMessage shortMessage = new ActiveMQTextMessage();
         setContent(shortMessage, shortText);
@@ -146,12 +147,14 @@ public class ActiveMQTextMessageTest extends TestCase {
     }
     
     public void testNullText() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2046
     	ActiveMQTextMessage nullMessage = new ActiveMQTextMessage();
     	setContent(nullMessage, null);
     	assertTrue(nullMessage.toString().contains("text = null"));
     }
 
     public void testTransient() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6130
         Method method = ActiveMQTextMessage.class.getMethod("getRegionDestination", null);
         assertTrue(method.isAnnotationPresent(Transient.class));
     }

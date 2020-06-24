@@ -56,6 +56,7 @@ public class UdpTransportFactory extends TransportFactory {
     @Override
     public TransportServer doBind(final URI location) throws IOException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             if (options.containsKey("port")) {
                 throw new IllegalArgumentException("The port property cannot be specified on a UDP server transport - please use the port in the URI syntax");
@@ -64,6 +65,7 @@ public class UdpTransportFactory extends TransportFactory {
             int port = location.getPort();
             OpenWireFormat openWireFormat = asOpenWireFormat(wf);
             UdpTransport transport = (UdpTransport) createTransport(location.getPort(), wf);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3275
 
             Transport configuredTransport = configure(transport, wf, options, true);
             UdpTransportServer server = new UdpTransportServer(location, transport, configuredTransport, createReplayStrategy());
@@ -97,6 +99,7 @@ public class UdpTransportFactory extends TransportFactory {
         }
 
         transport = new InactivityMonitor(transport, format);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2088
 
         if (format instanceof OpenWireFormat) {
             transport = configureClientSideNegotiator(transport, format, udpTransport);
@@ -112,6 +115,7 @@ public class UdpTransportFactory extends TransportFactory {
     }
 
     protected Transport createTransport(int port, WireFormat wf) throws UnknownHostException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3275
         OpenWireFormat wireFormat = asOpenWireFormat(wf);
         return new UdpTransport(wireFormat, port);
     }
@@ -135,6 +139,7 @@ public class UdpTransportFactory extends TransportFactory {
         }
 
         transport = new InactivityMonitor(transport, format);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2088
 
         if (!acceptServer && format instanceof OpenWireFormat) {
             transport = configureClientSideNegotiator(transport, format, udpTransport);

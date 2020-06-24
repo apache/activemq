@@ -72,6 +72,7 @@ public class CommandDatagramSocket extends CommandChannelSupport {
 
                 // TODO could use a DataInput implementation that talks direct
                 // to the byte[] to avoid object allocation
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
                 receiveCounter++;
                 DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(datagram.getData(), 0, datagram.getLength()));
                 
@@ -237,6 +238,7 @@ public class CommandDatagramSocket extends CommandChannelSupport {
     }
 
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         return receiveCounter;
     }
 }

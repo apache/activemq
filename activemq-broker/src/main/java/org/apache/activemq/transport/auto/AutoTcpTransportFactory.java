@@ -90,6 +90,7 @@ public class AutoTcpTransportFactory extends TcpTransportFactory implements Brok
 
             @Override
             protected TcpTransport createTransport(Socket socket, WireFormat format,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6505
                     TcpTransportFactory detectedTransportFactory, InitBuffer initBuffer) throws IOException {
                 setDefaultLinkStealing(format, this);
                 return super.createTransport(socket, format, detectedTransportFactory, initBuffer);

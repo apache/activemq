@@ -43,6 +43,7 @@ public class DestinationFilterTest extends TestCase {
 	}
 
     public void testMatchesChild() throws Exception{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4884
         DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue("A.*.C"));
         assertFalse("Filter matched wrong destination type", filter.matches(new ActiveMQTopic("A.B")));
         assertTrue("Filter did not match", filter.matches(new ActiveMQQueue("A.B.C")));

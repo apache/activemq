@@ -50,6 +50,7 @@ public class AmqpConfiguredMaxConnectionsTest extends AmqpClientTestSupport {
     }
 
     public AmqpConfiguredMaxConnectionsTest(String connectorScheme, boolean useSSL) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5778
         super(connectorScheme, useSSL);
     }
 
@@ -70,6 +71,7 @@ public class AmqpConfiguredMaxConnectionsTest extends AmqpClientTestSupport {
         assertEquals(MAX_CONNECTIONS, getProxyToBroker().getCurrentConnectionsCount());
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
             AmqpConnection connection = trackConnection(client.createConnection());
             connection.setConnectTimeout(3000);
             connection.connect();

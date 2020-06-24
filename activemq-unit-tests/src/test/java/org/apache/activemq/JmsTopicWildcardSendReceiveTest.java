@@ -150,6 +150,7 @@ public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
     }
 
     public void testReceiveWildcardTopicMatchDoubleWildcard() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4884
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -175,6 +176,7 @@ public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
     }
 
     public void testReceiveWildcardTopicMatchSinglePastTheEndWildcard() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4884
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 

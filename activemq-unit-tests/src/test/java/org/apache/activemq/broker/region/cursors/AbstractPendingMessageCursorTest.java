@@ -320,6 +320,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         verifyStoreStats(dest, 200, publishedMessageSize.get());
 
         //should be equal in this case
+//IC see: https://issues.apache.org/jira/browse/AMQ-6158
         assertEquals(dest.getDurableTopicSubs().get(subKey).getPendingMessageSize(),
                 dest.getMessageStore().getMessageStoreStatistics().getMessageSize().getTotalSize());
 

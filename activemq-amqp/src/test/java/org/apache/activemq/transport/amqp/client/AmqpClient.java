@@ -98,6 +98,7 @@ public class AmqpClient {
         NettyTransport transport = NettyTransportFactory.createTransport(remoteURI);
         AmqpConnection connection = new AmqpConnection(transport, username, password);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         connection.setMechanismRestriction(mechanismRestriction);
         connection.setAuthzid(authzid);
 
@@ -128,6 +129,7 @@ public class AmqpClient {
      *        The authzid used when authenticating (currently only with PLAIN)
      */
     public void setAuthzid(String authzid) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         this.authzid = authzid;
     }
 

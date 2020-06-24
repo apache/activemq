@@ -43,6 +43,7 @@ public class TimeStatisticImpl extends StatisticImpl {
     }
 
     public synchronized void reset() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1946
         if(isDoReset()) {
             super.reset();
             count = 0;

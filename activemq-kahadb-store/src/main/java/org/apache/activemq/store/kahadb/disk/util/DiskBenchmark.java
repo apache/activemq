@@ -30,6 +30,7 @@ public class DiskBenchmark {
 
     private static final boolean SKIP_METADATA_UPDATE =
         Boolean.getBoolean("org.apache.activemq.file.skipMetadataUpdate");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
 
     boolean verbose;
     // reads and writes work with 4k of data at a time.
@@ -87,6 +88,7 @@ public class DiskBenchmark {
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
             return "Writes: \n" + "  " + writes + " writes of size " + size + " written in " + (writeDuration / 1000.0) + " seconds.\n" + "  " + getWriteRate()
                 + " writes/second.\n" + "  " + getWriteSizeRate() + " megs/second.\n" + "\n" + "Sync Writes: \n" + "  " + syncWrites + " writes of size "
                 + size + " written in " + (syncWriteDuration / 1000.0) + " seconds.\n" + "  " + getSyncWriteRate() + " writes/second.\n" + "  "
@@ -198,12 +200,14 @@ public class DiskBenchmark {
         Report rc = new Report();
 
         // Initialize the block we will be writing to disk.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
         byte[] data = new byte[bs];
         for (int i = 0; i < data.length; i++) {
             data[i] = (byte) ('a' + (i % 26));
         }
         rc.size = data.length;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         long start;
         long now;
         int ioCount;
@@ -251,6 +255,7 @@ public class DiskBenchmark {
                 for (long i = 0; i + data.length < size; i += data.length) {
                     raf.seek(i);
                     raf.write(data);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5551
                     raf.getChannel().force(!SKIP_METADATA_UPDATE);
                     ioCount++;
                     now = System.currentTimeMillis();
@@ -263,6 +268,7 @@ public class DiskBenchmark {
         now = System.currentTimeMillis();
         rc.syncWrites = ioCount;
         rc.syncWriteDuration = (now - start);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4947
 
         try(RecoverableRandomAccessFile raf = new RecoverableRandomAccessFile(file, "rw")) {
             start = System.currentTimeMillis();
@@ -291,6 +297,7 @@ public class DiskBenchmark {
     }
 
     private void preallocateDataFile(RecoverableRandomAccessFile raf, File location) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5578
         File tmpFile;
         if (location != null && location.isDirectory()) {
             tmpFile = new File(location, "template.dat");
@@ -300,6 +307,7 @@ public class DiskBenchmark {
         if (tmpFile.exists()) {
             tmpFile.delete();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6445
         try (RandomAccessFile templateFile = new RandomAccessFile(tmpFile, "rw");) {
             templateFile.setLength(size);
             templateFile.getChannel().force(true);

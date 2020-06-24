@@ -92,6 +92,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1796
         PolicyEntry policy = new PolicyEntry();
         DeadLetterStrategy defaultDeadLetterStrategy = policy.getDeadLetterStrategy();
         if(defaultDeadLetterStrategy!=null) {
@@ -122,6 +123,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
 
     protected void makeDlqBrowser() throws Exception {
         dlqDestination = createDlqDestination();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2553
 
         LOG.info("Browsing dead letter on: " + dlqDestination);
         dlqBrowser = session.createBrowser((Queue)dlqDestination);
@@ -136,6 +138,8 @@ public abstract class DeadLetterTestSupport extends TestSupport {
                 boolean satisfied = false;
 
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6121
+//IC see: https://issues.apache.org/jira/browse/AMQ-6122
                     QueueViewMBean dlqView = getProxyToQueue(dlqQ.getQueueName());
                     satisfied = dlqView != null ? dlqView.isDLQ() : false;
                 } catch (Throwable error) {
@@ -196,6 +200,8 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         deliveryMode = DeliveryMode.NON_PERSISTENT;
         durableSubscriber = false;
         doTest();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2566
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
         validateConsumerPrefetch(this.getDestinationString(), 0);
     }
 
@@ -219,6 +225,8 @@ public abstract class DeadLetterTestSupport extends TestSupport {
             Thread.sleep(100);
         } catch (InterruptedException e) {
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2566
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
         RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
         for (org.apache.activemq.broker.region.Destination dest : regionBroker.getQueueRegion().getDestinationMap().values()) {
             if (dest.getName().equals(destination)) {

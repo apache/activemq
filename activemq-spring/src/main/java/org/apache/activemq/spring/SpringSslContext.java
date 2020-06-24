@@ -69,6 +69,8 @@ public class SpringSslContext extends SslContext {
      */
     @PostConstruct
     private void postConstruct() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             afterPropertiesSet();
         } catch (Exception ex) {
@@ -96,12 +98,15 @@ public class SpringSslContext extends SslContext {
     private Collection<TrustManager> createTrustManagers() throws Exception {
         boolean ocsp = Boolean.valueOf(Security.getProperty("ocsp.enable"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         KeyStore ks = createTrustManagerKeyStore();
         if( ks ==null ) {
             return new ArrayList<TrustManager>(0);
         }
         TrustManagerFactory tmf  = TrustManagerFactory.getInstance(trustStoreAlgorithm);
         boolean initialized = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6118
         if ((ocsp || crlPath != null) && trustStoreAlgorithm.equalsIgnoreCase("PKIX")) {
             PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(ks, new X509CertSelector());
             if (crlPath != null) {
@@ -112,6 +117,7 @@ public class SpringSslContext extends SslContext {
                 }
             }
             tmf.init(new CertPathTrustManagerParameters(pkixParams));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5008
             initialized = true;
         }
 
@@ -129,6 +135,7 @@ public class SpringSslContext extends SslContext {
         }
 
         KeyManagerFactory tmf  = KeyManagerFactory.getInstance(keyStoreAlgorithm);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3822
         tmf.init(ks, keyStoreKeyPassword == null ? (keyStorePassword==null? null : keyStorePassword.toCharArray()) : keyStoreKeyPassword.toCharArray());
         return Arrays.asList(tmf.getKeyManagers());
     }
@@ -139,6 +146,7 @@ public class SpringSslContext extends SslContext {
         }
 
         KeyStore ks = KeyStore.getInstance(trustStoreType);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3268
         InputStream is=Utils.resourceFromString(trustStore).getInputStream();
         try {
             ks.load(is, trustStorePassword==null? null : trustStorePassword.toCharArray());
@@ -154,6 +162,7 @@ public class SpringSslContext extends SslContext {
         }
 
         KeyStore ks = KeyStore.getInstance(keyStoreType);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3268
         InputStream is=Utils.resourceFromString(keyStore).getInputStream();
         try {
             ks.load(is, keyStorePassword==null? null : keyStorePassword.toCharArray());
@@ -176,6 +185,7 @@ public class SpringSslContext extends SslContext {
     }
 
     public void setKeyStore(String keyStore) throws MalformedURLException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3268
         this.keyStore = keyStore;
     }
 
@@ -204,6 +214,7 @@ public class SpringSslContext extends SslContext {
     }
 
     public String getKeyStoreKeyPassword() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3822
         return keyStoreKeyPassword;
     }
 
@@ -244,6 +255,7 @@ public class SpringSslContext extends SslContext {
     }
 
     public String getCrlPath() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5008
         return crlPath;
     }
 

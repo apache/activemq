@@ -39,6 +39,7 @@ public class SizeStatisticImpl extends StatisticImpl {
 
     @Override
     public synchronized void reset() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5320
         if (isDoReset()) {
             super.reset();
             count = 0;
@@ -95,6 +96,7 @@ public class SizeStatisticImpl extends StatisticImpl {
      * @return the maximum size of any step
      */
     public void setMaxSize(long size) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
         maxSize = size;
     }
 
@@ -109,6 +111,7 @@ public class SizeStatisticImpl extends StatisticImpl {
      * @return the maximum size of any step
      */
     public void setMinSize(long size) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
         minSize = size;
     }
 
@@ -190,6 +193,7 @@ public class SizeStatisticImpl extends StatisticImpl {
         buffer.append(Long.toString(minSize));
         buffer.append(" totalSize: ");
         buffer.append(Long.toString(totalSize));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         buffer.append(" averageSize: ");
         buffer.append(Double.toString(getAverageSize()));
         buffer.append(" averageTimeExMinMax: ");

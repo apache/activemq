@@ -121,6 +121,7 @@ public interface Connection extends Service {
 
     void updateClient(ConnectionControl control);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
 
     /**
      * Returns the number of active transactions established on this Connection.

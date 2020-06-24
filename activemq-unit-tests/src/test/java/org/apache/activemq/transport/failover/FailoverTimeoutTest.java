@@ -53,6 +53,7 @@ public class FailoverTimeoutTest {
     private static final Logger LOG = LoggerFactory.getLogger(FailoverTimeoutTest.class);
 
     private static final String QUEUE_NAME = "test.failovertimeout";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3085
     BrokerService bs;
     URI tcpUri;
 
@@ -60,6 +61,7 @@ public class FailoverTimeoutTest {
     public void setUp() throws Exception {
         bs = new BrokerService();
         bs.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5951
         bs.addConnector(getTransportUri());
         bs.start();
         tcpUri = bs.getTransportConnectors().get(0).getConnectUri();
@@ -73,11 +75,13 @@ public class FailoverTimeoutTest {
     }
 
     protected String getTransportUri() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         return "tcp://localhost:0";
     }
 
     @Test
     public void testTimoutDoesNotFailConnectionAttempts() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5231
         bs.stop();
         long timeout = 1000;
 
@@ -102,6 +106,7 @@ public class FailoverTimeoutTest {
 
         assertTrue(duration > 3000);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5951
         safeClose(connection);
     }
 
@@ -139,6 +144,7 @@ public class FailoverTimeoutTest {
 
         producer.send(message);
         bs.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5951
         connection.close();
     }
 
@@ -147,6 +153,7 @@ public class FailoverTimeoutTest {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + tcpUri + ")?maxReconnectAttempts=0");
         final ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5951
         doTestInterleaveAndException(connection, new MessageAck());
         safeClose(connection);
     }
@@ -186,6 +193,7 @@ public class FailoverTimeoutTest {
         final CountDownLatch enqueueOnExecutorDone = new CountDownLatch(NUM_TASKS);
 
         // let a few tasks delay a bit
+//IC see: https://issues.apache.org/jira/browse/AMQ-5951
         final AtomicLong sleepMillis = new AtomicLong(1000);
         for (int i=0; i < NUM_TASKS; i++) {
             executorService.submit(new Runnable() {
@@ -193,6 +201,7 @@ public class FailoverTimeoutTest {
                 public void run() {
                     try {
                         TimeUnit.MILLISECONDS.sleep(Math.max(0, sleepMillis.addAndGet(-50)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5951
                         connection.asyncSendPacket(command);
                     } catch (Exception e) {
                     } finally {

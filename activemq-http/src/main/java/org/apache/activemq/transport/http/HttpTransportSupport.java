@@ -52,6 +52,7 @@ public abstract class HttpTransportSupport extends TransportThreadSupport {
     // Properties
     // -------------------------------------------------------------------------
     public String getRemoteAddress() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-753
         return remoteUrl.toString();
     }
 
@@ -68,14 +69,17 @@ public abstract class HttpTransportSupport extends TransportThreadSupport {
     }
 
     public String getProxyHost() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6556
         return proxyHost != null ? proxyHost : getSystemProperty(PROPERTY_PROXY_HOST);
     }
 
     public void setProxyHost(String proxyHost) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1099
         this.proxyHost = proxyHost;
     }
 
     public int getProxyPort() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6556
         return proxyPort != null ? proxyPort
                 : (getSystemProperty(PROPERTY_PROXY_PORT) != null
                         ? Integer.parseInt(getSystemProperty(PROPERTY_PROXY_PORT)) : DEFAULT_PROXY_PORT);
@@ -86,14 +90,17 @@ public abstract class HttpTransportSupport extends TransportThreadSupport {
     }
 
     public String getProxyUser() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6556
        return proxyUser != null ? proxyUser : getSystemProperty(PROPERTY_PROXY_USER);
     }
 
     public void setProxyUser(String proxyUser) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1514
        this.proxyUser = proxyUser;
     }
 
     public String getProxyPassword() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6556
        return proxyPassword != null ? proxyPassword : getSystemProperty(PROPERTY_PROXY_PASSWORD);
     }
 

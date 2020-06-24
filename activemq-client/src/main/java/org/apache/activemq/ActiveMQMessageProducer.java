@@ -89,9 +89,11 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         this.info.setWindowSize(session.connection.getProducerWindowSize());
         // Allows the options on the destination to configure the producerInfo
         if (destination != null && destination.getOptions() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
             Map<String, Object> options = IntrospectionSupport.extractProperties(
                 new HashMap<String, Object>(destination.getOptions()), "producer.");
             IntrospectionSupport.setProperties(this.info, options);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3500
             if (options.size() > 0) {
                 String msg = "There are " + options.size()
                     + " producer options that couldn't be set on the producer."
@@ -108,8 +110,11 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         // Enable producer window flow control if protocol >= 3 and the window size > 0
         if (session.connection.getProtocolVersion() >= 3 && this.info.getWindowSize() > 0) {
             producerWindow = new MemoryUsage("Producer Window: " + producerId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
             producerWindow.setExecutor(session.getConnectionExecutor());
             producerWindow.setLimit(this.info.getWindowSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2033
             producerWindow.start();
         }
 
@@ -119,6 +124,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         this.startTime = System.currentTimeMillis();
         this.messageSequence = new AtomicLong(0);
         this.stats = new JMSProducerStatsImpl(session.getSessionStats(), destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4213
         try {
             this.session.addProducer(this);
             this.session.syncSendPacket(info);
@@ -126,7 +132,9 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
             this.session.removeProducer(this);
             throw e;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
         this.setSendTimeout(sendTimeout);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1053
         setTransformer(session.getTransformer());
     }
 
@@ -177,6 +185,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     public void dispose() {
         if (!closed) {
             this.session.removeProducer(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2033
             if (producerWindow != null) {
                 producerWindow.stop();
             }
@@ -220,6 +229,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3769
         this.send(destination, message, deliveryMode, priority, timeToLive, null);
     }
 
@@ -259,6 +269,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         }
 
         ActiveMQDestination dest;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3976
         if (destination.equals(info.getDestination())) {
             dest = (ActiveMQDestination)destination;
         } else if (info.getDestination() == null) {
@@ -270,6 +281,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
             throw new JMSException("No destination specified");
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1053
         if (transformer != null) {
             Message transformedMessage = transformer.producerTransform(session, this, message);
             if (transformedMessage != null) {
@@ -286,6 +298,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         }
 
         this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow, sendTimeout, onComplete);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3769
 
         stats.onMessage();
     }

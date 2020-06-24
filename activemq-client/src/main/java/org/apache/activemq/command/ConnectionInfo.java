@@ -52,6 +52,7 @@ public class ConnectionInfo extends BaseCommand {
     }
 
     public ConnectionInfo copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2049
         ConnectionInfo copy = new ConnectionInfo();
         copy(copy);
         return copy;
@@ -68,7 +69,9 @@ public class ConnectionInfo extends BaseCommand {
         copy.manageable = manageable;
         copy.clientMaster = clientMaster;
         copy.transportContext = transportContext;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         copy.faultTolerant= faultTolerant;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
         copy.clientIp = clientIp;
     }
 
@@ -209,6 +212,7 @@ public class ConnectionInfo extends BaseCommand {
      * @return the faultTolerant
      */
     public boolean isFaultTolerant() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return this.faultTolerant;
     }
 
@@ -224,6 +228,9 @@ public class ConnectionInfo extends BaseCommand {
      * @return failoverReconnect true if this is a reconnect
      */
     public boolean isFailoverReconnect() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         return this.failoverReconnect;
     }
 
@@ -235,6 +242,7 @@ public class ConnectionInfo extends BaseCommand {
      * @openwire:property version=8
      */
     public String getClientIp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
         return clientIp;
     }
 

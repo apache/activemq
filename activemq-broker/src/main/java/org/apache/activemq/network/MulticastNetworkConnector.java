@@ -112,6 +112,7 @@ public class MulticastNetworkConnector extends NetworkConnector {
         remoteTransport.start();
         localTransport.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
         super.handleStart();
     }
 
@@ -142,10 +143,14 @@ public class MulticastNetworkConnector extends NetworkConnector {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
         return getClass().getName() + ":" + getName() + "["  + remoteTransport.toString() + "]";
     }
 
     protected DemandForwardingBridgeSupport createBridge(Transport local, Transport remote) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2030
         CompositeDemandForwardingBridge bridge = new CompositeDemandForwardingBridge(this, local, remote);
         bridge.setBrokerService(getBrokerService());
         return bridge;

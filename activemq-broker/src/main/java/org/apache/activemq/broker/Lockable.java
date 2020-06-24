@@ -61,5 +61,6 @@ public interface Lockable {
      */
     public void setLockKeepAlivePeriod(long lockKeepAlivePeriod);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4122
     long getLockKeepAlivePeriod();
 }

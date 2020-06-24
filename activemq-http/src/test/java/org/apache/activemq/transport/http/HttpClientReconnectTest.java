@@ -47,6 +47,7 @@ public class HttpClientReconnectTest {
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2238
         broker = new BrokerService();
         TransportConnector connector = broker.addConnector("https://localhost:0?trace=true");
         broker.setPersistent(false);

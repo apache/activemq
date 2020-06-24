@@ -50,11 +50,13 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
     }
 
     private <T> void setConnectorProperty(String name, Class<T> type, T value) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         connector.getClass().getMethod("set" + name, type).invoke(connector, value);
     }
 
     protected void createServer() {
         LOG.info("Starting Jetty server");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7063
         if (jettyOptions.getConfig() != null) {
             try {
                 LOG.info("Configuring Jetty server using {}", jettyOptions.getConfig());
@@ -62,6 +64,7 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
                 if (!file.exists()) {
                     throw new IllegalArgumentException("Jetty XML not found: " + file.getAbsolutePath());
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
                 XmlConfiguration xmlConfiguration = new XmlConfiguration(Resource.newResource(file));
                 server = (Server) xmlConfiguration.configure();
             } catch (Throwable t) {
@@ -83,6 +86,7 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
         bindHost = (bindHost == null || bindHost.length() == 0) ? "localhost" : bindHost;
         InetAddress addr = InetAddress.getByName(bindHost);
         host = addr.getCanonicalHostName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7063
         if (server.getConnectors().length == 0) {
             LOG.info("Creating Jetty connector");
             setConnectorProperty("Host", String.class, host);
@@ -128,6 +132,7 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
     }
 
     public void setJettyOptions(Map<String, Object> options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7063
         if (options != null) {
             IntrospectionSupport.setProperties(this.jettyOptions, options);
         }
@@ -149,6 +154,7 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
         private String config;
 
         public String getConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7063
             return config;
         }
 

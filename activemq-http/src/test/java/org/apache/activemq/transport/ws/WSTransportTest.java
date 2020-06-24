@@ -60,6 +60,7 @@ public class WSTransportTest extends WSTransportTestSupport {
 
     @Override
     protected void addAdditionalConnectors(BrokerService service) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5755
         stompUri = service.addConnector("stomp://localhost:0").getPublishableConnectString();
     }
 
@@ -72,6 +73,7 @@ public class WSTransportTest extends WSTransportTestSupport {
         Server server = new Server();
 
         Connector connector = createJettyConnector(server);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
 
         WebAppContext context = new WebAppContext();
         context.setResourceBase("src/test/webapp");
@@ -85,6 +87,7 @@ public class WSTransportTest extends WSTransportTestSupport {
     }
 
     protected Connector createJettyConnector(Server server) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         Connector c = new SocketConnectorFactory().createConnector(server);
         c.getClass().getMethod("setPort", Integer.TYPE).invoke(c, getProxyPort());
         return c;
@@ -102,8 +105,10 @@ public class WSTransportTest extends WSTransportTestSupport {
     @Override
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5755
         super.setUp();
         stompConnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4028
         server = createWebServer();
     }
 
@@ -116,11 +121,13 @@ public class WSTransportTest extends WSTransportTestSupport {
             // Some tests explicitly disconnect from stomp so can ignore
         } finally {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5755
                 super.tearDown();
             } catch (Exception ex) {
                 LOG.warn("Error on super tearDown()");
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4028
             if (server != null) {
                 try {
                     server.stop();
@@ -143,6 +150,7 @@ public class WSTransportTest extends WSTransportTestSupport {
     protected void testGet(final String uri, SslContextFactory
             sslContextFactory) throws Exception {
         HttpClient httpClient = sslContextFactory != null ? new HttpClient(sslContextFactory) :
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
             new HttpClient(new SslContextFactory.Client());
         httpClient.start();
 
@@ -178,6 +186,7 @@ public class WSTransportTest extends WSTransportTestSupport {
 
     protected String getTestURI() {
         int port = getProxyPort();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5755
         return "http://localhost:" + port + "/websocket.html#" + wsConnectUri;
     }
 

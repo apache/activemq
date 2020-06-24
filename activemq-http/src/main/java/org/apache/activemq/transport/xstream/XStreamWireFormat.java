@@ -63,12 +63,14 @@ public class XStreamWireFormat extends TextWireFormat {
 
     @Override
     public Object unmarshalText(String text) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3388
         return getXStream().fromXML(text);
     }
 
     @Override
     public Object unmarshalText(Reader reader) {
         Object val = getXStream().fromXML(reader);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6077
         if (val instanceof TransientInitializer) {
             ((TransientInitializer)val).initTransients();
         }
@@ -77,6 +79,7 @@ public class XStreamWireFormat extends TextWireFormat {
 
     @Override
     public String marshalText(Object command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3556
         if (command instanceof MarshallAware) {
             ((MarshallAware)command).beforeMarshall(this);
         } else if(command instanceof MessageDispatch) {
@@ -112,6 +115,7 @@ public class XStreamWireFormat extends TextWireFormat {
         if (xStream == null) {
             xStream = createXStream();
             // make it work in OSGi env
+//IC see: https://issues.apache.org/jira/browse/AMQ-3579
             xStream.setClassLoader(getClass().getClassLoader());
         }
         return xStream;
@@ -124,6 +128,7 @@ public class XStreamWireFormat extends TextWireFormat {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected XStream createXStream() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6013
         final XStream xstream = XStreamSupport.createXStream();
         xstream.ignoreUnknownElements();
         xstream.registerConverter(new Converter() {

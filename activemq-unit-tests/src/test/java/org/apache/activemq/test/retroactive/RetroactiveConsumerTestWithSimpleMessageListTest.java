@@ -50,6 +50,7 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
         // lets some messages
         connection = createConnection();
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-980
         MessageProducer producer = createProducer();
         for (int i = 0; i < messageCount; i++) {
             TextMessage message = session.createTextMessage("Message: " + i + " sent at: " + new Date());
@@ -63,6 +64,7 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
         connection.start();
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-980
         MessageConsumer consumer = createConsumer();
         MessageIdList listener = new MessageIdList();
         consumer.setMessageListener(listener);
@@ -114,6 +116,7 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
     }
 
     protected MessageProducer createProducer() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-980
         return session.createProducer(destination);
     }
 

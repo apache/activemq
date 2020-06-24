@@ -46,6 +46,7 @@ public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
                         
             // allow MDA's params to be set via query arguments  
             // (e.g., multicast://default?group=foo             
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
             Map options = URISupport.parseParameters(uri);         
             IntrospectionSupport.setProperties(mda, options);
             

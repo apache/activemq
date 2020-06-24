@@ -48,9 +48,11 @@ public abstract class AmqpAbstractReceiver extends AmqpAbstractLink<Receiver> {
     public AmqpAbstractReceiver(AmqpSession session, Receiver endpoint) {
         super(session, endpoint);
         this.configuredCredit = session.getConnection().getConfiguredReceiverCredit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5763
 
         // We don't support second so enforce it as First and let remote decide what to do
         this.endpoint.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6659
 
         // Match what the sender mode is
         this.endpoint.setSenderSettleMode(endpoint.getRemoteSenderSettleMode());
@@ -72,6 +74,7 @@ public abstract class AmqpAbstractReceiver extends AmqpAbstractLink<Receiver> {
      * @return the configured receiver credit to grant.
      */
     public int getConfiguredReceiverCredit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5763
         return configuredCredit;
     }
 
@@ -109,6 +112,7 @@ public abstract class AmqpAbstractReceiver extends AmqpAbstractLink<Receiver> {
         while ((count = getEndpoint().recv(recvBuffer, 0, recvBuffer.length)) > 0) {
             current.write(recvBuffer, 0, count);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5778
             if (current.size() > session.getMaxFrameSize()) {
                 throw new AmqpProtocolException("Frame size of " + current.size() + " larger than max allowed " + session.getMaxFrameSize());
             }

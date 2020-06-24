@@ -41,6 +41,7 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
     }
 
     public void setTransactionContext(TransactionContext transactionContext) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
         this.transactionContext = transactionContext;
     }
 
@@ -102,6 +103,7 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
             } catch (JMSException e) {
                 throw (XAException)new XAException(XAException.XAER_PROTO).initCause(e);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7485
             if ((arg1 & TMFAIL) != 0) {
                 // do no further work in this context
                 LOG.debug("Marking transaction: {} rollbackOnly", this);
@@ -120,6 +122,7 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
 
     public boolean isSameRM(XAResource xaresource) throws XAException {
         boolean isSame = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5031
         if (xaresource != null) {
             // Do we have to unwrap?
             if (xaresource instanceof LocalAndXATransaction) {
@@ -172,6 +175,7 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
         return "[" + super.toString() + "," + transactionContext + "]";
     }
 }

@@ -49,6 +49,7 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
 
     @Test
     public void testModRm() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         final String brokerConfig = configurationSeed + "-auth-rm-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-users-guests");
         startBroker(brokerConfig);
@@ -84,6 +85,7 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
 
     @Test
     public void testModWithGroupClass() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6471
         final String brokerConfig = configurationSeed + "-auth-add-guest-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-users");
         startBroker(brokerConfig);
@@ -104,6 +106,7 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5644
         final String ALL_USERS = "ALL.USERS.>";
         final String ALL_GUESTS = "ALL.GUESTS.>";
 
@@ -114,6 +117,7 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
 
         final String ALL_PREFIX = "ALL.>";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5644
         assertDenied("user", ALL_PREFIX);
         assertDenied("guest", ALL_PREFIX);
 

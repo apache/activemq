@@ -125,6 +125,7 @@ public class PercentDiskUsageLimitTest {
 
     @Test(timeout=30000)
     public void testStartFailDiskLimitOverMaxFree() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6084
         broker.setAdjustUsageLimits(false);
         int freePercent = getFreePercentage();
 

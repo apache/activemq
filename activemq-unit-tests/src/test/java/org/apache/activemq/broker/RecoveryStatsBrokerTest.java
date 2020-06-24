@@ -61,6 +61,7 @@ public class RecoveryStatsBrokerTest extends BrokerRestartTestSupport {
     @Override
     protected void configureBroker(BrokerService broker) throws Exception {
         KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
         persistenceAdapter.setJournalMaxFileLength(1024*20);
         //persistenceAdapter.setConcurrentStoreAndDispatchQueues(false);
         persistenceAdapter.setDirectory(broker.getBrokerDataDirectory());

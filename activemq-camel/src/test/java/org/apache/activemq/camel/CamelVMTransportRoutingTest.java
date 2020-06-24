@@ -59,6 +59,7 @@ public class CamelVMTransportRoutingTest extends TestCase {
     public void testSendReceiveWithCamelRouteIntercepting() throws Exception {
 
         final int MSG_COUNT = 1000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
 
         Session sendSession = senderConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Session receiverSession1 = receiverConnection1.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -99,6 +100,7 @@ public class CamelVMTransportRoutingTest extends TestCase {
     @Override
     public void setUp() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         broker = createBroker();
         broker.start();
         broker.waitUntilStarted();
@@ -119,6 +121,7 @@ public class CamelVMTransportRoutingTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         if( senderConnection != null ) {
             senderConnection.close();
         }
@@ -142,6 +145,7 @@ public class CamelVMTransportRoutingTest extends TestCase {
         final String fromEndpoint = "activemq:topic:" + SENDER_TOPIC;
         final String toEndpoint = "activemq:topic:" + RECEIVER_TOPIC;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         log.info("creating context and sending message");
         camelContext = new DefaultCamelContext();
         camelContext.addComponent("activemq",

@@ -60,6 +60,7 @@ public class BrokerComponentXMLConfigTest {
     public void setUp() throws Exception {
         brokerService = createBroker(new FileSystemResource(CONF_ROOT + "broker-camel.xml"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         factory = new ActiveMQConnectionFactory(BrokerRegistry.getInstance().findFirst().getVmConnectorURI());
         consumerConnection = factory.createConnection();
         consumerConnection.start();
@@ -89,6 +90,7 @@ public class BrokerComponentXMLConfigTest {
 
     @After
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         if (producerConnection != null) {
             producerConnection.close();
         }
@@ -107,6 +109,7 @@ public class BrokerComponentXMLConfigTest {
         Topic topic = consumerSession.createTopic(TOPIC_NAME);
 
         final CountDownLatch latch = new CountDownLatch(messageCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         MessageConsumer consumer = consumerSession.createConsumer(queue);
         consumer.setMessageListener(new MessageListener() {
             @Override
@@ -121,6 +124,7 @@ public class BrokerComponentXMLConfigTest {
         });
         MessageProducer producer = producerSession.createProducer(topic);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         for (int i = 0; i < messageCount; i++) {
             javax.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
@@ -133,8 +137,10 @@ public class BrokerComponentXMLConfigTest {
     @Test
     public void testRouteWithDestinationLimit() throws Exception {
         final ActiveMQQueue routeQueue = new ActiveMQQueue(ROUTE_QUEUE_NAME);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4714
 
         final CountDownLatch routeLatch = new CountDownLatch(DIVERT_COUNT);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         MessageConsumer messageConsumer = consumerSession.createConsumer(routeQueue);
         messageConsumer.setMessageListener(new MessageListener() {
             @Override
@@ -147,6 +153,7 @@ public class BrokerComponentXMLConfigTest {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         final CountDownLatch divertLatch = new CountDownLatch(messageCount - DIVERT_COUNT);
         MessageConsumer divertConsumer = consumerSession.createConsumer(new ActiveMQQueue(DIVERTED_QUEUE_NAME));
         divertConsumer.setMessageListener(new MessageListener() {
@@ -162,6 +169,7 @@ public class BrokerComponentXMLConfigTest {
 
         MessageProducer producer = producerSession.createProducer(routeQueue);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4816
         for (int i = 0; i < messageCount; i++) {
             javax.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
@@ -176,6 +184,7 @@ public class BrokerComponentXMLConfigTest {
     @Test
     public void testPreserveOriginalHeaders() throws Exception {
         final ActiveMQQueue queue = new ActiveMQQueue(QUEUE_NAME);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5903
 
         Topic topic = consumerSession.createTopic(TOPIC_NAME);
 
@@ -194,6 +203,7 @@ public class BrokerComponentXMLConfigTest {
             }
         });
         MessageProducer producer = producerSession.createProducer(topic);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4714
 
         for (int i = 0; i < messageCount; i++) {
             javax.jms.Message message = producerSession.createTextMessage("test: " + i);

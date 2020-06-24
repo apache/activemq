@@ -46,6 +46,7 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionFailureEvictsFromPoolTest.class);
     private BrokerService broker;
     TransportConnector connector;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
 
     protected void setUp() throws Exception {
         broker = new BrokerService();
@@ -81,6 +82,7 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
     }
 
     public void doTestEviction(ConnectionFactory pooledFactory) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2376
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         ActiveMQConnection amqC = (ActiveMQConnection) connection.getConnection();
         final CountDownLatch gotExceptionEvent = new CountDownLatch(1);
@@ -103,6 +105,7 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
         createConnectionFailure(connection);
         try {
             sendMessage(connection);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
             TestCase.fail("Expected Error");
         } catch (JMSException e) {
         } finally {
@@ -117,8 +120,10 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
     }
 
     private void createConnectionFailure(Connection connection) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         ActiveMQConnection c = (ActiveMQConnection) ((PooledConnection)connection).getConnection();
         MockTransport t = (MockTransport)c.getTransportChannel().narrow(MockTransport.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2376
         t.onException(new IOException("forcing exception for " + getName() + " to force pool eviction"));
         LOG.info("arranged for failure, chucked exception");
     }

@@ -53,6 +53,7 @@ public interface Broker extends Region, Service {
      * @return a Broker instance.
      */
     Broker getAdaptor(Class<?> type);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6497
 
     /**
      * Get the id of the broker
@@ -281,6 +282,7 @@ public interface Broker extends Region, Service {
      * @return the temp data store
      */
     PListStore getTempDataStore();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2575
 
     /**
      * @return the URI that can be used to connect to the local Broker
@@ -303,6 +305,10 @@ public interface Broker extends Region, Service {
      * @return the broker at the top of the Stack
      */
     Broker getRoot();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1207
+//IC see: https://issues.apache.org/jira/browse/AMQ-880
+//IC see: https://issues.apache.org/jira/browse/AMQ-450
+//IC see: https://issues.apache.org/jira/browse/AMQ-879
 
     /**
      * Determine if a message has expired -allows default behaviour to be
@@ -338,6 +344,7 @@ public interface Broker extends Region, Service {
      * @return the broker sequence id
      */
     long getBrokerSequenceId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1656
 
     /**
      * called when message is consumed
@@ -345,6 +352,9 @@ public interface Broker extends Region, Service {
      * @param messageReference
      */
     void messageConsumed(ConnectionContext context, MessageReference messageReference);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
 
     /**
      * Called when message is delivered to the broker
@@ -361,6 +371,7 @@ public interface Broker extends Region, Service {
      * @param messageReference
      */
     void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
 
     /**
      * Called when there is a slow consumer
@@ -377,6 +388,7 @@ public interface Broker extends Region, Service {
      * @param destination
      */
     void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
 
     /**
      * Called when a Usage reaches a limit
@@ -385,8 +397,10 @@ public interface Broker extends Region, Service {
      * @param usage
      */
     void isFull(ConnectionContext context,Destination destination,Usage<?> usage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6497
 
     void virtualDestinationAdded(ConnectionContext context, VirtualDestination virtualDestination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
 
     void virtualDestinationRemoved(ConnectionContext context, VirtualDestination virtualDestination);
 
@@ -395,12 +409,16 @@ public interface Broker extends Region, Service {
      *  configuration
      */
     void nowMasterBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1541
 
     Scheduler getScheduler();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
 
     ThreadPoolExecutor getExecutor();
 
     void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
 
     void networkBridgeStopped(BrokerInfo brokerInfo);
 

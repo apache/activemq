@@ -47,6 +47,7 @@ public class MQTTWSLinkStealingTest extends WSTransportTestSupport {
 
         wsMQTTConnection = new MQTTWSConnection();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         wsClient = new WebSocketClient();
         wsClient.start();
 
@@ -87,6 +88,7 @@ public class MQTTWSLinkStealingTest extends WSTransportTestSupport {
 
         MQTTWSConnection theif = new MQTTWSConnection();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         wsClient.connect(theif, wsConnectUri, request);
         if (!theif.awaitConnection(30, TimeUnit.SECONDS)) {
             fail("Could not open new WS connection for link stealing client");

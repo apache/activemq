@@ -23,6 +23,7 @@ package org.apache.activemq.broker;
  */
 public interface BrokerContextAware {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
     void setBrokerContext(BrokerContext brokerContext);
     BrokerContext getBrokerContext();
 }

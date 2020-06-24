@@ -26,6 +26,7 @@ public class Stomp11SslAuthTest extends Stomp11Test {
 
     @Override
     protected boolean isUseTcpConnector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         return false;
     }
 

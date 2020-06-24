@@ -25,6 +25,7 @@ public class BitArrayBinTest {
 
     @Test
     public void testSetAroundWindow() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1742
         doTestSetAroundWindow(500, 2000);
         doTestSetAroundWindow(512, 2000);
         doTestSetAroundWindow(128, 512);
@@ -39,6 +40,7 @@ public class BitArrayBinTest {
         assertTrue("set", toTest.getBit(0));
 
         toTest.setBit(0, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5016
         assertTrue("set", toTest.getBit(0));
     }
 
@@ -112,6 +114,9 @@ public class BitArrayBinTest {
                 int instance = value + muliplier * BitArray.LONG_SIZE;
                 assertTrue("not already set: id=" + instance, !toTest.setBit(instance, Boolean.TRUE));
                 assertTrue("not already set: id=" + value, !toTest.setBit(value, Boolean.TRUE));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
                 assertEquals("max set correct", instance, toTest.getLastSetIndex());
             }
         }
@@ -138,6 +143,9 @@ public class BitArrayBinTest {
 
     @Test
     public void testLastSeq() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         BitArrayBin toTest = new BitArrayBin(512);
         assertEquals("last not set", -1, toTest.getLastSetIndex());
 

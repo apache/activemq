@@ -234,6 +234,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
             checkpointLock.writeLock().lock();
             try {
                 if (metaData.getPage() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7086
                     checkpointUpdate(getCleanupOnStop());
                 }
             } finally {
@@ -287,6 +288,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
                     }
                     metaData.load(tx);
                     metaData.loadScheduler(tx, schedulers);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4068
                     for (JobSchedulerImpl js : schedulers.values()) {
                         try {
                             js.start();
@@ -322,6 +324,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
 
             @Override
             public boolean accept(File dir, String name) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7227
                 if (name.endsWith(".data") || name.endsWith(".redo") || name.endsWith(".log") || name.endsWith(".free")) {
                     return true;
                 }
@@ -409,6 +412,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
                         for (Integer addLocation : entry.getValue()) {
                             if (completeFileSet.contains(addLocation)) {
                                 LOG.trace("A remove in log {} has an add still in existance in {}.", entry.getKey(), addLocation);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6152
                                 orphanedRemove = false;
                                 break;
                             }
@@ -507,6 +511,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
      * @throws IOException if an error occurs while updating the journal references table.
      */
     protected void decrementJournalCount(Transaction tx, HashMap<Integer, Integer> decrementsByFileIds) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7221
         for(Map.Entry<Integer, Integer> entry : decrementsByFileIds.entrySet()) {
             int logId = entry.getKey();
             Integer refCount = metaData.getJournalRC().get(tx, logId);
@@ -569,6 +574,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
      */
     protected void referenceRemovedLocation(Transaction tx, Location location, List<Integer> removedJobsFileId) throws IOException {
         int logId = location.getDataFileId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7221
         List<Integer> removed = this.metaData.getRemoveLocationTracker().get(tx, logId);
         if (removed == null) {
             removed = new ArrayList<Integer>();
@@ -634,6 +640,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
 
         @Override
         public JobSchedulerKahaDBMetaData readPayload(DataInput dataIn) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
             JobSchedulerKahaDBMetaData rc = new JobSchedulerKahaDBMetaData(store);
             rc.read(dataIn);
             return rc;
@@ -884,6 +891,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
             Map.Entry<String, JobSchedulerImpl> entry = i.next();
             JobSchedulerImpl scheduler = entry.getValue();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7196
             for (Iterator<JobLocation> jobLocationIterator = scheduler.getAllScheduledJobs(tx); jobLocationIterator.hasNext();) {
                 final JobLocation job = jobLocationIterator.next();
                 if (job.getLocation().compareTo(lastAppendLocation) >= 0) {
@@ -912,6 +920,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
             Map.Entry<String, JobSchedulerImpl> entry = i.next();
             JobSchedulerImpl scheduler = entry.getValue();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7196
             for (Iterator<JobLocation> jobLocationIterator = scheduler.getAllScheduledJobs(tx); jobLocationIterator.hasNext();) {
                 final JobLocation job = jobLocationIterator.next();
                 missingJournalFiles.add(job.getLocation().getDataFileId());
@@ -995,6 +1004,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
             Map.Entry<String, JobSchedulerImpl> entry = i.next();
             JobSchedulerImpl scheduler = entry.getValue();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7196
             for (Iterator<JobLocation> jobLocationIterator = scheduler.getAllScheduledJobs(tx); jobLocationIterator.hasNext();) {
                 final JobLocation job = jobLocationIterator.next();
 

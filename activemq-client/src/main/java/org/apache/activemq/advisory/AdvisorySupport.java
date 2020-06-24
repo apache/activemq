@@ -73,9 +73,12 @@ public final class AdvisorySupport {
     public static final String MSG_PROPERTY_DISCARDED_COUNT = "discardedCount";
 
     public static final ActiveMQTopic ALL_DESTINATIONS_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(
+//IC see: https://issues.apache.org/jira/browse/AMQ-3615
             TOPIC_ADVISORY_TOPIC.getPhysicalName() + "," + QUEUE_ADVISORY_TOPIC.getPhysicalName() + "," +
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
                     TEMP_QUEUE_ADVISORY_TOPIC.getPhysicalName() + "," + TEMP_TOPIC_ADVISORY_TOPIC.getPhysicalName());
     public static final ActiveMQTopic TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(
+//IC see: https://issues.apache.org/jira/browse/AMQ-3204
             TEMP_QUEUE_ADVISORY_TOPIC.getPhysicalName() + "," + TEMP_TOPIC_ADVISORY_TOPIC.getPhysicalName());
     private static final ActiveMQTopic AGENT_TOPIC_DESTINATION = new ActiveMQTopic(AGENT_TOPIC);
 
@@ -87,6 +90,7 @@ public final class AdvisorySupport {
     }
 
     public static ActiveMQTopic[] getAllDestinationAdvisoryTopics(Destination destination) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3705
         return getAllDestinationAdvisoryTopics(ActiveMQMessageTransformation.transformDestination(destination));
     }
 
@@ -113,6 +117,7 @@ public final class AdvisorySupport {
     }
 
     public static ActiveMQTopic getConsumerAdvisoryTopic(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         String prefix;
         if (destination.isQueue()) {
             prefix = QUEUE_CONSUMER_ADVISORY_TOPIC_PREFIX;
@@ -123,6 +128,7 @@ public final class AdvisorySupport {
     }
 
     public static ActiveMQTopic getVirtualDestinationConsumerAdvisoryTopic(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         String prefix;
         if (destination.isQueue()) {
             prefix = QUEUE_VIRTUAL_DESTINATION_CONSUMER_ADVISORY_TOPIC_PREFIX;
@@ -137,7 +143,9 @@ public final class AdvisorySupport {
     }
 
     public static ActiveMQTopic getProducerAdvisoryTopic(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         String prefix;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7352
         if (destination == null) {
             prefix = ANONYMOUS_PRODUCER_ADVISORY_TOPIC_PREFIX;
         } else if (destination.isQueue()) {
@@ -149,6 +157,7 @@ public final class AdvisorySupport {
     }
 
     private static ActiveMQTopic getAdvisoryTopic(ActiveMQDestination destination, String prefix, boolean consumerTopics) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7352
         return destination != null ? new ActiveMQTopic(prefix + destination.getPhysicalName().replaceAll(",", "&sbquo;")):
             new ActiveMQTopic(prefix);
     }
@@ -158,6 +167,10 @@ public final class AdvisorySupport {
     }
 
     public static ActiveMQTopic getExpiredMessageTopic(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1207
+//IC see: https://issues.apache.org/jira/browse/AMQ-880
+//IC see: https://issues.apache.org/jira/browse/AMQ-450
+//IC see: https://issues.apache.org/jira/browse/AMQ-879
         if (destination.isQueue()) {
             return getExpiredQueueMessageAdvisoryTopic(destination);
         }
@@ -179,6 +192,7 @@ public final class AdvisorySupport {
     }
 
     public static ActiveMQTopic getNoConsumersAdvisoryTopic(Destination destination) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3705
         return getExpiredMessageTopic(ActiveMQMessageTransformation.transformDestination(destination));
     }
 
@@ -258,16 +272,19 @@ public final class AdvisorySupport {
     }
 
     public static ActiveMQTopic getMessageDLQdAdvisoryTopic(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2786
         String name = MESSAGE_DLQ_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
 
     public static ActiveMQTopic getMasterBrokerAdvisoryTopic() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1541
         return new ActiveMQTopic(MASTER_BROKER_TOPIC_PREFIX);
     }
 
     public static ActiveMQTopic getNetworkBridgeAdvisoryTopic() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3107
         return new ActiveMQTopic(NETWORK_BRIDGE_TOPIC_PREFIX);
     }
 
@@ -287,6 +304,7 @@ public final class AdvisorySupport {
 
     public static ActiveMQTopic getDestinationAdvisoryTopic(ActiveMQDestination destination) {
         switch (destination.getDestinationType()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
             case ActiveMQDestination.QUEUE_TYPE:
                 return QUEUE_ADVISORY_TOPIC;
             case ActiveMQDestination.TOPIC_TYPE:
@@ -305,6 +323,7 @@ public final class AdvisorySupport {
     }
 
     public static boolean isTempDestinationAdvisoryTopic(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3615
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
             for (int i = 0; i < compositeDestinations.length; i++) {
@@ -338,6 +357,7 @@ public final class AdvisorySupport {
     }
 
     public static boolean isAdvisoryTopic(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
         if (destination != null) {
             if (destination.isComposite()) {
                 ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
@@ -409,6 +429,7 @@ public final class AdvisorySupport {
     }
 
     public static boolean isVirtualDestinationConsumerAdvisoryTopic(Destination destination) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         return isVirtualDestinationConsumerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
     }
 
@@ -431,6 +452,9 @@ public final class AdvisorySupport {
     }
 
     public static boolean isSlowConsumerAdvisoryTopic(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
             for (int i = 0; i < compositeDestinations.length; i++) {
@@ -485,6 +509,7 @@ public final class AdvisorySupport {
     }
 
     public static boolean isMasterBrokerAdvisoryTopic(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1541
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
             for (int i = 0; i < compositeDestinations.length; i++) {
@@ -553,6 +578,7 @@ public final class AdvisorySupport {
     }
 
     public static boolean isNetworkBridgeAdvisoryTopic(Destination destination) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
         return isNetworkBridgeAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
     }
 
@@ -578,6 +604,7 @@ public final class AdvisorySupport {
     }
 
     public static ActiveMQTopic getNetworkBridgeForwardFailureAdvisoryTopic() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
         return new ActiveMQTopic(NETWORK_BRIDGE_FORWARD_FAILURE_TOPIC_PREFIX);
     }
 }

@@ -112,7 +112,9 @@ public class KahaDBTest extends TestCase {
 
 
     public void testCheckCorruptionNotIgnored() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2405
         KahaDBStore kaha = createStore(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4662
         assertTrue(kaha.isChecksumJournalFiles());
         assertFalse(kaha.isCheckForCorruptJournalFiles());
 
@@ -135,6 +137,7 @@ public class KahaDBTest extends TestCase {
             broker = createBroker(kaha);
             fail("expected IOException");
         } catch (IOException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2405
             assertTrue( e.getMessage().startsWith("Detected missing/corrupt journal files") );
         }
 
@@ -142,6 +145,7 @@ public class KahaDBTest extends TestCase {
 
 
     public void testMigrationOnNewDefaultForChecksumJournalFiles() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4662
         KahaDBStore kaha = createStore(true);
         kaha.setChecksumJournalFiles(false);
         assertFalse(kaha.isChecksumJournalFiles());
@@ -199,6 +203,7 @@ public class KahaDBTest extends TestCase {
     }
 
     public void testNoReplayOnStopStart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6277
         KahaDBStore kaha = createStore(true);
         BrokerService broker = createBroker(kaha);
         sendMessages(100);
@@ -226,6 +231,7 @@ public class KahaDBTest extends TestCase {
         assertEquals("Expected to received all messages.", count, 100);
         broker.stop();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6446
         Logger.getRootLogger().removeAppender(appender);
         assertFalse("Did not replay any records from the journal", didSomeRecovery.get());
     }

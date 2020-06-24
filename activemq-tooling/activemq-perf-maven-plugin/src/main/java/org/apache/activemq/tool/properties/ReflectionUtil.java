@@ -40,6 +40,7 @@ public final class ReflectionUtil {
 
             Object target = obj;
             Class<?> targetClass = obj.getClass();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
 
             // DEBUG: Debugging Info
             debugInfo = "Invoking: " + targetClass.getName();
@@ -93,6 +94,7 @@ public final class ReflectionUtil {
                 throw new IllegalAccessException("Unable to find appropriate setter method signature for property: " + property);
             }
             Class<?> paramType = setterMethod.getParameterTypes()[0];
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
 
             // Set primitive type
             debugInfo += "." + setterMethod + "(" + paramType.getName() + ": " + val + ")";
@@ -160,6 +162,7 @@ public final class ReflectionUtil {
     }
 
     public static void configureClass(Object obj, Properties props) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
         for (Iterator<Object> i = props.keySet().iterator(); i.hasNext();) {
             try {
                 String key = (String)i.next();
@@ -213,6 +216,7 @@ public final class ReflectionUtil {
                     } else {
                         try {
                             Object val = getterMethods[i].invoke(targetObject, null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4289
                             if (val != null && val != targetObject) {
                                 props.putAll(retrieveClassProperties(propertyName + ".", val.getClass(), val));
                             }

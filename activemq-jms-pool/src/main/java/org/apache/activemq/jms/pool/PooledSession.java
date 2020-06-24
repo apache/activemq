@@ -69,6 +69,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     public PooledSession(SessionKey key, SessionHolder sessionHolder, KeyedObjectPool<SessionKey, SessionHolder> sessionPool, boolean transactional, boolean anonymous) {
         this.key = key;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
         this.sessionHolder = sessionHolder;
         this.sessionPool = sessionPool;
         this.transactional = transactional;
@@ -77,6 +78,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     public void addSessionEventListener(PooledSessionEventListener listener) {
         // only add if really needed
+//IC see: https://issues.apache.org/jira/browse/AMQ-4225
         if (!sessionEventListeners.contains(listener)) {
             this.sessionEventListeners.add(listener);
         }
@@ -92,15 +94,18 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public void close() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5015
         if (ignoreClose) {
             return;
         }
 
         if (closed.compareAndSet(false, true)) {
             boolean invalidate = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
             try {
                 // lets reset the session
                 getInternalSession().setMessageListener(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2095
 
                 // Close any consumers and browsers that may have been created.
                 for (Iterator<MessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
@@ -115,6 +120,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
                 if (transactional && !isXa) {
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2095
                         getInternalSession().rollback();
                     } catch (JMSException e) {
                         invalidate = true;
@@ -127,6 +133,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
             } finally {
                 consumers.clear();
                 browsers.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4225
                 for (PooledSessionEventListener listener : this.sessionEventListeners) {
                     listener.onSessionClosed(this);
                 }
@@ -136,6 +143,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
             if (invalidate) {
                 // lets close the session and not put the session back into the pool
                 // instead invalidate it so the pool can create a new one on demand.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
                 if (sessionHolder != null) {
                     try {
                         sessionHolder.close();
@@ -152,18 +160,21 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
                 try {
                     sessionPool.returnObject(key, sessionHolder);
                 } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
                     javax.jms.IllegalStateException illegalStateException = new javax.jms.IllegalStateException(e.toString());
                     illegalStateException.initCause(e);
                     throw illegalStateException;
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
             sessionHolder = null;
         }
     }
 
     @Override
     public void commit() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2095
         getInternalSession().commit();
     }
 
@@ -205,10 +216,12 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         TemporaryQueue result;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3680
 
         result = getInternalSession().createTemporaryQueue();
 
         // Notify all of the listeners of the created temporary Queue.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4225
         for (PooledSessionEventListener listener : this.sessionEventListeners) {
             listener.onTemporaryQueueCreate(result);
         }
@@ -223,6 +236,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         result = getInternalSession().createTemporaryTopic();
 
         // Notify all of the listeners of the created temporary Topic.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4225
         for (PooledSessionEventListener listener : this.sessionEventListeners) {
             listener.onTemporaryTopicCreate(result);
         }
@@ -273,6 +287,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     @Override
     public XAResource getXAResource() {
         SessionHolder session = safeGetSessionHolder();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
 
         if (session.getSession() instanceof XASession) {
             return ((XASession) session.getSession()).getXAResource();
@@ -288,6 +303,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
         SessionHolder session = safeGetSessionHolder();
         if (session != null) {
             session.getSession().run();
@@ -343,6 +359,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4968
         return addTopicSubscriber(((TopicSession) getInternalSession()).createSubscriber(topic));
     }
 
@@ -379,6 +396,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     }
 
     public Session getInternalSession() throws IllegalStateException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
         return safeGetSessionHolder().getSession();
     }
 
@@ -390,6 +408,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         MessageProducer result = null;
 
         if (useAnonymousProducers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
             result = safeGetSessionHolder().getOrCreateProducer();
         } else {
             result = getInternalSession().createProducer(destination);
@@ -406,6 +425,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         QueueSender result = null;
 
         if (useAnonymousProducers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
             result = safeGetSessionHolder().getOrCreateSender();
         } else {
             result = ((QueueSession) getInternalSession()).createSender(destination);
@@ -422,6 +442,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         TopicPublisher result = null;
 
         if (useAnonymousProducers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
             result = safeGetSessionHolder().getOrCreatePublisher();
         } else {
             result = ((TopicSession) getInternalSession()).createPublisher(destination);
@@ -431,6 +452,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     }
 
     private QueueBrowser addQueueBrowser(QueueBrowser browser) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-615
         browsers.add(browser);
         return browser;
     }
@@ -459,6 +481,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
         return "PooledSession { " + safeGetSessionHolder() + " }";
     }
 
@@ -473,10 +496,12 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
      *            the consumer which is being closed
      */
     protected void onConsumerClose(MessageConsumer consumer) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4968
         consumers.remove(consumer);
     }
 
     private SessionHolder safeGetSessionHolder() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5564
         SessionHolder sessionHolder = this.sessionHolder;
         if (sessionHolder == null) {
             throw new IllegalStateException("The session has already been closed");

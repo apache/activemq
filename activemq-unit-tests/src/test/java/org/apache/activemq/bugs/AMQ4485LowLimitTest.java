@@ -241,6 +241,8 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
                     if (tally.accumulator.get() != expected) {
                         LOG.info("Tally for: " + tally.brokerName + ", dest: " + tally.destination + " - " + tally.accumulator.get() + " != " + expected + ", " + tally.expected);
                         if (tally.accumulator.get() > expected - 50) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                             dumpQueueStat(null);
                         }
                         if (tally.expected.size() == 1) {
@@ -261,6 +263,8 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
         LOG.info("Duration:" + TimeUtils.printDuration(duration));
 
         assertEquals("nothing in the dlq's", 0, dumpQueueStat(new ActiveMQQueue("ActiveMQ.DLQ")));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
 
     }
 
@@ -276,6 +280,8 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
     }
 
     private long dumpQueueStat(ActiveMQDestination destination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         long sumTotal = 0;
         Collection<BrokerItem> brokerList = brokers.values();
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext(); ) {

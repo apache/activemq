@@ -33,6 +33,7 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 public class FTPBlobTest extends FTPTestSupport {
 
     public void testBlobFile() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2732
         setConnection();
         // first create Message
         File file = File.createTempFile("amq-data-file-", ".dat");
@@ -48,6 +49,7 @@ public class FTPBlobTest extends FTPTestSupport {
         MessageConsumer consumer = session.createConsumer(destination);
         BlobMessage message = session.createBlobMessage(file);
         message.setName("fileName");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3067
 
         producer.send(message);
         Thread.sleep(1000);
@@ -56,6 +58,7 @@ public class FTPBlobTest extends FTPTestSupport {
         Message msg = consumer.receive(1000);
         assertTrue(msg instanceof ActiveMQBlobMessage);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3067
         assertEquals("name is correct", "fileName", ((ActiveMQBlobMessage)msg).getName());
         InputStream input = ((ActiveMQBlobMessage) msg).getInputStream();
         StringBuilder b = new StringBuilder();
@@ -65,6 +68,7 @@ public class FTPBlobTest extends FTPTestSupport {
             i = input.read();
         }
         input.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         File uploaded = new File(ftpHomeDirFile, msg.getJMSMessageID().toString().replace(":", "_"));
         assertEquals(content, b.toString());
         assertTrue(uploaded.exists());

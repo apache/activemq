@@ -42,6 +42,7 @@ public class AMQ4441Test extends JmsPoolTestSupport {
     @Before
     public void setUp() throws Exception {
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         brokerService = new BrokerService();
         brokerService.setDeleteAllMessagesOnStartup(true);
@@ -57,6 +58,7 @@ public class AMQ4441Test extends JmsPoolTestSupport {
     public void demo() throws JMSException, InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean done = new AtomicBoolean(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         final PooledConnectionFactory pooled = new PooledConnectionFactory();
         pooled.setConnectionFactory(new ActiveMQConnectionFactory("vm://localhost?create=false"));
 
@@ -88,6 +90,7 @@ public class AMQ4441Test extends JmsPoolTestSupport {
             thread.start();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         if (latch.await(20, TimeUnit.SECONDS)) {
             fail("A thread obtained broken connection");
         }

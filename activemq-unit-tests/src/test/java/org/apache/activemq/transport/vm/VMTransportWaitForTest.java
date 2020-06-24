@@ -43,9 +43,11 @@ public class VMTransportWaitForTest {
 
     private static final String VM_BROKER_URI_NO_WAIT =
         "vm://localhost?broker.persistent=false&create=false";
+//IC see: https://issues.apache.org/jira/browse/AMQ-1895
 
     private static final String VM_BROKER_URI_WAIT_FOR_START =
         VM_BROKER_URI_NO_WAIT + "&waitForStart=" + WAIT_TIME;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
 
     private static final String VM_BROKER_URI_SHORT_WAIT_FOR_START =
         VM_BROKER_URI_NO_WAIT + "&waitForStart=" + SHORT_WAIT_TIME;
@@ -69,6 +71,7 @@ public class VMTransportWaitForTest {
 
         // spawn a thread that will wait for an embedded broker to start via
         // vm://..
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
         Thread t = new Thread("ClientConnectionThread") {
             @Override
             public void run() {
@@ -79,6 +82,8 @@ public class VMTransportWaitForTest {
                     gotConnection.countDown();
                 } catch (Exception e) {
                     e.printStackTrace();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2527
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
                     fail("unexpected exception: " + e);
                 }
             }
@@ -91,6 +96,7 @@ public class VMTransportWaitForTest {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
         broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
         assertTrue("has got connection", gotConnection.await(5, TimeUnit.SECONDS));
         broker.stop();
     }
@@ -99,6 +105,7 @@ public class VMTransportWaitForTest {
     public void testWaitForNoBrokerInRegistry() throws Exception {
 
         long startTime = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
 
         try {
             ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(new URI(VM_BROKER_URI_SHORT_WAIT_FOR_START));

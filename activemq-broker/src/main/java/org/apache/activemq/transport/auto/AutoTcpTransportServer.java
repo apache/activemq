@@ -90,6 +90,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         try {
             wff = (WireFormatFactory)WIREFORMAT_FACTORY_FINDER.newInstance(scheme);
             if (options != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6420
                 final Map<String, Object> wfOptions = new HashMap<>();
                 if (options.get(AutoTransportUtils.ALL) != null) {
                     wfOptions.putAll(options.get(AutoTransportUtils.ALL));
@@ -118,6 +119,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
             // Try to load if from a META-INF property.
             try {
                 tf = (TransportFactory)TRANSPORT_FACTORY_FINDER.newInstance(scheme);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
                 if (options != null) {
                     IntrospectionSupport.setProperties(tf, options);
                 }
@@ -154,6 +156,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
 
         //Use an executor service here to handle new connections.  Setting the max number
         //of threads to the maximum number of connections the thread count isn't unbounded
+//IC see: https://issues.apache.org/jira/browse/AMQ-6535
         newConnectionExecutor = new ThreadPoolExecutor(maxConnectionThreadPoolSize,
                 maxConnectionThreadPoolSize,
                 30L, TimeUnit.SECONDS,
@@ -164,6 +167,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
 
         //Executor for waiting for bytes to detection of protocol
         protocolDetectionExecutor = new ThreadPoolExecutor(maxConnectionThreadPoolSize,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
                 maxConnectionThreadPoolSize,
                 30L, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<Runnable>());
@@ -201,6 +205,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
      */
     public void setMaxConnectionThreadPoolSize(int maxConnectionThreadPoolSize) {
         this.maxConnectionThreadPoolSize = maxConnectionThreadPoolSize;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6535
         newConnectionExecutor.setCorePoolSize(maxConnectionThreadPoolSize);
         newConnectionExecutor.setMaximumPoolSize(maxConnectionThreadPoolSize);
         protocolDetectionExecutor.setCorePoolSize(maxConnectionThreadPoolSize);
@@ -235,6 +240,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         if (isAllProtocols() || enabledProtocols.contains(AutoTransportUtils.OPENWIRE)) {
             OpenWireProtocolVerifier owpv;
             if (wireFormatFactory instanceof OpenWireFormatFactory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7191
                 owpv = new OpenWireProtocolVerifier(((OpenWireFormatFactory) wireFormatFactory).isSizePrefixDisabled());
             } else {
                 owpv = new OpenWireProtocolVerifier(new OpenWireFormatFactory().isSizePrefixDisabled());
@@ -253,6 +259,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         //This needs to be done in a new thread because
         //the socket might be waiting on the client to send bytes
         //doHandleSocket can't complete until the protocol can be detected
+//IC see: https://issues.apache.org/jira/browse/AMQ-6535
         newConnectionExecutor.submit(new Runnable() {
             @Override
             public void run() {
@@ -268,6 +275,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         final ByteBuffer data = ByteBuffer.allocate(8);
 
         // We need to peak at the first 8 bytes of the buffer to detect the protocol
+//IC see: https://issues.apache.org/jira/browse/AMQ-6535
         Future<?> future = protocolDetectionExecutor.submit(new Runnable() {
             @Override
             public void run() {
@@ -277,6 +285,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
                         //and the socket is closed
                         int read = is.read();
                         if (read == -1) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
                             throw new IOException("Connection failed, stream is closed.");
                         }
                         data.put((byte) read);
@@ -290,6 +299,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
 
         try {
             //If this fails and throws an exception and the socket will be closed
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             waitForProtocolDetectionFinish(future, readBytes);
         } finally {
             //call cancel in case task didn't complete
@@ -298,6 +308,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         data.flip();
         ProtocolInfo protocolInfo = detectProtocol(data.array());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6505
         InitBuffer initBuffer = new InitBuffer(readBytes.get(), ByteBuffer.allocate(readBytes.get()));
         initBuffer.buffer.put(data.array());
 
@@ -307,11 +318,13 @@ public class AutoTcpTransportServer extends TcpTransportServer {
 
         WireFormat format = protocolInfo.detectedWireFormatFactory.createWireFormat();
         Transport transport = createTransport(socket, format, protocolInfo.detectedTransportFactory, initBuffer);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6505
 
         return new TransportInfo(format, transport, protocolInfo.detectedTransportFactory);
     }
 
     protected void waitForProtocolDetectionFinish(final Future<?> future, final AtomicInteger readBytes) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         try {
             //Wait for protocolDetectionTimeOut if defined
             if (protocolDetectionTimeOut > 0) {
@@ -332,6 +345,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
      * @return
      */
     protected TcpTransport createTransport(Socket socket, WireFormat format,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6505
             TcpTransportFactory detectedTransportFactory, InitBuffer initBuffer) throws IOException {
         return new TcpTransport(format, socket, initBuffer);
     }
@@ -352,6 +366,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
     }
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6535
         if (newConnectionExecutor != null) {
             newConnectionExecutor.shutdownNow();
             try {
@@ -394,6 +409,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         }
 
         if (!found) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             throw new IllegalStateException("Could not detect the wire format");
         }
 

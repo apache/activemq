@@ -40,6 +40,7 @@ public class DurableConduitBridge extends ConduitBridge {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         return "DurableConduitBridge:" + configuration.getBrokerName() + "->" + getRemoteBrokerName();
     }
     /**
@@ -62,6 +63,7 @@ public class DurableConduitBridge extends ConduitBridge {
     @Override
     protected void setupStaticDestinations() {
         super.setupStaticDestinations();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2691
         ActiveMQDestination[] dests = configuration.isDynamicOnly() ? null : durableDestinations;
         if (dests != null) {
             for (ActiveMQDestination dest : dests) {
@@ -75,11 +77,14 @@ public class DurableConduitBridge extends ConduitBridge {
                             String candidateSubName = getSubscriberName(dest);
                             for (Subscription subscription : topicRegion.getDurableSubscriptions().values()) {
                                 String subName = subscription.getConsumerInfo().getSubscriptionName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
                                 String clientId = subscription.getContext().getClientId();
                                 if (subName != null && subName.equals(candidateSubName) && clientId.startsWith(configuration.getName())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
                                     DemandSubscription sub = createDemandSubscription(dest, subName);
                                     if (sub != null) {
                                         sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
                                         sub.setStaticallyIncluded(true);
                                         addSubscription(sub);
                                         break;
@@ -91,6 +96,7 @@ public class DurableConduitBridge extends ConduitBridge {
                         LOG.error("Failed to add static destination {}", dest, e);
                     }
                     LOG.trace("Forwarding messages for durable destination: {}", dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6423
                 } else if (configuration.isSyncDurableSubs() && !isPermissableDestination(dest)) {
                     if (dest.isTopic()) {
                         RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
@@ -99,6 +105,7 @@ public class DurableConduitBridge extends ConduitBridge {
                         String candidateSubName = getSubscriberName(dest);
                         for (Subscription subscription : topicRegion.getDurableSubscriptions().values()) {
                             String subName = subscription.getConsumerInfo().getSubscriptionName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6538
                             if (subName != null && subName.equals(candidateSubName) &&
                                     subscription instanceof DurableTopicSubscription) {
                                try {
@@ -129,7 +136,10 @@ public class DurableConduitBridge extends ConduitBridge {
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
         boolean isForcedDurable = NetworkBridgeUtils.isForcedDurable(info,
                 dynamicallyIncludedDestinations, staticallyIncludedDestinations);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6472
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6383
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         if (addToAlreadyInterestedConsumers(info, isForcedDurable)) {
             return null; // don't want this subscription added
         }
@@ -142,9 +152,12 @@ public class DurableConduitBridge extends ConduitBridge {
             info.setSubscriptionName(getSubscriberName(info.getDestination()));
             // and override the consumerId with something unique so that it won't
             // be removed if the durable subscriber (at the other end) goes away
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
            info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),
                                consumerIdGenerator.getNextSequenceId()));
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
+//IC see: https://issues.apache.org/jira/browse/AMQ-1509
         info.setSelector(null);
         DemandSubscription demandSubscription = doCreateDemandSubscription(info);
         if (forcedDurableId != null) {
@@ -155,6 +168,7 @@ public class DurableConduitBridge extends ConduitBridge {
     }
 
     protected String getSubscriberName(ActiveMQDestination dest) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2691
         String subscriberName = DURABLE_SUB_PREFIX + configuration.getBrokerName() + "_" + dest.getPhysicalName();
         return subscriberName;
     }

@@ -109,6 +109,8 @@ public class AMQ5844Test {
         broker.setBrokerName("Main");
 
         PolicyEntry policy = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
         AbortSlowAckConsumerStrategy abortSlowConsumerStrategy = new AbortSlowAckConsumerStrategy();
         abortSlowConsumerStrategy.setAbortConnection(false);
         //time in milliseconds between checks for slow subscriptions

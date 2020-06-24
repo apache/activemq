@@ -49,6 +49,7 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
         LOG.info("Created sendConnection: " + sendConnection);
         LOG.info("Created receiveConnection: " + receiveConnection);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1780
         session = createSendSession(sendConnection);
         receiveSession = createReceiveSession(receiveConnection);
 
@@ -81,6 +82,7 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
     }
 
     protected Session createReceiveSession(Connection receiveConnection) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1780
         return receiveConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 

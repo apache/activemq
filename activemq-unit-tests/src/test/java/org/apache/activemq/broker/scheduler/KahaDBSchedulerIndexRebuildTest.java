@@ -177,6 +177,7 @@ public class KahaDBSchedulerIndexRebuildTest {
         TextMessage message = session.createTextMessage("test msg");
         long time = TimeUnit.SECONDS.toMillis(30);
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7458
         message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, 0);
         producer.send(message);
         producer.close();

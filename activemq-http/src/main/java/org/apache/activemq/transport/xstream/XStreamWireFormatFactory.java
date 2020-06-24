@@ -26,6 +26,7 @@ import org.apache.activemq.wireformat.WireFormatFactory;
 public class XStreamWireFormatFactory implements WireFormatFactory {
 
     String host;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5050
 
     public WireFormat createWireFormat() {
         return new XStreamWireFormat();

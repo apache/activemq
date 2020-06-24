@@ -25,6 +25,7 @@ public class SubscriptionKey {
     private final int hashValue;
 
     public SubscriptionKey(SubscriptionInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1305
         this(info.getClientId(), info.getSubscriptionName());
     }
 

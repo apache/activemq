@@ -32,6 +32,7 @@ public class ConsumeQueuePrefetchTest extends ConsumeTopicPrefetchTest {
     
     public void testInflightWithConsumerPerMessage() throws JMSException {
         makeMessages(prefetchSize);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2566
 
         LOG.info("About to send and receive: " + prefetchSize + " on destination: " + destination
                 + " of type: " + destination.getClass().getName());

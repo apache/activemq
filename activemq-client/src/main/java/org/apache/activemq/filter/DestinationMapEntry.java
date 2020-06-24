@@ -31,6 +31,7 @@ public abstract class DestinationMapEntry<T> implements Comparable<T> {
 
     public int compareTo(Object that) {
         if (that instanceof DestinationMapEntry) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
             DestinationMapEntry<?> thatEntry = (DestinationMapEntry<?>)that;
             return ActiveMQDestination.compare(destination, thatEntry.destination);
         } else if (that == null) {
@@ -55,6 +56,7 @@ public abstract class DestinationMapEntry<T> implements Comparable<T> {
     }
 
     public void setTempTopic(boolean flag){
+//IC see: https://issues.apache.org/jira/browse/AMQ-2697
         setDestination(new ActiveMQTempTopic(">"));
     }
     

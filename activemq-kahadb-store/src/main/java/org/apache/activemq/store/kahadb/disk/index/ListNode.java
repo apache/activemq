@@ -49,6 +49,7 @@ public final class ListNode<Key, Value> {
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
             return "PageId:" + page.getPageId() + ", index:" + containingList + super.toString();
         }
     };
@@ -78,6 +79,7 @@ public final class ListNode<Key, Value> {
 
         @Override
         public Value setValue(Value value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             Value oldValue = this.value;
             this.value = value;
             return oldValue;
@@ -94,6 +96,7 @@ public final class ListNode<Key, Value> {
         private final Transaction tx;
         private final ListIndex<Key, Value> index;
         ListNode<Key, Value> nextEntry;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
 
         private ListNodeIterator(Transaction tx, ListNode<Key, Value> current) {
             this.tx = tx;
@@ -133,12 +136,15 @@ public final class ListNode<Key, Value> {
     }
 
     final class ListIterator implements Iterator<Entry<Key, Value>> {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
 
         private final Transaction tx;
         private final ListIndex<Key, Value> targetList;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
         ListNode<Key, Value> currentNode, previousNode;
         KeyValueEntry<Key, Value> nextEntry;
         KeyValueEntry<Key, Value> entryToRemove;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
 
         private ListIterator(Transaction tx, ListNode<Key, Value> current, long start) {
             this.tx = tx;
@@ -187,6 +193,7 @@ public final class ListNode<Key, Value> {
 
         @Override
         public Entry<Key, Value> next() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             if (nextEntry != null) {
                 entryToRemove = nextEntry;
                 nextEntry = entryToRemove.getNext();
@@ -204,6 +211,7 @@ public final class ListNode<Key, Value> {
             try {
                 entryToRemove.unlink();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
                 ListNode<Key, Value> toRemoveNode = null;
                 if (currentNode.entries.isEmpty()) {
                     // may need to free this node
@@ -230,6 +238,7 @@ public final class ListNode<Key, Value> {
                         previousNode.setNext(ListIndex.NOT_SET);
                         previousNode.store(tx);
                         targetList.setTailPageId(previousNode.getPageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
                     } else {
                         toRemoveNode = currentNode;
                         previousNode.setNext(toRemoveNode.getNext());
@@ -240,6 +249,7 @@ public final class ListNode<Key, Value> {
 
                 targetList.onRemove(entryToRemove);
                 entryToRemove = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6352
 
                 if (toRemoveNode != null) {
                     tx.free(toRemoveNode.getPage());
@@ -253,6 +263,7 @@ public final class ListNode<Key, Value> {
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         ListNode<Key, Value> getCurrent() {
             return this.currentNode;
         }
@@ -269,13 +280,16 @@ public final class ListNode<Key, Value> {
         private final Marshaller<Value> valueMarshaller;
 
         public NodeMarshaller(Marshaller<Key> keyMarshaller, Marshaller<Value> valueMarshaller) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
             this.keyMarshaller = keyMarshaller;
             this.valueMarshaller = valueMarshaller;
         }
 
         @Override
         public void writePayload(ListNode<Key, Value> node, DataOutput os) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
             os.writeLong(node.next);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             short count = (short) node.entries.size(); // cast may truncate
                                                        // value...
             if (count != node.entries.size()) {
@@ -294,6 +308,7 @@ public final class ListNode<Key, Value> {
         @Override
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ListNode<Key, Value> readPayload(DataInput is) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             ListNode<Key, Value> node = new ListNode<Key, Value>();
             node.setNext(is.readLong());
             final short size = is.readShort();
@@ -309,6 +324,7 @@ public final class ListNode<Key, Value> {
             throw new IllegalArgumentException("Key cannot be null");
         }
         entries.addLast(new KeyValueEntry<Key, Value>(key, value));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         store(tx, ADD_LAST);
         return null;
     }
@@ -323,6 +339,7 @@ public final class ListNode<Key, Value> {
     }
 
     public void storeUpdate(Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4094
         store(tx, ADD_LAST);
     }
 
@@ -332,17 +349,22 @@ public final class ListNode<Key, Value> {
             // then we need to overflow the value
             getContainingList().storeNode(tx, this, entries.size() == 1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             if (this.next == -1) {
                 getContainingList().setTailPageId(getPageId());
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
         } catch (Transaction.PageOverflowIOException e) {
             // If we get an overflow
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
             split(tx, addFirst);
         }
     }
 
     private void store(Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4094
+//IC see: https://issues.apache.org/jira/browse/AMQ-4094
         getContainingList().storeNode(tx, this, true);
     }
 
@@ -351,16 +373,20 @@ public final class ListNode<Key, Value> {
         if (isAddFirst) {
             // head keeps the first entry, insert extension with the rest
             extension.setEntries(entries.getHead().splitAfter());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
             extension.setNext(this.getNext());
             extension.store(tx, isAddFirst);
             this.setNext(extension.getPageId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
         } else {
             extension.setEntries(entries.getTail().getPrevious().splitAfter());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4094
             extension.setNext(this.getNext());
             extension.store(tx, isAddFirst);
             getContainingList().setTailPageId(extension.getPageId());
             this.setNext(extension.getPageId());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         store(tx, true);
     }
 
@@ -377,6 +403,7 @@ public final class ListNode<Key, Value> {
         KeyValueEntry<Key, Value> nextEntry = entries.getTail();
         while (nextEntry != null) {
             if (nextEntry.getKey().equals(key)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
                 result = nextEntry.getValue();
                 break;
             }
@@ -455,6 +482,7 @@ public final class ListNode<Key, Value> {
     }
 
     public void setContainingList(ListIndex<Key, Value> list) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         this.containingList = list;
     }
 
@@ -476,6 +504,7 @@ public final class ListNode<Key, Value> {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3775
         return "[ListNode(" + (page != null ? page.getPageId() + "->" + next : "null") + ")[" + entries.size() + "]]";
     }
 }

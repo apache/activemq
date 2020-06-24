@@ -129,6 +129,7 @@ public class AbstractRuntimeConfigurationBroker extends BrokerFilter {
      * @throws Exception
      */
     protected void applyDestinationWork() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6035
         Runnable work = addDestinationWork.poll();
         if (work != null) {
             try {

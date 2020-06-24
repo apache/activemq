@@ -79,11 +79,13 @@ public class MQTTConnectTest extends MQTTTestSupport {
 
     @Override
     public String getProtocolConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         return "transport.connectAttemptTimeout=1000";
     }
 
     @Test(timeout = 90000)
     public void testParallelConnectPlain() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5598
         final int THREAD_COUNT = 16;
         final int CONNECTION_COUNT = 100;
         ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
@@ -139,6 +141,7 @@ public class MQTTConnectTest extends MQTTTestSupport {
                  return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
              }
          }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
 
         // and it should be closed due to inactivity
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
@@ -147,6 +150,7 @@ public class MQTTConnectTest extends MQTTTestSupport {
                 return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
 
         assertTrue("no exceptions", exceptions.isEmpty());
     }

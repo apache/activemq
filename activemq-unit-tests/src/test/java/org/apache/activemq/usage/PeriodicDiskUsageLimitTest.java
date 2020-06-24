@@ -126,6 +126,8 @@ public class PeriodicDiskUsageLimitTest {
 
         //set threshold to 1 megabyte
         broker.setDiskUsageCheckRegrowThreshold(1024 * 1024);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
         broker.setSchedulePeriodForDiskUsageCheck(2000);
         startBroker();
 
@@ -135,6 +137,7 @@ public class PeriodicDiskUsageLimitTest {
         final long storeLimit = broker.getSystemUsage().getStoreUsage().getLimit();
         final long tmpLimit = broker.getSystemUsage().getTempUsage().getLimit();
         FileUtils.deleteQuietly(testfile);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
 
         //regrow
         assertTrue("Store Usage should ramp up.", Wait.waitFor(new Wait.Condition() {
@@ -143,6 +146,7 @@ public class PeriodicDiskUsageLimitTest {
                 return broker.getSystemUsage().getStoreUsage().getLimit() >  storeLimit;
             }
         }, 15000));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
 
         //regrow
         assertTrue("Temp Usage should ramp up.", Wait.waitFor(new Wait.Condition() {
@@ -150,6 +154,7 @@ public class PeriodicDiskUsageLimitTest {
             public boolean isSatisified() throws Exception {
                 return broker.getSystemUsage().getTempUsage().getLimit() >  tmpLimit;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
         }, 15000));
     }
 
@@ -180,6 +185,10 @@ public class PeriodicDiskUsageLimitTest {
      */
     @Test(timeout=60000)
     public void testDiskLimitCheckNotSetUsingPercent() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5964
+//IC see: https://issues.apache.org/jira/browse/AMQ-5965
+//IC see: https://issues.apache.org/jira/browse/AMQ-5969
         tempUsage.setPercentLimit(getFreePercentage(broker.getTempDataStore().getDirectory()) + 5);
         storeUsage.setPercentLimit(getFreePercentage(adapter.getDirectory()) + 5);
         startBroker();
@@ -188,8 +197,10 @@ public class PeriodicDiskUsageLimitTest {
         long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
 
         //write a 5 meg file to the file system
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
         writeTestFile(5 * 1024 * 1024);
         Thread.sleep(5000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
 
         //assert that the usage limits have not changed because a task should not have run
         assertEquals(originalDisk, broker.getSystemUsage().getStoreUsage().getLimit());
@@ -213,6 +224,7 @@ public class PeriodicDiskUsageLimitTest {
         long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
 
         //write a 2 meg file to the file system
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
         writeTestFile(2 * 1024 * 1024);
         Thread.sleep(5000);
 
@@ -233,6 +245,10 @@ public class PeriodicDiskUsageLimitTest {
         //only run if at least 4 percent disk space free
         int tempFreePercent = getFreePercentage(broker.getTempDataStore().getDirectory());
         int freePercent = getFreePercentage(adapter.getDirectory());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5964
+//IC see: https://issues.apache.org/jira/browse/AMQ-5965
+//IC see: https://issues.apache.org/jira/browse/AMQ-5969
         if (freePercent >= 4 && tempFreePercent >= 4) {
             tempUsage.setPercentLimit(freePercent / 2);
             storeUsage.setPercentLimit(tempFreePercent / 2);
@@ -258,6 +274,7 @@ public class PeriodicDiskUsageLimitTest {
     protected void assertRampDown() throws Exception {
         //Try a couple of times because other processes could write/delete from disk
         assertTrue("Store Usage should ramp down", Wait.waitFor(new Wait.Condition() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -303,6 +320,10 @@ public class PeriodicDiskUsageLimitTest {
         final byte[] data = new byte[size];
         final Random rng = new Random();
         rng.nextBytes(data);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5963
+//IC see: https://issues.apache.org/jira/browse/AMQ-5964
+//IC see: https://issues.apache.org/jira/browse/AMQ-5965
+//IC see: https://issues.apache.org/jira/browse/AMQ-5969
         try(FileOutputStream stream = new FileOutputStream(testfile)) {
             IOUtils.write(data, stream);
         }

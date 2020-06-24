@@ -114,14 +114,17 @@ public class BrokerMBeanSupport {
 
         objectNameStr += "," + "transactionType=RecoveredXaTransaction";
         objectNameStr += "," + "xid=" + JMXSupport.encodeObjectNamePart(transaction.getTransactionId().toString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5213
 
         return new ObjectName(objectNameStr);
     }
 
     public static ObjectName createLog4JConfigViewName(String brokerObjectName) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5213
 
         objectNameStr += "," + "service=Log4JConfiguration";
+//IC see: https://issues.apache.org/jira/browse/AMQ-5213
 
         return new ObjectName(objectNameStr);
     }
@@ -129,6 +132,7 @@ public class BrokerMBeanSupport {
     public static ObjectName createPersistenceAdapterName(String brokerObjectName, String name) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5213
         objectNameStr += "," + "service=PersistenceAdapter";
         objectNameStr += "," + "instanceName=" + JMXSupport.encodeObjectNamePart(name);
 
@@ -141,6 +145,7 @@ public class BrokerMBeanSupport {
 
     public static ObjectName createAbortSlowConsumerStrategyName(String brokerObjectName, AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5213
         objectNameStr += ",service=SlowConsumerStrategy,instanceName="+ JMXSupport.encodeObjectNamePart(strategy.getName());
         ObjectName objectName = new ObjectName(objectNameStr);
         return objectName;
@@ -162,6 +167,7 @@ public class BrokerMBeanSupport {
     }
 
     public static ObjectName createVirtualDestinationSelectorCacheName(ObjectName brokerObjectName, String type, String name) throws MalformedObjectNameException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
         String objectNameStr = brokerObjectName.toString();
         objectNameStr += ",service=" + type + ",virtualDestinationSelectoCache="+ JMXSupport.encodeObjectNamePart(name);
         ObjectName objectName = new ObjectName(objectNameStr);
@@ -178,6 +184,8 @@ public class BrokerMBeanSupport {
     public static ObjectName createConnectionViewByType(ObjectName connectorName, String type, String name) throws MalformedObjectNameException {
         String objectNameStr = connectorName.toString();
         objectNameStr += ",connectionViewType=" + JMXSupport.encodeObjectNamePart(type);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         objectNameStr += ",connectionName="+ JMXSupport.encodeObjectNamePart(name);
         return new ObjectName(objectNameStr);
     }
@@ -189,6 +197,7 @@ public class BrokerMBeanSupport {
     }
 
     public static ObjectName createNetworkOutBoundDestinationObjectName(ObjectName networkName, ActiveMQDestination destination) throws MalformedObjectNameException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         String str = networkName.toString();
         str += ",direction=outbound" + createDestinationProperties(destination);
         return new ObjectName(str);
@@ -220,6 +229,7 @@ public class BrokerMBeanSupport {
 
     public static ObjectName createJmsConnectorName(String brokerObjectName, String type, String name) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5213
         objectNameStr += ",connector=" + type + ",jmsConnectors="+ JMXSupport.encodeObjectNamePart(name);
         ObjectName objectName = new ObjectName(objectNameStr);
         return objectName;
@@ -256,6 +266,8 @@ public class BrokerMBeanSupport {
 
     public static ObjectName createConnectionQuery(String brokerMBeanName, String name) throws MalformedObjectNameException {
         return new ObjectName(brokerMBeanName + ","
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
                               + "connector=*," + "connectorName=*," + "connectionViewType=*,"
                               + "connectionName=" + JMXSupport.encodeObjectNamePart(name));
     }

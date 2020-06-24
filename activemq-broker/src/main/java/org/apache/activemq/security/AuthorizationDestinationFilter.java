@@ -32,6 +32,7 @@ public class AuthorizationDestinationFilter extends DestinationFilter {
     private final AuthorizationBroker broker;
 
     public AuthorizationDestinationFilter(Destination destination, AuthorizationBroker broker) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         super(destination);
         this.broker = broker;
     }

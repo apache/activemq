@@ -30,6 +30,7 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 public class DefaultBlobDownloadStrategy extends DefaultStrategy implements BlobDownloadStrategy {
 
     public DefaultBlobDownloadStrategy(BlobTransferPolicy transferPolicy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
         super(transferPolicy);
     }
 
@@ -61,9 +62,11 @@ public class DefaultBlobDownloadStrategy extends DefaultStrategy implements Blob
 
     public void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException {
         URL url = createMessageURL(message);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2713
 
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
         connection.setRequestMethod("DELETE");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6646
         try {
             connection.connect();
         } catch (IOException e) {

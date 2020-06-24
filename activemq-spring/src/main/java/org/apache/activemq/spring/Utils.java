@@ -33,6 +33,7 @@ public class Utils {
         if (file.exists()) {
             resource = new FileSystemResource(uri);
         } else if (ResourceUtils.isUrl(uri)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
             try {
                 resource = new UrlResource(ResourceUtils.getURL(uri));
             } catch (FileNotFoundException e) {

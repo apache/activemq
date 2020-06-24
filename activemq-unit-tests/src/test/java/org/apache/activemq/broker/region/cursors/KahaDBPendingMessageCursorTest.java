@@ -159,6 +159,7 @@ public class KahaDBPendingMessageCursorTest extends
     @Test
     public void testMessageSizeTwoDurablesPartialConsumption() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6158
 
         Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
         connection.setClientID("clientId");

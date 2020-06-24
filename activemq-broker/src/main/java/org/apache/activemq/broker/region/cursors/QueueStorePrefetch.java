@@ -47,9 +47,13 @@ class QueueStorePrefetch extends AbstractStoreCursor {
      */
     public QueueStorePrefetch(Queue queue, Broker broker) {
         super(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6667
         this.queue = queue;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2512
         this.store = queue.getMessageStore();
         this.broker = broker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
 
     }
 
@@ -72,6 +76,7 @@ class QueueStorePrefetch extends AbstractStoreCursor {
         try {
             int result = this.store.getMessageCount();
             return result;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2512
 
         } catch (IOException e) {
             LOG.error("Failed to get message count", e);
@@ -91,6 +96,7 @@ class QueueStorePrefetch extends AbstractStoreCursor {
 
     @Override
     protected boolean canEnableCash() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6667
         return super.canEnableCash() && queue.singlePendingSend();
     }
 
@@ -112,6 +118,8 @@ class QueueStorePrefetch extends AbstractStoreCursor {
 
     @Override
     protected void setBatch(MessageId messageId) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
         if (LOG.isTraceEnabled()) {
             LOG.trace("{}  setBatch {} seq: {}, loc: {}", this, messageId, messageId.getFutureOrSequenceLong(), messageId.getEntryLocator());
         }
@@ -122,15 +130,21 @@ class QueueStorePrefetch extends AbstractStoreCursor {
 
     @Override
     protected void doFillBatch() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         hadSpace = this.hasSpace();
         if (!broker.getBrokerService().isPersistent() || hadSpace) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
             this.store.recoverNextMessages(this.maxBatchSize, this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
             dealWithDuplicates(); // without the index lock
         }
     }
 
     @Override
     public String toString(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
+//IC see: https://issues.apache.org/jira/browse/AMQ-4485
         return super.toString() + ",store=" + store;
     }
 }

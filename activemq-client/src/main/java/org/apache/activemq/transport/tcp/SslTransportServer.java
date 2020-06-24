@@ -103,6 +103,7 @@ public class SslTransportServer extends TcpTransportServer {
     @Override
     public void bind() throws IOException {
         super.bind();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1659
         if (needClientAuth) {
             ((SSLServerSocket)this.serverSocket).setNeedClientAuth(true);
         } else if (wantClientAuth) {
@@ -127,6 +128,7 @@ public class SslTransportServer extends TcpTransportServer {
 
     @Override
     public boolean isSslServer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         return true;
     }
 

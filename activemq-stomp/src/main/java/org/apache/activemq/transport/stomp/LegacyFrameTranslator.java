@@ -42,12 +42,14 @@ public class LegacyFrameTranslator implements FrameTranslator {
 
     @Override
     public ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame command) throws JMSException, ProtocolException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         final Map<?, ?> headers = command.getHeaders();
         final ActiveMQMessage msg;
         /*
          * To reduce the complexity of this method perhaps a Chain of Responsibility
          * would be a better implementation
          */
+//IC see: https://issues.apache.org/jira/browse/AMQ-2833
         if (headers.containsKey(Stomp.Headers.AMQ_MESSAGE_TYPE)) {
             String intendedType = (String)headers.get(Stomp.Headers.AMQ_MESSAGE_TYPE);
             if(intendedType.equalsIgnoreCase("text")){
@@ -78,11 +80,15 @@ public class LegacyFrameTranslator implements FrameTranslator {
         } else {
             ActiveMQTextMessage text = new ActiveMQTextMessage();
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
                 ByteArrayOutputStream bytes = new ByteArrayOutputStream(command.getContent().length + 4);
                 DataOutputStream data = new DataOutputStream(bytes);
                 data.writeInt(command.getContent().length);
                 data.write(command.getContent());
                 text.setContent(bytes.toByteSequence());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
                 data.close();
             } catch (Throwable e) {
                 throw new ProtocolException("Text could not bet set: " + e, false, e);
@@ -104,6 +110,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
 
         if (message.getDataStructureType() == ActiveMQTextMessage.DATA_STRUCTURE_TYPE) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             if (!message.isCompressed() && message.getContent() != null) {
                 ByteSequence msgContent = message.getContent();
                 if (msgContent.getLength() > 4) {
@@ -113,6 +120,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
                 }
             } else {
                 ActiveMQTextMessage msg = (ActiveMQTextMessage)message.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3742
                 String messageText = msg.getText();
                 if (messageText != null) {
                     command.setContent(msg.getText().getBytes("UTF-8"));
@@ -122,6 +130,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
         } else if (message.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE) {
 
             ActiveMQBytesMessage msg = (ActiveMQBytesMessage)message.copy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-978
             msg.setReadOnlyBody(true);
             byte[] data = new byte[(int)msg.getBodyLength()];
             msg.readBytes(data);
@@ -143,6 +152,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
 
         String rc = converter.getCreatedTempDestinationName(activeMQDestination);
         if( rc!=null ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             return rc;
         }
 
@@ -172,9 +182,11 @@ public class LegacyFrameTranslator implements FrameTranslator {
 
         // in case of space padding by a client we trim for the initial detection, on fallback use
         // the un-trimmed value.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3836
         String originalName = name;
         name = name.trim();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6030
         String[] destinations = name.split(",");
         if (destinations == null || destinations.length == 0) {
             destinations = new String[] { name };
@@ -219,8 +231,10 @@ public class LegacyFrameTranslator implements FrameTranslator {
                         throw new ProtocolException("Illegal destination name: [" + fallbackName + "] -- ActiveMQ STOMP destinations "
                                 + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/", false, e);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6246
                 } else {
                     throw new ProtocolException("Illegal destination name: [" + originalName + "] -- ActiveMQ STOMP destinations "
+//IC see: https://issues.apache.org/jira/browse/AMQ-2841
                                                 + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
                 }
             }

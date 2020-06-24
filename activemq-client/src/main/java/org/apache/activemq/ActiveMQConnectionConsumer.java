@@ -79,6 +79,7 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
 
         this.connection.addConnectionConsumer(this);
         this.connection.addDispatcher(consumerInfo.getConsumerId(), this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4226
         this.connection.syncSendPacket(this.consumerInfo);
     }
 
@@ -142,6 +143,7 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
                 ActiveMQQueueSession queueSession = (ActiveMQQueueSession)s;
                 session = (ActiveMQSession)queueSession.getNext();
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1760
                 connection.onClientInternalException(new JMSException("Session pool provided an invalid session type: " + s.getClass()));
                 return;
             }
@@ -163,6 +165,7 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
     }
 
     public ConsumerInfo getConsumerInfo() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4226
         return consumerInfo;
     }
 }

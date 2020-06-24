@@ -65,6 +65,7 @@ public class VMTransportServer implements TransportServer {
     public VMTransport connect() throws IOException {
         TransportAcceptListener al;
         synchronized (this) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6494
             if (disposed.get()) {
                 throw new IOException("Server has been disposed.");
             }
@@ -77,6 +78,7 @@ public class VMTransportServer implements TransportServer {
         connectionCount.incrementAndGet();
         VMTransport client = new VMTransport(location) {
             public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
                 if (!disposed.get()) {
                     super.stop();
                     if (connectionCount.decrementAndGet() == 0 && disposeOnDisconnect) {
@@ -118,6 +120,7 @@ public class VMTransportServer implements TransportServer {
     }
 
     public void stop() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6494
         if (disposed.compareAndSet(false, true)) {
             VMTransportFactory.stopped(this);
         }
@@ -139,16 +142,21 @@ public class VMTransportServer implements TransportServer {
     }
 
     public int getConnectionCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
         return connectionCount.intValue();
     }
 
     @Override
     public boolean isSslServer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         return false;
     }
 
     @Override
     public boolean isAllowLinkStealing() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         return allowLinkStealing;
     }
 

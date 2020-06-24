@@ -36,6 +36,7 @@ public interface BrokerFacade {
 	 * @throws Exception
 	 */
 	String getBrokerName() throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1324
 
 	/**
 	 * Admin view of the broker.
@@ -80,6 +81,7 @@ public interface BrokerFacade {
 	 * @return not <code>null</code>
 	 * @throws Exception
 	 */
+//IC see: https://issues.apache.org/jira/browse/AMQ-2429
 	Collection<ProducerViewMBean> getQueueProducers(String queueName)
 			throws Exception;
 
@@ -104,6 +106,7 @@ public interface BrokerFacade {
 	 */
 	public Collection<SubscriptionViewMBean> getTopicSubscribers(String topicName)
 			throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5104
 
 	/**
 	 * All active non-durable subscribers to a topic.
@@ -130,6 +133,7 @@ public interface BrokerFacade {
 	 * @return not <code>null</code>
 	 * @throws Exception
 	 */
+//IC see: https://issues.apache.org/jira/browse/AMQ-3013
 	Collection<DurableSubscriptionViewMBean> getInactiveDurableTopicSubscribers()
 			throws Exception;
 
@@ -206,6 +210,7 @@ public interface BrokerFacade {
 	 * @return not <code>null</code>
 	 * @throws Exception
 	 */
+//IC see: https://issues.apache.org/jira/browse/AMQ-3108
     Collection<NetworkBridgeViewMBean> getNetworkBridges()
             throws Exception;
 

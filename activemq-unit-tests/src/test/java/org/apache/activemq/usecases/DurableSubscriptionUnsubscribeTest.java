@@ -71,6 +71,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
     }
 
     public void doJMXUnsubscribe(boolean restart) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3081
         createSubscriptions();
         createAdvisorySubscription();
 
@@ -101,6 +102,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
         if (restart) {
             restartBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
             createAdvisorySubscription();
             assertCount(0, 0);
         }
@@ -157,6 +159,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
         if (restart) {
             restartBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
             createAdvisorySubscription();
             assertCount(0, 0);
         }
@@ -165,12 +168,14 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
     public void doDirectUnsubscribe(boolean restart) throws Exception {
         createSubscriptions();
         createAdvisorySubscription();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
 
         Thread.sleep(1000);
         assertCount(100, 0);
 
         if (restart) {
             restartBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
             createAdvisorySubscription();
             assertCount(100, 0);
         }
@@ -183,7 +188,9 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
             context.setBroker(broker.getRegionBroker());
             context.setClientId(getName());
             broker.getBroker().removeSubscription(context, info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3081
             if (i % 20 == 0) {
                 Thread.sleep(1000);
                 assertCount(100 - i - 1, 0);
@@ -194,6 +201,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
         if (restart) {
             restartBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
             createAdvisorySubscription();
             assertCount(0, 0);
         }
@@ -210,6 +218,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
     private final AtomicInteger advisories = new AtomicInteger(0);
 
     private void createAdvisorySubscription() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer advisoryConsumer = session.createConsumer(AdvisorySupport.getConsumerAdvisoryTopic(topic));
         advisoryConsumer.setMessageListener(new MessageListener() {
@@ -252,6 +261,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
             assertEquals(0, countMBean());
 
         // check if we got all advisories
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         assertEquals(100, all + advisories.get());
     }
 
@@ -287,6 +297,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
 
         broker.setKeepDurableSubsActive(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3081
 
         broker.start();
         broker.waitUntilStarted();
@@ -299,6 +310,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
             connection.close();
         connection = null;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3081
         if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();

@@ -40,6 +40,7 @@ public class SoWriteTimeoutClientTest extends JmsTestSupport {
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker =  new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
         broker.setDeleteAllMessagesOnStartup(true);
         KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
         adapter.setConcurrentStoreAndDispatchQueues(false);
@@ -65,6 +66,7 @@ public class SoWriteTimeoutClientTest extends JmsTestSupport {
         proxy.setTarget(tcpBrokerUri);
         proxy.open();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
         ActiveMQConnectionFactory pFactory = new ActiveMQConnectionFactory("failover:(" + proxy.getUrl() + "?soWriteTimeout=4000&sleep=500)?jms.useAsyncSend=true&trackMessages=true&maxCacheSize=6638400");
         final Connection pc = pFactory.createConnection();
         pc.start();
@@ -84,6 +86,7 @@ public class SoWriteTimeoutClientTest extends JmsTestSupport {
         });
 
         // wait for timeout and reconnect
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
         TimeUnit.SECONDS.sleep(8);
         proxy.goOn();
         for (int i=0; i<messageCount; i++) {

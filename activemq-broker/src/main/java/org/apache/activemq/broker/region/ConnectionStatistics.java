@@ -54,6 +54,7 @@ public class ConnectionStatistics extends StatsImpl {
     }
 
     public void setEnabled(boolean enabled) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-894
         super.setEnabled(enabled);
         enqueues.setEnabled(enabled);
         dequeues.setEnabled(enabled);

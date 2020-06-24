@@ -49,6 +49,8 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
     private int received = 0;
 
     public static Test suite() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
         return suite(DurableSubscriptionSelectorTest.class);
     }
 
@@ -133,9 +135,14 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
             broker.setDeleteAllMessagesOnStartup(true);
         }
         setDefaultPersistenceAdapter(broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
 
         /* use maxPageSize policy in place of always pulling from the broker in maxRows chunks
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         if (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3557
             ((JDBCPersistenceAdapter)broker.getPersistenceAdapter()).setMaxRows(5000);
         }*/
 

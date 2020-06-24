@@ -45,6 +45,7 @@ public class KahaDBPersistenceAdapterTest extends PersistenceAdapterTestSupport 
     }
 
     public void testNoReplayOnStop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6277
         brokerService.getPersistenceAdapter().checkpoint(true);
         brokerService.stop();
 

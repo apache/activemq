@@ -95,6 +95,7 @@ public class AMQ5266StarvedConsumerTest {
     @Parameterized.Parameters(name="#{0},producerThreads:{1},consumerThreads:{2},mL:{3},useCache:{4},store:{5},optimizedDispatch:{6}")
     public static Iterable<Object[]> parameters() {
         return Arrays.asList(new Object[][]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
                 {1000, 40,  5,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.KahaDB, true},
                 {1000, 40,  5,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.LevelDB, true},
                 {1000, 40,  5,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.JDBC, true},
@@ -110,6 +111,7 @@ public class AMQ5266StarvedConsumerTest {
     @Before
     public void startBroker() throws Exception {
         brokerService = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         TestSupport.setPersistenceAdapter(brokerService, persistenceAdapterChoice);
         brokerService.setDeleteAllMessagesOnStartup(true);
         brokerService.setUseJmx(false);

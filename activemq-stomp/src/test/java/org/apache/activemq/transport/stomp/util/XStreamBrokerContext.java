@@ -31,6 +31,7 @@ public class XStreamBrokerContext implements BrokerContext {
 
     public XStreamBrokerContext() {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6013
         XStream stream = XStreamSupport.createXStream();
         stream.processAnnotations(SamplePojo.class);
 
@@ -55,6 +56,7 @@ public class XStreamBrokerContext implements BrokerContext {
 
     @Override
     public String getConfigurationUrl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         return null;
     }
 

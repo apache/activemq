@@ -58,6 +58,8 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
     }
 
     public static Test suite() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2209
+//IC see: https://issues.apache.org/jira/browse/AMQ-1882
         return suite(PurgeTest.class);
     }
 
@@ -75,6 +77,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         }
 
         // Now get the QueueViewMBean and purge
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         String objectNameStr = broker.getBrokerObjectName().toString();
         objectNameStr += ",destinationType=Queue,destinationName="+getDestinationString();
         ObjectName queueViewMBeanName = assertRegisteredObjectName(objectNameStr);
@@ -106,14 +109,17 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         assertEquals("Queue size", count, 0);
         assertEquals("Browse size", proxy.browseMessages().size(), 0);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1882
         producer.close();
     }
 
     public void initCombosForTestDelete() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         addCombinationValues("persistenceAdapter", new Object[] {new MemoryPersistenceAdapter(), new KahaDBPersistenceAdapter()});
     }
 
     public void testDeleteSameProducer() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3092
         connection = connectionFactory.createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -142,6 +148,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
 
     public void testDelete() throws Exception {
         // Send some messages
+//IC see: https://issues.apache.org/jira/browse/AMQ-2209
         connection = connectionFactory.createConnection();
         connection.setClientID(clientID);
         connection.start();
@@ -151,9 +158,11 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
 
         // Now get the QueueViewMBean and purge
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
         QueueViewMBean queueProxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName brokerViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean brokerProxy = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerViewMBeanName, BrokerViewMBean.class, true);
 
@@ -184,6 +193,8 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
 
         sendMessages(session, messageCount);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
         queueProxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
@@ -192,6 +203,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
     }
 
     private void sendMessages(Session session, int count) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1882
         MessageProducer producer = session.createProducer(destination);
         for (int i = 0; i < messageCount; i++) {
             Message message = session.createTextMessage("Message: " + i);
@@ -210,6 +222,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         bindAddress = "tcp://localhost:0";
         useTopic = false;
         super.setUp();
@@ -229,6 +242,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         answer.setUseJmx(true);
         answer.setEnableStatistics(true);
         answer.addConnector(bindAddress);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2209
         answer.setPersistenceAdapter(persistenceAdapter);
         answer.deleteAllMessages();
         return answer;
@@ -236,6 +250,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
 
     @Override
     protected ConnectionFactory createConnectionFactory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
     }
 

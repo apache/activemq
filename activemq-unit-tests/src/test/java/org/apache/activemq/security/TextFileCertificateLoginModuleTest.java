@@ -79,6 +79,7 @@ public class TextFileCertificateLoginModuleTest {
 
     @Test
     public void testLoginWithREGEXPUsersFile() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7230
         loginTest(CERT_USERS_FILE_REGEXP, CERT_GROUPS_FILE);
     }
 

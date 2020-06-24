@@ -65,6 +65,7 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
 
     @Override
     public void setConnectionFactory(Object toUse) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5224
         if (toUse instanceof XAConnectionFactory) {
             connectionFactory = toUse;
         } else {
@@ -107,6 +108,7 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
             try {
                 InitialContext ctx = new InitialContext();
                 NamingEnumeration<Binding> bindings = ctx.listBindings(name);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5015
 
                 while (bindings.hasMore()) {
                     Binding bd = bindings.next();

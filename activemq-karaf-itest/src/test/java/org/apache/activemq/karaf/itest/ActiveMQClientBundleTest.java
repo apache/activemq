@@ -28,6 +28,7 @@ public class ActiveMQClientBundleTest extends AbstractFeatureTest {
 
 	@Configuration
 	public static Option[] configure() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
 		return new Option[] //
 		{ //
 				configure("activemq-client") //

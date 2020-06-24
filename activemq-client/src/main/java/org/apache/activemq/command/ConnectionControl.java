@@ -45,6 +45,7 @@ public class ConnectionControl extends BaseCommand {
     }
     @Override
     public boolean isConnectionControl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return true;
     }
 
@@ -128,6 +129,7 @@ public class ConnectionControl extends BaseCommand {
      * @return connected brokers.
      */
     public String getConnectedBrokers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return this.connectedBrokers;
     }
 
@@ -173,6 +175,7 @@ public class ConnectionControl extends BaseCommand {
      * @return the token
      */
     public byte[] getToken() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3383
         return this.token;
     }
 

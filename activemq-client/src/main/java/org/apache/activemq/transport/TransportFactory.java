@@ -112,7 +112,9 @@ public abstract class TransportFactory {
 
     public Transport doConnect(URI location) throws Exception {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5050
             if( !options.containsKey("wireFormat.host") ) {
                 options.put("wireFormat.host", location.getHost());
             }
@@ -121,6 +123,7 @@ public abstract class TransportFactory {
             Transport rc = configure(transport, wf, options);
             //remove auto
             IntrospectionSupport.extractProperties(options, "auto.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
 
             if (!options.isEmpty()) {
                 throw new IllegalArgumentException("Invalid connect parameters: " + options);
@@ -133,6 +136,7 @@ public abstract class TransportFactory {
 
     public Transport doCompositeConnect(URI location) throws Exception {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             WireFormat wf = createWireFormat(options);
             Transport transport = createTransport(location, wf);
@@ -152,6 +156,7 @@ public abstract class TransportFactory {
      * @param tf
      */
     public static void registerTransportFactory(String scheme, TransportFactory tf) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1607
         TRANSPORT_FACTORYS.put(scheme, tf);
       }
 
@@ -195,6 +200,7 @@ public abstract class TransportFactory {
     }
 
     protected WireFormatFactory createWireFormatFactory(Map<String, String> options) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
         String wireFormat = options.remove("wireFormat");
         if (wireFormat == null) {
             wireFormat = getDefaultWireFormatType();
@@ -247,6 +253,7 @@ public abstract class TransportFactory {
      */
     @SuppressWarnings("rawtypes")
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1993
         if (options.containsKey(THREAD_NAME_FILTER)) {
             transport = new ThreadNameFilter(transport);
         }
@@ -267,6 +274,8 @@ public abstract class TransportFactory {
      */
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2308
+//IC see: https://issues.apache.org/jira/browse/AMQ-1993
         if (options.containsKey(WRITE_TIMEOUT_FILTER)) {
             transport = new WriteTimeoutFilter(transport);
             String soWriteTimeout = (String)options.remove(WRITE_TIMEOUT_FILTER);
@@ -280,6 +289,7 @@ public abstract class TransportFactory {
 
     @SuppressWarnings("rawtypes")
     protected String getOption(Map options, String key, String def) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2764
         String rc = (String) options.remove(key);
         if( rc == null ) {
             rc = def;

@@ -95,6 +95,7 @@ public class Statements {
         if (createSchemaStatements == null) {
             createSchemaStatements = new String[] {
                 "CREATE TABLE " + getFullMessageTableName() + "(" + "ID " + sequenceDataType + " NOT NULL"
+//IC see: https://issues.apache.org/jira/browse/AMQ-6057
                     + ", CONTAINER " + containerNameDataType + " NOT NULL, MSGID_PROD " + msgIdDataType + ", MSGID_SEQ "
                     + sequenceDataType + ", EXPIRATION " + longDataType + ", MSG "
                     + (useExternalMessageReferences ? stringIdDataType : binaryDataType)
@@ -103,6 +104,7 @@ public class Statements {
                 "CREATE INDEX " + getFullMessageTableName() + "_CIDX ON " + getFullMessageTableName() + " (CONTAINER)",
                 "CREATE INDEX " + getFullMessageTableName() + "_EIDX ON " + getFullMessageTableName() + " (EXPIRATION)",
                 "CREATE TABLE " + getFullAckTableName() + "(" + "CONTAINER " + containerNameDataType + " NOT NULL"
+//IC see: https://issues.apache.org/jira/browse/AMQ-1356
                     + ", SUB_DEST " + stringIdDataType 
                     + ", CLIENT_ID " + stringIdDataType + " NOT NULL" + ", SUB_NAME " + stringIdDataType
                     + " NOT NULL" + ", SELECTOR " + stringIdDataType + ", LAST_ACKED_ID " + sequenceDataType
@@ -112,13 +114,16 @@ public class Statements {
                 "ALTER TABLE " + getFullMessageTableName() + " ADD XID " + stringIdDataType,
                 "ALTER TABLE " + getFullAckTableName() + " ADD PRIORITY " + sequenceDataType  + " DEFAULT 5 NOT NULL",
                 "ALTER TABLE " + getFullAckTableName() + " ADD XID " + stringIdDataType,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3075
                 "ALTER TABLE " + getFullAckTableName() + " " + getDropAckPKAlterStatementEnd(),
                 "ALTER TABLE " + getFullAckTableName() + " ADD PRIMARY KEY (CONTAINER, CLIENT_ID, SUB_NAME, PRIORITY)",
                 "CREATE INDEX " + getFullMessageTableName() + "_XIDX ON " + getFullMessageTableName() + " (XID)",
+//IC see: https://issues.apache.org/jira/browse/AMQ-7008
                 "CREATE INDEX " + getFullAckTableName() + "_XIDX ON " + getFullAckTableName() + " (XID)",
                 "CREATE INDEX " + getFullMessageTableName() + "_IIDX ON " + getFullMessageTableName() + " (ID ASC, XID, CONTAINER)"
             };
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         getCreateLockSchemaStatements();
         String[] allCreateStatements = new String[createSchemaStatements.length + createLockSchemaStatements.length];
         System.arraycopy(createSchemaStatements, 0, allCreateStatements, 0, createSchemaStatements.length);
@@ -153,6 +158,7 @@ public class Statements {
     public String[] getDropSchemaStatements() {
         if (dropSchemaStatements == null) {
             dropSchemaStatements = new String[] {"DROP TABLE " + getFullAckTableName() + "",
+//IC see: https://issues.apache.org/jira/browse/AMQ-1953
                                                  "DROP TABLE " + getFullMessageTableName() + "",
                                                  "DROP TABLE " + getFullLockTableName() + ""};
         }
@@ -163,6 +169,7 @@ public class Statements {
         if (addMessageStatement == null) {
             addMessageStatement = "INSERT INTO "
                                   + getFullMessageTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                                   + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, PRIORITY, MSG, XID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         }
         return addMessageStatement;
@@ -170,12 +177,15 @@ public class Statements {
 
     public String getUpdateMessageStatement() {
         if (updateMessageStatement == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3519
+//IC see: https://issues.apache.org/jira/browse/AMQ-5068
             updateMessageStatement = "UPDATE " + getFullMessageTableName() + " SET MSG=? WHERE MSGID_PROD=? AND MSGID_SEQ=? AND CONTAINER=?";
         }
         return updateMessageStatement;
     }
 
     public String getRemoveMessageStatement() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2681
         if (removeMessageStatement == null) {
             removeMessageStatement = "DELETE FROM " + getFullMessageTableName() + " WHERE ID=?";
         }
@@ -184,7 +194,11 @@ public class Statements {
 
     public String getFindMessageSequenceIdStatement() {
         if (findMessageSequenceIdStatement == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
             findMessageSequenceIdStatement = "SELECT ID, PRIORITY FROM " + getFullMessageTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
                                              + " WHERE MSGID_PROD=? AND MSGID_SEQ=? AND CONTAINER=?";
         }
         return findMessageSequenceIdStatement;
@@ -198,6 +212,7 @@ public class Statements {
     }
 
     public String getFindMessageByIdStatement() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2681
         if (findMessageByIdStatement == null) {
         	findMessageByIdStatement = "SELECT MSG FROM " + getFullMessageTableName() + " WHERE ID=?";
         }
@@ -205,6 +220,7 @@ public class Statements {
     }
 
     public String getFindXidByIdStatement() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         if (findXidByIdStatement == null) {
             findXidByIdStatement = "SELECT XID FROM " + getFullMessageTableName() + " WHERE ID=?";
         }
@@ -230,6 +246,7 @@ public class Statements {
     }
 
     public void setFindAllMessageIdsStatement(String val) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         findAllMessageIdsStatement = val;
     }
 
@@ -241,6 +258,9 @@ public class Statements {
     }
 
     public String getLastProducerSequenceIdStatement() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         if (lastProducerSequenceIdStatement == null) {
             lastProducerSequenceIdStatement = "SELECT MAX(MSGID_SEQ) FROM " + getFullMessageTableName()
                                             + " WHERE MSGID_PROD=?";
@@ -260,6 +280,7 @@ public class Statements {
         if (createDurableSubStatement == null) {
             createDurableSubStatement = "INSERT INTO "
                                         + getFullAckTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
                                         + "(CONTAINER, CLIENT_ID, SUB_NAME, SELECTOR, LAST_ACKED_ID, SUB_DEST, PRIORITY) "
                                         + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         }
@@ -269,6 +290,7 @@ public class Statements {
     public String getFindDurableSubStatement() {
         if (findDurableSubStatement == null) {
             findDurableSubStatement = "SELECT SELECTOR, SUB_DEST " + "FROM " + getFullAckTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                                       + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
         }
         return findDurableSubStatement;
@@ -277,6 +299,7 @@ public class Statements {
     public String getFindAllDurableSubsStatement() {
         if (findAllDurableSubsStatement == null) {
             findAllDurableSubsStatement = "SELECT SELECTOR, SUB_NAME, CLIENT_ID, SUB_DEST" + " FROM "
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                                           + getFullAckTableName() + " WHERE CONTAINER=? AND PRIORITY=0";
         }
         return findAllDurableSubsStatement;
@@ -304,6 +327,7 @@ public class Statements {
                                                  + " M, " + getFullAckTableName() + " D "
                                                  + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
                                                  + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                                                  + " ORDER BY M.PRIORITY DESC, M.ID";
         }
         return findAllDurableSubMessagesStatement;
@@ -314,7 +338,9 @@ public class Statements {
             findDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
                                               + getFullAckTableName() + " D "
                                               + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                                               + " AND M.XID IS NULL"
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                                               + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
                                               + " AND M.ID > ?"
                                               + " ORDER BY M.ID";
@@ -324,10 +350,13 @@ public class Statements {
     
     public String getFindDurableSubMessagesByPriorityStatement() {
         if (findDurableSubMessagesByPriorityStatement == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
             findDurableSubMessagesByPriorityStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M,"
                                               + " " + getFullAckTableName() + " D"
                                               + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                                               + " AND M.XID IS NULL"
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                                               + " AND M.CONTAINER=D.CONTAINER"
                                               + " AND M.PRIORITY=D.PRIORITY AND M.ID > D.LAST_ACKED_ID"
                                               + " AND M.ID > ? AND M.PRIORITY = ?"
@@ -356,11 +385,13 @@ public class Statements {
 
     public String getDurableSubscriberMessageCountStatement() {
         if (durableSubscriberMessageCountStatement == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-876
             durableSubscriberMessageCountStatement = "SELECT COUNT(*) FROM "
                                                      + getFullMessageTableName()
                                                      + " M, "
                                                      + getFullAckTableName()
                                                      + " D "
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
                                                      + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
                                                      + " AND M.CONTAINER=D.CONTAINER "
                                                      + "     AND M.ID >"
@@ -391,6 +422,7 @@ public class Statements {
     public String getFindAllDestinationsStatement() {
         if (findAllDestinationsStatement == null) {
             findAllDestinationsStatement = "SELECT DISTINCT CONTAINER FROM " + getFullMessageTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-6057
                     + " WHERE CONTAINER IS NOT NULL UNION SELECT DISTINCT CONTAINER FROM " + getFullAckTableName();
         }
         return findAllDestinationsStatement;
@@ -413,6 +445,7 @@ public class Statements {
     public String getDeleteOldMessagesStatementWithPriority() {
         if (deleteOldMessagesStatementWithPriority == null) {
             deleteOldMessagesStatementWithPriority = "DELETE FROM " + getFullMessageTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
                                          + " WHERE (PRIORITY=? AND ID <= "
                                          + "     ( SELECT min(" + getFullAckTableName() + ".LAST_ACKED_ID)"
                                          + "       FROM " + getFullAckTableName() + " WHERE "
@@ -425,6 +458,7 @@ public class Statements {
     }
 
     public String getLockCreateStatement() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-831
         if (lockCreateStatement == null) {
             lockCreateStatement = "SELECT * FROM " + getFullLockTableName();
             if (useLockCreateWhereClause) {
@@ -436,6 +470,7 @@ public class Statements {
     }
 
     public String getLeaseObtainStatement() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
         if (leaseObtainStatement == null) {
             leaseObtainStatement = "UPDATE " + getFullLockTableName()
                     + " SET BROKER_NAME=?, TIME=?"
@@ -470,6 +505,7 @@ public class Statements {
 
     public String getLockUpdateStatement() {
         if (lockUpdateStatement == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1816
             lockUpdateStatement = "UPDATE " + getFullLockTableName() + " SET TIME = ? WHERE ID = 1";
         }
         return lockUpdateStatement;
@@ -481,6 +517,7 @@ public class Statements {
     public String getDestinationMessageCountStatement() {
         if (destinationMessageCountStatement == null) {
             destinationMessageCountStatement = "SELECT COUNT(*) FROM " + getFullMessageTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                                                + " WHERE CONTAINER=? AND XID IS NULL";
         }
         return destinationMessageCountStatement;
@@ -492,6 +529,7 @@ public class Statements {
     public String getFindNextMessagesStatement() {
         if (findNextMessagesStatement == null) {
             findNextMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
                                         + " WHERE CONTAINER=? AND ID < ? AND ID > ? AND XID IS NULL ORDER BY ID";
         }
         return findNextMessagesStatement;
@@ -501,10 +539,13 @@ public class Statements {
      * @return the findNextMessagesStatement
      */
     public String getFindNextMessagesByPriorityStatement() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2843
         if (findNextMessagesByPriorityStatement == null) {
             findNextMessagesByPriorityStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
                                         + " WHERE CONTAINER=?"
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                                         + " AND XID IS NULL"
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
                                         + " AND ID < ? "
                                         + " AND ( (ID > ? AND PRIORITY = 9) "
                                         + "    OR (ID > ? AND PRIORITY = 8) "
@@ -522,6 +563,7 @@ public class Statements {
     }    
 
     public void setFindNextMessagesByPriorityStatement(String val) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5853
         findNextMessagesByPriorityStatement = val;
     }
 
@@ -530,6 +572,7 @@ public class Statements {
      */
     public String getLastAckedDurableSubscriberMessageStatement() {
         if (lastAckedDurableSubscriberMessageStatement == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             lastAckedDurableSubscriberMessageStatement = "SELECT MAX(LAST_ACKED_ID) FROM "
                                                          + getFullAckTableName()
                                                          + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";                                                    
@@ -538,6 +581,8 @@ public class Statements {
     }
 
     public String getSelectDurablePriorityAckStatement() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
         if (selectDurablePriorityAckStatement == null) {
             selectDurablePriorityAckStatement = "SELECT LAST_ACKED_ID FROM " + getFullAckTableName()
                                                     + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?"
@@ -560,6 +605,7 @@ public class Statements {
     public String getUpdateDurableLastAckStatement() {
         if (updateDurableLastAckStatement == null) {
             updateDurableLastAckStatement  = "UPDATE " + getFullAckTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                     + " SET LAST_ACKED_ID=?, XID = NULL WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
         }
         return  updateDurableLastAckStatement;
@@ -625,6 +671,7 @@ public class Statements {
     public String getClearXidFlagStatement() {
         if (clearXidFlagStatement == null) {
             clearXidFlagStatement = "UPDATE "  + getFullMessageTableName()
+//IC see: https://issues.apache.org/jira/browse/AMQ-5567
                     + " SET XID = NULL, ID = ? WHERE ID = ?";
         }
         return clearXidFlagStatement;
@@ -639,6 +686,7 @@ public class Statements {
     }
 
     public String getFullLockTableName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-831
         return getTablePrefix() + getLockTableName();
     }
 
@@ -741,6 +789,7 @@ public class Statements {
     }
 
     public String getLockTableName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-831
         return lockTableName;
     }
 
@@ -785,10 +834,12 @@ public class Statements {
     }
 
     public void setCreateLockSchemaStatements(String[] createLockSchemaStatments) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         this.createLockSchemaStatements = createLockSchemaStatments;
     }
 
     public void setDeleteOldMessagesStatementWithPriority(String deleteOldMessagesStatementWithPriority) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
         this.deleteOldMessagesStatementWithPriority = deleteOldMessagesStatementWithPriority;
     }
 
@@ -837,6 +888,7 @@ public class Statements {
     }
     
     public void setFindMessageByIdStatement(String findMessageByIdStatement) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2681
         this.findMessageByIdStatement = findMessageByIdStatement;
     }
 
@@ -849,10 +901,12 @@ public class Statements {
     }
 
     public void setRemoveMessageStatment(String removeMessageStatement) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2681
         this.removeMessageStatement = removeMessageStatement;
     }
 
     public void setUpdateLastPriorityAckRowOfDurableSubStatement(String updateLastPriorityAckRowOfDurableSubStatement) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         this.updateLastPriorityAckRowOfDurableSubStatement = updateLastPriorityAckRowOfDurableSubStatement;
     }
 
@@ -861,6 +915,7 @@ public class Statements {
     }
 
     public boolean isUseLockCreateWhereClause() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-831
         return useLockCreateWhereClause;
     }
 
@@ -899,6 +954,7 @@ public class Statements {
     }
 
     public void setDurableSubscriberMessageCountStatementWithPriority(String durableSubscriberMessageCountStatementWithPriority) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         this.durableSubscriberMessageCountStatementWithPriority = durableSubscriberMessageCountStatementWithPriority;
     }
 
@@ -926,10 +982,15 @@ public class Statements {
 
 
     public void setLastProducerSequenceIdStatement(String lastProducerSequenceIdStatement) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         this.lastProducerSequenceIdStatement = lastProducerSequenceIdStatement;
     }
 
     public void setSelectDurablePriorityAckStatement(String selectDurablePriorityAckStatement) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
         this.selectDurablePriorityAckStatement = selectDurablePriorityAckStatement;
     }
 
@@ -942,6 +1003,7 @@ public class Statements {
     }
 
     public void setUpdateXidFlagStatement(String updateXidFlagStatement) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         this.updateXidFlagStatement = updateXidFlagStatement;
     }
 
@@ -978,6 +1040,7 @@ public class Statements {
     }
 
     public void setLeaseObtainStatement(String leaseObtainStatement) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
         this.leaseObtainStatement = leaseObtainStatement;
     }
 

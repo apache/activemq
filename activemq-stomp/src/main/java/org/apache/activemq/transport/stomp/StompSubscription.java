@@ -68,6 +68,7 @@ public class StompSubscription {
         this.subscriptionId = subscriptionId;
         this.consumerInfo = consumerInfo;
         this.transformation = transformation;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
         this.pendingAcks = pendingAcks;
     }
 
@@ -87,14 +88,20 @@ public class StompSubscription {
             }
         } else if (isAutoAck()) {
             MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2617
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
             protocolConverter.getStompTransport().sendToActiveMQ(ack);
         }
 
         boolean ignoreTransformation = false;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2098
         if (transformation != null && !( message instanceof ActiveMQBytesMessage ) ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
+//IC see: https://issues.apache.org/jira/browse/AMQ-4129
             message.setReadOnlyProperties(false);
             message.setStringProperty(Stomp.Headers.TRANSFORMATION, transformation);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1567
         } else {
             if (message.getStringProperty(Stomp.Headers.TRANSFORMATION) != null) {
                 ignoreTransformation = true;
@@ -108,11 +115,13 @@ public class StompSubscription {
             command.getHeaders().put(Stomp.Headers.Message.SUBSCRIPTION, subscriptionId);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
         if (protocolConverter.isStomp12() && ackId != null) {
             command.getHeaders().put(Stomp.Headers.Message.ACK_ID, ackId);
         }
 
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2617
             protocolConverter.getStompTransport().sendToStomp(command);
         } catch (IOException ex) {
             if (ackId != null) {
@@ -154,6 +163,7 @@ public class StompSubscription {
         }
         // avoid contention with onMessageDispatch
         if (ack != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
             protocolConverter.getStompTransport().sendToActiveMQ(ack);
         }
     }
@@ -161,6 +171,7 @@ public class StompSubscription {
     synchronized MessageAck onStompMessageAck(String messageId, TransactionId transactionId) {
         MessageId msgId = new MessageId(messageId);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
         final StompAckEntry ackEntry = dispatchedMessage.get(msgId);
         if (ackEntry == null) {
             return null;
@@ -170,8 +181,11 @@ public class StompSubscription {
         ack.setDestination(consumerInfo.getDestination());
         ack.setConsumerId(consumerInfo.getConsumerId());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
         if (isClientAck()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3493
             if (transactionId == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1807
                 ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
             } else {
                 ack.setAckType(MessageAck.DELIVERED_ACK_TYPE);
@@ -188,6 +202,7 @@ public class StompSubscription {
                 if (transactionId != null) {
                     if (!transactedMessages.contains(entry)) {
                         transactedMessages.add(entry);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3493
                         count++;
                     }
                 } else {
@@ -204,12 +219,14 @@ public class StompSubscription {
             if (transactionId != null) {
                 ack.setTransactionId(transactionId);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
         } else if (isIndividualAck()) {
             if (ackEntry.getAckId() != null) {
                 pendingAcks.remove(ackEntry.getAckId());
             }
             ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
             ack.setMessageID(msgId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6697
             ack.setMessageCount(1);
             if (transactionId != null) {
                 transactedMessages.add(dispatchedMessage.get(msgId));
@@ -230,6 +247,7 @@ public class StompSubscription {
         }
 
         final StompAckEntry ackEntry = dispatchedMessage.get(msgId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
 
         if (ackEntry.getAckId() != null) {
             pendingAcks.remove(ackEntry.getAckId());
@@ -244,9 +262,11 @@ public class StompSubscription {
             transactedMessages.add(ackEntry);
             ack.setTransactionId(transactionId);
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2426
             dispatchedMessage.remove(msgId);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3670
         return ack;
     }
 
@@ -259,6 +279,7 @@ public class StompSubscription {
     }
 
     public boolean isAutoAck() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7218
         return ackMode.equals(AUTO_ACK);
     }
 

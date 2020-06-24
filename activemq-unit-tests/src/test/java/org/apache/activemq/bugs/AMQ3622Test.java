@@ -94,6 +94,7 @@ public class AMQ3622Test {
     @Test
     public void go() throws Exception {
         StompConnection connection = new StompConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3896
         Integer port = Integer.parseInt(connectionUri.split(":")[2]);
         connection.open("localhost", port);        
         connection.connect("", "");

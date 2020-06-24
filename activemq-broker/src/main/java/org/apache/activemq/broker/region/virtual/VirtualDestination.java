@@ -40,6 +40,7 @@ public interface VirtualDestination extends DestinationInterceptor {
      * Returns mapped destination(s)
      */
     ActiveMQDestination getMappedDestinations();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5187
 
     /**
      * Creates a mapped destination

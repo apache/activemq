@@ -35,6 +35,7 @@ public class DiscardingDeadLetterStrategy extends SharedDeadLetterStrategy {
     public boolean isSendToDeadLetterQueue(Message message) {
         boolean result = false;
         LOG.debug("Discarding message sent to DLQ: {}, dest: {}", message.getMessageId(), message.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4584
         return result;
     }
 }

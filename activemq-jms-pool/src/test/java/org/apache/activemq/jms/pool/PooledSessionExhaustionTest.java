@@ -58,6 +58,7 @@ public class PooledSessionExhaustionTest extends JmsPoolTestSupport {
     @Override
     public void setUp() throws Exception {
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
@@ -68,10 +69,12 @@ public class PooledSessionExhaustionTest extends JmsPoolTestSupport {
         brokerService.start();
         connectionUri = connector.getPublishableConnectString();
         factory = new ActiveMQConnectionFactory(connectionUri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         pooledFactory = new PooledConnectionFactory();
         pooledFactory.setConnectionFactory(factory);
         pooledFactory.setMaxConnections(1);
         pooledFactory.setBlockIfSessionPoolIsFull(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5076
         pooledFactory.setMaximumActiveSessionPerConnection(1);
     }
 
@@ -88,6 +91,7 @@ public class PooledSessionExhaustionTest extends JmsPoolTestSupport {
     }
 
     class TestRunner implements Runnable {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5076
 
         CyclicBarrier barrier;
         TestRunner(CyclicBarrier barrier) {
@@ -154,6 +158,7 @@ public class PooledSessionExhaustionTest extends JmsPoolTestSupport {
         });
         thread.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5076
         ExecutorService threads = Executors.newFixedThreadPool(2);
         final CyclicBarrier barrier = new CyclicBarrier(2, new Runnable() {
 

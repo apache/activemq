@@ -47,6 +47,7 @@ public class InitialContextTest extends TestCase {
     }
 
     public void testInitialContextHasXA() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2656
         InitialContext context = new InitialContext();
         assertTrue("Created context", context != null);
 
@@ -76,6 +77,7 @@ public class InitialContextTest extends TestCase {
 
     public void testConnectionFactoryPolicyConfig() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-406
         Properties properties = new Properties();
         properties.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.activemq.jndi.ActiveMQInitialContextFactory");
         properties.put(Context.PROVIDER_URL, "tcp://localhost:65432");

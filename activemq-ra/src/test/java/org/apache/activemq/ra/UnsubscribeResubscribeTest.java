@@ -68,6 +68,7 @@ public class UnsubscribeResubscribeTest {
     @Test(timeout = 60000)
     public void testUnsubscribeResubscribe() throws ResourceException, JMSException, XAException {
         getConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         assertNotNull(managedConnection);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("topic");

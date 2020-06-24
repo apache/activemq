@@ -34,6 +34,8 @@ import static org.junit.Assert.assertTrue;
 public class MemoryUsageTest {
 
     MemoryUsage underTest;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
     ThreadPoolExecutor executor;
       
     @Test
@@ -43,6 +45,7 @@ public class MemoryUsageTest {
         underTest.start();
         underTest.increaseUsage(1);
         assertEquals("usage is correct", 10, underTest.getPercentUsage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4798
         assertEquals("no new thread created without listener or callback",activeThreadCount, Thread.activeCount());
     }
     
@@ -50,6 +53,8 @@ public class MemoryUsageTest {
     public final void testAddUsageListenerStartsThread() throws Exception {       
         int activeThreadCount = Thread.activeCount();
         underTest = new MemoryUsage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         underTest.setExecutor(executor);
         underTest.setLimit(10);
         underTest.start();
@@ -63,6 +68,7 @@ public class MemoryUsageTest {
             }
         });
         underTest.increaseUsage(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4798
         assertTrue("listener was called", called.await(30, TimeUnit.SECONDS));
         assertTrue("listener called from another thread", !Thread.currentThread().toString().equals(listnerThreadNameHolder[0]));
         assertEquals("usage is correct", 10, underTest.getPercentUsage());
@@ -71,12 +77,14 @@ public class MemoryUsageTest {
 
     @Test
     public void testPercentOfJvmHeap() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4482
         underTest.setPercentOfJvmHeap(50);
         assertEquals("limit is half jvm limit", Math.round(Runtime.getRuntime().maxMemory() / 2.0), underTest.getLimit());
     }
 
     @Test
     public void testParentPortion() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4798
         underTest.setLimit(1491035750);
         MemoryUsage child = new MemoryUsage(underTest, "child", 1f);
         assertEquals("limits are matched whole", underTest.getLimit(), child.getLimit());
@@ -87,6 +95,7 @@ public class MemoryUsageTest {
 
     @Test(timeout=2000)
     public void testLimitedWaitFail() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7234
         underTest.setLimit(10);
         underTest.start();
         underTest.increaseUsage(11);
@@ -96,6 +105,8 @@ public class MemoryUsageTest {
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         underTest = new MemoryUsage();
         this.executor = new ThreadPoolExecutor(1, 10, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {

@@ -18,6 +18,7 @@ package org.apache.activemq.security;
 
 public class JaasDualAuthenticationNetworkBridgeNioSslTest extends JaasDualAuthenticationNetworkBridgeTest {
     public JaasDualAuthenticationNetworkBridgeNioSslTest() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6665
         super();
         CONFIG_FILE="org/apache/activemq/security/JaasDualAuthenticationNetworkBridgeNioSsl.xml";
     }

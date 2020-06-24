@@ -59,6 +59,7 @@ public class KahaDBFastEnqueueTest {
     private final int parallelProducer = 20;
     private final Vector<Exception> exceptions = new Vector<Exception>();
     long toSend = 10000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
 
     // use with:
     // -Xmx4g -Dorg.apache.kahadb.journal.appender.WRITE_STAT_WINDOW=10000 -Dorg.apache.kahadb.journal.CALLER_BUFFER_APPENDER=true
@@ -89,6 +90,7 @@ public class KahaDBFastEnqueueTest {
         long totalSent  = toSend * payloadString.length();
 
         double duration =  System.currentTimeMillis() - start;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         stopBroker();
         LOG.info("Duration:                " + duration + "ms");
         LOG.info("Rate:                       " + (toSend * 1000/duration) + "m/s");
@@ -161,6 +163,7 @@ public class KahaDBFastEnqueueTest {
     private void restartBroker(int restartDelay, int checkpoint) throws Exception {
         stopBroker();
         TimeUnit.MILLISECONDS.sleep(restartDelay);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         startBroker(false, checkpoint);
     }
 
@@ -176,6 +179,7 @@ public class KahaDBFastEnqueueTest {
             broker.stop();
             broker.waitUntilStopped();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         System.clearProperty(Journal.CALLER_BUFFER_APPENDER);
         System.clearProperty(FileAppender.PROPERTY_LOG_WRITE_STAT_WINDOW);
     }
@@ -215,6 +219,7 @@ public class KahaDBFastEnqueueTest {
         kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter)broker.getPersistenceAdapter();
         kahaDBPersistenceAdapter.setEnableJournalDiskSyncs(false);
         // defer checkpoints which require a sync
+//IC see: https://issues.apache.org/jira/browse/AMQ-3646
         kahaDBPersistenceAdapter.setCleanupInterval(checkPointPeriod);
         kahaDBPersistenceAdapter.setCheckpointInterval(checkPointPeriod);
 

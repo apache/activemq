@@ -39,8 +39,10 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
     public static final String MERGE = "MERGE";
     public static final String HEAP = "HEAP";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2414
     String engineType = INNODB;
     String typeStatement = "ENGINE";
+//IC see: https://issues.apache.org/jira/browse/AMQ-2857
 
     @Override
     public void setStatements(Statements statements) {
@@ -50,10 +52,13 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
             statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " WRITE");
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1130
         statements.setBinaryDataType("LONGBLOB");
         
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-2857
         String typeClause = typeStatement + "=" + type;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2414
         if( type.equals(NDBCLUSTER) ) {
             // in the NDBCLUSTER case we will create as INNODB and then alter to NDBCLUSTER
             typeClause = typeStatement + "=" + INNODB;
@@ -90,6 +95,7 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
     }
 
     public String getTypeStatement() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2857
         return typeStatement;
     }
 
@@ -99,6 +105,7 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
 
     @Override
     public String limitQuery(String query) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7368
         return query + " LIMIT " + getMaxRows();
     }
 

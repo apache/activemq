@@ -78,6 +78,7 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter implements
             ClassLoader original = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(JaasAuthenticationBroker.class.getClassLoader());
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5470
                 SecurityContext s = authenticate(info.getUserName(), info.getPassword(), (X509Certificate[]) info.getTransportContext());
                 context.setSecurityContext(s);
             } finally {
@@ -99,6 +100,7 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter implements
 
     @Override
     public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5470
         try {
             CallbackHandler callback = new JaasCertificateCallbackHandler(peerCertificates);
             LoginContext lc = new LoginContext(jaasConfiguration, callback);
@@ -107,6 +109,7 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter implements
 
             String dnName = "";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3322
             for (Principal principal : subject.getPrincipals()) {
                 if (principal instanceof UserPrincipal) {
                     dnName = ((UserPrincipal)principal).getName();

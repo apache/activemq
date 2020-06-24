@@ -84,6 +84,7 @@ public abstract class AbstractTempRegion extends AbstractRegion {
         Destination result = cachedDestinations.remove(new CachedDestination(
                 destination));
         if (result == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4091
             result =  destinationFactory.createDestination(context, destination, destinationStatistics);
         }
         return result;
@@ -95,6 +96,7 @@ public abstract class AbstractTempRegion extends AbstractRegion {
         if (this.doCacheTempDestinations) {
             cachedDestinations.put(new CachedDestination(dest
                     .getActiveMQDestination()), dest);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1810
         }else {
             try {
                 dest.dispose(context);

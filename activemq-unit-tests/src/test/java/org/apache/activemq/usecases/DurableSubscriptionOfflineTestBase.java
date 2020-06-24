@@ -131,6 +131,7 @@ public abstract class DurableSubscriptionOfflineTestBase {
             ((KahaDBPersistenceAdapter)broker.getPersistenceAdapter()).setJournalMaxFileLength(journalMaxFileLength);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5938
         configurePlugins(broker);
         broker.start();
         broker.waitUntilStarted();
@@ -216,6 +217,7 @@ class DurableSubscriptionOfflineTestListener implements MessageListener {
     }
     @Override
     public void onMessage(javax.jms.Message message) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7091
         synchronized (this) {
             count++;
         }

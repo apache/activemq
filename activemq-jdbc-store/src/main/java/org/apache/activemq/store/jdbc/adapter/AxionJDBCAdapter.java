@@ -56,6 +56,7 @@ public class AxionJDBCAdapter extends StreamJDBCAdapter {
         };
         statements.setCreateSchemaStatements(createStatements);
         statements.setLongDataType("LONG");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2291
         statements.setSequenceDataType("LONG");
         
         super.setStatements(statements);

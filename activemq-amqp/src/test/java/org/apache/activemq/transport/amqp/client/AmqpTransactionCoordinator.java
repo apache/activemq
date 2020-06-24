@@ -109,6 +109,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractResource<Sender> {
 
                 // Clear state data
                 pendingDelivery.settle();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6309
                 pendingRequests.remove(txId);
                 deliveries.remove();
             }
@@ -164,6 +165,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractResource<Sender> {
         Message message = Message.Factory.create();
         Discharge discharge = new Discharge();
         discharge.setFail(!commit);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6309
         discharge.setTxnId(txId.getRemoteTxId());
         message.setBody(new AmqpValue(discharge));
 

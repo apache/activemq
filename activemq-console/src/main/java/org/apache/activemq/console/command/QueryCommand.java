@@ -26,6 +26,7 @@ public class QueryCommand extends AbstractJmxCommand {
     private static final Properties PREDEFINED_OBJNAME_QUERY = new Properties();
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5724
         PREDEFINED_OBJNAME_QUERY.setProperty("Broker", "brokerName=%1");
         PREDEFINED_OBJNAME_QUERY.setProperty("Connection", "connector=clientConnectors,connectionViewType=*,connectionName=%1,*");
         PREDEFINED_OBJNAME_QUERY.setProperty("Connector", "connector=clientConnectors,connectorName=%1");
@@ -49,8 +50,10 @@ public class QueryCommand extends AbstractJmxCommand {
         "                                  similar to the JMX object name format.",
         "    --view <attr1>,<attr2>,...    Select the specific attribute of the object to view.",
         "                                  By default all attributes will be displayed.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5724
         "    --invoke <operation>          Specify the operation to invoke on matching objects",
         "    --jmxurl <url>                Set the JMX URL to connect to.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-2975
         "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",            
         "    --jmxuser <user>              Set the JMX user used for authenticating.",
         "    --jmxpassword <password>      Set the JMX password used for authenticating.",
@@ -81,6 +84,7 @@ public class QueryCommand extends AbstractJmxCommand {
         "        - Print all attributes of all topics except those that has a name that begins",
         "          with \"ActiveMQ.Advisory\".",
         "",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5724
         "    query --objname type=Broker,brokerName=*,connector=clientConnectors,connectorName=* -xQNetworkConnector=*",
         "        - Print all attributes of all connectors, connections excluding network connectors",
         "          that belongs to the broker that begins with local.", 
@@ -117,6 +121,7 @@ public class QueryCommand extends AbstractJmxCommand {
      */
     protected void runTask(List<String> tokens) throws Exception {
         // Query for the mbeans to add
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
         Map<Object, List> addMBeans = JmxMBeansUtil.queryMBeansAsMap(createJmxConnection(), queryAddObjects, queryViews);
         // Query for the mbeans to sub
         if (querySubObjects.size() > 0) {
@@ -124,6 +129,7 @@ public class QueryCommand extends AbstractJmxCommand {
             addMBeans.keySet().removeAll(subMBeans.keySet());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5724
         if (opAndParams.isEmpty()) {
             context.printMBean(JmxMBeansUtil.filterMBeansView(new ArrayList(addMBeans.values()), queryViews));
         } else {
@@ -189,6 +195,7 @@ public class QueryCommand extends AbstractJmxCommand {
             while (queryTokens.hasMoreTokens()) {
                 queryAddObjects.add(queryTokens.nextToken());
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5724
             normaliseObjectName(queryAddObjects);
         } else if (token.startsWith("-xQ")) {
             // If token is a substractive predefined query define option
@@ -203,14 +210,19 @@ public class QueryCommand extends AbstractJmxCommand {
             // If subtractive query
             String predefQuery = PREDEFINED_OBJNAME_QUERY.getProperty(key);
             if (predefQuery == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new IllegalArgumentException("Unknown query object type: " + key));
                 return;
             }
             String queryStr = JmxMBeansUtil.createQueryString(predefQuery, value);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1050
+//IC see: https://issues.apache.org/jira/browse/AMQ-1050
             StringTokenizer queryTokens = new StringTokenizer(queryStr, COMMAND_OPTION_DELIMETER);
             while (queryTokens.hasMoreTokens()) {
                 querySubObjects.add(queryTokens.nextToken());
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5724
             normaliseObjectName(querySubObjects);
         } else if (token.startsWith("--objname")) {
             // If token is an additive object name query option
@@ -232,6 +244,8 @@ public class QueryCommand extends AbstractJmxCommand {
             // If no object name query is specified, or next token is a new
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new IllegalArgumentException("Object name query not specified"));
                 return;
             }
@@ -245,6 +259,7 @@ public class QueryCommand extends AbstractJmxCommand {
 
             // If no view specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new IllegalArgumentException("Attributes to view not specified"));
                 return;
             }
@@ -255,6 +270,7 @@ public class QueryCommand extends AbstractJmxCommand {
                 queryViews.add(viewTokens.nextElement());
             }
         } else if (token.startsWith("--invoke")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5724
 
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
                 context.printException(new IllegalArgumentException("operation to invoke is not specified"));
@@ -312,6 +328,7 @@ public class QueryCommand extends AbstractJmxCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         context.printHelp(helpFile);
     }
 

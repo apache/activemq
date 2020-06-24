@@ -76,6 +76,7 @@ public class RestPersistentTest extends JettyTestSupport {
 
     private void postMessage(HttpClient httpClient, String url, String properties, String message) throws Exception
     {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         final CountDownLatch latch = new CountDownLatch(1);
         final StringBuffer buf = new StringBuffer();
         final AtomicInteger status = new AtomicInteger();

@@ -71,6 +71,7 @@ public class AMQ6599Test {
         brokerService.setPersistent(false);
 
         TransportConnector connector = brokerService.addConnector(protocol +
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
                 "://localhost:0?transport.soTimeout=3500");
         connector.setName("connector");
         uri = connector.getPublishableConnectString();

@@ -154,6 +154,7 @@ public class AMQ3157Test extends EmbeddedBrokerTestSupport {
         String domain = "org.apache.activemq";
         ObjectName name;
         if (destination.isQueue()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             name = new ObjectName(domain + ":type=Broker,brokerName=localhost," +
                                   "destinationType=Queue,destinationName=" + destination.getPhysicalName());
         } else {

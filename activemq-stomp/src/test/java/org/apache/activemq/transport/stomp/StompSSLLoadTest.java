@@ -27,6 +27,7 @@ public class StompSSLLoadTest extends StompLoadTest {
 
     @Override
     protected boolean isUseTcpConnector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         return false;
     }
 

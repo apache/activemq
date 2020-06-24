@@ -43,6 +43,7 @@ public class VirtualDestinationInterceptorProcessor extends DefaultConfiguration
         final DtoVirtualDestinationInterceptor dto = (DtoVirtualDestinationInterceptor) o;
 
         plugin.addDestinationWork.add(new UpdateVirtualDestinationsTask(plugin) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5915
 
             @Override
             protected VirtualDestination[] getVirtualDestinations() {

@@ -67,11 +67,13 @@ public class VMTransportFactory extends TransportFactory {
         if (data.getComponents().length == 1 && "broker".equals(data.getComponents()[0].getScheme())) {
             brokerURI = data.getComponents()[0];
             CompositeData brokerData = URISupport.parseComposite(brokerURI);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
             host = brokerData.getParameters().get("brokerName");
             if (host == null) {
                 host = "localhost";
             }
             if (brokerData.getPath() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2607
                 host = brokerData.getPath();
             }
             options = data.getParameters();
@@ -80,12 +82,16 @@ public class VMTransportFactory extends TransportFactory {
             // If using the less complex vm://localhost?broker.persistent=true
             // form
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
                 host = extractHost(location);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
                 options = URISupport.parseParameters(location);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
                 String config = options.remove("brokerConfig");
                 if (config != null) {
                     brokerURI = new URI(config);
                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
                     Map<String, Object> brokerOptions = IntrospectionSupport.extractProperties(options, "broker.");
                     brokerURI = new URI("broker://()/" + host + "?"
                                         + URISupport.createQueryString(brokerOptions));
@@ -93,6 +99,7 @@ public class VMTransportFactory extends TransportFactory {
                 if ("false".equals(options.remove("create"))) {
                     create = false;
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1895
                 String waitForStartString = options.remove("waitForStart");
                 if (waitForStartString != null) {
                     waitForStart = Integer.parseInt(waitForStartString);
@@ -113,6 +120,7 @@ public class VMTransportFactory extends TransportFactory {
             // doing this do not think that the broker has not been created and
             // cause multiple brokers to be started.
             synchronized (BrokerRegistry.getInstance().getRegistryMutext()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1895
                 broker = lookupBroker(BrokerRegistry.getInstance(), host, waitForStart);
                 if (broker == null) {
                     if (!create) {
@@ -125,17 +133,20 @@ public class VMTransportFactory extends TransportFactory {
                             broker = BrokerFactory.createBroker(brokerURI);
                         }
                         broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3219
                         MDC.put("activemq.broker", broker.getBrokerName());
                     } catch (URISyntaxException e) {
                         throw IOExceptionSupport.create(e);
                     }
                     BROKERS.put(host, broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1895
                     BrokerRegistry.getInstance().getRegistryMutext().notifyAll();
                 }
 
                 server = SERVERS.get(host);
                 if (server == null) {
                     server = (VMTransportServer)bind(location, true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
                     TransportConnector connector = new TransportConnector(server);
                     connector.setBrokerService(broker);
                     connector.setUri(location);
@@ -148,6 +159,7 @@ public class VMTransportFactory extends TransportFactory {
         }
 
         VMTransport vmtransport = server.connect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1666
         IntrospectionSupport.setProperties(vmtransport.peer, new HashMap<String,String>(options));
         IntrospectionSupport.setProperties(vmtransport, options);
         Transport transport = vmtransport;
@@ -163,6 +175,7 @@ public class VMTransportFactory extends TransportFactory {
     }
 
    private static String extractHost(URI location) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
        String host = location.getHost();
        if (host == null || host.length() == 0) {
            host = location.getAuthority();
@@ -189,14 +202,17 @@ public class VMTransportFactory extends TransportFactory {
         BrokerService broker = null;
         synchronized(registry.getRegistryMutext()) {
             broker = registry.lookup(brokerName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
             if (broker == null || waitForStart > 0) {
                 final long expiry = System.currentTimeMillis() + waitForStart;
                 while ((broker == null || !broker.isStarted()) && System.currentTimeMillis() - expiry < 0) {
                     long timeout = Math.max(0, expiry - System.currentTimeMillis());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
                     if (broker == null) {
                         try {
                             LOG.debug("waiting for broker named: " + brokerName + " to enter registry");
                             registry.getRegistryMutext().wait(timeout);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5086
                             broker = registry.lookup(brokerName);
                         } catch (InterruptedException ignored) {
                         }
@@ -229,6 +245,7 @@ public class VMTransportFactory extends TransportFactory {
      * @throws IOException
      */
     private TransportServer bind(URI location, boolean dispose) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
         String host = extractHost(location);
         LOG.debug("binding to broker: " + host);
         VMTransportServer server = new VMTransportServer(location, dispose);
@@ -241,7 +258,9 @@ public class VMTransportFactory extends TransportFactory {
     }
 
     public static void stopped(VMTransportServer server) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
         String host = extractHost(server.getBindURI());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2448
         stopped(host);
     }
 
@@ -255,6 +274,7 @@ public class VMTransportFactory extends TransportFactory {
             if (broker != null) {
                 ServiceSupport.dispose(broker);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3219
             MDC.remove("activemq.broker");
         }
     }

@@ -105,6 +105,7 @@ public class AmqpSupport {
     public static Map.Entry<Symbol, DescribedType> findFilter(Map<Symbol, Object> filters, Object[] filterIds) {
 
         if (filterIds == null || filterIds.length == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6309
             throw new IllegalArgumentException("Invalid empty Filter Ids array passed: ");
         }
 
@@ -112,6 +113,7 @@ public class AmqpSupport {
             return null;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5559
         for (Map.Entry<Symbol, Object> filter : filters.entrySet()) {
             if (filter.getValue() instanceof DescribedType) {
                 DescribedType describedType = ((DescribedType) filter.getValue());
@@ -163,6 +165,7 @@ public class AmqpSupport {
      * @return a new byte array that holds the big endian value of the long.
      */
     public static byte[] toBytes(long value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5602
         Buffer buffer = new Buffer(8);
         buffer.bigEndianEditor().writeLong(value);
         return buffer.data;
@@ -197,6 +200,7 @@ public class AmqpSupport {
      * @throws AmqpProtocolException if an error occurs while deducing the destination type.
      */
     public static ActiveMQDestination createDestination(Object endpoint) throws AmqpProtocolException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         if (endpoint == null) {
             return null;
         } else if (endpoint instanceof Coordinator) {
@@ -226,6 +230,7 @@ public class AmqpSupport {
      * @return a Symbol that matches the defined Capability value for the ActiveMQDestiantion.
      */
     public static Symbol getDestinationTypeSymbol(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6467
         if (destination.isQueue()) {
             if (destination.isTemporary()) {
                 return TEMP_QUEUE_CAPABILITY;

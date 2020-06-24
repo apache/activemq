@@ -168,6 +168,7 @@ public class DurableSubsOfflineSelectorIndexUseTest extends org.apache.activemq.
         assertEquals(messageCount / 2, listenerT.count);
         assertEquals(messageCount / 2, listenerF.count);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4094
         consumerTrue.close();
         session.unsubscribe("true");
 

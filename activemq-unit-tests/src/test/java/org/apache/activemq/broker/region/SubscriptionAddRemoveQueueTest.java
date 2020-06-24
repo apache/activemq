@@ -362,6 +362,7 @@ public class SubscriptionAddRemoveQueueTest {
 
         @Override
         public boolean isWildcard() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
             return false;
         }
 
@@ -409,11 +410,13 @@ public class SubscriptionAddRemoveQueueTest {
 
         @Override
         public SubscriptionStatistics getSubscriptionStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
             return subscriptionStatistics;
         }
 
         @Override
         public long getInFlightMessageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
             return subscriptionStatistics.getInflightMessageSize().getTotalSize();
         }
     }

@@ -61,6 +61,7 @@ public class TempTopic  extends Topic  implements Task{
                                         .getConnectionId()))) {
 
             tempDest.setConnectionId(sub.getConsumerInfo().getConsumerId().getConnectionId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3431
             if (LOG.isDebugEnabled()) {
                 LOG.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
             }

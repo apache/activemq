@@ -90,6 +90,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
      * @throws Exception
      */
     private void startServer(String uri) throws IOException, URISyntaxException, Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         server = TransportFactory.bind(new URI(uri));
         server.setAcceptListener(new TransportAcceptListener() {
             public void onAccept(Transport transport) {
@@ -213,6 +214,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
 
         assertNotNull(clientWF.get());
         assertEquals(CommandTypes.PROTOCOL_VERSION, clientWF.get().getVersion());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
 
         assertNotNull(serverWF.get());
         assertEquals(CommandTypes.PROTOCOL_VERSION, serverWF.get().getVersion());
@@ -220,6 +222,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
 
     public void testWireFormatMaxFrameSize() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
         startServer("tcp://localhost:61616");
         startClient("tcp://localhost:61616?wireFormat.maxFrameSize=1048576");
 

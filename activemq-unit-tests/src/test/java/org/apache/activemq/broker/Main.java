@@ -49,6 +49,7 @@ public final class Main {
             // BrokerService broker = BrokerFactory.createBroker(new URI(brokerDir + "/activemq.xml"));
 
             // for running on Java 5 without mx4j
+//IC see: https://issues.apache.org/jira/browse/AMQ-1134
             ManagementContext managementContext = broker.getManagementContext();
             managementContext.setFindTigerMbeanServer(true);
             managementContext.setUseMBeanServer(true);

@@ -46,12 +46,16 @@ public class JmsRollbackRedeliveryTest {
     public TestName testName = new TestName();
 
     protected static final Logger LOG = LoggerFactory.getLogger(JmsRollbackRedeliveryTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
     final int nbMessages = 10;
     final String destinationName = "Destination";
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
     final String brokerUrl = "vm://localhost?create=false";
     boolean consumerClose = true;
     boolean rollback = true;
     BrokerService broker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2897
 
     @Before
     public void setUp() throws Exception {
@@ -70,11 +74,14 @@ public class JmsRollbackRedeliveryTest {
             broker.waitUntilStopped();
         }
         LOG.debug("Finishing " + testName.getMethodName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4854
         Thread.sleep(100);
     }
     
     @Test
     public void testRedelivery() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         doTestRedelivery(brokerUrl, false);
     }
 
@@ -119,11 +126,13 @@ public class JmsRollbackRedeliveryTest {
                 if (msg != null) {
                     if (msg != null && rolledback.put(msg.getText(), Boolean.TRUE) != null) {
                         LOG.info("Received message " + msg.getText() + " (" + received.getAndIncrement() + ")" + msg.getJMSMessageID());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
                         assertTrue(msg.getJMSRedelivered());
                         assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
                         session.commit();
                     } else {
                         LOG.info("Rollback message " + msg.getText() + " id: " +  msg.getJMSMessageID());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
                         assertFalse("should not have redelivery flag set, id: " + msg.getJMSMessageID(), msg.getJMSRedelivered());
                         session.rollback();
                     }
@@ -143,6 +152,7 @@ public class JmsRollbackRedeliveryTest {
         connection.start();
 
         populateDestinationWithInterleavedProducer(nbMessages, destinationName, connection);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
 
         // Consume messages and rollback transactions
         {
@@ -286,6 +296,12 @@ public class JmsRollbackRedeliveryTest {
     @Test
     public void testRedeliveryPropertyWithNoRollback() throws Exception {
         final int numMessages = 1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
+//IC see: https://issues.apache.org/jira/browse/AMQ-1730
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
         ConnectionFactory connectionFactory = 
             new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = connectionFactory.createConnection();
@@ -333,6 +349,7 @@ public class JmsRollbackRedeliveryTest {
 
     
     private void populateDestinationWithInterleavedProducer(final int nbMessages,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
             final String destinationName, Connection connection)
             throws JMSException {
         Session session1 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

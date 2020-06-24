@@ -53,6 +53,7 @@ public class ActiveMQXAConnection extends ActiveMQConnection implements XATopicC
     private int xaAckMode;
 
     protected ActiveMQXAConnection(Transport transport, IdGenerator clientIdGenerator,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
                                    IdGenerator connectionIdGenerator, JMSStatsImpl factoryStats) throws Exception {
         super(transport, clientIdGenerator, connectionIdGenerator, factoryStats);
     }
@@ -72,6 +73,7 @@ public class ActiveMQXAConnection extends ActiveMQConnection implements XATopicC
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         return new ActiveMQXASession(this, getNextSessionId(), getAckMode(), isDispatchAsync());
     }
 

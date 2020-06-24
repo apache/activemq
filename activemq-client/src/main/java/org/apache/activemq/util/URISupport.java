@@ -118,8 +118,10 @@ public class URISupport {
      */
     public static Map<String, String> parseQuery(String uri) throws URISyntaxException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2729
             uri = uri.substring(uri.lastIndexOf("?") + 1); // get only the relevant part of the query
             Map<String, String> rc = new HashMap<String, String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2240
             if (uri != null && !uri.isEmpty()) {
                 String[] parameters = uri.split("&");
                 for (int i = 0; i < parameters.length; i++) {
@@ -152,12 +154,17 @@ public class URISupport {
      * @throws URISyntaxException
      */
     public static Map<String, String> parseParameters(URI uri) throws URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
         if (!isCompositeURI(uri)) {
             return uri.getQuery() == null ? emptyMap() : parseQuery(stripPrefix(uri.getQuery(), "?"));
         } else {
             CompositeData data = URISupport.parseComposite(uri);
             Map<String, String> parameters = new HashMap<String, String>();
             parameters.putAll(data.getParameters());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
             if (parameters.isEmpty()) {
                 parameters = emptyMap();
             }
@@ -244,11 +251,14 @@ public class URISupport {
      * @throws URISyntaxException
      */
     public static URI createURIWithQuery(URI uri, String query) throws URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
         String schemeSpecificPart = uri.getRawSchemeSpecificPart();
         // strip existing query if any
         int questionMark = schemeSpecificPart.lastIndexOf("?");
         // make sure question mark is not within parentheses
+//IC see: https://issues.apache.org/jira/browse/AMQ-3209
         if (questionMark < schemeSpecificPart.lastIndexOf(")")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2240
             questionMark = -1;
         }
         if (questionMark > 0) {
@@ -275,6 +285,7 @@ public class URISupport {
         CompositeData rc = new CompositeData();
         rc.scheme = uri.getScheme();
         String ssp = stripPrefix(uri.getRawSchemeSpecificPart().trim(), "//").trim();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1385
 
         parseComposite(uri, rc, ssp);
 
@@ -292,6 +303,7 @@ public class URISupport {
      */
     public static boolean isCompositeURI(URI uri) {
         String ssp = stripPrefix(uri.getRawSchemeSpecificPart().trim(), "//").trim();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3953
 
         if (ssp.indexOf('(') == 0 && checkParenthesis(ssp)) {
             return true;
@@ -313,6 +325,7 @@ public class URISupport {
     public static int indexOfParenthesisMatch(String str, int first) throws URISyntaxException {
         int index = -1;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3828
         if (first < 0 || first > str.length()) {
             throw new IllegalArgumentException("Invalid position for first parenthesis: " + first);
         }
@@ -366,6 +379,7 @@ public class URISupport {
         int p;
         int initialParen = ssp.indexOf("(");
         if (initialParen == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3828
 
             rc.host = ssp.substring(0, initialParen);
             p = rc.host.indexOf("/");

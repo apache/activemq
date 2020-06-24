@@ -39,6 +39,7 @@ class MemoryTopicSub {
     private MessageId lastBatch;
 
     public MemoryTopicSub(SubscriptionKey subscriptionKey) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
         this.subscriptionKey = subscriptionKey;
     }
 
@@ -51,8 +52,10 @@ class MemoryTopicSub {
 
     void removeMessage(MessageId id) {
         Message removed;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
         synchronized (this) {
             removed = map.remove(id);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1560
             if ((lastBatch != null && lastBatch.equals(id)) || map.isEmpty()) {
                 resetBatching();
             }
@@ -117,6 +120,7 @@ class MemoryTopicSub {
         lastBatch = null;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6387
     SubscriptionKey getSubscriptionKey() {
         return subscriptionKey;
     }

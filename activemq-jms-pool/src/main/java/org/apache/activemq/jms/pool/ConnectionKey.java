@@ -49,6 +49,7 @@ public class ConnectionKey {
             return true;
         }
         if (that instanceof ConnectionKey) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4366
             return equals((ConnectionKey) that);
         }
         return false;

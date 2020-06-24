@@ -44,10 +44,13 @@ public class WSSTransportFactory extends TransportFactory implements BrokerServi
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             WSSTransportServer result = new WSSTransportServer(location, SslContext.getCurrentSslContext());
             Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3980
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5237
             IntrospectionSupport.setProperties(result, transportOptions);
             result.setTransportOption(transportOptions);
             result.setHttpOptions(httpOptions);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
             result.setBrokerService(brokerService);
             return result;
         } catch (URISyntaxException e) {

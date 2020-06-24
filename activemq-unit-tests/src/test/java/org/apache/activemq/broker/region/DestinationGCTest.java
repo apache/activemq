@@ -52,6 +52,7 @@ public class DestinationGCTest {
 
     @Before
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         brokerService = createBroker();
         brokerService.start();
         brokerService.waitUntilStarted();
@@ -77,6 +78,7 @@ public class DestinationGCTest {
         broker.setUseJmx(true);
         broker.setDestinations(new ActiveMQDestination[] {queue});
         broker.setSchedulePeriodForDestinationPurge(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3339
         broker.setMaxPurgedDestinationsPerSweep(1);
         broker.setDestinationPolicy(map);
 
@@ -87,6 +89,7 @@ public class DestinationGCTest {
     public void testDestinationGCWithActiveConsumers() throws Exception {
         assertEquals(1, brokerService.getAdminView().getQueues().length);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5222
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         Connection connection = factory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -100,6 +103,7 @@ public class DestinationGCTest {
         });
 
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         assertTrue("After GC runs there should be one Queue.", Wait.waitFor(new Condition() {
             @Override
@@ -148,6 +152,7 @@ public class DestinationGCTest {
     public void testDestinationGcAnonymousProducer() throws Exception {
 
         final ActiveMQQueue q = new ActiveMQQueue("Q.TEST.ANONYMOUS.PRODUCER");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6188
 
         brokerService.getAdminView().addQueue(q.getPhysicalName());
         assertEquals(2, brokerService.getAdminView().getQueues().length);
@@ -173,6 +178,7 @@ public class DestinationGCTest {
 
         assertFalse(brokerService.getDestination(q).canGC());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         connection.close();
     }
 }

@@ -76,9 +76,11 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCPersistenceAdapter.class);
     private static FactoryFinder adapterFactoryFinder = new FactoryFinder(
+//IC see: https://issues.apache.org/jira/browse/AMQ-4581
         "META-INF/services/org/apache/activemq/store/jdbc/");
     private static FactoryFinder lockFactoryFinder = new FactoryFinder(
         "META-INF/services/org/apache/activemq/store/jdbc/lock/");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
 
     public static final long DEFAULT_LOCK_KEEP_ALIVE_PERIOD = 30 * 1000;
 
@@ -108,6 +110,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     protected final HashMap<ActiveMQDestination, MessageStore> storeCache = new HashMap<>();
 
     {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         setLockKeepAlivePeriod(DEFAULT_LOCK_KEEP_ALIVE_PERIOD);
     }
 
@@ -195,6 +198,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     @Override
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         MessageStore rc = storeCache.get(destination);
         if (rc == null) {
             MessageStore store = transactionStore.proxy(new JDBCMessageStore(this, getAdapter(), wireFormat, destination, audit));
@@ -225,6 +229,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
      */
     @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3695
         if (destination.isQueue() && getBrokerService().shouldRecordVirtualDestination(destination)) {
             try {
                 removeConsumerDestination(destination);
@@ -232,6 +237,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 LOG.error("Failed to remove consumer destination: " + destination, ioe);
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         storeCache.remove(destination);
     }
 
@@ -256,6 +262,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
      */
     @Override
     public void removeTopicMessageStore(ActiveMQTopic destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         storeCache.remove(destination);
     }
 
@@ -272,6 +279,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             sequenceGenerator.setLastSequenceId(seq);
             long brokerSeq = 0;
             if (seq != 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2696
                 byte[] msg = getAdapter().doGetMessageById(c, seq);
                 if (msg != null) {
                     Message last = (Message)wireFormat.unmarshal(new ByteSequence(msg));
@@ -291,6 +299,9 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     @Override
     public long getLastProducerSequenceId(ProducerId id) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         TransactionContext c = getTransactionContext();
         try {
             return getAdapter().doGetLastProducerSequenceId(c, id);
@@ -311,6 +322,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
         if (isCreateTablesOnStartup()) {
             TransactionContext transactionContext = getTransactionContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
             transactionContext.getExclusiveConnection();
             transactionContext.begin();
             try {
@@ -329,17 +341,20 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     @Override
     public void doStart() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
         if( brokerService!=null ) {
           wireFormat.setVersion(brokerService.getStoreOpenWireVersion());
         }
 
         // Cleanup the db periodically.
         if (cleanupPeriod > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2470
             cleanupTicket = getScheduledThreadPoolExecutor().scheduleWithFixedDelay(new Runnable() {
                 @Override
                 public void run() {
                     cleanup();
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2063
             }, 0, cleanupPeriod, TimeUnit.MILLISECONDS);
         }
         createMessageAudit();
@@ -359,7 +374,9 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         try {
             LOG.debug("Cleaning up old messages.");
             c = getTransactionContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
             c.getExclusiveConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
             getAdapter().doDeleteOldMessages(c);
         } catch (IOException e) {
             LOG.warn("Old message cleanup failed due to: " + e, e);
@@ -383,6 +400,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             clockDaemon = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable runnable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
                     Thread thread = new Thread(runnable, "ActiveMQ JDBC PA Scheduled Task");
                     thread.setDaemon(true);
                     return thread;
@@ -419,6 +437,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public DataSource getLockDataSource() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1244
         if (lockDataSource == null) {
             lockDataSource = getDataSource();
             if (lockDataSource == null) {
@@ -446,6 +465,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     protected JDBCAdapter createAdapter() throws IOException {
 
         adapter = (JDBCAdapter) loadAdapter(adapterFactoryFinder, "adapter");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
 
         // Use the default JDBC adapter if the
         // Database type is not recognized.
@@ -464,6 +484,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 // Make the filename file system safe.
                 String dirverName = c.getConnection().getMetaData().getDriverName();
                 dirverName = dirverName.replaceAll("[^a-zA-Z0-9\\-]", "_").toLowerCase(Locale.ENGLISH);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4012
 
                 try {
                     adapter = finder.newInstance(dirverName);
@@ -486,6 +507,8 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     public void setAdapter(JDBCAdapter adapter) {
         this.adapter = adapter;
         this.adapter.setStatements(getStatements());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         this.adapter.setMaxRows(getMaxRows());
     }
 
@@ -498,11 +521,13 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public TransactionContext getTransactionContext(ConnectionContext context) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6693
         if (context == null || isBrokerContext(context)) {
             return getTransactionContext();
         } else {
             TransactionContext answer = (TransactionContext)context.getLongTermStoreContext();
             if (answer == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2463
                 answer = getTransactionContext();
                 context.setLongTermStoreContext(answer);
             }
@@ -511,11 +536,14 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     private boolean isBrokerContext(ConnectionContext context) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6693
         return context.getSecurityContext() != null && context.getSecurityContext().isBrokerContext();
     }
 
     public TransactionContext getTransactionContext() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
         TransactionContext answer = new TransactionContext(this, networkTimeout, queryTimeout);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2463
         if (transactionIsolation > 0) {
             answer.setTransactionIsolation(transactionIsolation);
         }
@@ -553,6 +581,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public boolean isChangeAutoCommitAllowed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1492
         return changeAutoCommitAllowed;
     }
 
@@ -567,6 +596,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public int getNetworkTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7473
         return networkTimeout;
     }
 
@@ -595,6 +625,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     @Override
     public void deleteAllMessages() throws IOException {
         TransactionContext c = getTransactionContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
         c.getExclusiveConnection();
         try {
             getAdapter().doDropTables(c);
@@ -636,6 +667,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
      */
     @Deprecated
     public void setUseDatabaseLock(boolean useDatabaseLock) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         setUseLock(useDatabaseLock);
     }
 
@@ -657,6 +689,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     public void setStatements(Statements statements) {
         this.statements = statements;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4581
         if (adapter != null) {
             this.adapter.setStatements(getStatements());
         }
@@ -677,6 +710,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             locker = new DefaultDatabaseLocker();
             LOG.debug("Using default JDBC Locker: " + locker);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         locker.configure(this);
         return locker;
     }
@@ -687,11 +721,13 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
         return "JDBCPersistenceAdapter(" + super.toString() + ")";
     }
 
     @Override
     public void setDirectory(File dir) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3573
         this.directory=dir;
     }
 
@@ -707,9 +743,11 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     @Override
     public void checkpoint(boolean sync) throws IOException {
         // by pass TransactionContext to avoid IO Exception handler
+//IC see: https://issues.apache.org/jira/browse/AMQ-1780
         Connection connection = null;
         try {
             connection = getDataSource().getConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
             if (!connection.isValid(10)) {
                 throw new IOException("isValid(10) failed for: " + connection);
             }
@@ -740,6 +778,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
      */
     @Deprecated
     public void setLockAcquireSleepInterval(long lockAcquireSleepInterval) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         getLocker().setLockAcquireSleepInterval(lockAcquireSleepInterval);
     }
 
@@ -751,10 +790,13 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
      * @param transactionIsolation the isolation level to use
      */
     public void setTransactionIsolation(int transactionIsolation) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2463
         this.transactionIsolation = transactionIsolation;
     }
 
     public int getMaxProducersToAudit() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2519
+//IC see: https://issues.apache.org/jira/browse/AMQ-4581
         return maxProducersToAudit;
     }
 
@@ -787,10 +829,13 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public long getNextSequenceId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
         return sequenceGenerator.getNextSequenceId();
     }
 
     public int getMaxRows() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         return maxRows;
     }
 
@@ -802,6 +847,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public void recover(JdbcMemoryTransactionStore jdbcMemoryTransactionStore) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         TransactionContext c = getTransactionContext();
         try {
             getAdapter().doRecoverPreparedOps(c, jdbcMemoryTransactionStore);
@@ -816,6 +862,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     public void commitAdd(ConnectionContext context, final MessageId messageId, final long preparedSequenceId, final long newSequence) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
             getAdapter().doCommitAddOp(c, preparedSequenceId, newSequence);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
@@ -828,6 +875,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     public void commitRemove(ConnectionContext context, MessageAck ack) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7424
             if (c != null && ack != null && ack.getLastMessageId() != null && ack.getLastMessageId().getEntryLocator() != null) {
                 getAdapter().doRemoveMessage(c, (Long) ack.getLastMessageId().getEntryLocator(), null);
             }
@@ -877,6 +925,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5384
     long[] getStoreSequenceIdForMessageId(ConnectionContext context, MessageId messageId, ActiveMQDestination destination) throws IOException {
         long[] result = new long[]{-1, Byte.MAX_VALUE -1};
         TransactionContext c = getTransactionContext(context);
@@ -893,6 +942,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         throw new UnsupportedOperationException();
     }
 }

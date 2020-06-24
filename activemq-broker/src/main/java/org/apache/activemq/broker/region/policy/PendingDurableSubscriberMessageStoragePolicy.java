@@ -39,5 +39,6 @@ public interface PendingDurableSubscriberMessageStoragePolicy {
      * @param sub 
      * @return the Pending Message cursor
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-3196
     PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String clientId, String name, int maxBatchSize, DurableTopicSubscription sub);
 }

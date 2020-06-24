@@ -44,6 +44,7 @@ public class XATransaction extends Transaction {
         this.transactionStore = transactionStore;
         this.xid = xid;
         this.broker = broker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2950
         this.connectionId = connectionId;
         if (LOG.isDebugEnabled()) {
             LOG.debug("XA Transaction new/begin : " + xid);
@@ -72,7 +73,9 @@ public class XATransaction extends Transaction {
         case PREPARED_STATE:
             // 2 phase commit, work done.
             // We would record commit here.
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
             storeCommit(getTransactionId(), true, null /* done post prepare call */, postCommitTask);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             setStateFinished();
             break;
         default:
@@ -89,6 +92,7 @@ public class XATransaction extends Transaction {
             throw xae;
         } catch (Throwable t) {
             LOG.warn("Store COMMIT FAILED: " + txid, t);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             XAException xae = null;
             if (wasPrepared) {
                 // report and await outcome
@@ -128,6 +132,7 @@ public class XATransaction extends Transaction {
         } catch (Throwable e) {
             LOG.warn("PRE-PREPARE FAILED: ", e);
             rollback();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5311
             XAException xae = newXAException("PRE-PREPARE FAILED: Transaction rolled back", XAException.XA_RBOTHER);
             xae.initCause(e);
             throw xae;
@@ -164,6 +169,7 @@ public class XATransaction extends Transaction {
             doPostRollback();
             break;
         default:
+//IC see: https://issues.apache.org/jira/browse/AMQ-5311
             throw newXAException("Invalid state: " + getState(), XAException.XA_RBPROTO);
         }
 
@@ -198,6 +204,7 @@ public class XATransaction extends Transaction {
             doPrePrepare();
             setState(Transaction.PREPARED_STATE);
             transactionStore.prepare(getTransactionId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
             preCommitTask.run();
             return XAResource.XA_OK;
         default:
@@ -212,6 +219,7 @@ public class XATransaction extends Transaction {
     }
 
     public ConnectionId getConnectionId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2950
         return connectionId;
     }
 
@@ -226,6 +234,7 @@ public class XATransaction extends Transaction {
     }
 
     public XATransactionId getXid() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         return xid;
     }
 }

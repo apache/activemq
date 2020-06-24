@@ -69,8 +69,10 @@ public class Main {
 
         // lets add the conf directory first, to find the log4j.properties just in case its not
         // in the activemq.classpath system property or some jar incorrectly includes one
+//IC see: https://issues.apache.org/jira/browse/AMQ-3248
         File confDir = app.getActiveMQConfig();
         app.addClassPath(confDir);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1363
 
         // Add the following to the classpath:
         //
@@ -96,6 +98,7 @@ public class Main {
             app.addExtensionDirectory(homeLibDir);
 
             if (!baseIsHome) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4053
                 app.addExtensionDirectory(new File(baseLibDir, "camel"));
                 app.addExtensionDirectory(new File(baseLibDir, "optional"));
                 app.addExtensionDirectory(new File(baseLibDir, "web"));
@@ -113,6 +116,7 @@ public class Main {
 
         try {
             int ret = app.runTaskClass(tokens);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5841
             System.exit(ret);
         } catch (ClassNotFoundException e) {
             System.out.println("Could not load class: " + e.getMessage());
@@ -124,6 +128,7 @@ public class Main {
                 }
             } catch (MalformedURLException e1) {
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1720
             System.exit(1);
         } catch (Throwable e) {
             System.out.println("Failed to execute main task. Reason: " + e);
@@ -218,6 +223,7 @@ public class Main {
 
     public int runTaskClass(List<String> tokens) throws Throwable {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2113
         StringBuilder buffer = new StringBuilder();
         buffer.append(System.getProperty("java.vendor"));
         buffer.append(" ");
@@ -227,6 +233,7 @@ public class Main {
         System.out.println("Java Runtime: " + buffer.toString());
 
         buffer = new StringBuilder();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3248
         buffer.append("current=");
         buffer.append(Runtime.getRuntime().totalMemory()/1024L);
         buffer.append("k  free=");
@@ -251,6 +258,7 @@ public class Main {
 
         ClassLoader cl = getClassLoader();
         Thread.currentThread().setContextClassLoader(cl);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1363
 
         // Use reflection to run the task.
         try {
@@ -259,6 +267,7 @@ public class Main {
             Method runTask = task.getMethod("main", new Class[] {
                 String[].class, InputStream.class, PrintStream.class
             });
+//IC see: https://issues.apache.org/jira/browse/AMQ-5841
             return (int)runTask.invoke(task.newInstance(), args, System.in, System.out);
         } catch (InvocationTargetException e) {
             throw e.getCause();
@@ -270,7 +279,10 @@ public class Main {
     }
 
     public void addClassPathList(String fileList) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1096
+//IC see: https://issues.apache.org/jira/browse/AMQ-1046
         if (fileList != null && fileList.length() > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6138
             StringTokenizer tokenizer = new StringTokenizer(fileList, File.pathSeparator);
             while (tokenizer.hasMoreTokens()) {
                 addClassPath(new File(tokenizer.nextToken()));
@@ -308,6 +320,7 @@ public class Main {
 
                 for (Iterator<File> iter = activeMQClassPath.iterator(); iter.hasNext();) {
                     File dir = iter.next();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2869
                     urls.add(dir.toURI().toURL());
                 }
 
@@ -319,6 +332,7 @@ public class Main {
 
                             // Sort the jars so that classpath built is consistently in the same
                             // order. Also allows us to use jar names to control classpath order.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3248
                             Arrays.sort(files, new Comparator<File>() {
                                 @Override
                                 public int compare(File f1, File f2) {
@@ -328,6 +342,7 @@ public class Main {
 
                             for (int j = 0; j < files.length; j++) {
                                 if (files[j].getName().endsWith(".zip") || files[j].getName().endsWith(".jar")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2869
                                     urls.add(files[j].toURI().toURL());
                                 }
                             }
@@ -381,6 +396,8 @@ public class Main {
     public File getActiveMQBase() {
         if (activeMQBase == null) {
             if (System.getProperty("activemq.base") != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1096
+//IC see: https://issues.apache.org/jira/browse/AMQ-1046
                 activeMQBase = new File(System.getProperty("activemq.base"));
             }
 
@@ -395,6 +412,7 @@ public class Main {
 
     public File getActiveMQConfig() {
         File activeMQConfig = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3248
 
         if (System.getProperty("activemq.conf") != null) {
             activeMQConfig = new File(System.getProperty("activemq.conf"));
@@ -418,6 +436,7 @@ public class Main {
     }
 
     public String getExtensionDirForLogging() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4053
         StringBuilder sb = new StringBuilder("[");
         for (Iterator<File> it = extensions.iterator(); it.hasNext();) {
             File file = it.next();

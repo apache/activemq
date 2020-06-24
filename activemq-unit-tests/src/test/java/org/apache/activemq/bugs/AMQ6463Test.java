@@ -65,6 +65,7 @@ public class AMQ6463Test extends JmsTestSupport {
         TextMessage message = session.createTextMessage("test msg");
         final int numMessages = 20;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7052
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, 0);
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 0);
         message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, numMessages - 1);
@@ -79,6 +80,7 @@ public class AMQ6463Test extends JmsTestSupport {
                 return gotUsageBlocked.get();
             }
         }, 60000));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7052
 
         MessageConsumer consumer = session.createConsumer(queueA);
         TextMessage msg;
@@ -102,6 +104,7 @@ public class AMQ6463Test extends JmsTestSupport {
         IOHelper.deleteChildren(service.getSchedulerDirectoryFile());
 
         service.getSystemUsage().getMemoryUsage().setLimit(512);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7052
 
         // Setup a destination policy where it takes only 1 message at a time.
         PolicyMap policyMap = new PolicyMap();
@@ -125,6 +128,7 @@ public class AMQ6463Test extends JmsTestSupport {
             public void doAppend(LoggingEvent event) {
                 if (event.getLevel().equals(Level.ERROR)) {
                     errors.incrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4261
                 } else if (event.getLevel().equals(Level.WARN) && event.getRenderedMessage().contains("Usage Manager Memory Limit")) {
                     gotUsageBlocked.set(true);
                 }

@@ -23,6 +23,7 @@ package org.apache.activemq.transport.discovery;
 public class ZeroconfDiscoverTransportTest extends DiscoveryTransportBrokerTest {
 
     protected String getDiscoveryUri() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3613
         return "zeroconf://cheese";
     }
 

@@ -55,6 +55,7 @@ public class QueueBrowseServlet extends HttpServlet {
     // -------------------------------------------------------------------------
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1315
             WebClient client = WebClient.getWebClient(request);
             Session session = client.getSession();
             Queue queue = getQueue(request, session);
@@ -96,6 +97,7 @@ public class QueueBrowseServlet extends HttpServlet {
             style = "simple";
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1315
             return (MessageRenderer) factoryFinder.newInstance(style);
         }
         catch (IllegalAccessException e) {

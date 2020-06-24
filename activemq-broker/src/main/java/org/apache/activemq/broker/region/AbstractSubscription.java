@@ -65,13 +65,16 @@ public abstract class AbstractSubscription implements Subscription {
         this.context = context;
         this.info = info;
         this.destinationFilter = DestinationFilter.parseFilter(info.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-625
         this.selectorExpression = parseSelector(info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
         this.lastAckTime = System.currentTimeMillis();
     }
 
     private static BooleanExpression parseSelector(ConsumerInfo info) throws InvalidSelectorException {
         BooleanExpression rc = null;
         if (info.getSelector() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
             rc = SelectorParser.parse(info.getSelector());
         }
         if (info.isNoLocal()) {
@@ -93,6 +96,7 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
         this.lastAckTime = System.currentTimeMillis();
         subscriptionStatistics.getConsumedCount().increment();
     }
@@ -106,6 +110,7 @@ public abstract class AbstractSubscription implements Subscription {
             }
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-625
             return (selectorExpression == null || selectorExpression.matches(context)) && this.context.isAllowedToConsume(node);
         } catch (JMSException e) {
             LOG.info("Selector failed to evaluate: {}", e.getMessage(), e);
@@ -115,6 +120,7 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public boolean isWildcard() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         return destinationFilter.isWildcard();
     }
 
@@ -145,6 +151,7 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public ConnectionContext getContext() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-606
         return context;
     }
 
@@ -153,6 +160,7 @@ public abstract class AbstractSubscription implements Subscription {
     }
 
     public BooleanExpression getSelectorExpression() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-625
         return selectorExpression;
     }
 
@@ -187,6 +195,7 @@ public abstract class AbstractSubscription implements Subscription {
     }
 
     public boolean isUsePrefetchExtension() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6577
         return usePrefetchExtension;
     }
 
@@ -195,6 +204,7 @@ public abstract class AbstractSubscription implements Subscription {
     }
 
     public void setPrefetchSize(int newSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1846
         info.setPrefetchSize(newSize);
     }
 
@@ -205,6 +215,7 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public boolean isSlowConsumer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
         return slowConsumer;
     }
 
@@ -242,12 +253,14 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public long getInFlightMessageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
         return subscriptionStatistics.getInflightMessageSize().getTotalSize();
     }
 
     @Override
     public int getInFlightUsage() {
         int prefetchSize = info.getPrefetchSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6357
         if (prefetchSize > 0) {
             return (getInFlightSize() * 100) / prefetchSize;
         }
@@ -270,6 +283,8 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public int getCursorMemoryHighWaterMark(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
         return this.cursorMemoryHighWaterMark;
     }
 
@@ -280,6 +295,7 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public int countBeforeFull() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5813
         return info.getPrefetchSize() - getDispatchedQueueSize();
     }
 
@@ -294,6 +310,7 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public long getTimeOfLastMessageAck() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
         return lastAckTime;
     }
 
@@ -303,11 +320,13 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public long getConsumedCount(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
         return subscriptionStatistics.getConsumedCount().getCount();
     }
 
     @Override
     public void incrementConsumedCount(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
         subscriptionStatistics.getConsumedCount().increment();
     }
 
@@ -322,6 +341,7 @@ public abstract class AbstractSubscription implements Subscription {
     }
 
     public void wakeupDestinationsForDispatch() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
         for (Destination dest : destinations) {
             dest.wakeup();
         }
@@ -332,6 +352,7 @@ public abstract class AbstractSubscription implements Subscription {
     }
 
     protected void contractPrefetchExtension(int amount) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6824
         if (isUsePrefetchExtension() && getPrefetchSize() != 0) {
             decrementPrefetchExtension(amount);
         }
@@ -364,6 +385,8 @@ public abstract class AbstractSubscription implements Subscription {
     }
 
     public CopyOnWriteArrayList<Destination> getDestinations() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
         return destinations;
     }
 }

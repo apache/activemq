@@ -46,6 +46,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
     public void doStart() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         if (lockAcquireSleepInterval < lockable.getLockKeepAlivePeriod()) {
             LOG.warn("LockableService keep alive period: " + lockable.getLockKeepAlivePeriod()
                     + ", which renews the lease, is greater than lockAcquireSleepInterval: " + lockAcquireSleepInterval
@@ -53,9 +54,11 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
         }
 
         LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the master");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4841
         String sql = getStatements().getLeaseObtainStatement();
         LOG.debug(getLeaseHolderId() + " locking Query is "+sql);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
         long now = 0l;
         while (!isStopping()) {
             Connection connection = null;
@@ -67,6 +70,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
                 statement = connection.prepareStatement(sql);
                 setQueryTimeout(statement);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
                 now = System.currentTimeMillis() + diffFromCurrentTime;
                 statement.setString(1, getLeaseHolderId());
                 statement.setLong(2, now + lockAcquireSleepInterval);
@@ -84,6 +88,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
             } catch (Exception e) {
                 LOG.warn(getLeaseHolderId() + " lease acquire failure: "+ e, e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5162
                 if (isStopping()) {
                     throw new Exception(
                             "Cannot start broker as being asked to shut down. "
@@ -91,6 +96,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
                                     + e, e);
                 }
                 if (handleStartException) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
                     throw e;
                 }
             } finally {
@@ -101,7 +107,9 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
             LOG.debug(getLeaseHolderId() + " failed to acquire lease.  Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again...");
             TimeUnit.MILLISECONDS.sleep(lockAcquireSleepInterval);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         if (isStopping()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4122
             throw new RuntimeException(getLeaseHolderId() + " failing lease acquire due to stop");
         }
 
@@ -111,6 +119,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     private void reportLeasOwnerShipAndDuration(Connection connection) throws SQLException {
         PreparedStatement statement = null;
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4841
             statement = connection.prepareStatement(getStatements().getLeaseOwnerStatement());
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -122,6 +131,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     }
 
     protected long initTimeDiff(Connection connection) throws SQLException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3654
         if (Long.MAX_VALUE == diffFromCurrentTime) {
             if (maxAllowableDiffFromDBTime > 0) {
                 diffFromCurrentTime = determineTimeDifference(connection);
@@ -133,12 +143,14 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     }
 
     protected long determineTimeDifference(Connection connection) throws SQLException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7403
         try (PreparedStatement statement = connection.prepareStatement(getStatements().getCurrentDateTime());
              ResultSet resultSet = statement.executeQuery()) {
             long result = 0l;
             if (resultSet.next()) {
                 Timestamp timestamp = resultSet.getTimestamp(1);
                 long diff = System.currentTimeMillis() - timestamp.getTime();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4645
                 if (Math.abs(diff) > maxAllowableDiffFromDBTime) {
                     // off by more than maxAllowableDiffFromDBTime so lets adjust
                     result = (-diff);
@@ -150,8 +162,10 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     }
 
     public void doStop(ServiceStopper stopper) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         if (lockable.getBrokerService() != null && lockable.getBrokerService().isRestartRequested()) {
             // keep our lease for restart
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
             return;
         }
         releaseLease();
@@ -162,6 +176,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
         PreparedStatement statement = null;
         try {
             connection = getConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4841
             statement = connection.prepareStatement(getStatements().getLeaseUpdateStatement());
             statement.setString(1, null);
             statement.setLong(2, 0l);
@@ -180,6 +195,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     @Override
     public boolean keepAlive() throws IOException {
         boolean result = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4841
         final String sql = getStatements().getLeaseUpdateStatement();
         LOG.debug(getLeaseHolderId() + ", lease keepAlive Query is " + sql);
 
@@ -199,12 +215,14 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
             result = (statement.executeUpdate() == 1);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
             if (!result) {
                 reportLeasOwnerShipAndDuration(connection);
             }
         } catch (Exception e) {
             LOG.warn(getLeaseHolderId() + ", failed to update lease: " + e, e);
             IOException ioe = IOExceptionSupport.create(e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
             lockable.getBrokerService().handleIOException(ioe);
             throw ioe;
         } finally {
@@ -216,6 +234,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
     public String getLeaseHolderId() {
         if (leaseHolderId == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
             if (lockable.getBrokerService() != null) {
                 leaseHolderId = lockable.getBrokerService().getBrokerName();
             }
@@ -236,6 +255,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     }
 
     public boolean isHandleStartException() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5162
         return handleStartException;
     }
 
@@ -245,6 +265,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4643
         return "LeaseDatabaseLocker owner:" + leaseHolderId + ",duration:" + lockAcquireSleepInterval + ",renew:" + lockAcquireSleepInterval;
     }
 }

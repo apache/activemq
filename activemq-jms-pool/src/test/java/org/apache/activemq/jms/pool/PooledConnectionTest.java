@@ -106,6 +106,7 @@ public class PooledConnectionTest extends JmsPoolTestSupport {
 
     protected ConnectionFactory createPooledConnectionFactory() {
         PooledConnectionFactory cf = new PooledConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         cf.setConnectionFactory(new ActiveMQConnectionFactory(
             "vm://localhost?broker.persistent=false&broker.useJmx=false&broker.schedulerSupport=false"));
         cf.setMaxConnections(1);

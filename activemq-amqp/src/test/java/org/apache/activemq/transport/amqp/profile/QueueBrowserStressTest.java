@@ -69,6 +69,7 @@ public class QueueBrowserStressTest extends JMSClientTestSupport {
             }
 
             LOG.debug("close browser for {}", queue.getQueueName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6309
             try {
                 browser.close();
             } catch (JMSException e) {

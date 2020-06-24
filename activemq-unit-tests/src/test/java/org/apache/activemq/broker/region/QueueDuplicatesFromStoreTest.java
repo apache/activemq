@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 public class QueueDuplicatesFromStoreTest extends TestCase {
     private static final Logger LOG = LoggerFactory
             .getLogger(QueueDuplicatesFromStoreTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3177
 
     ActiveMQQueue destination = new ActiveMQQueue("queue-"
             + QueueDuplicatesFromStoreTest.class.getSimpleName());
@@ -79,6 +80,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
         brokerService = createBroker();
         brokerService.setUseJmx(false);
         brokerService.deleteAllMessages();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
         brokerService.start();
     }
 
@@ -101,7 +103,9 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
 
     public void doTestNoDuplicateAfterCacheFullAndAcked(final int auditDepth) throws Exception {
         final PersistenceAdapter persistenceAdapter =  brokerService.getPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
         final MessageStore queueMessageStore =
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
                 persistenceAdapter.createQueueMessageStore(destination);
         final ConnectionContext contextNotInTx = new ConnectionContext();
         final ConsumerInfo consumerInfo = new ConsumerInfo();
@@ -109,6 +113,8 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
         consumerInfo.setExclusive(true);
         final Queue queue = new Queue(brokerService, destination,
                 queueMessageStore, destinationStatistics, brokerService.getTaskRunnerFactory());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2483
+//IC see: https://issues.apache.org/jira/browse/AMQ-2028
 
         // a workaround for this issue
         // queue.setUseCache(false);
@@ -291,6 +297,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
 
             @Override
             public boolean isWildcard() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
                 return false;
             }
 
@@ -332,6 +339,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
 
             @Override
             public int getCursorMemoryHighWaterMark(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-2403
                 return 0;
             }
 
@@ -342,6 +350,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
 
             @Override
             public boolean isSlowConsumer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
                 return false;
             }
 
@@ -356,6 +365,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
 
             @Override
             public long getConsumedCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4927
                 return 0;
             }
 
@@ -371,11 +381,13 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
 
             @Override
             public SubscriptionStatistics getSubscriptionStatistics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5792
                 return subscriptionStatistics;
             }
 
             @Override
             public long getInFlightMessageSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5837
                 return subscriptionStatistics.getInflightMessageSize().getTotalSize();
             }
         };
@@ -397,6 +409,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
                                 new IndirectMessageReference(
                                         getMessage(removeIndex)), ack);
                         queue.wakeup();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2252
 
                     }
                     if (removeIndex % 1000 == 0) {

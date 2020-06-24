@@ -59,6 +59,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
 
     public ManagedSessionProxy(ActiveMQSession session, ManagedConnectionProxy connectionProxy) {
         this.session = session;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2166
         this.connectionProxy = connectionProxy;
     }
 
@@ -72,6 +73,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @throws JMSException
      */
     public void close() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2166
     	if (closed) {
     		return;
         }
@@ -331,6 +333,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @throws JMSException
      */
     public void setMessageListener(MessageListener listener) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1756
         getSession().setMessageListener(listener);
     }
 

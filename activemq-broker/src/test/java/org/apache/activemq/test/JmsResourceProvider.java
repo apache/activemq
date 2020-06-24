@@ -197,6 +197,7 @@ public class JmsResourceProvider {
      */
     public void setTransacted(boolean transacted) {
         this.transacted = transacted;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         if (transacted) {
             setAckMode(Session.SESSION_TRANSACTED);
         }

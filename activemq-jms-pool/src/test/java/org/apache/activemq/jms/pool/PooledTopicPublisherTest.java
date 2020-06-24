@@ -48,6 +48,7 @@ public class PooledTopicPublisherTest extends JmsPoolTestSupport {
     @Override
     @After
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         if (connection != null) {
             try {
                 connection.close();
@@ -80,6 +81,7 @@ public class PooledTopicPublisherTest extends JmsPoolTestSupport {
     @Test(timeout = 60000)
     public void testSetGetExceptionListener() throws Exception {
         pcf = new PooledConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         pcf.setConnectionFactory(new ActiveMQConnectionFactory(
             "vm://test?broker.persistent=false&broker.useJmx=false"));
 
@@ -95,6 +97,7 @@ public class PooledTopicPublisherTest extends JmsPoolTestSupport {
 
     @Test(timeout = 60000)
     public void testPooledConnectionAfterInactivity() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
         brokerService = new BrokerService();
         TransportConnector networkConnector = brokerService.addConnector("tcp://localhost:0");
         brokerService.setPersistent(false);
@@ -111,7 +114,9 @@ public class PooledTopicPublisherTest extends JmsPoolTestSupport {
         pcf.setConnectionFactory(new ActiveMQConnectionFactory(uri));
 
         PooledConnection conn =  (PooledConnection) pcf.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         Connection amq = conn.getConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4019
         assertNotNull(amq);
         final CountDownLatch gotException = new CountDownLatch(1);
         conn.setExceptionListener(new ExceptionListener() {
@@ -120,6 +125,7 @@ public class PooledTopicPublisherTest extends JmsPoolTestSupport {
                 gotException.countDown();
             }});
         conn.setClientID(getTestName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4441
 
         // let it hang, simulate a server hang so inactivity timeout kicks in
         proxy.pause();

@@ -22,6 +22,7 @@ import java.net.URI;
 
 public class DummyConnectionFactory extends ActiveMQConnectionFactory {
 	public DummyConnectionFactory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
 		super();
 	}
 

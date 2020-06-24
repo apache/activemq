@@ -30,6 +30,7 @@ public class HttpsTransportBrokerTest extends HttpTransportBrokerTest {
 
     @Override
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4308
         setAutoFail(true);
         setMaxTestTime(300000);
 

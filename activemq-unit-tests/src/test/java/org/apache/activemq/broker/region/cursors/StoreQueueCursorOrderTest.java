@@ -222,6 +222,9 @@ public class StoreQueueCursorOrderTest {
         queueMessageStore.start();
         queueMessageStore.registerIndexListener(null);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
         SystemUsage systemUsage = new SystemUsage();
         // ensure memory limit is reached
@@ -299,6 +302,7 @@ public class StoreQueueCursorOrderTest {
         queueMessageStore.start();
         queueMessageStore.registerIndexListener(null);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
         SystemUsage systemUsage = new SystemUsage();
         // ensure memory limit is reached
@@ -376,6 +380,7 @@ public class StoreQueueCursorOrderTest {
         underTest.release();
         assertEquals(count, dequeueCount);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6667
         msg = getMessage(4);
         msg.setMemoryUsage(systemUsage.getMemoryUsage());
         msg.getMessageId().setFutureOrSequenceLong(4l);
@@ -400,6 +405,7 @@ public class StoreQueueCursorOrderTest {
         queueMessageStore.start();
         queueMessageStore.registerIndexListener(null);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
         SystemUsage systemUsage = new SystemUsage();
         // ensure memory limit is reached
@@ -413,6 +419,7 @@ public class StoreQueueCursorOrderTest {
         ActiveMQTextMessage msg = getMessage(0);
         messages[0] = msg;
         msg.setMemoryUsage(systemUsage.getMemoryUsage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6667
         msg.getMessageId().setFutureOrSequenceLong(0l);
         underTest.addMessageLast(msg);
 
@@ -427,6 +434,7 @@ public class StoreQueueCursorOrderTest {
         msg = getMessage(2);
         messages[2] = msg;
         msg.setMemoryUsage(systemUsage.getMemoryUsage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6667
         msg.getMessageId().setFutureOrSequenceLong(2l);
         underTest.addMessageLast(msg);
 

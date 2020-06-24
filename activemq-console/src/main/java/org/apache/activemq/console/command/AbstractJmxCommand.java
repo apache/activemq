@@ -41,15 +41,18 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     private static boolean jmxUseLocal;
     private static final String CONNECTOR_ADDRESS =
         "com.sun.management.jmxremote.localConnectorAddress";
+//IC see: https://issues.apache.org/jira/browse/AMQ-2464
 
     private JMXServiceURL jmxServiceUrl;
     private JMXConnector jmxConnector;
     private MBeanServerConnection jmxConnection;
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3247
         DEFAULT_JMX_URL = System.getProperty("activemq.jmx.url", "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
         jmxUser = System.getProperty("activemq.jmx.user");
         jmxPassword = System.getProperty("activemq.jmx.password");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5247
         jmxUseLocal = Boolean.parseBoolean(System.getProperty("activemq.jmx.useLocal", "false"));
     }
 
@@ -62,11 +65,14 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     }
 
     public static String getJVM() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2275
+//IC see: https://issues.apache.org/jira/browse/AMQ-2464
         return System.getProperty("java.vm.specification.vendor");
     }
 
     public static boolean isSunJVM() {
         // need to check for Oracle as that is the name for Java7 onwards.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4027
         return getJVM().equals("Sun Microsystems Inc.") || getJVM().startsWith("Oracle");
     }
 
@@ -150,6 +156,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
                             ".." + File.separator + "lib" + File.separator + "tools.jar";
                     URLClassLoader loader = new URLClassLoader(new URL[]{new File(tools).toURI().toURL()});
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2464
                     Class virtualMachine = Class.forName("com.sun.tools.attach.VirtualMachine", true, loader);
                     Class virtualMachineDescriptor = Class.forName("com.sun.tools.attach.VirtualMachineDescriptor", true, loader);
 
@@ -163,6 +170,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
 
                     for(Object vmInstance : allVMs) {
                         String displayName = (String)getVMDescriptor.invoke(vmInstance, (Object[])null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1469
                         if (displayName.contains("activemq.jar start")) {
                             String id = (String)getVMId.invoke(vmInstance, (Object[])null);
 
@@ -224,6 +232,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
      * @param jmxUser - the jmx
      */
     public void setJmxUser(String jmxUser) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2464
         AbstractJmxCommand.jmxUser = jmxUser;
     }
 
@@ -240,6 +249,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
      * @param jmxPassword - the password used for JMX authentication
      */
     public void setJmxPassword(String jmxPassword) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2464
         AbstractJmxCommand.jmxPassword = jmxPassword;
     }
 
@@ -256,6 +266,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
      * @param jmxUseLocal - <code>true</code> if the mbean server from this JVM should be used, <code>false<code> if the jmx url should be used
      */
     public void setJmxUseLocal(boolean jmxUseLocal) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5247
         AbstractJmxCommand.jmxUseLocal = jmxUseLocal;
     }
 
@@ -318,7 +329,9 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
         // Try to handle the options first
         if (token.equals("--jmxurl")) {
             // If no jmx url specified, or next token is a new option
+//IC see: https://issues.apache.org/jira/browse/AMQ-1469
             if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new IllegalArgumentException("JMX URL not specified."));
             }
 
@@ -328,6 +341,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
                 tokens.clear();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1469
             String strJmxUrl = tokens.remove(0);
             try {
                 this.setJmxServiceUrl(new JMXServiceURL(strJmxUrl));
@@ -335,8 +349,10 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
                 context.printException(e);
                 tokens.clear();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2975
         } else if(token.equals("--pid")) {
            if (isSunJVM()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1469
                if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
                    context.printException(new IllegalArgumentException("pid not specified"));
                    return;
@@ -344,7 +360,9 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
                int pid = Integer.parseInt(tokens.remove(0));
                context.print("Connecting to pid: " + pid);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2464
                String jmxUrl = findJMXUrlByProcessId(pid);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3858
                if (jmxUrl != null) {
                    // If jmx url already specified
                    if (getJmxServiceUrl() != null) {
@@ -354,6 +372,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
                    try {
                        this.setJmxServiceUrl(new JMXServiceURL(jmxUrl));
                    } catch (MalformedURLException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                        context.printException(e);
                        tokens.clear();
                    }
@@ -365,6 +384,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
            }
         } else if (token.equals("--jmxuser")) {
             // If no jmx user specified, or next token is a new option
+//IC see: https://issues.apache.org/jira/browse/AMQ-1469
             if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
                 context.printException(new IllegalArgumentException("JMX user not specified."));
             }
@@ -387,6 +407,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     public void execute(List<String> tokens) throws Exception {
         try {
             super.execute(tokens);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
         } catch (Exception exception) {
             handleException(exception, jmxServiceUrl.toString());
             return;

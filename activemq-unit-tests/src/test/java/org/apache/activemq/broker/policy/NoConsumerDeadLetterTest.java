@@ -56,6 +56,7 @@ public class NoConsumerDeadLetterTest extends DeadLetterTestSupport {
     }
     
     public void testConsumerReceivesMessages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2443
     	this.topic = false;
         ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory)createConnectionFactory();
         connection = (ActiveMQConnection)factory.createConnection();
@@ -102,6 +103,7 @@ public class NoConsumerDeadLetterTest extends DeadLetterTestSupport {
     }
 
     protected Destination createDlqDestination() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2120
     	if (this.topic) {
     		return AdvisorySupport.getNoTopicConsumersAdvisoryTopic((ActiveMQDestination)getDestination());
     	} else {

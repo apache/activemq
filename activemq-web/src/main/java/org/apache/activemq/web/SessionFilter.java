@@ -41,6 +41,7 @@ public class SessionFilter implements Filter {
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
     	// set secret to prevent CSRF attacks
+//IC see: https://issues.apache.org/jira/browse/AMQ-2613
         ((HttpServletRequest)request).getSession(true).setAttribute("secret", UUID.randomUUID().toString());;
         chain.doFilter(request, response);
     }

@@ -81,6 +81,7 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
     }
 
     public void testNeedClientAuthReject() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2384
         SSLContext context = SSLContext.getInstance("TLS");    
         // no client cert
         context.init(null, getTrustManager(), null);
@@ -96,6 +97,7 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
     }
 
     public void testNeedClientAuthSucceed() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4298
         SSLContext context = SSLContext.getInstance("TLS");
         context.init(getKeyManager(), getTrustManager(), null);
         makeSSLConnection(context, null, needClientAuthConnector);

@@ -29,6 +29,7 @@ public class StopBrokerMojo extends AbstractMojo {
     private MavenBrokerManager  brokerManager;
 
     public MavenBrokerManager getBrokerManager() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5499
         return brokerManager;
     }
 
@@ -50,11 +51,13 @@ public class StopBrokerMojo extends AbstractMojo {
         }
 
         this.useBrokerManager().stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5499
 
         getLog().info("Stopped the ActiveMQ Broker");
     }
 
     protected MavenBrokerManager    useBrokerManager () {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5499
         if ( this.brokerManager == null ) {
             this.brokerManager = new MavenBrokerSingletonManager();
         }

@@ -44,6 +44,8 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
     public void testWildcardOnExcludedDestination() throws Exception {
 
         NetworkBridgeConfiguration configuration = getDefaultBridgeConfiguration();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4209
+//IC see: https://issues.apache.org/jira/browse/AMQ-4210
 
         configuration.setExcludedDestinations(Arrays.asList(ActiveMQDestination.createDestination("OTHER.>",
                 ActiveMQDestination.TOPIC_TYPE)));
@@ -89,6 +91,8 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
     public void testDistinctTopicAndQueue() throws Exception {
 
         NetworkBridgeConfiguration configuration = getDefaultBridgeConfiguration();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4209
+//IC see: https://issues.apache.org/jira/browse/AMQ-4210
 
         configuration.setExcludedDestinations(Arrays.asList(ActiveMQDestination.createDestination(">",
                 ActiveMQDestination.TOPIC_TYPE)));
@@ -104,6 +108,8 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
     public void testListOfExcludedDestinationWithWildcard() throws Exception {
 
         NetworkBridgeConfiguration configuration = getDefaultBridgeConfiguration();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4209
+//IC see: https://issues.apache.org/jira/browse/AMQ-4210
 
         configuration.setExcludedDestinations(Arrays.asList(ActiveMQDestination.createDestination("OTHER.>", ActiveMQDestination.TOPIC_TYPE),
                 ActiveMQDestination.createDestination("TEST.*", ActiveMQDestination.TOPIC_TYPE)));
@@ -120,6 +126,7 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
     public void testExcludeStaticDestinations() throws Exception {
 
         NetworkBridgeConfiguration configuration = getDefaultBridgeConfiguration();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6331
 
         configuration.setExcludedDestinations(Arrays.asList(ActiveMQDestination.createDestination("TEST.X1", ActiveMQDestination.QUEUE_TYPE), ActiveMQDestination.createDestination("OTHER.X1", ActiveMQDestination.QUEUE_TYPE)));
         configuration.setStaticallyIncludedDestinations(Arrays.asList(ActiveMQDestination.createDestination(
@@ -205,6 +212,8 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
     }
 
     public NetworkBridgeConfiguration getDefaultBridgeConfiguration() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4209
+//IC see: https://issues.apache.org/jira/browse/AMQ-4210
         NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
         config.setBrokerName("local");
         config.setDispatchAsync(false);

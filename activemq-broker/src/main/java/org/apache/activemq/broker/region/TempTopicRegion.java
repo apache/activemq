@@ -44,6 +44,8 @@ public class TempTopicRegion extends AbstractTempRegion {
             throw new JMSException("A durable subscription cannot be created for a temporary topic.");
         }
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
+//IC see: https://issues.apache.org/jira/browse/AMQ-1672
             TopicSubscription answer = new TopicSubscription(broker, context, info, usageManager);
             // lets configure the subscription depending on the destination
             ActiveMQDestination destination = info.getDestination();
@@ -64,6 +66,7 @@ public class TempTopicRegion extends AbstractTempRegion {
     }
 
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         return "TempTopicRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + usageManager.getMemoryUsage().getPercentUsage() + "%";
     }
 
@@ -73,6 +76,7 @@ public class TempTopicRegion extends AbstractTempRegion {
         // there is still an active sub. Temp destination may be removed
         // while a network sub is still active which is valid.
         if (timeout == 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1176
             timeout = 1;
         }
 

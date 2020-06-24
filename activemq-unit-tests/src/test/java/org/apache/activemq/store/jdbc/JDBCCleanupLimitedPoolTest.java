@@ -57,6 +57,7 @@ public class JDBCCleanupLimitedPoolTest {
         derby.setDatabaseName("derbyDb");
         derby.setCreateDatabase("create");
         derby.getConnection().close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
 
         broker = createBroker();
         broker.start();
@@ -94,6 +95,7 @@ public class JDBCCleanupLimitedPoolTest {
     public void testNoDeadlockOnXaPoolExhaustion() throws Exception {
         final CountDownLatch done = new CountDownLatch(1);
         final CountDownLatch doneCommit = new CountDownLatch(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
 
         final ActiveMQXAConnectionFactory factory = new ActiveMQXAConnectionFactory(broker.getTransportConnectorByScheme("tcp").getPublishableConnectString());
 

@@ -47,6 +47,7 @@ public class HttpTraceTestSupport {
     }
 
     public static void testHttpTraceEnabled(final String uri, final int expectedStatus) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
         testHttpTraceEnabled(uri, expectedStatus, new SslContextFactory.Client());
     }
 

@@ -46,6 +46,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         this.pos = 0;
         this.offset = 0;
         this.length = buf.length;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         this.work = new byte[8];
     }
 
@@ -59,6 +60,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         this.offset = sequence.getOffset();
         this.pos =  this.offset;
         this.length = sequence.length;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         this.work = new byte[8];
     }
 
@@ -220,6 +222,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
 
     @Override
     public short readShort() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         this.read(work, 0, 2);
         return (short) (((work[0] & 0xff) << 8) | (work[1] & 0xff));
     }
@@ -227,6 +230,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     @Override
     public int readUnsignedShort() {
         this.read(work, 0, 2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         return ((work[0] & 0xff) << 8) | (work[1] & 0xff);
     }
 
@@ -287,6 +291,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     @Override
     public String readUTF() throws IOException {
         int length = readUnsignedShort();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6651
         if (pos + length > buf.length) {
             throw new UTFDataFormatException("bad string");
         }

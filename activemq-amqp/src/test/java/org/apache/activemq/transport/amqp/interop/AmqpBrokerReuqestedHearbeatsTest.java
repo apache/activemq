@@ -48,6 +48,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
 
     @Parameters(name="connector={0}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return Arrays.asList(new Object[][] {
             {"amqp", false},
             {"amqp+ws", false},
@@ -77,6 +78,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
 
@@ -98,6 +100,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.createConnection());
         connection.setIdleTimeout(TEST_IDLE_TIMEOUT * 4);
         assertNotNull(connection);
@@ -115,6 +118,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.createConnection());
         assertNotNull(connection);
 
@@ -151,6 +155,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.createConnection());
         assertNotNull(connection);
 
@@ -166,6 +171,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
         assertFalse(disconnected.await(5, TimeUnit.SECONDS));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
 
         connection.close();
 

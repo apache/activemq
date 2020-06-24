@@ -68,6 +68,7 @@ public class MessageGroupDelayedTest extends JmsTestSupport {
     public void setUp() throws Exception {
         broker = createBroker();
         broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2082
         ActiveMQConnectionFactory connFactory = new ActiveMQConnectionFactory(connector.getConnectUri() + "?jms.prefetchPolicy.all=1");
         connection = connFactory.createConnection();
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -100,6 +101,7 @@ public class MessageGroupDelayedTest extends JmsTestSupport {
         producer.close();
         session.close();
         connection.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2897
         broker.stop();
     }
 

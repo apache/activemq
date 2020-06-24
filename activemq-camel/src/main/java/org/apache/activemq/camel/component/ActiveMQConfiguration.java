@@ -55,6 +55,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     }
 
     public boolean isUseSingleConnection() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1636
         return useSingleConnection;
     }
 
@@ -64,6 +65,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
      */
     @Deprecated
     public String getUserName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6585
         return getUsername();
     }
 
@@ -105,6 +107,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     }
 
     public boolean isTrustAllPackages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6166
         return trustAllPackages;
     }
 
@@ -133,13 +136,16 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     }
 
     protected void setActiveMQComponent(ActiveMQComponent activeMQComponent) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2611
         this.activeMQComponent = activeMQComponent;
     }
 
     @Override
     protected ConnectionFactory createConnectionFactory() {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6166
         answer.setTrustAllPackages(trustAllPackages);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6585
         if (getUsername() != null) {
             answer.setUserName(getUsername());
         }
@@ -151,6 +157,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
         }
         answer.setBrokerURL(getBrokerURL());
         if (isUseSingleConnection()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2611
             SingleConnectionFactory scf = new SingleConnectionFactory(answer);
             if (activeMQComponent != null) {
                 activeMQComponent.addSingleConnectionFactory(scf);
@@ -196,6 +203,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
                     throw e1;
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2398
         } else {
             return loader.loadClass(name);
         }

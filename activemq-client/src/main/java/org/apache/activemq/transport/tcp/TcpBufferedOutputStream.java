@@ -91,6 +91,7 @@ public class TcpBufferedOutputStream extends FilterOutputStream implements TimeS
                 System.arraycopy(b, off, buffer, count, len);
                 count += len;
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1993
                 try {
                     writeTimestamp = System.currentTimeMillis();
                     out.write(b, off, len);
@@ -110,10 +111,12 @@ public class TcpBufferedOutputStream extends FilterOutputStream implements TimeS
      */
     public void flush() throws IOException {
         if (count > 0 && out != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1993
             try {
                 writeTimestamp = System.currentTimeMillis();
                 out.write(buffer, 0, count);
             } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1993
             	writeTimestamp = -1;
             }
             count = 0;
@@ -133,6 +136,7 @@ public class TcpBufferedOutputStream extends FilterOutputStream implements TimeS
      * @see org.apache.activemq.transport.tcp.TimeStampStream#isWriting()
      */
     public boolean isWriting() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1993
         return writeTimestamp > 0;
     }
     

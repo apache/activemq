@@ -64,6 +64,8 @@ public class JaasNetworkTest extends TestCase {
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");  
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-7056
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         ActiveMQConnectionFactory producerFactory  = new ActiveMQConnectionFactory("ssl://localhost:61617?verifyHostName=false");
         Connection producerConn = producerFactory.createConnection();
         Session producerSess = producerConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -72,6 +74,8 @@ public class JaasNetworkTest extends TestCase {
         TextMessage sentMessage = producerSess.createTextMessage("test");
         producer.send(sentMessage);
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-7056
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         ActiveMQConnectionFactory consumerFactory  = new ActiveMQConnectionFactory("ssl://localhost:61618?verifyHostName=false");
         Connection consumerConn = consumerFactory.createConnection();
         Session consumerSess = consumerConn.createSession(false, Session.AUTO_ACKNOWLEDGE);

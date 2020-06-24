@@ -88,6 +88,7 @@ public class WireFormatNegotiator extends TransportFilter {
     }
 
     public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-789
         super.stop();
         readyCountDownLatch.countDown();
     }
@@ -95,6 +96,8 @@ public class WireFormatNegotiator extends TransportFilter {
     public void oneway(Object command) throws IOException {
         boolean wasInterrupted = Thread.interrupted();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
             if (readyCountDownLatch.getCount() > 0 && !readyCountDownLatch.await(negotiateTimeout, TimeUnit.MILLISECONDS)) {
                 throw new IOException("Wire format negotiation timeout: peer did not send his wire format.");
             }
@@ -110,6 +113,7 @@ public class WireFormatNegotiator extends TransportFilter {
             throw interruptedIOException;
         }  finally {
             if (wasInterrupted) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
                 Thread.currentThread().interrupt();
             }
         }
@@ -142,7 +146,9 @@ public class WireFormatNegotiator extends TransportFilter {
                 onException(new IOException("Remote wire format (" + info.getVersion() + ") is lower the minimum version required (" + minimumVersion + ")"));
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-682
             wireFormat.renegotiateWireFormat(info);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1156
             Socket socket = next.narrow(Socket.class);
             if (socket != null) {
                 socket.setTcpNoDelay(wireFormat.isTcpNoDelayEnabled());
@@ -155,6 +161,8 @@ public class WireFormatNegotiator extends TransportFilter {
         } catch (IOException e) {
             onException(e);
         } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
             Thread.currentThread().interrupt();
             onException((IOException)new InterruptedIOException().initCause(e));
         } catch (Exception e) {
@@ -185,6 +193,7 @@ public class WireFormatNegotiator extends TransportFilter {
     }
 
     public long getNegotiateTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-789
         return negotiateTimeout;
     }
 

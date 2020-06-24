@@ -122,6 +122,7 @@ public class MemoryMonitoringTool implements Runnable {
                 nonHeapMB = memoryBean.getNonHeapMemoryUsage().getUsed() / oneMB;
                 heapMB = memoryBean.getHeapMemoryUsage().getUsed() / oneMB;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1867
                 reportGenerator.writeWithIndent(6, "<memory_usage index='" + resultIndex
                                                 + "' non_heap_mb='" + nonHeapMB
                                                 + "' non_heap_bytes='"

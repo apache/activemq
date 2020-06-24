@@ -102,7 +102,9 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
 
     @Override
     public void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4363
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         onePhase = true;
         factory = new ActiveMQXAConnectionFactory(
             connectionUri + "?jms.prefetchPolicy.all=0&jms.redeliveryPolicy.maximumRedeliveries="+messagesExpected);
@@ -187,6 +189,7 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
 
     public void testCommitSendErrorRecovery() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         XAConnection connection = factory.createXAConnection();
         connection.start();
         XASession session = connection.createXASession();
@@ -223,6 +226,7 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
     }
 
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
     final AtomicInteger getAutoCommitCount = new AtomicInteger();
     private ArrayList<Integer> getAutoCommitErrors = new ArrayList<Integer>();
     private ArrayList<Integer> executeUpdateErrorOps = new ArrayList<Integer>();
@@ -261,6 +265,7 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
         executeUpdateErrorOps.add(9);
         executeUpdateErrorOps.add(12);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7008
         getAutoCommitErrors.add(61);
         getAutoCommitErrors.add(62);
 

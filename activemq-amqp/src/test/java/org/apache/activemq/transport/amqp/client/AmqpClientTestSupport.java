@@ -38,6 +38,7 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
     }
 
     public AmqpClientTestSupport(String connectorScheme, boolean useSSL) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5778
         this.connectorScheme = connectorScheme;
         this.useSSL = useSSL;
     }
@@ -45,6 +46,7 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
     @Override
     @After
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         for (AmqpConnection connection : connections) {
             try {
                 connection.close();
@@ -68,6 +70,7 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
 
     @Override
     protected boolean isUseTcpConnector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return !isUseSSL() && !connectorScheme.contains("nio") && !connectorScheme.contains("ws");
     }
 
@@ -88,6 +91,7 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
 
     @Override
     protected boolean isUseWsConnector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return !isUseSSL() && connectorScheme.contains("ws");
     }
 
@@ -129,6 +133,7 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
             String uri = null;
 
             if (isUseSSL()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
                 if (webSocket) {
                     uri = "wss://127.0.0.1:" + port;
                 } else {
@@ -153,6 +158,7 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
     }
 
     public AmqpConnection trackConnection(AmqpConnection connection) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         connections.add(connection);
         return connection;
     }
@@ -170,6 +176,7 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
     }
 
     public AmqpConnection createAmqpConnection(URI brokerURI, String username, String password) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         return trackConnection(createAmqpClient(brokerURI, username, password).connect());
     }
 

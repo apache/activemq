@@ -72,6 +72,7 @@ public class StartCommand extends AbstractCommand {
      */
     protected void runTask(List<String> brokerURIs) throws Exception {
         URI configURI;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4526
 
         while( true ) {
             final BrokerService broker;
@@ -88,11 +89,13 @@ public class StartCommand extends AbstractCommand {
                 broker.start();
 
             } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new RuntimeException("Failed to execute start task. Reason: " + e, e));
                 throw e;
             }
 
             if (!broker.waitUntilStarted()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3696
                 throw new Exception(broker.getStartException());
             }
 
@@ -116,6 +119,7 @@ public class StartCommand extends AbstractCommand {
 
             // The broker has stopped..
             shutdownLatch.await();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4748
             try {
                 Runtime.getRuntime().removeShutdownHook(jvmShutdownHook);
             } catch (Throwable e) {
@@ -133,6 +137,7 @@ public class StartCommand extends AbstractCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         context.printHelp(helpFile);
     }
 

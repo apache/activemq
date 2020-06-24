@@ -31,6 +31,7 @@ public class WSSTransportServer extends WSTransportServer {
 
     @Override
     public boolean isSslServer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6029
         return true;
     }
 }

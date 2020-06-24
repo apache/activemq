@@ -131,20 +131,27 @@ public class FailoverTransport implements CompositeTransport {
     private volatile boolean shuttingDown = false;
 
     public FailoverTransport() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
         brokerSslContext = SslContext.getCurrentSslContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-915
+//IC see: https://issues.apache.org/jira/browse/AMQ-915
         stateTracker.setTrackTransactions(true);
         // Setup a task that is used to reconnect the a connection async.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         reconnectTaskFactory = new TaskRunnerFactory();
         reconnectTaskFactory.init();
         reconnectTask = reconnectTaskFactory.createTaskRunner(new Task() {
             @Override
             public boolean iterate() {
                 boolean result = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
                 if (!started) {
                     return result;
                 }
                 boolean buildBackup = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                 synchronized (backupMutex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3699
                     if ((connectedTransport.get() == null || doRebalance || priorityBackupAvailable) && !disposed) {
                         result = doReconnect();
                         buildBackup = false;
@@ -165,8 +172,14 @@ public class FailoverTransport implements CompositeTransport {
                     }
                 } else {
                     // build backups on the next iteration
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
                     buildBackup = true;
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3782
+//IC see: https://issues.apache.org/jira/browse/AMQ-3782
                         if (reconnectTask == null) {
                             return true;
                         }
@@ -182,6 +195,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     private void processCommand(Object incoming) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6248
         Command command = (Command) incoming;
         if (command == null) {
             return;
@@ -192,6 +206,7 @@ public class FailoverTransport implements CompositeTransport {
                 object = requestMap.remove(Integer.valueOf(((Response) command).getCorrelationId()));
             }
             if (object != null && object.getClass() == Tracked.class) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2556
                 ((Tracked) object).onResponses(command);
             }
         }
@@ -199,6 +214,7 @@ public class FailoverTransport implements CompositeTransport {
         if (command.isConnectionControl()) {
             handleConnectionControl((ConnectionControl) command);
         } else if (command.isConsumerControl()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5844
             ConsumerControl consumerControl = (ConsumerControl)command;
             if (consumerControl.isClose()) {
                 stateTracker.processRemoveConsumer(consumerControl.getConsumerId(), RemoveInfo.LAST_DELIVERED_UNKNOWN);
@@ -223,6 +239,7 @@ public class FailoverTransport implements CompositeTransport {
                 try {
                     handleTransportFailure(owner, error);
                 } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
                     Thread.currentThread().interrupt();
                     if (transportListener != null) {
                         transportListener.onException(new InterruptedIOException());
@@ -241,15 +258,19 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public final void disposeTransport(Transport transport) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         transport.setTransportListener(disposedListener);
         ServiceSupport.dispose(transport);
     }
 
     public final void handleTransportFailure(IOException e) throws InterruptedException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6248
         handleTransportFailure(getConnectedTransport(), e);
     }
 
     public final void handleTransportFailure(Transport failed, IOException e) throws InterruptedException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5241
+//IC see: https://issues.apache.org/jira/browse/AMQ-4897
         if (shuttingDown) {
             // shutdown info sent and remote socket closed and we see that before a local close
             // let the close do the work
@@ -262,6 +283,7 @@ public class FailoverTransport implements CompositeTransport {
 
         // could be blocked in write with the reconnectMutex held, but still needs to be whacked
         Transport transport = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6248
 
         if (connectedTransport.compareAndSet(failed, null)) {
             transport = failed;
@@ -280,19 +302,25 @@ public class FailoverTransport implements CompositeTransport {
 
                 LOG.warn("Transport ({}) failed{} attempting to automatically reconnect",
                          connectedTransportURI, (reconnectOk ? "," : ", not"), e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6248
 
                 failedConnectTransportURI = connectedTransportURI;
                 connectedTransportURI = null;
                 connectedToPriority = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4501
 
                 if (reconnectOk) {
                     // notify before any reconnect attempt so ack state can be whacked
+//IC see: https://issues.apache.org/jira/browse/AMQ-2560
+//IC see: https://issues.apache.org/jira/browse/AMQ-4785
                     if (transportListener != null) {
                         transportListener.transportInterupted();
                     }
 
                     reconnectTask.wakeup();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3972
                 } else if (!isDisposed()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
                     propagateFailureToExceptionListener(e);
                 }
             }
@@ -305,6 +333,7 @@ public class FailoverTransport implements CompositeTransport {
 
     public final void handleConnectionControl(ConnectionControl control) {
         String reconnectStr = control.getReconnectTo();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4505
         if (LOG.isTraceEnabled()) {
             LOG.trace("Received ConnectionControl: {}", control);
         }
@@ -323,6 +352,7 @@ public class FailoverTransport implements CompositeTransport {
                 }
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2807
         processNewTransports(control.isRebalanceConnection(), control.getConnectedBrokers());
     }
 
@@ -343,6 +373,7 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 if (list.isEmpty() == false) {
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2807
                         updateURIs(rebalance, list.toArray(new URI[list.size()]));
                     } catch (IOException e) {
                         LOG.error("Failed to update transport URI's from: " + newTransports, e);
@@ -363,9 +394,11 @@ public class FailoverTransport implements CompositeTransport {
             stateTracker.setMaxCacheSize(getMaxCacheSize());
             stateTracker.setTrackMessages(isTrackMessages());
             stateTracker.setTrackTransactionProducers(isTrackTransactionProducers());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1613
             if (connectedTransport.get() != null) {
                 stateTracker.restore(connectedTransport.get());
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                 reconnect(false);
             }
         }
@@ -375,7 +408,9 @@ public class FailoverTransport implements CompositeTransport {
     public void stop() throws Exception {
         Transport transportToStop = null;
         List<Transport> backupsToStop = new ArrayList<Transport>(backups.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3939
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         try {
             synchronized (reconnectMutex) {
                 if (LOG.isDebugEnabled()) {
@@ -387,6 +422,7 @@ public class FailoverTransport implements CompositeTransport {
                 started = false;
                 disposed = true;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1613
                 if (connectedTransport.get() != null) {
                     transportToStop = connectedTransport.getAndSet(null);
                 }
@@ -400,7 +436,9 @@ public class FailoverTransport implements CompositeTransport {
             reconnectTaskFactory.shutdownNow();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3939
         synchronized(backupMutex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3939
             for (BackupTransport backup : backups) {
                 backup.setDisposed(true);
                 Transport transport = backup.getTransport();
@@ -418,6 +456,7 @@ public class FailoverTransport implements CompositeTransport {
             } catch (Exception e) {
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         if (transportToStop != null) {
             transportToStop.stop();
         }
@@ -456,6 +495,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public Transport getConnectedTransport() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1613
         return connectedTransport.get();
     }
 
@@ -472,6 +512,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public int getStartupMaxReconnectAttempts() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2385
         return this.startupMaxReconnectAttempts;
     }
 
@@ -480,6 +521,8 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public long getTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2061
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return timeout;
     }
 
@@ -502,6 +545,8 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public boolean isBackup() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1572
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return backup;
     }
 
@@ -518,6 +563,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public int getCurrentBackups() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3517
         return this.backups.size();
     }
 
@@ -546,6 +592,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public boolean isPriorityBackup() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3699
         return priorityBackup;
     }
 
@@ -569,12 +616,15 @@ public class FailoverTransport implements CompositeTransport {
     @Override
     public void oneway(Object o) throws IOException {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-976
+//IC see: https://issues.apache.org/jira/browse/AMQ-976
         Command command = (Command) o;
         Exception error = null;
         try {
 
             synchronized (reconnectMutex) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3516
                 if (command != null && connectedTransport.get() == null) {
                     if (command.isShutdownInfo()) {
                         // Skipping send of ShutdownInfo command when not connected.
@@ -582,19 +632,24 @@ public class FailoverTransport implements CompositeTransport {
                     } else if (command instanceof RemoveInfo || command.isMessageAck()) {
                         // Simulate response to RemoveInfo command or MessageAck (as it will be stale)
                         stateTracker.track(command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3517
                         if (command.isResponseRequired()) {
                             Response response = new Response();
                             response.setCorrelationId(command.getCommandId());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6248
                             processCommand(response);
                         }
                         return;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3932
                     } else if (command instanceof MessagePull) {
                         // Simulate response to MessagePull if timed as we can't honor that now.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3939
                         MessagePull pullRequest = (MessagePull) command;
                         if (pullRequest.getTimeout() != 0) {
                             MessageDispatch dispatch = new MessageDispatch();
                             dispatch.setConsumerId(pullRequest.getConsumerId());
                             dispatch.setDestination(pullRequest.getDestination());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6248
                             processCommand(dispatch);
                         }
                         return;
@@ -607,13 +662,16 @@ public class FailoverTransport implements CompositeTransport {
 
                         // Wait for transport to be connected.
                         Transport transport = connectedTransport.get();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2061
                         long start = System.currentTimeMillis();
                         boolean timedout = false;
                         while (transport == null && !disposed && connectionFailure == null
                                 && !Thread.currentThread().isInterrupted() && willReconnect()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5951
 
                             LOG.trace("Waiting for transport to reconnect..: {}", command);
                             long end = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5231
                             if (command.isMessage() && timeout > 0 && (end - start > timeout)) {
                                 timedout = true;
                                 LOG.info("Failover timed out after {} ms", (end - start));
@@ -636,7 +694,9 @@ public class FailoverTransport implements CompositeTransport {
                             } else if (connectionFailure != null) {
                                 error = connectionFailure;
                             } else if (timedout == true) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                                 error = new IOException("Failover timeout of " + timeout + " ms reached.");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5951
                             } else if (!willReconnect()) {
                                 error = new IOException("Reconnect attempts of " + maxReconnectAttempts + " exceeded");
                             } else {
@@ -645,6 +705,7 @@ public class FailoverTransport implements CompositeTransport {
                             break;
                         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5090
                         Tracked tracked = null;
                         try {
                             tracked = stateTracker.track(command);
@@ -655,7 +716,9 @@ public class FailoverTransport implements CompositeTransport {
                         // the state tracker,
                         // then hold it in the requestMap so that we can replay
                         // it later.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                         synchronized (requestMap) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1488
                             if (tracked != null && tracked.isWaitingForResponse()) {
                                 requestMap.put(Integer.valueOf(command.getCommandId()), tracked);
                             } else if (tracked == null && command.isResponseRequired()) {
@@ -667,6 +730,7 @@ public class FailoverTransport implements CompositeTransport {
                         try {
                             transport.oneway(command);
                             stateTracker.trackBack(command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5241
                             if (command.isShutdownInfo()) {
                                 shuttingDown = true;
                             }
@@ -675,6 +739,7 @@ public class FailoverTransport implements CompositeTransport {
                             // If the command was not tracked.. we will retry in
                             // this method
                             if (tracked == null && canReconnect()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5951
 
                                 // since we will retry in this method.. take it
                                 // out of the request
@@ -704,6 +769,7 @@ public class FailoverTransport implements CompositeTransport {
             }
         } catch (InterruptedException e) {
             // Some one may be trying to stop our thread.
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
             Thread.currentThread().interrupt();
             throw new InterruptedIOException();
         }
@@ -711,6 +777,7 @@ public class FailoverTransport implements CompositeTransport {
         if (!disposed) {
             if (error != null) {
                 if (error instanceof IOException) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                     throw (IOException) error;
                 }
                 throw IOExceptionSupport.create(error);
@@ -719,6 +786,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     private boolean willReconnect() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5951
         return firstConnection || 0 != calculateReconnectAttemptLimit();
     }
 
@@ -740,9 +808,11 @@ public class FailoverTransport implements CompositeTransport {
     @Override
     public void add(boolean rebalance, URI u[]) {
         boolean newURI = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3513
         for (URI uri : u) {
             if (!contains(uri)) {
                 uris.add(uri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                 newURI = true;
             }
         }
@@ -753,6 +823,7 @@ public class FailoverTransport implements CompositeTransport {
 
     @Override
     public void remove(boolean rebalance, URI u[]) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3513
         for (URI uri : u) {
             uris.remove(uri);
         }
@@ -762,6 +833,7 @@ public class FailoverTransport implements CompositeTransport {
     public void add(boolean rebalance, String u) {
         try {
             URI newURI = new URI(u);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3513
             if (contains(newURI) == false) {
                 uris.add(newURI);
                 reconnect(rebalance);
@@ -773,13 +845,17 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public void reconnect(boolean rebalance) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1771
         synchronized (reconnectMutex) {
             if (started) {
                 if (rebalance) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                     doRebalance = true;
                 }
                 LOG.debug("Waking up reconnect task");
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-726
                     reconnectTask.wakeup();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -792,6 +868,7 @@ public class FailoverTransport implements CompositeTransport {
 
     private List<URI> getConnectList() {
         // updated have precedence
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
         LinkedHashSet<URI> uniqueUris = new LinkedHashSet<URI>(updated);
         uniqueUris.addAll(uris);
 
@@ -827,6 +904,7 @@ public class FailoverTransport implements CompositeTransport {
 
     @Override
     public void setTransportListener(TransportListener commandListener) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         synchronized (listenerMutex) {
             this.transportListener = commandListener;
             listenerMutex.notifyAll();
@@ -839,6 +917,7 @@ public class FailoverTransport implements CompositeTransport {
             return target.cast(this);
         }
         Transport transport = connectedTransport.get();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         if (transport != null) {
             return transport.narrow(target);
         }
@@ -852,7 +931,9 @@ public class FailoverTransport implements CompositeTransport {
         cc.setFaultTolerant(true);
         t.oneway(cc);
         stateTracker.restore(t);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3513
         Map<Integer, Command> tmpMap = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         synchronized (requestMap) {
             tmpMap = new LinkedHashMap<Integer, Command>(requestMap);
         }
@@ -878,6 +959,7 @@ public class FailoverTransport implements CompositeTransport {
     @Override
     public String getRemoteAddress() {
         Transport transport = connectedTransport.get();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         if (transport != null) {
             return transport.getRemoteAddress();
         }
@@ -893,6 +975,8 @@ public class FailoverTransport implements CompositeTransport {
         // If updateURIsURL is specified, read the file and add any new
         // transport URI's to this FailOverTransport.
         // Note: Could track file timestamp to avoid unnecessary reading.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2807
+//IC see: https://issues.apache.org/jira/browse/AMQ-3513
         String fileURL = getUpdateURIsURL();
         if (fileURL != null) {
             BufferedReader in = null;
@@ -925,9 +1009,11 @@ public class FailoverTransport implements CompositeTransport {
         }
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
     final boolean doReconnect() {
         Exception failure = null;
         synchronized (reconnectMutex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
             List<URI> connectList = null;
             // First ensure we are up to date.
             doUpdateURIsFromDisk();
@@ -935,14 +1021,17 @@ public class FailoverTransport implements CompositeTransport {
             if (disposed || connectionFailure != null) {
                 reconnectMutex.notifyAll();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3699
             if ((connectedTransport.get() != null && !doRebalance && !priorityBackupAvailable) || disposed || connectionFailure != null) {
                 return false;
             } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
                 connectList = getConnectList();
                 if (connectList.isEmpty()) {
                     failure = new IOException("No uris available to connect to.");
                 } else {
                     if (doRebalance) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4501
                         if (connectedToPriority || compareURIs(connectList.get(0), connectedTransportURI)) {
                             // already connected to first in the list, no need to rebalance
                             doRebalance = false;
@@ -953,6 +1042,7 @@ public class FailoverTransport implements CompositeTransport {
                             try {
                                 Transport transport = this.connectedTransport.getAndSet(null);
                                 if (transport != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                                     disposeTransport(transport);
                                 }
                             } catch (Exception e) {
@@ -963,14 +1053,18 @@ public class FailoverTransport implements CompositeTransport {
                     }
 
                     resetReconnectDelay();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
 
                     Transport transport = null;
                     URI uri = null;
 
                     // If we have a backup already waiting lets try it.
                     synchronized (backupMutex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3699
                         if ((priorityBackup || backup) && !backups.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
                             ArrayList<BackupTransport> l = new ArrayList<BackupTransport>(backups);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3685
                             if (randomize) {
                                 Collections.shuffle(l);
                             }
@@ -978,9 +1072,12 @@ public class FailoverTransport implements CompositeTransport {
                             backups.remove(bt);
                             transport = bt.getTransport();
                             uri = bt.getUri();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6248
                             processCommand(bt.getBrokerInfo());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3699
                             if (priorityBackup && priorityBackupAvailable) {
                                 Transport old = this.connectedTransport.getAndSet(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4507
                                 if (old != null) {
                                     disposeTransport(old);
                                 }
@@ -992,6 +1089,7 @@ public class FailoverTransport implements CompositeTransport {
                     // When there was no backup and we are reconnecting for the first time
                     // we honor the initialReconnectDelay before trying a new connection, after
                     // this normal reconnect delay happens following a failed attempt.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5819
                     if (transport == null && !firstConnection && connectFailures == 0 && initialReconnectDelay > 0 && !disposed) {
                         // reconnectDelay will be equal to initialReconnectDelay since we are on
                         // the first connect attempt after we had a working connection, doDelay
@@ -1009,12 +1107,14 @@ public class FailoverTransport implements CompositeTransport {
                             // We could be starting with a backup and if so we wait to grab a
                             // URI from the pool until next time around.
                             if (transport == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4718
                                 uri = addExtraQueryOptions(iter.next());
                                 transport = TransportFactory.compositeConnect(uri);
                             }
 
                             LOG.debug("Attempting {}th connect to: {}", connectFailures, uri);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6248
                             transport.setTransportListener(createTransportListener(transport));
                             transport.start();
 
@@ -1077,6 +1177,7 @@ public class FailoverTransport implements CompositeTransport {
 
             int reconnectLimit = calculateReconnectAttemptLimit();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2730
             connectFailures++;
             if (reconnectLimit != INFINITE && connectFailures >= reconnectLimit) {
                 LOG.error("Failed to connect to {} after: {} attempt(s)", connectList, connectFailures);
@@ -1087,12 +1188,14 @@ public class FailoverTransport implements CompositeTransport {
                 synchronized (listenerMutex) {
                     if (transportListener == null) {
                         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1771
                             listenerMutex.wait(2000);
                         } catch (InterruptedException ex) {
                         }
                     }
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
                 propagateFailureToExceptionListener(connectionFailure);
                 return false;
             }
@@ -1100,11 +1203,13 @@ public class FailoverTransport implements CompositeTransport {
             int warnInterval = getWarnAfterReconnectAttempts();
             if (warnInterval > 0 && (connectFailures == 1 || (connectFailures % warnInterval) == 0)) {
                 LOG.warn("Failed to connect to {} after: {} attempt(s) with {}, continuing to retry.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
                          connectList, connectFailures, (failure == null ? "?" : failure.getLocalizedMessage()));
             }
         }
 
         if (!disposed) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3699
             doDelay();
         }
 
@@ -1112,12 +1217,14 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     private void doDelay() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3513
         if (reconnectDelay > 0) {
             synchronized (sleepMutex) {
                 LOG.debug("Waiting {} ms before attempting connection", reconnectDelay);
                 try {
                     sleepMutex.wait(reconnectDelay);
                 } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
                     Thread.currentThread().interrupt();
                 }
             }
@@ -1133,6 +1240,8 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     private void resetReconnectDelay() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3049
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
         if (!useExponentialBackOff || reconnectDelay == DEFAULT_INITIAL_RECONNECT_DELAY) {
             reconnectDelay = initialReconnectDelay;
         }
@@ -1161,12 +1270,14 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     private boolean shouldBuildBackups() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4461
        return (backup && backups.size() < backupPoolSize) || (priorityBackup && !(priorityBackupAvailable || connectedToPriority));
     }
 
     final boolean buildBackups() {
         synchronized (backupMutex) {
             if (!disposed && shouldBuildBackups()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3699
                 ArrayList<URI> backupList = new ArrayList<URI>(priorityList);
                 List<URI> connectList = getConnectList();
                 for (URI uri: connectList) {
@@ -1183,29 +1294,39 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 backups.removeAll(disposedList);
                 disposedList.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4461
                 for (Iterator<URI> iter = backupList.iterator(); !disposed && iter.hasNext() && shouldBuildBackups(); ) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4718
                     URI uri = addExtraQueryOptions(iter.next());
                     if (connectedTransportURI != null && !connectedTransportURI.equals(uri)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3939
                         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
                             SslContext.setCurrentSslContext(brokerSslContext);
                             BackupTransport bt = new BackupTransport(this);
                             bt.setUri(uri);
                             if (!backups.contains(bt)) {
                                 Transport t = TransportFactory.compositeConnect(uri);
                                 t.setTransportListener(bt);
+//IC see: https://issues.apache.org/jira/browse/AMQ-610
                                 t.start();
                                 bt.setTransport(t);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3699
                                 if (priorityBackup && isPriority(uri)) {
                                    priorityBackupAvailable = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4461
                                    backups.add(0, bt);
                                    // if this priority backup overflows the pool
                                    // remove the backup with the lowest priority
+//IC see: https://issues.apache.org/jira/browse/AMQ-4461
                                    if (backups.size() > backupPoolSize) {
                                        BackupTransport disposeTransport = backups.remove(backups.size() - 1);
                                        disposeTransport.setDisposed(true);
                                        Transport transport = disposeTransport.getTransport();
                                        if (transport != null) {
                                            transport.setTransportListener(disposedListener);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
                                            disposeTransport(transport);
                                        }
                                    }
@@ -1215,6 +1336,8 @@ public class FailoverTransport implements CompositeTransport {
                             }
                         } catch (Exception e) {
                             LOG.debug("Failed to build backup ", e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
+//IC see: https://issues.apache.org/jira/browse/AMQ-2715
                         } finally {
                             SslContext.setCurrentSslContext(null);
                         }
@@ -1226,11 +1349,13 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     protected boolean isPriority(URI uri) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4501
         if (!priorityBackup) {
             return false;
         }
 
         if (!priorityList.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5336
             for (URI priorityURI : priorityList) {
                 if (compareURIs(priorityURI, uri)) {
                     return true;
@@ -1251,11 +1376,13 @@ public class FailoverTransport implements CompositeTransport {
 
     @Override
     public boolean isConnected() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4897
         return connectedTransport.get() != null;
     }
 
     @Override
     public void reconnect(URI uri) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3513
         add(true, new URI[]{uri});
     }
 
@@ -1285,9 +1412,11 @@ public class FailoverTransport implements CompositeTransport {
                 copy.addAll(this.updated);
                 updated.clear();
                 if (updatedURIs != null && updatedURIs.length > 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3513
                     for (URI uri : updatedURIs) {
                         if (uri != null && !updated.contains(uri)) {
                             updated.add(uri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7165
                             if (failedConnectTransportURI != null && failedConnectTransportURI.equals(uri)) {
                                 failedConnectTransportURI = null;
                             }
@@ -1295,6 +1424,7 @@ public class FailoverTransport implements CompositeTransport {
                     }
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3706
             if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(new HashSet<URI>(updated))) {
                 buildBackups();
                 reconnect(rebalance);
@@ -1306,6 +1436,7 @@ public class FailoverTransport implements CompositeTransport {
      * @return the updateURIsURL
      */
     public String getUpdateURIsURL() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2807
         return this.updateURIsURL;
     }
 
@@ -1332,6 +1463,7 @@ public class FailoverTransport implements CompositeTransport {
 
     @Override
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         Transport transport = connectedTransport.get();
         if (transport == null) {
             return 0;
@@ -1340,20 +1472,24 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public int getConnectFailures() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2730
         return connectFailures;
     }
 
     public void connectionInterruptProcessingComplete(ConnectionId connectionId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
         synchronized (reconnectMutex) {
             stateTracker.connectionInterruptProcessingComplete(this, connectionId);
         }
     }
 
     public ConnectionStateTracker getStateTracker() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2556
         return stateTracker;
     }
 
     public boolean isConnectedToPriority() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5336
         return connectedToPriority;
     }
 
@@ -1373,6 +1509,7 @@ public class FailoverTransport implements CompositeTransport {
 
         boolean result = false;
         if (first == null || second == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4501
             return result;
         }
 
@@ -1405,6 +1542,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     private InputStreamReader getURLStream(String path) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2807
         InputStreamReader result = null;
         URL url = null;
         try {
@@ -1420,6 +1558,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     private URI addExtraQueryOptions(URI uri) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4718
         try {
             if( nestedExtraQueryOptions!=null && !nestedExtraQueryOptions.isEmpty() ) {
                 if( uri.getQuery() == null ) {
@@ -1439,6 +1578,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public int getWarnAfterReconnectAttempts() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4706
         return warnAfterReconnectAttempts;
     }
 
@@ -1458,6 +1598,7 @@ public class FailoverTransport implements CompositeTransport {
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         Transport transport = connectedTransport.get();
         if (transport != null) {
             return transport.getPeerCertificates();

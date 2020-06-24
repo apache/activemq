@@ -82,6 +82,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         @Override
         public void run() {
             long now = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
 
             if ((now - startTime) >= connectAttemptTimeout && connectCheckerTask != null && !ASYNC_TASKS.isShutdown()) {
                 LOG.debug("No connection attempt made in time for {}! Throwing InactivityIOException.", AbstractInactivityMonitor.this.toString());
@@ -90,6 +91,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                         @Override
                         public void run() {
                             onException(new InactivityIOException(
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
                                 "Channel was inactive (no connection attempt made) for too (>" + (connectAttemptTimeout) + ") long: " + next.getRemoteAddress()));
                         }
                     });
@@ -132,6 +134,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4067
             return "ReadChecker";
         }
     };
@@ -155,6 +158,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
         @Override
         public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4067
             return "WriteChecker";
         }
     };
@@ -182,9 +186,11 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             return;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         if (!commandSent.get() && useKeepAlive && monitorStarted.get() && !ASYNC_TASKS.isShutdown()) {
             LOG.trace("{} no message sent since last write check, sending a KeepAliveInfo", this);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4156
             try {
                 ASYNC_TASKS.execute(new Runnable() {
                     @Override
@@ -195,6 +201,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                                 // If we can't get the lock it means another
                                 // write beat us into the
                                 // send and we don't need to heart beat now.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
                                 if (sendLock.writeLock().tryLock()) {
                                     KeepAliveInfo info = new KeepAliveInfo();
                                     info.setResponseRequired(keepAliveResponseRequired);
@@ -212,10 +219,12 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
                     @Override
                     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4067
                         return "WriteCheck[" + getRemoteAddress() + "]";
                     };
                 });
             } catch (RejectedExecutionException ex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
                 if (!ASYNC_TASKS.isShutdown()) {
                     LOG.error("Async write check was rejected from the executor: ", ex);
                     throw ex;
@@ -235,6 +244,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             LOG.trace("A receive is in progress, skipping read check.");
             return;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         if (!commandReceived.get() && monitorStarted.get() && !ASYNC_TASKS.isShutdown()) {
             LOG.debug("No message received since last read check for {}. Throwing InactivityIOException.", this);
 
@@ -243,15 +253,18 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     @Override
                     public void run() {
                         LOG.debug("Running {}", this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4274
                         onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: " + next.getRemoteAddress()));
                     }
 
                     @Override
                     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4067
                         return "ReadCheck[" + getRemoteAddress() + "]";
                     };
                 });
             } catch (RejectedExecutionException ex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
                 if (!ASYNC_TASKS.isShutdown()) {
                     LOG.error("Async read check was rejected from the executor: ", ex);
                     throw ex;
@@ -277,6 +290,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             if (command.getClass() == KeepAliveInfo.class) {
                 KeepAliveInfo info = (KeepAliveInfo) command;
                 if (info.isResponseRequired()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
                     sendLock.readLock().lock();
                     try {
                         info.setResponseRequired(false);
@@ -311,6 +325,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         // are performing a send we take a read lock. The inactivity monitor
         // sends its Heart-beat commands under a write lock. This means that
         // the MutexTransport is still responsible for synchronizing sends
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         sendLock.readLock().lock();
         inSend.set(true);
         try {
@@ -324,6 +339,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     // Must be called under lock, either read or write on sendLock.
     private void doOnewaySend(Object command) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4156
         if (failed.get()) {
             throw new InactivityIOException("Cannot send, channel has already failed: " + next.getRemoteAddress());
         }
@@ -339,6 +355,9 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     public void onException(IOException error) {
         if (failed.compareAndSet(false, true)) {
             stopMonitorThreads();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
+//IC see: https://issues.apache.org/jira/browse/AMQ-4274
+//IC see: https://issues.apache.org/jira/browse/AMQ-4274
             if (sendLock.writeLock().isHeldByCurrentThread()) {
                 sendLock.writeLock().unlock();
             }
@@ -351,6 +370,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     }
 
     public long getConnectAttemptTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         return connectAttemptTimeout;
     }
 
@@ -395,6 +415,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     }
 
     abstract protected boolean configuredOk() throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
 
     public synchronized void startConnectCheckTask() {
         startConnectCheckTask(getConnectAttemptTimeout());
@@ -460,6 +481,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         if (writeCheckTime > 0 || readCheckTime > 0) {
             monitorStarted.set(true);
             synchronized (AbstractInactivityMonitor.class) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
                 if (ASYNC_TASKS == null || ASYNC_TASKS.isShutdown()) {
                     ASYNC_TASKS = createExecutor();
                 }
@@ -482,6 +504,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     }
 
     protected synchronized void stopMonitorThreads() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5794
         stopConnectCheckTask();
         if (monitorStarted.compareAndSet(true, false)) {
             if (readCheckerTask != null) {
@@ -491,6 +514,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                 writeCheckerTask.cancel();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4156
             synchronized (AbstractInactivityMonitor.class) {
                 WRITE_CHECK_TIMER.purge();
                 READ_CHECK_TIMER.purge();
@@ -500,6 +524,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     READ_CHECK_TIMER.cancel();
                     WRITE_CHECK_TIMER = null;
                     READ_CHECK_TIMER = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6474
                     try {
                         ThreadPoolUtils.shutdownGraceful(ASYNC_TASKS, TimeUnit.SECONDS.toMillis(10));
                     } finally {
@@ -520,6 +545,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     };
 
     private ThreadPoolExecutor createExecutor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4205
         ThreadPoolExecutor exec = new ThreadPoolExecutor(0, Integer.MAX_VALUE, getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
         exec.allowCoreThreadTimeOut(true);
         return exec;

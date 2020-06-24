@@ -46,6 +46,7 @@ public final class JettyServer {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         broker.addConnector("tcp://localhost:61616");
         broker.addConnector("stomp://localhost:0");
         broker.start();
@@ -63,6 +64,7 @@ public final class JettyServer {
         }
         System.out.println("Starting Web Server on port: " + port);
         Server server = new Server();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(port);
         WebAppContext context = new WebAppContext();

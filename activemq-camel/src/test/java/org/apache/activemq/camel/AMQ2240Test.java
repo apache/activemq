@@ -55,6 +55,7 @@ public class AMQ2240Test {
 
             LOG.info("creating context with bad URI: " + vmUri);
             ActiveMQComponent amq = ActiveMQComponent.activeMQComponent(vmUri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4325
 
             amq.getConfiguration().getConnectionFactory();
 

@@ -108,6 +108,7 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         // query durable sub on local and remote broker
         // raise an error if its not removed from both brokers
         assertFalse(foundSubInLocalBroker(subName));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
 
         assertFalse("Durable subscription not unregistered on remote broker",
                 foundSubInRemoteBrokerByTopicName(topicName));
@@ -133,6 +134,7 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         // query durable sub on local and remote broker
         // raise an error if not found
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         assertTrue(foundSubInLocalBroker(subName));
         assertTrue(foundSubInLocalBroker(subName2));
 
@@ -152,6 +154,7 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         assertTrue("Durable subscription should still be on remote broker",
                 foundSubInRemoteBrokerByTopicName(topicName));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         sub2.close();
         session.unsubscribe(subName2);
 

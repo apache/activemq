@@ -47,6 +47,7 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     void addSubscription(ConnectionContext context, Subscription sub) throws Exception;
 
     void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
 
     void addProducer(ConnectionContext context, ProducerInfo info) throws Exception;
 
@@ -57,8 +58,10 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException;
 
     long getInactiveTimeoutBeforeGC();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5253
 
     void markForGC(long timeStamp);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3157
 
     boolean canGC();
 
@@ -68,10 +71,13 @@ public interface Destination extends Service, Task, Message.MessageDestination {
 
     @Override
     MemoryUsage getMemoryUsage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1510
 
     void setMemoryUsage(MemoryUsage memoryUsage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4121
 
     TempUsage getTempUsage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7085
 
     void dispose(ConnectionContext context) throws IOException;
 
@@ -94,6 +100,7 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     boolean isAlwaysRetroactive();
 
     void setAlwaysRetroactive(boolean value);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2911
 
     /**
      * Set's the interval at which warnings about producers being blocked by
@@ -115,6 +122,7 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     int getMaxProducersToAudit();
 
     void setMaxProducersToAudit(int maxProducersToAudit);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1510
 
     int getMaxAuditDepth();
 
@@ -181,6 +189,9 @@ public interface Destination extends Service, Task, Message.MessageDestination {
      * @param messageReference
      */
     void messageConsumed(ConnectionContext context, MessageReference messageReference);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
 
     /**
      * Called when message is delivered to the broker
@@ -199,6 +210,7 @@ public interface Destination extends Service, Task, Message.MessageDestination {
      * @param sub
      */
     void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
 
     /**
      * Called when there is a slow consumer
@@ -223,6 +235,7 @@ public interface Destination extends Service, Task, Message.MessageDestination {
      * @param usage
      */
     void isFull(ConnectionContext context, Usage<?> usage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3157
 
     List<Subscription> getConsumers();
 
@@ -238,11 +251,14 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     boolean isPrioritizedMessages();
 
     SlowConsumerStrategy getSlowConsumerStrategy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
 
     boolean isDoOptimzeMessageStorage();
     void setDoOptimzeMessageStorage(boolean doOptimzeMessageStorage);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
 
     public void clearPendingMessages(int pendingAdditionsCount);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
     void duplicateFromStore(Message message, Subscription subscription);
 }

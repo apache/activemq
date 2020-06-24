@@ -37,6 +37,7 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
     private ForwardingBridge bridge;
 
     public void initCombosForTestForwardMessageCompressed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         addCombinationValues("deliveryMode", new Object[] {new Integer(DeliveryMode.NON_PERSISTENT),
                                                            new Integer(DeliveryMode.PERSISTENT)});
         addCombinationValues("destinationType", new Object[] {new Byte(ActiveMQDestination.QUEUE_TYPE),
@@ -115,7 +116,9 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
         connection2.send(consumerInfo);
         Thread.sleep(1000);
         // Give forwarding bridge a chance to finish setting up
+//IC see: https://issues.apache.org/jira/browse/AMQ-1337
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-877
             Thread.sleep(1000);
         } catch (InterruptedException ie) {
             ie.printStackTrace();
@@ -135,6 +138,7 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
         bridge = new ForwardingBridge(createTransport(), createRemoteTransport());
         bridge.setClientId("local-remote-bridge");
         bridge.setDispatchAsync(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1337
         bridge.start();
     }
 

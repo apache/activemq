@@ -58,6 +58,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
 
     public void testGetNext() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5087
         RedeliveryPolicy policy = new RedeliveryPolicy();
         policy.setInitialRedeliveryDelay(0);
         policy.setRedeliveryDelay(500);
@@ -82,6 +83,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         policy.setInitialRedeliveryDelay(500);
 
         long delay = policy.getNextRedeliveryDelay(500);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5674
         assertEquals(1000, delay);
         delay = policy.getNextRedeliveryDelay(delay);
         assertEquals(1000, delay);
@@ -98,6 +100,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         // Receive a message with the JMS API
         RedeliveryPolicy policy = connection.getRedeliveryPolicy();
         policy.setInitialRedeliveryDelay(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3045
         policy.setRedeliveryDelay(500);
         policy.setBackOffMultiplier((short) 2);
         policy.setUseExponentialBackOff(true);
@@ -121,6 +124,10 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         session.rollback();
 
         // No delay on first rollback..
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
+//IC see: https://issues.apache.org/jira/browse/AMQ-1031
+//IC see: https://issues.apache.org/jira/browse/AMQ-1032
         m = (TextMessage)consumer.receive(100);
         assertNotNull(m);
         session.rollback();
@@ -153,6 +160,8 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
 
         // Receive a message with the JMS API
         RedeliveryPolicy policy = connection.getRedeliveryPolicy();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1847
+//IC see: https://issues.apache.org/jira/browse/AMQ-1847
         policy.setInitialRedeliveryDelay(0);
         policy.setRedeliveryDelay(500);
 
@@ -171,6 +180,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         TextMessage m;
         m = (TextMessage)consumer.receive(1000);
         assertNotNull(m);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3045
         assertEquals("1st", m.getText());
         session.rollback();
 
@@ -184,6 +194,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertNull(m);
         m = (TextMessage)consumer.receive(700);
         assertNotNull(m);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3045
         assertEquals("1st", m.getText());
         session.rollback();
 
@@ -248,6 +259,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertNotNull(m);
         assertEquals("1st", m.getText());
         String cause = m.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
         assertTrue("cause exception has policy ref: " + cause, cause.contains("RedeliveryPolicy"));
         assertTrue("cause exception has redelivered count ref: " + cause, cause.contains("[3]"));
 
@@ -262,6 +274,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
     public void testInfiniteMaximumNumberOfRedeliveries() throws Exception {
 
         // Receive a message with the JMS API
+//IC see: https://issues.apache.org/jira/browse/AMQ-967
         RedeliveryPolicy policy = connection.getRedeliveryPolicy();
         policy.setInitialRedeliveryDelay(100);
         policy.setUseExponentialBackOff(false);
@@ -285,6 +298,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
 
         m = (TextMessage)consumer.receive(1000);
         assertNotNull(m);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3045
         assertEquals("1st", m.getText());
         session.rollback();
 
@@ -304,6 +318,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertEquals("1st", m.getText());
         session.rollback();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5087
         m = (TextMessage)consumer.receive(2000);
         assertNotNull(m);
         assertEquals("1st", m.getText());
@@ -398,6 +413,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         TextMessage m;
         m = (TextMessage)consumer.receive(1000);
         assertNotNull(m);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3045
         assertEquals("1st", m.getText());
         session.rollback();
 
@@ -413,6 +429,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
 
     public void testRepeatedRedeliveryReceiveNoCommit() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5146
         connection.start();
         Session dlqSession = connection.createSession(true, Session.SESSION_TRANSACTED);
         ActiveMQQueue destination = new ActiveMQQueue("TEST");
@@ -455,6 +472,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertNotNull("Got message from DLQ", m);
         assertEquals("1st", m.getText());
         String cause = m.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
         assertTrue("cause exception has policy ref: " + cause, cause.contains("RedeliveryPolicy"));
         assertTrue("cause exception has pre dispatch and count:" + cause, cause.contains("Delivery[5]"));
 
@@ -560,6 +578,8 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         final int maxRedeliveries = 4;
         for (int i=0;i<=maxRedeliveries + 1;i++) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
             final ActiveMQConnection consumerConnection = (ActiveMQConnection)factory.createConnection(userName, password);
             connections.add(consumerConnection);
             // Receive a message with the JMS API
@@ -583,6 +603,8 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
                 transportServer.stop();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
             Wait.waitFor(new Wait.Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
@@ -602,6 +624,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
 
     public void testRepeatedServerClose() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6494
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         ActiveMQQueue destination = new ActiveMQQueue("TEST");
@@ -703,6 +726,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         LOG.info("cause: " + cause);
         assertTrue("cause exception has policy ref", cause.contains("RedeliveryPolicy"));
         assertTrue("cause exception has redelivered count ref: " + cause, cause.contains("[5]"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
 
         dlqSession.commit();
 
@@ -805,6 +829,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
 
     public void testRepeatedRedeliveryNoCommitForwardMessage() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7464
         connection.start();
         Session dlqSession = connection.createSession(true, Session.SESSION_TRANSACTED);
         ActiveMQQueue destination = new ActiveMQQueue("TEST");
@@ -883,6 +908,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
                     return done.await(10, TimeUnit.MILLISECONDS);
                 }
             }, 5000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5735
 
             if (i<=maxRedeliveries) {
                 assertTrue("listener done @" + i, done.await(5, TimeUnit.SECONDS));
@@ -898,6 +924,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         TextMessage m = (TextMessage)dlqConsumer.receive(1000);
         assertNotNull("Got message from DLQ", m);
         assertEquals("1st", m.getText());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4637
         String cause = m.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
         assertTrue("cause exception has policy ref", cause.contains("RedeliveryPolicy"));
         dlqSession.commit();
@@ -1002,6 +1029,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
     public void testInitialRedeliveryDelayZero() throws Exception {
 
         // Receive a message with the JMS API
+//IC see: https://issues.apache.org/jira/browse/AMQ-1847
         RedeliveryPolicy policy = connection.getRedeliveryPolicy();
         policy.setInitialRedeliveryDelay(0);
         policy.setUseExponentialBackOff(false);
@@ -1111,9 +1139,11 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         m = (TextMessage)consumer.receive(100);
         assertNull("second delivery delayed: " + m, m);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5087
         m = (TextMessage)consumer.receive(2000);
         assertNotNull(m);
         assertEquals("1st", m.getText());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3045
 
         m = (TextMessage)consumer.receive(100);
         assertNotNull(m);
@@ -1123,6 +1153,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
 
     public void testRedeliveryPolicyPerDestination() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3224
         RedeliveryPolicy queuePolicy = new RedeliveryPolicy();
         queuePolicy.setInitialRedeliveryDelay(0);
         queuePolicy.setRedeliveryDelay(1000);

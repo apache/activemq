@@ -76,6 +76,7 @@ public class SocketProxy {
     }
 
     public void setReceiveBufferSize(int receiveBufferSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2737
         this.receiveBufferSize = receiveBufferSize;
     }
     
@@ -84,12 +85,14 @@ public class SocketProxy {
     }
 
     public void open() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         serverSocket = createServerSocket(target);
         serverSocket.setReuseAddress(true);
         if (receiveBufferSize > 0) {
             serverSocket.setReceiveBufferSize(receiveBufferSize);
         }
         if (proxyUrl == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3195
             serverSocket.bind(new InetSocketAddress(listenPort), acceptBacklog);
             proxyUrl = urlFromSocket(target, serverSocket);
         } else {
@@ -100,10 +103,14 @@ public class SocketProxy {
             acceptor.pause();
         }
         new Thread(null, acceptor, "SocketProxy-Acceptor-" + serverSocket.getLocalPort()).start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         closed = new CountDownLatch(1);
     }
 
     private boolean isSsl(URI target) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         return "ssl".equals(target.getScheme());
     }
 
@@ -129,6 +136,9 @@ public class SocketProxy {
      * close all proxy connections and acceptor
      */
     public void close() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
         List<Bridge> connections;
         synchronized(this.connections) {
             connections = new ArrayList<Bridge>(this.connections);
@@ -138,6 +148,9 @@ public class SocketProxy {
             closeConnection(con);
         }
         acceptor.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         closed.countDown();
     }
 
@@ -180,6 +193,9 @@ public class SocketProxy {
         synchronized(connections) {
             LOG.info("pause, numConnections=" + connections.size());
             acceptor.pause();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
             for (Bridge con : connections) {
                 con.pause();
             }
@@ -192,6 +208,9 @@ public class SocketProxy {
     public void goOn() {
         synchronized(connections) {
             LOG.info("goOn, numConnections=" + connections.size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
             for (Bridge con : connections) {
                 con.goOn();
             }
@@ -208,6 +227,9 @@ public class SocketProxy {
     }
 
     private void halfCloseConnection(Bridge c) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
         try {
             c.halfClose();
         } catch (Exception e) {
@@ -216,6 +238,7 @@ public class SocketProxy {
     }
 
     public boolean isPauseAtStart() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3195
         return pauseAtStart;
     }
 
@@ -246,7 +269,9 @@ public class SocketProxy {
 
         public Bridge(Socket socket, URI target) throws Exception {
             receiveSocket = socket;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
             sendSocket = createSocket(target);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2737
             if (receiveBufferSize > 0) {
                 sendSocket.setReceiveBufferSize(receiveBufferSize);
             }
@@ -274,6 +299,9 @@ public class SocketProxy {
         }
 
         public void halfClose() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
             receiveSocket.close();
         }
 
@@ -322,6 +350,9 @@ public class SocketProxy {
                 } catch (Exception e) {
                     LOG.debug("read/write failed, reason: " + e.getLocalizedMessage());
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
                         if (!receiveSocket.isClosed()) {
                             // for halfClose, on read/write failure if we close the
                             // remote end will see a close at the same time.
@@ -366,12 +397,16 @@ public class SocketProxy {
                     pause.get().await();
                     try {
                         Socket source = socket.accept();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2737
                         pause.get().await();
                         if (receiveBufferSize > 0) {
                             source.setReceiveBufferSize(receiveBufferSize);
                         }
                         LOG.info("accepted " + source + ", receiveBufferSize:" + source.getReceiveBufferSize());
                         synchronized(connections) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3176
+//IC see: https://issues.apache.org/jira/browse/AMQ-3129
+//IC see: https://issues.apache.org/jira/browse/AMQ-2774
                             connections.add(new Bridge(source, target));
                         }
                     } catch (SocketTimeoutException expected) {
@@ -385,6 +420,9 @@ public class SocketProxy {
         public void close() {
             try {
                 socket.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
                 closed.countDown();
                 goOn();
             } catch (IOException ignored) {

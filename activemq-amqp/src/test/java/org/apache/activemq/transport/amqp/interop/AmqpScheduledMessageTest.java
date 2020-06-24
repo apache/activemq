@@ -152,6 +152,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
         sender.close();
 
         // Read the message with short timeout, shouldn't get it.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6037
         try {
             readMessages(getTestName(), 1, false, 500);
             fail("Should not read the message");
@@ -167,6 +168,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
     @Test
     public void testScheduleWithDelay() throws Exception {
         final long DELAY = 5000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
 
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
@@ -183,6 +185,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
         assertNotNull(queueView);
 
         long sendTime = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
 
         AmqpMessage message = new AmqpMessage();
         message.setMessageAnnotation("x-opt-delivery-delay", DELAY);
@@ -208,6 +211,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
         }
 
         long receivedTime = System.currentTimeMillis();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6504
 
         assertNotNull(delivered);
         Long msgDeliveryTime = (Long) delivered.getMessageAnnotation("x-opt-delivery-delay");
@@ -227,6 +231,11 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
         final int NUMBER = 10;
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -278,6 +287,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
 
             MessageConsumer consumer = session.createConsumer(destination);
             for (int i = 1; i <= count; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6037
                 Message received = consumer.receive(timeout);
                 assertNotNull(received);
                 LOG.info("Read next message: {}", received.getJMSMessageID());

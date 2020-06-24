@@ -198,6 +198,9 @@ public class AmqpTransactionContext {
                 try {
                     LOG.info("Attempting to roll back TX:[{}]", transactionId);
                     coordinator.discharge(transactionId, request, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
                     session.pumpToProtonTransport(request);
                 } catch (Exception e) {
                     request.onFailure(e);

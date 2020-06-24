@@ -66,6 +66,7 @@ public class VirtualDestPerfTest {
     @Test
     @Ignore("comparison test - 'new' no wait on future with async send broker side is always on")
     public void testAsyncSendBurstToFillCache() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         startBroker(4, true, true);
         connectionFactory.setUseAsyncSend(true);
 
@@ -125,6 +126,7 @@ public class VirtualDestPerfTest {
         for (int i=2;i<11;i++) {
             for (Boolean concurrent : new Boolean[]{true, false}) {
                 startBroker(i, concurrent, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
 
                 long startTime = System.currentTimeMillis();
                 produceMessages(new AtomicLong(messageCount), target);
@@ -156,6 +158,7 @@ public class VirtualDestPerfTest {
     }
 
     protected void produceMessages(AtomicLong messageCount, ActiveMQDestination destination) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         final ByteSequence payLoad = new ByteSequence(new byte[messageSize]);
         Connection connection = connectionFactory.createConnection();
         MessageProducer messageProducer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createProducer(destination);
@@ -177,6 +180,7 @@ public class VirtualDestPerfTest {
         PolicyMap destPolicyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setExpireMessagesPeriod(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         defaultEntry.setOptimizedDispatch(true);
         defaultEntry.setCursorMemoryHighWaterMark(110);
         destPolicyMap.setDefaultEntry(defaultEntry);
@@ -197,6 +201,7 @@ public class VirtualDestPerfTest {
         brokerService.start();
 
         connectionFactory = new ActiveMQConnectionFactory(brokerService.getTransportConnectors().get(0).getPublishableConnectString());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5077
         connectionFactory.setWatchTopicAdvisories(false);
         if (brokerService.getPersistenceAdapter() instanceof KahaDBPersistenceAdapter) {
 

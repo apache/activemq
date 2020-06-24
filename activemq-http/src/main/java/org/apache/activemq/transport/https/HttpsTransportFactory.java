@@ -38,6 +38,7 @@ import org.apache.activemq.wireformat.WireFormat;
 public class HttpsTransportFactory extends HttpTransportFactory {
 
     public TransportServer doBind(String brokerId, URI location) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2942
         return doBind(location);
     }
 
@@ -45,6 +46,7 @@ public class HttpsTransportFactory extends HttpTransportFactory {
     public TransportServer doBind(URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3827
             HttpsTransportServer result = new HttpsTransportServer(location, this, SslContext.getCurrentSslContext());
             Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
@@ -61,6 +63,7 @@ public class HttpsTransportFactory extends HttpTransportFactory {
         // need to remove options from uri
         try {
             URI uri = URISupport.removeQuery(location);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7406
 
             Map<String, String> options = new HashMap<>(URISupport.parseParameters(location));
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");

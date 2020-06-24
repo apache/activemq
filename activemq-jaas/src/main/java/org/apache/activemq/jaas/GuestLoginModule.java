@@ -62,6 +62,7 @@ public class GuestLoginModule implements LoginModule {
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3198
         this.callbackHandler = callbackHandler;
         debug = "true".equalsIgnoreCase((String)options.get("debug"));
         credentialsInvalidate = "true".equalsIgnoreCase((String)options.get("credentialsInvalidate"));
@@ -82,6 +83,7 @@ public class GuestLoginModule implements LoginModule {
 
     @Override
     public boolean login() throws LoginException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         succeeded = true;
         if (credentialsInvalidate) {
             PasswordCallback passwordCallback = new PasswordCallback("Password: ", false);
@@ -91,6 +93,7 @@ public class GuestLoginModule implements LoginModule {
                      if (debug) {
                         LOG.debug("Guest login failing (credentialsInvalidate=true) on presence of a password");
                      }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
                      succeeded = false;
                      passwordCallback.clearPassword();
                  };
@@ -101,6 +104,7 @@ public class GuestLoginModule implements LoginModule {
         if (debug) {
             LOG.debug("Guest login " + succeeded);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         return succeeded;
     }
 
@@ -125,6 +129,7 @@ public class GuestLoginModule implements LoginModule {
         if (debug) {
             LOG.debug("abort");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         if (!succeeded) {
             return false;
         } else if (succeeded && commitSucceeded) {
@@ -134,6 +139,7 @@ public class GuestLoginModule implements LoginModule {
             // our commit failed
             succeeded = false;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3198
         return true;
     }
 
@@ -145,6 +151,7 @@ public class GuestLoginModule implements LoginModule {
             LOG.debug("logout");
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         succeeded = false;
         commitSucceeded = false;
         return true;

@@ -59,9 +59,11 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         succeeded = false;
         init(options);
         users = load(USER_FILE_PROP_NAME, "user", options).getProps();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5876
         groups = load(GROUP_FILE_PROP_NAME, "group", options).invertedPropertiesValuesMap();
     }
 
@@ -78,6 +80,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         } catch (UnsupportedCallbackException uce) {
             throw new LoginException(uce.getMessage() + " not available to obtain information from user");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4249
         user = ((NameCallback) callbacks[0]).getName();
         char[] tmpPassword = ((PasswordCallback) callbacks[1]).getPassword();
         if (tmpPassword == null) {
@@ -95,6 +98,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
             throw new FailedLoginException("Password does not match");
         }
         succeeded = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
 
         if (debug) {
             LOG.debug("login " + user);
@@ -114,6 +118,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
 
         principals.add(new UserPrincipal(user));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5876
         Set<String> matchedGroups = groups.get(user);
         if (matchedGroups != null) {
             for (String entry : matchedGroups) {
@@ -152,6 +157,8 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
     @Override
     public boolean logout() throws LoginException {
         subject.getPrincipals().removeAll(principals);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3182
+//IC see: https://issues.apache.org/jira/browse/AMQ-3183
         clear();
         if (debug) {
             LOG.debug("logout");

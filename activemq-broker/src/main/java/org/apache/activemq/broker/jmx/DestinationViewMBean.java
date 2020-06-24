@@ -78,6 +78,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Number of messages that have been forwarded (to a networked broker) from the destination.")
     long getForwardCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5289
 
     /**
      * Returns the number of messages that have been dispatched but not
@@ -88,6 +89,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Number of messages that have been dispatched to, but not acknowledged by, consumers.")
     long getInFlightCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1560
 
     /**
      * Returns the number of messages that have expired
@@ -96,6 +98,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Number of messages that have been expired.")
     long getExpiredCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
 
     /**
      * Returns the number of consumers subscribed this destination.
@@ -110,6 +113,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Number of producers attached to this destination")
     long getProducerCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1510
 
     /**
      * Returns the number of messages in this destination which are yet to be
@@ -147,6 +151,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("An array of all messages in the destination based on an SQL-92 selection on the message headers or XPATH on the body. Not HTML friendly.")
     CompositeData[] browse(@MBeanInfo("selector") String selector) throws OpenDataException, InvalidSelectorException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * @return A list of all the messages in the destination's queue.
@@ -164,6 +169,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Sends a TextMessage to the destination.")
     String sendTextMessage(@MBeanInfo("body") String body) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * Sends a TextMessage to the destination.
@@ -187,6 +193,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Sends a TextMessage to the destination.")
     String sendTextMessage(@MBeanInfo("headers") Map<?,?> headers, @MBeanInfo("body") String body) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * Sends a TextMesage to the destination.
@@ -198,6 +205,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Sends a TextMessage to a password-protected destination.")
     String sendTextMessage(@MBeanInfo("body") String body, @MBeanInfo("user") String user, @MBeanInfo("password") String password) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      *
@@ -213,6 +221,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Sends a TextMessage to a password-protected destination.")
     String sendTextMessage(@MBeanInfo("headers") Map<String,String> headers, @MBeanInfo("body") String body, @MBeanInfo("user") String user, @MBeanInfo("password") String password) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4522
 
     /**
      * @return the percentage of amount of memory used
@@ -225,6 +234,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Memory used by undelivered messages in bytes")
     long getMemoryUsageByteCount();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4119
 
     /**
      * @return the amount of memory allocated to this destination
@@ -249,6 +259,7 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Temp usage limit, in bytes, assigned to this destination.")
     long getTempUsageLimit();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7085
 
     /**
      * set the amount of temp usage allocated to this destination
@@ -298,6 +309,7 @@ public interface DestinationViewMBean {
 
     @MBeanInfo("Average message size on this destination")
     long getAverageMessageSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5521
 
     @MBeanInfo("Max message size on this destination")
     public long getMaxMessageSize();
@@ -414,12 +426,14 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Optional slowConsumer handler MBean for this destination")
     ObjectName getSlowConsumerStrategy() throws IOException, MalformedObjectNameException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2741
 
     /**
      * @return A string of destination options, name value pairs as URL queryString.
      */
     @MBeanInfo("Destination options as name value pairs in a URL queryString")
     String getOptions();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4162
 
     /**
      * @return true if this is dead letter queue
@@ -432,6 +446,7 @@ public interface DestinationViewMBean {
      * enable/disable the DLQ flag
      */
     void setDLQ(boolean value);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6691
 
     @MBeanInfo("Number of messages blocked for flow control")
     long getBlockedSends();

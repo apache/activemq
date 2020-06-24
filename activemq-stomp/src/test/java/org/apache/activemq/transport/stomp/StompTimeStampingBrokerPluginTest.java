@@ -48,6 +48,7 @@ public class StompTimeStampingBrokerPluginTest extends StompTestSupport {
 
     @Override
     protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         plugins.add(new TimeStampingBrokerPlugin());
     }
 
@@ -65,6 +66,7 @@ public class StompTimeStampingBrokerPluginTest extends StompTestSupport {
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         brokerService.setDestinationPolicy(pMap);
     }
 

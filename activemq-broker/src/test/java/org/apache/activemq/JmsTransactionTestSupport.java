@@ -86,6 +86,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         resourceProvider = getJmsResourceProvider();
         topic = resourceProvider.isTopic();
         // We will be using transacted sessions.
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         setSessionTransacted();
         connectionFactory = newConnectionFactory();
         reconnect();
@@ -114,6 +115,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     /**
      */
     protected BrokerService createBroker() throws Exception, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
         return BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false"));
     }
@@ -164,10 +166,12 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         for (int j = 0; j < batchCount; j++) {
             LOG.info("Producing batch " + j + " of " + batchSize + " messages");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
             beginTx();
             for (int i = 0; i < batchSize; i++) {
                 producer.send(message);
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1585
             messageSent();
             commitTx();
             LOG.info("Consuming batch " + j + " of " + batchSize + " messages");
@@ -196,6 +200,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // sends a message
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
         producer.send(outbound[0]);
         commitTx();
@@ -225,6 +230,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         LOG.info("Received: " + message);
 
         // validates that the rolled-back was not consumed
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         commitTx();
         Message inbound[] = new Message[messages.size()];
         messages.toArray(inbound);
@@ -317,6 +323,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // sends a message
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
         producer.send(outbound[0]);
         commitTx();
@@ -330,9 +337,11 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         reconnect();
 
         // sends a message
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
         producer.send(outbound[1]);
         commitTx();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
 
         // receives the first message
         ArrayList<Message> messages = new ArrayList<Message>();
@@ -349,6 +358,8 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         LOG.info("Received: " + message);
 
         // validates that the rolled-back was not consumed
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         commitTx();
         Message inbound[] = new Message[messages.size()];
         messages.toArray(inbound);
@@ -365,6 +376,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // lets consume any outstanding messages from prev test runs
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
             while (consumer.receive(1000) != null) {
         }
@@ -416,6 +428,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // lets consume any outstanding messages from prev test runs
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
         while (consumer.receive(1000) != null) {
         }
@@ -454,6 +467,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
         assertNull(consumer.receiveNoWait());
         commitTx();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
 
         Message inbound[] = new Message[messages.size()];
         messages.toArray(inbound);
@@ -471,6 +485,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message"), session.createTextMessage("Third Message"),
                                             session.createTextMessage("Fourth Message")};
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
         for (int i = 0; i < outbound.length; i++) {
             // sends a message
@@ -536,6 +551,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         TextMessage[] outbound = new TextMessage[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // lets consume any outstanding messages from prev test runs
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
         while (consumer.receiveNoWait() != null) {
         }
@@ -576,6 +592,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         Message outbound = session.createObjectMessage(list);
         outbound.setStringProperty("foo", "abc");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         beginTx();
         producer.send(outbound);
         commitTx();
@@ -596,11 +613,13 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         body.clear();
         body.add("This should never be seen!");
         rollbackTx();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
 
         beginTx();
         message = consumer.receive(5000);
         List<String> secondBody = assertReceivedObjectMessageWithListBody(message);
         assertNotSame("Second call should return a different body", secondBody, body);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         commitTx();
     }
 
@@ -656,6 +675,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
      * Sets the prefeftch policy to one.
      */
     protected void setPrefetchToOne() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
         ActiveMQPrefetchPolicy prefetchPolicy = getPrefetchPolicy();
         prefetchPolicy.setQueuePrefetch(1);
         prefetchPolicy.setTopicPrefetch(1);
@@ -693,6 +713,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
             unackMessages.add(message);
             if (unackMessages.size() == MESSAGE_COUNT) {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
                     rollbackTx();
                     resendPhase = true;
                 } catch (Exception e) {
@@ -703,6 +724,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
             ackMessages.add(message);
             if (ackMessages.size() == MESSAGE_COUNT) {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2078
                     commitTx();
                 } catch (Exception e) {
                     e.printStackTrace();

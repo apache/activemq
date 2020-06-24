@@ -41,6 +41,7 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
                                                           new ActiveMQTopic("TEST"),
                                                           new ActiveMQTempQueue("TEST:1"),
                                                           new ActiveMQTempTopic("TEST:1"),
+//IC see: https://issues.apache.org/jira/browse/AMQ-1110
                                                           new ActiveMQTempQueue("TEST"),
                                                           new ActiveMQTempTopic("TEST"),
                                                           new ActiveMQQueue("TEST?option=value"),
@@ -126,6 +127,7 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
     }
 
     public void testEmptyQueueName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5211
         try {
             new ActiveMQQueue("");
             fail("Should have thrown IllegalArgumentException");

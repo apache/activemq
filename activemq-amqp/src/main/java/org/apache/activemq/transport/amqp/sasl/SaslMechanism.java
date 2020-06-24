@@ -57,5 +57,6 @@ public interface SaslMechanism {
      * @return a failure error to explain why the mechanism failed.
      */
     String getFailureReason();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
 
 }

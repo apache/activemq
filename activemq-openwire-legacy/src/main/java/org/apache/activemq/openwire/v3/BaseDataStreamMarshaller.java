@@ -227,6 +227,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
 
     private Throwable createThrowable(String className, String message) {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1515
             Class clazz = Class.forName(className, false, BaseDataStreamMarshaller.class.getClassLoader());
             Constructor constructor = clazz.getConstructor(new Class[] {String.class});
             return (Throwable)constructor.newInstance(new Object[] {message});
@@ -290,6 +291,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
                 dataIn.readFully(data);
                 // Yes deprecated, but we know what we are doing.
                 // This allows us to create a String from a ASCII byte array. (no UTF-8 decoding)
+//IC see: https://issues.apache.org/jira/browse/AMQ-1515
                 return new String(data, 0);
             } else {
                 return dataIn.readUTF();

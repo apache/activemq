@@ -53,6 +53,7 @@ public class DiscardingDLQBrokerPlugin implements BrokerPlugin {
      */
     @Override
     public Broker installPlugin(Broker broker) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
         log.info("Installing Discarding Dead Letter Queue broker plugin[dropAll={}; dropTemporaryTopics={}; dropTemporaryQueues={}; dropOnly={}; reportInterval={}]", new Object[]{
                 isDropAll(), isDropTemporaryTopics(), isDropTemporaryQueues(), getDropOnly(), reportInterval
         });
@@ -61,6 +62,7 @@ public class DiscardingDLQBrokerPlugin implements BrokerPlugin {
         cb.setDropTemporaryQueues(isDropTemporaryQueues());
         cb.setDropTemporaryTopics(isDropTemporaryTopics());
         cb.setDestFilter(getDestFilter());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3115
         cb.setReportInterval(getReportInterval());
         return cb;
     }

@@ -99,6 +99,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public boolean isConduitNetworkQueueSubscriptions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         return conduitNetworkQueueSubscriptions;
     }
 
@@ -121,6 +122,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public boolean isSyncDurableSubs() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
         return syncDurableSubs;
     }
 
@@ -200,6 +202,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public String getClientIdToken() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         return clientIdToken;
     }
 
@@ -219,6 +222,8 @@ public class NetworkBridgeConfiguration {
      */
     public void setNetworkTTL(int networkTTL) {
         this.networkTTL = networkTTL;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         setConsumerTTL(networkTTL);
         setMessageTTL(networkTTL);
     }
@@ -249,6 +254,7 @@ public class NetworkBridgeConfiguration {
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setPrefetchSize(int prefetchSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6267
         if (prefetchSize < 1) {
             throw new IllegalArgumentException("prefetchSize must be > 0"
                     + " because network consumers do not poll for messages.");
@@ -304,6 +310,7 @@ public class NetworkBridgeConfiguration {
      * @return the destinationFilter
      */
     public String getDestinationFilter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3384
         if (this.destinationFilter == null) {
             if (dynamicallyIncludedDestinations != null && !dynamicallyIncludedDestinations.isEmpty()) {
                 StringBuffer filter = new StringBuffer();
@@ -317,6 +324,7 @@ public class NetworkBridgeConfiguration {
                         filter.append(destination.getPhysicalName());
                         delimiter = ",";
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
                         if (useVirtualDestSubs) {
                             filter.append(delimiter);
                             filter.append(AdvisorySupport.VIRTUAL_DESTINATION_CONSUMER_ADVISORY_TOPIC_PREFIX);
@@ -371,6 +379,8 @@ public class NetworkBridgeConfiguration {
     }
 
     public List<ActiveMQDestination> getExcludedDestinations() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2086
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         return excludedDestinations;
     }
 
@@ -398,6 +408,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public boolean isSuppressDuplicateQueueSubscriptions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2198
         return suppressDuplicateQueueSubscriptions;
     }
 
@@ -410,6 +421,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public boolean isSuppressDuplicateTopicSubscriptions() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2753
         return suppressDuplicateTopicSubscriptions;
     }
 
@@ -425,6 +437,7 @@ public class NetworkBridgeConfiguration {
      * @return the brokerURL
      */
     public String getBrokerURL() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return this.brokerURL;
     }
 
@@ -453,6 +466,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public int getConsumerPriorityBase() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3558
         return consumerPriorityBase;
     }
 
@@ -466,6 +480,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public boolean isStaticBridge() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3632
         return staticBridge;
     }
 
@@ -478,6 +493,7 @@ public class NetworkBridgeConfiguration {
      *      True if the Network should enforce compression for messages sent.
      */
     public void setUseCompression(boolean useCompression) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         this.useCompression = useCompression;
     }
 
@@ -489,6 +505,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public boolean isAdvisoryForFailedForward() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4276
         return advisoryForFailedForward;
     }
 
@@ -497,6 +514,8 @@ public class NetworkBridgeConfiguration {
     }
 
     public void setConsumerTTL(int consumerTTL) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         this.consumerTTL = consumerTTL;
     }
 
@@ -513,6 +532,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public boolean isUseBrokerNamesAsIdSeed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2327
         return useBrokerNamesAsIdSeed;
     }
 
@@ -521,6 +541,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public boolean isGcDestinationViews() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4918
         return gcDestinationViews;
     }
 
@@ -537,6 +558,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public boolean isCheckDuplicateMessagesOnDuplex() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4924
         return checkDuplicateMessagesOnDuplex;
     }
 
@@ -545,10 +567,12 @@ public class NetworkBridgeConfiguration {
     }
 
     public boolean isUseVirtualDestSubs() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6080
         return useVirtualDestSubs;
     }
 
     public BridgeFactory getBridgeFactory() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6861
         return bridgeFactory;
     }
 
@@ -561,6 +585,7 @@ public class NetworkBridgeConfiguration {
      */
     @Deprecated
     public boolean isUseVirtualDestSus() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
         return useVirtualDestSubs;
     }
 
@@ -570,6 +595,7 @@ public class NetworkBridgeConfiguration {
     }
 
     public void setSslContext(SslContext sslContext) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7037
         this.sslContext = sslContext;
     }
 

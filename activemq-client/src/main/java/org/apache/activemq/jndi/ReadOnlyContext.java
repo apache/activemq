@@ -96,7 +96,9 @@ public class ReadOnlyContext implements Context, Serializable {
         } else {
             this.environment = new Hashtable<String, Object>(environment);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2220
         this.bindings = new HashMap<String, Object>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2220
         treeBindings = new HashMap<String, Object>();
         if (bindings != null) {
             for (Map.Entry<String, Object> binding : bindings.entrySet()) {

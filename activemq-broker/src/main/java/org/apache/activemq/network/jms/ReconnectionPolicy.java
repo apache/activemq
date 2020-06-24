@@ -234,6 +234,7 @@ public class ReconnectionPolicy {
         long nextDelay = initialReconnectDelay;
 
         if (useExponentialBackOff) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6273
             nextDelay = Math.max(initialReconnectDelay, nextDelay * (long)((attempt - 1) * backOffMultiplier));
         }
 

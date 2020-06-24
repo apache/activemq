@@ -37,6 +37,7 @@ public class VMPendingQueueMessageStoragePolicy implements PendingQueueMessageSt
      * @return the cursor
      */
     public PendingMessageCursor getQueuePendingMessageCursor(Broker broker,Queue queue) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         return new VMPendingMessageCursor(queue.isPrioritizedMessages());
     }
 }

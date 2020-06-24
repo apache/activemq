@@ -118,6 +118,9 @@ public class BitArray implements Serializable {
     }
 
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
         writeToStream(out);
     }
     
@@ -134,6 +137,7 @@ public class BitArray implements Serializable {
     public void writeToStream(DataOutput dataOut) throws IOException {
         dataOut.writeByte(length);
         if (length <= BYTE_SIZE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3422
             dataOut.writeByte((byte)bits);
         } else if (length <= SHORT_SIZE) {
             dataOut.writeShort((short)bits);

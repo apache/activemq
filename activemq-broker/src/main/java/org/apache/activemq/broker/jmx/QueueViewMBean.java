@@ -32,6 +32,7 @@ public interface QueueViewMBean extends DestinationViewMBean {
      */
     @MBeanInfo("View a message from the destination by JMS message ID.")
     CompositeData getMessage(@MBeanInfo("messageId") String messageId) throws OpenDataException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
     /**
      * Removes a message from the queue. If the message has already been
@@ -189,6 +190,7 @@ public interface QueueViewMBean extends DestinationViewMBean {
      */
     @MBeanInfo("Map of groupNames and ConsumerIds")
     Map<String,String> getMessageGroups();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4766
 
     /**
      * @return the message group type implementation (simple,bucket,cached)
@@ -212,6 +214,7 @@ public interface QueueViewMBean extends DestinationViewMBean {
 
     @MBeanInfo("pause dispatch to consumers")
     void pause();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5229
 
     @MBeanInfo("resume dispatch to consumers if paused")
     void resume();

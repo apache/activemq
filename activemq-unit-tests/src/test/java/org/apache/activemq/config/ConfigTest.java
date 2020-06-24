@@ -115,6 +115,7 @@ public class ConfigTest {
             broker.getPersistenceAdapter();
 
             assertTrue(broker.getSystemUsage().getStoreUsage().getStore() instanceof JournalPersistenceAdapter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2064
 
             LOG.info("Success");
         } finally {
@@ -137,6 +138,7 @@ public class ConfigTest {
         adapter.setCreateTablesOnStartup(false);
 
         context.checking(new Expectations() {{
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
             allowing(dataSource).getConnection();
             will(returnValue(connection));
             allowing(connection).getMetaData();
@@ -149,6 +151,7 @@ public class ConfigTest {
         }});
 
         adapter.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         assertTrue("has the locker override", adapter.getLocker() instanceof TransactDatabaseLocker);
         adapter.stop();
     }
@@ -165,6 +168,7 @@ public class ConfigTest {
         adapter.setCreateTablesOnStartup(false);
 
         context.checking(new Expectations() {{
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
             allowing(dataSource).getConnection();
             will(returnValue(connection));
             allowing(connection).getMetaData();
@@ -177,6 +181,7 @@ public class ConfigTest {
         }});
 
         adapter.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         assertEquals("has the default locker", adapter.getLocker().getClass(), DefaultDatabaseLocker.class);
         adapter.stop();
     }
@@ -235,6 +240,7 @@ public class ConfigTest {
             dest = new ActiveMQTopic("Topic.SimpleDispatch");
             assertTrue("Should have a simple dispatch policy for " + dest.getTopicName(),
                     broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof SimpleDispatchPolicy);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
 
             dest = new ActiveMQTopic("Topic.RoundRobinDispatch");
             assertTrue("Should have a round robin dispatch policy for " + dest.getTopicName(),
@@ -252,6 +258,7 @@ public class ConfigTest {
             dest = new ActiveMQTopic("Topic.FixedSizedSubs");
             subsPolicy = broker.getDestinationPolicy().getEntryFor(dest).getSubscriptionRecoveryPolicy();
             assertTrue("Should have a fixed sized subscription recovery policy for " + dest.getTopicName(), subsPolicy instanceof FixedSizedSubscriptionRecoveryPolicy);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
             assertEquals("FixedSizedSubsPolicy Config Error (maximumSize)", 2000000, ((FixedSizedSubscriptionRecoveryPolicy) subsPolicy).getMaximumSize());
             assertEquals("FixedSizedSubsPolicy Config Error (useSharedBuffer)", false, ((FixedSizedSubscriptionRecoveryPolicy) subsPolicy).isUseSharedBuffer());
 
@@ -266,6 +273,7 @@ public class ConfigTest {
             dest = new ActiveMQTopic("Topic.TimedSubs");
             subsPolicy = broker.getDestinationPolicy().getEntryFor(dest).getSubscriptionRecoveryPolicy();
             assertTrue("Should have a timed subscription recovery policy for " + dest.getTopicName(), subsPolicy instanceof TimedSubscriptionRecoveryPolicy);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3813
             assertEquals("TimedSubsPolicy Config Error (recoverDuration)", 25000, ((TimedSubscriptionRecoveryPolicy) subsPolicy).getRecoverDuration());
             LOG.info("Success");
 
@@ -279,6 +287,7 @@ public class ConfigTest {
             assertEquals("SystemUsage Config Error (StoreUsage.limit)", 1024 * 1024 * 1024, systemUsage.getStoreUsage().getLimit());
             assertEquals("SystemUsage Config Error (StoreUsage.name)", "foo", systemUsage.getStoreUsage().getName());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2064
             assertNotNull(systemUsage.getStoreUsage().getStore());
             assertTrue(systemUsage.getStoreUsage().getStore() instanceof MemoryPersistenceAdapter);
 
@@ -373,6 +382,7 @@ public class ConfigTest {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Topic topic = session.createTopic("test.foo");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4213
             for (int i = 0; i < MAX_PRODUCERS; i++) {
                 session.createProducer(topic);
             }
@@ -384,6 +394,7 @@ public class ConfigTest {
             }
 
             // Tests the anonymous producer case also counts.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5649
             try {
                 session.createProducer(null);
                 fail("Should have got an exception on exceeding MAX_PRODUCERS");

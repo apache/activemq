@@ -48,6 +48,7 @@ public class MessagePullTest extends BaseCommandTestSupport {
         info.setConsumerId(createConsumerId("ConsumerId:1"));
         info.setDestination(createActiveMQDestination("Destination:2"));
         info.setTimeout(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
         info.setCorrelationId("CorrelationId:3");
         info.setMessageId(createMessageId("MessageId:4"));
     }

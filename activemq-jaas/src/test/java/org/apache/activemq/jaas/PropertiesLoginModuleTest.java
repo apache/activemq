@@ -52,6 +52,7 @@ public class PropertiesLoginModuleTest extends TestCase {
     }
 
     public void testLogin() throws LoginException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
         LoginContext context = new LoginContext(getLoginModule(), new UserPassHandler("first", "secret"));
         context.login();
 
@@ -67,6 +68,7 @@ public class PropertiesLoginModuleTest extends TestCase {
     }
 
     public void testLoginReload() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6214
         File targetPropDir = new File("target/loginReloadTest");
         File sourcePropDir = new File("src/test/resources");
         File usersFile = new File(targetPropDir, "users.properties");
@@ -114,6 +116,7 @@ public class PropertiesLoginModuleTest extends TestCase {
 
     public void testBadUseridLogin() throws Exception {
         LoginContext context = new LoginContext(getLoginModule(), new UserPassHandler("BAD", "secret"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
 
         try {
             context.login();
@@ -125,6 +128,7 @@ public class PropertiesLoginModuleTest extends TestCase {
 
     public void testBadPWLogin() throws Exception {
         LoginContext context = new LoginContext(getLoginModule(), new UserPassHandler("first", "BAD"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
 
         try {
             context.login();
@@ -140,6 +144,7 @@ public class PropertiesLoginModuleTest extends TestCase {
         private final String pass;
 
         public UserPassHandler(final String user, final String pass) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6214
             this.user = user;
             this.pass = pass;
         }
@@ -159,6 +164,7 @@ public class PropertiesLoginModuleTest extends TestCase {
     }
 
     protected String getLoginModule() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
         return "PropertiesLogin";
     }
 }

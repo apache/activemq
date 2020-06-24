@@ -205,6 +205,7 @@ public class DefaultConfigurationProcessor implements ConfigurationProcessor {
                 try {
                     setter.invoke(instance, JAXBUtils.matchType(argument, setter.getParameterTypes()[0]));
                 } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7037
                     plugin.info("failed to invoke " + setter + " on " + instance + " with args " + argument, e);
                 }
             } else {

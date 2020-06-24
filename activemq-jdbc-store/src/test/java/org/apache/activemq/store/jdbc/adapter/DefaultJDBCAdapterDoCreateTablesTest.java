@@ -156,6 +156,9 @@ public class DefaultJDBCAdapterDoCreateTablesTest {
 
 		defaultJDBCAdapter.doCreateTables(transactionContext);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
+//IC see: https://issues.apache.org/jira/browse/AMQ-6370
 		InOrder inOrder = inOrder(resultSet, connection, statement1, statement2);
 		inOrder.verify(resultSet).next();
 		inOrder.verify(resultSet).close();

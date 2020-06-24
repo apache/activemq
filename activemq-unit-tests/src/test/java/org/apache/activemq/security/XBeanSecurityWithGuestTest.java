@@ -59,6 +59,7 @@ public class XBeanSecurityWithGuestTest extends JmsTestSupport {
     }
 
     public void testUserSendNoCredentials() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3198
         Message m = doSend(false);
         // note brokerService.useAuthenticatedPrincipalForJMXUserID=true for this
         assertEquals("guest", ((ActiveMQMessage)m).getUserID());
@@ -129,6 +130,7 @@ public class XBeanSecurityWithGuestTest extends JmsTestSupport {
     }
 
     public void initCombosForTestUserSendNoCredentials() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3198
         addCombinationValues("userName", new Object[] {"", null});
         addCombinationValues("password", new Object[] {"", null});
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("GuestQueue")});

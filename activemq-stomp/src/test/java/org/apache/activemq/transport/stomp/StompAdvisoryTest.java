@@ -54,6 +54,7 @@ public class StompAdvisoryTest extends StompTestSupport {
 
     @Override
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         try {
             connection.close();
         } catch (Exception ex) {}
@@ -63,6 +64,7 @@ public class StompAdvisoryTest extends StompTestSupport {
 
     @Override
     protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5220
         plugins.add(new StatisticsBrokerPlugin());
     }
 
@@ -70,6 +72,8 @@ public class StompAdvisoryTest extends StompTestSupport {
     protected void applyBrokerPolicies() throws Exception {
 
         PolicyEntry policy = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
         policy.setAdvisoryForFastProducers(true);
         policy.setAdvisoryForConsumed(true);
         policy.setAdvisoryForDelivery(true);
@@ -127,6 +131,7 @@ public class StompAdvisoryTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testConnectionAdvisoryJSON() throws Exception {
         stompConnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         HashMap<String, String> subheaders = new HashMap<String, String>(1);
         subheaders.put("transformation", Stomp.Transformations.JMS_JSON.toString());
@@ -164,6 +169,7 @@ public class StompAdvisoryTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testConnectionAdvisoryXML() throws Exception {
         stompConnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         HashMap<String, String> subheaders = new HashMap<String, String>(1);
         subheaders.put("transformation", Stomp.Transformations.JMS_XML.toString());
@@ -201,6 +207,7 @@ public class StompAdvisoryTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testConsumerAdvisory() throws Exception {
         stompConnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         Destination dest = new ActiveMQQueue("testConsumerAdvisory");
 
@@ -236,6 +243,7 @@ public class StompAdvisoryTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testProducerAdvisory() throws Exception {
         stompConnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         Destination dest = new ActiveMQQueue("testProducerAdvisory");
 
@@ -272,6 +280,7 @@ public class StompAdvisoryTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testProducerAdvisoryXML() throws Exception {
         stompConnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         Destination dest = new ActiveMQQueue("testProducerAdvisoryXML");
 
@@ -309,6 +318,7 @@ public class StompAdvisoryTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testProducerAdvisoryJSON() throws Exception {
         stompConnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         Destination dest = new ActiveMQQueue("testProducerAdvisoryJSON");
 
@@ -345,6 +355,7 @@ public class StompAdvisoryTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testStatisticsAdvisory() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5220
         Connection c = cf.createConnection("system", "manager");
         c.start();
         final Session session = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -373,6 +384,7 @@ public class StompAdvisoryTest extends StompTestSupport {
         });
         child.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         stompConnect();
         // Attempt to gather the statistics response from the previous request.
         stompConnection.connect("system", "manager");
@@ -394,6 +406,7 @@ public class StompAdvisoryTest extends StompTestSupport {
     public void testDestinationAdvisoryTempQueue() throws Exception {
 
         cf.setWatchTopicAdvisories(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6030
 
         stompConnect();
 
@@ -460,6 +473,7 @@ public class StompAdvisoryTest extends StompTestSupport {
         HashMap<String, String> subheaders = new HashMap<String, String>(1);
         subheaders.put("receipt", "id-1");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         stompConnect();
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/topic/ActiveMQ.Advisory.TempTopic,/topic/ActiveMQ.Advisory.TempQueue",

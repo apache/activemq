@@ -48,6 +48,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     @Override
     protected void acknowledge(final ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
         this.setTimeOfLastMessageAck(System.currentTimeMillis());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4621
 
         final Destination q = (Destination) n.getRegionDestination();
         final QueueMessageReference node = (QueueMessageReference)n;
@@ -69,6 +70,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     @Override
     public synchronized String toString() {
         return "QueueSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + dispatched.size() + ", delivered="
+//IC see: https://issues.apache.org/jira/browse/AMQ-6422
                + this.prefetchExtension + ", pending=" + getPendingQueueSize() + ", prefetch=" + getPrefetchSize() + ", prefetchExtension=" + prefetchExtension.get();
     }
 
@@ -86,6 +88,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
      */
     @Override
     public void destroy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-378
         setSlowConsumer(false);
     }
 

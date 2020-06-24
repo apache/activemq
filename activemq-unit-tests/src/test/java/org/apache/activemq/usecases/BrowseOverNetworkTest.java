@@ -41,6 +41,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 10;
 
     public void testBrowse() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2993
         createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=false"));
         createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=false&useJmx=false"));
 
@@ -54,6 +55,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
         sendMessages("BrokerA", dest, MESSAGE_COUNT);
 
         Thread.sleep(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3020
 
         int browsed = browseMessages("BrokerB", dest);
 
@@ -75,6 +77,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
     }
 
     public void testConsumerInfo() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2993
         createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker1.xml"));
         createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker2.xml"));
 
@@ -88,6 +91,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
 
         int broker1 = browseMessages("broker1", dest);
         assertEquals("Browsed a message on an empty queue", 0, broker1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3020
         Thread.sleep(1000);
         int broker2 = browseMessages("broker2", dest);
         assertEquals("Browsed a message on an empty queue", 0, broker2);
@@ -99,6 +103,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
         String broker;
         Destination dest;
         int totalCount;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
         final int expect;
         QueueBrowser browser = null;
         MessageConsumer consumer = null;
@@ -166,6 +171,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
     }
 
     public void testAMQ3020() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3020
         createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker1A.xml"));
         createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker1B.xml"));
         createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker2A.xml"));
@@ -177,6 +183,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
         brokers.get("broker-2A").broker.waitUntilStarted();
         brokers.get("broker-3A").broker.waitUntilStarted();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3576
          for (BrokerItem brokerItem : brokers.values()) {
             final BrokerService broker = brokerItem.broker;
             waitForBridgeFormation(broker, 1, 0);

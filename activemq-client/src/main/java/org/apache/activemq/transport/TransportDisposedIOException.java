@@ -39,6 +39,8 @@ public class TransportDisposedIOException extends IOException {
     }
 
     public TransportDisposedIOException(String message, Throwable cause) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
         super(message, cause);
     }
 

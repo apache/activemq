@@ -43,6 +43,7 @@ public class MessageAuthenticationTest extends EmbeddedBrokerTestSupport {
     private Connection connection;
 
     public void testSendInvalidMessage() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1801
         if (connection == null) {
             connection = createConnection();
         }

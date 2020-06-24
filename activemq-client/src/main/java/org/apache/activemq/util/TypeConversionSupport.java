@@ -34,11 +34,13 @@ public final class TypeConversionSupport {
     private static final Converter IDENTITY_CONVERTER = new Converter() {
         @Override
         public Object convert(Object value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4145
             return value;
         }
     };
 
     private static class ConversionKey {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         final Class<?> from;
         final Class<?> to;
         final int hashCode;
@@ -51,6 +53,7 @@ public final class TypeConversionSupport {
 
         @Override
         public boolean equals(Object obj) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6433
             if (this == obj)
                 return true;
             if (obj == null)
@@ -96,7 +99,9 @@ public final class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Long.class, String.class), toStringConverter);
         CONVERSION_MAP.put(new ConversionKey(Float.class, String.class), toStringConverter);
         CONVERSION_MAP.put(new ConversionKey(Double.class, String.class), toStringConverter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
         CONVERSION_MAP.put(new ConversionKey(UTF8Buffer.class, String.class), toStringConverter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         CONVERSION_MAP.put(new ConversionKey(URI.class, String.class), toStringConverter);
         CONVERSION_MAP.put(new ConversionKey(BigInteger.class, String.class), toStringConverter);
 
@@ -187,6 +192,7 @@ public final class TypeConversionSupport {
                 return ActiveMQDestination.createDestination((String)value, ActiveMQDestination.QUEUE_TYPE);
             }
         });
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
         CONVERSION_MAP.put(new ConversionKey(String.class, URI.class), new Converter() {
             @Override
             public Object convert(Object value) {
@@ -214,6 +220,7 @@ public final class TypeConversionSupport {
 
         // eager same instance type test to avoid the overhead of invoking the type converter
         // if already same type
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
         if (to.isInstance(value)) {
             return to.cast(value);
         }
@@ -229,6 +236,7 @@ public final class TypeConversionSupport {
 
     public static Converter lookupConverter(Class<?> from, Class<?> to) {
         // use wrapped type for primitives
+//IC see: https://issues.apache.org/jira/browse/AMQ-4011
         if (from.isPrimitive()) {
             from = convertPrimitiveTypeToWrapperType(from);
         }
@@ -236,6 +244,7 @@ public final class TypeConversionSupport {
             to = convertPrimitiveTypeToWrapperType(to);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4145
         if (from.equals(to)) {
             return IDENTITY_CONVERTER;
         }

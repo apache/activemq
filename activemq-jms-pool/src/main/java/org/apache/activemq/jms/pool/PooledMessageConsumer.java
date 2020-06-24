@@ -79,6 +79,7 @@ public class PooledMessageConsumer implements MessageConsumer {
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4019
         return "PooledMessageConsumer { " + delegate + " }";
     }
 }

@@ -80,6 +80,8 @@ public class DurableSubscriptionReactivationTest extends EmbeddedBrokerTestSuppo
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = super.createBroker();
         answer.setKeepDurableSubsActive(keepDurableSubsActive);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
+//IC see: https://issues.apache.org/jira/browse/AMQ-2551
         answer.setPersistenceAdapter(new JDBCPersistenceAdapter());
         answer.setDeleteAllMessagesOnStartup(true);
         return answer;

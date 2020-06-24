@@ -68,6 +68,7 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
     };
 
     public SubscriptionRecoveryPolicy copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-714
         TimedSubscriptionRecoveryPolicy rc = new TimedSubscriptionRecoveryPolicy();
         rc.setRecoverDuration(recoverDuration);
         return rc;
@@ -91,10 +92,13 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
     }
     
     public void setBroker(Broker broker) {  
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         this.scheduler = broker.getScheduler();
     }
 
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2005
         scheduler.executePeriodically(gcTask, GC_INTERVAL);
     }
 

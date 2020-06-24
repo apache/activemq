@@ -41,6 +41,7 @@ public class ConsumerReceiveWithTimeoutTest {
     @Before
     public void setUp() throws Exception {
         createBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5907
 
         connection = createConnection();
     }
@@ -108,6 +109,7 @@ public class ConsumerReceiveWithTimeoutTest {
     public void testConsumerReceivePrefetchZeroRedeliveryZero() throws Exception {
 
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5907
 
         // push message to queue
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

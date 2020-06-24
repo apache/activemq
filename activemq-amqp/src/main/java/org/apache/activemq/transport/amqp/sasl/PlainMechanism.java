@@ -30,6 +30,7 @@ public class PlainMechanism extends AbstractSaslMechanism {
         sasl.recv(data, 0, data.length);
 
         Buffer[] parts = new Buffer(data).split((byte) 0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6055
         switch (parts.length) {
             case 0:
                 // Treat this as anonymous connect to support legacy behavior

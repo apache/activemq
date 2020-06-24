@@ -85,8 +85,12 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         info.setBrokerMasterConnector(bs.readBoolean());
         info.setManageable(bs.readBoolean());
         info.setClientMaster(bs.readBoolean());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         info.setFaultTolerant(bs.readBoolean());
         info.setFailoverReconnect(bs.readBoolean());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
 
     }
 
@@ -107,8 +111,12 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         bs.writeBoolean(info.isBrokerMasterConnector());
         bs.writeBoolean(info.isManageable());
         bs.writeBoolean(info.isClientMaster());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         bs.writeBoolean(info.isFaultTolerant());
         bs.writeBoolean(info.isFailoverReconnect());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
 
         return rc + 0;
     }
@@ -134,6 +142,10 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         bs.readBoolean();
         bs.readBoolean();
         bs.readBoolean();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
 
     }
 
@@ -167,8 +179,12 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         info.setBrokerMasterConnector(dataIn.readBoolean());
         info.setManageable(dataIn.readBoolean());
         info.setClientMaster(dataIn.readBoolean());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         info.setFaultTolerant(dataIn.readBoolean());
         info.setFailoverReconnect(dataIn.readBoolean());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
 
     }
 
@@ -189,8 +205,12 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         dataOut.writeBoolean(info.isBrokerMasterConnector());
         dataOut.writeBoolean(info.isManageable());
         dataOut.writeBoolean(info.isClientMaster());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         dataOut.writeBoolean(info.isFaultTolerant());
         dataOut.writeBoolean(info.isFailoverReconnect());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
 
     }
 }

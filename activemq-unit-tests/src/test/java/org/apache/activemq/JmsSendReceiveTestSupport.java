@@ -96,6 +96,7 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1885
             sendToProducer(producer, producerDestination, message);
             messageSent();
         }
@@ -112,6 +113,7 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
      * @throws JMSException
      */
     protected void sendToProducer(MessageProducer producer,
+//IC see: https://issues.apache.org/jira/browse/AMQ-1885
             Destination producerDestination, Message message) throws JMSException {
         producer.send(producerDestination, message);   
     }

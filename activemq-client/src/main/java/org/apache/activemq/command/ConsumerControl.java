@@ -41,6 +41,7 @@ public class ConsumerControl extends BaseCommand {
      * @return Returns the destination.
      */
     public ActiveMQDestination getDestination() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
         return destination;
     }
 
@@ -60,6 +61,7 @@ public class ConsumerControl extends BaseCommand {
 
     @Override
     public boolean isConsumerControl() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5707
         return true;
     }
 

@@ -321,6 +321,7 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
     public void testAnonymousProducerAdvisoriesTrue() throws Exception {
         //turn on support for anonymous producers
         broker.setAnonymousProducerAdvisorySupport(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7352
 
         ActiveMQDestination destination = AdvisorySupport.getProducerAdvisoryTopic(null);
         assertEquals(AdvisorySupport.ANONYMOUS_PRODUCER_ADVISORY_TOPIC_PREFIX, destination.getPhysicalName());

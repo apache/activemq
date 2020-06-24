@@ -38,6 +38,7 @@ public class SlowConnectionTest extends TestCase {
         MockBroker broker = new MockBroker();
         broker.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
         socketReadyLatch.await();
         int timeout = 1000;
         URI tcpUri = new URI("tcp://localhost:" + broker.ss.getLocalPort() + "?soTimeout=" + timeout + "&trace=true&connectionTimeout=" + timeout + "&wireFormat.maxInactivityDurationInitalDelay=" + timeout);
@@ -66,6 +67,7 @@ public class SlowConnectionTest extends TestCase {
     }
 
     class MockBroker extends Thread {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3542
         ServerSocket ss = null;
         public MockBroker() {
             super("MockBroker");

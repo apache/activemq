@@ -52,6 +52,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
     }
 
     public SecureSocketConnectorFactory(SslContextFactory contextFactory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         this.contextFactory = contextFactory;
     }
 
@@ -67,6 +68,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
 
         SslContextFactory factory;
         if (contextFactory == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
             factory = new SslContextFactory.Server();
             if (context != null) {
                 // Should not be using this method since it does not use all of the values
@@ -92,6 +94,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
                     factory.setSecureRandomAlgorithm(secureRandomCertficateAlgorithm);
                 }
                 if (keyCertificateAlgorithm != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7249
                     factory.setKeyManagerFactoryAlgorithm(keyCertificateAlgorithm);
                 }
                 if (trustCertificateAlgorithm != null) {
@@ -117,6 +120,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
         if ("KRB".equals(auth) || "BOTH".equals(auth)
             && Server.getVersion().startsWith("8")) {
             //return new Krb5AndCertsSslSocketConnector(factory, auth);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
             return null;
         } else {
             ServerConnector connector = new ServerConnector(server, factory);
@@ -214,6 +218,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
     }
 
     public boolean isWantClientAuth() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4298
         return wantClientAuth;
     }
 

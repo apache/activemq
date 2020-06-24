@@ -143,6 +143,7 @@ public class AMQ4351Test extends BrokerTestSupport {
         final AtomicLong size = new AtomicLong();
         final AtomicBoolean done = new AtomicBoolean();
         CountDownLatch doneLatch = new CountDownLatch(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4389
         CountDownLatch started;
         CountDownLatch finished;
 
@@ -159,6 +160,7 @@ public class AMQ4351Test extends BrokerTestSupport {
         }
 
         public void stopAsync() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4389
             finished.countDown();
             done.set(true);
         }
@@ -177,6 +179,7 @@ public class AMQ4351Test extends BrokerTestSupport {
                 try {
                     Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
                     MessageConsumer consumer = session.createDurableSubscriber(destination, name, null, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4389
                     started.countDown();
                     while( !done.get() ) {
                         Message msg = consumer.receive(100);
@@ -202,6 +205,7 @@ public class AMQ4351Test extends BrokerTestSupport {
     public void testAMQ4351() throws InterruptedException, JMSException {
         LOG.info("Start test.");
         int subs = 100;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4389
         CountDownLatch startedLatch = new CountDownLatch(subs - 1);
         CountDownLatch shutdownLatch = new CountDownLatch(subs - 4);
 
@@ -232,6 +236,7 @@ public class AMQ4351Test extends BrokerTestSupport {
                 client.stopAsync();
             }
             shutdownLatch.await(10, TimeUnit.SECONDS);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4389
 
             // Start producing messages for 10 minutes, at high rate
             LOG.info("Starting mass message producer...");

@@ -35,6 +35,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
         "", 
         "Stop Options:",
         "    --jmxurl <url>             Set the JMX URL to connect to.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-2975
         "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",            
         "    --jmxuser <user>           Set the JMX user used for authenticating.",
         "    --jmxpassword <password>   Set the JMX password used for authenticating.",
@@ -70,6 +71,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
      */
     protected void runTask(List brokerNames) throws Exception {
         Collection mbeans;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
 
         // Stop all brokers
         if (isStopAllBrokers) {
@@ -80,6 +82,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
             mbeans = JmxMBeansUtil.getAllBrokers(createJmxConnection());
             // If there is no broker to stop
             if (mbeans.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printInfo("There are no brokers to stop.");
                 return;
 
@@ -102,6 +105,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
                 brokerName = (String) brokerNames.remove(0);
                 Collection matchedBrokers = JmxMBeansUtil.getBrokersByName(createJmxConnection(), brokerName);
                 if (matchedBrokers.isEmpty()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                     context.printInfo(brokerName + " did not match any running brokers.");
                 } else {
                     mbeans.addAll(matchedBrokers);
@@ -124,8 +128,10 @@ public class ShutdownCommand extends AbstractJmxCommand {
         for (Iterator i = brokerBeans.iterator(); i.hasNext();) {
             brokerObjName = ((ObjectInstance)i.next()).getObjectName();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             String brokerName = brokerObjName.getKeyProperty("brokerName");
             context.print("Stopping broker: " + brokerName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
 
             try {
                 jmxConnection.invoke(brokerObjName, "terminateJVM", new Object[] {
@@ -133,6 +139,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
                 }, new String[] {
                     "int"
                 });
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.print("Succesfully stopped broker: " + brokerName);
             } catch (Exception e) {
                 // TODO: Check exceptions throwned
@@ -165,6 +172,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         context.printHelp(helpFile);
     }
 

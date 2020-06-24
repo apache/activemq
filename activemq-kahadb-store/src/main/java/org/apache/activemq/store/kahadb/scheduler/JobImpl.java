@@ -26,6 +26,7 @@ public class JobImpl implements Job {
     private final byte[] payload;
 
     protected JobImpl(JobLocation location, ByteSequence bs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         this.jobLocation = location;
         this.payload = new byte[bs.getLength()];
         System.arraycopy(bs.getData(), bs.getOffset(), this.payload, 0, bs.getLength());
@@ -38,11 +39,13 @@ public class JobImpl implements Job {
 
     @Override
     public byte[] getPayload() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         return this.payload;
     }
 
     @Override
     public long getPeriod() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-451
         return this.jobLocation.getPeriod();
     }
 
@@ -78,6 +81,7 @@ public class JobImpl implements Job {
 
     @Override
     public int getExecutionCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         return this.jobLocation.getRescheduledCount();
     }
 

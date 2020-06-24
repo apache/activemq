@@ -35,6 +35,7 @@ public class TwoBrokerQueueSendReceiveTest  extends TwoBrokerTopicSendReceiveTes
     }
 
     public void testReceiveOnXConsumersNoLeak() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3716
         consumer.close();
         sendMessages();
         for (int i=0; i<data.length; i++) {
@@ -51,6 +52,7 @@ public class TwoBrokerQueueSendReceiveTest  extends TwoBrokerTopicSendReceiveTes
             @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("local subs map size = " + bridge.getLocalSubscriptionMap().size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4148
                 return 0 == bridge.getLocalSubscriptionMap().size();
             }
         }));

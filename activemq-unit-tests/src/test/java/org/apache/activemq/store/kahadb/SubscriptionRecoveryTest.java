@@ -76,6 +76,7 @@ public class SubscriptionRecoveryTest {
         File dataFile=new File("KahaDB");
         pa.setDirectory(dataFile);
         pa.setJournalMaxFileLength(10*1024);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         pa.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
         pa.setCheckpointInterval(TimeUnit.SECONDS.toMillis(5));
         pa.setCleanupInterval(TimeUnit.SECONDS.toMillis(5));

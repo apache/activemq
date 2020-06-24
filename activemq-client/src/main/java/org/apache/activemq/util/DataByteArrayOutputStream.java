@@ -203,6 +203,7 @@ public final class DataByteArrayOutputStream extends OutputStream implements Dat
     }
 
     public void writeUTF(String text) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6651
         long encodedsize = MarshallingSupport.countUTFBytes(text);
         if (encodedsize > 65535) {
             throw new UTFDataFormatException("encoded string too long: " + encodedsize + " bytes");

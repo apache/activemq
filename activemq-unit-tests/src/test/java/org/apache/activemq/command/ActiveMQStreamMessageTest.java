@@ -344,6 +344,7 @@ public class ActiveMQStreamMessageTest {
             msg.reset();
             assertTrue(msg.readLong() == test);
             msg.reset();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
             assertTrue(msg.readString().equals(Long.valueOf(test).toString()));
             msg.reset();
             try {
@@ -393,6 +394,7 @@ public class ActiveMQStreamMessageTest {
                 fail("Should have thrown exception");
             } catch (MessageFormatException mfe) {
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1965
             msg = new ActiveMQStreamMessage();
             msg.writeObject(new Long("1"));
             // reset so it's readable now
@@ -590,11 +592,13 @@ public class ActiveMQStreamMessageTest {
 
     @Test
     public void testReadBigString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-942
         ActiveMQStreamMessage msg = new ActiveMQStreamMessage();
         try {
             // Test with a 1Meg String
             StringBuffer bigSB = new StringBuffer(1024 * 1024);
             for (int i = 0; i < 1024 * 1024; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6809
                 bigSB.append('a' + i % 26);
             }
             String bigString = bigSB.toString();
@@ -743,6 +747,7 @@ public class ActiveMQStreamMessageTest {
     public void testClearBody() throws JMSException {
         ActiveMQStreamMessage streamMessage = new ActiveMQStreamMessage();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1964
             streamMessage.writeObject(new Long(2));
             streamMessage.clearBody();
             assertFalse(streamMessage.isReadOnlyBody());
@@ -963,6 +968,7 @@ public class ActiveMQStreamMessageTest {
 
     @Test
     public void testWriteObject() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1964
         try {
             ActiveMQStreamMessage message = new ActiveMQStreamMessage();
             message.clearBody();
@@ -983,7 +989,9 @@ public class ActiveMQStreamMessageTest {
             message.clearBody();
             message.writeObject(new Object());
             fail("should throw an exception");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6809
         } catch(MessageFormatException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6809
         } catch(Exception e) {
             fail(e.getMessage());
         }

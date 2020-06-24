@@ -57,10 +57,12 @@ public class TransportServerFilter implements TransportServer {
     }
 
     public boolean isSslServer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         return next.isSslServer();
     }
 
     public boolean isAllowLinkStealing() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         return next.isAllowLinkStealing();
     }
 }

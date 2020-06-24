@@ -134,6 +134,7 @@ public class TransportFilter implements TransportListener, Transport {
 
     @Override
     public String getRemoteAddress() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-753
         return next.getRemoteAddress();
     }
 
@@ -148,6 +149,7 @@ public class TransportFilter implements TransportListener, Transport {
 
     @Override
     public boolean isDisposed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         return next.isDisposed();
     }
 
@@ -163,6 +165,7 @@ public class TransportFilter implements TransportListener, Transport {
 
     @Override
     public int getReceiveCounter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         return next.getReceiveCounter();
     }
 
@@ -183,6 +186,7 @@ public class TransportFilter implements TransportListener, Transport {
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return next.getPeerCertificates();
     }
 

@@ -49,6 +49,7 @@ public final class IOExceptionSupport {
     }
 
     public static IOException createFrameSizeException(int size, long maxSize) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6228
         return new IOException("Frame size of " + toHumanReadableSizeString(size) +
             " larger than max allowed " + toHumanReadableSizeString(maxSize));
     }

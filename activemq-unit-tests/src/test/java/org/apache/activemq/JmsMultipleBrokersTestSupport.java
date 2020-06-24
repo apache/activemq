@@ -93,6 +93,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         BrokerService localBroker = brokers.get(localBrokerName).broker;
         BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3632
         return bridgeBrokers(localBroker, remoteBroker, dynamicOnly, 1, true, false);
     }
 
@@ -100,6 +101,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         BrokerService localBroker = brokers.get(localBrokerName).broker;
         BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2927
         return bridgeBrokers(localBroker, remoteBroker, dynamicOnly, networkTTL, conduit, false);
     }
 
@@ -116,9 +118,13 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
                 uri = "static:(failover:(" + remoteURI + "))";
             }
             NetworkConnector connector = new DiscoveryNetworkConnector(new URI(uri));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3694
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
             connector.setName("to-" + remoteBroker.getBrokerName());
             connector.setDynamicOnly(dynamicOnly);
             connector.setNetworkTTL(networkTTL);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
+//IC see: https://issues.apache.org/jira/browse/AMQ-1509
             connector.setConduitSubscriptions(conduit);
             localBroker.addNetworkConnector(connector);
             maxSetupTime = 2000;
@@ -131,6 +137,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
     // This will interconnect all brokers using multicast
     protected void bridgeAllBrokers() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2198
         bridgeAllBrokers("default", 1, false, false);
     }
     
@@ -151,9 +158,11 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
             TransportConnector transport = transportConnectors.get(0);
             transport.setDiscoveryUri(new URI("multicast://default?group=" + groupName));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2198
             NetworkConnector nc = broker.addNetworkConnector("multicast://default?group=" + groupName);
             nc.setNetworkTTL(ttl);
             nc.setSuppressDuplicateQueueSubscriptions(suppressduplicateQueueSubs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2198
             nc.setDecreaseNetworkConsumerPriority(decreasePriority);
         }
 
@@ -165,6 +174,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     protected void waitForBridgeFormation(final int min) throws Exception {
         for (BrokerItem brokerItem : brokers.values()) {
             final BrokerService broker = brokerItem.broker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3195
             waitForBridgeFormation(broker, min, 0);
         }
     }
@@ -180,6 +190,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             result = Wait.waitFor(new Wait.Condition() {
                 public boolean isSatisified() throws Exception {
                     int activeCount = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
                     for (NetworkBridge bridge : broker.getNetworkConnectors().get(bridgeIndex).activeBridges()) {
                         if (bridge.getRemoteBrokerName() != null) {
                             LOG.info("found bridge[" + bridge + "] to " + bridge.getRemoteBrokerName() + " on broker :" + broker.getBrokerName());
@@ -193,6 +204,8 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected void waitForMinTopicRegionConsumerCount(final String name, final int count) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
         final BrokerService broker = brokers.get(name).broker;
         final TopicRegion topicRegion =  (TopicRegion) ((RegionBroker) broker.getRegionBroker()).getTopicRegion();
         assertTrue("found expected consumers in topic region of" + name, Wait.waitFor(new Wait.Condition() {
@@ -267,6 +280,8 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
     
     protected void waitForBridgeFormation() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
         waitForBridgeFormation(1);
     }
 
@@ -275,6 +290,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = i.next().broker;
             broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3197
             broker.waitUntilStarted();
         }
 
@@ -291,6 +307,8 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
     protected BrokerService createBroker(URI brokerUri) throws Exception {
         BrokerService broker = BrokerFactory.createBroker(brokerUri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
         configureBroker(broker);
         brokers.put(broker.getBrokerName(), new BrokerItem(broker));
 
@@ -327,6 +345,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected MessageConsumer createSyncConsumer(String brokerName, Destination dest) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3020
         BrokerItem brokerItem = brokers.get(brokerName);
         if (brokerItem != null) {
             Connection con = brokerItem.createConnection();
@@ -339,6 +358,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected MessageConsumer createConsumer(String brokerName, Destination dest) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
         return createConsumer(brokerName, dest, null, null);
     }
 
@@ -359,6 +379,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
     
     protected QueueBrowser createBrowser(String brokerName, Destination dest) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2529
         BrokerItem brokerItem = brokers.get(brokerName);
         if (brokerItem != null) {
             return brokerItem.createBrowser(dest);
@@ -423,6 +444,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
 
     protected void sendMessages(String brokerName, Destination destination, int count) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
     	sendMessages(brokerName, destination, count, null);
     }
     
@@ -438,12 +460,15 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
         for (int i = 0; i < count; i++) {
             TextMessage msg = createTextMessage(sess, conn.getClientID() + ": Message-" + i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
             if (properties != null) {
             	for (String propertyName : properties.keySet()) {
             		msg.setObjectProperty(propertyName, properties.get(propertyName));
             	}
             }
             producer.send(msg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1521
+//IC see: https://issues.apache.org/jira/browse/AMQ-1973
             onSend(i, msg);
         }
 
@@ -516,6 +541,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
     public String buildFailoverUriToAllBrokers() {
         StringBuilder uriBuilder = new StringBuilder("failover:(");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
 
         int index = 1, size = brokers.size();
 
@@ -545,6 +571,8 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             this.broker = broker;
 
             factory = new ActiveMQConnectionFactory(broker.getVmConnectorURI());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
             factory.setConnectionIDPrefix(broker.getBrokerName());
             consumers = Collections.synchronizedMap(new HashMap<MessageConsumer, MessageIdList>());
             connections = Collections.synchronizedList(new ArrayList<Connection>());
@@ -553,6 +581,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }
 
         public String getConnectionUri(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-5672
             return broker.getVmConnectorURI().toString();
         }
 
@@ -565,6 +594,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }
 
         public MessageConsumer createConsumer(Destination dest) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2104
             return createConsumer(dest, null, null);
         }
         
@@ -594,6 +624,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }
         
         public QueueBrowser createBrowser(Destination dest) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2529
             Connection c = createConnection();
             c.start();
             Session s = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -649,6 +680,8 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             }
 
             broker.stop();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3077
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
             broker.waitUntilStopped();
             consumers.clear();
 

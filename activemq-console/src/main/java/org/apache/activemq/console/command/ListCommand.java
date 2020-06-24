@@ -30,6 +30,7 @@ public class ListCommand extends AbstractJmxCommand {
         "",
         "List Options:",
         "    --jmxurl <url>             Set the JMX URL to connect to.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-2975
         "    --pid <pid>                Set the pid to connect to (only on Sun JVM).",            
         "    --jmxuser <user>           Set the JMX user used for authenticating.",
         "    --jmxpassword <password>   Set the JMX password used for authenticating.",
@@ -55,7 +56,9 @@ public class ListCommand extends AbstractJmxCommand {
      * @throws Exception
      */
     protected void runTask(List tokens) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5956
         Set<String> propsView = new HashSet<String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         propsView.add("brokerName");
         context.printMBean(JmxMBeansUtil.filterMBeansView(JmxMBeansUtil.getAllBrokers(createJmxConnection()), propsView));
     }
@@ -64,6 +67,7 @@ public class ListCommand extends AbstractJmxCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         context.printHelp(helpFile);
     }
 

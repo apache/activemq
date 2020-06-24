@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.ft;
 
 public class QueueMasterSlaveTestUsingSharedFileTest extends
+//IC see: https://issues.apache.org/jira/browse/AMQ-4165
         QueueMasterSlaveTestSupport {
     
     protected String getSlaveXml() {

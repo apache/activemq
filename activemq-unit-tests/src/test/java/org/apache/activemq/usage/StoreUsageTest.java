@@ -37,6 +37,7 @@ public class StoreUsageTest extends EmbeddedBrokerTestSupport {
     @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7132
         broker.getSystemUsage().getStoreUsage().setLimit(38 * 1024);
         broker.deleteAllMessages();
         return broker;
@@ -51,10 +52,13 @@ public class StoreUsageTest extends EmbeddedBrokerTestSupport {
         Connection conn = factory.createConnection();
         conn.start();
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
         final Destination dest = sess.createQueue(this.getClass().getName());
         final ProducerThread producer = new ProducerThread(sess, dest);
         producer.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6547
+//IC see: https://issues.apache.org/jira/browse/AMQ-3143
         assertTrue("some messages sent", Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
                 BaseDestination baseDestination = (BaseDestination) broker.getRegionBroker().getDestinationMap().get(dest);

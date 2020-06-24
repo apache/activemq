@@ -58,6 +58,7 @@ public class AutoNIOTransport extends NIOTransport {
     protected int readFromBuffer() throws IOException {
         int readSize = 0;
         if (!doneInitBuffer) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             if (initBuffer == null || initBuffer.readSize < 8) {
                 throw new IOException("Protocol type could not be determined.");
             }

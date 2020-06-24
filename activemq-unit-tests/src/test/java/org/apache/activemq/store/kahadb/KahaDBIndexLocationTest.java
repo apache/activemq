@@ -96,6 +96,7 @@ public class KahaDBIndexLocationTest {
         persistenceAdapter.setDirectory(kahaDataDir);
         persistenceAdapter.setIndexDirectory(kahaIndexDir);
         persistenceAdapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
 
         broker.setDataDirectoryFile(testDataDir);
         broker.setUseJmx(false);
@@ -137,6 +138,7 @@ public class KahaDBIndexLocationTest {
 
         // Should contain the initial log for the journal and the lock.
         assertNotNull(journal);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
         assertEquals(2, journal.length);
     }
 

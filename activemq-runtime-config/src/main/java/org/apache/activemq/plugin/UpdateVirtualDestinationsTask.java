@@ -56,6 +56,7 @@ public abstract class UpdateVirtualDestinationsTask implements Runnable {
                 // update existing interceptor
                 final VirtualDestinationInterceptor virtualDestinationInterceptor = (VirtualDestinationInterceptor) destinationInterceptor;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
                 Set<VirtualDestination> existingVirtualDests = new HashSet<>();
                 Collections.addAll(existingVirtualDests, virtualDestinationInterceptor.getVirtualDestinations());
 

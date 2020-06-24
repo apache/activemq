@@ -45,6 +45,7 @@ public class CamelEndpointLoader implements CamelContextAware {
     private CamelContext camelContext;
     private ActiveMQComponent component;
     DestinationSource source;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4574
 
     public CamelEndpointLoader() {
     }
@@ -63,6 +64,8 @@ public class CamelEndpointLoader implements CamelContextAware {
      */
     @PostConstruct
     private void postConstruct() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             afterPropertiesSet();
         } catch (Exception ex) {
@@ -76,6 +79,7 @@ public class CamelEndpointLoader implements CamelContextAware {
      * @org.apache.xbean.InitMethod
      */
     public void afterPropertiesSet() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4574
         if (source != null) {
             source.setDestinationListener(new DestinationListener() {
                 @Override
@@ -145,6 +149,7 @@ public class CamelEndpointLoader implements CamelContextAware {
         String queueUri = getQueueUri(queue);
         ActiveMQComponent jmsComponent = getComponent();
         Endpoint endpoint = new JmsQueueEndpoint(queueUri, jmsComponent, queue.getPhysicalName(), jmsComponent.getConfiguration());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2130
         camelContext.addEndpoint(queueUri, endpoint);
     }
 
@@ -156,6 +161,8 @@ public class CamelEndpointLoader implements CamelContextAware {
         String queueUri = getQueueUri(queue);
         // lur cache of endpoints so they will disappear in time
         // this feature needs a new component api - list available endpoints
+//IC see: https://issues.apache.org/jira/browse/AMQ-2130
+//IC see: https://issues.apache.org/jira/browse/AMQ-3139
         camelContext.removeEndpoints(queueUri);
     }
 
@@ -174,6 +181,7 @@ public class CamelEndpointLoader implements CamelContextAware {
         String topicUri = getTopicUri(topic);
         // lur cache of endpoints so they will disappear in time
         // this feature needs a new component api - list available endpoints
+//IC see: https://issues.apache.org/jira/browse/AMQ-3139
         camelContext.removeEndpoints(topicUri);
     }
 }

@@ -52,6 +52,7 @@ public class TcpTransportFactory extends TransportFactory {
     public TransportServer doBind(final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
 
             ServerSocketFactory serverSocketFactory = createServerSocketFactory();
             TcpTransportServer server = createTcpTransportServer(location, serverSocketFactory);
@@ -101,6 +102,7 @@ public class TcpTransportFactory extends TransportFactory {
 
         boolean useInactivityMonitor = "true".equals(getOption(options, "useInactivityMonitor", "true"));
         if (useInactivityMonitor && isUseInactivityMonitor(transport)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
             transport = createInactivityMonitor(transport, format);
             IntrospectionSupport.setProperties(transport, options);
         }
@@ -110,6 +112,8 @@ public class TcpTransportFactory extends TransportFactory {
             transport = new WireFormatNegotiator(transport, (OpenWireFormat)format, tcpTransport.getMinmumWireFormatVersion());
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2308
+//IC see: https://issues.apache.org/jira/browse/AMQ-1993
         return super.compositeConfigure(transport, format, options);
     }
 
@@ -118,6 +122,7 @@ public class TcpTransportFactory extends TransportFactory {
      * @return true if the inactivity monitor should be used on the transport
      */
     protected boolean isUseInactivityMonitor(Transport transport) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1134
         return true;
     }
 
@@ -144,6 +149,7 @@ public class TcpTransportFactory extends TransportFactory {
     }
 
     public TcpTransport createTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         throw new IOException("createTransport() method not implemented!");
     }
 
@@ -179,6 +185,7 @@ public class TcpTransportFactory extends TransportFactory {
     }
 
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         return new InactivityMonitor(transport, format);
     }
 }

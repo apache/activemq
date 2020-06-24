@@ -80,6 +80,7 @@ public class AMQ3120Test {
         adapter.setCheckpointInterval(500);
         adapter.setCleanupInterval(500);
         adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
 
         if (!deleteAllOnStart) {
             adapter.setForceRecoverIndex(true);
@@ -113,10 +114,12 @@ public class AMQ3120Test {
 
     @Test
     public void testCleanupOfFiles() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3120
         final int messageCount = 500;
         startBroker(true);
         int fileCount = getFileCount(kahaDbDir);
         assertEquals(4, fileCount);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5603
 
         Connection connection = new ActiveMQConnectionFactory(
                 broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
@@ -127,9 +130,11 @@ public class AMQ3120Test {
         ProducerThread producer = new ProducerThread(producerSess, destination) {
             @Override
             protected Message createMessage(int i) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5558
                 return session.createTextMessage(payload + "::" + i);
             }
         };
+//IC see: https://issues.apache.org/jira/browse/AMQ-3120
         producer.setSleep(650);
         producer.setMessageCount(messageCount);
         ConsumerThread consumer = new ConsumerThread(consumerSess, destination);
@@ -143,6 +148,7 @@ public class AMQ3120Test {
         consumer.join();
 
         assertEquals("consumer got all produced messages", producer.getMessageCount(), consumer.getReceived());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3120
 
         broker.stop();
         broker.waitUntilStopped();

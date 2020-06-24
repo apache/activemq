@@ -251,6 +251,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         assertEquals(1, selectingConsumerMessages.getMessageCount());
 
         // assert broker A stats
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
         waitForMessagesToBeConsumed(brokerA, "Consumer.B.VirtualTopic.tempTopic", false, 2, 1, 5000);
         assertEquals(1, brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
                 .getConsumers().size());
@@ -361,8 +362,10 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         selectingConsumerMessages = getConsumerMessages("BrokerB", selectingConsumer);
         selectingConsumerMessages.waitForMessagesToArrive(1, 1000L);
         assertEquals(0, selectingConsumerMessages.getMessageCount());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
 
         // assert broker A stats
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
         waitForMessagesToBeConsumed(brokerA, "Consumer.B.VirtualTopic.tempTopic", false, 20, 20, 5000);
         assertEquals(20, brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
                 .getDestinationStatistics().getEnqueues().getCount());
@@ -399,6 +402,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
 
         // assert broker A stats
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
         waitForMessagesToBeConsumed(brokerA, "Consumer.B.VirtualTopic.tempTopic", false, 20, 20, 5000);
         assertEquals(30, brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
                 .getDestinationStatistics().getEnqueues().getCount());
@@ -408,6 +412,9 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
                 .getDestinationStatistics().getMessages().getCount());
 
         // assert broker B stats
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
         waitForMessagesToBeConsumed(brokerB, "Consumer.B.VirtualTopic.tempTopic", false, 20, 20, 5000);
         assertEquals(20, brokerB.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
                 .getDestinationStatistics().getEnqueues().getCount());
@@ -432,6 +439,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         }, 500);
 
         // assert broker A stats
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
         waitForMessagesToBeConsumed(brokerA, "Consumer.B.VirtualTopic.tempTopic", false, 30, 30, 5000);
         assertEquals(30, brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
                 .getDestinationStatistics().getEnqueues().getCount());
@@ -456,6 +464,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
             throws MalformedObjectNameException {
         ObjectName objectName = BrokerMBeanSupport
                 .createVirtualDestinationSelectorCacheName(broker.getBrokerObjectName(), "plugin", "virtualDestinationCache");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
         return (VirtualDestinationSelectorCacheViewMBean) broker.getManagementContext()
                 .newProxyInstance(objectName, VirtualDestinationSelectorCacheViewMBean.class, true);
     }
@@ -580,6 +589,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
     public void testSelectorNoMatchInCache() throws Exception {
         clearSelectorCacheFiles();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5933
 
         // have the cache ignoreWildcardSelectors
         final BrokerService brokerA = brokers.get("BrokerA").broker;
@@ -596,6 +606,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
     }
 
     private HashMap<String, Object> asMap(String key, Object value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
         HashMap<String, Object> rc = new HashMap<String, Object>(1);
         rc.put(key, value);
         return rc;
@@ -643,6 +654,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         virtualTopic.setSelectorAware(true);
         VirtualDestinationInterceptor interceptor = new VirtualDestinationInterceptor();
         interceptor.setVirtualDestinations(new VirtualDestination[]{virtualTopic});
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
         broker.setDestinationInterceptors(new DestinationInterceptor[]{interceptor});
         configurePersistenceAdapter(broker);
 
@@ -676,6 +688,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
      * @throws Exception
      */
     private void waitForMessagesToBeConsumed(final BrokerService broker, final String destinationName,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5791
                                              final boolean topic, final int numEnqueueMsgs, final int numDequeueMsgs, int waitTime) throws Exception {
         final ActiveMQDestination destination;
         if (topic) {

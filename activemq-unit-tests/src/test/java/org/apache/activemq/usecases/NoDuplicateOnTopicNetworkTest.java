@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory
             .getLogger(NoDuplicateOnTopicNetworkTest.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3177
 
     private static final String MULTICAST_DEFAULT = "multicast://default";
     private static final String BROKER_1 = "tcp://localhost:61626";
@@ -73,6 +74,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
     public boolean suppressDuplicateTopicSubs = false;
     public DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
     public boolean durableSub = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
     AtomicInteger idCounter = new AtomicInteger(0);
     
     private boolean dynamicOnly = false;
@@ -99,6 +101,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
     }
     
     public static Test suite() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2753
         return suite(NoDuplicateOnTopicNetworkTest.class);
     }
     
@@ -122,6 +125,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
     private BrokerService createAndStartBroker(String name, String addr)
             throws Exception {
         BrokerService broker = new BrokerService();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setBrokerName(name);
         broker.addConnector(addr).setDiscoveryUri(new URI(MULTICAST_DEFAULT));
@@ -132,7 +136,9 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
         networkConnector.setDecreaseNetworkConsumerPriority(true);
         networkConnector.setDynamicOnly(dynamicOnly);
         networkConnector.setNetworkTTL(ttl);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2753
         networkConnector.setSuppressDuplicateTopicSubscriptions(suppressDuplicateTopicSubs);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3558
         networkConnector.setConsumerPriorityBase(BASE_PRIORITY);
         networkConnector.addStaticallyIncludedDestination(new ActiveMQTopic("BeStaticallyIncluded"));
         
@@ -158,7 +164,9 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
     }
 
     public void initCombosForTestProducerConsumerTopic() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
         this.addCombinationValues("suppressDuplicateTopicSubs", new Object[]{Boolean.TRUE, Boolean.FALSE});
+//IC see: https://issues.apache.org/jira/browse/AMQ-2753
         this.addCombinationValues("dispatchPolicy", new Object[]{new PriorityNetworkDispatchPolicy(), new SimpleDispatchPolicy()});
         this.addCombinationValues("durableSub", new Object[]{Boolean.TRUE, Boolean.FALSE});
     }
@@ -184,6 +192,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
         Thread consumerThread = new Thread(new Runnable() {
             public void run() {
                 consumer.setBrokerURL(BROKER_2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2753
                 consumer.setTopicName(TOPIC_NAME);
                 try {
                     consumer.consumer();
@@ -198,12 +207,15 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
         consumerThread.start();
         LOG.info("Started Consumer");
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-2753
         assertTrue("consumer started eventually", consumerStarted.await(10, TimeUnit.SECONDS));
         
         // ensure subscription has percolated though the network
         Thread.sleep(2000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2030
 
         // verify network consumer priority
+//IC see: https://issues.apache.org/jira/browse/AMQ-3558
         final RegionBroker regionBroker = (RegionBroker)broker1.getRegionBroker();
         assertTrue("Found network destination with priority as expected", Wait.waitFor(new Wait.Condition() {
             @Override
@@ -241,6 +253,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
             }
             map.put(msg, msg);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
         consumer.unSubscribe();
         if (suppressDuplicateTopicSubs || dispatchPolicy instanceof PriorityNetworkDispatchPolicy) {
             assertEquals("no duplicates", 0, duplicateCount);
@@ -274,6 +287,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
         }
         
         public List<String> getMessageStrings() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2753
             synchronized(receivedStrings) {
                 return new ArrayList<String>(receivedStrings);
             }
@@ -299,6 +313,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
                     brokerURL);
             connection = factory.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
             connection.setClientID("ID" + idCounter.incrementAndGet());
         }
 
@@ -312,6 +327,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
         }
 
         private void createConsumer() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
             if (durableSub) {
                 consumer = session.createDurableSubscriber(topic, durableID);
             } else {
@@ -363,6 +379,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
         }
 
         public void unSubscribe() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3353
             consumer.close();
             if (durableSub) {
                 session.unsubscribe(durableID);

@@ -48,6 +48,7 @@ public class DestinationListenerTest extends EmbeddedBrokerTestSupport implement
     public void testDestiationSourceHasInitialDestinations() throws Exception {
         Thread.sleep(1000);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1199
         DestinationSource destinationSource = connection.getDestinationSource();
         Set<ActiveMQQueue> queues = destinationSource.getQueues();
         Set<ActiveMQTopic> topics = destinationSource.getTopics();
@@ -107,6 +108,7 @@ public class DestinationListenerTest extends EmbeddedBrokerTestSupport implement
 
         connection = (ActiveMQConnection) createConnection();
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1199
         connection.getDestinationSource().setDestinationListener(this);
     }
 

@@ -43,6 +43,7 @@ public class BitArrayBin implements Serializable {
         maxNumberOfArrays = Math.max(maxNumberOfArrays, 1);
         list = new LinkedList<BitArray>();
         for (int i = 0; i < maxNumberOfArrays; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1507
             list.add(null);
         }
     }
@@ -73,6 +74,7 @@ public class BitArrayBin implements Serializable {
      */
     public boolean isInOrder(long index) {
         boolean result = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         if (lastInOrderBit == -1) {
             result = true;
         } else {
@@ -115,10 +117,12 @@ public class BitArrayBin implements Serializable {
         int bin = getBin(index);
         BitArray answer = null;
         if (bin >= 0) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1742
             if (bin >= maxNumberOfArrays) {
                 int overShoot = bin - maxNumberOfArrays + 1;
                 while (overShoot > 0) {
                     list.removeFirst();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5016
                     longFirstIndex += BitArray.LONG_SIZE;
                     list.add(new BitArray());
                     overShoot--;
@@ -127,6 +131,7 @@ public class BitArrayBin implements Serializable {
                 bin = maxNumberOfArrays - 1;
             }
             answer = list.get(bin);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1507
             if (answer == null) {
                 answer = new BitArray();
                 list.set(bin, answer);
@@ -159,6 +164,7 @@ public class BitArrayBin implements Serializable {
      */
     private int getOffset(long index) {
         int answer = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5016
         if (longFirstIndex >= 0) {
             answer = (int)((index - longFirstIndex) - (BitArray.LONG_SIZE * getBin(index)));
         }
@@ -167,7 +173,11 @@ public class BitArrayBin implements Serializable {
 
     public long getLastSetIndex() {
         long result = -1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2800
+//IC see: https://issues.apache.org/jira/browse/AMQ-2542
+//IC see: https://issues.apache.org/jira/browse/AMQ-2803
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5016
         if (longFirstIndex >=0) {
             result = longFirstIndex;
             BitArray last = null;

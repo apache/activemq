@@ -52,6 +52,7 @@ public class MessageDatabaseSizeTest {
 
     @Parameters(name = "subStatsEnabled={0}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6642
         return Arrays.asList(new Object[][] {
                 // Subscription stats on
                 {true},
@@ -70,6 +71,7 @@ public class MessageDatabaseSizeTest {
     private boolean subStatsEnabled;
 
     public MessageDatabaseSizeTest(boolean subStatsEnabled) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6642
         super();
         this.subStatsEnabled = subStatsEnabled;
     }
@@ -82,6 +84,7 @@ public class MessageDatabaseSizeTest {
         broker.setUseJmx(true);
         broker.setDataDirectory(dataDir.getRoot().getAbsolutePath());
         adapter = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6642
         adapter.setEnableSubscriptionStatistics(subStatsEnabled);
         broker.start();
         LOG.info("Starting broker..");
@@ -129,12 +132,15 @@ public class MessageDatabaseSizeTest {
 
     @Test
     public void testUpdateMessageSameLocationDifferentSize() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6642
         final KahaDBStore store = adapter.getStore();
         MessageId messageId = new MessageId("111:222:333");
         ActiveMQTextMessage textMessage = getMessage(new MessageId("111:222:333"));
 
         //Add a single message and update once so we can compare the size consistently
         MessageStore messageStore = store.createQueueMessageStore(destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7308
+//IC see: https://issues.apache.org/jira/browse/AMQ-7308
         messageStore.start();
         messageStore.addMessage(broker.getAdminConnectionContext(), textMessage);
         textMessage.setText("new size of message");

@@ -79,6 +79,9 @@ public abstract class JmsConnector implements Service {
     private String name;
 
     private static LRUCache<Destination, DestinationBridge> createLRUCache() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
         return new LRUCache<Destination, DestinationBridge>() {
             private static final long serialVersionUID = -7446792754185879286L;
 
@@ -88,6 +91,7 @@ public abstract class JmsConnector implements Service {
                     Iterator<Map.Entry<Destination, DestinationBridge>> iter = entrySet().iterator();
                     Map.Entry<Destination, DestinationBridge> lru = iter.next();
                     remove(lru.getKey());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5262
                     DestinationBridge bridge = lru.getValue();
                     try {
                         bridge.stop();
@@ -119,8 +123,12 @@ public abstract class JmsConnector implements Service {
             replyToBridges.setMaxCacheSize(getReplyToDestinationCacheSize());
 
             connectionService = createExecutor();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5859
 
             // Subclasses can override this to customize their own it.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
             result = doConnectorInit();
         }
         return result;
@@ -171,9 +179,11 @@ public abstract class JmsConnector implements Service {
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5859
             ThreadPoolUtils.shutdown(connectionService);
             connectionService = null;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5262
             if (foreignConnection.get() != null) {
                 try {
                     foreignConnection.get().close();
@@ -188,6 +198,9 @@ public abstract class JmsConnector implements Service {
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
             for (DestinationBridge bridge : inboundBridges) {
                 bridge.stop();
             }
@@ -199,6 +212,7 @@ public abstract class JmsConnector implements Service {
     }
 
     public void clearBridges() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1621
         inboundBridges.clear();
         outboundBridges.clear();
         replyToBridges.clear();
@@ -217,6 +231,9 @@ public abstract class JmsConnector implements Service {
     }
 
     public Connection getLocalConnection() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
         return this.localConnection.get();
     }
 
@@ -354,6 +371,7 @@ public abstract class JmsConnector implements Service {
      * @return the outboundClientId
      */
     public String getOutboundClientId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1456
         return outboundClientId;
     }
 
@@ -382,6 +400,9 @@ public abstract class JmsConnector implements Service {
      * @return the currently configured reconnection policy.
      */
     public ReconnectionPolicy getReconnectionPolicy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
         return this.policy;
     }
 
@@ -396,6 +417,7 @@ public abstract class JmsConnector implements Service {
      * @return the preferJndiDestinationLookup
      */
     public boolean isPreferJndiDestinationLookup() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3298
         return preferJndiDestinationLookup;
     }
 
@@ -431,6 +453,7 @@ public abstract class JmsConnector implements Service {
     }
 
     protected void removeInboundBridge(DestinationBridge bridge) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1621
         inboundBridges.remove(bridge);
     }
 
@@ -450,6 +473,9 @@ public abstract class JmsConnector implements Service {
     }
 
     private static synchronized int getNextId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3137
+//IC see: https://issues.apache.org/jira/browse/AMQ-2455
+//IC see: https://issues.apache.org/jira/browse/AMQ-3635
         return nextId++;
     }
 
@@ -499,6 +525,7 @@ public abstract class JmsConnector implements Service {
         replyToBridges.clear();
 
         if (this.foreignConnection.compareAndSet(connection, null)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5262
 
             // Stop the inbound bridges when the foreign connection is dropped since
             // the bridge has no consumer and needs to be restarted once a new connection
@@ -524,6 +551,7 @@ public abstract class JmsConnector implements Service {
             });
 
         } else if (this.localConnection.compareAndSet(connection, null)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5262
 
             // Stop the outbound bridges when the local connection is dropped since
             // the bridge has no consumer and needs to be restarted once a new connection
@@ -551,6 +579,8 @@ public abstract class JmsConnector implements Service {
     }
 
     private void scheduleAsyncLocalConnectionReconnect() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5859
+//IC see: https://issues.apache.org/jira/browse/AMQ-5859
         this.connectionService.execute(new Runnable() {
             @Override
             public void run() {
@@ -564,6 +594,8 @@ public abstract class JmsConnector implements Service {
     }
 
     private void scheduleAsyncForeignConnectionReconnect() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5859
+//IC see: https://issues.apache.org/jira/browse/AMQ-5859
         this.connectionService.execute(new Runnable() {
             @Override
             public void run() {
@@ -578,6 +610,7 @@ public abstract class JmsConnector implements Service {
 
     private void doInitializeConnection(boolean local) throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5859
         ThreadPoolExecutor connectionService = this.connectionService;
         int attempt = 0;
 
@@ -590,9 +623,11 @@ public abstract class JmsConnector implements Service {
                                                          policy.getMaxReconnectAttempts();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5859
         do {
             if (attempt > 0) {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6273
                     long nextDelay = policy.getNextDelay(attempt);
                     LOG.debug("Bridge reconnect attempt {} waiting {}ms before next attempt.", attempt, nextDelay);
                     Thread.sleep(nextDelay);
@@ -600,6 +635,7 @@ public abstract class JmsConnector implements Service {
                 }
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5859
             if (connectionService.isTerminating()) {
                 return;
             }
@@ -627,6 +663,7 @@ public abstract class JmsConnector implements Service {
                 return;
             } catch(Exception e) {
                 LOG.debug("Failed to establish initial {} connection for JmsConnector [{}]", new Object[]{ (local ? "local" : "foreign"), attempt }, e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6273
             } finally {
                 attempt++;
             }

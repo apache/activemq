@@ -42,6 +42,7 @@ public class MulticastDiscoveryOnFaultyNetworkTest extends JmsMultipleBrokersTes
 
     public void initCombosForTestSendOnAFaultyTransport() {
         addCombinationValues( "useDuplexNetworkBridge", new Object[]{ Boolean.TRUE , Boolean.FALSE } );
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
         addCombinationValues( "useStaticDiscovery", new Object[]{ Boolean.TRUE , Boolean.FALSE } );
     }
     
@@ -108,6 +109,7 @@ public class MulticastDiscoveryOnFaultyNetworkTest extends JmsMultipleBrokersTes
 
     @Override
     protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4160
         String networkDisoveryUrlString = useStaticDiscovery ?
                 "static:(" + remoteBroker.getTransportConnectors().get(0).getPublishableConnectString() + ")?useExponentialBackOff=false" :
                 "multicast://default?group=TESTERIC&useLocalHost=false";

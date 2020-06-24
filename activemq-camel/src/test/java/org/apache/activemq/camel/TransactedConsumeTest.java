@@ -90,6 +90,8 @@ public class TransactedConsumeTest extends CamelSpringTestSupport {
         //AMQPersistenceAdapter amq = new AMQPersistenceAdapter();
         //amq.setDirectory(new File("target/data"));
         //brokerService.setPersistenceAdapter(amq);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2868
+//IC see: https://issues.apache.org/jira/browse/AMQ-3470
         KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter)
                 brokerService.getPersistenceAdapter();
         kahaDBPersistenceAdapter.setEnableJournalDiskSyncs(false);

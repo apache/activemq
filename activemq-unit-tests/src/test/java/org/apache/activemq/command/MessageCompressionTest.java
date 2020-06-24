@@ -82,6 +82,7 @@ public class MessageCompressionTest extends TestCase {
     public void testBytesMessageCompression() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3062
         factory.setUseCompression(true);
         sendTestBytesMessage(factory, TEXT);
         ActiveMQBytesMessage message = receiveTestBytesMessage(factory);
@@ -105,6 +106,7 @@ public class MessageCompressionTest extends TestCase {
 
     private void sendTestMessage(ActiveMQConnectionFactory factory, String message) throws JMSException {
         ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1919
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage(message));
@@ -123,6 +125,7 @@ public class MessageCompressionTest extends TestCase {
 
     private void sendTestBytesMessage(ActiveMQConnectionFactory factory, String message) throws JMSException, UnsupportedEncodingException {
         ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3062
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(queue);
         BytesMessage bytesMessage = session.createBytesMessage();
@@ -134,6 +137,7 @@ public class MessageCompressionTest extends TestCase {
     private ActiveMQBytesMessage receiveTestBytesMessage(ActiveMQConnectionFactory factory) throws JMSException, UnsupportedEncodingException {
         ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection();
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1919
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(queue);
         ActiveMQBytesMessage rc = (ActiveMQBytesMessage) consumer.receive();

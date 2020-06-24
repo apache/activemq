@@ -65,14 +65,17 @@ public class JDBCIOExceptionHandlerMockeryTest {
 
         // simulate jdbc up between hasLock and checkpoint, so hasLock fails to verify
         context.checking(new Expectations() {{
+//IC see: https://issues.apache.org/jira/browse/AMQ-6799
             allowing(brokerService).isStarted();
             will(returnValue(true));
             allowing(brokerService).isRestartAllowed();
             will(returnValue(false));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6065
             allowing(brokerService).setSystemExitOnShutdown(with(false));
             allowing(brokerService).stopAllConnectors(with(any(ServiceStopper.class)));
             allowing(brokerService).getPersistenceAdapter();
             will(returnValue(jdbcPersistenceAdapter));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6625
             allowing(jdbcPersistenceAdapter).allowIOResumption();
             allowing(jdbcPersistenceAdapter).getLocker();
             will(returnValue(locker));
@@ -90,6 +93,7 @@ public class JDBCIOExceptionHandlerMockeryTest {
 
         }});
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5174
         LeaseLockerIOExceptionHandler underTest = new LeaseLockerIOExceptionHandler();
         underTest.setBrokerService(brokerService);
 

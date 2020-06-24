@@ -29,6 +29,7 @@ public class ConnectionCleanupTest extends TestCase {
     private ActiveMQConnection connection;
 
     protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5710
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         connection = (ActiveMQConnection)factory.createConnection();
     }
@@ -50,6 +51,7 @@ public class ConnectionCleanupTest extends TestCase {
 
         try {
             connection.setClientID("test");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5710
             fail("Should have received JMSException");
         } catch (JMSException e) {
         }

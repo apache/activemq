@@ -226,9 +226,12 @@ public class PageFileTest extends TestCase {
 
         //Load a second instance on the same directory fo the page file which
         //simulates an unclean shutdown from the previous run
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
         final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
         pf2.setEnableRecoveryFile(false);
         pf2.load();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
+//IC see: https://issues.apache.org/jira/browse/AMQ-6590
         try {
             assertTrue("We have 10 free pages", Wait.waitFor(new Wait.Condition() {
                 @Override
@@ -248,6 +251,7 @@ public class PageFileTest extends TestCase {
 
     public void testAllocatedAndUnusedAreFree() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7084
         PageFile pf = new PageFile(new File("target/test-data"), getName());
         pf.delete();
         pf.load();
@@ -270,6 +274,7 @@ public class PageFileTest extends TestCase {
 
     public void testBackgroundRecoveryIsThreadSafe() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
         PageFile pf = new PageFile(new File("target/test-data"), getName());
         pf.delete();
         pf.setEnableRecoveryFile(false);
@@ -362,6 +367,7 @@ public class PageFileTest extends TestCase {
     }
 
     public void testRecoveryAfterUncleanShutdownAndZeroFreePages() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7163
         final int numberOfPages = 1000;
         final AtomicBoolean recoveryEnd = new AtomicBoolean();
 
@@ -412,6 +418,7 @@ public class PageFileTest extends TestCase {
     }
 
     public void testBackgroundWillMarkUsedPagesAsFreeInTheBeginning() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7082
         final int numberOfPages = 100000;
         final AtomicBoolean recoveryEnd = new AtomicBoolean();
 

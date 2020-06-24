@@ -41,6 +41,7 @@ public class NetworkAsyncStartTest extends JmsMultipleBrokersTestSupport {
     public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
         System.setProperty("javax.net.ssl.trustStore", TRUST_KEYSTORE);
         System.setProperty("javax.net.ssl.trustStorePassword", PASSWORD);
         System.setProperty("javax.net.ssl.trustStoreType", KEYSTORE_TYPE);
@@ -136,12 +137,15 @@ public class NetworkAsyncStartTest extends JmsMultipleBrokersTestSupport {
         BrokerService brokerB = brokers.get("BrokerB").broker;
         brokerB.addConnector(brokerBUri);
         brokerB.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3253
+//IC see: https://issues.apache.org/jira/browse/AMQ-2571
 
         assertTrue("got bridge to B", waitForBridgeFormation(brokerA, 1, 0));
         assertTrue("got bridge to B&C", waitForBridgeFormation(brokerA, 1, 1));
     }
 
     protected void testAsyncNetworkStartupWithSlowConnectionCreation(String transport) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6414
         String brokerBUri = transport + "://" + brokerBDomain;
         String brokerCUri = transport + "://" + brokerCDomain;
 

@@ -131,6 +131,7 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      */
     public void setDeliveryMode(int newDeliveryMode) throws JMSException {
         if (newDeliveryMode != DeliveryMode.PERSISTENT && newDeliveryMode != DeliveryMode.NON_PERSISTENT) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3241
             throw new javax.jms.IllegalStateException("unknown delivery mode: " + newDeliveryMode);
         }
         checkClosed();
@@ -311,6 +312,7 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      * @return the sendTimeout
      */
     public int getSendTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
         return sendTimeout;
     }
 

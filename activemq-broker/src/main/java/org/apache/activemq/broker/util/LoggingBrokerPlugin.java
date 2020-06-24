@@ -58,6 +58,8 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
      */
     @PostConstruct
     private void postConstruct() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4676
+//IC see: https://issues.apache.org/jira/browse/AMQ-4673
         try {
             afterPropertiesSet();
         } catch (Exception ex) {
@@ -97,6 +99,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     public boolean isLogSessionEvents() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3263
         return logSessionEvents;
     }
 
@@ -155,6 +158,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
             LOG.info("Acknowledging message for client ID: {}{}", consumerExchange.getConnectionContext().getClientId(), (ack.getMessageCount() == 1 ? ", " + ack.getLastMessageId() : ""));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
             if (ack.getMessageCount() > 1) {
                 LOG.trace("Message count: {}, First Message Id: {}, Last Message Id: {}", new Object[]{ ack.getMessageCount(), ack.getFirstMessageId(), ack.getLastMessageId() });
             }
@@ -270,12 +274,14 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         if (isLogAll() || isLogProducerEvents()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3779
             logSend(messageSend.copy());
         }
         super.send(producerExchange, messageSend);
     }
 
     private void logSend(Message copy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6389
         copy.getSize();
         Logger perDestinationsLogger = LOG;
         if (isPerDestinationLogger()) {
@@ -283,6 +289,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
             perDestinationsLogger = LoggerFactory.getLogger(LOG.getName() +
                     "." + destination.getDestinationTypeAsString() + "." + destination.getPhysicalName());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
         perDestinationsLogger.info("Sending message: {}", copy);
     }
 
@@ -375,6 +382,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     @Override
     public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3263
         if (isLogAll() || isLogSessionEvents()) {
             LOG.info("Adding Session: {}", info);
         }
@@ -383,6 +391,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     @Override
     public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3263
         if (isLogAll() || isLogSessionEvents()) {
             LOG.info("Removing Session: {}", info);
         }
@@ -495,6 +504,8 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                                          Subscription subscription, Throwable poisonCause) {
         if (isLogAll() || isLogInternalEvents()) {
             String msg = "Unable to display message.";
@@ -503,6 +514,8 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
             LOG.info("Sending to DLQ: {}", msg);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
         return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
     }
 
@@ -511,6 +524,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
         if (isLogAll() || isLogProducerEvents() || isLogInternalEvents()) {
             LOG.info("Fast Producer: {}", producerInfo);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
         super.fastProducer(context, producerInfo, destination);
     }
 
@@ -528,6 +542,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
             String msg = "Unable to display message.";
 
             msg = messageReference.getMessage().toString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
 
             LOG.info("Message consumed: {}", msg);
         }
@@ -555,6 +570,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
             LOG.info("Message discarded: {}", msg);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2628
         super.messageDiscarded(context, sub, messageReference);
     }
 
@@ -588,6 +604,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
         buf.append(isLogAll());
         buf.append(", logConnectionEvents=");
         buf.append(isLogConnectionEvents());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3263
         buf.append(", logSessionEvents=");
         buf.append(isLogSessionEvents());
         buf.append(", logConsumerEvents=");
@@ -603,6 +620,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     public void setPerDestinationLogger(boolean perDestinationLogger) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3779
         this.perDestinationLogger = perDestinationLogger;
     }
 

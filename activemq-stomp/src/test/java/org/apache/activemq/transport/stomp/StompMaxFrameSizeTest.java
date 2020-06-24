@@ -66,6 +66,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
 
     @Override
     protected boolean isUseSslConnector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         return true;
     }
 
@@ -81,6 +82,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
 
     @Override
     protected String getAdditionalConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5776
         return "?wireFormat.maxDataLength=" + MAX_DATA_SIZE + "&wireFormat.maxFrameSize=" + maxFrameSize;
     }
 

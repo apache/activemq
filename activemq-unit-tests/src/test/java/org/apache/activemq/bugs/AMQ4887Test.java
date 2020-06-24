@@ -49,6 +49,7 @@ public class AMQ4887Test {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
         ActiveMQConnection connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4887
         doTestBytesMessageSetPropertyBeforeCopy(connection);
     }
 
@@ -84,6 +85,7 @@ public class AMQ4887Test {
             BytesMessage receivedBytesMessage = (BytesMessage) receivedMessage;
 
             int numElements = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4887
             try {
                 while (true) {
                     receivedBytesMessage.readBoolean();

@@ -52,11 +52,13 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
 
     public ListIndex(PageFile pageFile, long headPageId) {
         this.pageFile = pageFile;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         setHeadPageId(headPageId);
     }
 
     @SuppressWarnings("rawtypes")
     public ListIndex(PageFile pageFile, Page page) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         this(pageFile, page.getPageId());
     }
 
@@ -71,6 +73,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
                 throw new IllegalArgumentException("The value marshaller must be set before loading the ListIndex");
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
             marshaller = new ListNode.NodeMarshaller<Key, Value>(keyMarshaller, valueMarshaller);
             final Page<ListNode<Key,Value>> p = tx.load(getHeadPageId(), null);
             if( p.getType() == Page.PAGE_FREE_TYPE ) {
@@ -105,6 +108,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     }
 
     protected ListNode<Key,Value> getHead(Transaction tx) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         return loadNode(tx, getHeadPageId());
     }
 
@@ -116,6 +120,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     synchronized public boolean containsKey(Transaction tx, Key key) throws IOException {
         assertLoaded();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         if (size.get() == 0) {
             return false;
         }
@@ -140,6 +145,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         for (Iterator<Map.Entry<Key,Value>> iterator = iterator(tx); iterator.hasNext(); ) {
             Map.Entry<Key,Value> candidate = iterator.next();
             if (key.equals(candidate.getKey())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
                 this.lastGetNodeCache = ((ListIterator) iterator).getCurrent();
                 this.lastGetEntryCache = candidate;
                 this.lastCacheTxSrc = new WeakReference<Transaction>(tx);
@@ -160,6 +166,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     synchronized public Value put(Transaction tx, Key key, Value value) throws IOException {
 
         Value oldValue = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
 
         if (lastGetNodeCache != null && tx.equals(lastCacheTxSrc.get())) {
 
@@ -210,6 +217,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     synchronized public Value add(Transaction tx, Key key, Value value) throws IOException {
         assertLoaded();
         getTail(tx).put(tx, key, value);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         size.incrementAndGet();
         flushCache();
         return null;
@@ -228,6 +236,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     synchronized public Value remove(Transaction tx, Key key) throws IOException {
         assertLoaded();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         if (size.get() == 0) {
             return null;
         }
@@ -266,6 +275,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     }
 
     public void onRemove(Entry<Key, Value> removed) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         size.decrementAndGet();
         flushCache();
     }
@@ -281,6 +291,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
             ListNode<Key,Value>candidate = iterator.next();
             candidate.clear(tx);
             // break up the transaction
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
             tx.commit();
         }
         flushCache();
@@ -300,6 +311,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         return getHead(tx).iterator(tx);
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
     synchronized public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx, long initialPosition) throws IOException {
         return getHead(tx).iterator(tx, initialPosition);
     }
@@ -322,6 +334,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         Page<ListNode<Key,Value>> page = tx.load(pageId, marshaller);
         ListNode<Key, Value> node = page.get();
         node.setPage(page);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
         node.setContainingList(this);
         return node;
     }
@@ -340,6 +353,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
 
     public void storeNode(Transaction tx, ListNode<Key,Value> node, boolean overflow) throws IOException {
         tx.store(node.getPage(), marshaller, overflow);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         flushCache();
     }
 
@@ -348,6 +362,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     }
 
     public void setPageFile(PageFile pageFile) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         this.pageFile = pageFile;
     }
 
@@ -356,6 +371,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     }
 
     public void setHeadPageId(long headPageId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         this.headPageId = headPageId;
     }
 
@@ -380,14 +396,17 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     }
 
     public long getTailPageId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3434
        return tailPageId;
     }
 
     public long size() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
         return size.get();
     }
 
     private void flushCache() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3467
         this.lastGetEntryCache = null;
         this.lastGetNodeCache = null;
         this.lastCacheTxSrc.clear();

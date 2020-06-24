@@ -63,6 +63,7 @@ public class AMQ3145Test {
         broker.getManagementContext().setCreateConnector(false);
         broker.addConnector("tcp://localhost:0");
         broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3167
         broker.waitUntilStarted();
         factory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri().toString());
         connection = factory.createConnection();
@@ -100,6 +101,7 @@ public class AMQ3145Test {
     private QueueViewMBean getProxyToQueueViewMBean()
             throws MalformedObjectNameException, JMSException {
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
                 + ":destinationType=Queue,destinationName=" + queue.getQueueName()
                 + ",type=Broker,brokerName=localhost");
         QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext()

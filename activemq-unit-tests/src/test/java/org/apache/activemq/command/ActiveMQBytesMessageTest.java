@@ -235,6 +235,7 @@ public class ActiveMQBytesMessageTest extends TestCase {
         try {
             msg.writeObject("fred");
             msg.writeObject(Boolean.TRUE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
             msg.writeObject(Character.valueOf('q'));
             msg.writeObject(Byte.valueOf((byte) 1));
             msg.writeObject(Short.valueOf((short) 3));
@@ -270,6 +271,8 @@ public class ActiveMQBytesMessageTest extends TestCase {
     }
 
     public void testClearProperties() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7291
+//IC see: https://issues.apache.org/jira/browse/AMQ-7291
         ActiveMQBytesMessage bytesMessage = new ActiveMQBytesMessage();
         bytesMessage.setIntProperty("one", 1);
         // simulate send

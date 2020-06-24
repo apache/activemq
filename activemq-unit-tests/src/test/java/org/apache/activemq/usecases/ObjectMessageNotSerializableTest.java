@@ -44,6 +44,7 @@ public class ObjectMessageNotSerializableTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ObjectMessageNotSerializableTest.class);
     
     BrokerService broker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2622
     AtomicInteger numReceived = new AtomicInteger(0);
     final Vector<Throwable> exceptions = new Vector<Throwable>();
 
@@ -56,7 +57,9 @@ public class ObjectMessageNotSerializableTest extends CombinationTestSupport {
     }
 	
 	protected void setUp() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "org.apache.activemq.usecases,java.util,java.lang");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2622
         exceptions.clear();
         broker = createBroker();
     }

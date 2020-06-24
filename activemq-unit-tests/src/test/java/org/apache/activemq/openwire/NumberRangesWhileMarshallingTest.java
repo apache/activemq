@@ -95,6 +95,7 @@ public class NumberRangesWhileMarshallingTest extends TestCase {
     }
 
     public void testMaxFrameSize() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
         OpenWireFormat wf = new OpenWireFormat();
         wf.setMaxFrameSize(10);
         ActiveMQTextMessage msg = new ActiveMQTextMessage();
@@ -121,6 +122,8 @@ public class NumberRangesWhileMarshallingTest extends TestCase {
     }
 
     public void testDefaultMaxFrameSizeUnlimited() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4076
+//IC see: https://issues.apache.org/jira/browse/AMQ-498
         OpenWireFormat wf = new OpenWireFormat();
         assertEquals(Long.MAX_VALUE, wf.getMaxFrameSize());
     }

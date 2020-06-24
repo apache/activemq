@@ -77,6 +77,10 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
             try {
                 URI uri = new URI(url);
                 LOG.info("Adding new broker connection URL: " + uri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
+//IC see: https://issues.apache.org/jira/browse/AMQ-2981
+//IC see: https://issues.apache.org/jira/browse/AMQ-2598
+//IC see: https://issues.apache.org/jira/browse/AMQ-2939
                 uri = URISupport.applyParameters(uri, parameters, DISCOVERED_OPTION_PREFIX);
                 serviceURIs.put(event.getServiceName(), uri);
                 next.add(false,new URI[] {uri});
@@ -90,6 +94,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
     public void onServiceRemove(DiscoveryEvent event) {
         URI uri = serviceURIs.get(event.getServiceName());
         if (uri != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2632
             next.remove(false,new URI[] {uri});
         }
     }
@@ -103,11 +108,14 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
     }
 
     public void setParameters(Map<String, String> parameters) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2283
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
        this.parameters = parameters;
     }
 
     @Override
     public void transportResumed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4723
         if( discoveryAgent instanceof Suspendable ) {
             try {
                 ((Suspendable)discoveryAgent).suspend();

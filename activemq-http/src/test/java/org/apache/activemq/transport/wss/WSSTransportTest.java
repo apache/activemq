@@ -27,12 +27,14 @@ import org.junit.Test;
 public class WSSTransportTest extends WSTransportTest {
     @Override
     protected Connector createJettyConnector(Server server) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         SecureSocketConnectorFactory sscf = new SecureSocketConnectorFactory();
         sscf.setKeyStore("src/test/resources/server.keystore");
         sscf.setKeyStorePassword("password");
         sscf.setTrustStore("src/test/resources/client.keystore");
         sscf.setTrustStorePassword("password");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         ServerConnector c = (ServerConnector) sscf.createConnector(server);
         c.setPort(getProxyPort());
         return c;
@@ -46,6 +48,7 @@ public class WSSTransportTest extends WSTransportTest {
     @Override
     @Test(timeout=10000)
     public void testGet() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
         SslContextFactory factory = new SslContextFactory.Client();
         factory.setEndpointIdentificationAlgorithm(null);       // service cert does not contain a SAN
         factory.setSslContext(broker.getSslContext().getSSLContext());

@@ -61,6 +61,7 @@ public class SslContextNBrokerServiceTest {
         BrokerService broker = getBroker(name);
         assertNotNull(name, broker);
         broker.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4876
         broker.waitUntilStarted();
         try {
             result = verifySslCredentials(broker);

@@ -74,6 +74,7 @@ public class ActiveMQQueueSender extends ActiveMQMessageProducer implements Queu
 
     protected ActiveMQQueueSender(ActiveMQSession session, ActiveMQDestination destination,int sendTimeout)
         throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1517
         super(session, session.getNextProducerId(), destination,sendTimeout);
     }
 

@@ -138,6 +138,8 @@ public class JMSEndpointStatsImpl extends StatsImpl {
 
     @Override
     public void setEnabled(boolean enabled) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2265
+//IC see: https://issues.apache.org/jira/browse/AMQ-2262
         super.setEnabled(enabled);
         messageCount.setEnabled(enabled);
         messageRateTime.setEnabled(enabled);

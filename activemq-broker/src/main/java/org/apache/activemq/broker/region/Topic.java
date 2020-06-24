@@ -85,6 +85,7 @@ public class Topic extends BaseDestination implements Task {
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         @Override
         public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
             try {
                 Topic.this.taskRunner.wakeup();
             } catch (InterruptedException e) {
@@ -96,15 +97,22 @@ public class Topic extends BaseDestination implements Task {
             DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Exception {
         super(brokerService, store, destination, parentStats);
         this.topicStore = store;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5164
+//IC see: https://issues.apache.org/jira/browse/AMQ-4842
         subscriptionRecoveryPolicy = new RetainedMessageSubscriptionRecoveryPolicy(null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         this.taskRunner = taskFactory.createTaskRunner(this, "Topic  " + destination.getPhysicalName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6979
+//IC see: https://issues.apache.org/jira/browse/AMQ-5129
         this.taskRunnerFactor = taskFactory;
     }
 
     @Override
     public void initialize() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1606
         super.initialize();
         // set non default subscription recovery policy (override policyEntries)
+//IC see: https://issues.apache.org/jira/browse/AMQ-4108
         if (AdvisorySupport.isMasterBrokerAdvisoryTopic(destination)) {
             subscriptionRecoveryPolicy = new LastImageSubscriptionRecoveryPolicy();
             setAlwaysRetroactive(true);
@@ -135,14 +143,18 @@ public class Topic extends BaseDestination implements Task {
 
             // Do a retroactive recovery if needed.
             if (sub.getConsumerInfo().isRetroactive() || isAlwaysRetroactive()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2911
 
                 // synchronize with dispatch method so that no new messages are sent
                 // while we are recovering a subscription to avoid out of order messages.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3703
                 dispatchLock.writeLock().lock();
                 try {
                     boolean applyRecovery = false;
                     synchronized (consumers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3855
                         if (!consumers.contains(sub)){
+//IC see: https://issues.apache.org/jira/browse/AMQ-2303
                             sub.add(context, this);
                             consumers.add(sub);
                             applyRecovery=true;
@@ -159,6 +171,7 @@ public class Topic extends BaseDestination implements Task {
             } else {
                 synchronized (consumers) {
                     if (!consumers.contains(sub)){
+//IC see: https://issues.apache.org/jira/browse/AMQ-2303
                         sub.add(context, this);
                         consumers.add(sub);
                         super.addSubscription(context, sub);
@@ -167,7 +180,9 @@ public class Topic extends BaseDestination implements Task {
             }
         } else {
             DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2821
             super.addSubscription(context, sub);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3909
             sub.add(context, this);
             if(dsub.isActive()) {
                 synchronized (consumers) {
@@ -201,9 +216,11 @@ public class Topic extends BaseDestination implements Task {
         if (!sub.getConsumerInfo().isDurable()) {
             boolean removed = false;
             synchronized (consumers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6587
                 removed = consumers.remove(sub);
             }
             if (removed) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2821
                 super.removeSubscription(context, sub, lastDeliveredSequenceId);
             }
         }
@@ -211,12 +228,14 @@ public class Topic extends BaseDestination implements Task {
     }
 
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1553
         if (topicStore != null) {
             topicStore.deleteSubscription(key.clientId, key.subscriptionName);
             DurableTopicSubscription removed = durableSubscribers.remove(key);
             if (removed != null) {
                 destinationStatistics.getConsumers().decrement();
                 // deactivate and remove
+//IC see: https://issues.apache.org/jira/browse/AMQ-5513
                 removed.deactivate(false, 0l);
                 consumers.remove(removed);
             }
@@ -224,6 +243,7 @@ public class Topic extends BaseDestination implements Task {
     }
 
     private boolean hasDurableSubChanged(SubscriptionInfo info1, ConsumerInfo info2) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5996
         if (hasSelectorChanged(info1, info2)) {
             return true;
         }
@@ -233,6 +253,7 @@ public class Topic extends BaseDestination implements Task {
 
     private boolean hasNoLocalChanged(SubscriptionInfo info1, ConsumerInfo info2) throws IOException {
         //Not all persistence adapters store the noLocal value for a subscription
+//IC see: https://issues.apache.org/jira/browse/AMQ-6430
         PersistenceAdapter adapter = broker.getBrokerService().getPersistenceAdapter();
         if (adapter instanceof NoLocalSubscriptionAware) {
             if (info1.isNoLocal() ^ info2.isNoLocal()) {
@@ -244,6 +265,7 @@ public class Topic extends BaseDestination implements Task {
     }
 
     private boolean hasSelectorChanged(SubscriptionInfo info1, ConsumerInfo info2) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         if (info1.getSelector() != null ^ info2.getSelector() != null) {
             return true;
         }
@@ -258,6 +280,7 @@ public class Topic extends BaseDestination implements Task {
     public void activate(ConnectionContext context, final DurableTopicSubscription subscription) throws Exception {
         // synchronize with dispatch method so that no new messages are sent
         // while we are recovering a subscription to avoid out of order messages.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3703
         dispatchLock.writeLock().lock();
         try {
 
@@ -266,11 +289,14 @@ public class Topic extends BaseDestination implements Task {
             }
 
             // Recover the durable subscription.
+//IC see: https://issues.apache.org/jira/browse/AMQ-1562
             String clientId = subscription.getSubscriptionKey().getClientId();
             String subscriptionName = subscription.getSubscriptionKey().getSubscriptionName();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1553
             SubscriptionInfo info = topicStore.lookupSubscription(clientId, subscriptionName);
             if (info != null) {
                 // Check to see if selector changed.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
                 if (hasDurableSubChanged(info, subscription.getConsumerInfo())) {
                     // Need to delete the subscription
                     topicStore.deleteSubscription(clientId, subscriptionName);
@@ -278,12 +304,16 @@ public class Topic extends BaseDestination implements Task {
                     // Force a rebuild of the selector chain for the subscription otherwise
                     // the stored subscription is updated but the selector expression is not
                     // and the subscription will not behave according to the new configuration.
+//IC see: https://issues.apache.org/jira/browse/AMQ-5996
                     subscription.setSelector(subscription.getConsumerInfo().getSelector());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3921
                     synchronized (consumers) {
                         consumers.remove(subscription);
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2303
                 } else {
                     synchronized (consumers) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3921
                         if (!consumers.contains(subscription)) {
                             consumers.add(subscription);
                         }
@@ -295,6 +325,7 @@ public class Topic extends BaseDestination implements Task {
             if (info == null) {
                 info = new SubscriptionInfo();
                 info.setClientId(clientId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
                 info.setSelector(subscription.getConsumerInfo().getSelector());
                 info.setSubscriptionName(subscriptionName);
                 info.setDestination(getActiveMQDestination());
@@ -302,8 +333,10 @@ public class Topic extends BaseDestination implements Task {
                 // This destination is an actual destination id.
                 info.setSubscribedDestination(subscription.getConsumerInfo().getDestination());
                 // This destination might be a pattern
+//IC see: https://issues.apache.org/jira/browse/AMQ-2303
                 synchronized (consumers) {
                     consumers.add(subscription);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4885
                     topicStore.addSubscription(info, subscription.getConsumerInfo().isRetroactive());
                 }
             }
@@ -343,6 +376,7 @@ public class Topic extends BaseDestination implements Task {
                 });
             }
         } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3703
             dispatchLock.writeLock().unlock();
         }
     }
@@ -365,11 +399,13 @@ public class Topic extends BaseDestination implements Task {
         final ConnectionContext context = producerExchange.getConnectionContext();
 
         final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
         producerExchange.incrementSend();
         final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0
                 && !context.isInRecoveryMode();
 
         message.setRegionDestination(this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
 
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
@@ -389,16 +425,20 @@ public class Topic extends BaseDestination implements Task {
 
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3233
                 if (isFlowControlLogRequired()) {
                     LOG.warn("{}, Usage Manager memory limit reached {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-4261
                             getActiveMQDestination().getQualifiedName(), memoryUsage.getLimit());
                 } else {
                     LOG.debug("{}, Usage Manager memory limit reached {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
                             getActiveMQDestination().getQualifiedName(), memoryUsage.getLimit());
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3551
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
                     throw new javax.jms.ResourceAllocationException("Usage Manager memory limit ("
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
                             + memoryUsage.getLimit() + ") reached. Rejecting send for producer (" + message.getProducerId()
                             + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                             + " See http://activemq.apache.org/producer-flow-control.html for more info");
@@ -415,6 +455,7 @@ public class Topic extends BaseDestination implements Task {
 
                                     // While waiting for space to free up...
                                     // the transaction may be done
+//IC see: https://issues.apache.org/jira/browse/AMQ-7234
                                     if (message.isInTransaction()) {
                                         if (context.getTransaction() == null || context.getTransaction().getState() > IN_USE_STATE) {
                                             throw new JMSException("Send transaction completed while waiting for space");
@@ -422,8 +463,11 @@ public class Topic extends BaseDestination implements Task {
                                     }
 
                                     // the message may have expired.
+//IC see: https://issues.apache.org/jira/browse/AMQ-1796
                                     if (message.isExpired()) {
                                         broker.messageExpired(context, message, null);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
                                         getDestinationStatistics().getExpired().increment();
                                     } else {
                                         doMessageSend(producerExchange, message);
@@ -449,8 +493,10 @@ public class Topic extends BaseDestination implements Task {
                             }
                         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2683
                         registerCallbackForNotFullNotification();
                         context.setDontSendReponse(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1056
                         return;
                     }
 
@@ -471,13 +517,16 @@ public class Topic extends BaseDestination implements Task {
                                     int size = context.getTransaction().size();
                                     LOG.warn("Waiting for space to send transacted message - transaction elements = {} need more space to commit. Message = {}", size, message);
                                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4190
                                 count++;
                             }
                         } else {
                             waitForSpace(
                                     context,
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
                                     producerExchange,
                                     memoryUsage,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
                                     "Usage Manager Memory Usage limit reached. Stopping producer ("
                                             + message.getProducerId()
                                             + ") to prevent flooding "
@@ -489,7 +538,9 @@ public class Topic extends BaseDestination implements Task {
 
                     // The usage manager could have delayed us by the time
                     // we unblock the message could have expired..
+//IC see: https://issues.apache.org/jira/browse/AMQ-1796
                     if (message.isExpired()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
                         getDestinationStatistics().getExpired().increment();
                         LOG.debug("Expired message: {}", message);
                         return;
@@ -518,28 +569,34 @@ public class Topic extends BaseDestination implements Task {
     synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message)
             throws IOException, Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1656
         message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
         Future<Object> result = null;
 
         if (topicStore != null && message.isPersistent() && !canOptimizeOutPersistence()) {
             if (systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3351
                 final String logMessage = "Persistent store is Full, " + getStoreUsageHighWaterMark() + "% of "
                         + systemUsage.getStoreUsage().getLimit() + ". Stopping producer (" + message.getProducerId()
                         + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                         + " See http://activemq.apache.org/producer-flow-control.html for more info";
+//IC see: https://issues.apache.org/jira/browse/AMQ-3551
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
                     throw new javax.jms.ResourceAllocationException(logMessage);
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4635
                 waitForSpace(context,producerExchange, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }
             result = topicStore.asyncAddTopicMessage(context, message,isOptimizeStorage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
 
             //Moved the reduceMemoryfootprint clearing to the dispatch method
         }
 
         message.incrementReferenceCount();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
         if (context.isInTransaction()) {
             context.getTransaction().addSynchronization(new Synchronization() {
                 @Override
@@ -547,8 +604,11 @@ public class Topic extends BaseDestination implements Task {
                     // It could take while before we receive the commit
                     // operation.. by that time the message could have
                     // expired..
+//IC see: https://issues.apache.org/jira/browse/AMQ-6361
                     if (message.isExpired()) {
                         if (broker.isExpired(message)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
                             getDestinationStatistics().getExpired().increment();
                             broker.messageExpired(context, message, null);
                         }
@@ -572,6 +632,7 @@ public class Topic extends BaseDestination implements Task {
             try {
                 dispatch(context, message);
             } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5136
                 message.decrementReferenceCount();
             }
         }
@@ -601,9 +662,14 @@ public class Topic extends BaseDestination implements Task {
         if (topicStore != null && node.isPersistent()) {
             DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
             SubscriptionKey key = dsub.getSubscriptionKey();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
             topicStore.acknowledge(context, key.getClientId(), key.getSubscriptionName(), node.getMessageId(),
                     convertToNonRangedAck(ack, node));
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
         messageConsumed(context, node);
     }
 
@@ -612,18 +678,22 @@ public class Topic extends BaseDestination implements Task {
     }
 
     public Message loadMessage(MessageId messageId) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1553
         return topicStore != null ? topicStore.getMessage(messageId) : null;
     }
 
     @Override
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6555
         if (started.compareAndSet(false, true)) {
             this.subscriptionRecoveryPolicy.start();
             if (memoryUsage != null) {
                 memoryUsage.start();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5768
             if (getExpireMessagesPeriod() > 0 && !AdvisorySupport.isAdvisoryTopic(getActiveMQDestination())) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5251
                 scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
             }
         }
@@ -632,6 +702,7 @@ public class Topic extends BaseDestination implements Task {
     @Override
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
             if (taskRunner != null) {
                 taskRunner.shutdown();
             }
@@ -649,6 +720,7 @@ public class Topic extends BaseDestination implements Task {
 
     @Override
     public Message[] browse() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
         final List<Message> result = new ArrayList<Message>();
         doBrowse(result, getMaxBrowsePageSize());
         return result.toArray(new Message[result.size()]);
@@ -656,7 +728,9 @@ public class Topic extends BaseDestination implements Task {
 
     private void doBrowse(final List<Message> browseList, final int max) {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1553
             if (topicStore != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3532
                 final List<Message> toExpire = new ArrayList<Message>();
                 topicStore.recover(new MessageRecoveryListener() {
                     @Override
@@ -664,6 +738,7 @@ public class Topic extends BaseDestination implements Task {
                         if (message.isExpired()) {
                             toExpire.add(message);
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
                         browseList.add(message);
                         return true;
                     }
@@ -675,18 +750,23 @@ public class Topic extends BaseDestination implements Task {
 
                     @Override
                     public boolean hasSpace() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
                         return browseList.size() < max;
                     }
 
                     @Override
                     public boolean isDuplicate(MessageId id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                         return false;
                     }
                 });
+//IC see: https://issues.apache.org/jira/browse/AMQ-3532
                 final ConnectionContext connectionContext = createConnectionContext();
                 for (Message message : toExpire) {
                     for (DurableTopicSubscription sub : durableSubscribers.values()) {
                         if (!sub.isActive()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6070
                             message.setRegionDestination(this);
                             messageExpired(connectionContext, sub, message);
                         }
@@ -694,6 +774,7 @@ public class Topic extends BaseDestination implements Task {
                 }
                 Message[] msgs = subscriptionRecoveryPolicy.browse(getActiveMQDestination());
                 if (msgs != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
                     for (int i = 0; i < msgs.length && browseList.size() < max; i++) {
                         browseList.add(msgs[i]);
                     }
@@ -707,11 +788,13 @@ public class Topic extends BaseDestination implements Task {
     @Override
     public boolean iterate() {
         synchronized (messagesWaitingForSpace) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1490
             while (!memoryUsage.isFull() && !messagesWaitingForSpace.isEmpty()) {
                 Runnable op = messagesWaitingForSpace.removeFirst();
                 op.run();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2683
             if (!messagesWaitingForSpace.isEmpty()) {
                 registerCallbackForNotFullNotification();
             }
@@ -744,6 +827,7 @@ public class Topic extends BaseDestination implements Task {
     }
 
     public void setSubscriptionRecoveryPolicy(SubscriptionRecoveryPolicy recoveryPolicy) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5160
         if (this.subscriptionRecoveryPolicy != null && this.subscriptionRecoveryPolicy instanceof RetainedMessageSubscriptionRecoveryPolicy) {
             // allow users to combine retained message policy with other ActiveMQ policies
             RetainedMessageSubscriptionRecoveryPolicy policy = (RetainedMessageSubscriptionRecoveryPolicy) this.subscriptionRecoveryPolicy;
@@ -765,9 +849,11 @@ public class Topic extends BaseDestination implements Task {
         // misleading metrics.
         // destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4697
         destinationStatistics.getMessageSize().addSize(message.getSize());
         MessageEvaluationContext msgContext = null;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3703
         dispatchLock.readLock().lock();
         try {
             if (!subscriptionRecoveryPolicy.add(context, message)) {
@@ -786,6 +872,7 @@ public class Topic extends BaseDestination implements Task {
                 message.clearUnMarshalledState();
             }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1833
             msgContext = context.getMessageEvaluationContext();
             msgContext.setDestination(destination);
             msgContext.setMessageReference(message);
@@ -794,8 +881,10 @@ public class Topic extends BaseDestination implements Task {
             }
 
         } finally {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3703
             dispatchLock.readLock().unlock();
             if (msgContext != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1889
                 msgContext.clear();
             }
         }
@@ -805,8 +894,11 @@ public class Topic extends BaseDestination implements Task {
     private final Runnable expireMessagesWork = new Runnable() {
         @Override
         public void run() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
             List<Message> browsedMessages = new InsertionCountList<Message>();
             doBrowse(browsedMessages, getMaxExpirePageSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6979
+//IC see: https://issues.apache.org/jira/browse/AMQ-5129
             expiryTaskInProgress.set(false);
         }
     };
@@ -818,6 +910,7 @@ public class Topic extends BaseDestination implements Task {
             }
         }
     };
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
 
     @Override
     public void messageExpired(ConnectionContext context, Subscription subs, MessageReference reference) {
@@ -825,12 +918,14 @@ public class Topic extends BaseDestination implements Task {
         // AMQ-2586: Better to leave this stat at zero than to give the user
         // misleading metrics.
         // destinationStatistics.getMessages().decrement();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1112
         destinationStatistics.getExpired().increment();
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
         ack.setDestination(destination);
         ack.setMessageID(reference.getMessageId());
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3362
             if (subs instanceof DurableTopicSubscription) {
                 ((DurableTopicSubscription)subs).removePending(reference);
             }
@@ -849,6 +944,7 @@ public class Topic extends BaseDestination implements Task {
         boolean result = false;
 
         if (isDoOptimzeMessageStorage() && durableSubscribers.isEmpty()==false){
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
                 result = true;
                 for (DurableTopicSubscription s : durableSubscribers.values()) {
                     if (s.isActive()== false){
@@ -863,6 +959,7 @@ public class Topic extends BaseDestination implements Task {
                         result = false;
                         break;
                     }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3750
                     if (s.getInFlightUsage() > getOptimizeMessageStoreInFlightLimit()){
                         result = false;
                         break;
@@ -878,6 +975,7 @@ public class Topic extends BaseDestination implements Task {
      */
     @Override
     public void clearPendingMessages(int pendingAdditionsCount) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
         dispatchLock.readLock().lock();
         try {
             for (DurableTopicSubscription durableTopicSubscription : durableSubscribers.values()) {

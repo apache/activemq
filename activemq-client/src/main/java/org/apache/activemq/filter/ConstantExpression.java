@@ -65,6 +65,7 @@ public class ConstantExpression implements Expression {
 
         long l = value.longValue();
         if (Integer.MIN_VALUE <= l && l <= Integer.MAX_VALUE) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
             value = Integer.valueOf(value.intValue());
         }
         return new ConstantExpression(value);

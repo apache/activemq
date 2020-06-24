@@ -158,6 +158,7 @@ public class ActiveMQActivationSpecTest {
         activationSpec.setAcknowledgeMode("foobar");
         PropertyDescriptor[] expected = {acknowledgeModeProperty};
         assertActivationSpecInvalid(expected);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         assertEquals("Incorrect acknowledge mode", ActiveMQActivationSpec.INVALID_ACKNOWLEDGE_MODE,
                 activationSpec.getAcknowledgeModeForSession());
     }
@@ -191,6 +192,7 @@ public class ActiveMQActivationSpecTest {
 
     @Test(timeout = 60000)
     public void testDefaultSubscriptionDurabilitySetCorrectly() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         assertEquals("Incorrect default value", ActiveMQActivationSpec.NON_DURABLE_SUBSCRIPTION, activationSpec.getSubscriptionDurability());
     }
 
@@ -218,6 +220,7 @@ public class ActiveMQActivationSpecTest {
 
     @Test(timeout = 60000)
     public void testValidDurableSubscriber() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-705
         activationSpec.setDestinationType(Topic.class.getName());
         activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.DURABLE_SUBSCRIPTION);
         activationSpec.setClientId("foobar");
@@ -250,6 +253,7 @@ public class ActiveMQActivationSpecTest {
 
     @Test(timeout = 60000)
     public void testDurableSubscriberEmptyClientIdEmptySubscriptionNameFailure() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-705
         activationSpec.setDestinationType(Topic.class.getName());
         activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.DURABLE_SUBSCRIPTION);
         activationSpec.setClientId(EMPTY_STRING);
@@ -263,6 +267,7 @@ public class ActiveMQActivationSpecTest {
     @Test(timeout = 60000)
     public void testSetEmptyStringButGetNullValue() {
         ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         activationSpec.setDestinationType(EMPTY_STRING);
         assertNull("Property not null", activationSpec.getDestinationType());
@@ -306,6 +311,7 @@ public class ActiveMQActivationSpecTest {
             fail("InvalidPropertyException should have been thrown");
         } catch (InvalidPropertyException e) {
             PropertyDescriptor[] actual = e.getInvalidPropertyDescriptors();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
             assertDescriptorsAreEqual(expected, actual);
         }
     }

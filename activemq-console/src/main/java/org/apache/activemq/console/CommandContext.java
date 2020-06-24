@@ -241,6 +241,7 @@ public final class CommandContext {
     }
 
     public OutputFormatter getFormatter() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
         return formatter;
     }
 

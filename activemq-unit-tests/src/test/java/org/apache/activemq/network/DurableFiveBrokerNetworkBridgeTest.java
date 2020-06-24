@@ -59,6 +59,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         connector.setConduitSubscriptions(true);
         connector.setSyncDurableSubs(true);
         connector.setNetworkTTL(-1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         connector.setClientIdToken("|");
         return connector;
     }
@@ -179,6 +180,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         Session ses = createSession("Broker_A_A");
         MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
         MessageConsumer clientB = ses.createDurableSubscriber(dest, "subB");
@@ -238,6 +240,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         Session ses = createSession("Broker_A_A");
         MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
 
@@ -288,6 +291,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
     protected void testDurablePropagation5Broker() throws Exception {
         // Setup broker networks
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         bridgeBrokers("Broker_A_A", "Broker_B_B");
         bridgeBrokers("Broker_B_B", "Broker_C_C");
         bridgeBrokers("Broker_C_C", "Broker_D_D");
@@ -305,6 +309,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         Session ses = createSession("Broker_A_A");
         MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
         Thread.sleep(1000);
@@ -356,6 +361,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
     protected void testDurablePropagationSpoke() throws Exception {
         // Setup broker networks
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         bridgeBrokers("Broker_A_A", "Broker_B_B");
         bridgeBrokers("Broker_B_B", "Broker_C_C");
         bridgeBrokers("Broker_B_B", "Broker_D_D");
@@ -371,6 +377,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         Session ses = createSession("Broker_A_A");
         Session ses2 = createSession("Broker_B_B");
         Session ses3 = createSession("Broker_C_C");
@@ -420,6 +427,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         ses3.unsubscribe("subC");
         ses4.unsubscribe("subD");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 0);
@@ -438,6 +446,9 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
     protected void testForceDurablePropagation() throws Exception {
         // Setup broker networks
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         bridgeBrokers("Broker_A_A", "Broker_B_B");
         bridgeBrokers("Broker_B_B", "Broker_C_C");
         if (!duplex) {
@@ -451,6 +462,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         Session ses = createSession("Broker_A_A");
         MessageConsumer clientA = ses.createConsumer(dest);
         Thread.sleep(1000);
@@ -491,6 +503,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
     protected void testDurablePropagationSync() throws Exception {
         // Setup broker networks
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         NetworkConnector nc1 = bridgeBrokers("Broker_A_A", "Broker_B_B");
         NetworkConnector nc2 = bridgeBrokers("Broker_B_B", "Broker_C_C");
 
@@ -515,6 +528,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         Session ses = createSession("Broker_A_A");
         Session ses2 = createSession("Broker_C_C");
         MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
@@ -522,6 +536,8 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         MessageConsumer clientC = ses2.createDurableSubscriber(dest, "subC");
         Thread.sleep(1000);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 0);
@@ -534,6 +550,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         }
 
         //there will be 2 network durables, 1 for each direction of the bridge
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 1);
@@ -547,6 +564,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         duplex = true;
 
         // Setup broker networks
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         bridgeBrokers("Broker_A_A", "Broker_B_B");
         bridgeBrokers("Broker_B_B", "Broker_C_C");
 
@@ -567,6 +585,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         ActiveMQTopic dest2 = (ActiveMQTopic) createDestination("TEST.FOO2", true);
 
         // Setup consumers
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         Session ses = createSession("Broker_A_A");
         Session ses2 = createSession("Broker_C_C");
         MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
@@ -576,6 +595,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         Thread.sleep(1000);
 
         //make sure network durables are online
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 1);
@@ -642,8 +662,11 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         deletePersistentMessagesOnStartup = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         String options = new String("?persistent=true&useJmx=false");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         createBroker(new URI("broker:(tcp://localhost:61616)/Broker_A_A" + options));
         createBroker(new URI("broker:(tcp://localhost:61617)/Broker_B_B" + options));
         createBroker(new URI("broker:(tcp://localhost:61618)/Broker_C_C" + options));
@@ -654,6 +677,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
     @Override
     protected void configureBroker(BrokerService broker) {
         broker.setBrokerId(broker.getBrokerName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6858
         broker.setDeleteAllMessagesOnStartup(deletePersistentMessagesOnStartup);
         broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "DurableFiveBrokerNetworkBridgeTest");
     }

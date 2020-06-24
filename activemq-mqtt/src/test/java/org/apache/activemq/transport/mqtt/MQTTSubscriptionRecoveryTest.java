@@ -73,6 +73,7 @@ public class MQTTSubscriptionRecoveryTest extends MQTTTestSupport {
     public void testDurableSubscriptionsAreRecovered() throws Exception {
 
         MqttClient connection = createClient(getTestName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5872
 
         final String[] topics = { "TopicA/", "TopicB/", "TopicC/" };
         for (int i = 0; i < topics.length; i++) {
@@ -91,6 +92,7 @@ public class MQTTSubscriptionRecoveryTest extends MQTTTestSupport {
         assertStatsForDisconnectedClient(topics.length);
 
         connection = createClient(getTestName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5872
 
         assertStatsForConnectedClient(topics.length);
     }

@@ -33,6 +33,10 @@ public class DatabaseLockerConfigTest {
 
     @Test
     public void testDefaultSleepConfig() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4103
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
+//IC see: https://issues.apache.org/jira/browse/AMQ-4103
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         LeaseDatabaseLocker underTest = new LeaseDatabaseLocker();
         underTest.configure(null);
         assertEquals("configured sleep value retained", AbstractLocker.DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL, underTest.getLockAcquireSleepInterval());

@@ -63,11 +63,13 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
 
     @Override
     public String getTransformerName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5795
         return TRANSFORMER_JMS;
     }
 
     @Override
     public InboundTransformer getFallbackTransformer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         return new AMQPNativeInboundTransformer();
     }
 
@@ -121,6 +123,7 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
 
                     try {
                         CharBuffer chars = charset.newDecoder().decode(buf);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
                         result = createTextMessage(String.valueOf(chars));
                     } catch (CharacterCodingException e) {
                         result = createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
@@ -179,6 +182,7 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
     }
 
     private static ActiveMQBytesMessage createBytesMessage(byte[] content, int offset, int length) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         ActiveMQBytesMessage message = new ActiveMQBytesMessage();
         message.setContent(new ByteSequence(content, offset, length));
         return message;
@@ -203,6 +207,7 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
         ActiveMQMapMessage message = new ActiveMQMapMessage();
         final Set<Map.Entry<String, Object>> set = content.entrySet();
         for (Map.Entry<String, Object> entry : set) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
             Object value = entry.getValue();
             if (value instanceof Binary) {
                 Binary binary = (Binary) value;

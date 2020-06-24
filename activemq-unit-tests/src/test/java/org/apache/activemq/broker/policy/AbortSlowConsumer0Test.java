@@ -61,6 +61,8 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumer0Test.class);
 
     public AbortSlowConsumer0Test() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
         this.topic = true;
     }
 
@@ -78,6 +80,7 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
     @Test
     public void testSlowConsumerIsAbortedViaJmx() throws Exception {
         underTest.setMaxSlowDuration(60*1000); // so jmx does the abort
+//IC see: https://issues.apache.org/jira/browse/AMQ-5114
         startConsumers(withPrefetch(2, destination));
         Entry<MessageConsumer, MessageIdList> consumertoAbort = consumers.entrySet().iterator().next();
         consumertoAbort.getValue().setProcessingDelay(8 * 1000);
@@ -120,6 +123,8 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
         assertEquals("no slow consumers left", 0, slowOnes.size());
 
         // verify mbean gone with destination
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
         if (topic) {
             broker.getAdminView().removeTopic(amqDest.getPhysicalName());
         } else {
@@ -135,6 +140,7 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
     }
 
     private Destination withPrefetch(int i, Destination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5114
         String destWithPrefetch =
                 ((ActiveMQDestination) destination).getPhysicalName() + "?consumer.prefetchSize=" + i;
         return topic ? new ActiveMQTopic(destWithPrefetch) : new ActiveMQQueue(destWithPrefetch);
@@ -162,6 +168,7 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
     @Test
     public void testAbortAlreadyClosingConsumers() throws Exception {
         consumerCount = 1;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5114
         startConsumers(withPrefetch(2, destination));
         for (MessageIdList list : consumers.values()) {
             list.setProcessingDelay(6 * 1000);
@@ -181,6 +188,7 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
 
     @Test
     public void testAbortConsumerOnDeadConnection() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5114
         TransportConnector transportConnector = broker.addConnector("tcp://0.0.0.0:0");
         transportConnector.setBrokerService(broker);
         transportConnector.setTaskRunnerFactory(broker.getTaskRunnerFactory());

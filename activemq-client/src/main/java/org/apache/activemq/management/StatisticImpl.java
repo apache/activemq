@@ -38,6 +38,7 @@ public class StatisticImpl implements Statistic, Resettable {
         this.name = name;
         this.unit = unit;
         this.description = description;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1946
         this.startTime = System.currentTimeMillis();
         this.lastSampleTime = this.startTime;
     }
@@ -63,6 +64,7 @@ public class StatisticImpl implements Statistic, Resettable {
     }
 
     public String getName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1946
         return this.name;
     }
 
@@ -100,6 +102,7 @@ public class StatisticImpl implements Statistic, Resettable {
      * @return the doReset
      */
     public boolean isDoReset() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1946
         return this.doReset;
     }
 

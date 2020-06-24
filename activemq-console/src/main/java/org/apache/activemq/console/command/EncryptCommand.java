@@ -28,9 +28,11 @@ public class EncryptCommand extends AbstractCommand {
             "Description: Encrypts given text.",
             "", 
             "Encrypt Options:",
+//IC see: https://issues.apache.org/jira/browse/AMQ-5123
             "    --password <password>      Password to be used by the encryptor.  Defaults to",
             "                               the value in the ACTIVEMQ_ENCRYPTION_PASSWORD env variable.",
             "    --input <input>            Text to be encrypted.",
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
             "    --algorithm <algorithm>    Algorithm to use.",
             "    --version                  Display the version information.",
             "    -h,-?,--help               Display the stop broker help information.",
@@ -40,6 +42,7 @@ public class EncryptCommand extends AbstractCommand {
     StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
     String input;
     String password;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
     String algorithm;
     
     @Override
@@ -59,6 +62,7 @@ public class EncryptCommand extends AbstractCommand {
 
     @Override
     protected void runTask(List<String> tokens) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5123
         if( password == null ) {
             password = System.getenv("ACTIVEMQ_ENCRYPTION_PASSWORD");
         }
@@ -67,6 +71,7 @@ public class EncryptCommand extends AbstractCommand {
             return;
         }
         encryptor.setPassword(password);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
         if (algorithm != null) {
              encryptor.setAlgorithm(algorithm);
              // From Jasypt: for PBE-AES-based algorithms, the IV generator is MANDATORY"
@@ -93,6 +98,7 @@ public class EncryptCommand extends AbstractCommand {
             }
 
             password=(String)tokens.remove(0);            
+//IC see: https://issues.apache.org/jira/browse/AMQ-7457
         } else if (token.startsWith("--algorithm")) {
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
                 context.printException(new IllegalArgumentException("algorithm not specified"));

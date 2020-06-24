@@ -42,6 +42,7 @@ public class MessageGroupHashBucket implements MessageGroupMap {
     public synchronized void put(String groupId, ConsumerId consumerId) {
         int bucket = getBucketNumber(groupId);
         consumers[bucket] = consumerId;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4766
         if (consumerId != null){
           cache.put(groupId,consumerId.toString());
         }
@@ -79,6 +80,7 @@ public class MessageGroupHashBucket implements MessageGroupMap {
     }
 
     public synchronized void removeAll(){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4766
         for (int i =0; i < consumers.length; i++){
             consumers[i] = null;
         }

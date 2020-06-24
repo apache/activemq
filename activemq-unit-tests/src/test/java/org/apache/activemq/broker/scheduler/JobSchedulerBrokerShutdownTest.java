@@ -39,6 +39,7 @@ public class JobSchedulerBrokerShutdownTest extends EmbeddedBrokerTestSupport {
 
         BrokerService broker = super.createBroker();
         broker.setSchedulerSupport(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         broker.setDataDirectory("target");
         broker.setSchedulerDirectoryFile(schedulerDirectory);
         broker.getSystemUsage().getStoreUsage().setLimit(1 * 512);

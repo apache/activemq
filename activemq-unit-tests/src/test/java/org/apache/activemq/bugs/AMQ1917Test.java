@@ -70,6 +70,7 @@ public class AMQ1917Test extends TestCase {
             broker.start();
 
             connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
 
             BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(10000);
             tpe = new ThreadPoolExecutor(NUM_THREADS, NUM_THREADS, 60000,
@@ -86,6 +87,7 @@ public class AMQ1917Test extends TestCase {
         public void testLoadedSendRecieveWithCorrelationId() throws Exception {
 
             ActiveMQConnectionFactory connectionFactory = new org.apache.activemq.ActiveMQConnectionFactory();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
             connectionFactory.setBrokerURL(connectionUri);
             Connection connection = connectionFactory.createConnection();
             setupReceiver(connection);
@@ -132,6 +134,7 @@ public class AMQ1917Test extends TestCase {
                             TextMessage msg = (TextMessage) consumer.receive(20000);
                             if (msg == null) {
                                 errorLatch.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
                                 fail("Response timed out."
                                         + " latchCount=" + roundTripLatch.getCount());
                             } else {
@@ -144,6 +147,7 @@ public class AMQ1917Test extends TestCase {
                                 sender.send(response);
                             }
                         } catch (JMSException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2149
                             if (working) {
                                 errorLatch.countDown();
                                 fail("Unexpected exception:" + e);

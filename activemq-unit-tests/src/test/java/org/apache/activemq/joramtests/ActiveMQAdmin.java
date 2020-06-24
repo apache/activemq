@@ -119,6 +119,7 @@ public class ActiveMQAdmin implements Admin {
     public void createConnectionFactory(String name) {
         try {
             final ConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3947
             ((ActiveMQConnectionFactory) factory).setNestedMapAndListEnabled(false);
             context.bind(name, factory);
         } catch (NamingException e) {

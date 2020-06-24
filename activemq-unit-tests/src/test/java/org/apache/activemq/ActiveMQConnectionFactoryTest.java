@@ -49,6 +49,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
 
         connection = (ActiveMQConnection)cf.createConnection();
         connection.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1337
 
         String clientID = connection.getClientID();
         LOG.info("Got client ID: " + clientID);
@@ -94,12 +95,14 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         // the broker url have been adjusted.
         assertEquals("vm:(broker:()/localhost)", cf.getBrokerURL());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2160
         cf = new ActiveMQConnectionFactory("vm://localhost?jms.auditDepth=5000");
         assertEquals(5000, cf.getAuditDepth());
     }
 
     public void testConnectAttemptTimeotOptionIsApplied() throws URISyntaxException, JMSException {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6362
 
         assertEquals(0, cf.getConnectResponseTimeout());
 
@@ -192,6 +195,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testConnectionFailsToConnectToVMBrokerThatIsNotRunning() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-958
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         try {
             factory.createConnection();
@@ -216,6 +220,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testSetExceptionListener() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2062
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNull(connection.getExceptionListener());
@@ -227,6 +232,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         };
         cf.setExceptionListener(exListener);
         connection.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4281
 
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection.getExceptionListener());
@@ -241,6 +247,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testSetClientInternalExceptionListener() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2635
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNull(connection.getClientInternalExceptionListener());
@@ -253,6 +260,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         connection.setClientInternalExceptionListener(listener);
         cf.setClientInternalExceptionListener(listener);
         connection.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4281
 
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection.getClientInternalExceptionListener());
@@ -267,8 +275,10 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
 
     protected void assertCreateConnection(String uri) throws Exception {
         // Start up a broker with a tcp connector.
+//IC see: https://issues.apache.org/jira/browse/AMQ-1337
         broker = new BrokerService();
         broker.setPersistent(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4033
         broker.setUseJmx(false);
         broker.setAdvisorySupport(false);
         broker.setSchedulerSupport(false);

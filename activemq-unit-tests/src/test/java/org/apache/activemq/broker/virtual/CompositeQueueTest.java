@@ -74,6 +74,7 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
         LOG.info("Sending to: " + producerDestination);
         LOG.info("Consuming from: " + destination1 + " and " + destination2);
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-2779
         MessageConsumer c1 = session.createConsumer(destination1, messageSelector1);
         MessageConsumer c2 = session.createConsumer(destination2, messageSelector2);
 
@@ -85,11 +86,13 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
         assertNotNull(producer);
 
         for (int i = 0; i < total; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1073
             producer.send(createMessage(session, i));
         }
 
         assertMessagesArrived(messageList1, messageList2);
         assertOriginalDestination(messageList1, messageList2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6274
 
     }
 
@@ -99,6 +102,7 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void assertOriginalDestination(ConsumerBean messageList1, ConsumerBean messageList2) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6274
         for( Message message: messageList1.getMessages()) {
             ActiveMQMessage amqMessage = (ActiveMQMessage)message;
             assertEquals( getProducerDestination(), amqMessage.getOriginalDestination() );
@@ -112,8 +116,10 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
 
     protected TextMessage createMessage(Session session, int i) throws JMSException {
         TextMessage textMessage = session.createTextMessage("message: " + i);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         if (i % 2 != 0) {
             textMessage.setStringProperty("odd", "yes");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2779
         } else {
             textMessage.setStringProperty("odd", "no");
         }

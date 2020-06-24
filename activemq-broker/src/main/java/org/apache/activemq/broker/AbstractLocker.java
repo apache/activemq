@@ -31,6 +31,7 @@ public abstract class AbstractLocker extends ServiceSupport implements Locker {
 
     @Override
     public boolean keepAlive() throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         return true;
     }
 
@@ -40,6 +41,7 @@ public abstract class AbstractLocker extends ServiceSupport implements Locker {
     }
 
     public long getLockAcquireSleepInterval() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         return lockAcquireSleepInterval;
     }
 
@@ -55,6 +57,7 @@ public abstract class AbstractLocker extends ServiceSupport implements Locker {
 
     @Override
     public void setLockable(LockableServiceSupport lockableServiceSupport) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4365
         this.lockable = lockableServiceSupport;
     }
 

@@ -50,6 +50,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
      */
     //need to revist!!!
     public void XtestWildCardSubscriptionPreservedOnRestart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1356
         ActiveMQDestination dest1 = new ActiveMQTopic("TEST.A");
         ActiveMQDestination dest2 = new ActiveMQTopic("TEST.B");
         ActiveMQDestination dest3 = new ActiveMQTopic("TEST.C");
@@ -286,6 +287,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         // The we should get the messages.
         for (int i = 0; i < 4; i++) {
             Message m2 = receiveMessage(connection2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1095
             assertNotNull("Did not get message "+i, m2);
         }
         assertNoMessagesLeft(connection2);
@@ -520,6 +522,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
     public void testQueuePersistentXAUncommitedAcksLostOnRestart() throws Exception {
         int NUMBER = 100;
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
+//IC see: https://issues.apache.org/jira/browse/AMQ-1848
 
         // Setup the producer and send the message.
         StubConnection connection = createConnection();
@@ -543,6 +546,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         // Begin the transaction.
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
         Message m = null;
         for (int i = 0; i < NUMBER; i++) {
             m = receiveMessage(connection);
@@ -568,6 +572,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // All messages should be re-delivered.
         for (int i = 0; i < NUMBER; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3305
             m = receiveMessage(connection);
             assertNotNull(m);
         }

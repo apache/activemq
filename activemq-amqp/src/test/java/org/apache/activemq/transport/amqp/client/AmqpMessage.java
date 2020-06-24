@@ -84,6 +84,7 @@ public class AmqpMessage {
         this.message = message;
         this.delivery = delivery;
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5684
         if (message.getMessageAnnotations() != null) {
             messageAnnotationsMap = message.getMessageAnnotations().getValue();
         }
@@ -92,6 +93,7 @@ public class AmqpMessage {
             applicationPropertiesMap = message.getApplicationProperties().getValue();
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4900
         if (message.getDeliveryAnnotations() != null) {
             deliveryAnnotationsMap = message.getDeliveryAnnotations().getValue();
         }
@@ -104,6 +106,7 @@ public class AmqpMessage {
      */
     public Delivery getWrappedDelivery() {
         if (delivery != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6672
             return UnmodifiableProxy.deliveryProxy(delivery);
         }
 
@@ -192,6 +195,7 @@ public class AmqpMessage {
      */
     public void modified(Boolean deliveryFailed, Boolean undeliverableHere) throws Exception {
         if (receiver == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5890
             throw new IllegalStateException("Can't modify non-received message.");
         }
 
@@ -283,6 +287,7 @@ public class AmqpMessage {
      *        the String message ID value to set.
      */
     public void setMessageId(String messageId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5684
         checkReadOnly();
         lazyCreateProperties();
         getWrappedMessage().setMessageId(messageId);
@@ -295,6 +300,7 @@ public class AmqpMessage {
      * @return the set message ID in String form or null if not set.
      */
     public String getMessageId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         if (message.getProperties() == null || message.getProperties().getMessageId() == null) {
             return null;
         }
@@ -309,6 +315,7 @@ public class AmqpMessage {
      * @return the set message ID in its original form or null if not set.
      */
     public Object getRawMessageId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6263
         if (message.getProperties() == null) {
             return null;
         }
@@ -335,6 +342,7 @@ public class AmqpMessage {
      *        the String Correlation ID value to set.
      */
     public void setCorrelationId(String correlationId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6353
         checkReadOnly();
         lazyCreateProperties();
         getWrappedMessage().setCorrelationId(correlationId);
@@ -347,6 +355,7 @@ public class AmqpMessage {
      * @return the set correlation ID in String form or null if not set.
      */
     public String getCorrelationId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         if (message.getProperties() == null || message.getProperties().getCorrelationId() == null) {
             return null;
         }
@@ -387,6 +396,7 @@ public class AmqpMessage {
      *        the String Group ID value to set.
      */
     public void setGroupId(String groupId) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         checkReadOnly();
         lazyCreateProperties();
         getWrappedMessage().setGroupId(groupId);
@@ -413,6 +423,7 @@ public class AmqpMessage {
      *        the boolean durable value to set.
      */
     public void setDurable(boolean durable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5828
         checkReadOnly();
         lazyCreateHeader();
         getWrappedMessage().setDurable(durable);
@@ -425,6 +436,7 @@ public class AmqpMessage {
      * @return true if the message is marked as being durable.
      */
     public boolean isDurable() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         if (message.getHeader() == null || message.getHeader().getDurable() == null) {
             return false;
         }
@@ -438,6 +450,7 @@ public class AmqpMessage {
      * @param priority the priority value to set.
      */
     public void setPriority(short priority) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6638
        checkReadOnly();
        lazyCreateHeader();
        getWrappedMessage().setPriority(priority);
@@ -578,6 +591,7 @@ public class AmqpMessage {
      *        The new value to set in the delivery annotations of this message.
      */
     public void setDeliveryAnnotation(String key, Object value) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4900
         checkReadOnly();
         lazyCreateDeliveryAnnotations();
         deliveryAnnotationsMap.put(Symbol.valueOf(key), value);
@@ -613,6 +627,7 @@ public class AmqpMessage {
      * @throws IllegalStateException if the message is read only.
      */
     public void setText(String value) throws IllegalStateException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5684
         checkReadOnly();
         AmqpValue body = new AmqpValue(value);
         getWrappedMessage().setBody(body);
@@ -628,6 +643,7 @@ public class AmqpMessage {
      * @throws IllegalStateException if the message is read only.
      */
     public void setBytes(byte[] bytes) throws IllegalStateException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5778
         checkReadOnly();
         Data body = new Data(new Binary(bytes));
         getWrappedMessage().setBody(body);
@@ -643,6 +659,7 @@ public class AmqpMessage {
      * @throws IllegalStateException if the message is read only.
      */
     public void setDescribedType(DescribedType described) throws IllegalStateException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5795
         checkReadOnly();
         AmqpValue body = new AmqpValue(described);
         getWrappedMessage().setBody(body);
@@ -687,12 +704,14 @@ public class AmqpMessage {
 
     private void lazyCreateMessageAnnotations() {
         if (messageAnnotationsMap == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6638
             messageAnnotationsMap = new HashMap<>();
             message.setMessageAnnotations(new MessageAnnotations(messageAnnotationsMap));
         }
     }
 
     private void lazyCreateDeliveryAnnotations() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4900
         if (deliveryAnnotationsMap == null) {
             deliveryAnnotationsMap = new HashMap<>();
             message.setDeliveryAnnotations(new DeliveryAnnotations(deliveryAnnotationsMap));
@@ -707,6 +726,7 @@ public class AmqpMessage {
     }
 
     private void lazyCreateHeader() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5828
         if (message.getHeader() == null) {
             message.setHeader(new Header());
         }

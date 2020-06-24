@@ -126,6 +126,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     }
 
     public void testSendReceiveUsingFailover() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-526
         sendUri = "failover:(tcp://localhost:61616,tcp://localhost:61617)";
         recvUri = "failover:(tcp://localhost:61616,tcp://localhost:61617)";
         createMulticastBrokerNetwork();
@@ -140,6 +141,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     }
 
     public void testSendReceiveUsingDiscovery() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1489
         sendUri = "discovery:multicast://default?group="+groupId;
         recvUri = "discovery:multicast://default?group="+groupId;
         createMulticastBrokerNetwork();

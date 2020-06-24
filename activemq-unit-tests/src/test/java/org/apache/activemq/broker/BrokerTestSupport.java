@@ -218,6 +218,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
     }
 
     protected TransactionInfo createEndTransaction(ConnectionInfo connectionInfo, TransactionId txid) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7185
         TransactionInfo info = new TransactionInfo(connectionInfo.getConnectionId(), txid, TransactionInfo.END);
         return info;
     }
@@ -294,6 +295,8 @@ public class BrokerTestSupport extends CombinationTestSupport {
             connection.send(info);
             return info.getDestination();
         } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2324
+//IC see: https://issues.apache.org/jira/browse/AMQ-2484
             return ActiveMQDestination.createDestination(queueName, destinationType);
         }
     }
@@ -345,6 +348,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
                 return;
             }
             if (o instanceof MessageDispatch && ((MessageDispatch)o).getMessage() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6906
                 fail("Received a message: "+((MessageDispatch)o).getMessage().getMessageId() + " for: " + ((MessageDispatch)o).getMessage().getDestination().getPhysicalName());
             }
         }

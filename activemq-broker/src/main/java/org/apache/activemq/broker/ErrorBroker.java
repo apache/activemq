@@ -63,6 +63,7 @@ public class ErrorBroker implements Broker {
 
     @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6497
         return Collections.emptyMap();
     }
 
@@ -83,6 +84,7 @@ public class ErrorBroker implements Broker {
 
     @Override
     public BrokerId getBrokerId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-780
         throw new BrokerStoppedException(this.message);
     }
 
@@ -229,6 +231,10 @@ public class ErrorBroker implements Broker {
 
     @Override
     public void preProcessDispatch(MessageDispatch messageDispatch) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1160
+//IC see: https://issues.apache.org/jira/browse/AMQ-1072
+//IC see: https://issues.apache.org/jira/browse/AMQ-936
+//IC see: https://issues.apache.org/jira/browse/AMQ-567
         throw new BrokerStoppedException(this.message);
     }
 
@@ -314,6 +320,8 @@ public class ErrorBroker implements Broker {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2021
+//IC see: https://issues.apache.org/jira/browse/AMQ-3236
                                          Subscription subscription, Throwable poisonCause) {
         throw new BrokerStoppedException(this.message);
     }
@@ -330,6 +338,9 @@ public class ErrorBroker implements Broker {
 
     @Override
     public void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1704
+//IC see: https://issues.apache.org/jira/browse/AMQ-1679
+//IC see: https://issues.apache.org/jira/browse/AMQ-609
         throw new BrokerStoppedException(this.message);
     }
 
@@ -360,6 +371,7 @@ public class ErrorBroker implements Broker {
 
     @Override
     public void virtualDestinationAdded(ConnectionContext context,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6027
             VirtualDestination virtualDestination) {
         throw new BrokerStoppedException(this.message);
     }
@@ -367,6 +379,7 @@ public class ErrorBroker implements Broker {
     @Override
     public void virtualDestinationRemoved(ConnectionContext context,
             VirtualDestination virtualDestination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-780
         throw new BrokerStoppedException(this.message);
     }
 
@@ -377,17 +390,21 @@ public class ErrorBroker implements Broker {
 
     @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
             ConsumerControl control) {
         throw new BrokerStoppedException(this.message);
     }
 
     @Override
     public void reapplyInterceptor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4995
         throw new BrokerStoppedException(this.message);
     }
 
     @Override
     public Scheduler getScheduler() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2620
+//IC see: https://issues.apache.org/jira/browse/AMQ-2568
         throw new BrokerStoppedException(this.message);
     }
 
@@ -398,11 +415,19 @@ public class ErrorBroker implements Broker {
 
     @Override
     public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
+//IC see: https://issues.apache.org/jira/browse/AMQ-1160
+//IC see: https://issues.apache.org/jira/browse/AMQ-1072
+//IC see: https://issues.apache.org/jira/browse/AMQ-936
+//IC see: https://issues.apache.org/jira/browse/AMQ-567
+//IC see: https://issues.apache.org/jira/browse/AMQ-3107
         throw new BrokerStoppedException(this.message);
     }
 
     @Override
     public void networkBridgeStopped(BrokerInfo brokerInfo) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1656
+//IC see: https://issues.apache.org/jira/browse/AMQ-1541
         throw new BrokerStoppedException(this.message);
     }
 }

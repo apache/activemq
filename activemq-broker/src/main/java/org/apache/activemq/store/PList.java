@@ -30,6 +30,7 @@ public interface PList {
     void destroy() throws IOException;
 
     Object addFirst(String id, ByteSequence bs) throws IOException;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4215
 
     Object addLast(String id, ByteSequence bs) throws IOException;
 

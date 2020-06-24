@@ -77,9 +77,11 @@ public class PooledTaskRunnerTest {
     @Test
     public void testWakeupResultsInThreadSafeCalls() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1686
         ThreadPoolExecutor executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
                 Thread thread = new Thread(runnable, name.getMethodName());
                 thread.setDaemon(true);
                 thread.setPriority(Thread.NORM_PRIORITY);

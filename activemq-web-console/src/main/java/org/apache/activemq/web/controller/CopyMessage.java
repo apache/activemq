@@ -49,6 +49,7 @@ public class CopyMessage extends DestinationFacade implements Controller {
             	log.warn("No queue named: " + getPhysicalDestinationName());
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4174
         return redirectToDestinationView();
     }
 

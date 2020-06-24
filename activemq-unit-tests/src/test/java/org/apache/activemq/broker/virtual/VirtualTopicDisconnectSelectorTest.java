@@ -47,6 +47,7 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
     protected Connection connection;
 
     public void testVirtualTopicSelectorDisconnect() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4271
         testVirtualTopicDisconnect("odd = 'no'", 3000, 1500);
     }
 
@@ -71,6 +72,7 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
         LOG.info("Consuming from: " + destination );
 
         MessageConsumer consumer = createConsumer(session, destination, messageSelector);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4271
 
         MessageListener listener = new MessageListener(){
             public void onMessage(Message message){
@@ -100,6 +102,7 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
                consumer.close();
             }
             if (i==reconnectCount){
+//IC see: https://issues.apache.org/jira/browse/AMQ-4271
                 consumer = createConsumer(session, destination, messageSelector);
                 consumer.setMessageListener(listener);
             }
@@ -122,6 +125,7 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
     }
 
     protected MessageConsumer createConsumer(Session session, Destination destination, String messageSelector) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4271
         if (messageSelector != null) {
             return session.createConsumer(destination, messageSelector);
         } else {
@@ -188,6 +192,7 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
 
 
     protected void startBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5920
         super.startBroker();
         // start with a clean slate
         SubQueueSelectorCacheBroker selectorCacheBroker  = (SubQueueSelectorCacheBroker) broker.getBroker().getAdaptor(SubQueueSelectorCacheBroker.class);

@@ -36,6 +36,7 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractFeatureTes
 
     @Configuration
     public static Option[] configure() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         return new Option[] //
         {
          configure("activemq"),
@@ -49,9 +50,11 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractFeatureTes
     @Test(timeout = 2 * 60 * 1000)
     public void test() throws Throwable {
         assertFeatureInstalled("activemq");
+//IC see: https://issues.apache.org/jira/browse/AMQ-4727
         installAndAssertFeature("camel");
         installAndAssertFeature("activemq-camel");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         assertBrokerStarted();
         withinReason(new Runnable() {
             @Override
@@ -66,6 +69,7 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractFeatureTes
         System.err.println("Hot deploying Camel application");
         copyFile(new File(karafDir + "/data/tmp/camel.xml"), new File(karafDir + "/deploy/camel.xml"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5526
         withinReason(new Callable<Boolean>(){
             @Override
             public Boolean call() throws Exception {
@@ -75,6 +79,7 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractFeatureTes
         });
 
         // produce and consume
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
         JMSTester tester = new JMSTester();
         tester.produceMessage("camel_in");
         assertEquals("got our message", "camel_in", tester.consumeMessage("camel_out"));

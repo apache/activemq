@@ -51,6 +51,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     public AmqpTransportFilter(Transport next, WireFormat wireFormat, BrokerService brokerService) {
         super(next);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         this.protocolConverter = new AmqpProtocolDiscriminator(this, brokerService);
         if (wireFormat instanceof AmqpWireFormat) {
             this.wireFormat = (AmqpWireFormat) wireFormat;
@@ -60,6 +61,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     @Override
     public void start() throws Exception {
         if (monitor != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
             monitor.setAmqpTransport(this);
             monitor.startConnectionTimeoutChecker(getConnectAttemptTimeout());
         }
@@ -99,6 +101,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     @Override
     public void onCommand(Object command) {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
             if (trace) {
                 TRACE_BYTES.trace("Received: \n{}", command);
             }
@@ -127,6 +130,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     @Override
     public void sendToAmqp(Object command) throws IOException {
         assert lock.isHeldByCurrentThread();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
         if (trace) {
             TRACE_BYTES.trace("Sending: \n{}", command);
         }
@@ -139,6 +143,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     @Override
     public long keepAlive() {
         long nextKeepAliveDelay = 0l;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
 
         try {
             lock.lock();
@@ -158,6 +163,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6418
         X509Certificate[] peerCerts = null;
         if (next instanceof SslTransport) {
             peerCerts = ((SslTransport) next).getPeerCertificates();
@@ -191,6 +197,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     @Override
     public String getTransformer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         return wireFormat.getTransformer();
     }
 
@@ -209,6 +216,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     }
 
     public void setProducerCredit(int producerCredit) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         wireFormat.setProducerCredit(producerCredit);
     }
 
@@ -218,6 +226,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     @Override
     public void setInactivityMonitor(AmqpInactivityMonitor monitor) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5587
         this.monitor = monitor;
     }
 
@@ -228,6 +237,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     @Override
     public boolean isUseInactivityMonitor() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5757
         return monitor != null;
     }
 
@@ -240,6 +250,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     }
 
     public long getMaxFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5778
         return wireFormat.getMaxFrameSize();
     }
 

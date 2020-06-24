@@ -59,6 +59,9 @@ public class AMQ7077Test {
         AbortSlowAckConsumerStrategy strategy = new AbortSlowAckConsumerStrategy();
         strategy.setCheckPeriod(500);
         strategy.setMaxTimeSinceLastAck(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7079
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
         strategy.setMaxSlowDuration(0);
         strategy.setMaxSlowCount(4);
         strategy.setIgnoreIdleConsumers(false);
@@ -92,6 +95,9 @@ public class AMQ7077Test {
         Destination destination = session.createQueue("DD");
 
         MessageConsumer advisoryConsumer = session.createConsumer(AdvisorySupport.getSlowConsumerAdvisoryTopic(destination));
+//IC see: https://issues.apache.org/jira/browse/AMQ-7079
+//IC see: https://issues.apache.org/jira/browse/AMQ-7077
+//IC see: https://issues.apache.org/jira/browse/AMQ-6421
 
         MessageConsumer consumer = session.createConsumer(destination);
         // will be idle and can get removed but will be marked slow and now produce an advisory

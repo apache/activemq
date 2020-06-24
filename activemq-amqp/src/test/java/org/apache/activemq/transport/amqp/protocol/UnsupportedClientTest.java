@@ -62,6 +62,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
 
     @Override
     public String getAdditionalConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
         return "&wireFormat.allowNonSaslConnections=false";
     }
 
@@ -93,6 +94,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
 
         AmqpHeader header = new AmqpHeader();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
         header.setProtocolId(3);
         header.setMajor(2);
         header.setMinor(0);
@@ -116,6 +118,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
 
         AmqpHeader header = new AmqpHeader();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
         header.setProtocolId(3);
         header.setMajor(1);
         header.setMinor(1);
@@ -139,6 +142,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
 
         AmqpHeader header = new AmqpHeader();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
         header.setProtocolId(3);
         header.setMajor(1);
         header.setMinor(0);
@@ -161,6 +165,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
     public void testNonSaslClientIsRejected() throws Exception {
 
         AmqpHeader header = new AmqpHeader();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6319
 
         header.setProtocolId(0);
         header.setMajor(1);
@@ -192,6 +197,10 @@ public class UnsupportedClientTest extends AmqpTestSupport {
 
         // Test TCP
         doTestInvalidHeaderProcessing(amqpPort, header, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
 
         // Test SSL
         doTestInvalidHeaderProcessing(amqpSslPort, header, true);
@@ -210,6 +219,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
 
         // Test TCP
         doTestInvalidHeaderProcessing(amqpPort, header, false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
 
         // Test SSL
         doTestInvalidHeaderProcessing(amqpSslPort, header, true);
@@ -241,6 +251,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
                     return true;
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(250)));
     }
 

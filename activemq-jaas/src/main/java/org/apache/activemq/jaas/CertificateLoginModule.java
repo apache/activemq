@@ -63,6 +63,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5876
         init(options);
     }
 
@@ -82,6 +83,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
             throw new LoginException(uce.getMessage() + " Unable to obtain client certificates.");
         }
         X509Certificate[] certificates = ((CertificateCallback)callbacks[0]).getCertificates();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
 
         username = getUserNameForCertificates(certificates);
         if (username == null) {
@@ -91,6 +93,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
         if (debug) {
             LOG.debug("Certificate for user: " + username);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         succeeded = true;
         return true;
     }
@@ -100,6 +103,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
      */
     @Override
     public boolean commit() throws LoginException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         if (debug) {
             LOG.debug("commit");
         }
@@ -111,12 +115,14 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
 
         principals.add(new UserPrincipal(username));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5876
         for (String group : getUserGroups(username)) {
              principals.add(new GroupPrincipal(group));
         }
 
         subject.getPrincipals().addAll(principals);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         username = null;
         commitSucceeded = true;
         return true;
@@ -130,6 +136,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
         if (debug) {
             LOG.debug("abort");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         if (!succeeded) {
             return false;
         } else if (succeeded && commitSucceeded) {
@@ -150,6 +157,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
     public boolean logout() {
         subject.getPrincipals().removeAll(principals);
         clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
 
         if (debug) {
             LOG.debug("logout");
@@ -164,7 +172,9 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
      * Helper method.
      */
     private void clear() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5876
         username = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-7137
         principals.clear();
     }
 
@@ -189,6 +199,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
     protected abstract Set<String> getUserGroups(final String username) throws LoginException;
 
     protected String getDistinguishedName(final X509Certificate[] certs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-960
         if (certs != null && certs.length > 0 && certs[0] != null) {
             return certs[0].getSubjectDN().getName();
         } else {

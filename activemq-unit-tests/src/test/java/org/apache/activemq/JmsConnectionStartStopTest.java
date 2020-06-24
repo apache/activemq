@@ -116,6 +116,7 @@ public class JmsConnectionStartStopTest extends TestSupport {
 
 
     public void testConcurrentSessionCreateWithStart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2872
         ThreadPoolExecutor executor = new ThreadPoolExecutor(50, Integer.MAX_VALUE,
                                       60L, TimeUnit.SECONDS,
                                       new SynchronousQueue<Runnable>());

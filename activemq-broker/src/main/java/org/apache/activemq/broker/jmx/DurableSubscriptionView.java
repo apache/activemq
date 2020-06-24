@@ -45,8 +45,11 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
     public DurableSubscriptionView(ManagedRegionBroker broker, BrokerService brokerService, String clientId, String userName, Subscription sub) {
         super(clientId, userName, sub);
         this.broker = broker;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         this.brokerService = brokerService;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1755
         this.durableSub=(DurableTopicSubscription) sub;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1808
         if (sub != null) {
             this.subscriptionName = sub.getConsumerInfo().getSubscriptionName();
         }
@@ -90,10 +93,12 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
         context.setClientId(clientId);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4000
         brokerService.getBroker().removeSubscription(context, info);
     }
 
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1755
         return "ActiveDurableSubscriptionView: " + getClientId() + ":" + getSubscriptionName();
     }
 
@@ -107,6 +112,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
 
     @Override
     public void removeMessage(@MBeanInfo("messageId") String messageId) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5938
         throw new IllegalStateException("Subscription must be inactive");
     }
 
@@ -152,6 +158,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
 
     @Override
     public boolean isActive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2770
         return durableSub.isActive();
     }
 

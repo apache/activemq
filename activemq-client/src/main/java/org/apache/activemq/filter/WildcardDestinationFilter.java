@@ -43,6 +43,7 @@ public class WildcardDestinationFilter extends DestinationFilter {
                 this.prefixes[i] = prefix;
             }
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2360
         this.destinationType = destinationType;
     }
 

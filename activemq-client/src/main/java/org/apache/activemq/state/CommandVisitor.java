@@ -56,6 +56,7 @@ public interface CommandVisitor {
     Response processAddConsumer(ConsumerInfo info) throws Exception;
 
     Response processRemoveConnection(ConnectionId id, long lastDeliveredSequenceId) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2087
 
     Response processRemoveSession(SessionId id, long lastDeliveredSequenceId) throws Exception;
 
@@ -74,6 +75,7 @@ public interface CommandVisitor {
     Response processMessageAck(MessageAck ack) throws Exception;
 
     Response processMessagePull(MessagePull pull) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-855
 
     Response processBeginTransaction(TransactionInfo info) throws Exception;
 
@@ -96,6 +98,7 @@ public interface CommandVisitor {
     Response processBrokerInfo(BrokerInfo info) throws Exception;
 
     Response processBrokerSubscriptionInfo(BrokerSubscriptionInfo info) throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6373
 
     Response processRecoverTransactions(TransactionInfo info) throws Exception;
 

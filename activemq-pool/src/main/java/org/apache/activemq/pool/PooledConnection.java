@@ -24,6 +24,7 @@ import org.apache.activemq.jms.pool.ConnectionPool;
 
 public class PooledConnection extends org.apache.activemq.jms.pool.PooledConnection implements EnhancedConnection {
     public PooledConnection(ConnectionPool connection) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4757
         super(connection);
     }
 

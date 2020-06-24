@@ -58,6 +58,8 @@ public class AMQ3625Test {
         if (System.getProperty(java_security_auth_login_config) != null) {
             oldLoginConf = System.getProperty(java_security_auth_login_config);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4388
+//IC see: https://issues.apache.org/jira/browse/AMQ-4387
         System.setProperty(java_security_auth_login_config, base + "/" + conf + "/" + "login.config");
         broker1 = BrokerFactory.createBroker(xbean + base + "/" + conf + "/" + JaasStompSSLBroker1_xml);
         broker2 = BrokerFactory.createBroker(xbean + base + "/" + conf + "/" + JaasStompSSLBroker2_xml);
@@ -83,6 +85,7 @@ public class AMQ3625Test {
         Appender appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5892
                 if (event.getMessage().toString().contains("java.lang.SecurityException")) {
                     authenticationFailed.set(true);
                 }
@@ -94,6 +97,8 @@ public class AMQ3625Test {
         Logger.getRootLogger().addAppender(appender);
         
         String connectURI = broker1.getConnectorByName("openwire").getConnectUri().toString();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7056
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         connectURI = connectURI.replace("?needClientAuth=true", "?verifyHostName=false");
         broker2.addNetworkConnector("static:(" + connectURI + ")").start();
         

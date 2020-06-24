@@ -53,6 +53,7 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
 
     @Parameters(name="{0}")
     public static Collection<Object[]> data() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
         return Arrays.asList(new Object[][] {
             {"complete-frames", false},
             {"partial-frames", true}
@@ -68,8 +69,10 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
     public void setUp() throws Exception {
         super.setUp();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-7289
         wsClient = new WebSocketClient(new SslContextFactory.Client(true));
         wsClient.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
 
         request = new ClientUpgradeRequest();
         request.setSubProtocols("mqttv3.1");
@@ -96,11 +99,15 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
 
     @Test(timeout = 60000)
     public void testConnectCycles() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5870
         for (int i = 0; i < 10; ++i) {
             testConnect();
 
             wsMQTTConnection = new MQTTWSConnection().setWritePartialFrames(partialFrames);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
+//IC see: https://issues.apache.org/jira/browse/AMQ-6680
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
             wsClient.connect(wsMQTTConnection, wsConnectUri, request);
             if (!wsMQTTConnection.awaitConnection(30, TimeUnit.SECONDS)) {
                 throw new IOException("Could not connect to MQTT WS endpoint");

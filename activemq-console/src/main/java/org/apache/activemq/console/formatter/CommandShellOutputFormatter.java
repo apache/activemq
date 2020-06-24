@@ -196,6 +196,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
      */
     public void printException(Exception e) {
         out.println("ERROR: " + e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-790
         e.printStackTrace(out);
     }
 
@@ -207,6 +208,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
     public void printVersion(String version) {
         out.println("");
         out.println("ActiveMQ " + version);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1306
         out.println("For help or more information please see: http://activemq.apache.org");
         out.println("");
     }

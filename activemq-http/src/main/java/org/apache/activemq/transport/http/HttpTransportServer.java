@@ -77,8 +77,10 @@ public class HttpTransportServer extends WebTransportServerSupport {
 
     @Override
     protected void doStart() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         createServer();
         if (connector == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
             connector = socketConnectorFactory.createConnector(server);
         }
 
@@ -87,21 +89,25 @@ public class HttpTransportServer extends WebTransportServerSupport {
         ServletContextHandler contextHandler =
             new ServletContextHandler(server, "/", ServletContextHandler.SECURITY);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3579
         ServletHolder holder = new ServletHolder();
         holder.setServlet(new HttpTunnelServlet());
         contextHandler.addServlet(holder, "/");
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
         contextHandler.setAttribute("wireFormat", getWireFormat());
+//IC see: https://issues.apache.org/jira/browse/AMQ-2764
         contextHandler.setAttribute("transportFactory", transportFactory);
         contextHandler.setAttribute("transportOptions", transportOptions);
         contextHandler.setAttribute("wireFormatOptions", wireFormatOptions);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7327
 
         //AMQ-6182 - disabling trace by default
         configureTraceMethod((ConstraintSecurityHandler) contextHandler.getSecurityHandler(),
                 httpOptions.isEnableTrace());
 
         addGzipHandler(contextHandler);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
 
         server.start();
 
@@ -110,6 +116,7 @@ public class HttpTransportServer extends WebTransportServerSupport {
 
         int port = boundTo.getPort();
         int p2 = getConnectorLocalPort();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         if (p2 != -1) {
             port = p2;
         }
@@ -128,7 +135,9 @@ public class HttpTransportServer extends WebTransportServerSupport {
     }
 
     private void addGzipHandler(ServletContextHandler contextHandler) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6521
         HandlerWrapper handler = null;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6521
         try {
             handler = (HandlerWrapper) forName("org.eclipse.jetty.servlets.gzip.GzipHandler").newInstance();
         } catch (Throwable t) {
@@ -170,16 +179,19 @@ public class HttpTransportServer extends WebTransportServerSupport {
 
     @Override
     public void setTransportOption(Map<String, Object> transportOptions) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3880
         socketConnectorFactory.setTransportOptions(transportOptions);
         super.setTransportOption(transportOptions);
     }
 
     public void setWireFormatOptions(Map<String, Object> wireFormatOptions) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7327
         this.wireFormatOptions = wireFormatOptions;
     }
 
     @Override
     public boolean isSslServer() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3996
         return false;
     }
 }

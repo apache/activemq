@@ -262,6 +262,7 @@ public class VirtualTopicDLQTest extends TestCase {
                 producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
                 for (int i = 0; i < numberMessages; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
                     TextMessage message = session.createTextMessage("I am a message :: " + String.valueOf(i));
                     try {
                         producer.send(message);
@@ -355,6 +356,8 @@ public class VirtualTopicDLQTest extends TestCase {
                 LOG.error("Consumer (" + destinationName + ") Caught: " + e);
             } finally {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
                     if (connection != null) {
                         connection.close();
                     }

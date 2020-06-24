@@ -112,6 +112,7 @@ public class MQTTTestSupport {
 
     public void startBroker() throws Exception {
         brokerService = createBroker(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
 
         configureBroker(brokerService);
 
@@ -131,6 +132,7 @@ public class MQTTTestSupport {
 
         brokerService.start();
         brokerService.waitUntilStarted();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         port = brokerService.getTransportConnectorByName("mqtt").getConnectUri().getPort();
         jmsUri = brokerService.getTransportConnectorByName("openwire").getPublishableConnectString();
         cf = new ActiveMQConnectionFactory(jmsUri);
@@ -140,12 +142,14 @@ public class MQTTTestSupport {
         BrokerService brokerService = new BrokerService();
         brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
         brokerService.setPersistent(isPersistent());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5872
         if (isPersistent()) {
             KahaDBStore kaha = new KahaDBStore();
             kaha.setDirectory(new File(KAHADB_DIRECTORY + getTestName()));
             brokerService.setPersistenceAdapter(kaha);
         }
         brokerService.setAdvisorySupport(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5607
         brokerService.setUseJmx(true);
         brokerService.getManagementContext().setCreateConnector(false);
         brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
@@ -170,9 +174,11 @@ public class MQTTTestSupport {
         sslContext.afterPropertiesSet();
         brokerService.setSslContext(sslContext);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
         addMQTTConnector(brokerService);
         addOpenWireConnector(brokerService);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5288
         ArrayList<BrokerPlugin> plugins = new ArrayList<BrokerPlugin>();
         createPlugins(plugins);
 
@@ -223,6 +229,7 @@ public class MQTTTestSupport {
     }
 
     protected void addOpenWireConnector(BrokerService brokerService) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5441
         TransportConnector connector = new TransportConnector();
         connector.setUri(new URI("tcp://0.0.0.0:0"));
         connector.setName("openwire");
@@ -237,11 +244,13 @@ public class MQTTTestSupport {
         StringBuilder connectorURI = new StringBuilder();
         connectorURI.append(getProtocolScheme());
         connectorURI.append("://0.0.0.0:").append(port);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5468
         String protocolConfig = getProtocolConfig();
         if (protocolConfig != null && !protocolConfig.isEmpty()) {
             connectorURI.append("?").append(protocolConfig);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         TransportConnector connector = new TransportConnector();
         connector.setUri(new URI(connectorURI.toString()));
         connector.setName("mqtt");
@@ -265,6 +274,7 @@ public class MQTTTestSupport {
     protected String getTopicName() {
         //wildcard characters are illegal in publish
         //replace a + with something else, like _ which is allowed
+//IC see: https://issues.apache.org/jira/browse/AMQ-5882
         return (getClass().getName() + "." + name.getMethodName()).replace("+", "_");
     }
 
@@ -305,6 +315,7 @@ public class MQTTTestSupport {
             provider.connect("tcp://localhost:" + port);
         } else {
             // Setup SSL context...
+//IC see: https://issues.apache.org/jira/browse/AMQ-6187
             File trustStore = new File(basedir(), "src/test/resources/server.keystore");
             File keyStore = new File(basedir(), "src/test/resources/client.keystore");
 
@@ -329,6 +340,7 @@ public class MQTTTestSupport {
     }
 
     public String getProtocolConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5468
         return protocolConfig;
     }
 
@@ -384,6 +396,7 @@ public class MQTTTestSupport {
     }
 
     protected MQTTClientProvider getMQTTClientProvider() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         return new FuseMQTTClientProvider();
     }
 
@@ -424,6 +437,7 @@ public class MQTTTestSupport {
         mqtt.setCleanSession(clean);
 
         // Setup SSL context...
+//IC see: https://issues.apache.org/jira/browse/AMQ-6187
         File trustStore = new File(basedir(), "src/test/resources/server.keystore");
         File keyStore = new File(basedir(), "src/test/resources/client.keystore");
 

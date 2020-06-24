@@ -72,6 +72,7 @@ public class ActiveMQConnectionFactoryTest {
         ois.close();
 
         Connection con = deserializedFactory.createConnection("defaultUser", "defaultPassword");
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         ActiveMQConnection connection = ((ActiveMQConnection) ((ManagedConnectionProxy) con).getManagedConnection().getPhysicalConnection());
         assertEquals(100, connection.getPrefetchPolicy().getQueuePrefetch());
         assertNotNull("Connection object returned by ActiveMQConnectionFactory.createConnection() is null", con);
@@ -81,6 +82,7 @@ public class ActiveMQConnectionFactoryTest {
 
     @Test(timeout = 60000)
     public void testOptimizeDurablePrefetch() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3986
         ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
         ra.setServerUrl(url);
         ra.setUserName(user);
@@ -97,6 +99,7 @@ public class ActiveMQConnectionFactoryTest {
         con.start();
 
         assertEquals(0, ((ActiveMQTopicSubscriber) sub).getPrefetchNumber());
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         con.close();
         ra.stop();
@@ -105,6 +108,8 @@ public class ActiveMQConnectionFactoryTest {
     @Test(timeout = 60000)
     public void testGetXAResource() throws Exception {
         ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5790
+//IC see: https://issues.apache.org/jira/browse/AMQ-4486
         ra.start(null);
         ra.setServerUrl(url);
         ra.setUserName(user);
@@ -116,10 +121,13 @@ public class ActiveMQConnectionFactoryTest {
         assertEquals("no pending transactions", 0, resources[0].recover(100).length);
 
         // validate equality
+//IC see: https://issues.apache.org/jira/browse/AMQ-5080
         XAResource[] resource2 = ra.getXAResources(null);
         assertEquals("one resource", 1, resource2.length);
         assertTrue("isSameRM true", resources[0].isSameRM(resource2[0]));
         assertTrue("the same instance", resources[0].equals(resource2[0]));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5790
+//IC see: https://issues.apache.org/jira/browse/AMQ-4486
 
         ra.stop();
     }
@@ -282,6 +290,7 @@ public class ActiveMQConnectionFactoryTest {
             ra.setUserName(user);
             ra.setPassword(pwd);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4486
             XAResource[] resources = ra.getXAResources(null);
             assertEquals("one resource", 1, resources.length);
 

@@ -47,6 +47,7 @@ public class StompMaxDataSizeTest extends StompTestSupport {
 
     @Override
     protected boolean isUseSslConnector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         return true;
     }
 

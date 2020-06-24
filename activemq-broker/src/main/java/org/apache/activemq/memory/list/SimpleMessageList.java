@@ -69,6 +69,7 @@ public class SimpleMessageList implements MessageList {
             for (Iterator<MessageReference> i = list.iterator(); i.hasNext();) {
                 MessageReference ref = i.next();
                 Message msg;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
                 msg = ref.getMessage();
                 if (filter.matches(msg.getDestination())) {
                     result.add(msg);

@@ -59,6 +59,7 @@ public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecovery
 
     public Message[] browse(ActiveMQDestination destination) throws Exception {
         List<Message> result = new ArrayList<Message>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3622
         if (lastImage != null) {
             DestinationFilter filter = DestinationFilter.parseFilter(destination);
             if (filter.matches(lastImage.getMessage().getDestination())) {
@@ -69,6 +70,7 @@ public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecovery
     }
 
     public SubscriptionRecoveryPolicy copy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-714
         return new LastImageSubscriptionRecoveryPolicy();
     }
     

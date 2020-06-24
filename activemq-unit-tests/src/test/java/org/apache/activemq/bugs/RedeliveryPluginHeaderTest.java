@@ -71,6 +71,7 @@ public class RedeliveryPluginHeaderTest extends TestCase {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
                 transportURL + "?trace=true&jms.redeliveryPolicy.maximumRedeliveries=0&jms.redeliveryPolicy.preDispatchCheck=true");
+//IC see: https://issues.apache.org/jira/browse/AMQ-6517
 
         Connection connection = factory.createConnection();
         connection.start();

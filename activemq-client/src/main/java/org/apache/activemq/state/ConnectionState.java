@@ -40,6 +40,7 @@ import org.apache.activemq.command.TransactionId;
 
 public class ConnectionState {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1349
     ConnectionInfo info;
     private final ConcurrentMap<TransactionId, TransactionState> transactions = new ConcurrentHashMap<TransactionId, TransactionState>();
     private final ConcurrentMap<SessionId, SessionState> sessions = new ConcurrentHashMap<SessionId, SessionState>();
@@ -61,6 +62,7 @@ public class ConnectionState {
 
     public void reset(ConnectionInfo info) {
         this.info = info;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1349
         transactions.clear();
         sessions.clear();
         tempDestinations.clear();
@@ -70,6 +72,7 @@ public class ConnectionState {
     }
 
     public void addTempDestination(DestinationInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-724
         checkShutdown();
         tempDestinations.add(info);
     }
@@ -101,6 +104,7 @@ public class ConnectionState {
     }
 
     public void addSession(SessionInfo info) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-724
         checkShutdown();
         sessions.put(info.getSessionId(), new SessionState(info));
     }
@@ -145,7 +149,9 @@ public class ConnectionState {
     }
 
     public Map<ConsumerId, ConsumerInfo> getRecoveringPullConsumers() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2579
         if (recoveringPullConsumers == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7463
             recoveringPullConsumers = new ConcurrentHashMap<ConsumerId, ConsumerInfo>();
         }
         return recoveringPullConsumers;

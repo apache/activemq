@@ -39,6 +39,7 @@ public class WebConsoleStarter implements ServletContextListener {
         LOG.debug("Initializing ActiveMQ WebConsole...");
 
         String webconsoleType = getWebconsoleType();
+//IC see: https://issues.apache.org/jira/browse/AMQ-7486
 
         ServletContext servletContext = event.getServletContext();
         WebApplicationContext context = createWebapplicationContext(servletContext, webconsoleType);
@@ -79,6 +80,7 @@ public class WebConsoleStarter implements ServletContextListener {
     private void initializeWebClient(ServletContext servletContext, WebApplicationContext context) {
         ConnectionFactory connectionFactory = (ConnectionFactory)context.getBean("connectionFactory");
         servletContext.setAttribute(WebClient.CONNECTION_FACTORY_ATTRIBUTE, connectionFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4034
         WebClient.initContext(servletContext);
     }
 
@@ -93,10 +95,12 @@ public class WebConsoleStarter implements ServletContextListener {
 
     private static String getWebconsoleType() {
         String webconsoleType = System.getProperty("webconsole.type", "embedded");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7486
 
         // detect osgi
         try {
             if (OsgiUtil.isOsgi()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4034
                 webconsoleType = "osgi";
             }
         } catch (NoClassDefFoundError ignore) {
@@ -107,6 +111,7 @@ public class WebConsoleStarter implements ServletContextListener {
 
     static class OsgiUtil {
         static boolean isOsgi() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4034
             return (FrameworkUtil.getBundle(WebConsoleStarter.class) != null);
         }
     }

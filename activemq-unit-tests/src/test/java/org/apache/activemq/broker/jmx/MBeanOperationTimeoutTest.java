@@ -59,6 +59,7 @@ public class MBeanOperationTimeoutTest {
         LOG.info("Produced " + messageCount + " messages to the broker.");
 
         // Now get the QueueViewMBean and purge
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         String objectNameStr = broker.getBrokerObjectName().toString();
         objectNameStr += ",destinationType=Queue,destinationName="+destinationName;
 

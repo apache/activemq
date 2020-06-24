@@ -57,6 +57,7 @@ public class StompTelnetTest extends StompTestSupport {
             LOG.info("try: " + connector.getConnectUri());
             int port = connector.getConnectUri().getPort();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3927
             StompConnection stompConnection = new StompConnection();
             stompConnection.open(createSocket(port));
             String frame = "CONNECT\r\naccept-version:1.1\r\n\r\n" + Stomp.NULL;

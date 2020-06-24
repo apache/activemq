@@ -27,6 +27,7 @@ public class MqttProtocolVerifier implements ProtocolVerifier {
     @Override
     public boolean isProtocol(byte[] value) {
        ByteBuffer buf = ByteBuffer.wrap(value);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6661
 
        if (!(buf.get() == 16 && validateRemainingLength(buf) && buf.get() == (byte) 0)) {
            return false;

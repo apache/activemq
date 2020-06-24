@@ -70,6 +70,7 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
 
     @Override
     public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             InitBuffer initBuffer) throws IOException {
         return new StompNIOTransport(wireFormat, socket, initBuffer);
     }
@@ -78,6 +79,7 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
     @Override
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
         transport = super.serverConfigure(transport, format, options);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3481
 
         MutexTransport mutex = transport.narrow(MutexTransport.class);
         if (mutex != null) {
@@ -90,6 +92,7 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
     @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3449
         transport = new StompTransportFilter(transport, format, brokerContext);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
@@ -97,12 +100,14 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2702
         this.brokerContext = brokerService.getBrokerContext();
     }
 
     @Override
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
         StompInactivityMonitor monitor = new StompInactivityMonitor(transport, format);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3897
 
         StompTransportFilter filter = (StompTransportFilter) transport.narrow(StompTransportFilter.class);
         filter.setInactivityMonitor(monitor);

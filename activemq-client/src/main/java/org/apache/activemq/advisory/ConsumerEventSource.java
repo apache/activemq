@@ -64,6 +64,7 @@ public class ConsumerEventSource implements Service, MessageListener {
     }
     
     public String getConsumerId() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1808
         return consumer != null ? consumer.getConsumerId().toString() : "NOT_SET";
     }
 

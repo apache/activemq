@@ -44,6 +44,7 @@ public interface HealthViewMBean {
      */
     @MBeanInfo("String representation of current Broker state")
     String healthStatus() throws Exception;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6252
 
     /**
      * Warning, this method only return a value if the health or healthList method has previously
@@ -54,5 +55,6 @@ public interface HealthViewMBean {
      */
     @MBeanInfo("String representation of current Broker state")
     String getCurrentStatus();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
 }

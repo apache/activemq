@@ -56,6 +56,7 @@ public class NIOTransportFactory extends TcpTransportFactory {
 
     @Override
     public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             InitBuffer initBuffer) throws IOException {
        return new NIOTransport(wireFormat, socket, initBuffer);
     }

@@ -36,6 +36,7 @@ import org.junit.rules.TestName;
 public class ClassLoadingAwareObjectInputStreamTest {
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
     }
 

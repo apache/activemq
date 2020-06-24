@@ -52,6 +52,7 @@ public class BrokerRegistry {
                     LOG.warn("Broker localhost not started so using {} instead", result.getBrokerName());
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-4690
             if (result == null && (brokerName==null || brokerName.isEmpty() || brokerName.equals("null"))){
                 result = findFirst();
             }
@@ -81,6 +82,7 @@ public class BrokerRegistry {
     public void bind(String brokerName, BrokerService broker) {
         synchronized (mutex) {
             brokers.put(brokerName, broker);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1895
             mutex.notifyAll();
         }
     }

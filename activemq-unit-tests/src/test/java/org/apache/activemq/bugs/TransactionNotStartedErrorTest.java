@@ -72,6 +72,7 @@ public class TransactionNotStartedErrorTest extends TestCase {
     private final Object lock = new Object();
 
     public Connection createConnection() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
             broker.getTransportConnectors().get(0).getPublishableConnectString());
         return factory.createConnection();
@@ -86,6 +87,7 @@ public class TransactionNotStartedErrorTest extends TestCase {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setPersistent(true);
         broker.setUseJmx(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();
         LOG.info("Starting broker..");

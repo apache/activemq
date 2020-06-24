@@ -40,6 +40,7 @@ public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testReceiverCanDrainMessagesQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         doTestReceiverCanDrainMessages(false);
     }
 
@@ -138,6 +139,7 @@ public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testPullOneFromRemoteQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         doTestPullOneFromRemote(false);
     }
 
@@ -184,6 +186,7 @@ public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
 
         receiver.close();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6500
         assertEquals(MSG_COUNT - 1, destinationView.getEnqueueCount() - destinationView.getDequeueCount());
         assertEquals(1, destinationView.getDispatchCount());
 
@@ -203,6 +206,10 @@ public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
     private void doTestMultipleZeroResultPulls(boolean topic) throws Exception {
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 

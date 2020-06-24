@@ -102,6 +102,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
     private EventDirContext eventContext;
 
     private final AtomicReference<DefaultAuthorizationMap> map =
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
         new AtomicReference<DefaultAuthorizationMap>(new DefaultAuthorizationMap());
     private final ThreadPoolExecutor updaterService;
 
@@ -111,6 +112,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
     public SimpleCachedLDAPAuthorizationMap() {
         // Allow for only a couple outstanding update request, they can be slow so we
         // don't want a bunch to pile up for no reason.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
         updaterService = new ThreadPoolExecutor(0, 1, 60, TimeUnit.SECONDS,
             new LinkedBlockingQueue<Runnable>(2),
             new ThreadFactory() {
@@ -124,8 +126,10 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
     }
 
     protected DirContext createContext() throws NamingException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
         Hashtable<String, String> env = new Hashtable<String, String>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, initialContextFactory);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5345
         if (connectionUsername != null && !"".equals(connectionUsername)) {
             env.put(Context.SECURITY_PRINCIPAL, connectionUsername);
         } else {
@@ -144,10 +148,12 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
 
     protected boolean isContextAlive() {
         boolean alive = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
         if (context != null) {
             try {
                 context.getAttributes("");
                 alive = true;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
             } catch (Exception e) {
             }
         }
@@ -164,6 +170,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
      *             if there is an error setting things up
      */
     protected DirContext open() throws NamingException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
         if (isContextAlive()) {
             return context;
         }
@@ -172,6 +179,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
             context = createContext();
             if (refreshInterval == -1 && !refreshDisabled) {
                 eventContext = ((EventDirContext) context.lookup(""));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
 
                 final SearchControls constraints = new SearchControls();
                 constraints.setSearchScope(SearchControls.SUBTREE_SCOPE);
@@ -226,10 +234,12 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
     protected synchronized void query() throws Exception {
         DirContext currentContext = open();
         entries.clear();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6529
 
         final SearchControls constraints = new SearchControls();
         constraints.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
         DefaultAuthorizationMap newMap = new DefaultAuthorizationMap();
         for (PermissionType permissionType : PermissionType.values()) {
             try {
@@ -263,6 +273,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
 
         // Create and swap in the new instance with updated LDAP data.
         newMap.setAuthorizationEntries(new ArrayList<DestinationMapEntry>(entries.values()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
         newMap.setGroupClass(groupClass);
         this.map.set(newMap);
 
@@ -334,6 +345,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                 if (dn.size() != getPrefixLengthForDestinationType(destinationType) + 1) {
                     // handle unknown entry
                     throw new IllegalArgumentException("Malformed policy structure for a temporary destination "
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
                         + "policy entry.  The permission group entries should be immediately below the " + "temporary policy base DN.");
                 }
                 entry = map.getTempDestinationAuthorizationEntry();
@@ -403,6 +415,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                 // Lookup of member to determine principal type (group or user) and name.
                 Attributes memberAttributes;
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
                     memberAttributes = context.getAttributes(memberDn, new String[] { "objectClass", groupNameAttribute, userNameAttribute });
                 } catch (NamingException e) {
                     LOG.error("Policy not applied! Unknown member {} in policy entry {}", new Object[]{ memberDn, result.getNameInNamespace() }, e);
@@ -527,6 +540,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                 // on the destination type and the DN size.
                 if (dn.size() == (getPrefixLengthForDestinationType(destinationType) + 2)) {
                     destination = formatDestination(dn.getRdn(dn.size() - 2), destinationType);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
                 } else if (dn.size() == (getPrefixLengthForDestinationType(destinationType) + 1)) {
                     destination = formatDestination(dn.getRdn(dn.size() - 1), destinationType);
                 } else {
@@ -569,6 +583,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                 dest = new ActiveMQTopic(formatDestinationName(destinationName));
                 break;
             default:
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
                 throw new IllegalArgumentException("Unknown destination type: " + destinationType);
         }
 
@@ -670,6 +685,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
      * refresh interval has elapsed.
      */
     protected void checkForUpdates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6529
         if (lastUpdated == -1) {
             //ACL's have never been queried, but we need them NOW as we're being asked for them. 
             try {
@@ -680,10 +696,12 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
             }
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
         if (context != null && refreshDisabled) {
             return;
         }
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
         if (context == null || (!refreshDisabled && (refreshInterval != -1 && System.currentTimeMillis() >= lastUpdated + refreshInterval))) {
             this.updaterService.execute(new Runnable() {
                 @Override
@@ -693,6 +711,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                     if (context == null || (!refreshDisabled &&
                         (refreshInterval != -1 && System.currentTimeMillis() >= lastUpdated + refreshInterval))) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
                         if (!isContextAlive()) {
                             try {
                                 context = createContext();
@@ -777,6 +796,8 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
      */
     @Override
     public Set<Object> getWriteACLs(ActiveMQDestination destination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
         checkForUpdates();
         DefaultAuthorizationMap map = this.map.get();
         return map.getWriteACLs(destination);
@@ -874,6 +895,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
 
                 for (PermissionType newPermissionType : PermissionType.values()) {
                     NamingEnumeration<SearchResult> results = context.search(newName, getFilterForPermissionType(newPermissionType), controls);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
 
                     if (results.hasMore()) {
                         objectAdded(namingEvent, destinationType, newPermissionType);
@@ -930,6 +952,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
      *            the exception event
      */
     public void namingExceptionThrown(NamingExceptionEvent namingExceptionEvent) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3845
         context = null;
         LOG.error("Caught unexpected exception.", namingExceptionEvent.getException());
     }
@@ -994,6 +1017,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
     }
 
     public String getQueueSearchBase() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3791
         return queueSearchBase;
     }
 
@@ -1124,6 +1148,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
     }
 
     public String getGroupClass() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
         return groupClass;
     }
 
@@ -1133,6 +1158,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
     }
 
     protected static enum DestinationType {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4555
         QUEUE, TOPIC, TEMP;
     }
 

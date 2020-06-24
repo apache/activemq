@@ -150,6 +150,7 @@ public class ConsumerBean extends Assert implements MessageListener {
     }
 
     public List<Message> getMessages() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6274
         return messages;
     }
 

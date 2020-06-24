@@ -62,6 +62,7 @@ public class AdvisoryTopicCleanUpTest {
         connectionUri = broker.addConnector("tcp://localhost:0").getPublishableConnectString();
 
         PolicyEntry policy = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3903
         policy.setAdvisoryForFastProducers(true);
         policy.setAdvisoryForConsumed(true);
         policy.setAdvisoryForDelivery(true);

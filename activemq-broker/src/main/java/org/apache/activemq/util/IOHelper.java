@@ -91,6 +91,7 @@ public final class IOHelper {
      */
     public static String toFileSystemSafeName(String name, boolean dirSeparators, int maxFileLength) {
         int size = name.length();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1485
         StringBuffer rc = new StringBuffer(size * 2);
         for (int i = 0; i < size; i++) {
             char c = name.charAt(i);
@@ -98,6 +99,7 @@ public final class IOHelper {
             valid = valid || (c >= 'A' && c <= 'Z');
             valid = valid || (c >= '0' && c <= '9');
             valid = valid || (c == '_') || (c == '-') || (c == '.') || (c == '#') || (dirSeparators && ((c == '/') || (c == '\\')));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
 
             if (valid) {
                 rc.append(c);
@@ -109,6 +111,7 @@ public final class IOHelper {
         }
         String result = rc.toString();
         if (result.length() > maxFileLength) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
             result = result.substring(result.length() - maxFileLength, result.length());
         }
         return result;
@@ -172,6 +175,7 @@ public final class IOHelper {
             } else {
                 for (int i = 0; i < files.length; i++) {
                     File file = files[i];
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
                     if (file.getName().equals(".") || file.getName().equals("..")) {
                         continue;
                     }
@@ -191,6 +195,7 @@ public final class IOHelper {
         if (!src.renameTo(new File(targetDirectory, src.getName()))) {
 
             // If rename fails we must do a true deep copy instead.
+//IC see: https://issues.apache.org/jira/browse/AMQ-6039
             Path sourcePath = src.toPath();
             Path targetDirPath = targetDirectory.toPath();
 
@@ -203,6 +208,7 @@ public final class IOHelper {
     }
 
     public static void moveFiles(File srcDirectory, File targetDirectory, FilenameFilter filter) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         if (!srcDirectory.isDirectory()) {
             throw new IOException("source is not a directory");
         }
@@ -257,6 +263,7 @@ public final class IOHelper {
         if (parent.getAbsolutePath().equals(fromPath)) {
             // one level down
             result = to;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         } else {
             String parentPath = parent.getAbsolutePath();
             String path = parentPath.substring(fromPath.length());
@@ -293,6 +300,7 @@ public final class IOHelper {
     }
 
     public static void copyInputStream(InputStream in, OutputStream out) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5745
         try {
             byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
             int len = in.read(buffer);
@@ -307,6 +315,7 @@ public final class IOHelper {
     }
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4183
         MAX_DIR_NAME_LENGTH = Integer.getInteger("MaximumDirNameLength", 200);
         MAX_FILE_NAME_LENGTH = Integer.getInteger("MaximumFileNameLength", 64);
     }
@@ -322,6 +331,7 @@ public final class IOHelper {
     public static void mkdirs(File dir) throws IOException {
         if (dir.exists()) {
             if (!dir.isDirectory()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
                 throw new IOException("Failed to create directory '" + dir +
                                       "', regular file already existed with that name");
             }

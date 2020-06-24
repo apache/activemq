@@ -44,6 +44,7 @@ public class ThreadTracker {
      */
     public static void track(final String name) {
         Tracker t;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         final String key = name.intern();
         synchronized(trackers) {
             t = trackers.get(key);
@@ -59,6 +60,7 @@ public class ThreadTracker {
      * output the result of stack trace capture to the log
      */
     public static void result() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2626
         synchronized(trackers) {
             for (Entry<String, Tracker> t: trackers.entrySet()) {
                 LOG.info("Tracker: " + t.getKey() + ", " + t.getValue().size() + " entry points...");
@@ -78,6 +80,7 @@ class Trace extends Throwable {
     public final long id;
     Trace() {
         super();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2610
         id = calculateIdentifier();
     }
     private long calculateIdentifier() {

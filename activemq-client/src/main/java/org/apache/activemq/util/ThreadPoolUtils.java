@@ -38,6 +38,7 @@ public final class ThreadPoolUtils {
      * @see java.util.concurrent.ExecutorService#shutdown()
      */
     public static void shutdown(ExecutorService executorService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         doShutdown(executorService, 0);
     }
 
@@ -49,6 +50,7 @@ public final class ThreadPoolUtils {
      * @see java.util.concurrent.ExecutorService#shutdownNow()
      */
     public static List<Runnable> shutdownNow(ExecutorService executorService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4026
         List<Runnable> answer = null;
         if (!executorService.isShutdown()) {
             LOG.debug("Forcing shutdown of ExecutorService: {}", executorService);
@@ -70,6 +72,7 @@ public final class ThreadPoolUtils {
      * with a timeout value of {@link #DEFAULT_SHUTDOWN_AWAIT_TERMINATION} millis.
      */
     public static void shutdownGraceful(ExecutorService executorService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         doShutdown(executorService, DEFAULT_SHUTDOWN_AWAIT_TERMINATION);
     }
 
@@ -90,6 +93,7 @@ public final class ThreadPoolUtils {
      * @param shutdownAwaitTermination timeout in millis to wait for orderly shutdown
      */
     public static void shutdownGraceful(ExecutorService executorService, long shutdownAwaitTermination) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         doShutdown(executorService, shutdownAwaitTermination);
     }
 
@@ -132,6 +136,7 @@ public final class ThreadPoolUtils {
                         Thread.currentThread().interrupt();
                     }
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
             } else  if (shutdownAwaitTermination < 0) {
                 try {
                     awaitTermination(executorService);
@@ -139,6 +144,8 @@ public final class ThreadPoolUtils {
                     warned = true;
                     LOG.warn("Forcing shutdown of ExecutorService: {} due interrupted.", executorService);
                     // we were interrupted during shutdown, so force shutdown
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
                     try {
                         executorService.shutdownNow();
                     } finally {
@@ -170,6 +177,7 @@ public final class ThreadPoolUtils {
      */
     public static void awaitTermination(ExecutorService executorService) throws InterruptedException {
         // log progress every 5th second so end user is aware of we are shutting down
+//IC see: https://issues.apache.org/jira/browse/AMQ-6203
         StopWatch watch = new StopWatch();
         final long interval = 2000;
         while (true) {
@@ -195,6 +203,7 @@ public final class ThreadPoolUtils {
     public static boolean awaitTermination(ExecutorService executorService, long shutdownAwaitTermination) throws InterruptedException {
         // log progress every 5th second so end user is aware of we are shutting down
         StopWatch watch = new StopWatch();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         long interval = Math.min(2000, shutdownAwaitTermination);
         boolean done = false;
         while (!done && interval > 0) {

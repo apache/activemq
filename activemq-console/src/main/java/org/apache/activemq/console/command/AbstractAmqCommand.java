@@ -46,6 +46,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
      * @throws JMSException
      */
     protected Connection createConnection() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
         return createConnection(getUsername(), getPassword());
     }
 
@@ -60,12 +61,14 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
      */
     protected Connection createConnection(String username, String password) throws JMSException {
         if (getBrokerUrl() == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
             context
                 .printException(new IllegalStateException(
                                                           "You must specify a broker URL to connect to using the --amqurl option."));
             return null;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
         ConnectionFactory factory = getConnectionFactory();
         Connection conn;
 
@@ -106,6 +109,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
         if (token.equals("--amqurl")) {
             // If no broker url specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(new IllegalArgumentException("Broker URL not specified."));
                 tokens.clear();
                 return;
@@ -113,6 +117,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
 
             // If broker url already specified
             if (getBrokerUrl() != null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context
                     .printException(new IllegalArgumentException("Multiple broker URL cannot be specified."));
                 tokens.clear();
@@ -124,12 +129,15 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
             try {
                 setBrokerUrl(new URI(strBrokerUrl));
             } catch (URISyntaxException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1707
                 context.printException(e);
                 tokens.clear();
                 return;
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3410
         } else if (token.equals("--factory")) {
             factoryClassString = (String) tokens.remove(0);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
         } else if (token.equals("--passwordFactory")) {
             passwordFactoryClassString = (String) tokens.remove(0);
         } else if (token.equals("--password")) {
@@ -179,6 +187,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
             try {
                 Class klass = Class.forName(factoryClassString);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3411
                 if (getUsername() != null || getPassword() != null) {
                     factory = (ConnectionFactory) klass.getConstructor(
                             String.class, String.class, URI.class).newInstance(

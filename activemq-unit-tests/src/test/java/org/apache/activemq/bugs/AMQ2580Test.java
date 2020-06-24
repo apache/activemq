@@ -194,6 +194,7 @@ public class AMQ2580Test extends TestSupport {
     }
 
     private void initTopic() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3792
         initConnection();
         TopicSession topicSession = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
         topic = topicSession.createTopic(TOPIC_NAME);

@@ -24,7 +24,9 @@ public interface CompositeDataConstants {
     String PROPERTIES = "PropertiesText";
     String JMSXGROUP_SEQ = "JMSXGroupSeq";
     String JMSXGROUP_ID = "JMSXGroupID";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4717
     String JMSXUSER_ID = "JMSXUserID";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4539
     String BROKER_PATH = "BrokerPath";
     String BODY_LENGTH = "BodyLength";
     String BODY_PREVIEW = "BodyPreview";

@@ -69,6 +69,7 @@ public class AmqpDeliveryAnnotationsTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testDeliveryAnnotationsStrippedFromIncoming() throws Exception {
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 

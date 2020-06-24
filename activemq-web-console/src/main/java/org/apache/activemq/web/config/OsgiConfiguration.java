@@ -45,6 +45,7 @@ public class OsgiConfiguration extends AbstractConfiguration implements ManagedS
 
         BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
         Dictionary<String, String> properties = new Hashtable<String, String>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4034
         properties.put(Constants.SERVICE_PID, "org.apache.activemq.webconsole");
         service = context.registerService(ManagedService.class.getName(),
             this, properties);
@@ -73,6 +74,7 @@ public class OsgiConfiguration extends AbstractConfiguration implements ManagedS
 
     @Override
     public void updated(Dictionary dictionary) throws ConfigurationException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4034
         if (dictionary != null) {
             jmxUrl = (String) dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_URL);
             if (jmxUrl == null) {

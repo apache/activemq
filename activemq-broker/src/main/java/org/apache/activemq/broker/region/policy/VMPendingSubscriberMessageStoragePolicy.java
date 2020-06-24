@@ -41,6 +41,7 @@ public class VMPendingSubscriberMessageStoragePolicy implements PendingSubscribe
      *      org.apache.activemq.kaha.Store, int)
      */
     public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String name,int maxBatchSize,Subscription subs) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2791
         return new VMPendingMessageCursor(AbstractPendingMessageCursor.isPrioritizedMessageSubscriber(broker, subs));
     }
 }

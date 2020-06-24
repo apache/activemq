@@ -51,6 +51,7 @@ public class RestTest extends JettyTestSupport {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         final StringBuffer buf = new StringBuffer();
         final CountDownLatch latch =
                 asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue", buf);
@@ -66,10 +67,12 @@ public class RestTest extends JettyTestSupport {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         final StringBuffer buf = new StringBuffer();
         final CountDownLatch latch =
                 asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=5000&type=queue", buf);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3856
         producer.send(session.createTextMessage("test"));
         LOG.info("message sent");
 
@@ -82,6 +85,7 @@ public class RestTest extends JettyTestSupport {
     public void testSelector() throws Exception {
         int port = getPort();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3856
         TextMessage msg1 = session.createTextMessage("test1");
         msg1.setIntProperty("test", 1);
         producer.send(msg1);
@@ -95,6 +99,7 @@ public class RestTest extends JettyTestSupport {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         final StringBuffer buf = new StringBuffer();
         final CountDownLatch latch = new CountDownLatch(1);
         httpClient.newRequest("http://localhost:" + port + "/message/test?readTimeout=1000&type=queue")
@@ -118,6 +123,7 @@ public class RestTest extends JettyTestSupport {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3856
         for (int i = 0; i < 200; i++) {
             String correlId = "RESTY" + RandomStringUtils.randomNumeric(10);
 
@@ -128,6 +134,7 @@ public class RestTest extends JettyTestSupport {
             LOG.info("Sending: " + correlId);
             producer.send(message);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
             final StringBuffer buf = new StringBuffer();
             final CountDownLatch latch =
                     asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", buf);
@@ -148,6 +155,7 @@ public class RestTest extends JettyTestSupport {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         final StringBuffer buf = new StringBuffer();
         final CountDownLatch latch =
                 asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", buf);
@@ -181,6 +189,7 @@ public class RestTest extends JettyTestSupport {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         final CountDownLatch latch = new CountDownLatch(1);
         final StringBuffer buf = new StringBuffer();
         final AtomicInteger status = new AtomicInteger();
@@ -215,6 +224,7 @@ public class RestTest extends JettyTestSupport {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         final CountDownLatch latch = new CountDownLatch(1);
         final StringBuffer buf = new StringBuffer();
         final AtomicInteger status = new AtomicInteger();
@@ -262,6 +272,7 @@ public class RestTest extends JettyTestSupport {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5356
         final CountDownLatch latch = new CountDownLatch(1);
         final StringBuffer buf = new StringBuffer();
         final AtomicInteger status = new AtomicInteger();

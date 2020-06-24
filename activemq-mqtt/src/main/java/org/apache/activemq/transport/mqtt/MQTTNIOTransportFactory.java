@@ -52,6 +52,7 @@ public class MQTTNIOTransportFactory extends NIOTransportFactory implements Brok
 
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4719
         TcpTransportServer result = new TcpTransportServer(this, location, serverSocketFactory) {
             @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
@@ -69,6 +70,7 @@ public class MQTTNIOTransportFactory extends NIOTransportFactory implements Brok
 
     @Override
     public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
             InitBuffer initBuffer) throws IOException {
         return new MQTTNIOTransport(wireFormat, socket, initBuffer);
     }
@@ -89,6 +91,7 @@ public class MQTTNIOTransportFactory extends NIOTransportFactory implements Brok
     @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4896
         transport = new MQTTTransportFilter(transport, format, brokerService);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);

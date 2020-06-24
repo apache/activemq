@@ -71,6 +71,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
         broker.setDataDirectoryFile(testDataDir);
         broker.setUseJmx(true);
         broker.setDeleteAllMessagesOnStartup(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4798
         broker.getSystemUsage().getMemoryUsage().setLimit(1024l*1024*64);
         KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
         persistenceAdapter.setDirectory(new File(testDataDir, "kahadb"));
@@ -95,6 +96,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
     }
 
     public void testPurgeLargeQueue() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6069
         testPurgeLargeQueue(false);
     }
 
@@ -108,6 +110,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
         QueueViewMBean proxy = getProxyToQueueViewMBean();
         LOG.info("purging..");
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5743
         org.apache.log4j.Logger log4jLogger = org.apache.log4j.Logger.getLogger(org.apache.activemq.broker.jmx.QueueView.class);
         final AtomicBoolean gotPurgeLogMessage = new AtomicBoolean(false);
 
@@ -116,6 +119,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
             public void doAppend(LoggingEvent event) {
                 if (event.getMessage() instanceof String) {
                     String message = (String) event.getMessage();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5743
                     if (message.contains("purge of " + NUM_TO_SEND +" messages")) {
                         LOG.info("Received a log message: {} ", event.getMessage());
                         gotPurgeLogMessage.set(true);
@@ -138,8 +142,11 @@ public class QueuePurgeTest extends CombinationTestSupport {
 
         assertEquals("Queue size is not zero, it's " + proxy.getQueueSize(), 0,
                 proxy.getQueueSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3149
+//IC see: https://issues.apache.org/jira/browse/AMQ-3145
         assertTrue("cache is disabled, temp store being used", !proxy.isCacheEnabled());
         assertTrue("got expected info purge log message", gotPurgeLogMessage.get());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6069
         assertEquals("Found messages when browsing", 0, proxy.browseMessages().size());
     }
 
@@ -163,6 +170,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
     private void applyBrokerSpoolingPolicy(boolean prioritizedMessages) {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6069
         defaultEntry.setPrioritizedMessages(prioritizedMessages);
         defaultEntry.setProducerFlowControl(false);
         PendingQueueMessageStoragePolicy pendingQueuePolicy = new FilePendingQueueMessageStoragePolicy();
@@ -173,6 +181,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
 
 
     public void testPurgeLargeQueueWithConsumer() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6069
         testPurgeLargeQueueWithConsumer(false);
     }
 
@@ -181,6 +190,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
     }
 
     public void testConcurrentPurgeAndSend() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1940
         testConcurrentPurgeAndSend(false);
     }
 
@@ -191,6 +201,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
     private void testConcurrentPurgeAndSend(boolean prioritizedMessages) throws Exception {
         applyBrokerSpoolingPolicy(false);
         createProducerAndSendMessages(NUM_TO_SEND / 2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6586
         final QueueViewMBean proxy = getProxyToQueueViewMBean();
         createConsumer();
         final long start = System.currentTimeMillis();
@@ -240,6 +251,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
         assertEquals("Queue size is not zero, it's " + proxy.getQueueSize(), 0,
                 proxy.getQueueSize());
         assertEquals("usage goes to duck", 0, proxy.getMemoryPercentUsage());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4598
         Message msg;
         do {
             msg = consumer.receive(1000);
@@ -248,11 +260,13 @@ public class QueuePurgeTest extends CombinationTestSupport {
             }
         } while (msg != null);
         assertEquals("Queue size not valid", 0, proxy.getQueueSize());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6069
         assertEquals("Found messages when browsing", 0, proxy.browseMessages().size());
     }
 
     private QueueViewMBean getProxyToQueueViewMBean()
             throws MalformedObjectNameException, JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         ObjectName queueViewMBeanName =
                 new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="
                 + queue.getQueueName());
@@ -266,6 +280,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         queue = session.createQueue("test1");
         MessageProducer producer = session.createProducer(queue);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2468
         for (int i = 0; i < numToSend; i++) {
             TextMessage message = session.createTextMessage(MESSAGE_TEXT + i);
             if (i  != 0 && i % 10000 == 0) {
@@ -280,6 +295,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
         consumer = session.createConsumer(queue);
         // wait for buffer fill out
         Thread.sleep(5 * 1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2468
         for (int i = 0; i < 500; ++i) {
             Message message = consumer.receive();
             message.acknowledge();

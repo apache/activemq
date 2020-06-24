@@ -37,6 +37,7 @@ public class JobSchedulerStoreTest {
     public void testRestart() throws Exception {
         JobSchedulerStore store = new JobSchedulerStoreImpl();
         File directory = new File("target/test/ScheduledDB");
+//IC see: https://issues.apache.org/jira/browse/AMQ-3758
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
         store.setDirectory(directory);

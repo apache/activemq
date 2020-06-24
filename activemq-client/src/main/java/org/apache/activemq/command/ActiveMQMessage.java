@@ -89,6 +89,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
             return false;
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         ActiveMQMessage msg = (ActiveMQMessage) o;
         MessageId oMsg = msg.getMessageId();
         MessageId thisMsg = this.getMessageId();
@@ -142,6 +143,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
                 // so lets set the IDs to be 1
                 MessageId id = new MessageId();
                 id.setTextView(value);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4563
                 this.setMessageId(id);
             }
         } else {
@@ -199,6 +201,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     @Override
     public String getJMSXMimeType() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1075
         return "jms/message";
     }
 
@@ -291,6 +294,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     @Override
     public void setJMSPriority(int priority) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         this.setPriority((byte) priority);
     }
 
@@ -303,6 +307,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     @Override
     public boolean propertyExists(String name) throws JMSException {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2840
             return (this.getProperties().containsKey(name) || getObjectProperty(name)!= null);
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
@@ -314,6 +319,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     public Enumeration getPropertyNames() throws JMSException {
         try {
             Vector<String> result = new Vector<String>(this.getProperties().keySet());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4201
             if( getRedeliveryCounter()!=0 ) {
                 result.add("JMSXDeliveryCount");
             }
@@ -326,6 +332,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
             if( getUserID()!=null ) {
                 result.add("JMSXUserID");
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2840
             return result.elements();
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
@@ -366,6 +373,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         JMS_PROPERTY_SETERS.put("JMSXGroupID", new PropertySetter() {
             @Override
             public void set(Message message, Object value) throws MessageFormatException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
                 String rc = (String) TypeConversionSupport.convert(value, String.class);
                 if (rc == null) {
                     throw new MessageFormatException("Property JMSXGroupID cannot be set from a " + value.getClass().getName() + ".");
@@ -376,6 +384,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         JMS_PROPERTY_SETERS.put("JMSXGroupSeq", new PropertySetter() {
             @Override
             public void set(Message message, Object value) throws MessageFormatException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
                 Integer rc = (Integer) TypeConversionSupport.convert(value, Integer.class);
                 if (rc == null) {
                     throw new MessageFormatException("Property JMSXGroupSeq cannot be set from a " + value.getClass().getName() + ".");
@@ -386,6 +395,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         JMS_PROPERTY_SETERS.put("JMSCorrelationID", new PropertySetter() {
             @Override
             public void set(Message message, Object value) throws MessageFormatException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
                 String rc = (String) TypeConversionSupport.convert(value, String.class);
                 if (rc == null) {
                     throw new MessageFormatException("Property JMSCorrelationID cannot be set from a " + value.getClass().getName() + ".");
@@ -396,6 +406,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         JMS_PROPERTY_SETERS.put("JMSDeliveryMode", new PropertySetter() {
             @Override
             public void set(Message message, Object value) throws MessageFormatException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5323
                 Integer rc = null;
                 try {
                     rc = (Integer) TypeConversionSupport.convert(value, Integer.class);
@@ -497,14 +508,17 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
             throw new IllegalArgumentException("Property name cannot be empty or null");
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4893
         if (value instanceof UTF8Buffer) {
             value = value.toString();
         }
 
         checkValidObject(value);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2646
         value = convertScheduled(name, value);
         PropertySetter setter = JMS_PROPERTY_SETERS.get(name);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         if (setter != null && value != null) {
             setter.set(this, value);
         } else {
@@ -517,9 +531,11 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     public void setProperties(Map<String, ?> properties) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         for (Map.Entry<String, ?> entry : properties.entrySet()) {
             // Lets use the object property method as we may contain standard
             // extension headers like JMSXGroupID
+//IC see: https://issues.apache.org/jira/browse/AMQ-4180
             setObjectProperty(entry.getKey(), entry.getValue());
         }
     }
@@ -544,9 +560,11 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     protected Object convertScheduled(String name, Object value) throws MessageFormatException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2646
         Object result = value;
         if (AMQ_SCHEDULED_DELAY.equals(name)){
             result = TypeConversionSupport.convert(value, Long.class);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7458
             if (result != null && (Long)result < 0) {
                 throw new MessageFormatException(name + " must not be a negative value");
             }
@@ -586,6 +604,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         if (value == null) {
             return false;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         Boolean rc = (Boolean) TypeConversionSupport.convert(value, Boolean.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a boolean");
@@ -599,6 +618,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         if (value == null) {
             throw new NumberFormatException("property " + name + " was null");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         Byte rc = (Byte) TypeConversionSupport.convert(value, Byte.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a byte");
@@ -612,6 +632,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         if (value == null) {
             throw new NumberFormatException("property " + name + " was null");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         Short rc = (Short) TypeConversionSupport.convert(value, Short.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a short");
@@ -625,6 +646,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         if (value == null) {
             throw new NumberFormatException("property " + name + " was null");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         Integer rc = (Integer) TypeConversionSupport.convert(value, Integer.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as an integer");
@@ -638,6 +660,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         if (value == null) {
             throw new NumberFormatException("property " + name + " was null");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         Long rc = (Long) TypeConversionSupport.convert(value, Long.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a long");
@@ -651,6 +674,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         if (value == null) {
             throw new NullPointerException("property " + name + " was null");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         Float rc = (Float) TypeConversionSupport.convert(value, Float.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a float");
@@ -664,6 +688,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         if (value == null) {
             throw new NullPointerException("property " + name + " was null");
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         Double rc = (Double) TypeConversionSupport.convert(value, Double.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a double");
@@ -673,6 +698,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     @Override
     public String getStringProperty(String name) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3211
         Object value = null;
         if (name.equals("JMSXUserID")) {
             value = getUserID();
@@ -685,6 +711,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         if (value == null) {
             return null;
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1576
         String rc = (String) TypeConversionSupport.convert(value, String.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a String");
@@ -698,6 +725,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     public void setBooleanProperty(String name, boolean value, boolean checkReadOnly) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1293
         setObjectProperty(name, Boolean.valueOf(value), checkReadOnly);
     }
 
@@ -782,6 +810,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     protected boolean isContentMarshalled() {
         //Always return true because ActiveMQMessage only has a content field
         //which is already marshalled
+//IC see: https://issues.apache.org/jira/browse/AMQ-6811
         return true;
     }
 }

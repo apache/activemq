@@ -200,6 +200,7 @@ public class QueueOptimizedDispatchExceptionTest {
 
             @Override
             public int getActiveTransactionCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5054
                 return 0;
             }
 

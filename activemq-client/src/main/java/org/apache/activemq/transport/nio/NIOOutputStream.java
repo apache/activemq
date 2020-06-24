@@ -88,6 +88,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
         if (availableBufferToWrite() < 1) {
             flush();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5144
         buffer[count++] = (byte) b;
     }
 
@@ -142,6 +143,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
     @Override
     public void close() throws IOException {
         super.close();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
         if (engine != null) {
             engine.closeOutbound();
         }
@@ -167,12 +169,15 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
     }
 
     protected void write(ByteBuffer data) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
         ByteBuffer plain;
         if (engine != null) {
             plain = ByteBuffer.allocate(engine.getSession().getPacketBufferSize());
             plain.clear();
             engine.wrap(data, plain);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
             plain.flip();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5144
         } else {
             plain = data;
         }
@@ -204,17 +209,21 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
                 // Since the write is non-blocking, all the data may not have
                 // been written.
                 lastWriteSize = out.write(plain);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5144
 
                 // if the data buffer was larger than the packet buffer we might
                 // need to wrap more packets until we reach the end of data, but only
                 // when plain has no more space since we are non-blocking and a write
                 // might not have written anything.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4095
                 if (engine != null && data.hasRemaining() && !plain.hasRemaining()) {
                     plain.clear();
                     engine.wrap(data, plain);
                     plain.flip();
                 }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4312
+//IC see: https://issues.apache.org/jira/browse/AMQ-4321
                 remaining = plain.remaining();
             }
         } finally {
@@ -244,6 +253,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
     }
 
     public void setEngine(SSLEngine engine) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2583
         this.engine = engine;
     }
 }

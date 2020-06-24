@@ -55,6 +55,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
 
     public static final String PROPERTY_SEQUENCE_ID_CACHE_SIZE = "org.apache.activemq.store.jdbc.SEQUENCE_ID_CACHE_SIZE";
     private static final int SEQUENCE_ID_CACHE_SIZE = Integer.parseInt(System.getProperty(
+//IC see: https://issues.apache.org/jira/browse/AMQ-3397
                PROPERTY_SEQUENCE_ID_CACHE_SIZE, "1000"), 10);
     private final ReentrantReadWriteLock sequenceIdCacheSizeLock = new ReentrantReadWriteLock();
     private Map<MessageId, long[]> sequenceIdCache = new LinkedHashMap<MessageId, long[]>() {
@@ -71,6 +72,8 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
 
     @Override
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId, MessageAck ack) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         if (ack != null && ack.isUnmatchedAck()) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("ignoring unmatched selector ack for: " + messageId + ", cleanup will get to this message after subsequent acks.");
@@ -79,8 +82,10 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3397
             long[] res = getCachedStoreSequenceId(c, destination, messageId);
             if (this.isPrioritizedMessages()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
                 adapter.doSetLastAckWithPriority(c, destination, context != null ? context.getXid() : null, clientId, subscriptionName, res[0], res[1]);
             } else {
                 adapter.doSetLastAck(c, destination, context != null ? context.getXid() : null, clientId, subscriptionName, res[0], res[1]);
@@ -97,6 +102,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     }
 
     public long[] getCachedStoreSequenceId(TransactionContext transactionContext, ActiveMQDestination destination, MessageId messageId) throws SQLException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3397
         long[] val = null;
         sequenceIdCacheSizeLock.readLock().lock();
         try {
@@ -140,6 +146,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     }
 
     private class LastRecovered implements Iterable<LastRecoveredEntry> {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
         LastRecoveredEntry[] perPriority = new LastRecoveredEntry[10];
         LastRecovered() {
             for (int i=0; i<perPriority.length; i++) {
@@ -152,6 +159,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
 
         public LastRecoveredEntry defaultPriority() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
             return perPriority[0];
         }
 
@@ -227,7 +235,9 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
 
         @Override
         public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
             if (delegate.hasSpace() && recoveredCount < maxMessages) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-907
                 Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
                 msg.getMessageId().setBrokerSequenceId(sequenceId);
                 lastRecovered.recovered = sequenceId;
@@ -269,6 +279,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
            subscriberLastRecoveredMap.put(key, new LastRecovered());
         }
         final LastRecovered lastRecovered = subscriberLastRecoveredMap.get(key);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
         LastRecoveredAwareListener recoveredAwareListener = new LastRecoveredAwareListener(listener, maxReturned);
         try {
             if (LOG.isTraceEnabled()) {
@@ -310,6 +321,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
 
     @Override
     public void resetBatching(String clientId, String subscriptionName) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3872
         String key = getSubscriptionKey(clientId, subscriptionName);
         if (!pendingCompletion.contains(key))  {
             subscriberLastRecoveredMap.remove(key);
@@ -321,6 +333,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     public void pendingCompletion(String clientId, String subscriptionName, long sequenceId, byte priority) {
         final String key = getSubscriptionKey(clientId, subscriptionName);
         LastRecovered recovered = new LastRecovered();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6707
         recovered.perPriority[priority].recovered = sequenceId;
         subscriberLastRecoveredMap.put(key, recovered);
         pendingCompletion.add(key);
@@ -335,11 +348,13 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     @Override
     protected void onAdd(Message message, long sequenceId, byte priority) {
         // update last recovered state
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
         for (LastRecovered last : subscriberLastRecoveredMap.values()) {
             last.updateStored(sequenceId, priority);
         }
         sequenceIdCacheSizeLock.writeLock().lock();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5266
             sequenceIdCache.put(message.getMessageId(), new long[]{sequenceId, priority});
         } finally {
             sequenceIdCacheSizeLock.writeLock().unlock();
@@ -351,6 +366,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             c = persistenceAdapter.getTransactionContext();
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             adapter.doSetSubscriberEntry(c, subscriptionInfo, retroactive, isPrioritizedMessages());
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
@@ -410,13 +426,17 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         int result = 0;
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
             result = adapter.doGetDurableSubscriberMessageCount(c, destination, clientId, subscriberName, isPrioritizedMessages());
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+//IC see: https://issues.apache.org/jira/browse/AMQ-845
             throw IOExceptionSupport.create("Failed to get Message Count: " + clientId + ". Reason: " + e, e);
         } finally {
             c.close();
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-2985
+//IC see: https://issues.apache.org/jira/browse/AMQ-2980
         if (LOG.isTraceEnabled()) {
             LOG.trace(clientId + ":" + subscriberName + ", messageCount: " + result);
         }

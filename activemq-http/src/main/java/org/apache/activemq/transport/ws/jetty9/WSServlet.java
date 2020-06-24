@@ -61,10 +61,12 @@ public class WSServlet extends WebSocketServlet implements BrokerServiceAware {
     private BrokerService brokerService;
 
     private enum Protocol {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         MQTT, STOMP, UNKNOWN
     }
 
     static {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6073
         stompProtocols.put("v12.stomp", 3);
         stompProtocols.put("v11.stomp", 2);
         stompProtocols.put("v10.stomp", 1);
@@ -77,6 +79,7 @@ public class WSServlet extends WebSocketServlet implements BrokerServiceAware {
     @Override
     public void init() throws ServletException {
         super.init();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5784
         listener = (TransportAcceptListener) getServletContext().getAttribute("acceptListener");
         if (listener == null) {
             throw new ServletException("No such attribute 'acceptListener' available in the ServletContext");
@@ -90,11 +93,13 @@ public class WSServlet extends WebSocketServlet implements BrokerServiceAware {
 
     @Override
     public void configure(WebSocketServletFactory factory) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5517
         factory.setCreator(new WebSocketCreator() {
             @Override
             public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
                 WebSocketListener socket;
                 Protocol requestedProtocol = Protocol.UNKNOWN;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
 
                 // When no sub-protocol is requested we default to STOMP for legacy reasons.
                 if (!req.getSubProtocols().isEmpty()) {
@@ -111,7 +116,9 @@ public class WSServlet extends WebSocketServlet implements BrokerServiceAware {
 
                 switch (requestedProtocol) {
                     case MQTT:
+//IC see: https://issues.apache.org/jira/browse/AMQ-5865
                         socket = new MQTTSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6669
                         ((MQTTSocket) socket).setTransportOptions(new HashMap<>(transportOptions));
                         ((MQTTSocket) socket).setPeerCertificates(req.getCertificates());
                         resp.setAcceptedSubProtocol(getAcceptedSubProtocol(mqttProtocols, req.getSubProtocols(), "mqtt"));
@@ -210,11 +217,13 @@ public class WSServlet extends WebSocketServlet implements BrokerServiceAware {
     }
 
     public void setTransportOptions(Map<String, Object> transportOptions) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6259
         this.transportOptions = transportOptions;
     }
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         this.brokerService = brokerService;
     }
 }

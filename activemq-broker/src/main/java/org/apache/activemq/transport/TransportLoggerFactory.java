@@ -137,6 +137,7 @@ public class TransportLoggerFactory {
             boolean useJmx, boolean startLogging, int jmxport) throws IOException {
         int id = -1; // new default to single logger
         // allow old behaviour with incantation
+//IC see: https://issues.apache.org/jira/browse/AMQ-6446
         if (!useJmx && jmxport != defaultJmxPort) {
             id = getNextId();
         }
@@ -164,6 +165,7 @@ public class TransportLoggerFactory {
             String logWriterName, boolean dynamicManagement, boolean startLogging, int jmxport) throws IOException {
         try {
             LogWriter logWriter = logWriterFinder.newInstance(logWriterName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6446
             if (id == -1) {
                 logWriter.setPrefix(String.format("%08X: ", getNextId()));
             }
@@ -188,6 +190,7 @@ public class TransportLoggerFactory {
     }
 
     private static Logger createLog(int id) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6446
         return LoggerFactory.getLogger(TransportLogger.class.getName()+".Connection" + (id > 0 ? ":"+id : "" ));
     }
 
@@ -208,6 +211,7 @@ public class TransportLoggerFactory {
          try {
              this.objectName = new ObjectName(this.managementContext.getJmxDomainName()+":"+ "Type=TransportLoggerControl");
              AnnotatedMBean.registerMBean(this.managementContext, new TransportLoggerControl(this.managementContext),this.objectName);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
 
              this.transportLoggerControlCreated = true;
 

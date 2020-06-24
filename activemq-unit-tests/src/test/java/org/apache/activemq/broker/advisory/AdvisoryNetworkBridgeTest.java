@@ -62,13 +62,16 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
         assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
         assertFalse(advisory.getBooleanProperty("started"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3135
         conn.close();
     }
 
     public void testAddConsumerLater() throws Exception {
         createBroker1();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3107
 
         createBroker2();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3107
 
         Thread.sleep(1000);
 
@@ -83,6 +86,7 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
         assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
         assertTrue(advisory.getBooleanProperty("started"));
         assertCreatedByDuplex(advisory.getBooleanProperty("createdByDuplex"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3109
 
         broker2.stop();
         broker2.waitUntilStopped();
@@ -101,10 +105,12 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
     }
 
     public void assertCreatedByDuplex(boolean createdByDuplex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3109
         assertFalse(createdByDuplex);
     }
 
     public void createBroker1() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3107
         broker1 = BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/network/reconnect-broker1.xml"));
         broker1.start();
         broker1.waitUntilStarted();

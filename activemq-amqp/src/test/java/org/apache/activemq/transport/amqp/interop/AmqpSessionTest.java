@@ -47,6 +47,7 @@ public class AmqpSessionTest extends AmqpClientTestSupport {
         assertNotNull(session);
 
         Session protonSession = session.getSession();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6672
 
         try {
             protonSession.close();
@@ -104,6 +105,7 @@ public class AmqpSessionTest extends AmqpClientTestSupport {
             }
         });
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
         AmqpSession session = connection.createSession();

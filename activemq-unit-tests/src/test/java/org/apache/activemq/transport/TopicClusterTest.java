@@ -112,6 +112,7 @@ public class TopicClusterTest extends TestCase implements MessageListener {
 
         String url = "tcp://localhost:0";
         TransportConnector connector = container.addConnector(url);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1489
         connector.setDiscoveryUri(new URI("multicast://default?group="+groupId));
         container.addNetworkConnector("multicast://default?group="+groupId);
         container.start();

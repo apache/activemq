@@ -127,14 +127,17 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         // Give both a chance to clear out their contexts
+//IC see: https://issues.apache.org/jira/browse/AMQ-4319
         this.sslBroker.removeDestination(context, destination, timeout);
         this.nonSslBroker.removeDestination(context, destination, timeout);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4364
         super.removeDestination(context, destination, timeout);
     }
 
     @Override
     public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5470
         if (peerCertificates != null) {
             return this.sslBroker.authenticate(username, password, peerCertificates);
         } else {

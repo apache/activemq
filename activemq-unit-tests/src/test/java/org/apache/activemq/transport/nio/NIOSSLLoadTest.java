@@ -61,6 +61,7 @@ public class NIOSSLLoadTest {
 
     final ConsumerThread[] consumers = new ConsumerThread[CONSUMER_COUNT];
     TransportConnector connector;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5368
 
     @Before
     public void setUp() throws Exception {
@@ -74,6 +75,7 @@ public class NIOSSLLoadTest {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
         connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=TLS_RSA_WITH_AES_256_CBC_SHA256");
         broker.start();
         broker.waitUntilStarted();
@@ -126,6 +128,7 @@ public class NIOSSLLoadTest {
     @Test(timeout=360000)
     @Ignore
     public void testConnectionHandshakeLoad() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5368
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("nio+ssl://localhost:" + connector.getConnectUri().getPort());
         int threadNumber = 500;
         final CountDownLatch latch = new CountDownLatch(threadNumber);

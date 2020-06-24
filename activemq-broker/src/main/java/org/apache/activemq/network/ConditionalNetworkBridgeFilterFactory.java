@@ -49,12 +49,15 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
     public NetworkBridgeFilter create(ConsumerInfo info, BrokerId[] remoteBrokerPath, int messageTTL, int consumerTTL) {
         ConditionalNetworkBridgeFilter filter = new ConditionalNetworkBridgeFilter();
         filter.setNetworkBrokerId(remoteBrokerPath[0]);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4607
+//IC see: https://issues.apache.org/jira/browse/AMQ-2180
         filter.setMessageTTL(messageTTL);
         filter.setConsumerTTL(consumerTTL);
         filter.setAllowReplayWhenNoConsumers(isReplayWhenNoConsumers());
         filter.setRateLimit(getRateLimit());
         filter.setRateDuration(getRateDuration());
         filter.setReplayDelay(getReplayDelay());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6907
         filter.setSelectorAware(isSelectorAware());
         return filter;
     }
@@ -92,6 +95,7 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
     }
 
     public void setSelectorAware(boolean selectorAware) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6907
         this.selectorAware = selectorAware;
     }
 
@@ -117,6 +121,7 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
                 // potential replay back to origin
                 match = allowReplayWhenNoConsumers && hasNoLocalConsumers(message, mec) && hasNotJustArrived(message);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                 if (match) {
                     LOG.trace("Replaying [{}] for [{}] back to origin in the absence of a local consumer", message.getMessageId(), message.getDestination());
                 } else {
@@ -130,6 +135,7 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
 
             if (match && rateLimitExceeded()) {
                 LOG.trace("Throttled network consumer rejecting [{}] for [{}] {}>{}/{}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                         message.getMessageId(), message.getDestination(), matchCount, rateLimit, rateDuration
                 });
                 match = false;
@@ -148,6 +154,7 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
             for (Subscription sub : consumers) {
                 if (!sub.getConsumerInfo().isNetworkSubscription() && !sub.getConsumerInfo().isBrowser()) {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6907
                     if (!isSelectorAware()) {
                         LOG.trace("Not replaying [{}] for [{}] to origin due to existing local consumer: {}", new Object[]{
                                 message.getMessageId(), message.getDestination(), sub.getConsumerInfo()
@@ -158,6 +165,7 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
                         try {
                             if (sub.matches(message, mec)) {
                                 LOG.trace("Not replaying [{}] for [{}] to origin due to existing selector matching local consumer: {}", new Object[]{
+//IC see: https://issues.apache.org/jira/browse/AMQ-4721
                                         message.getMessageId(), message.getDestination(), sub.getConsumerInfo()
                                 });
                                 return false;
@@ -198,6 +206,7 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
         }
 
         public void setSelectorAware(boolean selectorAware) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6907
             this.selectorAware = selectorAware;
         }
 

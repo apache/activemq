@@ -42,6 +42,7 @@ public class SlowConsumerTopicTest extends SimpleTopicTest {
    
 
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1842
         PerfConsumer result = new SlowConsumer(fac, dest);
         return result;
     }

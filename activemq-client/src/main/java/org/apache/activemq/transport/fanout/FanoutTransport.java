@@ -113,6 +113,8 @@ public class FanoutTransport implements CompositeTransport {
 
         @Override
         public void onCommand(Object o) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-976
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
             Command command = (Command) o;
             if (command.isResponse()) {
                 Integer id = new Integer(((Response) command).getCorrelationId());
@@ -134,6 +136,7 @@ public class FanoutTransport implements CompositeTransport {
         public void onException(IOException error) {
             try {
                 synchronized (reconnectMutex) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1464
                     if (transport == null || !transport.isConnected()) {
                         return;
                     }
@@ -149,6 +152,7 @@ public class FanoutTransport implements CompositeTransport {
                     reconnectTask.wakeup();
                 }
             } catch (InterruptedException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
                 Thread.currentThread().interrupt();
                 if (transportListener != null) {
                     transportListener.onException(new InterruptedIOException());
@@ -159,6 +163,7 @@ public class FanoutTransport implements CompositeTransport {
 
     public FanoutTransport() {
         // Setup a task that is used to reconnect the a connection async.
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         reconnectTaskFactory = new TaskRunnerFactory();
         reconnectTaskFactory.init();
         reconnectTask = reconnectTaskFactory.createTaskRunner(new Task() {
@@ -192,6 +197,7 @@ public class FanoutTransport implements CompositeTransport {
                     // Try to connect them up.
                     Iterator<FanoutTransportHandler> iter = transports.iterator();
                     while (iter.hasNext() && !disposed) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
 
                         long now = System.currentTimeMillis();
 
@@ -219,6 +225,7 @@ public class FanoutTransport implements CompositeTransport {
                                 restoreTransport(fanoutHandler);
                             }
                             LOG.debug("Connection established");
+//IC see: https://issues.apache.org/jira/browse/AMQ-2047
                             fanoutHandler.reconnectDelay = initialReconnectDelay;
                             fanoutHandler.connectFailures = 0;
                             if (primary == null) {
@@ -228,6 +235,7 @@ public class FanoutTransport implements CompositeTransport {
                         } catch (Exception e) {
                             LOG.debug("Connect fail to: " + uri + ", reason: " + e);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
                             if (fanoutHandler.transport != null) {
                                 ServiceSupport.dispose(fanoutHandler.transport);
                                 fanoutHandler.transport = null;
@@ -291,12 +299,14 @@ public class FanoutTransport implements CompositeTransport {
                     restoreTransport(th);
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
             connected = true;
         }
     }
 
     @Override
     public void stop() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
         try {
             synchronized (reconnectMutex) {
                 ServiceStopper ss = new ServiceStopper();
@@ -307,6 +317,7 @@ public class FanoutTransport implements CompositeTransport {
                 started = false;
                 disposed = true;
                 connected = false;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
 
                 for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
                     FanoutTransportHandler th = iter.next();
@@ -325,6 +336,9 @@ public class FanoutTransport implements CompositeTransport {
     }
 
     public int getMinAckCount() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1440
+//IC see: https://issues.apache.org/jira/browse/AMQ-1439
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
         return minAckCount;
     }
 
@@ -366,11 +380,15 @@ public class FanoutTransport implements CompositeTransport {
 
     @Override
     public void oneway(Object o) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-976
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         final Command command = (Command) o;
         try {
             synchronized (reconnectMutex) {
 
                 // Wait for transport to be connected.
+//IC see: https://issues.apache.org/jira/browse/AMQ-1440
+//IC see: https://issues.apache.org/jira/browse/AMQ-1439
                 while (connectedCount < minAckCount && !disposed && connectionFailure == null) {
                     LOG.debug("Waiting for at least " + minAckCount + " transports to be connected.");
                     reconnectMutex.wait(1000);
@@ -391,6 +409,7 @@ public class FanoutTransport implements CompositeTransport {
                     }
 
                     if (error instanceof IOException) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
                         throw (IOException) error;
                     }
                     throw IOExceptionSupport.create(error);
@@ -401,6 +420,8 @@ public class FanoutTransport implements CompositeTransport {
                 // then hold it in the requestMap so that we can replay
                 // it later.
                 boolean fanout = isFanoutCommand(command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1440
+//IC see: https://issues.apache.org/jira/browse/AMQ-1439
                 if (stateTracker.track(command) == null && command.isResponseRequired()) {
                     int size = fanout ? minAckCount : 1;
                     requestMap.put(new Integer(command.getCommandId()), new RequestCounter(command, size));
@@ -430,6 +451,7 @@ public class FanoutTransport implements CompositeTransport {
             }
         } catch (InterruptedException e) {
             // Some one may be trying to stop our thread.
+//IC see: https://issues.apache.org/jira/browse/AMQ-891
             Thread.currentThread().interrupt();
             throw new InterruptedIOException();
         }
@@ -441,6 +463,7 @@ public class FanoutTransport implements CompositeTransport {
      */
     private boolean isFanoutCommand(Command command) {
         if (command.isMessage()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
             if (fanOutQueues) {
                 return true;
             }
@@ -564,6 +587,7 @@ public class FanoutTransport implements CompositeTransport {
 
     @Override
     public void reconnect(URI uri) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         add(true, new URI[] { uri });
     }
 
@@ -579,6 +603,7 @@ public class FanoutTransport implements CompositeTransport {
 
     @Override
     public void updateURIs(boolean reblance, URI[] uris) throws IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         add(reblance, uris);
     }
 
@@ -604,6 +629,7 @@ public class FanoutTransport implements CompositeTransport {
     }
 
     public boolean isFanOutQueues() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1464
         return fanOutQueues;
     }
 
@@ -613,6 +639,7 @@ public class FanoutTransport implements CompositeTransport {
 
     @Override
     public boolean isDisposed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5616
         return disposed;
     }
 
@@ -624,6 +651,7 @@ public class FanoutTransport implements CompositeTransport {
     @Override
     public int getReceiveCounter() {
         int rc = 0;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2511
         synchronized (reconnectMutex) {
             for (FanoutTransportHandler th : transports) {
                 if (th.transport != null) {
@@ -636,6 +664,7 @@ public class FanoutTransport implements CompositeTransport {
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return null;
     }
 

@@ -54,6 +54,7 @@ public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumers
 
     public BrokerEndpoint(String uri, BrokerComponent component, String destinationName, ActiveMQDestination destination, BrokerConfiguration configuration) {
         super(UnsafeUriCharactersEncoder.encode(uri), component);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5657
         this.destinationName = destinationName;
         this.destination = destination;
         this.configuration = configuration;
@@ -90,6 +91,7 @@ public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumers
      * The name of the JMS destination
      */
     public String getDestinationName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5657
         return destinationName;
     }
 
@@ -121,6 +123,7 @@ public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumers
     }
 
     protected void inject(ProducerBrokerExchange producerBrokerExchange, Message message) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4714
         ProducerBrokerExchange pbe = producerBrokerExchange;
         if (message != null) {
             message.setDestination(destination);

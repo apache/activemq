@@ -85,6 +85,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         connection.connect();
 
         connection.setReceivedFrameInspector(new AmqpFrameValidator() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6479
 
             @Override
             public void inspectDetach(Detach detach, Binary encoded) {
@@ -117,6 +118,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         assertEquals(0, brokerView.getDurableTopicSubscribers().length);
         assertEquals(1, brokerView.getInactiveDurableTopicSubscribers().length);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6479
         connection.getSentFrameInspector().assertValid();
         connection.getReceivedFrameInspector().assertValid();
 
@@ -137,6 +139,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         assertEquals(1, brokerView.getDurableTopicSubscribers().length);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
 
         receiver.close();
 
@@ -236,6 +239,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         AmqpSession session = connection.createSession();
         AmqpReceiver receiver = session.createDurableReceiver("topic://" + getTestName(), getTestName());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5799
         assertEquals(1, brokerView.getDurableTopicSubscribers().length);
         assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
 
@@ -252,6 +256,8 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         assertNotNull(protonReceiver.getRemoteSource());
         Source remoteSource = (Source) protonReceiver.getRemoteSource();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5799
+//IC see: https://issues.apache.org/jira/browse/AMQ-5799
         if (remoteSource.getFilter() != null) {
             assertFalse(remoteSource.getFilter().containsKey(NO_LOCAL_NAME));
             assertFalse(remoteSource.getFilter().containsKey(JMS_SELECTOR_NAME));
@@ -431,6 +437,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         AmqpSession session = connection.createSession();
         AmqpReceiver receiver = session.createDurableReceiver("topic://" + getTestName(), getTestName(), SELECTOR_STRING, true);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         assertEquals(1, brokerView.getDurableTopicSubscribers().length);
         assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
 
@@ -463,6 +470,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         assertEquals(TerminusDurability.UNSETTLED_STATE, remoteSource.getDurable());
         assertEquals(COPY, remoteSource.getDistributionMode());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         assertEquals(1, brokerView.getDurableTopicSubscribers().length);
         assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
 
@@ -480,6 +488,15 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
+//IC see: https://issues.apache.org/jira/browse/AMQ-6460
         AmqpConnection connection = trackConnection(client.createConnection());
         connection.setContainerId(getTestName());
         connection.connect();

@@ -59,6 +59,7 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
 
     public BrokerService createBroker(URI config) throws Exception {
         String uri = config.getSchemeSpecificPart();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3222
         if (uri.lastIndexOf('?') != -1) {
             IntrospectionSupport.setProperties(this, URISupport.parseQuery(uri));
             uri = uri.substring(0, uri.lastIndexOf('?'));
@@ -87,6 +88,7 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
             throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + config);
         }
         
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         SpringBrokerContext springBrokerContext = new SpringBrokerContext();
         springBrokerContext.setApplicationContext(context);
         springBrokerContext.setConfigurationUrl(uri);
@@ -98,8 +100,10 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
     }
 
     protected ApplicationContext createApplicationContext(String uri) throws MalformedURLException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3268
         Resource resource = Utils.resourceFromString(uri);
         LOG.debug("Using " + resource + " from " + uri);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3747
         try {
             return new ResourceXmlApplicationContext(resource) {
                 @Override

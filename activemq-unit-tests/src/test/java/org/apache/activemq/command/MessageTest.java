@@ -86,6 +86,7 @@ public class MessageTest extends DataStructureTestSupport {
     }
 
     public void testPropRemove() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5119
         ActiveMQMessage message = new ActiveMQMessage();
         message.setStringProperty("RM","RM");
 

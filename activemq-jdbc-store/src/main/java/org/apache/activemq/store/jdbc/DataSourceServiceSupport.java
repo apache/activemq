@@ -33,6 +33,7 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
  * 
  */
 abstract public class DataSourceServiceSupport extends LockableServiceSupport {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
 
     private String dataDirectory = IOHelper.getDefaultDataDirectory();
     private File dataDirectoryFile;
@@ -47,6 +48,7 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
     }
 
     public File getDataDirectoryFile() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-825
         if (dataDirectoryFile == null) {
             dataDirectoryFile = new File(getDataDirectory());
         }
@@ -67,6 +69,7 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
 
     public DataSource getDataSource() throws IOException {
         if (dataSource == null) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
             dataSource = createDataSource(getDataDirectoryFile().getCanonicalPath());
             if (dataSource == null) {
                 throw new IllegalArgumentException("No dataSource property has been configured");
@@ -95,6 +98,7 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
     public static DataSource createDataSource(String homeDir, String dbName) throws IOException {
 
         // Setup the Derby datasource.
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         System.setProperty("derby.system.home", homeDir);
         System.setProperty("derby.storage.fileSyncTransactionLog", "true");
         System.setProperty("derby.storage.pageCacheSize", "100");

@@ -36,6 +36,7 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
     public void testNew() throws Exception {
 
         final String brokerConfig = configurationSeed + "-no-nc-broker";
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         applyNewConfig(brokerConfig, EMPTY_UPDATABLE_CONFIG);
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
@@ -43,6 +44,7 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
 
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc", SLEEP);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         assertTrue("new network connectors", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -55,14 +57,17 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc");
         assertEquals("no new network connectors", 1, brokerService.getNetworkConnectors().size());
         assertSame("same instance", networkConnector, brokerService.getNetworkConnectors().get(0));
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
         // verify nested elements
         assertEquals("has exclusions", 2, networkConnector.getExcludedDestinations().size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
 
         assertEquals("one statically included", 1, networkConnector.getStaticallyIncludedDestinations().size());
         assertEquals("one dynamically included", 1, networkConnector.getDynamicallyIncludedDestinations().size());
         assertEquals("one durable", 1, networkConnector.getDurableDestinations().size());
         assertFalse(networkConnector.getBrokerName().isEmpty());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
 
         assertNotNull(brokerService.getManagementContext().getObjectInstance(
                 brokerService.createNetworkConnectorObjectName(networkConnector)));
@@ -90,12 +95,15 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         assertEquals("got ttl update", 2, modNetworkConnector.getNetworkTTL());
 
         assertNotNull("got ssl", modNetworkConnector.getSslContext());
+//IC see: https://issues.apache.org/jira/browse/AMQ-7037
 
         // apply again - ensure no change
         applyNewConfig(brokerConfig, configurationSeed + "-mod-one-nc", SLEEP);
         assertEquals("no new network connectors", 1, brokerService.getNetworkConnectors().size());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         assertSame("same instance", modNetworkConnector, brokerService.getNetworkConnectors().get(0));
         assertFalse(modNetworkConnector.getBrokerName().isEmpty());
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
 
         assertNotNull(brokerService.getManagementContext().getObjectInstance(
                 brokerService.createNetworkConnectorObjectName(modNetworkConnector)));
@@ -104,6 +112,7 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
     @Test
     public void testRemove() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         final String brokerConfig = configurationSeed + "-two-nc-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-two-nc");
         startBroker(brokerConfig);
@@ -111,9 +120,11 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         assertEquals("correct network connectors", 2, brokerService.getNetworkConnectors().size());
 
         NetworkConnector two = brokerService.getNetworkConnectors().get(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
 
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc", SLEEP);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4682
         assertTrue("expected mod on time", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -124,6 +135,7 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         NetworkConnector remainingNetworkConnector = brokerService.getNetworkConnectors().get(0);
         assertEquals("name match", "one", remainingNetworkConnector.getName());
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
         try {
             brokerService.getManagementContext().getObjectInstance(
                 brokerService.createNetworkConnectorObjectName(two));

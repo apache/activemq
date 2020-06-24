@@ -34,6 +34,7 @@ public class CachedLDAPSecurityTest extends CachedLDAPSecurityLegacyTest {
     @Before
     @Override
     public void setup() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3791
         System.setProperty("ldapPort", String.valueOf(getLdapServer().getPort()));
         
         broker = BrokerFactory.createBroker("xbean:org/apache/activemq/security/activemq-apacheds.xml");

@@ -50,6 +50,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
     protected void setUp() throws Exception {
         super.setUp();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         remotePersistenceAdapter = createRemotePersistenceAdapter(true);
         remoteBroker = createRemoteBroker(remotePersistenceAdapter);
         remoteConnector = createRemoteConnector();
@@ -74,6 +75,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
      * @throws URISyntaxException
      */
     protected TransportConnector createRemoteConnector() throws Exception, IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         return new TransportConnector(TransportFactory.bind(new URI(getRemoteURI())));
     }
 
@@ -85,6 +87,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
      * @throws URISyntaxException
      */
     protected TransportConnector createConnector() throws Exception, IOException, URISyntaxException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         return new TransportConnector(TransportFactory.bind(new URI(getLocalURI())));
     }
 
@@ -153,6 +156,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
         remotePersistenceAdapter.start();
 
         remoteBroker = createRemoteBroker(remotePersistenceAdapter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
         remoteBroker.addConnector(getRemoteURI());
         remoteBroker.start();
         BrokerRegistry.getInstance().bind("remotehost", remoteBroker);

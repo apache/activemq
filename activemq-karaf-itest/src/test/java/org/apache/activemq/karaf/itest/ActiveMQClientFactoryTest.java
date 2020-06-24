@@ -45,6 +45,7 @@ public class ActiveMQClientFactoryTest extends AbstractFeatureTest {
         {
          composite(super.configure("activemq", "activemq-broker", "activemq-cf")),
          replaceConfigurationFile("etc/org.apache.activemq.cfg", 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6546
                                   new File(RESOURCE_BASE + "org.apache.activemq-local.cfg"))
         };
     }

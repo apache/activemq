@@ -100,10 +100,12 @@ public class AmqpTestSupport {
     @Before
     public void setUp() throws Exception {
         LOG.info("========== start " + getTestName() + " ==========");
+//IC see: https://issues.apache.org/jira/browse/AMQ-7399
         System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
         exceptions.clear();
 
         startBroker();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5604
 
         this.numberOfMessages = 2000;
     }
@@ -111,6 +113,7 @@ public class AmqpTestSupport {
     protected void createBroker(boolean deleteAllMessages) throws Exception {
         brokerService = new BrokerService();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         brokerService.setPersistent(isPersistent());
         brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
         if (isPersistent()) {
@@ -118,18 +121,22 @@ public class AmqpTestSupport {
             kaha.setDirectory(new File(KAHADB_DIRECTORY + getTestName()));
             brokerService.setPersistenceAdapter(kaha);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6037
         brokerService.setSchedulerSupport(isSchedulerEnabled());
         brokerService.setAdvisorySupport(false);
         brokerService.setUseJmx(isUseJmx());
         brokerService.getManagementContext().setCreateConnector(false);
 
         performAdditionalConfiguration(brokerService);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5707
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4753
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
         SSLContext.setDefault(ctx);
 
         // Setup SSL context...
+//IC see: https://issues.apache.org/jira/browse/AMQ-5591
         final File classesDir = new File(AmqpConnection.class.getProtectionDomain().getCodeSource().getLocation().getFile());
         File keystore = new File(classesDir, "../../src/test/resources/keystore");
         final SpringSslContext sslContext = new SpringSslContext();
@@ -140,6 +147,7 @@ public class AmqpTestSupport {
         sslContext.afterPropertiesSet();
         brokerService.setSslContext(sslContext);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         System.setProperty("javax.net.ssl.trustStore", keystore.getCanonicalPath());
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
@@ -148,8 +156,10 @@ public class AmqpTestSupport {
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
 
         ArrayList<BrokerPlugin> plugins = new ArrayList<>();
+//IC see: https://issues.apache.org/jira/browse/AMQ-6638
 
         addAdditionalPlugins(plugins);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6418
 
         if (!plugins.isEmpty()) {
             BrokerPlugin[] array = new BrokerPlugin[plugins.size()];
@@ -179,6 +189,7 @@ public class AmqpTestSupport {
         }
         if (isUseTcpConnector()) {
             connector = brokerService.addConnector(
+//IC see: https://issues.apache.org/jira/browse/AMQ-6638
                 "amqp://0.0.0.0:" + amqpPort + "?transport.tcpNoDelay=true&transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
             amqpPort = connector.getConnectUri().getPort();
             amqpURI = connector.getPublishableConnectURI();
@@ -186,6 +197,7 @@ public class AmqpTestSupport {
         }
         if (isUseSslConnector()) {
             connector = brokerService.addConnector(
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
                 "amqp+ssl://0.0.0.0:" + amqpSslPort + "?transport.tcpNoDelay=true&transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
             amqpSslPort = connector.getConnectUri().getPort();
             amqpSslURI = connector.getPublishableConnectURI();
@@ -200,11 +212,13 @@ public class AmqpTestSupport {
         }
         if (isUseNioPlusSslConnector()) {
             connector = brokerService.addConnector(
+//IC see: https://issues.apache.org/jira/browse/AMQ-7047
                 "amqp+nio+ssl://0.0.0.0:" + amqpNioPlusSslPort + "?transport.tcpNoDelay=true&transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
             amqpNioPlusSslPort = connector.getConnectUri().getPort();
             amqpNioPlusSslURI = connector.getPublishableConnectURI();
             LOG.debug("Using amqp+nio+ssl port " + amqpNioPlusSslPort);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         if (isUseAutoConnector()) {
             connector = brokerService.addConnector(
                 "auto://0.0.0.0:" + autoPort + getAdditionalConfig());
@@ -233,8 +247,10 @@ public class AmqpTestSupport {
             autoNioPlusSslURI = connector.getPublishableConnectURI();
             LOG.debug("Using auto+nio+ssl port " + autoNioPlusSslPort);
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         if (isUseWsConnector()) {
             connector = brokerService.addConnector(
+//IC see: https://issues.apache.org/jira/browse/AMQ-6638
                 "ws://0.0.0.0:" + getProxyPort(amqpWsPort) + "?transport.tcpNoDelay=true&transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
             amqpWsPort = connector.getConnectUri().getPort();
             amqpWsURI = connector.getPublishableConnectURI();
@@ -258,6 +274,7 @@ public class AmqpTestSupport {
     }
 
     protected boolean isSchedulerEnabled() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6037
         return false;
     }
 
@@ -282,6 +299,7 @@ public class AmqpTestSupport {
     }
 
     protected boolean isUseAutoConnector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5889
         return false;
     }
 
@@ -298,6 +316,7 @@ public class AmqpTestSupport {
     }
 
     protected boolean isUseWsConnector() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         return false;
     }
 
@@ -310,6 +329,7 @@ public class AmqpTestSupport {
     }
 
     protected String getAdditionalConfig() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5587
         return "";
     }
 
@@ -324,6 +344,7 @@ public class AmqpTestSupport {
     }
 
     public void restartBroker() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5617
         restartBroker(false);
     }
 
@@ -346,11 +367,13 @@ public class AmqpTestSupport {
 
     @After
     public void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5604
         stopBroker();
         LOG.info("========== tearDown " + getTestName() + " ==========");
     }
 
     public Connection createJMSConnection() throws JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5602
         if (!isUseOpenWireConnector()) {
             throw new javax.jms.IllegalStateException("OpenWire TransportConnector was not configured.");
         }
@@ -378,10 +401,12 @@ public class AmqpTestSupport {
     }
 
     public void sendMessages(Connection connection, Destination destination, int count) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4651
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         try {
             MessageProducer p = session.createProducer(destination);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5467
             for (int i = 1; i <= count; i++) {
                 TextMessage message = session.createTextMessage();
                 message.setText("TextMessage: " + i);
@@ -394,10 +419,12 @@ public class AmqpTestSupport {
     }
 
     public String getTestName() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5589
         return name.getMethodName();
     }
 
     protected int getProxyPort(int proxyPort) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6339
         if (proxyPort == 0) {
             ServerSocket ss = null;
             try {
@@ -426,6 +453,7 @@ public class AmqpTestSupport {
     }
 
     protected ConnectorViewMBean getProxyToConnectionView(String connectionType) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4962
         ObjectName connectorQuery = new ObjectName(
             "org.apache.activemq:type=Broker,brokerName=localhost,connector=clientConnectors,connectorName="+connectionType+"_//*");
 
@@ -448,6 +476,7 @@ public class AmqpTestSupport {
     }
 
     protected SubscriptionViewMBean getProxyToQueueSubscriber(String name) throws MalformedObjectNameException, JMSException, IOException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5413
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="+name);
         QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
@@ -462,6 +491,7 @@ public class AmqpTestSupport {
 
     protected TopicViewMBean getProxyToTopic(String name) throws MalformedObjectNameException, JMSException {
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Topic,destinationName="+name);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5666
         TopicViewMBean proxy = (TopicViewMBean) brokerService.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, TopicViewMBean.class, true);
         return proxy;

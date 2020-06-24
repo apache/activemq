@@ -70,6 +70,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
     public void testStompOnVirtualTopics() throws Exception {
         LOG.info("Running Stomp Producer");
         stompConnect();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
 
         StompConsumer consumerWorker = new StompConsumer(this);
         Thread consumer = new Thread(consumerWorker);
@@ -87,6 +88,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
         StompFrame frame = stompConnection.receive();
         assertTrue(frame.toString().startsWith("CONNECTED"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
         for (int i = 0; i < NUM_MSGS - 1; i++) {
             stompConnection.send("/topic/VirtualTopic.FOO", "Hello World {" + (i + 1) + "} " + payload.toString());
         }
@@ -113,6 +115,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
         // check if consumer set failMsg, then let the test fail.
         if (null != failMsg) {
             LOG.error(failMsg);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4437
             fail(failMsg);
         }
     }
@@ -157,6 +160,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
                 StompFrame frame = stompConnection.receive();
                 assertTrue(frame.toString().startsWith("CONNECTED"));
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5590
                 HashMap<String, String> headers = new HashMap<String, String>();
                 headers.put("receipt", "sub-1");
                 stompConnection.subscribe("/queue/Consumer.A.VirtualTopic.FOO", "auto", headers);
@@ -178,6 +182,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
                 // another receive should not return any more msgs
                 try {
                     frame = stompConnection.receive(3000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4437
                     assertNull(frame);
                 } catch (Exception e) {
                     LOG.info("Correctly received " + e + " while trying to consume an additional msg." + " This is expected as the queue should be empty now.");

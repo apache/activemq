@@ -66,6 +66,7 @@ public class FilteredDestination {
      */
     public void setSelector(String selector) throws InvalidSelectorException {
         this.selector = selector;
+//IC see: https://issues.apache.org/jira/browse/AMQ-2091
         setFilter(SelectorParser.parse(selector));
     }
 
@@ -94,6 +95,7 @@ public class FilteredDestination {
 
     @Override
     public int hashCode() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6204
         final int prime = 31;
         int result = 1;
         result = prime * result + ((destination == null) ? 0 : destination.hashCode());

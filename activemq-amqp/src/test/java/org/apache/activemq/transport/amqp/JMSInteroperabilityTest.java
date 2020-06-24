@@ -198,6 +198,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         MessageProducer amqpProducer = amqpSession.createProducer(queue);
         MessageConsumer openwireConsumer = openwireSession.createConsumer(queue);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-6486
         TextMessage outbound = amqpSession.createTextMessage();
         outbound.setText(testMessageBody);
         outbound.setBooleanProperty("Boolean", bool);
@@ -256,6 +257,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
     @SuppressWarnings("unchecked")
     @Test
     public void testMapMessageUsingPrimitiveSettersSendReceive() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         Connection openwire = createJMSConnection();
         Connection amqp = createConnection();
 
@@ -355,6 +357,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         // Now consume the ObjectMessage
         Message received = amqpConsumer.receive(2000);
         assertNotNull(received);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6374
         assertTrue("Expected ObjectMessage but got " + received, received instanceof ObjectMessage);
         ObjectMessage incoming = (ObjectMessage) received;
 
@@ -373,6 +376,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
 
         // Raw Transformer doesn't expand message properties.
         assumeFalse(!transformer.equals("jms"));
+//IC see: https://issues.apache.org/jira/browse/AMQ-6374
 
         Connection openwire = createJMSConnection();
         Connection amqp = createConnection();
@@ -540,6 +544,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
 
     @Test
     public void testQpidJMSToQpidJMSMessageSendReceive() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6438
         final int SIZE = 1024;
         final int NUM_MESSAGES = 100;
 

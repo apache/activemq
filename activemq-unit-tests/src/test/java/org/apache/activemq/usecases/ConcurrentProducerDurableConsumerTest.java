@@ -77,9 +77,11 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 
     @Parameters(name="{0}")
     public static Collection<TestSupport.PersistenceAdapterChoice[]> getTestParameters() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         TestSupport.PersistenceAdapterChoice[] kahaDb = { TestSupport.PersistenceAdapterChoice.KahaDB };
         TestSupport.PersistenceAdapterChoice[] levelDb = { TestSupport.PersistenceAdapterChoice.LevelDB };
         TestSupport.PersistenceAdapterChoice[] mem = { TestSupport.PersistenceAdapterChoice.MEM };
+//IC see: https://issues.apache.org/jira/browse/AMQ-4415
         List<TestSupport.PersistenceAdapterChoice[]> choices = new ArrayList<TestSupport.PersistenceAdapterChoice[]>();
         choices.add(kahaDb);
         choices.add(levelDb);
@@ -105,8 +107,10 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         double[] inactiveConsumerStats = produceMessages(destination, 500, 10, session, producer, null);
         LOG.info("With inactive consumers: ave: " + inactiveConsumerStats[1] + ", max: " + inactiveConsumerStats[0] + ", multiplier: "
             + (inactiveConsumerStats[0] / inactiveConsumerStats[1]));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
 
         // periodically start a durable sub that has a backlog
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
         final int consumersToActivate = 5;
         final Object addConsumerSignal = new Object();
         Executors.newCachedThreadPool(new ThreadFactory() {
@@ -124,6 +128,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                         synchronized (addConsumerSignal) {
                             addConsumerSignal.wait(30 * 60 * 1000);
                         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
                         TimedMessageListener listener = new TimedMessageListener();
                         consumer = createDurableSubscriber(factory.createConnection(), destination, "consumer" + (i + 1));
                         LOG.info("Created consumer " + consumer);
@@ -140,6 +145,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 
         LOG.info(" with concurrent activate, ave: " + statsWithActive[1] + ", max: " + statsWithActive[0] + ", multiplier: "
             + (statsWithActive[0] / statsWithActive[1]));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
 
         while (consumers.size() < consumersToActivate) {
             TimeUnit.SECONDS.sleep(2);
@@ -160,6 +166,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         // compare no active to active
         LOG.info("Ave send time with active: " + statsWithActive[1] + " as multiplier of ave with none active: " + inactiveConsumerStats[1] + ", multiplier="
             + (statsWithActive[1] / inactiveConsumerStats[1]));
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
 
         assertTrue("Ave send time with active: " + statsWithActive[1] + " within reasonable multpler of ave with none active: " + inactiveConsumerStats[1]
             + ", multiplier " + (statsWithActive[1] / inactiveConsumerStats[1]), statsWithActive[1] < 15 * inactiveConsumerStats[1]);
@@ -186,7 +193,9 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         double[] withConsumerStats = produceMessages(destination, toSend, numIterations, session, producer, null);
 
         LOG.info("With consumer: " + withConsumerStats[1] + " , with noConsumer: " + noConsumerStats[1] + ", multiplier: "
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
             + (withConsumerStats[1] / noConsumerStats[1]));
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
         final int reasonableMultiplier = 15; // not so reasonable but improving
         assertTrue("max X times as slow with consumer: " + withConsumerStats[1] + ", with no Consumer: " + noConsumerStats[1] + ", multiplier: "
             + (withConsumerStats[1] / noConsumerStats[1]), withConsumerStats[1] < noConsumerStats[1] * reasonableMultiplier);
@@ -212,6 +221,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
     private void startInactiveConsumers(ConnectionFactory factory, Destination destination) throws Exception {
         // create off line consumers
         startConsumers(factory, destination);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         for (Connection connection : connections) {
             connection.close();
         }
@@ -222,6 +232,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
     protected void startConsumers(ConnectionFactory factory, Destination dest) throws Exception {
         MessageConsumer consumer;
         for (int i = 0; i < consumerCount; i++) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
             TimedMessageListener list = new TimedMessageListener();
             consumer = createDurableSubscriber(factory.createConnection(), dest, "consumer" + (i + 1));
             consumer.setMessageListener(list);
@@ -236,6 +247,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final TopicSubscriber consumer = sess.createDurableSubscriber((javax.jms.Topic) dest, name);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
 
         return consumer;
     }
@@ -245,6 +257,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
      * @throws Exception
      */
     private double[] produceMessages(Destination destination, final int toSend, final int numIterations, Session session, MessageProducer producer,
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         Object addConsumerSignal) throws Exception {
         long start;
         long count = 0;
@@ -279,6 +292,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         }
 
         LOG.info("Sent: " + toSend * numIterations + ", batchMax: " + batchMax + " singleSendMax: " + max);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         return new double[] { batchMax, sum / numIterations };
     }
 
@@ -328,6 +342,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
     protected BrokerService createBroker() throws Exception {
         BrokerService brokerService = new BrokerService();
         brokerService.setEnableStatistics(false);
+//IC see: https://issues.apache.org/jira/browse/AMQ-2411
         brokerService.addConnector("tcp://0.0.0.0:0");
         brokerService.setDeleteAllMessagesOnStartup(true);
 
@@ -335,6 +350,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         policy.setPrioritizedMessages(true);
         policy.setMaxPageSize(500);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
         StorePendingDurableSubscriberMessageStoragePolicy durableSubPending = new StorePendingDurableSubscriberMessageStoragePolicy();
         durableSubPending.setImmediatePriorityDispatch(true);
         durableSubPending.setUseCache(true);
@@ -345,6 +361,8 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         brokerService.setDestinationPolicy(policyMap);
 
         setPersistenceAdapter(brokerService, persistenceAdapterChoice);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4415
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
 
         return brokerService;
     }
@@ -356,10 +374,12 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         prefetchPolicy.setAll(1);
         factory.setPrefetchPolicy(prefetchPolicy);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
         factory.setDispatchAsync(true);
         return factory;
     }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3188
     class TimedMessageListener implements MessageListener {
         final int batchSize = 1000;
         CountDownLatch firstReceiptLatch = new CountDownLatch(1);
@@ -370,6 +390,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         long maxReceiptTime = 0;
         AtomicLong count = new AtomicLong(0);
         Map<Integer, MessageIdList> messageLists = new ConcurrentHashMap<Integer, MessageIdList>(new HashMap<Integer, MessageIdList>());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
 
         @Override
         public void onMessage(Message message) {
@@ -379,6 +400,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
             int priority = 0;
             try {
                 priority = message.getJMSPriority();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
             } catch (JMSException ignored) {
             }
             if (!messageLists.containsKey(priority)) {
@@ -393,6 +415,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                 LOG.info("First receipt in " + firstReceipt + "ms");
             } else if (count.get() % batchSize == 0) {
                 LOG.info("Consumed " + count.get() + " in " + batchReceiptAccumulator + "ms" + ", priority:" + priority);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
                 batchReceiptAccumulator = 0;
             }
             maxReceiptTime = Math.max(maxReceiptTime, duration);
@@ -411,12 +434,14 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         }
 
         public long waitForReceivedLimit(long limit) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
             final long expiry = System.currentTimeMillis() + 30 * 60 * 1000;
             while (count.get() < limit) {
                 if (System.currentTimeMillis() > expiry) {
                     throw new RuntimeException("Expired waiting for X messages, " + limit);
                 }
                 TimeUnit.SECONDS.sleep(2);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
                 String missing = findFirstMissingMessage();
                 if (missing != null) {
                     LOG.info("first missing = " + missing);
@@ -424,6 +449,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                 }
 
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
             return receiptAccumulator / (limit / batchSize);
         }
 
@@ -436,6 +462,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                     if (previous == null) {
                         previous = current.copy();
                     } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5848
                         if (current.getProducerSequenceId() - 1 != previous.getProducerSequenceId()
                             && current.getProducerSequenceId() - 10 != previous.getProducerSequenceId()) {
                             return "Missing next after: " + previous + ", got: " + current;

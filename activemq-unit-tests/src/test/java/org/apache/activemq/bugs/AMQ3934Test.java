@@ -97,6 +97,7 @@ public class AMQ3934Test {
 
     private QueueViewMBean getProxyToQueueViewMBean() throws MalformedObjectNameException, NullPointerException,
             JMSException {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         final ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + queue.getQueueName());
         final QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext().newProxyInstance(
                 queueViewMBeanName, QueueViewMBean.class, true);

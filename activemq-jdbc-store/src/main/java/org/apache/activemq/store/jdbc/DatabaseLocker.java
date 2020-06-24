@@ -33,6 +33,7 @@ public interface DatabaseLocker extends Service {
      * @param adapter the persistence adapter to use
      * @throws IOException 
      */
+//IC see: https://issues.apache.org/jira/browse/AMQ-1191
     void setPersistenceAdapter(JDBCPersistenceAdapter adapter) throws IOException;
     
     /**

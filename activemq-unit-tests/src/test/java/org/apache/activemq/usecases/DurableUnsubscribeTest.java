@@ -46,6 +46,7 @@ public class DurableUnsubscribeTest extends org.apache.activemq.TestSupport {
 
 
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3374
         MessageProducer producer = session.createProducer(topic);
         for (int i = 0; i < 1000; i++) {
             producer.send(session.createTextMessage("text"));
@@ -72,6 +73,7 @@ public class DurableUnsubscribeTest extends org.apache.activemq.TestSupport {
         assertEquals("Subscription is missing.", 1, d.getConsumers().size());
 
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3013
         ObjectName[] subNames = broker.getAdminView().getInactiveDurableTopicSubscribers();
         mbs.invoke(subNames[0], "destroy", new Object[0], new String[0]);
 
@@ -104,6 +106,8 @@ public class DurableUnsubscribeTest extends org.apache.activemq.TestSupport {
         //broker.setPersistent(false);
         broker.setUseJmx(true);
         broker.setBrokerName(getName());
+//IC see: https://issues.apache.org/jira/browse/AMQ-3374
+//IC see: https://issues.apache.org/jira/browse/AMQ-3443
         broker.deleteAllMessages();
         broker.start();
 

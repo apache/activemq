@@ -31,7 +31,10 @@ public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMa
     @Override
     protected void configureJdbcPersistenceAdapter(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
         super.configureJdbcPersistenceAdapter(persistenceAdapter);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4103
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         persistenceAdapter.setLocker(new LeaseDatabaseLocker());
+//IC see: https://issues.apache.org/jira/browse/AMQ-4005
         persistenceAdapter.getLocker().setLockAcquireSleepInterval(getLockAcquireSleepInterval());
         persistenceAdapter.setLockKeepAlivePeriod(getLockKeepAlivePeriod());
     }
@@ -40,6 +43,7 @@ public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMa
     protected void configureBroker(BrokerService brokerService) {
         //let the brokers die on exception and master should have lease on restart
         // which will delay slave start till it expires
+//IC see: https://issues.apache.org/jira/browse/AMQ-5174
         LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
         ioExceptionHandler.setIgnoreSQLExceptions(false);
         ioExceptionHandler.setStopStartConnectors(false);

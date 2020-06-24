@@ -55,6 +55,7 @@ public class SslTransportFactoryTest extends TestCase {
                              + (needClientAuth ? "true" : "false");
 
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1670
                 sslTransportServer = (SslTransportServer)factory.doBind(new URI(
                                                                                             "ssl://localhost:61616?"
                                                                                                 + options));

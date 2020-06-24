@@ -41,6 +41,8 @@ public class LocalBrokerFacade extends BrokerFacadeSupport {
     private final BrokerService brokerService;
 
     public LocalBrokerFacade(BrokerService brokerService) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1324
+//IC see: https://issues.apache.org/jira/browse/AMQ-5685
         this.brokerService = brokerService;
     }
 
@@ -80,6 +82,7 @@ public class LocalBrokerFacade extends BrokerFacadeSupport {
         Set<Destination> destinations = getManagedBroker().getQueueRegion().getDestinations(destination);
         for (Iterator<Destination> i = destinations.iterator(); i.hasNext();) {
             Destination dest = unwrap(i.next());
+//IC see: https://issues.apache.org/jira/browse/AMQ-1803
             if (dest instanceof Queue) {
                 Queue regionQueue = (Queue) dest;
                 regionQueue.purge();
@@ -89,6 +92,7 @@ public class LocalBrokerFacade extends BrokerFacadeSupport {
 
 
     private Destination unwrap(Destination dest) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5685
         if (dest instanceof DestinationFilter) {
             return unwrap(((DestinationFilter) dest).getNext());
         }
@@ -97,6 +101,7 @@ public class LocalBrokerFacade extends BrokerFacadeSupport {
 
     @Override
     public Set queryNames(ObjectName name, QueryExp query) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2570
         return getManagementContext().queryNames(name, query);
     }
 

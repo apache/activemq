@@ -130,6 +130,7 @@ public class ProducerFlowControlTest extends JmsTestSupport {
         Thread.sleep(1000);
         keepGoing.set(false);
     	
+//IC see: https://issues.apache.org/jira/browse/AMQ-2523
 		assertFalse("producer has resumed", done.get());
     }
 
@@ -155,6 +156,7 @@ public class ProducerFlowControlTest extends JmsTestSupport {
                 while (keepGoing.get()) {
                     done.set(false);
                     try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2523
                         producer.send(session.createTextMessage("Test message " + ++i));
                         LOG.info("sent: " + i);
                     } catch (JMSException e) {
@@ -256,8 +258,10 @@ public class ProducerFlowControlTest extends JmsTestSupport {
     }
 
     public void testDisableWarning() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3233
         final AtomicInteger warnings = new AtomicInteger();
         final AtomicInteger debugs = new AtomicInteger();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4261
 
         Appender appender = new DefaultTestAppender() {
             @Override
@@ -296,6 +300,7 @@ public class ProducerFlowControlTest extends JmsTestSupport {
             fillQueue(new ActiveMQQueue("SomeOtherQueueToPickUpNewPolicy"));
             assertEquals(0, warnings.get());
             assertTrue(debugs.get() > 1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4261
 
         } finally {
             log4jLogger.removeAppender(appender);
@@ -389,6 +394,7 @@ public class ProducerFlowControlTest extends JmsTestSupport {
     }
     
     protected void tearDown() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3233
         for (Connection c : connections) {
             // force error on blocked connections
             ActiveMQConnection connection = (ActiveMQConnection) c;

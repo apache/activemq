@@ -42,8 +42,10 @@ public final class SelectorSelection {
             @Override
             public void run() {
                 try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5269
                     SelectorSelection.this.key = selectable.register(worker.selector, 0, SelectorSelection.this);
                 } catch (Exception e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6820
                     onError(e);
                 }
             }
@@ -55,6 +57,7 @@ public final class SelectorSelection {
     }
 
     public void enable() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2440
         worker.addIoTask(new Runnable() {
             @Override
             public void run() {
@@ -63,6 +66,7 @@ public final class SelectorSelection {
                 } catch (CancelledKeyException e) {
                 }
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5269
         });
     }
 
@@ -86,10 +90,12 @@ public final class SelectorSelection {
                     try {
                         key.cancel();
                     } catch (CancelledKeyException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6108
                     } finally {
                         worker.release();
                     }
                 }
+//IC see: https://issues.apache.org/jira/browse/AMQ-5269
             });
         }
     }

@@ -120,6 +120,7 @@ public class VMTransportThreadSafeTest {
         private final Transport peer;
 
         public VMResponderTransportListener(Queue<DummyCommand> receiveQueue, Transport peer) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3873
             this.received = receiveQueue;
             this.peer = peer;
         }
@@ -265,6 +266,8 @@ public class VMTransportThreadSafeTest {
     @Test(timeout=60000)
     public void testStopSendsShutdownToPeer() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3684
+//IC see: https://issues.apache.org/jira/browse/AMQ-4532
         final VMTransport local = new VMTransport(new URI(location1));
         final VMTransport remote = new VMTransport(new URI(location2));
 
@@ -290,6 +293,7 @@ public class VMTransportThreadSafeTest {
     @Test(timeout=60000)
     public void testRemoteStopSendsExceptionToPendingRequests() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4532
         final VMTransport local = new VMTransport(new URI(location1));
         final VMTransport remote = new VMTransport(new URI(location2));
 
@@ -318,6 +322,8 @@ public class VMTransportThreadSafeTest {
         // simulate broker stop
         remote.stop();
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-2191
+//IC see: https://issues.apache.org/jira/browse/AMQ-3529
         assertTrue("got expected exception response", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
@@ -820,6 +826,7 @@ public class VMTransportThreadSafeTest {
     @Test(timeout=120000)
     public void testTwoWayTrafficWithMutexTransportSync1() throws Exception {
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3873
         for (int i = 0; i < 20; ++i) {
             doTestTwoWayTrafficWithMutexTransport(false, false);
         }

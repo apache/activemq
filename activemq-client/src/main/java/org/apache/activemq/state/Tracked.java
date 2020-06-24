@@ -24,6 +24,7 @@ public class Tracked extends Response {
     private ResponseHandler handler;
 
     public Tracked(ResponseHandler runnable) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2556
         this.handler = runnable;
     }
 

@@ -47,15 +47,20 @@ public class ManagedTransportConnection extends TransportConnection {
     private final boolean populateUserName;
 
     public ManagedTransportConnection(TransportConnector connector, Transport transport, Broker broker,
+//IC see: https://issues.apache.org/jira/browse/AMQ-3451
                                       TaskRunnerFactory factory, TaskRunnerFactory stopFactory,
                                       ManagementContext context, ObjectName connectorName)
         throws IOException {
         super(connector, transport, broker, factory, stopFactory);
         this.managementContext = context;
         this.connectorName = connectorName;
+//IC see: https://issues.apache.org/jira/browse/AMQ-1905
         this.mbean = new ConnectionView(this, managementContext);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         this.populateUserName = broker.getBrokerService().isPopulateUserNameInMBeans();
         if (managementContext.isAllowRemoteAddressInMBeanNames()) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
             byAddressName = createObjectName("remoteAddress", transport.getRemoteAddress());
             registerMBean(byAddressName);
         }
@@ -64,6 +69,8 @@ public class ManagedTransportConnection extends TransportConnection {
     @Override
     public void stopAsync() {
         super.stopAsync();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3792
+//IC see: https://issues.apache.org/jira/browse/AMQ-5888
         synchronized (this) {
             unregisterMBean(byClientIdName);
             unregisterMBean(byAddressName);
@@ -76,9 +83,12 @@ public class ManagedTransportConnection extends TransportConnection {
     public Response processAddConnection(ConnectionInfo info) throws Exception {
         Response answer = super.processAddConnection(info);
         String clientId = info.getClientId();
+//IC see: https://issues.apache.org/jira/browse/AMQ-3734
         if (populateUserName) {
             ((ConnectionView) mbean).setUserName(info.getUserName());
         }
+//IC see: https://issues.apache.org/jira/browse/AMQ-3438
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         if (clientId != null) {
             if (byClientIdName == null) {
                 byClientIdName = createObjectName("clientId", clientId);
@@ -93,6 +103,7 @@ public class ManagedTransportConnection extends TransportConnection {
     protected void registerMBean(ObjectName name) {
         if (name != null) {
             try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2330
                 AnnotatedMBean.registerMBean(managementContext, mbean, name);
             } catch (Throwable e) {
                 LOG.warn("Failed to register MBean {}", name);

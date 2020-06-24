@@ -42,6 +42,7 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopic
     @Override
     protected TransportConnector configureBroker(BrokerService answer) throws Exception {
         answer.setPopulateJMSXUserID(true);
+//IC see: https://issues.apache.org/jira/browse/AMQ-5621
         return super.configureBroker(answer);
     }
 
@@ -50,6 +51,7 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopic
         super.assertMessagesReceivedAreValid(receivedMessages);
 
         // lets assert that the user ID is set
+//IC see: https://issues.apache.org/jira/browse/AMQ-4542
         for (Message message : receivedMessages) {
             String userID = message.getStringProperty("JMSXUserID");
             LOG.info("Received message with userID: " + userID);
@@ -88,6 +90,8 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopic
     }
 
     public void testSpoofedJMSXUserIdIsIgnoredAsObjectProperty() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3211
+//IC see: https://issues.apache.org/jira/browse/AMQ-4542
         for (int i = 0; i < data.length; i++) {
             Message message = createMessage(i);
             configureMessage(message);

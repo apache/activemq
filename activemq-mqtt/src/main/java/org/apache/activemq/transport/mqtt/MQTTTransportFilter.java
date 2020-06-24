@@ -68,6 +68,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     public MQTTTransportFilter(Transport next, WireFormat wireFormat, BrokerService brokerService) {
         super(next);
         this.protocolConverter = new MQTTProtocolConverter(this, brokerService);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4896
 
         if (wireFormat instanceof MQTTWireFormat) {
             this.wireFormat = (MQTTWireFormat) wireFormat;
@@ -79,6 +80,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         try {
             final Command command = (Command) o;
             protocolConverter.onActiveMQCommand(command);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3786
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
@@ -87,12 +89,14 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     @Override
     public void onCommand(Object command) {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5043
             MQTTFrame frame = (MQTTFrame) command;
             if (trace) {
                 TRACE.trace("Received: " + toString(frame));
             }
             protocolConverter.onMQTTCommand(frame);
         } catch (IOException e) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5112
             onException(e);
         } catch (JMSException e) {
             onException(IOExceptionSupport.create(e));
@@ -111,11 +115,13 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     public void sendToMQTT(MQTTFrame command) throws IOException {
         if( !stopped.get() ) {
             if (trace) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5043
                 TRACE.trace("Sending : " + toString(command));
             }
             Transport n = next;
             if (n != null) {
                 // sync access to underlying transport buffer
+//IC see: https://issues.apache.org/jira/browse/AMQ-5112
                 synchronized (sendLock) {
                     n.oneway(command);
                 }
@@ -124,6 +130,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     }
 
     static private String toString(MQTTFrame frame) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5043
         if( frame == null )
             return null;
         try {
@@ -151,6 +158,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
 
     @Override
     public void start() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5468
         if (monitor != null) {
             monitor.startConnectChecker(getConnectAttemptTimeout());
         }
@@ -166,6 +174,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6021
         X509Certificate[] peerCerts = null;
         if (next instanceof SslTransport) {
             peerCerts = ((SslTransport) next).getPeerCertificates();
@@ -204,10 +213,12 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     @Override
     public void onException(IOException error) {
         protocolConverter.onTransportError();
+//IC see: https://issues.apache.org/jira/browse/AMQ-5112
         super.onException(error);
     }
 
     public long getDefaultKeepAlive() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4123
         return protocolConverter != null ? protocolConverter.getDefaultKeepAlive() : -1;
     }
 
@@ -219,6 +230,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
      * @return the timeout value used to fail a connection if no CONNECT frame read.
      */
     public long getConnectAttemptTimeout() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5856
         return wireFormat.getConnectAttemptTimeout();
     }
 
@@ -230,10 +242,12 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
      *        the connection frame received timeout value.
      */
     public void setConnectAttemptTimeout(long connectTimeout) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5856
         wireFormat.setConnectAttemptTimeout(connectTimeout);
     }
 
     public boolean getPublishDollarTopics() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5292
         return protocolConverter != null && protocolConverter.getPublishDollarTopics();
     }
 
@@ -242,6 +256,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     }
 
     public String getSubscriptionStrategy() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5290
         return protocolConverter != null ? protocolConverter.getSubscriptionStrategy() : "default";
     }
 
@@ -266,6 +281,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
      * @return the maximum number of bytes a single MQTT message frame is allowed to be.
      */
     public int getMaxFrameSize() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5781
         return wireFormat.getMaxFrameSize();
     }
 

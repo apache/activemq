@@ -66,6 +66,7 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
      * @throws Exception
      */
     public void setVirtualDestinations(final VirtualDestination[] virtualDestinations, boolean applyImmediately) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6035
         setVirtualDestinations(virtualDestinations);
         if (applyImmediately) {
             this.applyDestinationWork();
@@ -104,6 +105,7 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
         try {
             if (!getBrokerService().getNetworkConnectors().contains(nc)) {
                 getBrokerService().addNetworkConnector(nc);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6610
                 getBrokerService().startNetworkConnector(nc, null);
                 info("started new network connector: " + nc);
             } else {
@@ -134,6 +136,7 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
     public void addNewPolicyEntry(PolicyEntry addition) {
         PolicyMap existingMap = getBrokerService().getDestinationPolicy();
         existingMap.put(addition.getDestination(), addition);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
         PolicyEntryUtil.applyRetrospectively(this, addition, null);
         info("added policy for: " + addition.getDestination());
     }
@@ -154,10 +157,12 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
      * @param existing
      */
     public void modifyPolicyEntry(PolicyEntry existing) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6088
         modifyPolicyEntry(existing, false);
     }
 
     public void modifyPolicyEntry(PolicyEntry existing, boolean createOrReplace) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
         modifyPolicyEntry(existing, createOrReplace, null);
     }
 
@@ -179,6 +184,7 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
      * @param includedProperties - optional list of properties to apply retrospectively
      */
     public void modifyPolicyEntry(PolicyEntry existing, boolean createOrReplace,
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
             Set<String> includedProperties) {
         PolicyMap existingMap = this.getBrokerService().getDestinationPolicy();
 
@@ -205,6 +211,7 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
         //Make sure that at this point the passed in object and the entry in
         //the map are the same
         if (existingEntry != null && existingEntry.equals(existing)) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-6091
             PolicyEntryUtil.applyRetrospectively(this, existingEntry, includedProperties);
             this.info("updated policy for: " + existingEntry.getDestination());
         } else {

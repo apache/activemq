@@ -52,6 +52,7 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
 
     @Test(timeout = 60000)
     public void testProduceOneConsumeOneInTx() throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5847
         connection = createConnection();
         connection.start();
 
@@ -160,6 +161,7 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
     @Test(timeout = 60000)
     public void testQueueTXRollbackAndCommit() throws Exception {
         final int MSG_COUNT = 3;
+//IC see: https://issues.apache.org/jira/browse/AMQ-5413
 
         connection = createConnection();
         connection.start();
@@ -197,6 +199,7 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
         for (int i = 1; i <= MSG_COUNT; i++) {
             LOG.info("Trying to receive message: {}", i);
             TextMessage message = (TextMessage) consumer.receive(1000);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6305
             assertNotNull("Message " + i + " should be available", message);
             assertEquals("Should get message: " + i, i, message.getIntProperty("MessageSequence"));
         }

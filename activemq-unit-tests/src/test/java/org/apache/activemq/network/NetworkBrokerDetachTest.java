@@ -131,6 +131,7 @@ public class NetworkBrokerDetachTest {
             consSession.createConsumer(destination);
         }
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         assertTrue("got expected consumer count from mbean within time limit",
                    verifyConsumerCount(1, destination, broker));
 
@@ -232,6 +233,7 @@ public class NetworkBrokerDetachTest {
     }
 
     protected ConnectionFactory createConnectionFactory(final BrokerService broker) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
         String url = broker.getTransportConnectors().get(0).getServer().getConnectURI().toString();
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
         connectionFactory.setOptimizedMessageDispatch(true);
@@ -258,6 +260,7 @@ public class NetworkBrokerDetachTest {
                 try {
 
                     ObjectName[] destinations;
+//IC see: https://issues.apache.org/jira/browse/AMQ-4237
 
                     if (destination.isQueue()) {
                         destinations = broker.getAdminView().getQueues();

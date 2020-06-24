@@ -61,6 +61,7 @@ public class LoadBalanceTest {
         final AtomicInteger broker1Count = new AtomicInteger(0);
         final AtomicInteger broker2Count = new AtomicInteger(0);
         final CountDownLatch startProducer = new CountDownLatch(1);
+//IC see: https://issues.apache.org/jira/browse/AMQ-4400
         final CountDownLatch consumer1Started = new CountDownLatch(1);
         final CountDownLatch consumer2Started = new CountDownLatch(1);
 
@@ -118,6 +119,7 @@ public class LoadBalanceTest {
             });
             container1.afterPropertiesSet();
             container1.start();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4400
             consumer1Started.countDown();
             pool.submit(new Callable<Object>() {
 
@@ -145,6 +147,7 @@ public class LoadBalanceTest {
                         container2.afterPropertiesSet();
                         container2.start();
                         consumer2Started.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4400
 
                         assertTrue("wait for start signal", startProducer.await(20, TimeUnit.SECONDS));
 
@@ -187,6 +190,7 @@ public class LoadBalanceTest {
 
             waitForBridgeFormation();
             startProducer.countDown();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4400
             consumer1Started.await();
             consumer2Started.await();
 

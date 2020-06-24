@@ -50,6 +50,7 @@ public class JmsConsumerSystem extends AbstractJmsClientSystem {
 
     @Override
     protected ClientRunBasis getClientRunBasis() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-5294
         assert (consumer != null);
         return ClientRunBasis.valueOf(consumer.getRecvType().toLowerCase());
     }

@@ -213,6 +213,7 @@ public class ForwardingBridge implements Service {
     public void serviceLocalException(Throwable error) {
         LOG.info("Unexpected local exception: {}", error.getMessage());
         LOG.debug("Exception trace: ", error);
+//IC see: https://issues.apache.org/jira/browse/AMQ-920
         fireBridgeFailed();
     }
 
@@ -221,6 +222,7 @@ public class ForwardingBridge implements Service {
             if (command.isMessageDispatch()) {
 
                 enqueueCounter.incrementAndGet();
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
 
                 final MessageDispatch md = (MessageDispatch)command;
                 Message message = md.getMessage();
@@ -231,6 +233,7 @@ public class ForwardingBridge implements Service {
                 }
                 message.setTransactionId(null);
 
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
                 if (isUseCompression()) {
                     message.compress();
                 }
@@ -256,6 +259,8 @@ public class ForwardingBridge implements Service {
                                     ExceptionResponse er = (ExceptionResponse)response;
                                     serviceLocalException(er.getException());
                                 } else {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
                                     dequeueCounter.incrementAndGet();
                                     localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1));
                                 }
@@ -353,6 +358,7 @@ public class ForwardingBridge implements Service {
     }
 
     private void fireBridgeFailed() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-1299
         NetworkBridgeListener l = this.bridgeFailedListener;
         if (l != null) {
             l.bridgeFailed();
@@ -388,6 +394,7 @@ public class ForwardingBridge implements Service {
      *      True if forwarded Messages should have their bodies compressed.
      */
     public void setUseCompression(boolean useCompression) {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3787
         this.useCompression = useCompression;
     }
 

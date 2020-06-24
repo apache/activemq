@@ -55,7 +55,10 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         this.subscriberName = subscriberName;
         this.maxProducersToAudit=32;
         this.maxAuditDepth=10000;
+//IC see: https://issues.apache.org/jira/browse/AMQ-3998
+//IC see: https://issues.apache.org/jira/browse/AMQ-3999
         resetSize();
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         this.storeHasMessages=this.size > 0;
     }
 
@@ -67,13 +70,16 @@ class TopicStorePrefetch extends AbstractStoreCursor {
 
     @Override
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4656
         batchList.addMessageFirst(node);
         size++;
+//IC see: https://issues.apache.org/jira/browse/AMQ-6014
         node.incrementReferenceCount();
     }
 
     @Override
     public final synchronized boolean addMessageLast(MessageReference node) throws Exception {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         this.storeHasMessages = super.addMessageLast(node);
         return this.storeHasMessages;
     }
@@ -86,9 +92,12 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         messageEvaluationContext.setMessageReference(message);
         if (this.subscription.matches(message, messageEvaluationContext)) {
             recovered = super.recoverMessage(message, cached);
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
             if (recovered && !cached) {
                 lastRecoveredPriority = message.getPriority();
             }
+//IC see: https://issues.apache.org/jira/browse/AMQ-1566
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
             storeHasMessages = true;
         }
         return recovered;
@@ -99,12 +108,14 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         // setBatch is not implemented - sequence order not reliable with concurrent transactions
         // on cache exhaustion - first pageIn starts from last ack location which may replay what
         // cursor has dispatched
+//IC see: https://issues.apache.org/jira/browse/AMQ-6562
         return true;
     }
 
     @Override
     protected synchronized int getStoreSize() {
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2695
             return store.getMessageCount(clientId, subscriberName);
         } catch (Exception e) {
             LOG.error("{} Failed to get the outstanding message count from the store", this, e);
@@ -125,7 +136,9 @@ class TopicStorePrefetch extends AbstractStoreCursor {
 
     @Override
     protected synchronized boolean isStoreEmpty() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-2512
         try {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
             return this.store.isEmpty();
         } catch (Exception e) {
             LOG.error("Failed to determine if store is empty", e);
@@ -142,9 +155,11 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     @Override
     protected void doFillBatch() throws Exception {
         // avoid repeated  trips to the store if there is nothing of interest
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         this.storeHasMessages = false;
         this.store.recoverNextMessages(clientId, subscriberName,
                 maxBatchSize, this);
+//IC see: https://issues.apache.org/jira/browse/AMQ-6562
         dealWithDuplicates();
         if (!this.storeHasMessages && (!this.batchList.isEmpty() || !hadSpace)) {
             this.storeHasMessages = true;
@@ -152,6 +167,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     }
 
     public byte getLastRecoveredPriority() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-3288
         return lastRecoveredPriority;
     }
 
@@ -161,11 +177,13 @@ class TopicStorePrefetch extends AbstractStoreCursor {
 
     @Override
     public Subscription getSubscription() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4952
         return subscription;
     }
 
     @Override
     public String toString() {
+//IC see: https://issues.apache.org/jira/browse/AMQ-4495
         return "TopicStorePrefetch(" + clientId + "," + subscriberName + ",storeHasMessages=" + this.storeHasMessages +") " + this.subscription.getConsumerInfo().getConsumerId() + " - " + super.toString();
     }
 }
