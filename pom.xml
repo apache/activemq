@@ -1458,7 +1458,7 @@
             <exclude>**/jquery-*.js</exclude>
             <exclude>**/bootstrap.min.css</exclude>
             <exclude>**/bootstrap.min.responsive.css</exclude>
-            <exclude>**/webapp/js/prototype.js</exclude>
+            <exclude>**/prototype.js</exclude>
             <exclude>**/web/behaviour.js</exclude>
             <exclude>**/webapp/js/common.js</exclude>
             <exclude>**/webapp/js/css.js</exclude>
