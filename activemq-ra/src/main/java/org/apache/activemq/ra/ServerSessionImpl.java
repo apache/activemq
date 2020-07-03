@@ -56,8 +56,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     }
 
 
-    private int serverSessionId = getNextLogId();
-    private final Logger log = LoggerFactory.getLogger(ServerSessionImpl.class.getName() + ":" + serverSessionId);
+    private final Logger log = LoggerFactory.getLogger(ServerSessionImpl.class);
 
     private ActiveMQSession session;
     private WorkManager workManager;
@@ -105,7 +104,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     }
 
     protected boolean isStale() {
-        return stale || !session.isRunning() || !session.isClosed();
+        return stale || !session.isRunning();
     }
 
     public MessageProducer getMessageProducer() throws JMSException {
@@ -261,7 +260,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
      */
     @Override
     public String toString() {
-        return "ServerSessionImpl:" + serverSessionId + "{" + session +"}";
+        return "ServerSessionImpl:{" + session +"}";
     }
 
     public void close() {

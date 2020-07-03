@@ -57,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JMock.class)
@@ -433,4 +434,64 @@ public class ServerSessionImplTest {
         }
     }
 
+
+
+    @Test
+    public void testSessionReusedByPool() throws Exception {
+
+        final MessageEndpointFactory messageEndpointFactory = context.mock(MessageEndpointFactory.class);
+        final MessageResourceAdapter resourceAdapter = context.mock(MessageResourceAdapter.class);
+        final ActiveMQEndpointActivationKey key = context.mock(ActiveMQEndpointActivationKey.class);
+        messageEndpoint = context.mock(MessageEndpointProxy.class);
+        workManager = context.mock(WorkManager.class);
+        final MessageActivationSpec messageActivationSpec = context.mock(MessageActivationSpec.class);
+        final BootstrapContext bootstrapContext = context.mock(BootstrapContext.class);
+        context.checking(new Expectations() {
+            {
+                allowing(bootstrapContext).getWorkManager();
+                will(returnValue(workManager));
+                allowing(resourceAdapter).getBootstrapContext();
+                will(returnValue(bootstrapContext));
+                allowing(messageEndpointFactory).isDeliveryTransacted(with(any(Method.class)));
+                will(returnValue(Boolean.FALSE));
+                allowing(key).getMessageEndpointFactory();
+                will(returnValue(messageEndpointFactory));
+                allowing(key).getActivationSpec();
+                will(returnValue(messageActivationSpec));
+                allowing(messageActivationSpec).isUseJndi();
+                will(returnValue(Boolean.FALSE));
+                allowing(messageActivationSpec).getDestinationType();
+                will(returnValue("javax.jms.Queue"));
+                allowing(messageActivationSpec).getDestination();
+                will(returnValue("Queue"));
+                allowing(messageActivationSpec).getAcknowledgeModeForSession();
+                will(returnValue(1));
+                allowing(messageActivationSpec).getMaxSessionsIntValue();
+                will(returnValue(10));
+                allowing(messageActivationSpec).getEnableBatchBooleanValue();
+                will(returnValue(Boolean.FALSE));
+                allowing(messageActivationSpec).isUseRAManagedTransactionEnabled();
+                will(returnValue(Boolean.TRUE));
+                allowing(messageEndpointFactory).createEndpoint(with(any(XAResource.class)));
+                will(returnValue(messageEndpoint));
+
+                allowing(workManager).scheduleWork((Work) with(Matchers.instanceOf(Work.class)), with(any(long.class)), with(any(ExecutionContext.class)),
+                        with(any(WorkListener.class)));
+                allowing(messageEndpoint).release();
+            }
+        });
+
+        endpointWorker = new ActiveMQEndpointWorker(resourceAdapter, key);
+        endpointWorker.setConnection(con);
+
+        pool = new ServerSessionPoolImpl(endpointWorker, 2);
+        endpointWorker.start();
+
+        // the test!
+        ServerSessionImpl first = (ServerSessionImpl) pool.getServerSession();
+        pool.returnToPool(first);
+
+        ServerSessionImpl reused = (ServerSessionImpl) pool.getServerSession();
+        assertEquals("got reuse", first, reused);
+    }
 }
