@@ -21,6 +21,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.BooleanExpression;
@@ -363,6 +364,15 @@ public class SelectorTest extends TestCase {
 
         assertSelector(message, "REGEX('connection1111', REPLACE(JMSMessageID,':',''))", true);
     }
+
+    public void testMatchOriginalDestinationAttribute() throws Exception {
+
+        ActiveMQMessage activeMQMessage = (ActiveMQMessage) createMessage();
+        ActiveMQQueue originalDest = new ActiveMQQueue("QQ");
+        activeMQMessage.setOriginalDestination(originalDest);
+        assertSelector(activeMQMessage, "JMSDestination='" + originalDest.getQualifiedName() +"'", true);
+    }
+
 
     protected Message createMessage() throws JMSException {
         Message message = createMessage("FOO.BAR");
