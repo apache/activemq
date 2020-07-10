@@ -398,7 +398,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
     }
 
     /**
-     * Sets the <a href="http://activemq.org/Xml+Configuration">XML
+     * Sets the <a href="https://activemq.apache.org/xml-configuration">XML
      * configuration file </a> used to configure the ActiveMQ broker via Spring
      * if using embedded mode.
      *
