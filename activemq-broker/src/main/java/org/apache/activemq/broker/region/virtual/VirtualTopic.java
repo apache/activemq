@@ -28,7 +28,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationFilter;
 
 /**
- * Creates <a href="http://activemq.org/site/virtual-destinations.html">Virtual
+ * Creates <a href="https://activemq.apache.org/virtual-destinations">Virtual
  * Topics</a> using a prefix and postfix. The virtual destination creates a
  * wildcard that is then used to look up all active queue subscriptions which
  * match.

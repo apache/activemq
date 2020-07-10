@@ -35,7 +35,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.util.LRUCache;
 
 /**
- * A Destination which implements <a href="http://activemq.org/site/virtual-destinations.html">Virtual Topic</a>
+ * A Destination which implements <a href="https://activemq.apache.org/virtual-destinations">Virtual Topic</a>
  */
 public class VirtualTopicInterceptor extends DestinationFilter {
 
