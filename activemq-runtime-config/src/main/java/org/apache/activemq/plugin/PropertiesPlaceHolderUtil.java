@@ -18,6 +18,7 @@ package org.apache.activemq.plugin;
 
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.spring.Utils;
+import org.apache.activemq.util.XBeanByteConverterUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
@@ -75,27 +76,13 @@ public class PropertiesPlaceHolderUtil {
         return replaceBytePostfix(str);
     }
 
-    static Pattern[] byteMatchers = new Pattern[] {
-            Pattern.compile("^\\s*(\\d+)\\s*(b)?\\s*$", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("^\\s*(\\d+)\\s*k(b)?\\s*$", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("^\\s*(\\d+)\\s*m(b)?\\s*$", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("^\\s*(\\d+)\\s*g(b)?\\s*$", Pattern.CASE_INSENSITIVE)};
-
     // xbean can Xb, Xkb, Xmb, Xg etc
     private String replaceBytePostfix(String str) {
         try {
-            for (int i=0; i< byteMatchers.length; i++) {
-                Matcher matcher = byteMatchers[i].matcher(str);
-                if (matcher.matches()) {
-                    long value = Long.parseLong(matcher.group(1));
-                    for (int j=1; j<=i; j++) {
-                        value *= 1024;
-                    }
-                    return String.valueOf(value);
-                }
-            }
-        } catch (NumberFormatException ignored) {
-            LOG.debug("nfe on: " + str, ignored);
+            Long value = XBeanByteConverterUtil.convertToLongBytes(str);
+            return String.valueOf(value);
+        } catch (IllegalArgumentException ignored) {
+            LOG.debug("iae on: " + str, ignored);
         }
         return str;
     }
