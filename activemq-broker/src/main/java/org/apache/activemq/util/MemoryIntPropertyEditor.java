@@ -17,8 +17,6 @@
 package org.apache.activemq.util;
 
 import java.beans.PropertyEditorSupport;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Used by xbean to set integers.
@@ -31,36 +29,7 @@ import java.util.regex.Pattern;
  */
 public class MemoryIntPropertyEditor extends PropertyEditorSupport {
     public void setAsText(String text) throws IllegalArgumentException {
-
-        Pattern p = Pattern.compile("^\\s*(\\d+)\\s*(b)?\\s*$", Pattern.CASE_INSENSITIVE);
-        Matcher m = p.matcher(text);
-        if (m.matches()) {
-            setValue(Integer.valueOf(Integer.parseInt(m.group(1))));
-            return;
-        }
-
-        p = Pattern.compile("^\\s*(\\d+)\\s*k(b)?\\s*$", Pattern.CASE_INSENSITIVE);
-        m = p.matcher(text);
-        if (m.matches()) {
-            setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024));
-            return;
-        }
-
-        p = Pattern.compile("^\\s*(\\d+)\\s*m(b)?\\s*$", Pattern.CASE_INSENSITIVE);
-        m = p.matcher(text);
-        if (m.matches()) {
-            setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024 * 1024));
-            return;
-        }
-
-        p = Pattern.compile("^\\s*(\\d+)\\s*g(b)?\\s*$", Pattern.CASE_INSENSITIVE);
-        m = p.matcher(text);
-        if (m.matches()) {
-            setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024 * 1024 * 1024));
-            return;
-        }
-
-        throw new IllegalArgumentException("Could convert not to a memory size: " + text);
+        setValue(XBeanByteConverterUtil.convertToIntegerBytes(text));
     }
 
     public String getAsText() {
