@@ -322,8 +322,8 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
     public void testBindableEnvOverrides() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         assertTrue(pcf instanceof ObjectFactory);
-        Hashtable<String, String> environment = new Hashtable<String, String>();
-        environment.put("tmFromJndi", String.valueOf(Boolean.FALSE));
+        Hashtable<String, Object> environment = new Hashtable<>();
+        environment.put("tmFromJndi", Boolean.FALSE);
         assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, environment) instanceof XaPooledConnectionFactory);
         assertFalse(pcf.isTmFromJndi());
         pcf.stop();
