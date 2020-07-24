@@ -249,13 +249,6 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     }
 
     /**
-     * @return The JMS selector for the specified {@code destination}
-     */
-    public Set<String> getSelector(final String destination) {
-        return subSelectorCache.get(destination);
-    }
-
-    /**
      * Persist the selector cache every {@code MAX_PERSIST_INTERVAL}ms.
      *
      * @see java.lang.Runnable#run()

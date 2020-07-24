@@ -77,7 +77,7 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
         LOG.debug("No active consumer match found. Will try cache if configured...");
 
         if (selectorCachePlugin != null) {
-            final Set<String> selectors = selectorCachePlugin.getSelector(dest.getActiveMQDestination().getQualifiedName());
+            final Set<String> selectors = selectorCachePlugin.getSelectorsForDestination(dest.getActiveMQDestination().getQualifiedName());
             if (selectors != null) {
                 for (String selector : selectors) {
                     try {
