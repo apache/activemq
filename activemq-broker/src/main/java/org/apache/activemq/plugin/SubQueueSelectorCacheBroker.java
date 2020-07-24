@@ -276,8 +276,8 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     @SuppressWarnings("unchecked")
     public Set<String> getSelectorsForDestination(String destinationName) {
         final Set<String> cachedSelectors = subSelectorCache.get(destinationName);
-        synchronized(cachedSelectors) {
-            if (cachedSelectors != null) {
+        if (cachedSelectors != null) {
+            synchronized(cachedSelectors) {
                 return new HashSet<>(cachedSelectors);
             }
         }
