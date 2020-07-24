@@ -69,7 +69,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
      * The subscription's selector cache. We cache compiled expressions keyed
      * by the target destination.
      */
-    private ConcurrentMap<String, Set<String>> subSelectorCache = new ConcurrentHashMap<String, Set<String>>();
+    private ConcurrentMap<String, Set<String>> subSelectorCache = new ConcurrentHashMap<>();
 
     private final File persistFile;
     private boolean singleSelectorPerDestination = false;
@@ -275,8 +275,11 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
     @SuppressWarnings("unchecked")
     public Set<String> getSelectorsForDestination(String destinationName) {
-        if (subSelectorCache.containsKey(destinationName)) {
-            return new HashSet<String>(subSelectorCache.get(destinationName));
+        final Set<String> cachedSelectors = subSelectorCache.get(destinationName);
+        synchronized(cachedSelectors) {
+            if (cachedSelectors != null) {
+                return new HashSet<>(cachedSelectors);
+            }
         }
 
         return Collections.EMPTY_SET;
@@ -291,17 +294,13 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     }
 
     public boolean deleteSelectorForDestination(String destinationName, String selector) {
-        if (subSelectorCache.containsKey(destinationName)) {
-            Set<String> cachedSelectors = subSelectorCache.get(destinationName);
-            return cachedSelectors.remove(selector);
-        }
-
-        return false;
+        final Set<String> cachedSelectors = subSelectorCache.get(destinationName);
+        return cachedSelectors != null ? cachedSelectors.remove(selector) : false;
     }
 
     public boolean deleteAllSelectorsForDestination(String destinationName) {
-        if (subSelectorCache.containsKey(destinationName)) {
-            Set<String> cachedSelectors = subSelectorCache.get(destinationName);
+        final Set<String> cachedSelectors = subSelectorCache.get(destinationName);
+        if (cachedSelectors != null) {
             cachedSelectors.clear();
         }
         return true;
