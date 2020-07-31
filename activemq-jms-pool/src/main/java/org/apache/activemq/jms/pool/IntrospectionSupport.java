@@ -20,7 +20,9 @@ import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.net.ssl.SSLServerSocket;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +99,7 @@ public final class IntrospectionSupport {
             return to.cast(value);
         }
 
-        if (boolean.class.isAssignableFrom(to) && value instanceof String) {
+        if ((boolean.class.isAssignableFrom(to) || Boolean.class.isAssignableFrom(to)) && value instanceof String) {
             return Boolean.valueOf((String)value);
         }
 
