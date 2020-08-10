@@ -193,7 +193,7 @@ public class DestinationsViewFilter implements Serializable {
                         Object leftValue = getter.invoke(left.getValue());
                         Object rightValue = getter.invoke(right.getValue());
                         if (leftValue instanceof Comparable && rightValue instanceof Comparable) {
-                            if (getSortOrder().toLowerCase().equals("desc")) {
+                            if (getSortOrder().equalsIgnoreCase("desc")) {
                                 return ((Comparable) rightValue).compareTo(leftValue);
                             } else {
                                 return ((Comparable) leftValue).compareTo(rightValue);
