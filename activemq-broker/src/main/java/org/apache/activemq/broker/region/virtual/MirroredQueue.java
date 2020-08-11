@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Creates <a href="http://activemq.org/site/mirrored-queues.html">Mirrored
+ * Creates <a href="https://activemq.apache.org/mirrored-queues">Mirrored
  * Queue</a> using a prefix and postfix to define the topic name on which to mirror the queue to.
  *
  * 
