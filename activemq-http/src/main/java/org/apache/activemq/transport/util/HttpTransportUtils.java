@@ -27,7 +27,7 @@ public class HttpTransportUtils {
 
         StringBuilder remoteAddress = new StringBuilder();
         String scheme = request.getScheme();
-        remoteAddress.append(scheme != null && scheme.toLowerCase().equals("https") ? "wss://" : "ws://");
+        remoteAddress.append(scheme != null && scheme.equalsIgnoreCase("https") ? "wss://" : "ws://");
         remoteAddress.append(request.getRemoteAddr());
         remoteAddress.append(":");
         remoteAddress.append(request.getRemotePort());

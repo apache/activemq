@@ -35,9 +35,9 @@ public class BooleanEditor extends PropertyEditorSupport {
     }
 
     public void setAsText(String text) throws java.lang.IllegalArgumentException {
-        if (text.toLowerCase().equals("true")) {
+        if (text.equalsIgnoreCase("true")) {
             setValue(Boolean.TRUE);
-        } else if (text.toLowerCase().equals("false")) {
+        } else if (text.equalsIgnoreCase("false")) {
             setValue(Boolean.FALSE);
         } else {
             throw new java.lang.IllegalArgumentException(text);
