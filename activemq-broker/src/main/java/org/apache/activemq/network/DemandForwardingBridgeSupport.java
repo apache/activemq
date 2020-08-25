@@ -1148,9 +1148,20 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return duplexInitiatingConnection != null ? duplexInitiatingConnection : DemandForwardingBridgeSupport.this;
     }
 
-    protected void addSubscription(DemandSubscription sub) throws IOException {
+    protected void addSubscription(final DemandSubscription sub) throws IOException {
         if (sub != null) {
-            localBroker.oneway(sub.getLocalInfo());
+            // Serialize with remove operations such that new sub does not cause remove/purge to fail
+            serialExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        localBroker.oneway(sub.getLocalInfo());
+                    } catch (IOException e) {
+                        LOG.warn("failed to deliver add sub command: {}, cause: {}", sub.getLocalInfo(), e);
+                        LOG.debug("detail", e);
+                    }
+                }
+            });
         }
     }
 

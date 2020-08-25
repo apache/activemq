@@ -94,6 +94,7 @@ public class NetworkRouteTest {
 
         // (1) send advisory of path 1
         remoteListener.onCommand(path1Msg);
+        localConsumer.latch.await(5, TimeUnit.SECONDS);
         msgDispatch.setConsumerId(((ConsumerInfo) localConsumer.arguments[0]).getConsumerId());
         // send advisory of path 2, doesn't send a ConsumerInfo to localBroker
         remoteListener.onCommand(path2Msg);
@@ -145,6 +146,7 @@ public class NetworkRouteTest {
 
         // (1) send advisory of path 1
         remoteListener.onCommand(path1Msg);
+        localConsumer.latch.await(5, TimeUnit.SECONDS);
         msgDispatch.setConsumerId(((ConsumerInfo) localConsumer.arguments[0]).getConsumerId());
         // send advisory of path 2, doesn't send a ConsumerInfo to localBroker
         remoteListener.onCommand(path2Msg);
@@ -280,6 +282,7 @@ public class NetworkRouteTest {
 
     private static class ArgHolder {
         public Object[] arguments;
+        final CountDownLatch latch = new CountDownLatch(1);
 
         public static ArgHolder holdArgsForLastVoidCall() {
             final ArgHolder holder = new ArgHolder();
@@ -295,12 +298,14 @@ public class NetworkRouteTest {
         }
 
         public static ArgHolder holdArgsForLastObjectCall() {
+
             final ArgHolder holder = new ArgHolder();
             EasyMock.expect(new Object()).andAnswer(new IAnswer<Object>() {
                 @Override
                 public Object answer() throws Throwable {
                     Object[] args = EasyMock.getCurrentArguments();
                     holder.arguments = Arrays.copyOf(args, args.length);
+                    holder.latch.countDown();
                     return null;
                 }
             });

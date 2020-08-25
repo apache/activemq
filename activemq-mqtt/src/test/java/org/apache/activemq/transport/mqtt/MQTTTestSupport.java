@@ -64,6 +64,7 @@ public class MQTTTestSupport {
     protected String protocolConfig;
     protected String protocolScheme;
     protected boolean useSSL;
+    protected boolean advisorySupport;
 
     public static final int AT_MOST_ONCE = 0;
     public static final int AT_LEAST_ONCE = 1;
@@ -145,7 +146,7 @@ public class MQTTTestSupport {
             kaha.setDirectory(new File(KAHADB_DIRECTORY + getTestName()));
             brokerService.setPersistenceAdapter(kaha);
         }
-        brokerService.setAdvisorySupport(false);
+        brokerService.setAdvisorySupport(advisorySupport);
         brokerService.setUseJmx(true);
         brokerService.getManagementContext().setCreateConnector(false);
         brokerService.setSchedulerSupport(isSchedulerSupportEnabled());

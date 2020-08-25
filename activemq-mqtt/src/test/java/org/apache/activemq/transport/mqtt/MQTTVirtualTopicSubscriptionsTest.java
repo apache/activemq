@@ -17,11 +17,21 @@
 package org.apache.activemq.transport.mqtt;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerPluginSupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.network.NetworkBridge;
+import org.apache.activemq.network.NetworkBridgeListener;
+import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.Wait;
 import org.fusesource.mqtt.client.BlockingConnection;
@@ -37,7 +47,9 @@ import org.slf4j.LoggerFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Run the basic tests with the NIO Transport.
@@ -217,4 +229,112 @@ public class MQTTVirtualTopicSubscriptionsTest extends MQTTTest {
         connection.disconnect();
     }
 
+    @Test(timeout = 6000 * 1000)
+    public void testCleanSessionWithNetworkOfBrokersRemoveAddRace() throws Exception {
+
+        stopBroker();
+        advisorySupport = true;
+        startBroker();
+
+        BrokerService brokerTwo = createBroker(false);
+        brokerTwo.setBrokerName("BrokerTwo");
+        final NetworkConnector networkConnector = brokerTwo.addNetworkConnector("static:" + jmsUri);
+        networkConnector.setDestinationFilter("ActiveMQ.Advisory.Consumer.Queue.>,ActiveMQ.Advisory.Queue");
+
+        // let remove Ops backup on the executor
+        final CountDownLatch removeOp = new CountDownLatch(1);
+
+        brokerTwo.setPlugins(new BrokerPlugin[] {new BrokerPluginSupport() {
+            @Override
+            public void removeDestinationInfo(ConnectionContext context, DestinationInfo destInfo) throws Exception {
+                // delay remove ops till subscription is renewed such that the single thread executor backs up
+                removeOp.await(50, TimeUnit.SECONDS);
+                super.removeDestinationInfo(context, destInfo);
+            }
+        }});
+        brokerTwo.start();
+
+
+        assertTrue("Bridge created", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return !networkConnector.activeBridges().isEmpty();
+            }
+        }));
+
+        // track an error on the network bridge
+        final AtomicBoolean failed = new AtomicBoolean();
+        NetworkBridgeListener listener = new NetworkBridgeListener() {
+            @Override
+            public void bridgeFailed() {
+                failed.set(true);
+            }
+
+            @Override
+            public void onStart(NetworkBridge bridge) {
+
+            }
+
+            @Override
+            public void onStop(NetworkBridge bridge) {
+
+            }
+
+            @Override
+            public void onOutboundMessage(NetworkBridge bridge, org.apache.activemq.command.Message message) {
+
+            }
+
+            @Override
+            public void onInboundMessage(NetworkBridge bridge, org.apache.activemq.command.Message message) {
+
+            }
+        };
+        for (NetworkBridge bridge : networkConnector.activeBridges()) {
+            bridge.setNetworkBridgeListener(listener);
+        }
+
+        final int numDests = 100;
+
+        // subscribe with durability
+        final String CLIENTID = "clean-session";
+        final MQTT mqttNotClean = createMQTTConnection(CLIENTID, false);
+        BlockingConnection notClean = mqttNotClean.blockingConnection();
+        notClean.connect();
+
+        for (int i=0; i<numDests; i++) {
+            final String TOPIC = "TopicA-" + i;
+            notClean.subscribe(new Topic[]{new Topic(TOPIC, QoS.EXACTLY_ONCE)});
+        }
+        notClean.disconnect();
+
+
+        // whack any old state with reconnect clean
+        final MQTT mqttClean = createMQTTConnection(CLIENTID, true);
+        final BlockingConnection clean = mqttClean.blockingConnection();
+        clean.connect();
+        for (int i=0; i<numDests; i++) {
+            final String TOPIC = "TopicA-" + i;
+            clean.subscribe(new Topic[]{new Topic(TOPIC, QoS.EXACTLY_ONCE)});
+        }
+        clean.disconnect();
+
+        // subscribe again with durability
+        notClean = mqttNotClean.blockingConnection();
+        notClean.connect();
+        for (int i=0; i<numDests; i++) {
+            final String TOPIC = "TopicA-" + i;
+            notClean.subscribe(new Topic[]{new Topic(TOPIC, QoS.EXACTLY_ONCE)});
+        }
+
+        // release bridge remove ops *after* new/re subscription
+        removeOp.countDown();
+
+        Message msg = notClean.receive(500, TimeUnit.MILLISECONDS);
+        assertNull(msg);
+        notClean.disconnect();
+
+        assertFalse("bridge did not fail", failed.get());
+        brokerTwo.stop();
+    }
 }
