@@ -19,6 +19,7 @@
 <html>
 <head>
 <c:set var="row" value="${requestContext.messageQuery.message}"/>
+<c:set var="destination"><c:out value="${requestContext.messageQuery.JMSDestination}"/></c:set>
 <c:set var="pageTitle" value="Message ${requestContext.messageQuery.id}"/>
 
 <%@include file="decorators/head.jsp" %>
@@ -235,7 +236,7 @@ function confirmAction(id, action) {
 	}
 	var value = select.options[selectedIndex].value;
 	var url = action + ".action?destination=" + value;
-	url += "&JMSDestination=${requestContext.messageQuery.JMSDestination}";
+	url += "&JMSDestination=${destination}";
 	url += "&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}";
 	if (confirm("Are you sure?"))
 	  location.href=url;
