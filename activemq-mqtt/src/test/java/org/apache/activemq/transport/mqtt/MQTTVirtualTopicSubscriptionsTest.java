@@ -27,6 +27,7 @@ import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.network.NetworkBridge;
@@ -330,6 +331,17 @@ public class MQTTVirtualTopicSubscriptionsTest extends MQTTTest {
         // release bridge remove ops *after* new/re subscription
         removeOp.countDown();
 
+        assertTrue("All destinations and subs recreated and consumers connected on brokerTwo via network", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                BrokerView brokerView = brokerTwo.getAdminView();
+                int numQueues = brokerView.getQueues().length;
+                int numSubscriptions = brokerView.getQueueSubscribers().length;
+
+                LOG.info("#Queues: " + numQueues + ", #Subs: " + numSubscriptions);
+                return numQueues == numDests && numSubscriptions == numDests;
+            }
+        }));
         Message msg = notClean.receive(500, TimeUnit.MILLISECONDS);
         assertNull(msg);
         notClean.disconnect();
