@@ -25,11 +25,13 @@ import javax.jms.XAConnectionFactory;
 import javax.jms.XASession;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
-
 import javax.transaction.xa.XAResource;
+
 import org.apache.geronimo.transaction.manager.NamedXAResourceFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.geronimo.transaction.manager.RecoverableTransactionManager;
 import org.apache.geronimo.transaction.manager.NamedXAResource;
 import org.apache.geronimo.transaction.manager.WrapperNamedXAResource;
@@ -137,55 +139,54 @@ public class GenericResourceManager {
         }
 
         public static boolean recover(final GenericResourceManager rm) throws IOException {
-            if (isRecoverable(rm)) {
-                final XAConnectionFactory connFactory = (XAConnectionFactory) rm.getConnectionFactory();
-
-                RecoverableTransactionManager rtxManager = (RecoverableTransactionManager) rm.getTransactionManager();
-                rtxManager.registerNamedXAResourceFactory(new NamedXAResourceFactory() {
-
-                    @Override
-                    public String getName() {
-                        return rm.getResourceName();
-                    }
-
-                    @Override
-                    public NamedXAResource getNamedXAResource() throws SystemException {
-                        try {
-                            final XAConnection xaConnection;
-                            if (rm.getUserName() != null && rm.getPassword() != null) {
-                                xaConnection = connFactory.createXAConnection(rm.getUserName(), rm.getPassword());
-                            } else {
-                                xaConnection = connFactory.createXAConnection();
-                            }
-                            final XASession session = xaConnection.createXASession();
-                            xaConnection.start();
-                            LOGGER.debug("new namedXAResource's connection: " + xaConnection);
-
-                            return new ConnectionAndWrapperNamedXAResource(session.getXAResource(), getName(), xaConnection);
-                        } catch (Exception e) {
-                            SystemException se =  new SystemException("Failed to create ConnectionAndWrapperNamedXAResource, " + e.getLocalizedMessage());
-                            se.initCause(e);
-                            LOGGER.error(se.getLocalizedMessage(), se);
-                            throw se;
-                        }
-                    }
-
-                    @Override
-                    public void returnNamedXAResource(NamedXAResource namedXaResource) {
-                        if (namedXaResource instanceof ConnectionAndWrapperNamedXAResource) {
-                            try {
-                                LOGGER.debug("closing returned namedXAResource's connection: " + ((ConnectionAndWrapperNamedXAResource)namedXaResource).connection);
-                                ((ConnectionAndWrapperNamedXAResource)namedXaResource).connection.close();
-                            } catch (Exception ignored) {
-                                LOGGER.debug("failed to close returned namedXAResource: " + namedXaResource, ignored);
-                            }
-                        }
-                    }
-                });
-                return true;
-            } else {
+            if (!isRecoverable(rm)) {
                 return false;
             }
+            final XAConnectionFactory connFactory = (XAConnectionFactory) rm.getConnectionFactory();
+
+            RecoverableTransactionManager rtxManager = (RecoverableTransactionManager) rm.getTransactionManager();
+            rtxManager.registerNamedXAResourceFactory(new NamedXAResourceFactory() {
+
+                @Override
+                public String getName() {
+                    return rm.getResourceName();
+                }
+
+                @Override
+                public NamedXAResource getNamedXAResource() throws SystemException {
+                    try {
+                        final XAConnection xaConnection;
+                        if (rm.getUserName() != null && rm.getPassword() != null) {
+                            xaConnection = connFactory.createXAConnection(rm.getUserName(), rm.getPassword());
+                        } else {
+                            xaConnection = connFactory.createXAConnection();
+                        }
+                        final XASession session = xaConnection.createXASession();
+                        xaConnection.start();
+                        LOGGER.debug("new namedXAResource's connection: " + xaConnection);
+
+                        return new ConnectionAndWrapperNamedXAResource(session.getXAResource(), getName(), xaConnection);
+                    } catch (Exception e) {
+                        SystemException se =  new SystemException("Failed to create ConnectionAndWrapperNamedXAResource, " + e.getLocalizedMessage());
+                        se.initCause(e);
+                        LOGGER.error(se.getLocalizedMessage(), se);
+                        throw se;
+                    }
+                }
+
+                @Override
+                public void returnNamedXAResource(NamedXAResource namedXaResource) {
+                    if (namedXaResource instanceof ConnectionAndWrapperNamedXAResource) {
+                        try {
+                            LOGGER.debug("closing returned namedXAResource's connection: " + ((ConnectionAndWrapperNamedXAResource)namedXaResource).connection);
+                            ((ConnectionAndWrapperNamedXAResource)namedXaResource).connection.close();
+                        } catch (Exception ignored) {
+                            LOGGER.debug("failed to close returned namedXAResource: " + namedXaResource, ignored);
+                        }
+                    }
+                }
+            });
+            return true;
         }
     }
 
