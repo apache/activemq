@@ -234,9 +234,17 @@ function confirmAction(id, action) {
 		return;
 	}
 	var value = select.options[selectedIndex].value;
-	var url = action + ".action?destination=" + value;
-	url += "&JMSDestination=${requestContext.messageQuery.JMSDestination}";
-	url += "&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}";
+	var url = action + ".action?destination=" + encodeURIComponent(value);
+
+	var url = action +
+		"<c:url value=".action">
+                     <c:param name="JMSDestination" value="${requestContext.messageQuery.JMSDestination}" />
+                     <c:param name="messageId" value="${row.JMSMessageID}" />
+                     <c:param name="JMSDestinationType" value="queue" />
+                     <c:param name="secret" value='${sessionScope["secret"]}' />
+                 </c:url>";
+	url = url + "&destination=" + encodeURIComponent(value);
+
 	if (confirm("Are you sure?"))
 	  location.href=url;
 }
