@@ -19,6 +19,7 @@ package org.apache.activemq.web;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.commons.io.input.BoundedInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +60,12 @@ import org.slf4j.LoggerFactory;
 public abstract class MessageServletSupport extends HttpServlet {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(MessageServletSupport.class);
+    /**
+     * A configuration tag to specify the maximum message size (in bytes) for the servlet. The default
+     * is given by DEFAULT_MAX_MESSAGE_SIZE below.
+     */
+    private static final String MAX_MESSAGE_SIZE_TAG = "maxMessageSize";
+    private static final Long DEFAULT_MAX_MESSAGE_SIZE = 100000L;
 
     private boolean defaultTopicFlag = true;
     private Destination defaultDestination;
@@ -68,6 +76,7 @@ public abstract class MessageServletSupport extends HttpServlet {
     private int defaultMessagePriority = 5;
     private long defaultMessageTimeToLive;
     private String destinationOptions;
+    private long maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE;
 
     public void init(ServletConfig servletConfig) throws ServletException {
         super.init(servletConfig);
@@ -89,6 +98,11 @@ public abstract class MessageServletSupport extends HttpServlet {
             } else {
                 defaultDestination = new ActiveMQQueue(name);
             }
+        }
+
+        String maxMessageSizeConfigured = servletConfig.getInitParameter(MAX_MESSAGE_SIZE_TAG);
+        if (maxMessageSizeConfigured != null) {
+            maxMessageSize = Long.parseLong(maxMessageSizeConfigured);
         }
 
         // lets check to see if there's a connection factory set
@@ -344,7 +358,8 @@ public abstract class MessageServletSupport extends HttpServlet {
         if (answer == null && contentType != null) {
             LOG.debug("Content-Type={}", contentType);
             // lets read the message body instead
-            BufferedReader reader = request.getReader();
+            BoundedInputStream boundedInputStream = new BoundedInputStream(request.getInputStream(), maxMessageSize);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(boundedInputStream));
             StringBuilder buffer = new StringBuilder();
             while (true) {
                 String line = reader.readLine();
