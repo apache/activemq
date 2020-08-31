@@ -74,6 +74,7 @@
       javax.management*,
       javax.transaction*;version="[1,3)",
       javax.naming*;resolution:=optional,
+      org.apache.commons.io*;resolution:=optional,
       org.apache.commons.pool*;resolution:=optional,
       org.apache.commons.net*;resolution:=optional,
       com.sun*;resolution:=optional,
