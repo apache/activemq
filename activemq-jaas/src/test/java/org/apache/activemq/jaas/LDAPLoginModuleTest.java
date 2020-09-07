@@ -18,7 +18,6 @@ package org.apache.activemq.jaas;
 
 import org.apache.directory.server.core.integ.AbstractLdapTestUnit;
 import org.apache.directory.server.core.integ.FrameworkRunner;
-import org.apache.directory.server.integ.ServerIntegrationUtils;
 import org.apache.directory.server.ldap.LdapServer;
 import org.apache.directory.server.annotations.CreateLdapServer;
 import org.apache.directory.server.annotations.CreateTransport;
@@ -34,11 +33,11 @@ import javax.naming.NamingEnumeration;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.security.auth.callback.*;
+import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.HashSet;
 import java.util.Hashtable;
 
@@ -47,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @RunWith ( FrameworkRunner.class )
-@CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", port=1024)})
+@CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", port=1024)}, allowAnonymousAccess = true)
 @ApplyLdifFiles(
    "test.ldif"
 )
@@ -171,5 +170,48 @@ public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
         fail("Should have failed authenticating");
     }
 
+
+    @Test
+    public void testAuthenticatedViaBindOnAnonConnection() throws Exception {
+        LoginContext context = new LoginContext("AnonBindCheckUserLDAPLogin", new CallbackHandler() {
+            @Override
+            public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+                for (int i = 0; i < callbacks.length; i++) {
+                    if (callbacks[i] instanceof NameCallback) {
+                        ((NameCallback) callbacks[i]).setName("first");
+                    } else if (callbacks[i] instanceof PasswordCallback) {
+                        ((PasswordCallback) callbacks[i]).setPassword("wrongSecret".toCharArray());
+                    } else {
+                        throw new UnsupportedCallbackException(callbacks[i]);
+                    }
+                }
+            }
+        });
+        try {
+            context.login();
+            fail("Should have failed authenticating");
+        } catch (FailedLoginException expected) {
+        }
+    }
+
+    @Test
+    public void testAuthenticatedOkViaBindOnAnonConnection() throws Exception {
+        LoginContext context = new LoginContext("AnonBindCheckUserLDAPLogin", new CallbackHandler() {
+            @Override
+            public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+                for (int i = 0; i < callbacks.length; i++) {
+                    if (callbacks[i] instanceof NameCallback) {
+                        ((NameCallback) callbacks[i]).setName("first");
+                    } else if (callbacks[i] instanceof PasswordCallback) {
+                        ((PasswordCallback) callbacks[i]).setPassword("secret".toCharArray());
+                    } else {
+                        throw new UnsupportedCallbackException(callbacks[i]);
+                    }
+                }
+            }
+        });
+        context.login();
+        context.logout();
+    }
 
 }
