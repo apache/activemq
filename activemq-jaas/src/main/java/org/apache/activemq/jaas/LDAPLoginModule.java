@@ -440,6 +440,7 @@ public class LDAPLoginModule implements LoginModule {
         if (log.isDebugEnabled()) {
             log.debug("Binding the user.");
         }
+        context.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
         context.addToEnvironment(Context.SECURITY_PRINCIPAL, dn);
         context.addToEnvironment(Context.SECURITY_CREDENTIALS, password);
         try {
@@ -465,7 +466,7 @@ public class LDAPLoginModule implements LoginModule {
         } else {
             context.removeFromEnvironment(Context.SECURITY_CREDENTIALS);
         }
-
+        context.addToEnvironment(Context.SECURITY_AUTHENTICATION, getLDAPPropertyValue(AUTHENTICATION));
         return isValid;
     }
 
