@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.SocketFactory;
 
+import junit.framework.Test;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
@@ -54,6 +55,11 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
     private final AtomicBoolean ignoreClientError = new AtomicBoolean(false);
     private final AtomicBoolean ignoreServerError = new AtomicBoolean(false);
+
+
+    public static Test suite() {
+         return suite(InactivityMonitorTest.class);
+    }
 
     @Override
     protected void setUp() throws Exception {
@@ -146,7 +152,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
                 @Override
                 public void onException(IOException error) {
-                    if (!ignoreClientError.get()) {
+                    if (!ignoreServerError.get()) {
                         LOG.info("Server transport error:", error);
                         serverErrorCount.incrementAndGet();
                     }
@@ -239,7 +245,6 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
      * @throws URISyntaxException
      */
     public void initCombosForTestNoClientHangWithServerBlock() throws Exception {
-        startClient();
 
         addCombinationValues("clientInactivityLimit", new Object[] {Long.valueOf(1000)});
         addCombinationValues("serverInactivityLimit", new Object[] {Long.valueOf(1000)});

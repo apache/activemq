@@ -18,7 +18,10 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 import java.util.Timer;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -217,8 +220,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                 });
             } catch (RejectedExecutionException ex) {
                 if (!ASYNC_TASKS.isShutdown()) {
-                    LOG.error("Async write check was rejected from the executor: ", ex);
-                    throw ex;
+                    LOG.warn("Async write check was rejected from the executor: ", ex);
                 }
             }
         } else {
@@ -253,8 +255,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                 });
             } catch (RejectedExecutionException ex) {
                 if (!ASYNC_TASKS.isShutdown()) {
-                    LOG.error("Async read check was rejected from the executor: ", ex);
-                    throw ex;
+                    LOG.warn("Async read check was rejected from the executor: ", ex);
                 }
             }
         } else {
@@ -501,7 +502,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     WRITE_CHECK_TIMER = null;
                     READ_CHECK_TIMER = null;
                     try {
-                        ThreadPoolUtils.shutdownGraceful(ASYNC_TASKS, TimeUnit.SECONDS.toMillis(10));
+                        ThreadPoolUtils.shutdownGraceful(ASYNC_TASKS, 0);
                     } finally {
                         ASYNC_TASKS = null;
                     }
@@ -511,21 +512,48 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     }
 
     private final ThreadFactory factory = new ThreadFactory() {
+        private long i = 0;
         @Override
         public Thread newThread(Runnable runnable) {
-            Thread thread = new Thread(runnable, "ActiveMQ InactivityMonitor Worker");
+            Thread thread = new Thread(runnable, "ActiveMQ InactivityMonitor Worker " + (i++));
             thread.setDaemon(true);
             return thread;
         }
     };
 
     private ThreadPoolExecutor createExecutor() {
-        ThreadPoolExecutor exec = new ThreadPoolExecutor(0, Integer.MAX_VALUE, getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
+        ThreadPoolExecutor exec = new ThreadPoolExecutor(getDefaultCorePoolSize(), getDefaultMaximumPoolSize(), getDefaultKeepAliveTime(),
+                TimeUnit.SECONDS, newWorkQueue(), factory, newRejectionHandler());
         exec.allowCoreThreadTimeOut(true);
         return exec;
     }
 
     private static int getDefaultKeepAliveTime() {
         return Integer.getInteger("org.apache.activemq.transport.AbstractInactivityMonitor.keepAliveTime", 30);
+    }
+
+    private static int getDefaultCorePoolSize() {
+        return Integer.getInteger("org.apache.activemq.transport.AbstractInactivityMonitor.corePoolSize", 0);
+    }
+
+    private static int getDefaultMaximumPoolSize() {
+        return Integer.getInteger("org.apache.activemq.transport.AbstractInactivityMonitor.maximumPoolSize", Integer.MAX_VALUE);
+    }
+
+    private static int getDefaultWorkQueueCapacity() {
+        return Integer.getInteger("org.apache.activemq.transport.AbstractInactivityMonitor.workQueueCapacity", 0);
+    }
+
+    private static boolean canRejectWork() {
+        return Boolean.getBoolean("org.apache.activemq.transport.AbstractInactivityMonitor.rejectWork");
+    }
+
+    private BlockingQueue<Runnable> newWorkQueue() {
+        final int workQueueCapacity = getDefaultWorkQueueCapacity();
+        return workQueueCapacity > 0 ? new LinkedBlockingQueue<Runnable>(workQueueCapacity) : new SynchronousQueue<Runnable>();
+    }
+
+    private RejectedExecutionHandler newRejectionHandler() {
+        return canRejectWork() ? new ThreadPoolExecutor.AbortPolicy() : new ThreadPoolExecutor.CallerRunsPolicy();
     }
 }
