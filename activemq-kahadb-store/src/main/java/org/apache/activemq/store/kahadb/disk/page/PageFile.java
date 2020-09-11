@@ -178,7 +178,6 @@ public class PageFile {
             this.page = page;
             current = data;
             currentLocation = -1;
-            diskBoundLocation = -1;
         }
 
         public void setCurrentLocation(Page page, long location, int length) {
