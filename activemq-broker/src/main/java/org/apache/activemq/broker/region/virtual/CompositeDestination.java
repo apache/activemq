@@ -30,10 +30,11 @@ public abstract class CompositeDestination implements VirtualDestination {
     private Collection forwardTo;
     private boolean forwardOnly = true;
     private boolean concurrentSend = false;
+    private boolean sendWhenNotMatched = false;
 
     @Override
     public Destination intercept(Destination destination) {
-        return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(), isConcurrentSend());
+        return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(),isSendWhenNotMatched(), isConcurrentSend());
     }
 
     @Override
@@ -192,4 +193,12 @@ public abstract class CompositeDestination implements VirtualDestination {
 
         return true;
     }
+    
+    public boolean isSendWhenNotMatched() {
+		return sendWhenNotMatched;
+	}
+
+	public void setSendWhenNotMatched(boolean sendWhenNotMatched) {
+		this.sendWhenNotMatched = sendWhenNotMatched;
+	}
 }
