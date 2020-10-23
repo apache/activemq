@@ -280,7 +280,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 // the DLQ.  If a custom redelivery policy is used on the broker the message
                 // can still be redelivered based on the configation of that policy.
                 LOG.trace("onDelivery: Rejected state = {}, message poisoned.", state);
-                settle(delivery, MessageAck.POSION_ACK_TYPE);
+                settle(delivery, MessageAck.POISON_ACK_TYPE);
             } else if (state instanceof Released) {
                 LOG.trace("onDelivery: Released state = {}", state);
                 // re-deliver && don't increment the counter.
@@ -297,7 +297,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 if (undeliverableHere != null && undeliverableHere) {
                     // receiver does not want the message..
                     // perhaps we should DLQ it?
-                    ackType = MessageAck.POSION_ACK_TYPE;
+                    ackType = MessageAck.POISON_ACK_TYPE;
                 }
                 settle(delivery, ackType);
             }

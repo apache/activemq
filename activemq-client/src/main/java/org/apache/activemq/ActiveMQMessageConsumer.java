@@ -519,7 +519,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     sendPullCommand(timeout);
                 } else if (redeliveryExceeded(md)) {
                     LOG.debug("{} received with excessive redelivered: {}", getConsumerId(), md);
-                    posionAck(md, "Dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
+                    poisonAck(md, "Dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
                     if (timeout > 0) {
                         timeout = Math.max(deadline - System.currentTimeMillis(), 0);
                     }
@@ -541,11 +541,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         return isConsumerExpiryCheckEnabled() && dispatch.getMessage().isExpired();
     }
 
-    private void posionAck(MessageDispatch md, String cause) throws JMSException {
-        MessageAck posionAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
-        posionAck.setFirstMessageId(md.getMessage().getMessageId());
-        posionAck.setPoisonCause(new Throwable(cause));
-        session.sendAck(posionAck);
+    private void poisonAck(MessageDispatch md, String cause) throws JMSException {
+        MessageAck poisonAck = new MessageAck(md, MessageAck.POISON_ACK_TYPE, 1);
+        poisonAck.setFirstMessageId(md.getMessage().getMessageId());
+        poisonAck.setPoisonCause(new Throwable(cause));
+        session.sendAck(poisonAck);
     }
 
     private boolean redeliveryExceeded(MessageDispatch md) {
@@ -1271,7 +1271,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     // DLQ.
                     // Acknowledge the last message.
 
-                    MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
+                    MessageAck ack = new MessageAck(lastMd, MessageAck.POISON_ACK_TYPE, deliveredMessages.size());
                     ack.setFirstMessageId(firstMsgId);
                     ack.setPoisonCause(new Throwable("Delivery[" + lastMd.getMessage().getRedeliveryCounter()  + "] exceeds redelivery policy limit:" + redeliveryPolicy
                             + ", cause:" + lastMd.getRollbackCause(), lastMd.getRollbackCause()));
@@ -1422,7 +1422,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     if (this.info.isBrowser() || md.getDeliverySequenceId() != 0l || !session.connection.isDuplicate(this, md.getMessage())) {
                         if (listener != null && unconsumedMessages.isRunning()) {
                             if (redeliveryExceeded(md)) {
-                                posionAck(md, "listener dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
+                                poisonAck(md, "listener dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
                                 return;
                             }
                             ActiveMQMessage message = createActiveMQMessage(md);
@@ -1483,7 +1483,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             dispatch(md);
                         } else {
                             LOG.warn("{} suppressing duplicate delivery on connection, poison acking: {}", getConsumerId(), md);
-                            posionAck(md, "Suppressing duplicate delivery on connection, consumer " + getConsumerId());
+                            poisonAck(md, "Suppressing duplicate delivery on connection, consumer " + getConsumerId());
                         }
                     }
                 }

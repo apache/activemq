@@ -1094,11 +1094,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 if (messageDispatch != null) {
                     LOG.warn("PoisonAck of {} on forwarding error: {}", messageDispatch.getMessage().getMessageId(), error);
                     try {
-                        MessageAck poisonAck = new MessageAck(messageDispatch, MessageAck.POSION_ACK_TYPE, 1);
+                        MessageAck poisonAck = new MessageAck(messageDispatch, MessageAck.POISON_ACK_TYPE, 1);
                         poisonAck.setPoisonCause(error);
                         localBroker.oneway(poisonAck);
                     } catch (IOException ioe) {
-                        LOG.error("Failed to posion ack message following forward failure: ", ioe);
+                        LOG.error("Failed to poison ack message following forward failure: ", ioe);
                     }
                     fireFailedForwardAdvisory(messageDispatch, error);
                 } else {

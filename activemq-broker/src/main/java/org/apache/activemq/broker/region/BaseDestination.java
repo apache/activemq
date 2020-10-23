@@ -894,7 +894,7 @@ public abstract class BaseDestination implements Destination {
         Throwable cause = new Throwable(DUPLICATE_FROM_STORE_MSG_PREFIX + destination);
         message.setRegionDestination(this);
         broker.getRoot().sendToDeadLetterQueue(connectionContext, message, null, cause);
-        MessageAck messageAck = new MessageAck(message, MessageAck.POSION_ACK_TYPE, 1);
+        MessageAck messageAck = new MessageAck(message, MessageAck.POISON_ACK_TYPE, 1);
         messageAck.setPoisonCause(cause);
         try {
             acknowledge(connectionContext, subscription, messageAck, message);
