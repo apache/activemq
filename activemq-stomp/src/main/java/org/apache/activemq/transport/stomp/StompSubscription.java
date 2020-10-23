@@ -238,7 +238,7 @@ public class StompSubscription {
         MessageAck ack = new MessageAck();
         ack.setDestination(consumerInfo.getDestination());
         ack.setConsumerId(consumerInfo.getConsumerId());
-        ack.setAckType(MessageAck.POSION_ACK_TYPE);
+        ack.setAckType(MessageAck.POISON_ACK_TYPE);
         ack.setMessageID(msgId);
         if (transactionId != null) {
             transactedMessages.add(ackEntry);
