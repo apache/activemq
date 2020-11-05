@@ -345,20 +345,22 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     private NetworkInterface findNetworkInterface() throws SocketException {
         Enumeration<NetworkInterface> ifcs = NetworkInterface.getNetworkInterfaces();
         List<NetworkInterface> possibles = new ArrayList<NetworkInterface>();
-        while (ifcs.hasMoreElements()) {
-            NetworkInterface ni = ifcs.nextElement();
-            try {
-                if (ni.supportsMulticast()
-                        && ni.isUp()) {
-                    for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
-                        if (ia != null && ia.getAddress() instanceof java.net.Inet4Address
-                                && !ia.getAddress().isLoopbackAddress()
-                                && (ni.getDisplayName()==null || !ni.getDisplayName().startsWith("vnic"))) {
-                            possibles.add(ni);
+        if (ifcs != null) {
+            while (ifcs.hasMoreElements()) {
+                NetworkInterface ni = ifcs.nextElement();
+                try {
+                    if (ni.supportsMulticast()
+                            && ni.isUp()) {
+                        for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
+                            if (ia != null && ia.getAddress() instanceof java.net.Inet4Address
+                                    && !ia.getAddress().isLoopbackAddress()
+                                    && (ni.getDisplayName()==null || !ni.getDisplayName().startsWith("vnic"))) {
+                                possibles.add(ni);
+                            }
                         }
                     }
-                }
-            } catch (SocketException ignored) {}
+                } catch (SocketException ignored) {}
+            }
         }
         return possibles.isEmpty() ? null : possibles.get(possibles.size() - 1);
     }
