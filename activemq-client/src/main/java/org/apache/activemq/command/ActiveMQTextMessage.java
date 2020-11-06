@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -41,7 +42,7 @@ import org.apache.activemq.wireformat.WireFormat;
  * @openwire:marshaller code="28"
  *
  */
-public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage {
+public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage, Serializable {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_TEXT_MESSAGE;
 
