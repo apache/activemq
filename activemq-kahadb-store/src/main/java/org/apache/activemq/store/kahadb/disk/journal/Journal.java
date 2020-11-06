@@ -25,6 +25,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.util.*;
@@ -55,6 +57,7 @@ public class Journal {
     public static final int BATCH_CONTROL_RECORD_SIZE = RECORD_HEAD_SPACE+BATCH_CONTROL_RECORD_MAGIC.length+4+8;
     public static final byte[] BATCH_CONTROL_RECORD_HEADER = createBatchControlRecordHeader();
 
+    private BrokerService broker;
     // tackle corruption when checksum is disabled or corrupt with zeros, minimise data loss
     public void corruptRecoveryLocation(Location recoveryPosition) throws IOException {
         DataFile dataFile = getDataFile(recoveryPosition);
@@ -834,6 +837,14 @@ public class Journal {
 
     public void setDataFileRemovedListener(DataFileRemovedListener dataFileRemovedListener) {
         this.dataFileRemovedListener = dataFileRemovedListener;
+    }
+
+    public BrokerService getBroker() {
+        return broker;
+    }
+
+    public void setBroker(final BrokerService broker) {
+        this.broker = broker;
     }
 
     public static class WriteCommand extends LinkedNode<WriteCommand> {

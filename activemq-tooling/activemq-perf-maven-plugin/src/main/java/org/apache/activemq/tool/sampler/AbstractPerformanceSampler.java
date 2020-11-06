@@ -210,6 +210,7 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
                 perfEventListener.onRampDownEnd(this);
             }
         } finally {
+            System.out.println("Latch counting down");
             completionLatch.countDown();
         }
     }

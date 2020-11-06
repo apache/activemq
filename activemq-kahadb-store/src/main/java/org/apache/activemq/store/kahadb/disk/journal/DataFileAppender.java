@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
+import org.apache.activemq.broker.util.AccessLogPlugin;
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNodeList;
 import org.apache.activemq.util.ByteSequence;
@@ -133,33 +134,53 @@ class DataFileAppender implements FileAppender {
         this.syncOnComplete = this.journal.isEnableAsyncDiskSync();
     }
 
+    protected void record(final String messageId, final Class cls, final String method, final long start) {
+        final long end = System.currentTimeMillis();
+        try {
+            final AccessLogPlugin accessLog = (AccessLogPlugin) this.journal.getBroker().getBroker().getAdaptor(AccessLogPlugin.class);
+            if (accessLog != null) {
+                accessLog.record(messageId, cls.getSimpleName() + "." + method, end - start);
+            }
+        } catch (Exception e) {
+            logger.error("Unable to record timing for " + cls.getSimpleName() + "." + method + ". Time taken: " + (end - start) + "ms", e);
+        }
+    }
+
     @Override
     public Location storeItem(ByteSequence data, byte type, boolean sync) throws IOException {
+        long start = System.currentTimeMillis();
 
-        // Write the packet our internal buffer.
-        int size = data.getLength() + Journal.RECORD_HEAD_SPACE;
+        try {
+            // Write the packet our internal buffer.
+            int size = data.getLength() + Journal.RECORD_HEAD_SPACE;
 
-        final Location location = new Location();
-        location.setSize(size);
-        location.setType(type);
+            final Location location = new Location();
+            location.setSize(size);
+            location.setType(type);
 
-        Journal.WriteCommand write = new Journal.WriteCommand(location, data, sync);
+            Journal.WriteCommand write = new Journal.WriteCommand(location, data, sync);
 
-        WriteBatch batch = enqueue(write);
-        location.setLatch(batch.latch);
-        if (sync) {
-            try {
-                batch.latch.await();
-            } catch (InterruptedException e) {
-                throw new InterruptedIOException();
+            WriteBatch batch = enqueue(write);
+            location.setLatch(batch.latch);
+            if (sync) {
+                long latchWaitStart = System.currentTimeMillis();
+                try {
+                    batch.latch.await();
+                } catch (InterruptedException e) {
+                    throw new InterruptedIOException();
+                } finally {
+                    record(null, DataFileAppender.class, "storeItem:latch.await()", latchWaitStart);
+                }
+                IOException exception = batch.exception.get();
+                if (exception != null) {
+                    throw exception;
+                }
             }
-            IOException exception = batch.exception.get();
-            if (exception != null) {
-                throw exception;
-            }
+
+            return location;
+        } finally {
+            record(null, DataFileAppender.class, "storeItem", start);
         }
-
-        return location;
     }
 
     @Override
@@ -180,70 +201,75 @@ class DataFileAppender implements FileAppender {
     }
 
     private WriteBatch enqueue(Journal.WriteCommand write) throws IOException {
-        synchronized (enqueueMutex) {
-            if (shutdown) {
-                throw new IOException("Async Writer Thread Shutdown");
-            }
+        long startEnqueue = System.currentTimeMillis();
+        try {
+            synchronized (enqueueMutex) {
+                if (shutdown) {
+                    throw new IOException("Async Writer Thread Shutdown");
+                }
 
-            if (!running) {
-                running = true;
-                thread = new Thread() {
-                    @Override
-                    public void run() {
-                        processQueue();
-                    }
-                };
-                thread.setPriority(Thread.MAX_PRIORITY);
-                thread.setDaemon(true);
-                thread.setName("ActiveMQ Data File Writer");
-                thread.start();
-                firstAsyncException = null;
-            }
+                if (!running) {
+                    running = true;
+                    thread = new Thread() {
+                        @Override
+                        public void run() {
+                            processQueue();
+                        }
+                    };
+                    thread.setPriority(Thread.MAX_PRIORITY);
+                    thread.setDaemon(true);
+                    thread.setName("ActiveMQ Data File Writer");
+                    thread.start();
+                    firstAsyncException = null;
+                }
 
-            if (firstAsyncException != null) {
-                throw firstAsyncException;
-            }
+                if (firstAsyncException != null) {
+                    throw firstAsyncException;
+                }
 
-            while ( true ) {
-                if (nextWriteBatch == null) {
-                    DataFile file = journal.getCurrentWriteFile();
-                    if( file.getLength() + write.location.getSize() >= journal.getMaxFileLength() ) {
-                        file = journal.rotateWriteFile();
-                    }
+                while (true) {
+                    if (nextWriteBatch == null) {
+                        DataFile file = journal.getCurrentWriteFile();
+                        if( file.getLength() + write.location.getSize() >= journal.getMaxFileLength() ) {
+                            file = journal.rotateWriteFile();
+                        }
 
 
-                    nextWriteBatch = newWriteBatch(write, file);
-                    enqueueMutex.notifyAll();
-                    break;
-                } else {
-                    // Append to current batch if possible..
-                    if (nextWriteBatch.canAppend(write)) {
-                        nextWriteBatch.append(write);
+                        nextWriteBatch = newWriteBatch(write, file);
+                        enqueueMutex.notifyAll();
                         break;
                     } else {
-                        // Otherwise wait for the queuedCommand to be null
-                        try {
-                            while (nextWriteBatch != null) {
-                                final long start = System.currentTimeMillis();
-                                enqueueMutex.wait();
-                                if (maxStat > 0) {
-                                    logger.info("Waiting for write to finish with full batch... millis: " +
+                        // Append to current batch if possible..
+                        if (nextWriteBatch.canAppend(write)) {
+                            nextWriteBatch.append(write);
+                            break;
+                        } else {
+                            // Otherwise wait for the queuedCommand to be null
+                            try {
+                                while (nextWriteBatch != null) {
+                                    final long start = System.currentTimeMillis();
+                                    enqueueMutex.wait();
+                                    if (maxStat > 0) {
+                                        logger.info("Waiting for write to finish with full batch... millis: " +
                                                 (System.currentTimeMillis() - start));
-                               }
+                                    }
+                                }
+                            } catch (InterruptedException e) {
+                                throw new InterruptedIOException();
                             }
-                        } catch (InterruptedException e) {
-                            throw new InterruptedIOException();
-                        }
-                        if (shutdown) {
-                            throw new IOException("Async Writer Thread Shutdown");
+                            if (shutdown) {
+                                throw new IOException("Async Writer Thread Shutdown");
+                            }
                         }
                     }
                 }
+                if (!write.sync) {
+                    inflightWrites.put(new Journal.WriteKey(write.location), write);
+                }
+                return nextWriteBatch;
             }
-            if (!write.sync) {
-                inflightWrites.put(new Journal.WriteKey(write.location), write);
-            }
-            return nextWriteBatch;
+        } finally {
+            record(null, DataFileAppender.class, "enqueue", startEnqueue);
         }
     }
 

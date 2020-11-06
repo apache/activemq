@@ -58,6 +58,7 @@ import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.broker.util.AccessLogPlugin;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.openwire.OpenWireFormat;
@@ -121,6 +122,18 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     static final long NOT_ACKED = -1;
 
     static final int VERSION = 6;
+
+    protected void record(final String messageId, final Class cls, final String method, final long start) {
+        final long end = System.currentTimeMillis();
+        try {
+            final AccessLogPlugin accessLog = (AccessLogPlugin) brokerService.getBroker().getAdaptor(AccessLogPlugin.class);
+            if (accessLog != null) {
+                accessLog.record(messageId, cls.getSimpleName() + "." + method, end - start);
+            }
+        } catch (Exception e) {
+            LOG.error("Unable to record timing for " + cls.getSimpleName() + "." + method + ". Time taken: " + (end - start) + "ms", e);
+        }
+    }
 
     protected class Metadata {
         protected Page<Metadata> page;
@@ -1021,13 +1034,21 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             ByteSequence sequence = toByteSequence(data);
 
             Location location;
-            checkpointLock.readLock().lock();
+            long lockStart = System.currentTimeMillis();
+
+            try {
+                checkpointLock.readLock().lock();
+            } finally {
+                record(null, MessageDatabase.class, "store:checkpointLock.readLock().lock()", lockStart);
+            }
             try {
 
                 long start = System.currentTimeMillis();
                 location = onJournalStoreComplete == null ? journal.write(sequence, sync) :  journal.write(sequence, onJournalStoreComplete) ;
+                record(null, MessageDatabase.class, "store:journal.write()", start);
                 long start2 = System.currentTimeMillis();
                 process(data, location, before);
+                record(null, MessageDatabase.class, "store:prcoess()", start);
 
                 long end = System.currentTimeMillis();
                 if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
@@ -1112,6 +1133,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // /////////////////////////////////////////////////////////////////
 
     void process(JournalCommand<?> data, final Location location, final IndexAware onSequenceAssignedCallback) throws IOException {
+        // TODO: timing here
+
         data.visit(new Visitor() {
             @Override
             public void visit(KahaAddMessageCommand command) throws IOException {
@@ -2757,6 +2780,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         manager.setPreallocationScope(Journal.PreallocationScope.valueOf(preallocationScope.trim().toUpperCase()));
         manager.setPreallocationStrategy(
                 Journal.PreallocationStrategy.valueOf(preallocationStrategy.trim().toUpperCase()));
+        manager.setBroker(brokerService);
         if (getDirectoryArchive() != null) {
             IOHelper.mkdirs(getDirectoryArchive());
             manager.setDirectoryArchive(getDirectoryArchive());

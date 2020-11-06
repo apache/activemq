@@ -40,9 +40,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
+import org.apache.activemq.broker.util.AccessLogPlugin;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
@@ -1311,50 +1313,80 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
         @Override
         public boolean cancel() {
-            if (this.done.compareAndSet(false, true)) {
-                return this.future.cancel(false);
+            long start = System.currentTimeMillis();
+
+            try {
+                if (this.done.compareAndSet(false, true)) {
+                    return this.future.cancel(false);
+                }
+                return false;
+            } finally {
+                record(this.message.getMessageId().toString(), StoreQueueTask.class, "cancel", start);
             }
-            return false;
         }
 
         @Override
         public void aquireLocks() {
-            if (this.locked.compareAndSet(false, true)) {
-                try {
-                    globalQueueSemaphore.acquire();
-                    store.acquireLocalAsyncLock();
-                    message.incrementReferenceCount();
-                } catch (InterruptedException e) {
-                    LOG.warn("Failed to aquire lock", e);
-                }
-            }
+            long start = System.currentTimeMillis();
 
+            try {
+                if (this.locked.compareAndSet(false, true)) {
+                    try {
+                        globalQueueSemaphore.acquire();
+                        store.acquireLocalAsyncLock();
+                        message.incrementReferenceCount();
+                    } catch (InterruptedException e) {
+                        LOG.warn("Failed to aquire lock", e);
+                    }
+                }
+            } finally {
+                record(this.message.getMessageId().toString(), StoreQueueTask.class, "aquireLocks", start);
+            }
         }
 
         @Override
         public void releaseLocks() {
-            if (this.locked.compareAndSet(true, false)) {
-                store.releaseLocalAsyncLock();
-                globalQueueSemaphore.release();
-                message.decrementReferenceCount();
+            long start = System.currentTimeMillis();
+
+            try {
+                if (this.locked.compareAndSet(true, false)) {
+                    store.releaseLocalAsyncLock();
+                    globalQueueSemaphore.release();
+                    message.decrementReferenceCount();
+                }
+            } finally {
+                record(this.message.getMessageId().toString(), StoreQueueTask.class, "releaseLocks", start);
             }
         }
 
+
         @Override
         public void run() {
-            this.store.doneTasks++;
+            long start = System.currentTimeMillis();
+
             try {
-                if (this.done.compareAndSet(false, true)) {
-                    this.store.addMessage(context, message);
-                    removeQueueTask(this.store, this.message.getMessageId());
-                    this.future.complete();
-                } else if (cancelledTaskModMetric > 0 && this.store.canceledTasks++ % cancelledTaskModMetric == 0) {
-                    System.err.println(this.store.dest.getName() + " cancelled: "
-                            + (this.store.canceledTasks / this.store.doneTasks) * 100);
-                    this.store.canceledTasks = this.store.doneTasks = 0;
+                this.store.doneTasks++;
+                try {
+                    if (this.done.compareAndSet(false, true)) {
+                        long startStore = System.currentTimeMillis();
+                        try {
+                            this.store.addMessage(context, message);
+                        } finally {
+                            record(this.message.getMessageId().toString(), StoreQueueTask.class, "store.addMessage", startStore);
+                        }
+
+                        removeQueueTask(this.store, this.message.getMessageId());
+                        this.future.complete();
+                    } else if (cancelledTaskModMetric > 0 && this.store.canceledTasks++ % cancelledTaskModMetric == 0) {
+                        System.err.println(this.store.dest.getName() + " cancelled: "
+                                + (this.store.canceledTasks / this.store.doneTasks) * 100);
+                        this.store.canceledTasks = this.store.doneTasks = 0;
+                    }
+                } catch (Exception e) {
+                    this.future.setException(e);
                 }
-            } catch (Exception e) {
-                this.future.setException(e);
+            } finally {
+                record(this.message.getMessageId().toString(), StoreQueueTask.class, "run", start);
             }
         }
 
@@ -1417,23 +1449,35 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
         @Override
         public void aquireLocks() {
-            if (this.locked.compareAndSet(false, true)) {
-                try {
-                    globalTopicSemaphore.acquire();
-                    store.acquireLocalAsyncLock();
-                    message.incrementReferenceCount();
-                } catch (InterruptedException e) {
-                    LOG.warn("Failed to aquire lock", e);
+            final long start = System.currentTimeMillis();
+
+            try {
+                if (this.locked.compareAndSet(false, true)) {
+                    try {
+                        globalTopicSemaphore.acquire();
+                        store.acquireLocalAsyncLock();
+                        message.incrementReferenceCount();
+                    } catch (InterruptedException e) {
+                        LOG.warn("Failed to aquire lock", e);
+                    }
                 }
+            } finally {
+                record(this.message.getMessageId().toString(), StoreTopicTask.class, "aquireLocks", start);
             }
         }
 
         @Override
         public void releaseLocks() {
-            if (this.locked.compareAndSet(true, false)) {
-                message.decrementReferenceCount();
-                store.releaseLocalAsyncLock();
-                globalTopicSemaphore.release();
+            final long start = System.currentTimeMillis();
+
+            try {
+                if (this.locked.compareAndSet(true, false)) {
+                    message.decrementReferenceCount();
+                    store.releaseLocalAsyncLock();
+                    globalTopicSemaphore.release();
+                }
+            } finally {
+                record(this.message.getMessageId().toString(), StoreTopicTask.class, "releaseLocks", start);
             }
         }
 
@@ -1444,34 +1488,51 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
          * @return true if all acknowledgements received
          */
         public boolean addSubscriptionKey(String key) {
-            synchronized (this.subscriptionKeys) {
-                this.subscriptionKeys.add(key);
+            final long start = System.currentTimeMillis();
+            try {
+                synchronized (this.subscriptionKeys) {
+                    this.subscriptionKeys.add(key);
+                }
+                return this.subscriptionKeys.size() >= this.subscriptionCount;
+            } finally {
+                record(this.message.getMessageId().toString(), StoreTopicTask.class, "addSubscriptionKey", start);
             }
-            return this.subscriptionKeys.size() >= this.subscriptionCount;
         }
 
         @Override
         public void run() {
-            this.store.doneTasks++;
-            try {
-                if (this.done.compareAndSet(false, true)) {
-                    this.topicStore.addMessage(context, message);
-                    // apply any acks we have
-                    synchronized (this.subscriptionKeys) {
-                        for (String key : this.subscriptionKeys) {
-                            this.topicStore.doAcknowledge(context, key, this.message.getMessageId(), null);
+            final long start = System.currentTimeMillis();
 
+            try {
+                this.store.doneTasks++;
+                try {
+                    if (this.done.compareAndSet(false, true)) {
+                        final long storeStart = System.currentTimeMillis();
+
+                        try {
+                            this.topicStore.addMessage(context, message);
+                        } finally {
+                            record(this.message.getMessageId().toString(), StoreTopicTask.class, "topicStore.addMessage", storeStart);
                         }
+                        // apply any acks we have
+                        synchronized (this.subscriptionKeys) {
+                            for (String key : this.subscriptionKeys) {
+                                this.topicStore.doAcknowledge(context, key, this.message.getMessageId(), null);
+
+                            }
+                        }
+                        removeTopicTask(this.topicStore, this.message.getMessageId());
+                        this.future.complete();
+                    } else if (cancelledTaskModMetric > 0 && this.store.canceledTasks++ % cancelledTaskModMetric == 0) {
+                        System.err.println(this.store.dest.getName() + " cancelled: "
+                                + (this.store.canceledTasks / this.store.doneTasks) * 100);
+                        this.store.canceledTasks = this.store.doneTasks = 0;
                     }
-                    removeTopicTask(this.topicStore, this.message.getMessageId());
-                    this.future.complete();
-                } else if (cancelledTaskModMetric > 0 && this.store.canceledTasks++ % cancelledTaskModMetric == 0) {
-                    System.err.println(this.store.dest.getName() + " cancelled: "
-                            + (this.store.canceledTasks / this.store.doneTasks) * 100);
-                    this.store.canceledTasks = this.store.doneTasks = 0;
+                } catch (Exception e) {
+                    this.future.setException(e);
                 }
-            } catch (Exception e) {
-                this.future.setException(e);
+            } finally {
+                record(this.message.getMessageId().toString(), StoreTopicTask.class, "run", start);
             }
         }
     }
