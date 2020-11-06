@@ -43,7 +43,7 @@ import org.apache.activemq.wireformat.WireFormat;
  *
  */
 public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage, Serializable {
-
+    private static final long serialVersionUID = 6848565895011781106L;
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_TEXT_MESSAGE;
 
     protected String text;
