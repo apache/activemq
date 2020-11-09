@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 /**
  * Tracks and logs timings for messages being sent to a destination
@@ -43,10 +44,13 @@ public class AccessLogPlugin extends BrokerPluginSupport {
     private final Timings timings = new Timings();
     private LinkedBlockingQueue<Runnable> loggingQueue = new LinkedBlockingQueue<>(10000);
     protected ExecutorService executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
-            loggingQueue, runnable -> {
-        Thread thread = new Thread(runnable, "LogThread");
-        thread.setDaemon(true);
-        return thread;
+            loggingQueue, new ThreadFactory() {
+        @Override
+        public Thread newThread(final Runnable r) {
+            Thread thread = new Thread(r, "LogThread");
+            thread.setDaemon(true);
+            return thread;
+        }
     });
 
     @Override
@@ -83,15 +87,21 @@ public class AccessLogPlugin extends BrokerPluginSupport {
 
         public void start(final Message message) {
             final String messageId = message.getMessageId().toString();
-            inflight.computeIfAbsent(messageId, t -> new Timing(messageId));
+
+            if (!inflight.containsKey(messageId)) {
+                inflight.put(messageId, new Timing(messageId));
+            }
         }
 
         public void end(final Message message) {
             final String messageId = message.getMessageId().toString();
             final Timing timing = inflight.remove(messageId);
 
-            executor.submit(() -> {
-                LOG.info(timing.toString());
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    LOG.info(timing.toString());
+                }
             });
         }
 
