@@ -123,6 +123,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     static final int VERSION = 6;
 
+    protected void setThreadMessageId(final String messageId) {
+        try {
+            final AccessLogPlugin accessLog = (AccessLogPlugin) brokerService.getBroker().getAdaptor(AccessLogPlugin.class);
+            if (accessLog != null) {
+                accessLog.setThreadMessageId(messageId);
+            }
+        } catch (Exception e) {
+        }
+    }
+
     protected void record(final String messageId, final Class cls, final String method, final long start) {
         final long end = System.currentTimeMillis();
         try {

@@ -1363,6 +1363,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         @Override
         public void run() {
             long start = System.currentTimeMillis();
+            setThreadMessageId(message.getMessageId().toString());
 
             try {
                 this.store.doneTasks++;
@@ -1387,6 +1388,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 }
             } finally {
                 record(this.message.getMessageId().toString(), StoreQueueTask.class, "run", start);
+                setThreadMessageId(null);
             }
         }
 
@@ -1502,6 +1504,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         @Override
         public void run() {
             final long start = System.currentTimeMillis();
+            setThreadMessageId(message.getMessageId().toString());
 
             try {
                 this.store.doneTasks++;
@@ -1533,6 +1536,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 }
             } finally {
                 record(this.message.getMessageId().toString(), StoreTopicTask.class, "run", start);
+                setThreadMessageId(null);
             }
         }
     }

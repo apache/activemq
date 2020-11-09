@@ -71,6 +71,10 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         timings.record(id, what, duration);
     }
 
+    public void setThreadMessageId(final String messageId) {
+        THREAD_MESSAGE_ID.set(messageId);
+    }
+
     private class Timings {
         private Map<String, Timing> inflight = new ConcurrentHashMap<>();
 
