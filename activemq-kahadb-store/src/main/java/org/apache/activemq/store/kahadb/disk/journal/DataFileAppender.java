@@ -84,6 +84,7 @@ class DataFileAppender implements FileAppender {
 
     public class WriteBatch {
         protected long duration = 0;
+        protected long rolloverDuration = 0;
         public final DataFile dataFile;
 
         public final LinkedNodeList<Journal.WriteCommand> writes = new LinkedNodeList<Journal.WriteCommand>();
@@ -129,6 +130,14 @@ class DataFileAppender implements FileAppender {
 
         public void setDuration(long duration) {
             this.duration = duration;
+        }
+
+        public long getRolloverDuration() {
+            return rolloverDuration;
+        }
+
+        public void setRolloverDuration(long rolloverDuration) {
+            this.rolloverDuration = rolloverDuration;
         }
     }
 
@@ -179,7 +188,8 @@ class DataFileAppender implements FileAppender {
             }
         }
 
-        record(null, DataFileAppender.class, "storeItem", batch.getDuration());
+        record(null, DataFileAppender.class, "writeBatch", batch.getDuration());
+        record(null, DataFileAppender.class, "rollover", batch.getRolloverDuration());
 
         return location;
     }
@@ -331,6 +341,7 @@ class DataFileAppender implements FileAppender {
                 }
 
                 if (dataFile != wb.dataFile) {
+                    final long rolloverStart = System.currentTimeMillis();
                     if (file != null) {
                         dataFile.closeRandomAccessFile(file);
                     }
@@ -341,6 +352,7 @@ class DataFileAppender implements FileAppender {
                     if (file.length() == 0l) {
                         journal.preallocateEntireJournalDataFile(file);
                     }
+                    wb.setRolloverDuration(System.currentTimeMillis() - rolloverStart);
                 }
 
                 Journal.WriteCommand write = wb.writes.getHead();
