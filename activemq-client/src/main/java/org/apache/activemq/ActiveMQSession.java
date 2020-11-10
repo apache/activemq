@@ -900,7 +900,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 earlyAck.setFirstMessageId(message.getMessageId());
             } else if (connection.isDuplicate(ActiveMQSession.this, message)) {
                 LOG.debug("{} got duplicate: {}", this, message.getMessageId());
-                earlyAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
+                earlyAck = new MessageAck(md, MessageAck.POISON_ACK_TYPE, 1);
                 earlyAck.setFirstMessageId(md.getMessage().getMessageId());
                 earlyAck.setPoisonCause(new Throwable("Duplicate delivery to " + this));
             }
@@ -986,7 +986,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                     // sent to the
                                     // DLQ.
                                     // Acknowledge the last message.
-                                    MessageAck ack = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
+                                    MessageAck ack = new MessageAck(md, MessageAck.POISON_ACK_TYPE, 1);
                                     ack.setFirstMessageId(md.getMessage().getMessageId());
                                     ack.setPoisonCause(new Throwable("Exceeded ra redelivery policy limit:" + redeliveryPolicy));
                                     LOG.trace("Exceeded redelivery with count: {}, Ack: {}", redeliveryCounter, ack);

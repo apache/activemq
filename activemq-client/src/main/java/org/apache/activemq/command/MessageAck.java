@@ -44,7 +44,7 @@ public class MessageAck extends BaseCommand {
      * message was not processed and the message was considered a poison
      * message.
      */
-    public static final byte POSION_ACK_TYPE = 1;
+    public static final byte POISON_ACK_TYPE = 1;
 
     /**
      * In case the client want's to explicitly let the broker know that a
@@ -117,7 +117,7 @@ public class MessageAck extends BaseCommand {
     }
 
     public boolean isPoisonAck() {
-        return ackType == POSION_ACK_TYPE;
+        return ackType == POISON_ACK_TYPE;
     }
 
     public boolean isStandardAck() {
