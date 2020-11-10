@@ -41,7 +41,6 @@
     <activemq-protobuf-version>1.1</activemq-protobuf-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
-    <ant-version>1.10.7</ant-version>
     <ant-bundle-version>1.10.7_1</ant-bundle-version>
     <aopalliance-version>1.0</aopalliance-version>
     <aries-version>1.1.0</aries-version>
@@ -1075,12 +1074,6 @@
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>${commons-io-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.ant</groupId>
-        <artifactId>ant</artifactId>
-        <version>${ant-version}</version>
       </dependency>
 
       <!-- ACTIVEMQ-WEB Specific Dependencies -->
