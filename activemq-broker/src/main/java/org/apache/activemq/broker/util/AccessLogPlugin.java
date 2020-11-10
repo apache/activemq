@@ -48,6 +48,7 @@ public class AccessLogPlugin extends BrokerPluginSupport {
     private static final Logger LOG = LoggerFactory.getLogger("TIMING");
     private static final ThreadLocal<String> THREAD_MESSAGE_ID = new ThreadLocal<>();
     private final Timings timings = new Timings();
+    private RecordingCallback recordingCallback;
 
     @PostConstruct
     private void postConstruct() {
@@ -156,6 +157,10 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         THREAD_MESSAGE_ID.set(messageId);
     }
 
+    public void setCallback(RecordingCallback recordingCallback) {
+        this.recordingCallback = recordingCallback;
+    }
+
     private class Timings {
         private Map<String, Timing> inflight = new ConcurrentHashMap<>();
 
@@ -175,6 +180,7 @@ public class AccessLogPlugin extends BrokerPluginSupport {
             final int th = threshold.get();
             if (th <= 0 || ((long)th < duration)) {
                 LOG.debug(timing.toString());
+                recordingCallback.sendComplete(timing);
             }
         }
 
@@ -188,7 +194,7 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         }
     }
 
-    private class Timing {
+    public class Timing {
         private final String messageId;
         private final int messageSize;
         private final List<Breakdown> timingBreakdowns = Collections.synchronizedList(new ArrayList<Breakdown>());
@@ -210,9 +216,13 @@ public class AccessLogPlugin extends BrokerPluginSupport {
                     ", timingBreakdowns=" + timingBreakdowns +
                     '}';
             }
+
+        public List<Breakdown> getBreakdowns() {
+            return timingBreakdowns;
+        }
     }
 
-    private class Breakdown {
+    public class Breakdown {
         private final String what;
         private final Long timing;
 
@@ -236,5 +246,9 @@ public class AccessLogPlugin extends BrokerPluginSupport {
                     ", timing=" + timing +
                     '}';
         }
+    }
+
+    public interface RecordingCallback {
+        void sendComplete(final Timing timing);
     }
 }

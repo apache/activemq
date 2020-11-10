@@ -22,6 +22,7 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.util.AccessLogPlugin;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,19 +33,49 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class RequestPerformanceLoggingTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(RequestPerformanceLoggingTest.class);
 
     private Connection connection;
     private BrokerService broker;
+    private CountDownLatch latch;
+    private List<AccessLogPlugin.Timing> timingList = new ArrayList<>();
 
     public void testDestinationStats() throws Exception{
+        latch = new CountDownLatch(1);
+
         final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final Queue testQueue = session.createQueue("Test.Queue");
         MessageProducer producer = session.createProducer(testQueue);
         Message msg = session.createTextMessage("This is a test");
         producer.send(msg);
+
+        latch.await(1, TimeUnit.MINUTES);
+        Assert.assertEquals(1, timingList.size());
+
+        final Set<String> items = new HashSet<>();
+        List<AccessLogPlugin.Breakdown> breakdownList = timingList.get(0).getBreakdowns();
+        for (final AccessLogPlugin.Breakdown breakdown : breakdownList) {
+            items.add(breakdown.getWhat());
+            System.out.println(breakdown.getWhat());
+        }
+
+        Assert.assertTrue(items.contains("StoreQueueTask.aquireLocks"));
+        Assert.assertTrue(items.contains("MessageDatabase.store:checkpointLock.readLock().lock()"));
+        Assert.assertTrue(items.contains("DataFileAppender.writeBatch"));
+        Assert.assertTrue(items.contains("DataFileAppender.rollover"));
+        Assert.assertTrue(items.contains("MessageDatabase.journal_write"));
+        Assert.assertTrue(items.contains("MessageDatabase.index_write"));
+        Assert.assertTrue(items.contains("StoreQueueTask.store.addMessage"));
+        Assert.assertTrue(items.contains("StoreQueueTask.run"));
+        Assert.assertTrue(items.contains("whole_request"));
     }
 
     @Override
@@ -68,7 +99,19 @@ public class RequestPerformanceLoggingTest extends TestCase {
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
         BrokerPlugin[] plugins = new BrokerPlugin[1];
-        plugins[0] = new AccessLogPlugin();
+        final AccessLogPlugin accessLogPlugin = new AccessLogPlugin();
+        accessLogPlugin.setEnabled(true);
+        accessLogPlugin.setThreshold(0);
+        accessLogPlugin.setCallback(new AccessLogPlugin.RecordingCallback() {
+
+            @Override
+            public void sendComplete(AccessLogPlugin.Timing timing) {
+                timingList.add(timing);
+                latch.countDown();
+            }
+        });
+
+        plugins[0] = accessLogPlugin;
         answer.setPlugins(plugins);
         answer.setDeleteAllMessagesOnStartup(true);
         answer.addConnector("tcp://localhost:0");
