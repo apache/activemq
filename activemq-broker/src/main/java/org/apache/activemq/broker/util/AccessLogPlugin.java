@@ -18,14 +18,22 @@ package org.apache.activemq.broker.util;
 
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.jmx.AsyncAnnotatedMBean;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Tracks and logs timings for messages being sent to a destination
@@ -34,16 +42,85 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AccessLogPlugin extends BrokerPluginSupport {
 
+    private final AtomicBoolean enabled = new AtomicBoolean(true);
+    private final AtomicInteger threshold = new AtomicInteger(0);
+
     private static final Logger LOG = LoggerFactory.getLogger("TIMING");
     private static final ThreadLocal<String> THREAD_MESSAGE_ID = new ThreadLocal<>();
     private final Timings timings = new Timings();
 
-    public AccessLogPlugin() {
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            afterPropertiesSet();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
+    /**
+     * @throws Exception
+     * @org.apache.xbean.InitMethod
+     */
+    public void afterPropertiesSet() throws Exception {
+        LOG.info("Created AccessLogPlugin: {}", this.toString());
+    }
+
+    @Override
+    public void start() throws Exception {
+        super.start();
+
+        if (getBrokerService().isUseJmx()) {
+            AsyncAnnotatedMBean.registerMBean(
+                    this.getBrokerService().getManagementContext(),
+                    new AccessLogView(this),
+                    createJmxName(getBrokerService().getBrokerObjectName().toString(), "AccessLogPlugin")
+            );
+        }
+    }
+
+    @Override
+    public void stop() throws Exception {
+        if (getBrokerService().isUseJmx()) {
+            final ObjectName name = createJmxName(getBrokerService().getBrokerObjectName().toString(), "AccessLogPlugin");
+            getBrokerService().getManagementContext().unregisterMBean(name);
+        }
+
+        super.stop();
+    }
+
+    public static ObjectName createJmxName(String brokerObjectName, String name) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+
+        objectNameStr += "," + "service=AccessLog";
+        objectNameStr += "," + "instanceName=" + JMXSupport.encodeObjectNamePart(name);
+
+        return new ObjectName(objectNameStr);
+    }
+
+    public boolean isEnabled() {
+        return enabled.get();
+    }
+
+    public void setEnabled(final boolean enabled) {
+        this.enabled.set(enabled);
+    }
+
+    public int getThreshold() {
+        return threshold.get();
+    }
+
+    public void setThreshold(final int threshold) {
+        this.threshold.set(threshold);
     }
 
     @Override
     public void send(final ProducerBrokerExchange producerExchange, final Message messageSend) throws Exception {
+        if (! enabled.get()) {
+            super.send(producerExchange, messageSend);
+            return;
+        }
+
         THREAD_MESSAGE_ID.set(messageSend.getMessageId().toString());
         long start = System.currentTimeMillis();
 
@@ -53,12 +130,16 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         } finally {
             final long end = System.currentTimeMillis();
             timings.record(messageSend.getMessageId().toString(), "whole_request", end - start);
-            timings.end(messageSend);
+            timings.end(messageSend, end - start);
             THREAD_MESSAGE_ID.set(null);
         }
     }
 
     public void record(final String messageId, final String what, final long duration) {
+        if (! enabled.get()) {
+            return;
+        }
+
         String id = messageId;
         if (id == null) {
             id = THREAD_MESSAGE_ID.get();
@@ -87,16 +168,19 @@ public class AccessLogPlugin extends BrokerPluginSupport {
             }
         }
 
-        public void end(final Message message) {
+        public void end(final Message message, final long duration) {
             final String messageId = message.getMessageId().toString();
             final Timing timing = inflight.remove(messageId);
-            LOG.debug(timing.toString());
+
+            final int th = threshold.get();
+            if (th <= 0 || ((long)th < duration)) {
+                LOG.debug(timing.toString());
+            }
         }
 
         public void record(final String messageId, final String what, final long duration) {
             final Timing timing = inflight.get(messageId);
             if (timing == null) {
-                LOG.debug("No inflight timing for messageId: " + messageId + ", skipping");
                 return;
             }
 
@@ -107,7 +191,7 @@ public class AccessLogPlugin extends BrokerPluginSupport {
     private class Timing {
         private final String messageId;
         private final int messageSize;
-        private final List<Breakdown> timingBreakdowns = new ArrayList<>();
+        private final List<Breakdown> timingBreakdowns = Collections.synchronizedList(new ArrayList<Breakdown>());
 
         private Timing(final String messageId, final int messageSize) {
             this.messageId = messageId;
@@ -122,10 +206,10 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         public String toString() {
             return "Timing{" +
                     "messageId='" + messageId + '\'' +
-                    "messageSize='" + messageSize + '\'' +
+                    ", messageSize='" + messageSize + '\'' +
                     ", timingBreakdowns=" + timingBreakdowns +
                     '}';
-        }
+            }
     }
 
     private class Breakdown {

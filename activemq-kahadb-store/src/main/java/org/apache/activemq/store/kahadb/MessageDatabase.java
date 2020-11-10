@@ -55,6 +55,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.activemq.ActiveMQMessageAuditNoSync;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.broker.BrokerStoppedException;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
@@ -140,6 +141,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             if (accessLog != null) {
                 accessLog.record(messageId, cls.getSimpleName() + "." + method, end - start);
             }
+        } catch (BrokerStoppedException e) {
+            // ignore this so we aren't dumping errors
         } catch (Exception e) {
             LOG.error("Unable to record timing for " + cls.getSimpleName() + "." + method + ". Time taken: " + (end - start) + "ms", e);
         }
