@@ -1061,7 +1061,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 record(null, MessageDatabase.class, "journal_write", start);
                 long start2 = System.currentTimeMillis();
                 process(data, location, before);
-                record(null, MessageDatabase.class, "index_write", start);
+                record(null, MessageDatabase.class, "index_write", start2);
                 long end = System.currentTimeMillis();
                 if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
                     if (LOG.isInfoEnabled()) {
@@ -2375,7 +2375,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     /**
      * Locate the storeMessageSize counter for this KahaDestination
-     * @param kahaDestination
+     * @param ¶kahaDestination
      * @return
      */
     protected MessageStoreStatistics getStoreStats(String kahaDestKey) {

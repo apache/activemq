@@ -63,6 +63,7 @@ import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
+import org.apache.activemq.broker.util.AccessLogPlugin;
 import org.apache.activemq.broker.util.InsertionCountList;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
@@ -607,8 +608,24 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
+    protected void record(final String messageId, final Class cls, final String method, final long start) {
+        final long end = System.currentTimeMillis();
+        try {
+            final AccessLogPlugin accessLog = (AccessLogPlugin) brokerService.getBroker().getAdaptor(AccessLogPlugin.class);
+            if (accessLog != null) {
+                accessLog.record(messageId, cls.getSimpleName() + "." + method, end - start);
+            }
+        } catch (BrokerStoppedException e) {
+            // ignore this so we aren't dumping errors
+        } catch (Exception e) {
+            LOG.error("Unable to record timing for " + cls.getSimpleName() + "." + method + ". Time taken: " + (end - start) + "ms", e);
+        }
+    }
+
     @Override
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
+        final long start = System.currentTimeMillis();
+
         final ConnectionContext context = producerExchange.getConnectionContext();
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
@@ -733,6 +750,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
             context.getConnection().dispatchAsync(ack);
         }
+
+        record(message.getMessageId().toString(), Queue.class, "send", start);
     }
 
     private void registerCallbackForNotFullNotification() {
@@ -823,13 +842,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException,
             Exception {
+        final long start = System.currentTimeMillis();
+
         final ConnectionContext context = producerExchange.getConnectionContext();
         ListenableFuture<Object> result = null;
 
         producerExchange.incrementSend();
         do {
             checkUsage(context, producerExchange, message);
+            final long startLock = System.currentTimeMillis();
             sendLock.lockInterruptibly();
+            record(message.getMessageId().toString(), Queue.class, "doMessageSend.sendLock.lockInterruptibly()", startLock);
             try {
                 message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                 if (store != null && message.isPersistent()) {
@@ -870,6 +893,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 // has already been deleted
             }
         }
+
+        record(message.getMessageId().toString(), Queue.class, "doMessageSend", start);
     }
 
     private boolean tryOrderedCursorAdd(Message message, ConnectionContext context) throws Exception {
