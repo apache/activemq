@@ -179,7 +179,7 @@ public class AccessLogPlugin extends BrokerPluginSupport {
 
             final int th = threshold.get();
             if (th <= 0 || ((long)th < duration)) {
-                LOG.debug(timing.toString());
+                LOG.info(timing.toString());
                 if (recordingCallback != null) {
                     recordingCallback.sendComplete(timing);
                 }
