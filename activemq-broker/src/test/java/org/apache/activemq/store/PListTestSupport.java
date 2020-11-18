@@ -278,7 +278,7 @@ public abstract class PListTestSupport {
         executor.execute(new B());
 
         executor.shutdown();
-        boolean finishedInTime = executor.awaitTermination(5, TimeUnit.MINUTES);
+        boolean finishedInTime = executor.awaitTermination(10, TimeUnit.MINUTES);
         LOG.info("Tested completion finished in time? -> {}", finishedInTime ? "YES" : "NO");
 
         assertTrue("no exceptions", exceptions.isEmpty());
