@@ -185,12 +185,18 @@ public class AMQ7118Test {
         if(doCheckpoint) {
             LOG.info("Initiating checkpointUpdate "+ ++checkpointIndex + " ...");
             broker.getPersistenceAdapter().checkpoint(true);
-            TimeUnit.SECONDS.sleep(2);
+            TimeUnit.SECONDS.sleep(4);
             LOG.info("Checkpoint complete.");
         }
         File files[] = dbfiles.listFiles(lff);
         Arrays.sort(files,  new DBFileComparator() );
         logfiles(files);
+
+        while (files.length != expectedCount) {
+            // gives time to checkpoint
+            TimeUnit.SECONDS.sleep(1);
+        }
+
         assertEquals(expectedCount, files.length);
         assertEquals(lastFileName, files[files.length-1].getName());
 

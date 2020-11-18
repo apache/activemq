@@ -42,7 +42,7 @@ public class AMQ7086Test {
     JobSchedulerStoreImpl jobSchedulerStore;
     KahaDBPersistenceAdapter kahaDBPersistenceAdapter;
 
-    @Test
+    @Test(timeout = 120000)
     public void testGcDoneAtStop() throws Exception {
 
         brokerService = createBroker(true);
@@ -63,8 +63,14 @@ public class AMQ7086Test {
 
         brokerService.stop();
 
+        while (verifyFilesOnDisk(jobDir) < 1) {
+            Thread.sleep(100);
+        }
         assertTrue("Expected job store data files at least 1", verifyFilesOnDisk(jobDir) >= 1);
-        assertEquals("Expected kahadb data files", 1, verifyFilesOnDisk(kahaDir));
+        while (verifyFilesOnDisk(kahaDir) < 1) {
+            Thread.sleep(100);
+        }
+        assertTrue("Expected kahadb data files at least 1", verifyFilesOnDisk(kahaDir) >= 1);
     }
 
     @Test
