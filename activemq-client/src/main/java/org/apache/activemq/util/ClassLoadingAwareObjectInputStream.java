@@ -98,18 +98,21 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     }
 
     private void checkSecurity(Class clazz) throws ClassNotFoundException {
-        if (!clazz.isPrimitive()) {
-            if (clazz.getPackage() != null && !trustAllPackages()) {
-               boolean found = false;
-               for (String packageName : getTrustedPackages()) {
-                   if (clazz.getPackage().getName().equals(packageName) || clazz.getPackage().getName().startsWith(packageName + ".")) {
-                       found = true;
-                       break;
-                   }
-               }
-               if (!found) {
-                   throw new ClassNotFoundException("Forbidden " + clazz + "! This class is not trusted to be serialized as ObjectMessage payload. Please take a look at http://activemq.apache.org/objectmessage.html for more information on how to configure trusted classes.");
-               }
+        if (trustAllPackages() || clazz.isPrimitive()) {
+            return;
+        }
+
+        boolean found = false;
+        Package thePackage = clazz.getPackage();
+        if (thePackage != null) {
+            for (String trustedPackage : getTrustedPackages()) {
+                if (thePackage.getName().equals(trustedPackage) || thePackage.getName().startsWith(trustedPackage + ".")) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw new ClassNotFoundException("Forbidden " + clazz + "! This class is not trusted to be serialized as ObjectMessage payload. Please take a look at http://activemq.apache.org/objectmessage.html for more information on how to configure trusted classes.");
             }
         }
     }
