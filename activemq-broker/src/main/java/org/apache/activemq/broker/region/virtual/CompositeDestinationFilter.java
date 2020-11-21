@@ -41,12 +41,14 @@ public class CompositeDestinationFilter extends DestinationFilter {
     private Collection forwardDestinations;
     private boolean forwardOnly;
     private boolean concurrentSend = false;
+    private boolean sendWhenNotMatched=false;
 
-    public CompositeDestinationFilter(Destination next, Collection forwardDestinations, boolean forwardOnly, boolean concurrentSend) {
+    public CompositeDestinationFilter(Destination next, Collection forwardDestinations, boolean forwardOnly,boolean sendWhenNotMatched, boolean concurrentSend) {
         super(next);
         this.forwardDestinations = forwardDestinations;
         this.forwardOnly = forwardOnly;
         this.concurrentSend = concurrentSend;
+        this.sendWhenNotMatched = sendWhenNotMatched;
     }
 
     @Override
@@ -100,9 +102,17 @@ public class CompositeDestinationFilter extends DestinationFilter {
                 doForward(context, message, brokerService.getRegionBroker(), destination);
             }
         }
-        if (!forwardOnly) {
-            super.send(context, message);
+        if(sendWhenNotMatched)
+        {
+        	if(matchingDestinations.size() <=0) {        
+        		super.send(context, message);
+        	}
+        }else {
+	        if (!forwardOnly) {
+	            super.send(context, message);
+	        }
         }
+       
         concurrent.await();
         if (exceptionAtomicReference.get() != null) {
             throw exceptionAtomicReference.get();
