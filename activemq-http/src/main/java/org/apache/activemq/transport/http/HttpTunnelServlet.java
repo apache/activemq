@@ -161,21 +161,6 @@ public class HttpTunnelServlet extends HttpServlet {
         return true;
     }
 
-    protected String readRequestBody(HttpServletRequest request) throws IOException {
-        StringBuffer buffer = new StringBuffer();
-        BufferedReader reader = request.getReader();
-        while (true) {
-            String line = reader.readLine();
-            if (line == null) {
-                break;
-            } else {
-                buffer.append(line);
-                buffer.append("\n");
-            }
-        }
-        return buffer.toString();
-    }
-
     protected BlockingQueueTransport getTransportChannel(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String clientID = request.getHeader("clientID");
         if (clientID == null) {
