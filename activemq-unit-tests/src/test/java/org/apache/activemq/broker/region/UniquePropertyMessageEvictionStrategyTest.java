@@ -18,19 +18,19 @@
 package org.apache.activemq.broker.region;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.UniquePropertyMessageEvictionStrategy;
+import org.apache.activemq.command.ActiveMQDestination;
 
 import javax.jms.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UniquePropertyMessageEvictionStrategyTest extends EmbeddedBrokerTestSupport {
-
-
 
     @Override
     protected BrokerService createBroker() throws Exception {
@@ -80,8 +80,7 @@ public class UniquePropertyMessageEvictionStrategyTest extends EmbeddedBrokerTes
                 Thread.sleep(100);
             }
         }
-
-
+        
         for (int i = 0; i < 11; i++) {
             javax.jms.Message msg = consumer.receive(1000);
             assertNotNull(msg);
@@ -100,6 +99,7 @@ public class UniquePropertyMessageEvictionStrategyTest extends EmbeddedBrokerTes
         javax.jms.Message msg = consumer.receive(1000);
         assertNull(msg);
 
+        assertEquals("usage goes to 0", 0, TestSupport.getDestination(broker, ActiveMQDestination.transform(destination)).getMemoryUsage().getUsage());
     }
 
 }
