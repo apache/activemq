@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-
+import java.util.List;
 
 /**
  * An eviction strategy which evicts the oldest message within messages with the same property value
@@ -45,12 +45,10 @@ public class UniquePropertyMessageEvictionStrategy extends MessageEvictionStrate
 
     @Override
     public MessageReference[] evictMessages(LinkedList messages) throws IOException {
-        MessageReference oldest = (MessageReference)messages.getFirst();
-        HashMap<Object, MessageReference> pivots = new HashMap<Object, MessageReference>();
-        Iterator iter = messages.iterator();
+        List<MessageReference> messageReferences = new LinkedList<>(messages);
+        HashMap<Object, MessageReference> pivots = new HashMap<>();
 
-        for (int i = 0; iter.hasNext(); i++) {
-            MessageReference reference = (MessageReference) iter.next();
+        for (MessageReference reference : messageReferences) {
             if (propertyName != null && reference.getMessage().getProperty(propertyName) != null) {
                 Object key = reference.getMessage().getProperty(propertyName);
                 if (pivots.containsKey(key)) {
@@ -64,16 +62,13 @@ public class UniquePropertyMessageEvictionStrategy extends MessageEvictionStrate
             }
         }
 
-        if (!pivots.isEmpty()) {
-            for (MessageReference ref : pivots.values()) {
-                messages.remove(ref);
-            }
-
-            if (messages.size() != 0) {
-                return (MessageReference[])messages.toArray(new MessageReference[messages.size()]);
-            }
+        if (pivots.isEmpty() || pivots.values().size() == messageReferences.size()) {
+            return new MessageReference[]{(MessageReference) messages.removeFirst()};
+        } else {
+            messages.removeIf(message -> !pivots.containsValue(message));
+            messageReferences.removeAll(pivots.values());
+            return messageReferences.toArray(new MessageReference[0]);
         }
-        return new MessageReference[] {oldest};
-
     }
+
 }
