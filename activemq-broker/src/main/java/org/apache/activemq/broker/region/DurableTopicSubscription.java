@@ -58,6 +58,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     private final ConcurrentMap<ActiveMQDestination, Destination> durableDestinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     private final SubscriptionKey subscriptionKey;
     private boolean keepDurableSubsActive;
+    private boolean enableMessageExpirationOnActiveDurableSubs;
     private final AtomicBoolean active = new AtomicBoolean();
     private final AtomicLong offlineTimestamp = new AtomicLong(-1);
     private final HashSet<MessageId> ackedAndPrepared = new HashSet<MessageId>();
@@ -69,6 +70,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         this.pending.setSystemUsage(usageManager);
         this.pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.keepDurableSubsActive = keepDurableSubsActive;
+        this.enableMessageExpirationOnActiveDurableSubs = broker.getBrokerService().isEnableMessageExpirationOnActiveDurableSubs();
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
     }
 
@@ -428,5 +430,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     public boolean isKeepDurableSubsActive() {
         return keepDurableSubsActive;
+    }
+
+    public boolean isEnableMessageExpirationOnActiveDurableSubs() {
+    	return enableMessageExpirationOnActiveDurableSubs;
     }
 }
