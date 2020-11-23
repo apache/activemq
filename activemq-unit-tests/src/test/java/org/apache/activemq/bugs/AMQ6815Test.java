@@ -71,7 +71,7 @@ public class AMQ6815Test {
          brokerService.stop();
       }
 
-      @Test(timeout = 240000)
+      @Test(timeout = 480000)
       public void testHeapUsage() throws Exception {
          Runtime.getRuntime().gc();
          final long initUsedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
@@ -79,7 +79,7 @@ public class AMQ6815Test {
          Runtime.getRuntime().gc();
          long usedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - initUsedMemory;
          LOG.info("Mem in use: " + usedMem/1024  + "K");
-         assertTrue("Used Mem reasonable " + usedMem, usedMem < 5*MEM_LIMIT);
+         assertTrue("Used Mem reasonable " + usedMem, usedMem < 5 * MEM_LIMIT);
       }
 
       protected void sendMessages(int count) throws JMSException {
