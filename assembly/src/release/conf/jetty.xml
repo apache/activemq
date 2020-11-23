@@ -22,7 +22,7 @@
 
     <bean id="securityLoginService" class="org.eclipse.jetty.security.HashLoginService">
         <property name="name" value="ActiveMQRealm" />
-        <property name="config" value="${activemq.conf}/jetty-realm.properties" />
+        <property name="config" value="file:${activemq.conf}/jetty-realm.properties" />
     </bean>
 
     <bean id="securityConstraint" class="org.eclipse.jetty.util.security.Constraint">
@@ -155,7 +155,7 @@
 					<constructor-arg>
 						<bean id="handlers" class="org.eclipse.jetty.util.ssl.SslContextFactory">
 						
-							<property name="keyStorePath" value="${activemq.conf}/broker.ks" />
+							<property name="keyStorePath" value="file:${activemq.conf}/broker.ks" />
 							<property name="keyStorePassword" value="password" />
 						</bean>
 					</constructor-arg>
