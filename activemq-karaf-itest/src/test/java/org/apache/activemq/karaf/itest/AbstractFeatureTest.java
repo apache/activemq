@@ -155,8 +155,6 @@ public abstract class AbstractFeatureTest {
          logLevel(LogLevelOption.LogLevel.INFO), //
          editConfigurationFilePut("etc/org.ops4j.pax.url.mvn.cfg", "org.ops4j.pax.url.mvn.repositories", "https://repo1.maven.org/maven2@id=central"),
          editConfigurationFilePut("etc/config.properties", "karaf.startlevel.bundle", "50"),
-         editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories",
-                 "mvn:org.apache.karaf.features/spring-legacy/" + karafVersion + "/xml/features"),
          // debugConfiguration("5005", true),
          features(activeMQUrl, features), //
          features(camelUrl)
