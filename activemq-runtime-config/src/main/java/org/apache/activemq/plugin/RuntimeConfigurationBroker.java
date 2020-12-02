@@ -230,7 +230,11 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
             ArrayList<StreamSource> schemas = new ArrayList<StreamSource>();
             schemas.add(new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()));
-            schemas.add(new StreamSource(getClass().getResource("/org/springframework/beans/factory/xml/spring-beans-3.0.xsd").toExternalForm()));
+            if (getClass().getResource("/org/springframework/beans/factory/xml/spring-beans-3.0.xsd") != null) {
+                schemas.add(new StreamSource(getClass().getResource("/org/springframework/beans/factory/xml/spring-beans-3.0.xsd").toExternalForm()));
+            } else {
+                schemas.add(new StreamSource(getClass().getResource("/org/springframework/beans/factory/xml/spring-beans.xsd").toExternalForm()));
+            }
             schema = schemaFactory.newSchema(schemas.toArray(new Source[]{}));
         }
         return schema;
