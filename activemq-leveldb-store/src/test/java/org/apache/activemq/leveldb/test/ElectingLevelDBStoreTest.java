@@ -222,7 +222,7 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         }
 
         LOG.info("Imposing 11s I/O wait on Zookeeper connections, waiting 30s for quorum to be lost");
-        this.connector.testHandle.setIOWaitMillis(11 * 1000, 30 * 1000);
+        this.connector.testHandle.setIOWaitMillis(11 * 1000, 60 * 1000);
 
         LOG.info("Confirming that the quorum has been lost");
         for (ElectingLevelDBStore store: stores) {
