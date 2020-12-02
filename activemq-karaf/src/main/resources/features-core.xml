@@ -18,12 +18,12 @@
 
 -->
 
-<features name="activemq-core-${project.version}">
+<features name="activemq-core-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.4.0">
 
     <repository>mvn:org.apache.karaf.features/spring-legacy/[4,5)/xml/features</repository>
 
     <!-- Bundles needed if only client will be deployed in the container -->
-    <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}">
         <feature version="[4,5)">spring</feature>
         <feature version="[4,5)">shell-compat</feature>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
@@ -32,28 +32,28 @@
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
         <bundle dependency="true">mvn:org.jvnet.jaxb2_commons/jaxb2-basics-runtime/${jaxb-basics-version}</bundle>
         <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jaxb-impl/${jaxb-bundle-version}</bundle>
-        <bundle dependency="false">mvn:org.apache.commons/commons-pool2/${commons-pool2-version}</bundle>
-        <bundle dependency="false">mvn:commons-net/commons-net/${commons-net-version}</bundle>
-        <bundle dependency='true'>mvn:org.apache.zookeeper/zookeeper/${zookeeper-version}</bundle>
+        <bundle>mvn:org.apache.commons/commons-pool2/${commons-pool2-version}</bundle>
+        <bundle>mvn:commons-net/commons-net/${commons-net-version}</bundle>
+        <bundle dependency="true">mvn:org.apache.zookeeper/zookeeper/${zookeeper-version}</bundle>
         <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
         <bundle>mvn:org.apache.activemq/activemq-osgi/${project.version}</bundle>
     </feature>
     
-    <feature name="activemq-cf" description="ActiveMQ ConnectionFactory from config" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature name="activemq-cf" description="ActiveMQ ConnectionFactory from config" version="${project.version}">
         <feature>activemq-client</feature>
         <feature>scr</feature>
         <bundle>mvn:org.apache.activemq/activemq-cf/${project.version}</bundle>
     </feature>
 
     <!-- All bundles needed by the broker -->
-    <feature name="activemq" description="ActiveMQ broker libraries" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature name="activemq" description="ActiveMQ broker libraries" version="${project.version}">
       <feature>connector</feature>
       <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
       <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
       <bundle dependency="true">mvn:commons-io/commons-io/${commons-io-version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
-      <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
+      <bundle dependency="true">mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
       <bundle dependency="true">mvn:commons-codec/commons-codec/1.9</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_6</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.2_1</bundle>
@@ -70,4 +70,4 @@
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson-version}</bundle>
       <bundle dependency="true">mvn:org.scala-lang/scala-library/${scala-version}</bundle>
     </feature>
-  </features>
+</features>

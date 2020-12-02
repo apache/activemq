@@ -18,26 +18,26 @@
 
 -->
 
-<features name="activemq-${project.version}">
+<features name="activemq-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.4.0">
 
     <repository>mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/features-core</repository>
 
     <!-- Starts the broker with default configuration -->
-    <feature name="activemq-broker-noweb" description="Full ActiveMQ broker with default configuration" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature name="activemq-broker-noweb" description="Full ActiveMQ broker with default configuration" version="${project.version}">
         <feature version="${project.version}">activemq</feature>
         <configfile finalname="${karaf.etc}/activemq.xml">mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/activemq</configfile>
         <configfile finalname="${karaf.etc}/org.apache.activemq.server-default.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq</configfile>
     </feature>
 
     <!-- Starts the broker with default configuration and web console -->
-    <feature name="activemq-broker" description="Full ActiveMQ broker with default configuration and web console" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature name="activemq-broker" description="Full ActiveMQ broker with default configuration and web console" version="${project.version}">
         <feature version="${project.version}">activemq</feature>
         <configfile finalname="${karaf.etc}/activemq.xml">mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/activemq</configfile>
         <configfile finalname="${karaf.etc}/org.apache.activemq.server-default.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq</configfile>
         <feature version="${project.version}">activemq-web-console</feature>
     </feature>
 
-    <feature name="activemq-camel" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature name="activemq-camel" version="${project.version}">
         <feature version="${project.version}">activemq-client</feature>
         <bundle>mvn:org.apache.activemq/activemq-camel/${project.version}</bundle>
         <feature version="${camel-version-range}">camel-jms</feature>
@@ -46,14 +46,14 @@
         <feature version="${camel-version-range}">camel-blueprint</feature>
     </feature>
 
-    <feature name="activemq-web-console" version="${project.version}" resolver="(obr)" start-level="50">
-      <feature start-level="10">war</feature>
-      <feature start-level="10">eventadmin</feature>
+    <feature name="activemq-web-console" version="${project.version}">
+      <feature>war</feature>
+      <feature>eventadmin</feature>
       <configfile finalname="${karaf.etc}/org.apache.activemq.webconsole.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq-webconsole</configfile>
       <bundle>mvn:org.apache.activemq/activemq-web-console/${project.version}/war</bundle>
     </feature>
 
-    <feature name="activemq-blueprint" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature name="activemq-blueprint" version="${project.version}">
       <feature version="${project.version}">activemq</feature>
       <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/${servicemix.specs.version}</bundle>
       <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
