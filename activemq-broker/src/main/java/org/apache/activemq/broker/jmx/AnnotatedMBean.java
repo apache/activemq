@@ -202,6 +202,7 @@ public class AnnotatedMBean extends StandardMBean {
 
     @Override
     public Object invoke(String s, Object[] objects, String[] strings) throws MBeanException, ReflectionException {
+        objects = (objects == null) ? new Object[]{} : objects;
         JMXAuditLogEntry entry = null;
         if (audit != OFF) {
             Subject subject = Subject.getSubject(AccessController.getContext());
