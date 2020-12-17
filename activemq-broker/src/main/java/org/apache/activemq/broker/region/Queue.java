@@ -608,17 +608,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
-    protected void record(final String messageId, final Class cls, final String method, final long start) {
-        final long end = System.currentTimeMillis();
+    protected void record(final String messageId, final Class cls, final String method, final long duration) {
         try {
             final AccessLogPlugin accessLog = (AccessLogPlugin) brokerService.getBroker().getAdaptor(AccessLogPlugin.class);
             if (accessLog != null) {
-                accessLog.record(messageId, cls.getSimpleName() + "." + method, end - start);
+                accessLog.record(messageId, cls.getSimpleName() + "." + method, duration);
             }
         } catch (BrokerStoppedException e) {
             // ignore this so we aren't dumping errors
         } catch (Exception e) {
-            LOG.error("Unable to record timing for " + cls.getSimpleName() + "." + method + ". Time taken: " + (end - start) + "ms", e);
+            LOG.error("Unable to record timing for " + cls.getSimpleName() + "." + method + ". Time taken: " + (duration) + "ms", e);
         }
     }
 
@@ -751,7 +750,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             context.getConnection().dispatchAsync(ack);
         }
 
-        record(message.getMessageId().toString(), Queue.class, "send", start);
+        record(message.getMessageId().toString(), Queue.class, "send", System.currentTimeMillis() - start);
     }
 
     private void registerCallbackForNotFullNotification() {
@@ -842,6 +841,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException,
             Exception {
+
+
+
         final long start = System.currentTimeMillis();
 
         final ConnectionContext context = producerExchange.getConnectionContext();
@@ -852,9 +854,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             checkUsage(context, producerExchange, message);
             final long startLock = System.currentTimeMillis();
             sendLock.lockInterruptibly();
-            record(message.getMessageId().toString(), Queue.class, "doMessageSend.sendLock.lockInterruptibly()", startLock);
+            record(message.getMessageId().toString(), Queue.class, "doMessageSend.sendLock.lockInterruptibly()", System.currentTimeMillis() - startLock);
             try {
+                final long startGetDestinationSequenceId = System.currentTimeMillis();
                 message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
+                record(message.getMessageId().toString(), Queue.class, "doMessageSend.message.setBrokerSequenceId()", System.currentTimeMillis() - startGetDestinationSequenceId);
+
                 if (store != null && message.isPersistent()) {
                     message.getMessageId().setFutureOrSequenceLong(null);
                     try {
@@ -882,9 +887,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
         } while (started.get());
 
+        long startMessageSent = System.currentTimeMillis();
         if (store == null || (!context.isInTransaction() && !message.isPersistent())) {
             messageSent(context, message);
         }
+        record(message.getMessageId().toString(), Queue.class, "doMessageSend.messageSent()", System.currentTimeMillis() - startMessageSent);
+
+        long startGetResult = System.currentTimeMillis();
         if (result != null && message.isResponseRequired() && !result.isCancelled()) {
             try {
                 result.get();
@@ -893,11 +902,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 // has already been deleted
             }
         }
+        record(message.getMessageId().toString(), Queue.class, "doMessageSend.result.get()", System.currentTimeMillis() - startGetResult);
 
-        record(message.getMessageId().toString(), Queue.class, "doMessageSend", start);
+        record(message.getMessageId().toString(), Queue.class, "doMessageSend", System.currentTimeMillis() - start);
     }
 
     private boolean tryOrderedCursorAdd(Message message, ConnectionContext context) throws Exception {
+        long startTryOrderedCursorAdd = System.currentTimeMillis();
         boolean result = true;
 
         if (context.isInTransaction()) {
@@ -909,6 +920,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             result = tryCursorAdd(message);
         }
 
+        record(message.getMessageId().toString(), Queue.class, "tryOrderedCursorAdd()", System.currentTimeMillis() - startTryOrderedCursorAdd);
         return result;
     }
 
@@ -1866,6 +1878,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     final void messageSent(final ConnectionContext context, final Message msg) throws Exception {
+        // TODO: log timing for this callback
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         destinationStatistics.getMessageSize().addSize(msg.getSize());

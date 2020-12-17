@@ -169,7 +169,9 @@ public class AccessLogPlugin extends BrokerPluginSupport {
             final int messageSize = message.getContent() != null ? message.getContent().getLength() : -1;
 
             if (!inflight.containsKey(messageId)) {
-                inflight.put(messageId, new Timing(messageId, messageSize));
+                final String destination = message.getDestination() != null ? message.getDestination().toString() : "";
+
+                inflight.put(messageId, new Timing(messageId, destination, messageSize));
             }
         }
 
@@ -198,11 +200,13 @@ public class AccessLogPlugin extends BrokerPluginSupport {
 
     public class Timing {
         private final String messageId;
+        private final String destination;
         private final int messageSize;
         private final List<Breakdown> timingBreakdowns = Collections.synchronizedList(new ArrayList<Breakdown>());
 
-        private Timing(final String messageId, final int messageSize) {
+        private Timing(final String messageId, final String destination, final int messageSize) {
             this.messageId = messageId;
+            this.destination = destination;
             this.messageSize = messageSize;
         }
 
@@ -214,6 +218,7 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         public String toString() {
             return "Timing{" +
                     "messageId='" + messageId + '\'' +
+                    ", destination='" + destination + '\'' +
                     ", messageSize='" + messageSize + '\'' +
                     ", timingBreakdowns=" + timingBreakdowns +
                     '}';
