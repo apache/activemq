@@ -32,38 +32,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 
 /**
  * Tracks and logs timings for messages being sent to a destination
- *
- * @org.apache.xbean.XBean
  */
 public class AccessLogPlugin extends BrokerPluginSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger("TIMING");
+    private static final ThreadLocal<String> THREAD_MESSAGE_ID = new ThreadLocal<>();
 
     private final AtomicBoolean enabled = new AtomicBoolean(true);
     private final AtomicInteger threshold = new AtomicInteger(0);
 
-    private static final Logger LOG = LoggerFactory.getLogger("TIMING");
-    private static final ThreadLocal<String> THREAD_MESSAGE_ID = new ThreadLocal<>();
     private final Timings timings = new Timings();
     private RecordingCallback recordingCallback;
 
     @PostConstruct
     private void postConstruct() {
-        try {
-            afterPropertiesSet();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * @throws Exception
-     * @org.apache.xbean.InitMethod
-     */
-    public void afterPropertiesSet() throws Exception {
         LOG.info("Created AccessLogPlugin: {}", this.toString());
     }
 
@@ -90,7 +79,7 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         super.stop();
     }
 
-    public static ObjectName createJmxName(String brokerObjectName, String name) throws MalformedObjectNameException {
+    public static ObjectName createJmxName(final String brokerObjectName, final String name) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
 
         objectNameStr += "," + "service=AccessLog";
@@ -123,15 +112,13 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         }
 
         THREAD_MESSAGE_ID.set(messageSend.getMessageId().toString());
-        long start = System.currentTimeMillis();
+        long start = System.nanoTime();
 
         try {
             timings.start(messageSend);
             super.send(producerExchange, messageSend);
         } finally {
-            final long end = System.currentTimeMillis();
-            timings.record(messageSend.getMessageId().toString(), "whole_request", end - start);
-            timings.end(messageSend, end - start);
+            timings.end(messageSend, start);
             THREAD_MESSAGE_ID.set(null);
         }
     }
@@ -162,26 +149,31 @@ public class AccessLogPlugin extends BrokerPluginSupport {
     }
 
     private class Timings {
-        private Map<String, Timing> inflight = new ConcurrentHashMap<>();
+        private ConcurrentMap<String, Timing> inflight = new ConcurrentHashMap<>();
 
         public void start(final Message message) {
             final String messageId = message.getMessageId().toString();
             final int messageSize = message.getContent() != null ? message.getContent().getLength() : -1;
 
-            if (!inflight.containsKey(messageId)) {
+            inflight.computeIfAbsent(messageId, (key) -> {
                 final String destination = message.getDestination() != null ? message.getDestination().toString() : "";
-
-                inflight.put(messageId, new Timing(messageId, destination, messageSize));
-            }
+                return new Timing(key, destination, messageSize);
+            });
         }
 
-        public void end(final Message message, final long duration) {
+        public void end(final Message message, final long start) {
+            final long duration = System.nanoTime() - start;
             final String messageId = message.getMessageId().toString();
+
+            record(messageId, "whole_request", duration);
+
             final Timing timing = inflight.remove(messageId);
 
             final int th = threshold.get();
             if (th <= 0 || ((long)th < duration)) {
-                LOG.info(timing.toString());
+                if (LOG.isInfoEnabled()) {
+                    LOG.info(timing.toString());
+                }
                 if (recordingCallback != null) {
                     recordingCallback.sendComplete(timing);
                 }
@@ -189,12 +181,7 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         }
 
         public void record(final String messageId, final String what, final long duration) {
-            final Timing timing = inflight.get(messageId);
-            if (timing == null) {
-                return;
-            }
-
-            timing.add(what, duration);
+            inflight.computeIfPresent(messageId, (key, timing) -> timing.add(what, duration));
         }
     }
 
@@ -202,7 +189,7 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         private final String messageId;
         private final String destination;
         private final int messageSize;
-        private final List<Breakdown> timingBreakdowns = Collections.synchronizedList(new ArrayList<Breakdown>());
+        private final List<Breakdown> timingBreakdowns = Collections.synchronizedList(new ArrayList<>());
 
         private Timing(final String messageId, final String destination, final int messageSize) {
             this.messageId = messageId;
@@ -210,8 +197,9 @@ public class AccessLogPlugin extends BrokerPluginSupport {
             this.messageSize = messageSize;
         }
 
-        public void add(final String what, final long duration) {
+        public Timing add(final String what, final long duration) {
             timingBreakdowns.add(new Breakdown(what, duration));
+            return this;
         }
 
         @Override
@@ -233,7 +221,7 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         private final String what;
         private final Long timing;
 
-        public Breakdown(String what, Long timing) {
+        public Breakdown(final String what, final Long timing) {
             this.what = what;
             this.timing = timing;
         }
@@ -243,14 +231,14 @@ public class AccessLogPlugin extends BrokerPluginSupport {
         }
 
         public Long getTiming() {
-            return timing;
+            return timing / 1000000;
         }
 
         @Override
         public String toString() {
             return "Breakdown{" +
-                    "what='" + what + '\'' +
-                    ", timing=" + timing +
+                    "what='" + getWhat() + '\'' +
+                    ", timing=" + getTiming() +
                     '}';
         }
     }

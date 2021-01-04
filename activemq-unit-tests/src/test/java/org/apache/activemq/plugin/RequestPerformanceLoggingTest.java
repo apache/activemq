@@ -64,7 +64,7 @@ public class RequestPerformanceLoggingTest extends TestCase {
         List<AccessLogPlugin.Breakdown> breakdownList = timingList.get(0).getBreakdowns();
         for (final AccessLogPlugin.Breakdown breakdown : breakdownList) {
             items.add(breakdown.getWhat());
-            System.out.println(breakdown.getWhat());
+            System.out.println(breakdown.getWhat() + "=" + breakdown.getTiming());
         }
 
         Assert.assertTrue(items.contains("StoreQueueTask.aquireLocks"));
