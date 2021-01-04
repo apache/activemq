@@ -121,7 +121,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
                             if (msg != null) {
                                 connection.send(createAck(consumerInfo, msg, counter, MessageAck.STANDARD_ACK_TYPE));
                             } else if (receiveCounter.get() < consumeCount) {
-                                LOG.info("Consumer stall, waiting for message #" + receiveCounter.get() + 1);
+                                LOG.info("Consumer stall, waiting for message #" + (receiveCounter.get() + 1));
                             }
                         }
 
