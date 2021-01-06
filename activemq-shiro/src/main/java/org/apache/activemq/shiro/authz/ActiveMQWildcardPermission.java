@@ -59,18 +59,25 @@ public class ActiveMQWildcardPermission extends WildcardPermission {
             } else {
                 Set<String> thisPart = getParts().get(i);
 
-                for (String token : thisPart) {
-                    if (token.equals(WILDCARD_TOKEN)) {
-                        continue;
+                // all tokens from otherPart must pass at least one token from thisPart
+                for (String otherToken : otherPart) {
+                    if (!caseSensitive) {
+                        otherToken = otherToken.toLowerCase();
                     }
-                    for (String otherToken : otherPart) {
-                        if (!caseSensitive) {
-                            otherToken = otherToken.toLowerCase();
+                	boolean otherIsMatched = false;
+                	for (String token : thisPart) {
+                        if (token.equals(WILDCARD_TOKEN)) {
+                        	otherIsMatched = true;
+                        	break;
                         }
-                        if (!matches(token, otherToken)) {
-                            return false;
+                        if (matches(token, otherToken)) {
+                        	otherIsMatched = true;
+                        	break;
                         }
-                    }
+                	}
+                	if (!otherIsMatched) {
+                		return false;
+                	}
                 }
                 i++;
             }

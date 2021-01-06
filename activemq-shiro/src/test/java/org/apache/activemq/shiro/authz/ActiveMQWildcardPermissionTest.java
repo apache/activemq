@@ -117,6 +117,10 @@ public class ActiveMQWildcardPermissionTest {
         assertNoMatch("*:ActiveMQ*", "topic:TEST:*");
         assertMatch("topic:ActiveMQ.Advisory*", "topic:ActiveMQ.Advisory.Connection:create");
         assertMatch("foo?ar", "foobar");
+        
+        assertMatch("queue:*:read,write", "queue:testqueue:read");
+        assertMatch("queue:*:read,write", "queue:test*:read,write");
+        assertNoMatch("queue:*:read,write", "queue:*:read,write,delete");
     }
 
     protected static void assertMatch(String pattern, String value) {
