@@ -62,7 +62,9 @@
                         </div>
                         <div id="site-quicklinks"><P>
                             <a href="http://activemq.apache.org/support.html"
-                               title="Get help and support using Apache ActiveMQ">Support</a></p>
+                               title="Get help and support using Apache ActiveMQ">Support</a>
+                            &#124;
+                            <a href="logout.jsp" title="Logout">Logout</a></p>
                         </div>
                     </div>
 
