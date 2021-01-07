@@ -41,14 +41,10 @@
     <activemq-protobuf-version>1.1</activemq-protobuf-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
-    <ant-bundle-version>1.10.7_1</ant-bundle-version>
-    <aopalliance-version>1.0</aopalliance-version>
     <aries-version>1.1.0</aries-version>
-    <aries-transaction-version>1.1.1</aries-transaction-version>
     <axion-version>1.0-M3-dev</axion-version>
     <camel-version>2.25.2</camel-version>
     <camel-version-range>[2.20,3)</camel-version-range>
-    <cglib-version>2.2</cglib-version>
     <commons-beanutils-version>1.9.4</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
     <commons-daemon-version>1.2.3</commons-daemon-version>
@@ -62,13 +58,10 @@
     <directory-version>2.0.0.AM25</directory-version>
     <ecj.version>3.17.0</ecj.version>
     <ftpserver-version>1.1.1</ftpserver-version>
-    <geronimo-version>1.0</geronimo-version>
     <guava-version>28.2-jre</guava-version>
     <hadoop-version>1.2.1</hadoop-version>
     <hawtbuf-version>1.11</hawtbuf-version>
     <hawtdispatch-version>1.22</hawtdispatch-version>
-    <howl-version>0.1.8</howl-version>
-    <hsqldb-version>1.8.0.12</hsqldb-version>
     <httpclient-version>4.5.13</httpclient-version>
     <httpcore-version>4.4.13</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
@@ -88,7 +81,6 @@
     <json-simple-version>1.1.1</json-simple-version>
     <junit-version>4.13.1</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
-    <jxta-version>2.0</jxta-version>
     <karaf-version>4.2.10</karaf-version>
     <leveldb-api-version>0.9</leveldb-api-version>
     <leveldb-version>0.9</leveldb-version>
@@ -98,10 +90,8 @@
     <owasp-dependency-check-version>5.2.4</owasp-dependency-check-version>
     <powermock-version>1.6.5</powermock-version>
     <mqtt-client-version>1.16</mqtt-client-version>
-    <openjpa-version>1.2.0</openjpa-version>
     <org-apache-derby-version>10.14.2.0</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
-    <p2psockets-version>1.1.2</p2psockets-version>
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
     <zookeeper-version>3.4.14</zookeeper-version>
     <qpid-proton-version>0.33.8</qpid-proton-version>
@@ -111,8 +101,6 @@
     <netty-all-version>4.1.53.Final</netty-all-version>
     <regexp-version>1.3</regexp-version>
     <rome-version>1.15.0</rome-version>
-    <saxon-version>9.5.1-5</saxon-version>
-    <saxon-bundle-version>9.5.1-5_1</saxon-bundle-version>
     <scala-plugin-version>3.1.0</scala-plugin-version>
     <scala-version>2.11.11</scala-version>
     <shiro-version>1.7.0</shiro-version>
@@ -123,8 +111,6 @@
     <taglibs-version>1.2.5</taglibs-version>
     <velocity-version>2.2</velocity-version>
     <xalan-version>2.7.2</xalan-version>
-    <xmlbeans-version>3.1.0</xmlbeans-version>
-    <xmlbeans-bundle-version>2.6.0_2</xmlbeans-bundle-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.15</xstream-version>
     <xbean-version>4.18</xbean-version>
@@ -693,12 +679,6 @@
         <version>${commons-collections-version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.apache.openjpa</groupId>
-        <artifactId>openjpa-persistence-jdbc</artifactId>
-        <version>${openjpa-version}</version>
-      </dependency>
-
       <!-- Optional Shiro Support -->
       <dependency>
         <groupId>org.apache.shiro</groupId>
@@ -842,15 +822,6 @@
         <version>${regexp-version}</version>
       </dependency>
 
-      <!-- Optional HSQL DB Support -->
-      <!--
-        <dependency>
-        <groupId>hsqldb</groupId>
-        <artifactId>hsqldb</artifactId>
-        <version>${hsqldb-version}</version>
-        </dependency>
-      -->
-
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-dbcp2</artifactId>
@@ -863,15 +834,6 @@
         <version>${commons-pool2-version}</version>
       </dependency>
 
-      <!-- Optional Journal Implementation -->
-      <!--
-        <dependency>
-        <groupId>howl</groupId>
-        <artifactId>howl-logger</artifactId>
-        <version>${howl-version}</version>
-        </dependency>
-      -->
-
       <!-- Optional Jabber support -->
       <dependency>
         <groupId>activemq</groupId>
@@ -883,21 +845,6 @@
         <groupId>activemq</groupId>
         <artifactId>smackx</artifactId>
         <version>1.5.0</version>
-      </dependency>
-
-      <!-- =============================== -->
-      <!-- XML processing dependencies -->
-      <!-- =============================== -->
-      <!-- For XMLBeans -->
-      <dependency>
-        <groupId>org.apache.xmlbeans</groupId>
-        <artifactId>xmlbeans</artifactId>
-        <version>${xmlbeans-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlbeans</groupId>
-        <artifactId>xmlbeans-xpath</artifactId>
-        <version>${xmlbeans-version}</version>
       </dependency>
 
       <!-- To use XPath using JAXP 1.3 (std in Java 5) -->
@@ -992,12 +939,6 @@
       </dependency>
 
       <dependency>
-        <groupId>aopalliance</groupId>
-        <artifactId>aopalliance</artifactId>
-        <version>${aopalliance-version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>org.jasypt</groupId>
         <artifactId>jasypt</artifactId>
         <version>${jasypt-version}</version>
@@ -1086,17 +1027,6 @@
         <groupId>org.fusesource.mqtt-client</groupId>
         <artifactId>mqtt-client</artifactId>
         <version>${mqtt-client-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>p2psockets</groupId>
-        <artifactId>p2psockets-core</artifactId>
-        <version>${p2psockets-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>jxta</groupId>
-        <artifactId>jxta</artifactId>
-        <version>${jxta-version}</version>
       </dependency>
 
       <dependency>
