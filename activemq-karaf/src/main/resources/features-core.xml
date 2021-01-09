@@ -50,7 +50,10 @@
       <feature>connector</feature>
       <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
-      <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
+      <conditional>
+          <condition>shell</condition>
+          <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
+      </conditional>
       <bundle dependency="true">mvn:commons-io/commons-io/${commons-io-version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
       <bundle dependency="true">mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
