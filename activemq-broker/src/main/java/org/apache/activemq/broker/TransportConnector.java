@@ -76,6 +76,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private int maximumProducersAllowedPerConnection = Integer.MAX_VALUE;
     private int maximumConsumersAllowedPerConnection  = Integer.MAX_VALUE;
     private PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
+    private boolean allowLinkStealing = false;
     private boolean warnOnRemoteClose = false;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
@@ -125,6 +126,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setMaximumConsumersAllowedPerConnection(getMaximumConsumersAllowedPerConnection());
         rc.setMaximumProducersAllowedPerConnection(getMaximumProducersAllowedPerConnection());
         rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
+        rc.setAllowLinkStealing(allowLinkStealing);
         rc.setWarnOnRemoteClose(isWarnOnRemoteClose());
         return rc;
     }
@@ -600,6 +602,10 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     @Override
     public boolean isAllowLinkStealing() {
         return server.isAllowLinkStealing();
+    }
+
+    public void setAllowLinkStealing(boolean allowLinkStealing) {
+        this.allowLinkStealing = allowLinkStealing;
     }
 
     public boolean isAuditNetworkProducers() {
