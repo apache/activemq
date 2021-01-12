@@ -369,7 +369,10 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
         @Override
         protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-            if (!(desc.getName().equals("java.lang.String") || desc.getName().startsWith("java.util."))) {
+            if (!(desc.getName().startsWith("java.lang.")
+                    || desc.getName().startsWith("com.thoughtworks.xstream")
+                    || desc.getName().startsWith("java.util.")
+                    || desc.getName().startsWith("org.apache.activemq."))) {
                 throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
             }
             return super.resolveClass(desc);
