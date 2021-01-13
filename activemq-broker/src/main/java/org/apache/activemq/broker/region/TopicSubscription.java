@@ -116,7 +116,11 @@ public class TopicSubscription extends AbstractSubscription {
                 if (info.getPrefetchSize() > 1 && matched.size() > info.getPrefetchSize()) {
                     // Slow consumers should log and set their state as such.
                     if (!isSlowConsumer()) {
-                        LOG.warn("{}: has twice its prefetch limit pending, without an ack; it appears to be slow", toString());
+                        String remoteAddr = null;
+                        if (context != null && context.getConnection() != null) {
+                            remoteAddr = context.getConnection().getRemoteAddress();
+                        }
+                        LOG.warn("{}: has twice its prefetch limit pending, without an ack; it appears to be slow{}", toString(), (remoteAddr != null) ? ": " + remoteAddr : "");
                         setSlowConsumer(true);
                         for (Destination dest: destinations) {
                             dest.slowConsumer(getContext(), this);
@@ -133,7 +137,7 @@ public class TopicSubscription extends AbstractSubscription {
                                 return;
                             }
                             if (!warnedAboutWait) {
-                                LOG.info("{}: Pending message cursor [{}] is full, temp usag ({}%) or memory usage ({}%) limit reached, blocking message add() pending the release of resources.",
+                                LOG.info("{}: Pending message cursor [{}] is full, temp usage ({}%) or memory usage ({}%) limit reached, blocking message add() pending the release of resources.",
                                         new Object[]{
                                                 toString(),
                                                 matched,
