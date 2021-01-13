@@ -122,4 +122,24 @@ public interface JobSchedulerViewMBean {
     @MBeanInfo("get the scheduled Jobs in the Store within the time range. Not HTML friendly ")
     public abstract TabularData getAllJobs(@MBeanInfo("start: yyyy-MM-dd hh:mm:ss")String start,@MBeanInfo("finish: yyyy-MM-dd hh:mm:ss")String finish)throws Exception;
 
+    /**
+     * Get the number of messages in the scheduler.
+     *
+     * @return the number of messages in the scheduler.
+     *
+     * @throws Exception if an error occurs while querying the scheduler store.
+     */
+    @MBeanInfo("get the number of scheduled message (basically message in the scheduler")
+    public abstract int getScheduledMessageCount() throws Exception;
+
+    /**
+     * Get the number of delayed messages.
+     *
+     * @return the number of delayed messages.
+     *
+     * @throws Exception if an error occurs while querying the scheduler store.
+     */
+    @MBeanInfo("get the number of delayed message")
+    public abstract int getDelayedMessageCount() throws Exception;
+
 }
