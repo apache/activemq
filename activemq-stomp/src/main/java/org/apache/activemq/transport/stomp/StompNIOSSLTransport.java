@@ -49,11 +49,18 @@ public class StompNIOSSLTransport extends NIOSSLTransport {
         super(wireFormat, socket, null, null, null);
     }
 
-
-
     public StompNIOSSLTransport(WireFormat wireFormat, Socket socket,
             SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer) throws IOException {
         super(wireFormat, socket, engine, initBuffer, inputBuffer);
+    }
+
+    @Override
+    public String getRemoteAddress() {
+        String remoteAddress = super.getRemoteAddress();
+        if (remoteAddress == null) {
+            return remoteLocation.toString();
+        }
+        return remoteAddress;
     }
 
     @Override
