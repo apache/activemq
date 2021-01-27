@@ -1279,11 +1279,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.trustAllPackages = trustAllPackages;
     }
 
-	public int getConnectResponseTimeout() {
-		return connectResponseTimeout;
-	}
+    public int getConnectResponseTimeout() {
+        return connectResponseTimeout;
+    }
 
-	public void setConnectResponseTimeout(int connectResponseTimeout) {
-		this.connectResponseTimeout = connectResponseTimeout;
-	}
+    public void setConnectResponseTimeout(int connectResponseTimeout) {
+        this.connectResponseTimeout = connectResponseTimeout;
+    }
 }
