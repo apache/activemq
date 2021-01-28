@@ -39,11 +39,11 @@ import org.apache.activemq.store.PersistenceAdapter;
  */
 public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
-    private Connection connection;
+    protected Connection connection;
     private Session session;
     private TopicSubscriber consumer;
     private MessageProducer producer;
-    private BrokerService broker;
+    protected BrokerService broker;
 
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
@@ -525,7 +525,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         return DeliveryMode.PERSISTENT;
     }
 
-    private void assertTextMessageEquals(String string, Message message) throws JMSException {
+    void assertTextMessageEquals(String string, Message message) throws JMSException {
         assertNotNull("Message was null", message);
         assertTrue("Message is not a TextMessage", message instanceof TextMessage);
         assertEquals(string, ((TextMessage) message).getText());

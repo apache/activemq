@@ -71,12 +71,6 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
 
     @Override
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId, MessageAck ack) throws IOException {
-        if (ack != null && ack.isUnmatchedAck()) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("ignoring unmatched selector ack for: " + messageId + ", cleanup will get to this message after subsequent acks.");
-            }
-            return;
-        }
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {
             long[] res = getCachedStoreSequenceId(c, destination, messageId);
