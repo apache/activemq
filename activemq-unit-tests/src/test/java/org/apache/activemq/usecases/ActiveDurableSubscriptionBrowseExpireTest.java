@@ -41,14 +41,11 @@ import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.MessageId;
 import org.junit.Test;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(value = Parameterized.class)
 public class ActiveDurableSubscriptionBrowseExpireTest extends DurableSubscriptionOfflineTestBase {    
-	//private static final Logger LOG = LoggerFactory.getLogger(ActiveDurableSubscriptionBrowseExpireTest.class);
     private boolean enableExpiration = true;
 
     public ActiveDurableSubscriptionBrowseExpireTest(boolean enableExpiration) {
