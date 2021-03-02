@@ -20,6 +20,10 @@
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
+    <bean id="httpConfig" class="org.eclipse.jetty.server.HttpConfiguration">
+        <property name="sendServerVersion" value="false"/>
+    </bean>
+
     <bean id="securityLoginService" class="org.eclipse.jetty.security.HashLoginService">
         <property name="name" value="ActiveMQRealm" />
         <property name="config" value="${activemq.conf}/jetty-realm.properties" />
@@ -141,9 +145,16 @@
     	<property name="targetMethod" value="setConnectors" />
     	<property name="arguments">
     	<list>
-           	<bean id="Connector" class="org.eclipse.jetty.server.ServerConnector">
-           		<constructor-arg ref="Server" />
-                    <!-- see the jettyPort bean -->
+               <bean id="Connector" class="org.eclipse.jetty.server.ServerConnector">
+                   <constructor-arg ref="Server"/>
+                   <constructor-arg>
+                       <list>
+                           <bean id="httpConnectionFactory" class="org.eclipse.jetty.server.HttpConnectionFactory">
+                               <constructor-arg ref="httpConfig"/>
+                           </bean>
+                       </list>
+                   </constructor-arg>
+                   <!-- see the jettyPort bean -->
                    <property name="host" value="#{systemProperties['jetty.host']}" />
                    <property name="port" value="#{systemProperties['jetty.port']}" />
                </bean>
