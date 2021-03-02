@@ -32,7 +32,9 @@ import org.apache.activemq.transport.ws.jetty9.WSServlet;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -62,6 +64,12 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
 
         if (connector == null) {
             connector = socketConnectorFactory.createConnector(server);
+        }
+
+        for(ConnectionFactory cf  : connector.getConnectionFactories()) {
+            if(HttpConnectionFactory.class.isAssignableFrom(cf.getClass())) {
+                HttpConnectionFactory.class.cast(cf).getHttpConfiguration().setSendServerVersion(false);
+            }
         }
 
         URI boundTo = bind();
