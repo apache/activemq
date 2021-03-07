@@ -200,17 +200,7 @@ public class NIOSSLTransport extends NIOTransport {
     final protected CountDownLatch initialized = new CountDownLatch(1);
 
     protected void doInit() throws Exception {
-        taskRunnerFactory.execute(new Runnable() {
-
-            @Override
-            public void run() {
-                //Need to start in new thread to let startup finish first
-                //We can trigger a read because we know the channel is ready since the SSL handshake
-                //already happened
-                serviceRead();
-                initialized.countDown();
-            }
-        });
+        initialized.countDown();
     }
 
     //Only used for the auto transport to abort the openwire init method early if already initialized
