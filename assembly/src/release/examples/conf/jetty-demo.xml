@@ -143,19 +143,19 @@
                     <property name="port" value="#{systemProperties['jetty.port']}" />
                 </bean>
                 <!--
-                    Enable this connector if you wish to use https with web console
+                    Enable this connector to use https with web console
                 -->
-                <!-- bean id="SecureConnector" class="org.eclipse.jetty.server.ServerConnector">
+                <bean id="SecureConnector" class="org.eclipse.jetty.server.ServerConnector">
 					<constructor-arg ref="Server" />
 					<constructor-arg>
-						<bean id="handlers" class="org.eclipse.jetty.util.ssl.SslContextFactory">
+						<bean id="handlers" class="org.eclipse.jetty.util.ssl.SslContextFactory$Server">
 						
 							<property name="keyStorePath" value="${activemq.conf}/broker.ks" />
 							<property name="keyStorePassword" value="password" />
 						</bean>
 					</constructor-arg>
 					<property name="port" value="8162" />
-				</bean -->
+				</bean>
             </list>
     	</property>
     </bean>
