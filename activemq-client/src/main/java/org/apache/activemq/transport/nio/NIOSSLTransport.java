@@ -243,8 +243,9 @@ public class NIOSSLTransport extends NIOTransport {
         }
     }
 
+    //Prevent concurrent access to SSLEngine
     @Override
-    public void serviceRead() {
+    public synchronized void serviceRead() {
         try {
             if (handshakeInProgress) {
                 doHandshake();
