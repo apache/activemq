@@ -257,6 +257,11 @@ public class NIOSSLTransport extends NIOTransport {
             plain.position(plain.limit());
 
             while (true) {
+                //If the transport was already stopped then break
+                if (this.isStopped()) {
+                    return;
+                }
+
                 if (!plain.hasRemaining()) {
 
                     int readCount = secureRead(plain);

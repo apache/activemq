@@ -108,6 +108,10 @@ public class NIOTransport extends TcpTransport {
     protected void serviceRead() {
         try {
             while (true) {
+                //If the transport was already stopped then break
+                if (this.isStopped()) {
+                    return;
+                }
 
                 int readSize = readFromBuffer();
                 if (readSize == -1) {
