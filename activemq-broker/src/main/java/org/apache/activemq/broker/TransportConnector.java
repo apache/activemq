@@ -266,7 +266,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         LOG.info("Connector {} started", getName());
     }
 
-    static Throwable getRootCause(final Throwable throwable) {
+    public static Throwable getRootCause(final Throwable throwable) {
         final List<Throwable> list = getThrowableList(throwable);
         return list.isEmpty() ? null : list.get(list.size() - 1);
     }

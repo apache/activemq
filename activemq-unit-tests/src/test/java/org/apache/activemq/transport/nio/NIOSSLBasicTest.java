@@ -117,7 +117,7 @@ public class NIOSSLBasicTest {
         final DefaultTestAppender appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.ERROR) && event.getRenderedMessage().contains("Could not accept connection")) {
+                if (event.getLevel().equals(Level.WARN) && event.getRenderedMessage().contains("Could not accept connection")) {
                     gotLogMessage.countDown();
                     if (event.getRenderedMessage().contains("tcp")) {
                         // got remote address

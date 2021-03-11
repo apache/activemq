@@ -70,7 +70,7 @@ public class NIOSSLConcurrencyTest extends TestCase {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
-        TransportConnector connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=SSL_RSA_WITH_RC4_128_SHA,SSL_DH_anon_WITH_3DES_EDE_CBC_SHA");
+        TransportConnector connector = broker.addConnector("nio+ssl://localhost:0?socket.verifyHostName=false&transport.needClientAuth=true");
         broker.start();
         broker.waitUntilStarted();
 
