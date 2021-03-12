@@ -56,7 +56,7 @@ public class MemoryLimitTest extends TestSupport {
 
     @Parameterized.Parameters(name="store={0}")
     public static Iterable<Object[]> getTestParameters() {
-        return Arrays.asList(new Object[][]{{TestSupport.PersistenceAdapterChoice.KahaDB}, {PersistenceAdapterChoice.LevelDB}, {PersistenceAdapterChoice.JDBC}});
+        return Arrays.asList(new Object[][]{{TestSupport.PersistenceAdapterChoice.KahaDB}, {PersistenceAdapterChoice.JDBC}});
     }
 
     protected BrokerService createBroker() throws Exception {

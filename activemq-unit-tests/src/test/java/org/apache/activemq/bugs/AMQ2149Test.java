@@ -320,7 +320,6 @@ public class AMQ2149Test {
         }
     }
 
-    // attempt to simply replicate leveldb failure. no joy yet
     public void x_testRestartReReceive() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {

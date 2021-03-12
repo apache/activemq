@@ -52,10 +52,6 @@ public class DurableSubscriptionOffline3Test extends DurableSubscriptionOfflineT
         List<PersistenceAdapterChoice[]> choices = new ArrayList<PersistenceAdapterChoice[]>();
         choices.add(kahaDb);
         choices.add(jdbc);
-        if (!osName.equalsIgnoreCase("AIX") && !osName.equalsIgnoreCase("SunOS")) {
-            PersistenceAdapterChoice[] levelDb = {PersistenceAdapterChoice.LevelDB};
-            choices.add(levelDb);
-        }
 
         return choices;
     }
@@ -246,12 +242,6 @@ public class DurableSubscriptionOffline3Test extends DurableSubscriptionOfflineT
 
     @Test(timeout = 60 * 1000)
     public void testOfflineSubscriptionWithSelectorAfterRestart() throws Exception {
-
-        if (PersistenceAdapterChoice.LevelDB == defaultPersistenceAdapter) {
-            // https://issues.apache.org/jira/browse/AMQ-4296
-            return;
-        }
-
         // create offline subs 1
         Connection con = createConnection("offCli1");
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);

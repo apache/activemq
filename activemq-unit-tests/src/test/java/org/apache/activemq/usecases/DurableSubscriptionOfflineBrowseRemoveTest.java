@@ -67,7 +67,6 @@ public class DurableSubscriptionOfflineBrowseRemoveTest extends DurableSubscript
         testParameters.add(new Object[]{TestSupport.PersistenceAdapterChoice.JDBC, Boolean.TRUE});
         testParameters.add(new Object[]{TestSupport.PersistenceAdapterChoice.JDBC, Boolean.FALSE});
 
-        // leveldb needs some work on finding index from green messageId
         return testParameters;
     }
 

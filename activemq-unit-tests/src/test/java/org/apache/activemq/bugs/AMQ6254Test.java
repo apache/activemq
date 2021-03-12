@@ -45,7 +45,6 @@ import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.leveldb.LevelDBStoreFactory;
 import org.apache.activemq.security.AuthenticationUser;
 import org.apache.activemq.security.AuthorizationEntry;
 import org.apache.activemq.security.AuthorizationPlugin;
@@ -69,7 +68,6 @@ public class AMQ6254Test {
     private static final Logger LOG = LoggerFactory.getLogger(AMQ6254Test.class);
 
     private static final String KAHADB = "KahaDB";
-    private static final String LEVELDB = "LevelDB";
 
     private BrokerService brokerService;
 
@@ -84,8 +82,6 @@ public class AMQ6254Test {
         return Arrays.asList(new Object[][] {
                 {KAHADB, true },
                 {KAHADB, false },
-                {LEVELDB, true },
-                {LEVELDB, false },
             });
     }
 
@@ -239,9 +235,6 @@ public class AMQ6254Test {
         switch (persistenceAdapterName) {
             case KAHADB:
                 answer.setPersistenceAdapter(new KahaDBPersistenceAdapter());
-                break;
-            case LEVELDB:
-                answer.setPersistenceFactory(new LevelDBStoreFactory());
                 break;
         }
 

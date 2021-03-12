@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Field;
 import java.net.URI;
+import java.util.ArrayList;
 
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
@@ -39,9 +40,6 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.Lists;
-import scala.annotation.bridge;
 
 /**
  * This test is to show that if a durable subscription over a network bridge is deleted and
@@ -219,10 +217,12 @@ public class NetworkDurableRecreationTest extends DynamicNetworkTestSupport {
         connector.setDecreaseNetworkConsumerPriority(false);
         connector.setConduitSubscriptions(true);
         connector.setDuplex(true);
-        connector.setDynamicallyIncludedDestinations(Lists.<ActiveMQDestination>newArrayList(
-                new ActiveMQTopic(testTopicName)));
-        connector.setExcludedDestinations(Lists.<ActiveMQDestination>newArrayList(
-                new ActiveMQTopic(excludeTopicName)));
+        ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
+        includedDestinations.add(new ActiveMQTopic(testTopicName));
+        ArrayList<ActiveMQDestination> excludedDestinations = new ArrayList<>();
+        excludedDestinations.add(new ActiveMQTopic(excludeTopicName));
+        connector.setDynamicallyIncludedDestinations(includedDestinations);
+        connector.setExcludedDestinations(excludedDestinations);
 
         brokerService.addNetworkConnector(connector);
         brokerService.addConnector("tcp://localhost:61616");

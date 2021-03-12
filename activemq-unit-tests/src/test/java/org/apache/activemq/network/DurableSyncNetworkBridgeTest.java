@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -60,8 +61,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 @RunWith(Parameterized.class)
 public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
@@ -561,9 +560,9 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //Add the second network connector
         NetworkConnector secondConnector = configureLocalNetworkConnector();
         secondConnector.setName("networkConnector2");
-        secondConnector.setDynamicallyIncludedDestinations(
-                Lists.<ActiveMQDestination>newArrayList(
-                        new ActiveMQTopic("include.new.topic?forceDurable=" + forceDurable)));
+        ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
+        includedDestinations.add(new ActiveMQTopic("include.new.topic?forceDurable=" + forceDurable));
+        secondConnector.setDynamicallyIncludedDestinations(includedDestinations);
         localBroker.addNetworkConnector(secondConnector);
         secondConnector.start();
 
@@ -693,7 +692,11 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         CompositeTopic compositeTopic = new CompositeTopic();
         compositeTopic.setName(name);
         compositeTopic.setForwardOnly(true);
-        compositeTopic.setForwardTo( Lists.newArrayList(forwardTo));
+        ArrayList<ActiveMQDestination> forwardDestinations = new ArrayList<>();
+        for (ActiveMQDestination ft : forwardTo) {
+            forwardDestinations.add(ft);
+        }
+        compositeTopic.setForwardTo(forwardDestinations);
 
         return compositeTopic;
     }
@@ -828,12 +831,15 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         connector.setStaticBridge(false);
         connector.setSyncDurableSubs(true);
         connector.setUseVirtualDestSubs(useVirtualDestSubs);
-        connector.setStaticallyIncludedDestinations(
-                Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(staticIncludeTopics + "?forceDurable=" + forceDurable)));
-        connector.setDynamicallyIncludedDestinations(
-                Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(includedTopics + "?forceDurable=" + forceDurable)));
-        connector.setExcludedDestinations(
-                Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(excludeTopicName)));
+        ArrayList<ActiveMQDestination> staticIncludedDestinations = new ArrayList<>();
+        staticIncludedDestinations.add(new ActiveMQTopic(staticIncludeTopics + "?forceDurable=" + forceDurable));
+        connector.setStaticallyIncludedDestinations(staticIncludedDestinations);
+        ArrayList<ActiveMQDestination> dynamicIncludedDestinations = new ArrayList<>();
+        dynamicIncludedDestinations.add(new ActiveMQTopic(includedTopics + "?forceDurable=" + forceDurable));
+        connector.setDynamicallyIncludedDestinations(dynamicIncludedDestinations);
+        ArrayList<ActiveMQDestination> excludedDestinations = new ArrayList<>();
+        excludedDestinations.add(new ActiveMQTopic(excludeTopicName));
+        connector.setExcludedDestinations(excludedDestinations);
         return connector;
     }
 

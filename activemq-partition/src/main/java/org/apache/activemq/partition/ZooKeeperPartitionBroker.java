@@ -17,7 +17,6 @@
 package org.apache.activemq.partition;
 
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.leveldb.replicated.groups.ZKClient;
 import org.apache.activemq.partition.dto.Partitioning;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;

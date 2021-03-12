@@ -48,10 +48,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-leveldb-store</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
     <dependency>
@@ -669,11 +665,8 @@
                 <!-- breaks hudson: disable till we get a chance to give it the time that it needs - http://hudson.zones.apache.org/hudson/job/ActiveMQ/org.apache.activemq$activemq-core/199/testReport/org.apache.activemq.network/BrokerNetworkWithStuckMessagesTest/testBrokerNetworkWithStuckMessages/ -->
                 <exclude>**/BrokerNetworkWithStuckMessagesTest.*</exclude>
                 <exclude>**/DoSTest.*</exclude>
-
-                <!-- journal over journal is odd, but there may be some audit missing in leveldb, to investigate -->
                 <exclude>**/StoreQueueCursorJournalNoDuplicateTest.*</exclude>
                 <exclude>**/ThreeBrokerVirtualTopicNetworkAMQPATest.*</exclude>
-                <exclude>**/LevelDBXARecoveryBrokerTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
@@ -1128,21 +1121,6 @@
                       <configuration>
                           <excludes combine.children="append">
                               <exclude>**/QueueMasterSlaveSingleUrlTest.*</exclude>
-                              <exclude>**/mLevelDBXARecoveryBrokerTest.*</exclude>
-                              <exclude>**/StoreQueueCursorLevelDBNoDuplicateTest.*</exclude>
-                              <exclude>**/AMQ2149LevelDBTest.*</exclude>
-                              <exclude>**/SparseAckReplayAfterStoreCleanupLevelDBStoreTest.*</exclude>
-                              <exclude>**/LevelDBStoreBrokerTest.*</exclude>
-                              <exclude>**/LevelDBXARecoveryBrokerTest.*</exclude>
-                              <exclude>**/LevelDBDurableTopicTest.*</exclude>
-                              <exclude>**/LevelDBStoreQueueTest.*</exclude>
-                              <exclude>**/LevelDBNegativeQueueTest.*</exclude>
-                              <exclude>**/LevelDBStoreBrokerTest.*</exclude>
-                              <exclude>**/LevelDBStorePerDestinationTest.*</exclude>
-                              <exclude>**/LevelDBDurableSubscriptionTest.*</exclude>
-                              <exclude>**/QueueBrowsingLevelDBTest.*</exclude>
-                              <exclude>**/SingleBrokerVirtualDestinationsWithWildcardLevelDBTest.*</exclude>
-                              <exclude>**/ThreeBrokerVirtualTopicNetworkLevelDBTest.*</exclude>
                           </excludes>
                       </configuration>
                   </plugin>
@@ -1166,27 +1144,12 @@
                               <exclude>**/QueueMasterSlaveSingleUrlTest.*</exclude>
                               <exclude>**/AMQ1866.*</exclude>
                               <exclude>**/AMQ2149Test.*</exclude>
-                              <exclude>**/AMQ2149LevelDBTest.*</exclude>
                               <exclude>**/AMQ2584Test.*</exclude>
                               <exclude>**/ExpiredMessagesTest.*</exclude>
-                              <exclude>**/LevelDBDurableSubscriptionTest.*</exclude>
-                              <exclude>**/LevelDBXARecoveryBrokerTest.*</exclude>
                               <exclude>**/ManagedDurableSubscriptionTest.*</exclude>
-                              <exclude>**/SparseAckReplayAfterStoreCleanupLevelDBStoreTest.*</exclude>
                               <exclude>**/ThreeBrokerVirtualTopicNetworkAMQPATest.*</exclude>
                               <exclude>**/ConcurrentProducerDurableConsumerTest.*</exclude>  <!-- AIX only -->
                               <exclude>**/ConcurrentProducerQueueConsumerTest.*</exclude>    <!-- AIX only -->
-                              <exclude>**/mLevelDBXARecoveryBrokerTest.*</exclude>
-                              <exclude>**/StoreQueueCursorLevelDBNoDuplicateTest.*</exclude>
-                              <exclude>**/LevelDBStoreBrokerTest.*</exclude>
-                              <exclude>**/LevelDBDurableTopicTest.*</exclude>
-                              <exclude>**/LevelDBStoreQueueTest.*</exclude>
-                              <exclude>**/LevelDBNegativeQueueTest.*</exclude>
-                              <exclude>**/LevelDBStoreBrokerTest.*</exclude>
-                              <exclude>**/LevelDBStorePerDestinationTest.*</exclude>
-                              <exclude>**/QueueBrowsingLevelDBTest.*</exclude>
-                              <exclude>**/SingleBrokerVirtualDestinationsWithWildcardLevelDBTest.*</exclude>
-                              <exclude>**/ThreeBrokerVirtualTopicNetworkLevelDBTest.*</exclude>
                           </excludes>
                       </configuration>
                   </plugin>
@@ -1209,25 +1172,10 @@
                           <excludes combine.children="append">
                               <exclude>**/QueueMasterSlaveSingleUrlTest.*</exclude>
                               <exclude>**/AMQ2149Test.*</exclude>
-                              <exclude>**/AMQ2149LevelDBTest.*</exclude>
                               <exclude>**/AMQ2584Test.*</exclude>
                               <exclude>**/ExpiredMessagesTest.*</exclude>
-                              <exclude>**/LevelDBDurableSubscriptionTest.*</exclude>
-                              <exclude>**/LevelDBXARecoveryBrokerTest.*</exclude>
                               <exclude>**/ManagedDurableSubscriptionTest.*</exclude>
-                              <exclude>**/SparseAckReplayAfterStoreCleanupLevelDBStoreTest.*</exclude>
                               <exclude>**/ThreeBrokerVirtualTopicNetworkAMQPATest.*</exclude>
-                              <exclude>**/mLevelDBXARecoveryBrokerTest.*</exclude>
-                              <exclude>**/StoreQueueCursorLevelDBNoDuplicateTest.*</exclude>
-                              <exclude>**/LevelDBStoreBrokerTest.*</exclude>
-                              <exclude>**/LevelDBDurableTopicTest.*</exclude>
-                              <exclude>**/LevelDBStoreQueueTest.*</exclude>
-                              <exclude>**/LevelDBNegativeQueueTest.*</exclude>
-                              <exclude>**/LevelDBStoreBrokerTest.*</exclude>
-                              <exclude>**/LevelDBStorePerDestinationTest.*</exclude>
-                              <exclude>**/QueueBrowsingLevelDBTest.*</exclude>
-                              <exclude>**/SingleBrokerVirtualDestinationsWithWildcardLevelDBTest.*</exclude>
-                              <exclude>**/ThreeBrokerVirtualTopicNetworkLevelDBTest.*</exclude>
                               <!-- These are performance tests and take too long to run -->
                               <exclude>**/perf/*</exclude>
                               <!-- These are load tests and take too long to run -->
@@ -1253,25 +1201,10 @@
                           <excludes combine.children="append">
                               <exclude>**/QueueMasterSlaveSingleUrlTest.*</exclude>
                               <exclude>**/AMQ2149Test.*</exclude>
-                              <exclude>**/AMQ2149LevelDBTest.*</exclude>
                               <exclude>**/AMQ2584Test.*</exclude>
                               <exclude>**/ExpiredMessagesTest.*</exclude>
-                              <exclude>**/LevelDBDurableSubscriptionTest.*</exclude>
-                              <exclude>**/LevelDBXARecoveryBrokerTest.*</exclude>
                               <exclude>**/ManagedDurableSubscriptionTest.*</exclude>
-                              <exclude>**/SparseAckReplayAfterStoreCleanupLevelDBStoreTest.*</exclude>
                               <exclude>**/ThreeBrokerVirtualTopicNetworkAMQPATest.*</exclude>
-                              <exclude>**/mLevelDBXARecoveryBrokerTest.*</exclude>
-                              <exclude>**/StoreQueueCursorLevelDBNoDuplicateTest.*</exclude>
-                              <exclude>**/LevelDBStoreBrokerTest.*</exclude>
-                              <exclude>**/LevelDBDurableTopicTest.*</exclude>
-                              <exclude>**/LevelDBStoreQueueTest.*</exclude>
-                              <exclude>**/LevelDBNegativeQueueTest.*</exclude>
-                              <exclude>**/LevelDBStoreBrokerTest.*</exclude>
-                              <exclude>**/LevelDBStorePerDestinationTest.*</exclude>
-                              <exclude>**/QueueBrowsingLevelDBTest.*</exclude>
-                              <exclude>**/SingleBrokerVirtualDestinationsWithWildcardLevelDBTest.*</exclude>
-                              <exclude>**/ThreeBrokerVirtualTopicNetworkLevelDBTest.*</exclude>
                               <!-- These are performance tests and take too long to run -->
                               <exclude>**/perf/*</exclude>
                               <!-- These are load tests and take too long to run -->

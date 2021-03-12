@@ -167,7 +167,7 @@ public class FailoverTransactionTest extends TestSupport {
         String osName = System.getProperty("os.name");
         Object[] persistenceAdapters;
         if (!osName.equalsIgnoreCase("AIX") && !osName.equalsIgnoreCase("SunOS")) {
-            persistenceAdapters = new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC};
+            persistenceAdapters = new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC};
         } else {
             persistenceAdapters = new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC};
         }
@@ -375,7 +375,7 @@ public class FailoverTransactionTest extends TestSupport {
         addCombinationValues("defaultPersistenceAdapter",
             new Object[]{PersistenceAdapterChoice.KahaDB,
                     PersistenceAdapterChoice.JDBC
-                    // not implemented for AMQ store or PersistenceAdapterChoice.LevelDB
+                    // not implemented for AMQ store
             });
     }
 
@@ -482,7 +482,6 @@ public class FailoverTransactionTest extends TestSupport {
             new Object[]{PersistenceAdapterChoice.KahaDB,
                     PersistenceAdapterChoice.JDBC
                     // last producer message id store feature not implemented for AMQ store
-                    // or PersistenceAdapterChoice.LevelDB
             });
     }
 

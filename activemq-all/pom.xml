@@ -60,10 +60,6 @@
       <artifactId>activemq-jdbc-store</artifactId>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-leveldb-store</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-annotation_1.0_spec</artifactId>
     </dependency>
@@ -109,7 +105,6 @@
                   <include>${project.groupId}:activemq-mqtt</include>
                   <include>${project.groupId}:activemq-stomp</include>
                   <include>${project.groupId}:activemq-kahadb-store</include>
-                  <include>${project.groupId}:activemq-leveldb-store</include>
                   <include>${project.groupId}:activemq-jdbc-store</include>
                   <include>org.apache.activemq.protobuf:activemq-protobuf</include>
                   <include>org.fusesource.hawtbuf:hawtbuf</include>
@@ -310,13 +305,6 @@
         <dependency>
           <groupId>${project.groupId}</groupId>
           <artifactId>activemq-jdbc-store</artifactId>
-          <version>${project.version}</version>
-          <classifier>sources</classifier>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>${project.groupId}</groupId>
-          <artifactId>activemq-leveldb-store</artifactId>
           <version>${project.version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>

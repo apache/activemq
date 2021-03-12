@@ -95,15 +95,7 @@ public class BrokerXmlConfigStartTest {
         LOG.info("Broker config: " + configUrl);
         System.err.println("Broker config: " + configUrl);
         broker = BrokerFactory.createBroker(configUrl);
-        if ("activemq-leveldb-replicating.xml".equals(shortName)) {
-            try {
-                broker.start();
-            } catch (TimeoutException expectedWithNoZk) {
-                return;
-            }
-        } else {
-            broker.start();
-        }
+        broker.start();
         // alive, now try connect to connect
         try {
             for (TransportConnector transport : broker.getTransportConnectors()) {

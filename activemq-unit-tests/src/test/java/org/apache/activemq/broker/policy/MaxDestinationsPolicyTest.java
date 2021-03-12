@@ -19,6 +19,7 @@ package org.apache.activemq.broker.policy;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -39,7 +40,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
 
 /**
  * This unit test is to test that setting the property "maxDestinations" on
@@ -242,7 +242,9 @@ public class MaxDestinationsPolicyTest {
         PolicyEntry entry = new PolicyEntry();
         entry.setDestination(destination);
         entry.setMaxDestinations(maxDestinations);
-        policyMap.setPolicyEntries(Lists.newArrayList(entry));
+        ArrayList<PolicyEntry> policyEntries = new ArrayList<>();
+        policyEntries.add(entry);
+        policyMap.setPolicyEntries(policyEntries);
         broker.setDestinationPolicy(policyMap);
         return policyMap;
     }
