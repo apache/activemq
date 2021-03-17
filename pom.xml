@@ -109,7 +109,7 @@
     <snappy-version>1.1.2</snappy-version>
     <spring-version>4.3.30.RELEASE</spring-version>
     <taglibs-version>1.2.5</taglibs-version>
-    <velocity-version>2.2</velocity-version>
+    <velocity-version>2.3</velocity-version>
     <xalan-version>2.7.2</xalan-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.15</xstream-version>
