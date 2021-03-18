@@ -148,6 +148,9 @@
         <include>org.fusesource.hawtbuf:hawtbuf</include>
         <include>javax.xml.bind:jaxb-api</include>
         <include>org.glassfish.jaxb:jaxb-runtime</include>
+        <include>org.glassfish.jaxb:jaxb-core</include>
+        <include>com.sun.istack:istack-commons-runtime</include>
+        <include>javax.activation:javax.activation-api</include>
       </includes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
