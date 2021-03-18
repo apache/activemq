@@ -58,7 +58,7 @@
     <commons-logging-version>1.2</commons-logging-version>
     <commons-pool2-version>2.9.0</commons-pool2-version>
     <commons-primitives-version>1.0</commons-primitives-version>
-    <commons-net-version>3.7.2</commons-net-version>
+    <commons-net-version>3.8.0</commons-net-version>
     <directory-version>2.0.0.AM25</directory-version>
     <ecj.version>3.17.0</ecj.version>
     <ftpserver-version>1.1.1</ftpserver-version>
