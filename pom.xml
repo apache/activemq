@@ -208,7 +208,6 @@
   </distributionManagement>
 
   <modules>
-    <module>activemq-openwire-generator</module>
     <module>activemq-client</module>
     <module>activemq-openwire-legacy</module>
     <module>activemq-broker</module>
@@ -439,11 +438,6 @@
         <version>${activeio-version}</version>
         <type>test-jar</type>
         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-openwire-generator</artifactId>
-        <version>${project.version}</version>
       </dependency>
      <dependency>
         <groupId>org.apache.activemq</groupId>

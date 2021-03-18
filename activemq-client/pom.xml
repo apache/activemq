@@ -298,41 +298,6 @@
   </build>
 
   <profiles>
-    <!-- Execute with: mvn -P openwire-generate antrun:run -->
-    <profile>
-      <id>openwire-generate</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>default</id>
-                <phase>generate-sources</phase>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <tasks>
-                <echo>Running OpenWire Generator</echo>
-                <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask" classpathref="maven.compile.classpath" />
-                <generate version="12" basedir="${basedir}" generateTests="false" />
-              </tasks>
-            </configuration>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.activemq</groupId>
-                    <artifactId>activemq-openwire-generator</artifactId>
-                    <version>${project.version}</version>
-                </dependency>
-            </dependencies>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
     <profile>
       <id>activemq.tests-sanity</id>
       <activation>
