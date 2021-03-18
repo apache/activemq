@@ -28,8 +28,9 @@ import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -80,6 +81,12 @@ public class HttpTransportServer extends WebTransportServerSupport {
         createServer();
         if (connector == null) {
             connector = socketConnectorFactory.createConnector(server);
+        }
+
+        for(ConnectionFactory cf  : connector.getConnectionFactories()) {
+            if(HttpConnectionFactory.class.isAssignableFrom(cf.getClass())) {
+                HttpConnectionFactory.class.cast(cf).getHttpConfiguration().setSendServerVersion(false);
+            }
         }
 
         URI boundTo = bind();
