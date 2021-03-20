@@ -626,7 +626,7 @@ public abstract class JmsConnector implements Service {
 
                 return;
             } catch(Exception e) {
-                LOG.debug("Failed to establish initial {} connection for JmsConnector [{}]", new Object[]{ (local ? "local" : "foreign"), attempt }, e);
+                LOG.debug("Failed to establish initial {} connection for JmsConnector [{}]", (local ? "local" : "foreign"), attempt, e);
             } finally {
                 attempt++;
             }

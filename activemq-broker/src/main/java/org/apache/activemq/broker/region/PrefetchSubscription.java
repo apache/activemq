@@ -731,7 +731,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         if (node != QueueMessageReference.NULL_MESSAGE) {
                             nodeDest.getDestinationStatistics().getDispatched().increment();
                             incrementPrefetchCounter(node);
-                            LOG.trace("{} failed to dispatch: {} - {}, dispatched: {}, inflight: {}", new Object[]{ info.getConsumerId(), message.getMessageId(), message.getDestination(), getSubscriptionStatistics().getDispatched().getCount(), dispatched.size() });
+                            LOG.trace("{} failed to dispatch: {} - {}, dispatched: {}, inflight: {}",
+                                    info.getConsumerId(), message.getMessageId(), message.getDestination(),
+                                    getSubscriptionStatistics().getDispatched().getCount(), dispatched.size());
                         }
                     }
                     if (node instanceof QueueMessageReference) {
@@ -753,7 +755,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             if (node != QueueMessageReference.NULL_MESSAGE) {
                 nodeDest.getDestinationStatistics().getDispatched().increment();
                 incrementPrefetchCounter(node);
-                LOG.trace("{} dispatched: {} - {}, dispatched: {}, inflight: {}", new Object[]{ info.getConsumerId(), message.getMessageId(), message.getDestination(), getSubscriptionStatistics().getDispatched().getCount(), dispatched.size() });
+                LOG.trace("{} dispatched: {} - {}, dispatched: {}, inflight: {}",
+                        info.getConsumerId(), message.getMessageId(), message.getDestination(),
+                        getSubscriptionStatistics().getDispatched().getCount(), dispatched.size());
             }
         }
 

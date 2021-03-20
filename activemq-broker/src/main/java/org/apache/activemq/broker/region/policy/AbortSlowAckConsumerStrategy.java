@@ -173,7 +173,10 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
                 slowConsumers.remove(entry.getKey());
             } else {
 
-                LOG.trace("Not yet time to abort consumer {}: slow duration = {}, slow count = {}", new Object[]{ entry.getKey().getConsumerInfo().getConsumerId(), entry.getValue().markCount * getCheckPeriod(), entry.getValue().slowCount });
+                LOG.trace("Not yet time to abort consumer {}: slow duration = {}, slow count = {}",
+                        entry.getKey().getConsumerInfo().getConsumerId(),
+                        entry.getValue().markCount * getCheckPeriod(),
+                        entry.getValue().slowCount);
 
             }
         }

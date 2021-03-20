@@ -237,7 +237,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                     currentContext.search(queueSearchBase, getFilterForPermissionType(permissionType),
                     constraints), DestinationType.QUEUE, permissionType);
             } catch (Exception e) {
-                LOG.error("Policy not applied!.  Error processing policy under '{}' with filter '{}'", new Object[]{ queueSearchBase, getFilterForPermissionType(permissionType) }, e);
+                LOG.error("Policy not applied!.  Error processing policy under '{}' with filter '{}'", queueSearchBase, getFilterForPermissionType(permissionType), e);
             }
         }
 
@@ -247,7 +247,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                     currentContext.search(topicSearchBase, getFilterForPermissionType(permissionType),
                     constraints), DestinationType.TOPIC, permissionType);
             } catch (Exception e) {
-                LOG.error("Policy not applied!.  Error processing policy under '{}' with filter '{}'", new Object[]{ topicSearchBase, getFilterForPermissionType(permissionType) }, e);
+                LOG.error("Policy not applied!.  Error processing policy under '{}' with filter '{}'", topicSearchBase, getFilterForPermissionType(permissionType), e);
             }
         }
 
@@ -257,7 +257,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                     currentContext.search(tempSearchBase, getFilterForPermissionType(permissionType),
                     constraints), DestinationType.TEMP, permissionType);
             } catch (Exception e) {
-                LOG.error("Policy not applied!.  Error processing policy under '{}' with filter '{}'", new Object[]{ tempSearchBase, getFilterForPermissionType(permissionType) }, e);
+                LOG.error("Policy not applied!.  Error processing policy under '{}' with filter '{}'", tempSearchBase, getFilterForPermissionType(permissionType), e);
             }
         }
 
@@ -405,7 +405,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                 try {
                     memberAttributes = context.getAttributes(memberDn, new String[] { "objectClass", groupNameAttribute, userNameAttribute });
                 } catch (NamingException e) {
-                    LOG.error("Policy not applied! Unknown member {} in policy entry {}", new Object[]{ memberDn, result.getNameInNamespace() }, e);
+                    LOG.error("Policy not applied! Unknown member {} in policy entry {}", memberDn, result.getNameInNamespace(), e);
                     continue;
                 }
 
@@ -419,7 +419,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                         group = true;
                         Attribute name = memberAttributes.get(groupNameAttribute);
                         if (name == null) {
-                            LOG.error("Policy not applied! Group {} does not have name attribute {} under entry {}", new Object[]{ memberDn, groupNameAttribute, result.getNameInNamespace() });
+                            LOG.error("Policy not applied! Group {} does not have name attribute {} under entry {}", memberDn, groupNameAttribute, result.getNameInNamespace());
                             break;
                         }
 
@@ -430,7 +430,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                         user = true;
                         Attribute name = memberAttributes.get(userNameAttribute);
                         if (name == null) {
-                            LOG.error("Policy not applied! User {} does not have name attribute {} under entry {}", new Object[]{ memberDn, userNameAttribute, result.getNameInNamespace() });
+                            LOG.error("Policy not applied! User {} does not have name attribute {} under entry {}", memberDn, userNameAttribute, result.getNameInNamespace());
                             break;
                         }
 
@@ -901,9 +901,9 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                 }
             }
         } catch (InvalidNameException e) {
-            LOG.error("Policy not applied!  Error parsing DN for object rename for rename of {} to {}", new Object[]{ oldBinding.getName(), newBinding.getName() }, e);
+            LOG.error("Policy not applied!  Error parsing DN for object rename for rename of {} to {}", oldBinding.getName(), newBinding.getName(), e);
         } catch (Exception e) {
-            LOG.error("Policy not applied!  Error processing object rename for rename of {} to {}", new Object[]{ oldBinding.getName(), newBinding.getName() }, e);
+            LOG.error("Policy not applied!  Error processing object rename for rename of {} to {}", oldBinding.getName(), newBinding.getName(), e);
         }
     }
 

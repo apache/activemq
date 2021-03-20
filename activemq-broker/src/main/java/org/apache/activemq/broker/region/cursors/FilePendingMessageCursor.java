@@ -31,7 +31,6 @@ import org.apache.activemq.broker.region.IndirectMessageReference;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.Message;
-import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.PList;
 import org.apache.activemq.store.PListEntry;
@@ -443,8 +442,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             long start = 0;
             if (LOG.isTraceEnabled()) {
                 start = System.currentTimeMillis();
-                LOG.trace("{}, flushToDisk() mem list size: {} {}", new Object[] { name, memoryList.size(),
-                    (systemUsage != null ? systemUsage.getMemoryUsage() : "") });
+                LOG.trace("{}, flushToDisk() mem list size: {} {}",
+                        name, memoryList.size(),
+                        (systemUsage != null ? systemUsage.getMemoryUsage() : ""));
             }
             for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
                 MessageReference node = iterator.next();
@@ -461,7 +461,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             }
             memoryList.clear();
             setCacheEnabled(false);
-            LOG.trace("{}, flushToDisk() done - {} ms {}", new Object[]{ name, (System.currentTimeMillis() - start), (systemUsage != null ? systemUsage.getMemoryUsage() : "") });
+            LOG.trace("{}, flushToDisk() done - {} ms {}",
+                    name,
+                    (System.currentTimeMillis() - start),
+                    (systemUsage != null ? systemUsage.getMemoryUsage() : ""));
         }
     }
 

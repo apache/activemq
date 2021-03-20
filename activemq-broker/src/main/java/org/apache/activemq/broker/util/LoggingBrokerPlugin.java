@@ -156,7 +156,8 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
         if (isLogAll() || isLogConsumerEvents()) {
             LOG.info("Acknowledging message for client ID: {}{}", consumerExchange.getConnectionContext().getClientId(), (ack.getMessageCount() == 1 ? ", " + ack.getLastMessageId() : ""));
             if (ack.getMessageCount() > 1) {
-                LOG.trace("Message count: {}, First Message Id: {}, Last Message Id: {}", new Object[]{ ack.getMessageCount(), ack.getFirstMessageId(), ack.getLastMessageId() });
+                LOG.trace("Message count: {}, First Message Id: {}, Last Message Id: {}",
+                        ack.getMessageCount(), ack.getFirstMessageId(), ack.getLastMessageId());
             }
         }
         super.acknowledge(consumerExchange, ack);
