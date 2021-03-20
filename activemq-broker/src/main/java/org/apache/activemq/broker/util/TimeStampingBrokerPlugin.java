@@ -125,7 +125,8 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
                     message.setExpiration(expiration);
                 }
                 message.setTimestamp(newTimeStamp);
-                LOG.debug("Set message {} timestamp from {} to {}", new Object[]{ message.getMessageId(), oldTimestamp, newTimeStamp });
+                LOG.debug("Set message {} timestamp from {} to {}",
+                        message.getMessageId(), oldTimestamp, newTimeStamp);
             }
         }
         super.send(producerExchange, message);

@@ -232,7 +232,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     }
                 }
             } catch (InterruptedException e) {
-                LOG.debug(getName() + "Producer Flow Control Timeout Task is stopping");
+                LOG.debug("{} Producer Flow Control Timeout Task is stopping", getName());
             }
         }
     }
@@ -302,7 +302,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         public boolean recoverMessage(Message message) {
             recoveredAccumulator++;
             if ((recoveredAccumulator % 10000) == 0) {
-                LOG.info("cursor for {} has recovered {} messages. {}% complete", new Object[]{ getActiveMQDestination().getQualifiedName(), recoveredAccumulator, new Integer((int) (recoveredAccumulator * 100 / totalMessageCount))});
+                LOG.info("cursor for {} has recovered {} messages. {}% complete",
+                        getActiveMQDestination().getQualifiedName(), recoveredAccumulator,
+                        new Integer((int) (recoveredAccumulator * 100 / totalMessageCount)));
             }
             // Message could have expired while it was being
             // loaded..
@@ -421,7 +423,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     @Override
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
-        LOG.debug("{} add sub: {}, dequeues: {}, dispatched: {}, inflight: {}", new Object[]{ getActiveMQDestination().getQualifiedName(), sub, getDestinationStatistics().getDequeues().getCount(), getDestinationStatistics().getDispatched().getCount(), getDestinationStatistics().getInflight().getCount() });
+        LOG.debug("{} add sub: {}, dequeues: {}, dispatched: {}, inflight: {}",
+                getActiveMQDestination().getQualifiedName(),
+                sub,
+                getDestinationStatistics().getDequeues().getCount(),
+                getDestinationStatistics().getDispatched().getCount(),
+                getDestinationStatistics().getInflight().getCount());
 
         super.addSubscription(context, sub);
         // synchronize with dispatch method so that no new messages are sent
@@ -1234,7 +1241,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             messagesLock.readLock().unlock();
         }
 
-        LOG.trace("max {}, alreadyPagedIn {}, messagesCount {}, memoryUsage {}%", new Object[]{max, alreadyPagedIn, messagesInQueue, memoryUsage.getPercentUsage()});
+        LOG.trace("max {}, alreadyPagedIn {}, messagesCount {}, memoryUsage {}%",
+                max, alreadyPagedIn, messagesInQueue, memoryUsage.getPercentUsage());
         return (alreadyPagedIn == 0 || (alreadyPagedIn < max)
                 && (alreadyPagedIn < messagesInQueue)
                 && messages.hasSpace());
@@ -1951,7 +1959,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }finally {
             consumersLock.readLock().unlock();
         }
-        LOG.debug("{} Message {} sent to {}", new Object[]{ broker.getBrokerName(), msg.getMessageId(), this.destination });
+        LOG.debug("{} Message {} sent to {}",broker.getBrokerName(), msg.getMessageId(), this.destination);
         wakeup();
     }
 
@@ -2023,18 +2031,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("{} toPageIn: {}, force:{}, Inflight: {}, pagedInMessages.size {}, pagedInPendingDispatch.size {}, enqueueCount: {}, dequeueCount: {}, memUsage:{}, maxPageSize:{}",
-                    new Object[]{
-                            this,
-                            toPageIn,
-                            force,
-                            destinationStatistics.getInflight().getCount(),
-                            pagedInMessages.size(),
-                            pagedInPendingSize,
-                            destinationStatistics.getEnqueues().getCount(),
-                            destinationStatistics.getDequeues().getCount(),
-                            getMemoryUsage().getUsage(),
-                            maxPageSize
-                    });
+                    this,
+                    toPageIn,
+                    force,
+                    destinationStatistics.getInflight().getCount(),
+                    pagedInMessages.size(),
+                    pagedInPendingSize,
+                    destinationStatistics.getEnqueues().getCount(),
+                    destinationStatistics.getDequeues().getCount(),
+                    getMemoryUsage().getUsage(),
+                    maxPageSize);
         }
 
         if (toPageIn > 0 && (force || (haveRealConsumer() && pagedInPendingSize < maxPageSize))) {

@@ -238,9 +238,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (!stopping.get() && status.get() != PENDING_STOP) {
             transportException.set(e);
             if (TRANSPORTLOG.isDebugEnabled()) {
-                TRANSPORTLOG.debug(this + " failed: " + e, e);
+                TRANSPORTLOG.debug("{} failed: {}", this, e.getMessage(), e);
             } else if (TRANSPORTLOG.isWarnEnabled() && !suppressed(e)) {
-                TRANSPORTLOG.warn(this + " failed: " + e);
+                TRANSPORTLOG.warn("{} failed", this, e);
             }
             stopAsync(e);
         }
@@ -303,9 +303,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             inServiceException = true;
             try {
                 if (SERVICELOG.isDebugEnabled()) {
-                    SERVICELOG.debug("Async error occurred: " + e, e);
+                    SERVICELOG.debug("Async error occurred: {}", e.getMessage(), e);
                 } else {
-                    SERVICELOG.warn("Async error occurred: " + e);
+                    SERVICELOG.warn("Async error occurred", e);
                 }
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
@@ -334,12 +334,15 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
         } catch (Throwable e) {
             if (SERVICELOG.isDebugEnabled() && e.getClass() != BrokerStoppedException.class) {
-                SERVICELOG.debug("Error occured while processing " + (responseRequired ? "sync" : "async")
-                        + " command: " + command + ", exception: " + e, e);
+                SERVICELOG.debug("Error occurred while processing {} command: {}, exception: {}",
+                        (responseRequired ? "sync" : "async"),
+                        command,
+                        e.getMessage(),
+                        e);
             }
 
             if (e instanceof SuppressReplyException || (e.getCause() instanceof SuppressReplyException)) {
-                LOG.info("Suppressing reply to: " + command + " on: " + e + ", cause: " + e.getCause());
+                LOG.info("Suppressing reply to: {} on: {}, cause: {}", command, e, e.getCause());
                 responseRequired = false;
             }
 
@@ -377,7 +380,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (brokerService.isRollbackOnlyOnAsyncException() && !(e instanceof IOException) && isInTransaction(command)) {
             Transaction transaction = getActiveTransaction(command);
             if (transaction != null && !transaction.isRollbackOnly()) {
-                LOG.debug("on async exception, force rollback of transaction for: " + command, e);
+                LOG.debug("on async exception, force rollback of transaction for: {}", command, e);
                 transaction.setRollbackOnly(e);
             }
         }
@@ -399,7 +402,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
             }
         } catch(Exception ignored){
-            LOG.trace("failed to find active transaction for command: " + command, ignored);
+            LOG.trace("failed to find active transaction for command: {}", command, ignored);
         }
         return transaction;
     }
@@ -814,7 +817,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
         }
         registerConnectionState(info.getConnectionId(), state);
-        LOG.debug("Setting up new connection id: {}, address: {}, info: {}", new Object[]{ info.getConnectionId(), getRemoteAddress(), info });
+        LOG.debug("Setting up new connection id: {}, address: {}, info: {}",
+                info.getConnectionId(), getRemoteAddress(), info);
         this.faultTolerantConnection = info.isFaultTolerant();
         // Setup the context.
         String clientId = info.getClientId();
@@ -847,7 +851,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 brokerConnectionStates.remove(info.getConnectionId());
             }
             unregisterConnectionState(info.getConnectionId());
-            LOG.warn("Failed to add Connection id={}, clientId={}, clientIP={} due to {}", info.getConnectionId(), clientId, info.getClientIp(), e.getLocalizedMessage());
+            LOG.warn("Failed to add Connection id={}, clientId={}, clientIP={} due to {}",
+                    info.getConnectionId(), clientId, info.getClientIp(), e.getLocalizedMessage());
             //AMQ-6561 - stop for all exceptions on addConnection
             // close this down - in case the peer of this transport doesn't play nice
             delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage(), e);
@@ -982,7 +987,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 throw e;
             } else {
                 if (TRANSPORTLOG.isDebugEnabled()) {
-                    TRANSPORTLOG.debug("Unexpected exception on asyncDispatch, command of type: " + command.getDataStructureType(), e);
+                    TRANSPORTLOG.debug("Unexpected exception on asyncDispatch, command of type: {}",
+                            command.getDataStructureType(), e);
                 }
             }
         } finally {

@@ -110,7 +110,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
                     slowConsumers.remove(entry.getKey());
                 }
             } else {
-                LOG.info("sub: " + entry.getKey().getConsumerInfo().getConsumerId() + " is no longer slow");
+                LOG.info("sub: {} is no longer slow", entry.getKey().getConsumerInfo().getConsumerId());
                 slowConsumers.remove(entry.getKey());
             }
         }
@@ -130,7 +130,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
 
             Connection connection = connectionContext.getConnection();
             if (connection == null) {
-                LOG.debug("slowConsumer abort ignored, no connection in context:"  + connectionContext);
+                LOG.debug("slowConsumer abort ignored, no connection in context: {}", connectionContext);
             }
 
             if (!abortMap.containsKey(connection)) {
@@ -152,9 +152,9 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
                 if (LOG.isTraceEnabled()) {
                     for (Subscription subscription : subscriptions) {
                         LOG.trace("Connection {} being aborted because of slow consumer: {} on destination: {}",
-                                  new Object[] { connection.getConnectionId(),
-                                                 subscription.getConsumerInfo().getConsumerId(),
-                                                 subscription.getActiveMQDestination() });
+                                connection.getConnectionId(),
+                                subscription.getConsumerInfo().getConsumerId(),
+                                subscription.getActiveMQDestination());
                     }
                 }
 
@@ -224,7 +224,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
                 toAbort.put(sub, entry);
                 abortSubscription(toAbort, abortSubscriberConnection);
             } else {
-                LOG.warn("cannot abort subscription as it no longer exists in the map of slow consumers: " + sub);
+                LOG.warn("cannot abort subscription as it no longer exists in the map of slow consumers: {}", sub);
             }
         }
     }
