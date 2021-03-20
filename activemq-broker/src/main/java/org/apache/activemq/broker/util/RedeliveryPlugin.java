@@ -170,9 +170,8 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
     private void scheduleRedelivery(ConnectionContext context, MessageReference messageReference, long delay, int redeliveryCount) throws Exception {
         if (LOG.isTraceEnabled()) {
             Destination regionDestination = (Destination) messageReference.getRegionDestination();
-            LOG.trace("redelivery #{} of: {} with delay: {}, dest: {}", new Object[]{
-                    redeliveryCount, messageReference.getMessageId(), delay, regionDestination.getActiveMQDestination()
-            });
+            LOG.trace("redelivery #{} of: {} with delay: {}, dest: {}",
+                    redeliveryCount, messageReference.getMessageId(), delay, regionDestination.getActiveMQDestination());
         }
         final Message old = messageReference.getMessage();
         Message message = old.copy();

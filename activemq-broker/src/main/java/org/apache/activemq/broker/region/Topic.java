@@ -877,10 +877,11 @@ public class Topic extends BaseDestination implements Task {
             try {
                 durableTopicSubscription.dispatchPending();
             } catch (IOException exception) {
-                LOG.warn("After clear of pending, failed to dispatch to: {}, for: {}, pending: {}, exception: {}", new Object[]{
+                LOG.warn("After clear of pending, failed to dispatch to: {}, for: {}, pending: {}, exception: {}",
                         durableTopicSubscription,
                         destination,
-                        durableTopicSubscription.pending, exception });
+                        durableTopicSubscription.pending,
+                        exception);
             }
         }
     }

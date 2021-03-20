@@ -284,7 +284,7 @@ public class BrokerService implements Service {
             } else {
                 ret = Security.addProvider(bouncycastle);
             }
-            LOG.info("Loaded the Bouncy Castle security provider at position: " + ret);
+            LOG.info("Loaded the Bouncy Castle security provider at position: {}", ret);
         } catch(Throwable e) {
             // No BouncyCastle found so we use the default Java Security Provider
         }
@@ -306,7 +306,7 @@ public class BrokerService implements Service {
                 }
             }
         } catch (IOException ie) {
-            LOG.warn("Error reading broker version ", ie);
+            LOG.warn("Error reading broker version", ie);
         }
         BROKER_VERSION = version;
     }
@@ -648,7 +648,7 @@ public class BrokerService implements Service {
                     stop();
                 }
             } catch (Exception ex) {
-                LOG.warn("Failed to stop broker after failure in start. This exception will be ignored.", ex);
+                LOG.warn("Failed to stop broker after failure in start. This exception will be ignored", ex);
             }
             throw e;
         } finally {
@@ -749,7 +749,7 @@ public class BrokerService implements Service {
         brokerId = broker.getBrokerId();
 
         // need to log this after creating the broker so we have its id and name
-        LOG.info("Apache ActiveMQ {} ({}, {}) is starting", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId });
+        LOG.info("Apache ActiveMQ {} ({}, {}) is starting", getBrokerVersion(), getBrokerName(), brokerId);
         broker.start();
 
         if (isUseJmx()) {
@@ -776,7 +776,7 @@ public class BrokerService implements Service {
 
         startAllConnectors();
 
-        LOG.info("Apache ActiveMQ {} ({}, {}) started", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId});
+        LOG.info("Apache ActiveMQ {} ({}, {}) started", getBrokerVersion(), getBrokerName(), brokerId);
         LOG.info("For help or more information please see: http://activemq.apache.org");
 
         getBroker().brokerServiceStarted();
@@ -839,7 +839,7 @@ public class BrokerService implements Service {
             }.start();
         }
 
-        LOG.info("Apache ActiveMQ {} ({}, {}) is shutting down", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId} );
+        LOG.info("Apache ActiveMQ {} ({}, {}) is shutting down", getBrokerVersion(), getBrokerName(), brokerId);
 
         removeShutdownHook();
         if (this.scheduler != null) {
@@ -899,9 +899,9 @@ public class BrokerService implements Service {
         this.destinationFactory = null;
 
         if (startDate != null) {
-            LOG.info("Apache ActiveMQ {} ({}, {}) uptime {}", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId, getUptime()});
+            LOG.info("Apache ActiveMQ {} ({}, {}) uptime {}", getBrokerVersion(), getBrokerName(), brokerId, getUptime());
         }
-        LOG.info("Apache ActiveMQ {} ({}, {}) is shutdown", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId});
+        LOG.info("Apache ActiveMQ {} ({}, {}) is shutdown", getBrokerVersion(), getBrokerName(), brokerId);
 
         synchronized (shutdownHooks) {
             for (Runnable hook : shutdownHooks) {
@@ -963,9 +963,8 @@ public class BrokerService implements Service {
             if (pollInterval <= 0) {
                 pollInterval = 30;
             }
-            LOG.info("Stop gracefully with connectorName: {} queueName: {} timeout: {} pollInterval: {}", new Object[]{
-                    connectorName, queueName, timeout, pollInterval
-            });
+            LOG.info("Stop gracefully with connectorName: {} queueName: {} timeout: {} pollInterval: {}",
+                    connectorName, queueName, timeout, pollInterval);
             TransportConnector connector;
             for (int i = 0; i < transportConnectors.size(); i++) {
                 connector = transportConnectors.get(i);
@@ -2050,10 +2049,8 @@ public class BrokerService implements Service {
             }
 
             if (storeLimit > 0 && storeLimit < maxJournalFileSize) {
-                LOG.error("Store limit is " + storeLimit / (1024 * 1024) +
-                          " mb, whilst the max journal file size for the store is: " +
-                          maxJournalFileSize / (1024 * 1024) + " mb, " +
-                          "the store will not accept any data when used.");
+                LOG.error("Store limit is {} mb, whilst the max journal file size for the store is {} mb, the store will not accept any data when used.",
+                        (storeLimit / (1024 * 1024)), (maxJournalFileSize / (1024 * 1024)));
 
             }
         }
@@ -2083,10 +2080,8 @@ public class BrokerService implements Service {
                 long storeLimit = usage.getTempUsage().getLimit();
 
                 if (storeLimit > 0 && storeLimit < maxJournalFileSize) {
-                    LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
-                              " mb, whilst the max journal file size for the temporary store is: " +
-                              maxJournalFileSize / (1024 * 1024) + " mb, " +
-                              "the temp store will not accept any data when used.");
+                    LOG.error("Temporary Store limit {} mb, whilst the max journal file size for the temporary store is {} mb, the temp store will not accept any data when used.",
+                            (storeLimit / (1024 * 1024)), (maxJournalFileSize / (1024 * 1024)));
                 }
             }
         }
@@ -2101,8 +2096,8 @@ public class BrokerService implements Service {
             long totalSpace = storeUsage.getTotal() > 0 ? storeUsage.getTotal() : dir.getTotalSpace();
             long totalUsableSpace = (storeUsage.getTotal() > 0 ? storeUsage.getTotal() : dir.getUsableSpace()) + storeCurrent;
             if (totalUsableSpace < 0 || totalSpace < 0) {
+                LOG.error("File system space reported by {} was negative, possibly a huge file system, set a sane usage.total to provide some guidance", dir);
                 final String message = "File system space reported by: " + dir + " was negative, possibly a huge file system, set a sane usage.total to provide some guidance";
-                LOG.error(message);
                 throw new ConfigurationException(message);
             }
             //compute byte value of the percent limit
@@ -2123,11 +2118,11 @@ public class BrokerService implements Service {
 
                 //To prevent changing too often, check threshold
                 if (newLimit - storeLimit >= diskUsageCheckRegrowThreshold) {
-                    LOG.info("Usable disk space has been increased, attempting to regrow " + storeName + " limit to "
-                            + percentLimit + "% of the partition size.");
+                    LOG.info("Usable disk space has been increased, attempting to regrow {} limit to {}% of the parition size",
+                            storeName, percentLimit);
                     storeUsage.setLimit(newLimit);
-                    LOG.info(storeName + " limit has been increased to " + newLimit * 100 / totalSpace
-                            + "% (" + newLimit / oneMeg + " mb) of the partition size.");
+                    LOG.info("{} limit has been increase to {}% ({} mb) of the partition size.",
+                            (newLimit * 100 / totalSpace), (newLimit / oneMeg));
                 }
 
             //check if the limit is too large for the amount of usable space
@@ -2144,16 +2139,17 @@ public class BrokerService implements Service {
                 }
 
                 if (percentLimit > 0) {
-                    LOG.warn(storeName + " limit has been set to "
-                            + percentLimit + "% (" + bytePercentLimit / oneMeg + " mb)"
-                            + " of the partition size but there is not enough usable space."
-                            + " The current store limit (which may have been adjusted by a"
-                            + " previous usage limit check) is set to (" + storeLimit / oneMeg + " mb)"
-                            + " but only " + totalUsableSpace * 100 / totalSpace + "% (" + totalUsableSpace / oneMeg + " mb)"
-                            + " is available - resetting limit");
+                    LOG.warn("{} limit has been set to {}% ({} mb) of the partition size but there is not enough usable space." +
+                            "The current store limit (which may have been adjusted by a previous usage limit check) is set to ({} mb) " +
+                            "but only {}% ({} mb) is available - resetting limit",
+                            storeName,
+                            percentLimit,
+                            (bytePercentLimit / oneMeg),
+                            (storeLimit / oneMeg),
+                            (totalUsableSpace * 100 / totalSpace),
+                            (totalUsableSpace / oneMeg));
                 } else {
-                    LOG.warn(message + " - resetting to maximum available disk space: " +
-                            totalUsableSpace / oneMeg + " mb");
+                    LOG.warn("{} - resetting to maximum available disk space: {} mb", message, (totalUsableSpace / oneMeg));
                 }
                 storeUsage.setLimit(totalUsableSpace);
             }
@@ -2199,7 +2195,8 @@ public class BrokerService implements Service {
 
             if (adjustUsageLimits) {
                 usage.getMemoryUsage().setPercentOfJvmHeap(70);
-                LOG.warn(message + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
+                LOG.warn("{} mb - resetting to 70% of maximum available: {}",
+                        message, (usage.getMemoryUsage().getLimit() / (1024 * 1024)));
             } else {
                 LOG.error(message);
                 throw new ConfigurationException(message);
@@ -2233,10 +2230,12 @@ public class BrokerService implements Service {
                 long schedulerLimit = usage.getJobSchedulerUsage().getLimit();
                 long dirFreeSpace = schedulerDir.getUsableSpace();
                 if (schedulerLimit > dirFreeSpace) {
-                    LOG.warn("Job Scheduler Store limit is " + schedulerLimit / (1024 * 1024) +
-                             " mb, whilst the data directory: " + schedulerDir.getAbsolutePath() +
-                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to " +
-                            dirFreeSpace / (1024 * 1024) + " mb.");
+                    LOG.warn("Job Scheduler Store limit is {} mb, whilst the data directory: {} " +
+                            "only has {} mb of usage space - resetting to {} mb.",
+                            schedulerLimit / (1024 * 1024),
+                            schedulerDir.getAbsolutePath(),
+                            dirFreeSpace / (1024 * 1024),
+                            dirFreeSpace / (1042 * 1024));
                     usage.getJobSchedulerUsage().setLimit(dirFreeSpace);
                 }
             }
@@ -2328,7 +2327,7 @@ public class BrokerService implements Service {
                 ObjectName objectName = createNetworkConnectorObjectName(connector);
                 getManagementContext().unregisterMBean(objectName);
             } catch (Exception e) {
-                LOG.warn("Network Connector could not be unregistered from JMX due " + e.getMessage() + ". This exception is ignored.", e);
+                LOG.warn("Network Connector could not be unregistered from JMX due {}. This exception is ignored.", e.getMessage(), e);
             }
         }
     }
@@ -2412,7 +2411,7 @@ public class BrokerService implements Service {
                 regionBroker = new ManagedRegionBroker(this, getManagementContext(), getBrokerObjectName(),
                     getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory, destinationInterceptor,getScheduler(),getExecutor());
             } catch(MalformedObjectNameException me){
-                LOG.warn("Cannot create ManagedRegionBroker due " + me.getMessage(), me);
+                LOG.warn("Cannot create ManagedRegionBroker due {}", me.getMessage(), me);
                 throw new IOException(me);
             }
         } else {
@@ -2603,7 +2602,7 @@ public class BrokerService implements Service {
 
     protected void logError(String message, Throwable e) {
         if (useLoggingForShutdownErrors) {
-            LOG.error("Failed to shut down: " + e);
+            LOG.error("Failed to shut down", e);
         } else {
             System.err.println("Failed to shut down: " + e);
         }

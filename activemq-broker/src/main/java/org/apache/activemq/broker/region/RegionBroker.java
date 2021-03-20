@@ -577,7 +577,8 @@ public class RegionBroker extends EmptyBroker {
             brokerInfos.put(info.getBrokerId(), existing);
         }
         existing.incrementRefCount();
-        LOG.debug("{} addBroker: {} brokerInfo size: {}", new Object[]{ getBrokerName(), info.getBrokerName(), brokerInfos.size() });
+        LOG.debug("{} addBroker: {} brokerInfo size: {}",
+                getBrokerName(), info.getBrokerName(), brokerInfos.size());
         addBrokerInClusterUpdate(info);
     }
 
@@ -588,7 +589,8 @@ public class RegionBroker extends EmptyBroker {
             if (existing != null && existing.decrementRefCount() == 0) {
                 brokerInfos.remove(info.getBrokerId());
             }
-            LOG.debug("{} removeBroker: {} brokerInfo size: {}", new Object[]{ getBrokerName(), info.getBrokerName(), brokerInfos.size()});
+            LOG.debug("{} removeBroker: {} brokerInfo size: {}",
+                    getBrokerName(), info.getBrokerName(), brokerInfos.size());
             // When stopping don't send cluster updates since we are the one's tearing down
             // our own bridges.
             if (!brokerService.isStopping()) {

@@ -114,7 +114,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             try {
                 connectUri = URISupport.applyParameters(connectUri, parameters, DISCOVERED_OPTION_PREFIX);
             } catch (URISyntaxException e) {
-                LOG.warn("could not apply query parameters: {} to: {}", new Object[]{ parameters, connectUri }, e);
+                LOG.warn("could not apply query parameters: {} to: {}",parameters, connectUri, e);
             }
 
             LOG.info("Establishing network connection from {} to {}", localURI, connectUri);
@@ -162,7 +162,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
-                LOG.warn("Could not start network bridge between: {} and: {} due to: {}", new Object[]{ localURI, uri, e.getMessage() });
+                LOG.warn("Could not start network bridge between: {} and: {} due to: {}", localURI, uri, e.getMessage());
                 LOG.debug("Start failure exception: ", e);
                 try {
                     // Will remove bridge and active event.

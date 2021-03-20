@@ -109,7 +109,8 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
                 if (match) {
                     LOG.trace("Replaying [{}] for [{}] back to origin in the absence of a local consumer", message.getMessageId(), message.getDestination());
                 } else {
-                    LOG.trace("Suppressing replay of [{}] for [{}] back to origin {}", new Object[]{ message.getMessageId(), message.getDestination(), Arrays.asList(message.getBrokerPath())} );
+                    LOG.trace("Suppressing replay of [{}] for [{}] back to origin {}",
+                            message.getMessageId(), message.getDestination(), Arrays.asList(message.getBrokerPath()));
                 }
 
             } else {
@@ -118,9 +119,8 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
             }
 
             if (match && rateLimitExceeded()) {
-                LOG.trace("Throttled network consumer rejecting [{}] for [{}] {}>{}/{}", new Object[]{
-                        message.getMessageId(), message.getDestination(), matchCount, rateLimit, rateDuration
-                });
+                LOG.trace("Throttled network consumer rejecting [{}] for [{}] {}>{}/{}",
+                        message.getMessageId(), message.getDestination(), matchCount, rateLimit, rateDuration);
                 match = false;
             }
 
@@ -136,9 +136,8 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
             List<Subscription> consumers = regionDestination.getConsumers();
             for (Subscription sub : consumers) {
                 if (!sub.getConsumerInfo().isNetworkSubscription() && !sub.getConsumerInfo().isBrowser()) {
-                    LOG.trace("Not replaying [{}] for [{}] to origin due to existing local consumer: {}", new Object[]{
-                            message.getMessageId(), message.getDestination(), sub.getConsumerInfo()
-                    });
+                    LOG.trace("Not replaying [{}] for [{}] to origin due to existing local consumer: {}",
+                            message.getMessageId(), message.getDestination(), sub.getConsumerInfo());
                     return false;
                 }
             }

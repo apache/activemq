@@ -70,9 +70,8 @@ public class ConduitBridge extends DemandForwardingBridge {
         for (DemandSubscription ds : subscriptionMapByLocalId.values()) {
             DestinationFilter filter = DestinationFilter.parseFilter(ds.getLocalInfo().getDestination());
             if (canConduit(ds) && filter.matches(info.getDestination())) {
-                LOG.debug("{} {} with ids {} matched (add interest) {}", new Object[]{
-                        configuration.getBrokerName(), info, info.getNetworkConsumerIds(), ds
-                });
+                LOG.debug("{} {} with ids {} matched (add interest) {}",
+                        configuration.getBrokerName(), info, info.getNetworkConsumerIds(), ds);
                 // add the interest in the subscription
                 if (!info.isDurable()) {
                     ds.add(info.getConsumerId());
@@ -118,9 +117,8 @@ public class ConduitBridge extends DemandForwardingBridge {
 
         for (DemandSubscription ds : subscriptionMapByLocalId.values()) {
             if (ds.remove(id)) {
-                LOG.debug("{} on {} from {} removed interest for: {} from {}", new Object[]{
-                        configuration.getBrokerName(), localBroker, remoteBrokerName, id, ds
-                });
+                LOG.debug("{} on {} from {} removed interest for: {} from {}",
+                        configuration.getBrokerName(), localBroker, remoteBrokerName, id, ds);
             }
             if (ds.isEmpty()) {
                 tmpList.add(ds);
@@ -129,9 +127,8 @@ public class ConduitBridge extends DemandForwardingBridge {
 
         for (DemandSubscription ds : tmpList) {
             removeSubscription(ds);
-            LOG.debug("{} on {} from {} removed {}", new Object[]{
-                    configuration.getBrokerName(), localBroker, remoteBrokerName, ds
-            });
+            LOG.debug("{} on {} from {} removed {}",
+                    configuration.getBrokerName(), localBroker, remoteBrokerName, ds);
         }
     }
 }
