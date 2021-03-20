@@ -89,14 +89,14 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             @Override
             public void dispatchSync(Command message) {
                 if (message instanceof ExceptionResponse) {
-                    LOG.warn("Unexpected response: " + message);
+                    LOG.warn("Unexpected response: {}", message);
                 }
             }
 
             @Override
             public void dispatchAsync(Command command) {
                 if (command instanceof ExceptionResponse) {
-                    LOG.warn("Unexpected response: " + command);
+                    LOG.warn("Unexpected response: {}", command);
                 }
             }
 
@@ -107,7 +107,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
             @Override
             public void serviceException(Throwable error) {
-                LOG.warn("Unexpected exception: " + error, error);
+                LOG.warn("Unexpected exception", error);
             }
 
             @Override
@@ -152,7 +152,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
             @Override
             public void serviceExceptionAsync(IOException e) {
-                LOG.warn("Unexpected async ioexception: " + e, e);
+                LOG.warn("Unexpected async ioexception", e);
             }
 
             @Override
@@ -299,7 +299,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
                         long now = System.currentTimeMillis();
                         if (now >= nextWarn) {
-                            LOG.info("" + usage + ": " + logMessage + " (blocking for: " + (now - start) / 1000 + "s)");
+                            LOG.info("{}: {} (blocking for: {}s)", usage, logMessage, (now - start) / 1000);
                             nextWarn = now + 30000l;
                         }
                     }
@@ -405,7 +405,8 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                         messageSend.setExpiration(expiration);
                     }
                     messageSend.setTimestamp(newTimeStamp);
-                    LOG.debug("Set message {} timestamp from {} to {}", new Object[]{ messageSend.getMessageId(), oldTimestamp, newTimeStamp });
+                    LOG.debug("Set message {} timestamp from {} to {}",
+                            messageSend.getMessageId(), oldTimestamp, newTimeStamp);
                 }
             }
 

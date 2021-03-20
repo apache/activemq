@@ -290,14 +290,14 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     protected synchronized void addConnector(SearchResult result) throws Exception {
         String uuid = toUUID(result);
         if (uuidMap.containsKey(uuid)) {
-            LOG.warn("connector already regsitered for UUID [{}]", uuid);
+            LOG.warn("connector already registered for UUID [{}]", uuid);
             return;
         }
 
         URI connectorURI = toURI(result);
         if (connectorMap.containsKey(connectorURI)) {
             int referenceCount = referenceMap.get(connectorURI) + 1;
-            LOG.warn("connector reference added for URI [{}], UUID [{}], total reference(s) [{}]", new Object[]{ connectorURI, uuid, referenceCount });
+            LOG.warn("connector reference added for URI [{}], UUID [{}], total reference(s) [{}]",connectorURI, uuid, referenceCount);
             referenceMap.put(connectorURI, referenceCount);
             uuidMap.put(uuid, connectorURI);
             return;
@@ -357,7 +357,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         int referenceCount = referenceMap.get(connectorURI) - 1;
         referenceMap.put(connectorURI, referenceCount);
         uuidMap.remove(uuid);
-        LOG.debug("connector referenced removed for URI [{}], UUID[{}], remaining reference(s) [{}]", new Object[]{ connectorURI, uuid, referenceCount });
+        LOG.debug("connector referenced removed for URI [{}], UUID[{}], remaining reference(s) [{}]", connectorURI, uuid, referenceCount);
 
         if (referenceCount > 0) {
             return;
@@ -434,7 +434,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         String uuidNew = event.getNewBinding().getName();
         URI connectorURI = uuidMap.remove(uuidOld);
         uuidMap.put(uuidNew, connectorURI);
-        LOG.debug("connector reference renamed for URI [{}], Old UUID [{}], New UUID [{}]", new Object[]{ connectorURI, uuidOld, uuidNew });
+        LOG.debug("connector reference renamed for URI [{}], Old UUID [{}], New UUID [{}]", connectorURI, uuidOld, uuidNew);
     }
 
     /**
