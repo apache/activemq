@@ -106,7 +106,7 @@ public class Statements {
                     + ", SUB_DEST " + stringIdDataType 
                     + ", CLIENT_ID " + stringIdDataType + " NOT NULL" + ", SUB_NAME " + stringIdDataType
                     + " NOT NULL" + ", SELECTOR " + stringIdDataType + ", LAST_ACKED_ID " + sequenceDataType
-                    + ", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))", 
+                    + ", CONSTRAINT PK_" + getDurableSubAcksTableName() + " PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))",
                 "ALTER TABLE " + getFullMessageTableName() + " ADD PRIORITY " + sequenceDataType,
                 "CREATE INDEX " + getFullMessageTableName() + "_PIDX ON " + getFullMessageTableName() + " (PRIORITY)",
                 "ALTER TABLE " + getFullMessageTableName() + " ADD XID " + stringIdDataType,
