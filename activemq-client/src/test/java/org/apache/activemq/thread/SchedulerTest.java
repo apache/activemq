@@ -69,16 +69,33 @@ public class SchedulerTest {
         assertFalse(latch.await(1000, TimeUnit.MILLISECONDS));
     }
 
+    @Test
+    public void testExecutePeriodicallyTaskExceptionDoesNotBreakTimer() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(10);
+        scheduler.executePeriodically(new CountDownRunnable(latch, 5L), 10);
+        assertTrue(latch.await(5000, TimeUnit.MILLISECONDS));
+    }
+
     private static class CountDownRunnable implements Runnable {
         final CountDownLatch latch;
+        final Long throwAtCount;
 
         CountDownRunnable(final CountDownLatch latch) {
+            this(latch, null);
+        }
+
+        CountDownRunnable(final CountDownLatch latch, Long throwAtCount) {
             this.latch = latch;
+            this.throwAtCount = throwAtCount;
         }
 
         @Override
         public void run() {
             latch.countDown();
+
+            if (throwAtCount != null && latch.getCount() == throwAtCount) {
+                throw new RuntimeException("You never want this to happen in a real task!!");
+            }
         }
     }
 
