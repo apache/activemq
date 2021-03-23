@@ -2230,18 +2230,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private boolean shouldForward(JournalCommand<?> command) {
-        boolean result = false;
-        if (command != null) {
-            if (command instanceof KahaRemoveMessageCommand) {
-                result = true;
-            } else if (command instanceof KahaCommitCommand) {
-                KahaCommitCommand kahaCommitCommand = (KahaCommitCommand) command;
-                if (kahaCommitCommand.hasTransactionInfo() && kahaCommitCommand.getTransactionInfo().hasXaTransactionId()) {
-                    result = true;
-                }
-            }
+        if (command == null) {
+            return false;
         }
-        return result;
+
+        return (command instanceof KahaRemoveMessageCommand || command instanceof KahaCommitCommand);
     }
 
     private Location getNextLocationForAckForward(final Location nextLocation, final Location limit) {
