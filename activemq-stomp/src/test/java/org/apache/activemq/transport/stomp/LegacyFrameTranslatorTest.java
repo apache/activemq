@@ -47,9 +47,8 @@ public class LegacyFrameTranslatorTest {
 
             @Override
             public ActiveMQDestination answer(InvocationOnMock invocation) throws Throwable {
-
-                String name = invocation.getArgumentAt(0, String.class);
-                boolean topic = invocation.getArgumentAt(1, Boolean.class);
+                String name = invocation.getArgument(0, String.class);
+                boolean topic = invocation.getArgument(1, Boolean.class);
 
                 name = "temp-" + (topic ? "topic://" : "queue://X:") + UUID.randomUUID().toString();
 
