@@ -2168,7 +2168,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 result = true;
             } else if (command instanceof KahaCommitCommand) {
                 KahaCommitCommand kahaCommitCommand = (KahaCommitCommand) command;
-                if (kahaCommitCommand.hasTransactionInfo() && kahaCommitCommand.getTransactionInfo().hasXaTransactionId()) {
+                if (kahaCommitCommand.hasTransactionInfo())  {
                     result = true;
                 }
             }
