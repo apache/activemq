@@ -23,7 +23,7 @@ import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.transport.stomp.SamplePojo;
 
 import com.thoughtworks.xstream.XStream;
-import org.apache.activemq.util.XStreamSupport;
+import org.apache.activemq.transport.stomp.XStreamSupport;
 
 public class XStreamBrokerContext implements BrokerContext {
 

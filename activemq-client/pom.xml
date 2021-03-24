@@ -80,12 +80,6 @@
       <optional>true</optional>
     </dependency>
 
-    <dependency>
-      <groupId>com.thoughtworks.xstream</groupId>
-      <artifactId>xstream</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
     <!-- =============================== -->
     <!-- Testing Dependencies -->
     <!-- =============================== -->
