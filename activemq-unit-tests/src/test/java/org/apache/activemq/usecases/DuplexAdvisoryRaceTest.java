@@ -107,7 +107,7 @@ public class DuplexAdvisoryRaceTest {
                 Subscription subscription = super.addConsumer(context, info);
                 // delay return to allow dispatch to interleave
                 if (context.isNetworkConnection()) {
-                    TimeUnit.MILLISECONDS.sleep(200);
+                    TimeUnit.MILLISECONDS.sleep(100);
                 }
                 return subscription;
             };
@@ -148,7 +148,7 @@ public class DuplexAdvisoryRaceTest {
                 LOG.info("received: " + responseReceived.get());
                 return responseReceived.get() >= numMessagesPerDest * numDests;
             }
-        }, 10*60*1000)) {
+        }, 30*60*1000)) {
 
            org.apache.activemq.TestSupport.dumpAllThreads("DD");
 
