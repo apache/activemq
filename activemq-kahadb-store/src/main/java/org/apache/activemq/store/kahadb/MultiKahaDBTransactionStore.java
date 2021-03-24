@@ -19,8 +19,6 @@ package org.apache.activemq.store.kahadb;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -211,8 +209,9 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         return checkForCorruption;
     }
 
+    private static final XATransactionId NULL_XA_TRANSACTION_ID = new XATransactionId();
     public class Tx {
-        private final HashMap<TransactionStore, TransactionId> stores = new HashMap<TransactionStore, TransactionId>();
+        private final ConcurrentHashMap<TransactionStore, TransactionId> stores = new ConcurrentHashMap<TransactionStore, TransactionId>();
         private int prepareLocationId = 0;
 
         public void trackStore(TransactionStore store, XATransactionId xid) {
@@ -220,10 +219,10 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         }
 
         public void trackStore(TransactionStore store) {
-            stores.put(store, null);
+            stores.putIfAbsent(store, NULL_XA_TRANSACTION_ID);
         }
 
-        public HashMap<TransactionStore, TransactionId> getStoresMap() {
+        public Map<TransactionStore, TransactionId> getStoresMap() {
             return stores;
         }
 
@@ -243,8 +242,12 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     public Tx getTx(TransactionId txid) {
         Tx tx = inflightTransactions.get(txid);
         if (tx == null) {
-            tx = new Tx();
-            inflightTransactions.put(txid, tx);
+            final Tx val = new Tx();
+            tx = inflightTransactions.putIfAbsent(txid, val);
+            if (tx == null) {
+                // we won
+                tx = val;
+            }
         }
         return tx;
     }
@@ -273,7 +276,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         if (wasPrepared) {
             for (Map.Entry<TransactionStore, TransactionId> storeTx : tx.getStoresMap().entrySet()) {
                 TransactionId recovered = storeTx.getValue();
-                if (recovered != null) {
+                if (recovered != null && recovered != NULL_XA_TRANSACTION_ID ) {
                     storeTx.getKey().commit(recovered, true, null, null);
                 } else {
                     storeTx.getKey().commit(txid, true, null, null);
@@ -329,7 +332,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         if (tx != null) {
             for (Map.Entry<TransactionStore, TransactionId> storeTx : tx.getStoresMap().entrySet()) {
                 TransactionId recovered = storeTx.getValue();
-                if (recovered != null) {
+                if (recovered != null && recovered != NULL_XA_TRANSACTION_ID) {
                     storeTx.getKey().rollback(recovered);
                 } else {
                     storeTx.getKey().rollback(txid);
