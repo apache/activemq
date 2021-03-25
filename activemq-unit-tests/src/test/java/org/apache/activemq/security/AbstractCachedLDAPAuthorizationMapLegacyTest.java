@@ -322,7 +322,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
                     return map.context == null;
                 }
             }
-        }, 30*60*1000);
+        }, 10*60*1000);
 
         failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
         assertEquals("set size: " + failedACLs, 2, failedACLs.size());
@@ -347,7 +347,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
             public boolean isSatisified() throws Exception {
                 return map.getReadACLs(new ActiveMQQueue("FAILED")).size() == 2;
             }
-        }, 30*60*1000));
+        }, 10*60*1000));
     }
 
     protected SimpleCachedLDAPAuthorizationMap createMap() {
