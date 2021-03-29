@@ -22,22 +22,19 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.LargeFile;
 import org.apache.activemq.util.StoreUtil;
-import org.junit.runner.RunWith;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
+import org.junit.Test;
+import org.mockito.MockedStatic;
 import junit.framework.TestCase;
+import org.mockito.Mockito;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 
 /**
  * Tests for the BrokerService class
  * 
  * @author chirino
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(StoreUtil.class)
 public class BrokerServiceTest extends TestCase {
     public void testAddRemoveTransportsWithJMX() throws Exception {
         BrokerService service = new BrokerService();
@@ -94,6 +91,7 @@ public class BrokerServiceTest extends TestCase {
         assertEquals( 1024L * 1024 * 1024 * 100, service.getSystemUsage().getStoreUsage().getLimit() );
     }
 
+    @Test
     public void testLargeFileSystem() throws Exception {
         BrokerService service = new BrokerService();
 
@@ -105,29 +103,30 @@ public class BrokerServiceTest extends TestCase {
         service.setPersistenceAdapter(persistenceAdapter);
         service.setUseJmx(false);
 
-        mockStatic(StoreUtil.class);
+        try(MockedStatic<StoreUtil> mocked = Mockito.mockStatic(StoreUtil.class)) {
+            // Return a simulated handle to a very large file system that will return a negative totalSpace.
+            mocked.when(() -> StoreUtil.findParentDirectory(dataDirectory)).thenReturn(new LargeFile(dataDirectory.getParentFile(), "KahaDB"));
+            mocked.when(() -> StoreUtil.findParentDirectory(tmpDataDirectory)).thenReturn(tmpDataDirectory.getParentFile());
 
-        // Return a simulated handle to a very large file system that will return a negative totalSpace.
-        when(StoreUtil.findParentDirectory(dataDirectory)).thenReturn(new LargeFile(dataDirectory.getParentFile(), "KahaDB"));
-        when(StoreUtil.findParentDirectory(tmpDataDirectory)).thenReturn(tmpDataDirectory.getParentFile());
+            try {
+                service.start();
+                fail("Expect error on negative totalspace");
+            } catch (Exception expected) {
+                // verify message
+                assertTrue(expected.getLocalizedMessage().contains("negative"));
+            }
+            finally {
+                service.stop();
+            }
 
-        try {
-            service.start();
-            fail("Expect error on negative totalspace");
-        } catch (Exception expected) {
-            // verify message
-            assertTrue(expected.getLocalizedMessage().contains("negative"));
-        }
-        finally {
+            // configure a 2x value for the fs limit so it can start
+            service.getSystemUsage().getStoreUsage().setTotal( service.getSystemUsage().getStoreUsage().getLimit() * 2);
+
+            service.start(true);
             service.stop();
+
+            mocked.verify(() -> StoreUtil.findParentDirectory(any()), times(3));
         }
 
-        // configure a 2x value for the fs limit so it can start
-        service.getSystemUsage().getStoreUsage().setTotal( service.getSystemUsage().getStoreUsage().getLimit() * 2);
-
-        service.start(true);
-        service.stop();
-
-        verifyStatic();
     }
 }
