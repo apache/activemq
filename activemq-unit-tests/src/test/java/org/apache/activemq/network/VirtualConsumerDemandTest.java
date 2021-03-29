@@ -21,12 +21,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.jms.JMSException;
@@ -64,8 +62,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 /**
  * This test is to show that dynamicallyIncludedDestinations will work properly
@@ -1369,10 +1365,15 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         connector.setConduitSubscriptions(true);
         connector.setDuplex(isDuplex);
         connector.setUseVirtualDestSubs(true);
-        connector.setDynamicallyIncludedDestinations(Lists.newArrayList(new ActiveMQQueue(testQueueName),
-                new ActiveMQTopic(testTopicName + (forceDurable ? "?forceDurable=true" : "")), new ActiveMQTopic("VirtualTopic.>")));
-        connector.setExcludedDestinations(Lists.newArrayList(new ActiveMQQueue("exclude.test.foo"),
-                new ActiveMQTopic("exclude.test.bar")));
+        ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
+        includedDestinations.add(new ActiveMQQueue(testQueueName));
+        includedDestinations.add(new ActiveMQTopic(testTopicName + (forceDurable ? "?forceDurable=true" : "")));
+        includedDestinations.add(new ActiveMQTopic("VirtualTopic.>"));
+        connector.setDynamicallyIncludedDestinations(includedDestinations);
+        ArrayList<ActiveMQDestination> excludedDestinations = new ArrayList<>();
+        excludedDestinations.add(new ActiveMQQueue("exclude.test.foo"));
+        excludedDestinations.add(new ActiveMQTopic("exclude.test.bar"));
+        connector.setExcludedDestinations(excludedDestinations);
 
         if (startNetworkConnector) {
             brokerService.addNetworkConnector(connector);
@@ -1415,7 +1416,11 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         CompositeTopic compositeTopic = new CompositeTopic();
         compositeTopic.setName(name);
         compositeTopic.setForwardOnly(true);
-        compositeTopic.setForwardTo( Lists.newArrayList(forwardTo));
+        ArrayList<ActiveMQDestination> forwardToDestinations = new ArrayList<>();
+        for (ActiveMQDestination ft : forwardTo) {
+            forwardToDestinations.add(ft);
+        }
+        compositeTopic.setForwardTo(forwardToDestinations);
 
         return compositeTopic;
     }
@@ -1424,7 +1429,11 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         CompositeQueue compositeQueue = new CompositeQueue();
         compositeQueue.setName(name);
         compositeQueue.setForwardOnly(true);
-        compositeQueue.setForwardTo( Lists.newArrayList(forwardTo));
+        ArrayList<ActiveMQDestination> forwardToDestinations = new ArrayList<>();
+        for (ActiveMQDestination ft : forwardTo) {
+            forwardToDestinations.add(ft);
+        }
+        compositeQueue.setForwardTo(forwardToDestinations);
 
         return compositeQueue;
     }

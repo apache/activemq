@@ -91,7 +91,6 @@ public class AMQ5266SingleDestTest {
     public static Iterable<Object[]> parameters() {
         return Arrays.asList(new Object[][]{
                {1000,  40,  40,   1024*1024*1,  true, TestSupport.PersistenceAdapterChoice.KahaDB, false},
-               {1000,  40,  40,   1024*1024*1,  true, TestSupport.PersistenceAdapterChoice.LevelDB, false},
                {1000,  40,  40,   1024*1024*1,  true, TestSupport.PersistenceAdapterChoice.JDBC, false},
         });
     }

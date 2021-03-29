@@ -74,7 +74,7 @@ public class ConcurrentProducerQueueConsumerTest extends TestSupport
 
     public void initCombosForTestSendRateWithActivatingConsumers() throws Exception {
         addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB,
+                new Object[]{PersistenceAdapterChoice.KahaDB,
                              /* too slow for hudson - PersistenceAdapterChoice.JDBC,*/
                              PersistenceAdapterChoice.MEM});
     }
@@ -164,7 +164,7 @@ public class ConcurrentProducerQueueConsumerTest extends TestSupport
 
     public void x_initCombosForTestSendWithInactiveAndActiveConsumers() throws Exception {
         addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB,
+                new Object[]{PersistenceAdapterChoice.KahaDB,
                              /* too slow for hudson - PersistenceAdapterChoice.JDBC,*/
                              PersistenceAdapterChoice.MEM});
     }

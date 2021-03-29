@@ -42,7 +42,6 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.activemq.store.leveldb.LevelDBPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.util.JMXSupport;
 
@@ -197,7 +196,7 @@ public abstract class TestSupport extends CombinationTestSupport {
         return proxy;
     }
 
-    public static enum PersistenceAdapterChoice {LevelDB, KahaDB, JDBC, MEM };
+    public static enum PersistenceAdapterChoice {KahaDB, JDBC, MEM };
 
     public PersistenceAdapter setDefaultPersistenceAdapter(BrokerService broker) throws IOException {
         return setPersistenceAdapter(broker, defaultPersistenceAdapter);
@@ -213,9 +212,6 @@ public abstract class TestSupport extends CombinationTestSupport {
             break;
         case KahaDB:
             adapter = new KahaDBPersistenceAdapter();
-            break;
-        case LevelDB:
-            adapter = new LevelDBPersistenceAdapter();
             break;
         case MEM:
             adapter = new MemoryPersistenceAdapter();

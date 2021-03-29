@@ -78,11 +78,9 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
     @Parameters(name="{0}")
     public static Collection<TestSupport.PersistenceAdapterChoice[]> getTestParameters() {
         TestSupport.PersistenceAdapterChoice[] kahaDb = { TestSupport.PersistenceAdapterChoice.KahaDB };
-        TestSupport.PersistenceAdapterChoice[] levelDb = { TestSupport.PersistenceAdapterChoice.LevelDB };
         TestSupport.PersistenceAdapterChoice[] mem = { TestSupport.PersistenceAdapterChoice.MEM };
         List<TestSupport.PersistenceAdapterChoice[]> choices = new ArrayList<TestSupport.PersistenceAdapterChoice[]>();
         choices.add(kahaDb);
-        choices.add(levelDb);
         choices.add(mem);
         return choices;
     }

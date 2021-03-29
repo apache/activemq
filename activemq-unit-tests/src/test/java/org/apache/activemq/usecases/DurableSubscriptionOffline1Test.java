@@ -48,10 +48,6 @@ public class DurableSubscriptionOffline1Test extends DurableSubscriptionOfflineT
 
         persistenceAdapterChoices.add(PersistenceAdapterChoice.KahaDB);
         persistenceAdapterChoices.add(PersistenceAdapterChoice.JDBC);
-        if (!osName.equalsIgnoreCase("AIX") && !osName.equalsIgnoreCase("SunOS")) {
-            //choices.add(levelDb);
-            persistenceAdapterChoices.add(PersistenceAdapterChoice.LevelDB);
-        }
 
         List<Object[]> testParameters = new ArrayList<Object[]>();
         Boolean[] booleanValues = {Boolean.FALSE, Boolean.TRUE};

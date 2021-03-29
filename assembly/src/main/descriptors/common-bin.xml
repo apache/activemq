@@ -178,7 +178,6 @@
         <include>${pom.groupId}:activemq-stomp</include>
         <include>${pom.groupId}:activemq-http</include>
         <include>${pom.groupId}:activemq-jdbc-store</include>
-        <include>${pom.groupId}:activemq-leveldb-store</include>
         <include>${pom.groupId}:activemq-log4j-appender</include>
         <include>${pom.groupId}:activemq-jms-pool</include>
         <include>${pom.groupId}:activemq-pool</include>
@@ -218,21 +217,6 @@
         <include>org.apache.qpid:proton-j</include>
         <include>${pom.groupId}:activemq-runtime-config</include>
         <include>org.jvnet.jaxb2_commons:jaxb2-basics-runtime</include>
-
-        <!-- activemq-leveldb-store dependencies -->
-        <include>org.scala-lang:scala-library</include>
-        <include>org.fusesource.hawtbuf:hawtbuf-proto</include>
-        <include>org.fusesource.hawtdispatch:*</include>
-        <include>org.iq80.leveldb:*</include>
-        <include>com.google.guava:guava</include>
-        <include>org.fusesource.leveldbjni:*</include>
-        <include>org.fusesource.hawtjni:hawtjni-runtime</include>
-        <include>org.xerial.snappy:*</include>
-        <include>org.iq80.snappy:*</include>
-        <include>org.linkedin:org.linkedin.zookeeper-impl</include>
-        <include>org.linkedin:org.linkedin.util-core</include>
-        <include>org.apache.zookeeper:zookeeper</include>
-        <include>com.fasterxml.jackson.core:*</include>
 
         <!-- Apache Shiro dependencies: -->
         <include>org.apache.shiro:shiro-core</include>

@@ -64,12 +64,8 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport  {
         String osName = System.getProperty("os.name");
         LOG.info("Running on [" + osName + "]");
         PersistenceAdapterChoice[] kahaDb = {PersistenceAdapterChoice.KahaDB};
-        PersistenceAdapterChoice[] levelDb = {PersistenceAdapterChoice.LevelDB};
         List<PersistenceAdapterChoice[]> choices = new ArrayList<PersistenceAdapterChoice[]>();
         choices.add(kahaDb);
-        if (!osName.equalsIgnoreCase("AIX") && !osName.equalsIgnoreCase("SunOS")) {
-            choices.add(levelDb);
-        }
 
         return choices;
     }
@@ -191,8 +187,6 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport  {
         properties.put("maxFileLength", maxFileLengthVal);
         properties.put("cleanupInterval", "2000");
         properties.put("checkpointInterval", "2000");
-
-        // leveldb
         properties.put("logSize", maxFileLengthVal);
 
         IntrospectionSupport.setProperties(persistenceAdapter, properties);

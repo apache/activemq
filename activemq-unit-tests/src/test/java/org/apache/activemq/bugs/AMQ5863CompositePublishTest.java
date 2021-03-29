@@ -52,7 +52,6 @@ public class AMQ5863CompositePublishTest {
     public static Iterable<Object[]> parameters() {
         return Arrays.asList(new Object[][]{
                 {TestSupport.PersistenceAdapterChoice.KahaDB},
-                {TestSupport.PersistenceAdapterChoice.LevelDB},
                 {TestSupport.PersistenceAdapterChoice.JDBC}
         });
     }

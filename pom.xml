@@ -82,9 +82,6 @@
     <junit-version>4.13.2</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <karaf-version>4.2.10</karaf-version>
-    <leveldb-api-version>0.9</leveldb-api-version>
-    <leveldb-version>0.9</leveldb-version>
-    <leveldbjni-version>1.8</leveldbjni-version>
     <log4j-version>1.2.17</log4j-version>
     <mockito-version>3.8.0</mockito-version>
     <owasp-dependency-check-version>5.2.4</owasp-dependency-check-version>
@@ -101,10 +98,7 @@
     <netty-all-version>4.1.53.Final</netty-all-version>
     <regexp-version>1.3</regexp-version>
     <rome-version>1.15.0</rome-version>
-    <scala-plugin-version>3.1.0</scala-plugin-version>
-    <scala-version>2.11.11</scala-version>
     <shiro-version>1.7.1</shiro-version>
-    <scalatest-version>3.0.8</scalatest-version>
     <slf4j-version>1.7.30</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
     <spring-version>4.3.30.RELEASE</spring-version>
@@ -217,7 +211,6 @@
     <module>activemq-amqp</module>
     <module>activemq-kahadb-store</module>
     <module>activemq-jdbc-store</module>
-    <module>activemq-leveldb-store</module>
     <module>activemq-all</module>
     <module>activemq-camel</module>
     <module>activemq-console</module>
@@ -285,11 +278,6 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-jdbc-store</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-leveldb-store</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -1400,7 +1388,6 @@
             <exclude>**/*.iws</exclude>
             <exclude>**/.idea/**/*</exclude>
             <exclude>.git/**/*</exclude>
-            <exclude>**/LevelDB/**/*</exclude>
             <exclude>**/activemq-data/**/*</exclude>
             <exclude>**/dependency-reduced-pom.xml</exclude>
             <exclude>**/*.sln</exclude>

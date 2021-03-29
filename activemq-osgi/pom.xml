@@ -60,13 +60,11 @@
       org.jasypt*;resolution:=optional,
       org.eclipse.jetty*;resolution:=optional;version="[9.0,10)",
       org.apache.zookeeper*;resolution:=optional,
-      org.fusesource.leveldbjni*;resolution:=optional,
       org.fusesource.hawtjni*;resolution:=optional,
       org.springframework.jms*;version="[4,5)";resolution:=optional,
       org.springframework.transaction*;version="[4,5)";resolution:=optional,
       org.springframework*;version="[4,5)";resolution:=optional,
       org.xmlpull*;resolution:=optional,
-      scala*;resolution:=optional,
       javax.annotation*;version="[1,4)",
       !com.thoughtworks.qdox*,
       org.apache.commons.logging;version="[1.2,2)";resolution:=optional,
@@ -124,11 +122,6 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jdbc-store</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-leveldb-store</artifactId>
-      <version>${project.version}</version>
     </dependency>
 
     <!-- Additional protocol impls -->
@@ -284,28 +277,8 @@
               *;groupId=org.apache.activemq;inline=META-INF/services/*,
               *;groupId=org.apache.qpid;inline=META-INF/services/*,
               *;groupId=org.apache.xbean;inline=true
-              <!--
-              groupId=org.fusesource.leveldbjni;inline=META-INF/native/*,
-              groupId=org.xerial.snappy;inline=org/xerial/snappy/*
-              -->
             </Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
-            <!--
-            <Bundle-NativeCode>
-              META-INF/native/windows32/leveldbjni.dll;osname=Win32;processor=x86,
-              META-INF/native/windows64/leveldbjni.dll;osname=Win32;processor=x86-64,
-              META-INF/native/osx/libleveldbjni.jnilib;osname=macosx,
-              META-INF/native/linux32/libleveldbjni.so;osname=Linux;processor=x86,
-              META-INF/native/linux64/libleveldbjni.so;osname=Linux;processor=x86-64,
-              org/xerial/snappy/native/Windows/amd64/snappyjava.dll;osname=win32;processor=x86-64,
-              org/xerial/snappy/native/Windows/x86/snappyjava.dll;osname=win32;processor=x86,
-              org/xerial/snappy/native/Mac/x86_64/libsnappyjava.jnilib;osname=macosx;processor=x86-64,
-              org/xerial/snappy/native/Linux/amd64/libsnappyjava.so;osname=linux;processor=x86-64,
-              org/xerial/snappy/native/Linux/i386/libsnappyjava.so;osname=linux;processor=x86,
-              org/xerial/snappy/native/Linux/arm/libsnappyjava.so;osname=linux;processor=arm,
-              *
-            </Bundle-NativeCode>
-            -->
          </instructions>
         </configuration>
       </plugin>
@@ -456,13 +429,6 @@
         <dependency>
           <groupId>${project.groupId}</groupId>
           <artifactId>activemq-jdbc-store</artifactId>
-          <version>${project.version}</version>
-          <classifier>sources</classifier>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>${project.groupId}</groupId>
-          <artifactId>activemq-leveldb-store</artifactId>
           <version>${project.version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>

@@ -44,11 +44,7 @@
       <artifactId>slf4j-api</artifactId>
       <scope>compile</scope>
     </dependency>
-    
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-leveldb-store</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>org.linkedin</groupId>
       <artifactId>org.linkedin.zookeeper-impl</artifactId>

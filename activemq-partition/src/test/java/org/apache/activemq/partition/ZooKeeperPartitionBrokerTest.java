@@ -18,7 +18,6 @@ package org.apache.activemq.partition;
 
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.leveldb.replicated.groups.ZKClient;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.server.NIOServerCnxnFactory;
 import org.apache.zookeeper.server.ZooKeeperServer;
@@ -48,7 +47,6 @@ public class ZooKeeperPartitionBrokerTest extends PartitionBrokerTest {
         System.out.println("ZooKeeper started");
         super.setUp();
     }
-
 
     @After
     public void tearDown() throws Exception {

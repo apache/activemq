@@ -34,8 +34,6 @@ import javax.jms.Topic;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.leveldb.LevelDBStore;
-import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.IdGenerator;
 
 public class ReliableReconnectTest extends org.apache.activemq.TestSupport {

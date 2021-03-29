@@ -96,11 +96,9 @@ public class AMQ5266StarvedConsumerTest {
     public static Iterable<Object[]> parameters() {
         return Arrays.asList(new Object[][]{
                 {1000, 40,  5,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.KahaDB, true},
-                {1000, 40,  5,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.LevelDB, true},
                 {1000, 40,  5,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.JDBC, true},
 
                 {500, 20,  20,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.KahaDB, true},
-                {500, 20,  20,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.LevelDB, true},
                 {500, 20,  20,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.JDBC, true},
         });
     }

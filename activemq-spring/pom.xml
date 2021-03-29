@@ -74,11 +74,6 @@
       <artifactId>activeio-core</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-leveldb-store</artifactId>
-      <optional>true</optional>
-    </dependency>
     
     <!-- add the optional replication deps -->
     <dependency>
@@ -219,7 +214,6 @@
                 <include>${basedir}/../activemq-client/src/main/java</include>
                 <include>${basedir}/../activemq-broker/src/main/java</include>
                 <include>${basedir}/../activemq-camel/src/main/java</include>
-                <include>${basedir}/../activemq-leveldb-store/src/main/java</include>
                 <include>${basedir}/../activemq-jdbc-store/src/main/java</include>
                 <include>${basedir}/../activemq-kahadb-store/src/main/java</include>
                 <include>${basedir}/../activemq-mqtt/src/main/java</include>
@@ -281,29 +275,29 @@
     </plugins>
   </build>
 
-    <profiles>
-      <profile>
-        <id>activemq.tests-sanity</id>
-        <activation>
-          <property>
-            <name>activemq.tests</name>
-            <value>smoke</value>
-          </property>
-        </activation>
-        <build>
-          <plugins>
-            <plugin>
-              <artifactId>maven-surefire-plugin</artifactId>
-              <configuration>
-                <includes>
-                  <include>**/SpringBrokerFactoryTest.*</include>
-                </includes>
-              </configuration>
-            </plugin>
-          </plugins>
-        </build>
-      </profile>
-	<profile>
+  <profiles>
+    <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/SpringBrokerFactoryTest.*</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>activemq.tests-autoTransport</id>
       <activation>
         <property>
@@ -324,110 +318,6 @@
         </plugins>
       </build>
     </profile>
-
-        <profile>
-            <id>activemq.tests.windows.excludes</id>
-            <activation>
-                <os>
-                    <family>Windows</family>
-                </os>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludes combine.children="append">
-                                <exclude>**/LevelDBConfigTest.*</exclude>
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>activemq.tests.solaris.excludes</id>
-            <activation>
-                <property>
-                    <name>os.name</name>
-                    <value>SunOS</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludes combine.children="append">
-                                <exclude>**/LevelDBConfigTest.*</exclude>
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>activemq.tests.aix.excludes</id>
-            <activation>
-                <property>
-                    <name>os.name</name>
-                    <value>AIX</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludes combine.children="append">
-                                <exclude>**/LevelDBConfigTest.*</exclude>
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>activemq.tests.mac.excludes</id>
-            <activation>
-                <os>
-                    <family>mac</family>
-                </os>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludes combine.children="append">
-                                <exclude>**/LevelDBConfigTest.*</exclude>
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>activemq.tests.hpux.excludes</id>
-            <activation>
-                <os>
-                    <family>HP-UX</family>
-                </os>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludes combine.children="append">
-                                <exclude>**/LevelDBConfigTest.*</exclude>
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
+  </profiles>
 
 </project>

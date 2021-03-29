@@ -28,7 +28,6 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
-import org.apache.activemq.store.leveldb.LevelDBPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.junit.After;
 import org.junit.Before;
@@ -189,10 +188,6 @@ public abstract class DurableSubscriptionOfflineTestBase {
             case KahaDB:
                 LOG.debug(">>>> setPersistenceAdapter to KahaDB ");
                 adapter = new KahaDBPersistenceAdapter();
-                break;
-            case LevelDB:
-                LOG.debug(">>>> setPersistenceAdapter to LevelDB ");
-                adapter = new LevelDBPersistenceAdapter();
                 break;
             case MEM:
                 LOG.debug(">>>> setPersistenceAdapter to MEM ");

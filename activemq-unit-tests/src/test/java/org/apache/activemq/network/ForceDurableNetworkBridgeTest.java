@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import java.io.File;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -41,8 +42,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 @RunWith(Parameterized.class)
 public class ForceDurableNetworkBridgeTest extends DynamicNetworkTestSupport {
@@ -321,15 +320,17 @@ public class ForceDurableNetworkBridgeTest extends DynamicNetworkTestSupport {
         connector.setConduitSubscriptions(true);
         connector.setDuplex(true);
         connector.setStaticBridge(false);
-        connector.setStaticallyIncludedDestinations(Lists.<ActiveMQDestination>newArrayList(
-                new ActiveMQTopic(staticTopic + "?forceDurable=true"),
-                new ActiveMQTopic(staticTopic2)));
-        connector.setDynamicallyIncludedDestinations(
-                Lists.<ActiveMQDestination>newArrayList(
-                        new ActiveMQTopic("include.test.>?forceDurable=true"),
-                        new ActiveMQTopic(testTopicName2)));
-        connector.setExcludedDestinations(
-                Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(excludeTopicName)));
+        ArrayList<ActiveMQDestination> staticIncludedDestinations = new ArrayList<>();
+        staticIncludedDestinations.add(new ActiveMQTopic(staticTopic + "?forceDurable=true"));
+        staticIncludedDestinations.add(new ActiveMQTopic(staticTopic2));
+        connector.setStaticallyIncludedDestinations(staticIncludedDestinations);
+        ArrayList<ActiveMQDestination> dynamicIncludedDestinations = new ArrayList<>();
+        dynamicIncludedDestinations.add(new ActiveMQTopic("include.test.>?forceDurable=true"));
+        dynamicIncludedDestinations.add(new ActiveMQTopic(testTopicName2));
+        connector.setDynamicallyIncludedDestinations(dynamicIncludedDestinations);
+        ArrayList<ActiveMQDestination> excludedDestinations = new ArrayList<>();
+        excludedDestinations.add(new ActiveMQTopic(excludeTopicName));
+        connector.setExcludedDestinations(excludedDestinations);
         return connector;
     }
 

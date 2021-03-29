@@ -52,7 +52,7 @@ public class RedeliveryRestartTest extends TestSupport {
 
     @Parameterized.Parameters(name="Store={0}")
     public static Iterable<Object[]> data() {
-        return Arrays.asList(new Object[][]{{TestSupport.PersistenceAdapterChoice.KahaDB},{TestSupport.PersistenceAdapterChoice.JDBC},{TestSupport.PersistenceAdapterChoice.LevelDB}});
+        return Arrays.asList(new Object[][]{{TestSupport.PersistenceAdapterChoice.KahaDB},{TestSupport.PersistenceAdapterChoice.JDBC}});
     }
 
     @Override

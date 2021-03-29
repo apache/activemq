@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.web;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,6 +32,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.HashSet;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LocalBrokerFacadeTest {
@@ -58,7 +59,9 @@ public class LocalBrokerFacadeTest {
         when(brokerService.getAdminView()).thenReturn(brokerView);
         when(brokerView.getBroker()).thenReturn(managedRegionBroker);
         when(managedRegionBroker.getQueueRegion()).thenReturn(region);
-        when(region.getDestinations(destination)).thenReturn(newHashSet((Destination) queue));
+        HashSet<Destination> destinations = new HashSet<>();
+        destinations.add(queue);
+        when(region.getDestinations(destination)).thenReturn(destinations);
 
         facade.purgeQueue(destination);
 
@@ -74,7 +77,10 @@ public class LocalBrokerFacadeTest {
         when(brokerService.getAdminView()).thenReturn(brokerView);
         when(brokerView.getBroker()).thenReturn(managedRegionBroker);
         when(managedRegionBroker.getQueueRegion()).thenReturn(region);
-        when(region.getDestinations(destination)).thenReturn(newHashSet((Destination) queue1, queue2));
+        HashSet<Destination> destinations = new HashSet<>();
+        destinations.add(queue1);
+        destinations.add(queue2);
+        when(region.getDestinations(destination)).thenReturn(destinations);
 
         facade.purgeQueue(destination);
 
@@ -90,7 +96,9 @@ public class LocalBrokerFacadeTest {
         when(brokerView.getBroker()).thenReturn(managedRegionBroker);
         when(managedRegionBroker.getQueueRegion()).thenReturn(region);
 
-        when(region.getDestinations(destination)).thenReturn(newHashSet((Destination) new DestinationFilter(queue)));
+        HashSet<Destination> destinations = new HashSet<>();
+        destinations.add(new DestinationFilter(queue));
+        when(region.getDestinations(destination)).thenReturn(destinations);
 
         facade.purgeQueue(destination);
 
@@ -105,7 +113,9 @@ public class LocalBrokerFacadeTest {
         when(brokerView.getBroker()).thenReturn(managedRegionBroker);
         when(managedRegionBroker.getQueueRegion()).thenReturn(region);
 
-        when(region.getDestinations(destination)).thenReturn(newHashSet((Destination) new DestinationFilter(new DestinationFilter(queue))));
+        HashSet<Destination> destinations = new HashSet<>();
+        destinations.add(new DestinationFilter(new DestinationFilter(queue)));
+        when(region.getDestinations(destination)).thenReturn(destinations);
 
         facade.purgeQueue(destination);
 

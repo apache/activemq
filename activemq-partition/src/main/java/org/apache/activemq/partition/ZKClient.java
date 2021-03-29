@@ -14,7 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb.replicated.groups;
+package org.apache.activemq.partition;
+
+import org.apache.zookeeper.*;
+import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.data.Id;
+import org.apache.zookeeper.data.Stat;
+import org.linkedin.util.clock.Clock;
+import org.linkedin.util.clock.SystemClock;
+import org.linkedin.util.clock.Timespan;
+import org.linkedin.util.concurrent.ConcurrentUtils;
+import org.linkedin.util.io.PathUtils;
+import org.linkedin.zookeeper.client.*;
+import org.slf4j.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
@@ -26,35 +38,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.data.ACL;
-import org.apache.zookeeper.data.Id;
-import org.apache.zookeeper.data.Stat;
-import org.linkedin.util.clock.Clock;
-import org.linkedin.util.clock.SystemClock;
-import org.linkedin.util.clock.Timespan;
-import org.linkedin.util.concurrent.ConcurrentUtils;
-import org.linkedin.util.io.PathUtils;
-import org.linkedin.zookeeper.client.ChrootedZKClient;
-import org.linkedin.zookeeper.client.IZooKeeper;
-import org.linkedin.zookeeper.client.IZooKeeperFactory;
-import org.linkedin.zookeeper.client.LifecycleListener;
-import org.linkedin.zookeeper.client.ZooKeeperFactory;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.service.cm.ConfigurationException;
-import org.slf4j.Logger;
+public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient implements Watcher {
 
-public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient implements Watcher {
-
-    private static final Logger LOG = org.slf4j.LoggerFactory.getLogger(ZKClient.class.getName());
+    private static final Logger LOG = org.slf4j.LoggerFactory.getLogger(ZKClient.class);
 
     private Map<String, String> acls;
     private String password;
-
 
     public void start() throws Exception {
         // Grab the lock to make sure that the registration of the ManagedService
@@ -62,7 +51,6 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
         synchronized (_lock) {
             _stateChangeDispatcher.setDaemon(true);
             _stateChangeDispatcher.start();
-
             doStart();
         }
     }
@@ -75,7 +63,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
         this.password = password;
     }
 
-    protected void doStart() throws InvalidSyntaxException, ConfigurationException, UnsupportedEncodingException {
+    protected void doStart() throws UnsupportedEncodingException {
         connect();
     }
 
@@ -85,7 +73,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
             _stateChangeDispatcher.end();
             try {
                 _stateChangeDispatcher.join(1000);
-            } catch(Exception e) {
+            } catch (Exception e) {
                 LOG.debug("ignored exception", e);
             }
         }
@@ -94,19 +82,12 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
                 try {
                     changeState(State.NONE);
                     _zk.close();
-                    // We try to avoid a NPE when shutting down fabric:
-                    // java.lang.NullPointerException
-                    //     at org.apache.felix.framework.BundleWiringImpl.findClassOrResourceByDelegation(BundleWiringImpl.java:1433)
-                    //     at org.apache.felix.framework.BundleWiringImpl.access$400(BundleWiringImpl.java:73)
-                    //     at org.apache.felix.framework.BundleWiringImpl$BundleClassLoader.loadClass(BundleWiringImpl.java:1844)
-                    //     at java.lang.ClassLoader.loadClass(ClassLoader.java:247)
-                    //     at org.apache.zookeeper.ClientCnxn$SendThread.run(ClientCnxn.java:1089)
                     Thread th = getSendThread();
                     if (th != null) {
                         th.join(1000);
                     }
                     _zk = null;
-                } catch(Exception e) {
+                } catch (Exception e) {
                     LOG.debug("ignored exception", e);
                 }
             }
@@ -154,7 +135,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
 
     public void testGenerateConnectionLoss() throws Exception {
         waitForConnected();
-        Object clientCnxnSocket  = getField(_zk, "_zk", "cnxn", "sendThread", "clientCnxnSocket");
+        Object clientCnxnSocket = getField(_zk, "_zk", "cnxn", "sendThread", "clientCnxnSocket");
         callMethod(clientCnxnSocket, "testableCloseSocket");
     }
 
@@ -200,18 +181,15 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
         if (event.getState() != null) {
             LOG.debug("event: {}", event.getState());
             synchronized (_lock) {
-                switch(event.getState())
-                {
+                switch(event.getState()) {
                     case SyncConnected:
                         changeState(State.CONNECTED);
                         break;
-
                     case Disconnected:
-                        if(_state != State.NONE) {
+                        if (_state != State.NONE) {
                             changeState(State.RECONNECTING);
                         }
                         break;
-
                     case Expired:
                         // when expired, the zookeeper object is invalid and we need to recreate a new one
                         _zk = null;
@@ -219,7 +197,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
                         tryConnect();
                         break;
                     default:
-                        LOG.warn("unprocessed event state: {}", event.getState());
+                        LOG.warn("Unsupported event state: {}", event.getState());
                 }
             }
         }
@@ -230,7 +208,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
         State state = _state;
         if (state == State.NONE) {
             throw new IllegalStateException("ZooKeeper client has not been configured yet. You need to either create an ensemble or join one.");
-        } else if (state != State.CONNECTED) {
+        } else if (state != State.CONNECTING) {
             try {
                 waitForConnected();
             } catch (Exception e) {
@@ -270,7 +248,6 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
         }
         if (!_listeners.contains(listener)) {
             _listeners.add(listener);
-
         }
         if (_state == State.CONNECTED) {
             listener.onConnected();
@@ -315,7 +292,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
     private final static String CHARSET = "UTF-8";
 
     private final Clock _clock = SystemClock.instance();
-    private final List<LifecycleListener> _listeners = new CopyOnWriteArrayList<LifecycleListener>();
+    private final List<LifecycleListener> _listeners = new CopyOnWriteArrayList<>();
 
     protected final Object _lock = new Object();
     protected volatile State _state = State.NONE;
@@ -331,7 +308,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
 
     private class StateChangeDispatcher extends Thread {
         private final AtomicBoolean _running = new AtomicBoolean(true);
-        private final BlockingQueue<Boolean> _events = new LinkedBlockingQueue<Boolean>();
+        private final BlockingQueue<Boolean> _events = new LinkedBlockingQueue<>();
 
         private StateChangeDispatcher() {
             super("ZooKeeper state change dispatcher thread");
@@ -339,7 +316,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
 
         @Override
         public void run() {
-            Map<Object, Boolean> history = new IdentityHashMap<Object, Boolean>();
+            Map<Object, Boolean> history = new IdentityHashMap<>();
             LOG.info("Starting StateChangeDispatcher");
             while (_running.get()) {
                 Boolean isConnectedEvent;
@@ -375,7 +352,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
     }
 
     protected Map<Object, Boolean> callListeners(Map<Object, Boolean> history, Boolean connectedEvent) {
-        Map<Object, Boolean> newHistory = new IdentityHashMap<Object, Boolean>();
+        Map<Object, Boolean> newHistory = new IdentityHashMap<>();
         for (LifecycleListener listener : _listeners) {
             Boolean previousEvent = history.get(listener);
             // we propagate the event only if it was not already sent
@@ -396,6 +373,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
     }
 
     private class ExpiredSessionRecovery extends Thread {
+
         private ExpiredSessionRecovery() {
             super("ZooKeeper expired session recovery thread");
         }
@@ -403,19 +381,19 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
         @Override
         public void run() {
             LOG.info("Entering recovery mode");
-            synchronized(_lock) {
+            synchronized (_lock) {
                 try {
                     int count = 0;
                     while (_state == ZKClient.State.NONE) {
                         try {
                             count++;
-                            LOG.warn("Recovery mode: trying to reconnect to zookeeper [" + count + "]");
+                            LOG.warn("Recovery mode: trying to reconnect to zookeeper [{}]", count);
                             ZKClient.this.connect();
                         } catch (Throwable e) {
-                            LOG.warn("Recovery mode: reconnect attempt failed [" + count + "]... waiting for " + _reconnectTimeout, e);
+                            LOG.warn("Recovery mode: reconnect attempt failed [{}]... waiting for {}", count, _reconnectTimeout, e);
                             try {
                                 _lock.wait(_reconnectTimeout.getDurationInMilliseconds());
-                            } catch(InterruptedException e1) {
+                            } catch (InterruptedException e1) {
                                 throw new RuntimeException("Recovery mode: wait interrupted... bailing out", e1);
                             }
                         }
@@ -426,32 +404,21 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
                 }
             }
         }
+
     }
 
-    /**
-     * Constructor
-     */
-    public ZKClient(String connectString, Timespan sessionTimeout, Watcher watcher)
-    {
+    public ZKClient(String connectString, Timespan sessionTimeout, Watcher watcher) {
         this(new ZooKeeperFactory(connectString, sessionTimeout, watcher));
     }
 
-    /**
-     * Constructor
-     */
-    public ZKClient(IZooKeeperFactory factory)
-    {
+    public ZKClient(IZooKeeperFactory factory) {
         this(factory, null);
     }
 
-    /**
-     * Constructor
-     */
-    public ZKClient(IZooKeeperFactory factory, String chroot)
-    {
+    public ZKClient(IZooKeeperFactory factory, String chroot) {
         super(chroot);
         _factory = factory;
-        Map<String, String> acls = new HashMap<String, String>();
+        Map<String, String> acls = new HashMap<>();
         acls.put("/", "world:anyone:acdrw");
         setACLs(acls);
     }
@@ -476,28 +443,25 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
                     perm |= ZooDefs.Perms.ADMIN;
                     break;
                 default:
-                    System.err
-                            .println("Unknown perm type: " + permString.charAt(i));
+                    System.err.println("Unknown perm type:" + permString.charAt(i));
             }
         }
         return perm;
     }
 
     private static List<ACL> parseACLs(String aclString) {
-        List<ACL> acl;
+        List<ACL>  acl;
         String acls[] = aclString.split(",");
-        acl = new ArrayList<ACL>();
+        acl = new ArrayList<>();
         for (String a : acls) {
             int firstColon = a.indexOf(':');
             int lastColon = a.lastIndexOf(':');
             if (firstColon == -1 || lastColon == -1 || firstColon == lastColon) {
-                System.err
-                        .println(a + " does not have the form scheme:id:perm");
+                System.err.println(a + " does not have the form scheme:id:perm");
                 continue;
             }
             ACL newAcl = new ACL();
-            newAcl.setId(new Id(a.substring(0, firstColon), a.substring(
-                    firstColon + 1, lastColon)));
+            newAcl.setId(new Id(a.substring(0, firstColon), a.substring(firstColon + 1, lastColon)));
             newAcl.setPerms(getPermFromString(a.substring(lastColon + 1)));
             acl.add(newAcl);
         }
@@ -511,7 +475,7 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
         try {
             createBytesNodeWithParents(path, data, acl, createMode);
             return null;
-        } catch(KeeperException.NodeExistsException e) {
+        } catch (KeeperException.NodeExistsException e) {
             // this should not happen very often (race condition)
             return setByteData(path, data);
         }
@@ -595,20 +559,20 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
     private void createParents(String path) throws InterruptedException, KeeperException {
         path = PathUtils.getParentPath(adjustPath(path));
         path = PathUtils.removeTrailingSlash(path);
-        List<String> paths = new ArrayList<String>();
-        while(!path.equals("") && getZk().exists(path, false) == null) {
+        List<String> paths = new ArrayList<>();
+        while (!path.equals("") && getZk().exists(path, false) == null) {
             paths.add(path);
             path = PathUtils.getParentPath(path);
             path = PathUtils.removeTrailingSlash(path);
         }
         Collections.reverse(paths);
-        for(String p : paths) {
+        for (String p : paths) {
             try {
                 getZk().create(p,
                         null,
                         getNodeACLs(p),
                         CreateMode.PERSISTENT);
-            } catch(KeeperException.NodeExistsException e) {
+            } catch (KeeperException.NodeExistsException e) {
                 // ok we continue...
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("parent already exists " + p);
@@ -623,9 +587,10 @@ public class ZKClient extends org.linkedin.zookeeper.client.AbstractZKClient imp
         } else {
             try {
                 return data.getBytes(CHARSET);
-            } catch(UnsupportedEncodingException e) {
+            } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException(e);
             }
         }
     }
+
 }

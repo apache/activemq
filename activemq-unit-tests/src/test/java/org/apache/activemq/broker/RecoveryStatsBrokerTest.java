@@ -17,7 +17,6 @@
 
 package org.apache.activemq.broker;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -30,7 +29,6 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.store.MessageStoreStatistics;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
@@ -39,12 +37,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RunWith(value = Parameterized.class)
@@ -131,7 +124,9 @@ public class RecoveryStatsBrokerTest extends BrokerRestartTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testStaticsRecovery() throws Exception {
-        List<ActiveMQDestination> destinations = ImmutableList.of(new ActiveMQQueue("TEST.A"), new ActiveMQQueue("TEST.B"));
+        List<ActiveMQDestination> destinations = new ArrayList<>();
+        destinations.add(new ActiveMQQueue("TEST.A"));
+        destinations.add(new ActiveMQQueue("TEST.B"));
         Random random = new Random();
         Map<ActiveMQDestination, Integer> consumedMessages = new HashMap<>();
 

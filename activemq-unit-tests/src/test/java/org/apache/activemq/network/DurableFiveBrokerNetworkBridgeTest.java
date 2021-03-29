@@ -36,8 +36,6 @@ import org.apache.activemq.util.SubscriptionKey;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
 
-import com.google.common.collect.Lists;
-
 import junit.framework.Test;
 
 /**
@@ -52,8 +50,8 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
     @Override
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName) throws Exception {
         NetworkConnector connector = super.bridgeBrokers(localBrokerName, remoteBrokerName);
-        connector.setDynamicallyIncludedDestinations(
-                Lists.<ActiveMQDestination> newArrayList(new ActiveMQTopic("TEST.FOO?forceDurable=true")));
+        ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
+        includedDestinations.add(new ActiveMQTopic("TEST.FOO?forceDurable=true"));
         connector.setDuplex(duplex);
         connector.setDecreaseNetworkConsumerPriority(false);
         connector.setConduitSubscriptions(true);
@@ -555,10 +553,10 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         NetworkConnector nc4 = bridgeBrokers("Broker_B_B", "Broker_C_C");
         nc3.setName("nc_3_3");
         nc4.setName("nc_4_4");
-        nc3.setDynamicallyIncludedDestinations(
-                Lists.<ActiveMQDestination> newArrayList(new ActiveMQTopic("TEST.FOO2?forceDurable=true")));
-        nc4.setDynamicallyIncludedDestinations(
-                Lists.<ActiveMQDestination> newArrayList(new ActiveMQTopic("TEST.FOO2?forceDurable=true")));
+        ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
+        includedDestinations.add(new ActiveMQTopic("TEST.FOO2?forceDurable=true"));
+        nc3.setDynamicallyIncludedDestinations(includedDestinations);
+        nc4.setDynamicallyIncludedDestinations(includedDestinations);
 
         startAllBrokers();
 

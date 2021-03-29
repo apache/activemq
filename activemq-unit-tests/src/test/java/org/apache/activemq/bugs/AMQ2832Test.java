@@ -42,7 +42,6 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
@@ -249,9 +248,6 @@ public class AMQ2832Test {
 
         startBroker();
         PersistenceAdapter pa  = broker.getPersistenceAdapter();
-        if (pa instanceof LevelDBStore) {
-            return;
-        }
 
         ActiveMQQueue queue = new ActiveMQQueue("MyQueue");
         ActiveMQQueue disposable = new ActiveMQQueue("MyDisposableQueue");
