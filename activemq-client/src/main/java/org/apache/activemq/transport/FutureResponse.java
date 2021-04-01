@@ -42,10 +42,11 @@ public class FutureResponse {
         this.transportFilter = transportFilter;
     }
 
+
     public Response getResult() throws IOException {
         boolean hasInterruptPending = Thread.interrupted();
         try {
-            return responseSlot.take();
+            return responseSlot.poll(2, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             hasInterruptPending = false;
             throw dealWithInterrupt(e);
