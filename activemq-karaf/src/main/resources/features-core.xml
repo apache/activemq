@@ -20,12 +20,10 @@
 
 <features name="activemq-core-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.4.0">
 
-    <repository>mvn:org.apache.karaf.features/spring-legacy/[4,5)/xml/features</repository>
-
     <!-- Bundles needed if only client will be deployed in the container -->
     <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}">
         <feature version="[4,5)">spring</feature>
-        <feature version="[4,5)">shell-compat</feature>
+        <feature>aries-blueprint</feature>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
@@ -50,10 +48,6 @@
       <feature>connector</feature>
       <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
-      <conditional>
-          <condition>shell</condition>
-          <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
-      </conditional>
       <bundle dependency="true">mvn:commons-io/commons-io/${commons-io-version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
       <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang-version}</bundle>
