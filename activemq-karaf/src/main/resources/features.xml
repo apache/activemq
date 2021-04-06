@@ -37,6 +37,11 @@
         <feature version="${project.version}">activemq-web-console</feature>
     </feature>
 
+    <feature name="activemq-shell" version="${project.version}">
+        <feature>shell-compat</feature>
+        <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
+    </feature>
+
     <feature name="activemq-camel" version="${project.version}">
         <feature version="${project.version}">activemq-client</feature>
         <bundle>mvn:org.apache.activemq/activemq-camel/${project.version}</bundle>
@@ -46,6 +51,10 @@
         <feature version="${camel-version-range}">camel-blueprint</feature>
     </feature>
 
+    <!--
+        Don't forget to bind Karaf JMX server to 0.0.0.0 to have a functional webconsole:
+        In etc/org.apache.karaf.management.cfg, both rmiRegistryHost and rmiServerHost should use 0.0.0.0
+    -->
     <feature name="activemq-web-console" version="${project.version}">
       <feature>war</feature>
       <feature>eventadmin</feature>
