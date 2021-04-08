@@ -24,7 +24,7 @@
 	if (value == null) {
 		value = "";
 	}
-	value = org.apache.commons.lang.StringEscapeUtils.escapeHtml(value);
+	value = org.apache.commons.lang3.StringEscapeUtils.escapeHtml4(value);
 
 %>
 <input type="text" name="${name}" value="<%= value %>"/>
