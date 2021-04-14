@@ -94,10 +94,10 @@
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
     <zookeeper-version>3.4.14</zookeeper-version>
     <qpid-proton-version>0.33.8</qpid-proton-version>
-    <qpid-jms-version>0.55.0</qpid-jms-version>
-    <qpid-jms-netty-version>4.1.53.Final</qpid-jms-netty-version>
+    <qpid-jms-version>0.58.0</qpid-jms-version>
+    <qpid-jms-netty-version>4.1.63.Final</qpid-jms-netty-version>
     <qpid-jms-proton-version>0.33.8</qpid-jms-proton-version>
-    <netty-all-version>4.1.53.Final</netty-all-version>
+    <netty-all-version>4.1.63.Final</netty-all-version>
     <regexp-version>1.3</regexp-version>
     <rome-version>1.15.0</rome-version>
     <scala-plugin-version>3.1.0</scala-plugin-version>
