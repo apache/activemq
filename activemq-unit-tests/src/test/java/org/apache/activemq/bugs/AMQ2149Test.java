@@ -33,7 +33,6 @@ import java.util.concurrent.TimeoutException;
 import javax.jms.*;
 
 import org.apache.activemq.AutoFailTestSupport;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,8 +49,6 @@ import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.activemq.broker.region.BaseDestination.DUPLICATE_FROM_STORE_MSG_PREFIX;
-import static org.apache.activemq.command.ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY;
 import static org.junit.Assert.*;
 
 interface Configurer {
@@ -94,7 +91,6 @@ public class AMQ2149Test {
     
     public void createBroker(Configurer configurer) throws Exception {
         broker = new BrokerService();
-        broker.setAdvisorySupport(false);
         configurePersistenceAdapter(broker);
         
         broker.getSystemUsage().getMemoryUsage().setLimit(MESSAGE_LENGTH_BYTES * 200 * NUM_SENDERS_AND_RECEIVERS);
@@ -168,9 +164,8 @@ public class AMQ2149Test {
         public Receiver(javax.jms.Destination dest, boolean transactional) throws JMSException {
             this.dest = dest;
             this.transactional = transactional;
-            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);
-            connectionFactory.setWatchTopicAdvisories(false);
-            connection = connectionFactory.createConnection();
+            connection = new ActiveMQConnectionFactory(brokerURL)
+                    .createConnection();
             connection.setClientID(dest.toString());
             session = connection.createSession(transactional, transactional ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
             if (ActiveMQDestination.transform(dest).isTopic()) {
@@ -229,7 +224,7 @@ public class AMQ2149Test {
                 lastId = message.getJMSMessageID();
             } catch (TransactionRolledBackException expectedSometimesOnFailoverRecovery) {
                 ++nextExpectedSeqNum;
-                LOG.info("got rollback: " + expectedSometimesOnFailoverRecovery, expectedSometimesOnFailoverRecovery);
+                LOG.info("got rollback: " + expectedSometimesOnFailoverRecovery);
                 if (expectedSometimesOnFailoverRecovery.getMessage().contains("completion in doubt")) {
                     // in doubt - either commit command or reply missing
                     // don't know if we will get a replay
@@ -240,17 +235,7 @@ public class AMQ2149Test {
                     // batch will be replayed
                     nextExpectedSeqNum -= TRANSACITON_BATCH;
                 }
-            } catch (JMSException expectedSometimesOnFailoverRecoveryWithNestedTransactionRolledBackException) {
-                ++nextExpectedSeqNum;
-                LOG.info("got rollback: " + expectedSometimesOnFailoverRecoveryWithNestedTransactionRolledBackException, expectedSometimesOnFailoverRecoveryWithNestedTransactionRolledBackException);
-                if (expectedSometimesOnFailoverRecoveryWithNestedTransactionRolledBackException.getMessage().contains("xaErrorCode:100")) {
-                    resumeOnNextOrPreviousIsOk = false;
-                    // batch will be replayed
-                    nextExpectedSeqNum -= TRANSACITON_BATCH;
-                } else {
-                    LOG.error(dest + " onMessage error:" + expectedSometimesOnFailoverRecoveryWithNestedTransactionRolledBackException);
-                    exceptions.add(expectedSometimesOnFailoverRecoveryWithNestedTransactionRolledBackException);
-                }
+
             } catch (Throwable e) {
                 LOG.error(dest + " onMessage error:" + e);
                 exceptions.add(e);
@@ -273,9 +258,8 @@ public class AMQ2149Test {
 
         public Sender(javax.jms.Destination dest) throws JMSException {
             this.dest = dest;
-            ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(brokerURL);
-            activeMQConnectionFactory.setWatchTopicAdvisories(false);
-            connection = activeMQConnectionFactory.createConnection();
+            connection = new ActiveMQConnectionFactory(brokerURL)
+                    .createConnection();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             messageProducer = session.createProducer(dest);
             messageProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
@@ -375,7 +359,7 @@ public class AMQ2149Test {
         });
         
         verifyOrderedMessageReceipt();
-        verifyStats(false, false);
+        verifyStats(false);
     }
 
     @Test(timeout = 10 * 60 * 1000)
@@ -398,7 +382,7 @@ public class AMQ2149Test {
             timer.cancel();
         }
         
-        verifyStats(true, false);
+        verifyStats(true);
     }
 
     @Test(timeout = 10 * 60 * 1000)
@@ -418,7 +402,7 @@ public class AMQ2149Test {
             timer.cancel();
         }
         
-        verifyStats(true, false);
+        verifyStats(true);
     }
 
     @Test(timeout = 10 * 60 * 1000)
@@ -451,10 +435,10 @@ public class AMQ2149Test {
             timer.cancel();
         }
         
-        verifyStats(true, true);
+        verifyStats(true);
     }
 
-    private void verifyStats(boolean brokerRestarts, boolean transactional) throws Exception {
+    private void verifyStats(boolean brokerRestarts) throws Exception {
         RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
         
         for (Destination dest : regionBroker.getQueueRegion().getDestinationMap().values()) {
@@ -469,27 +453,6 @@ public class AMQ2149Test {
                 assertEquals("qneue/dequeue match for: " + dest.getName(),
                         stats.getEnqueues().getCount(), stats.getDequeues().getCount());   
             }
-        }
-        Destination activeMQDlq = regionBroker.getQueueRegion().getDestinationMap().get(new ActiveMQQueue("ActiveMQ.DLQ"));
-        if (activeMQDlq != null) {
-
-            // excuse duplicates from the store
-            int countToExcuse = 0;
-            org.apache.activemq.command.Message[] messages = activeMQDlq.browse();
-            for (org.apache.activemq.command.Message candidate: messages) {
-                final Object cause = candidate.getProperty(DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
-                if (cause!= null &&
-                        ((((String)cause).contains(DUPLICATE_FROM_STORE_MSG_PREFIX)) ||
-                        !transactional && ((String)cause).contains("Suppressing duplicate delivery on connection"))) {
-                    // expected some duplicate sends for durable subs
-                    countToExcuse++;
-                } else {
-                    LOG.error("Unexpected dlq: " + cause + ", " + candidate);
-                }
-            }
-
-            assertEquals("no unexpcted dlq messages", countToExcuse ,
-                    activeMQDlq.getDestinationStatistics().getMessages().getCount());
         }
     }
 

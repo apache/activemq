@@ -35,7 +35,6 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnection;
-import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -314,10 +313,8 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
             c.close();
 
             // verify no pending sends completed in rolledback tx
-            // temp dest should not exist
-            if (!ActiveMQDestination.transform(destination).isTemporary()) {
-                assertEquals("nothing sent during close", enqueueCountWhenBlocked, broker.getDestination(ActiveMQDestination.transform(destination)).getDestinationStatistics().getEnqueues().getCount());
-            }
+            assertEquals("nothing sent during close", enqueueCountWhenBlocked, broker.getDestination(ActiveMQDestination.transform(destination)).getDestinationStatistics().getEnqueues().getCount());
+
         } finally {
             log4jLogger.removeAppender(appender);
         }
