@@ -1263,6 +1263,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 for (Iterator<MessageDispatch> iter = deliveredMessages.iterator(); iter.hasNext();) {
                     MessageDispatch md = iter.next();
                     md.getMessage().onMessageRolledBack();
+                    // ensure we don't filter this as a duplicate
+                    session.connection.rollbackDuplicate(this, md.getMessage());
                 }
 
                 if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES

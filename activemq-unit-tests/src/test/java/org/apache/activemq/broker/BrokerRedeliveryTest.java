@@ -23,6 +23,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
@@ -40,12 +41,18 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
     static final Logger LOG = LoggerFactory.getLogger(BrokerRedeliveryTest.class);
     BrokerService broker = null;
+    TransportConnector tcpConnector = null;
 
     final ActiveMQQueue destination = new ActiveMQQueue("Redelivery");
     final String data = "hi";
     final long redeliveryDelayMillis = 2000;
     long initialRedeliveryDelayMillis = 4000;
     int maxBrokerRedeliveries = 2;
+    public Boolean checkForDuplicates = Boolean.TRUE;
+
+    public void initCombosForTestScheduledRedelivery() {
+        addCombinationValues("checkForDuplicates", new Object[] {Boolean.TRUE, Boolean.FALSE});
+    }
 
     public void testScheduledRedelivery() throws Exception {
         doTestScheduledRedelivery(maxBrokerRedeliveries, true);
@@ -130,6 +137,8 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         Message dlqMessage = dlqConsumer.receive(2000);
         assertNotNull("Got message from dql", dlqMessage);
         assertEquals("message matches", message.getStringProperty("data"), dlqMessage.getStringProperty("data"));
+
+        consumerConnection.close();
     }
 
     public void testNoScheduledRedeliveryOfDuplicates() throws Exception {
@@ -178,6 +187,8 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         Message dlqMessage = dlqConsumer.receive(4000);
         assertNotNull("Got message from dql", dlqMessage);
         assertEquals("message matches", message.getStringProperty("data"), dlqMessage.getStringProperty("data"));
+
+        consumerConnection.close();
     }
 
     private void sendMessage(int timeToLive) throws Exception {
@@ -206,6 +217,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         broker = new BrokerService();
         broker.setPersistent(persistent);
         broker.setSchedulerSupport(true);
+        tcpConnector = broker.addConnector("tcp://localhost:0");
 
         RedeliveryPlugin redeliveryPlugin = new RedeliveryPlugin();
 
@@ -231,12 +243,16 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory("vm://localhost");
+        return new ActiveMQConnectionFactory("failover:(" + tcpConnector.getPublishableConnectString() + ")?jms.checkForDuplicates=" + checkForDuplicates.toString());
     }
 
     @Override
     protected void tearDown() throws Exception {
         stopBroker();
         super.tearDown();
+    }
+
+    public static Test suite() {
+        return suite(BrokerRedeliveryTest.class);
     }
 }
