@@ -476,7 +476,7 @@ checkRunning(){
         return 2
        fi
        local activemq_pid="`cat "$pidfile"`"
-       local RET="`ps -o "pid,args" | grep "^$activemq_pid\s.*java"`"
+       local RET="`ps -o "pid,args" | grep "^\s*$activemq_pid\s.*java"`"
        if [ -n "$RET" ];then
          return 0;
        else
