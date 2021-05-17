@@ -164,6 +164,7 @@
               org.eclipse.jetty*;resolution:=optional;version="[9.0,10)",
               org.objectweb.asm*;version="[6,8)"
             </Import-Package>
+            <_contract>!*</_contract>
           </instructions>
         </configuration>
       </plugin>

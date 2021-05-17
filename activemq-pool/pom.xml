@@ -30,19 +30,6 @@
   <name>ActiveMQ :: Pool</name>
   <description>ActiveMQ Pooled ConnectionFactory</description>
 
-  <properties>
-    <activemq.osgi.import.pkg>
-      javax.transaction*;resolution:=optional,
-      org.apache.activemq.jms.pool*;resolution:=optional,
-      org.apache.activemq.ra*;resolution:=optional,
-      org.apache.geronimo.transaction.manager*;resolution:=optional,
-      *
-    </activemq.osgi.import.pkg>
-    <activemq.osgi.export>
-      org.apache.activemq.pool*;version=${project.version};-noimport:=true,
-    </activemq.osgi.export>
-  </properties>
-
   <dependencies>
 
     <!-- =============================== -->
@@ -134,5 +121,28 @@
       </build>
     </profile>
   </profiles>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <inherited>true</inherited>
+        <configuration>
+          <instructions>
+            <Export-Package>*</Export-Package>
+            <Import-Package>
+              javax.transaction*;resolution:=optional,
+              org.apache.activemq.jms.pool*;resolution:=optional,
+              org.apache.activemq.ra*;resolution:=optional,
+              org.apache.geronimo.transaction.manager*;resolution:=optional,
+              *
+            </Import-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

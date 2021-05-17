@@ -32,15 +32,6 @@
 
   <properties>
     <surefire.argLine>-Xmx512M</surefire.argLine>
-    <activemq.osgi.import.pkg>
-      !com.google.errorprone.annotations,
-      !com.google.errorprone.annotations.concurrent,
-      *
-    </activemq.osgi.import.pkg>
-    <activemq.osgi.private.pkg>
-      com.google.errorprone.annotations,
-      com.google.errorprone.annotations.concurrent
-    </activemq.osgi.private.pkg>
   </properties>
 
   <dependencies>
@@ -207,6 +198,26 @@
     </resources>
 
     <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <inherited>true</inherited>
+        <configuration>
+          <instructions>
+            <Export-Package>*</Export-Package>
+            <Import-Package>
+              !com.google.errorprone.annotations,
+              !com.google.errorprone.annotations.concurrent,
+              *
+            </Import-Package>
+            <Private-Package>
+              com.google.errorprone.annotations,
+              com.google.errorprone.annotations.concurrent
+            </Private-Package>
+          </instructions>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>

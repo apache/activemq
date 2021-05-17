@@ -123,7 +123,7 @@
     <slf4j-javadoc-url>http://www.slf4j.org/apidocs/</slf4j-javadoc-url>
 
     <!-- Maven Plugin Version for this Project -->
-    <maven-bundle-plugin-version>2.3.7</maven-bundle-plugin-version>
+    <maven-bundle-plugin-version>5.1.2</maven-bundle-plugin-version>
     <maven-surefire-plugin-version>2.22.2</maven-surefire-plugin-version>
     <maven-antrun-plugin-version>1.8</maven-antrun-plugin-version>
     <maven-assembly-plugin-version>2.6</maven-assembly-plugin-version>
@@ -1301,43 +1301,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <inherited>true</inherited>
-        <configuration>
-          <instructions>
-            <Bundle-Name>${project.artifactId}</Bundle-Name>
-            <Bundle-SymbolicName>${activemq.osgi.symbolic.name}</Bundle-SymbolicName>
-            <Export-Package>${activemq.osgi.export}</Export-Package>
-            <Import-Package>${activemq.osgi.import}</Import-Package>
-            <DynamicImport-Package>${activemq.osgi.dynamic.import}</DynamicImport-Package>
-            <Private-Package>${activemq.osgi.private.pkg}</Private-Package>
-            <Implementation-Title>Apache ActiveMQ</Implementation-Title>
-            <Implementation-Version>${project.version}</Implementation-Version>
-            <_versionpolicy-impl>[$(version;==;$(@)),$(version;=+;$(@)))</_versionpolicy-impl>
-            <_versionpolicy-uses>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy-uses>
-            <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
-            <_failok>${servicemix.osgi.failok}</_failok>
-          </instructions>
-        </configuration>
-        <executions>
-          <execution>
-            <id>cleanVersions</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>cleanVersions</goal>
-            </goals>
-            <configuration>
-              <versions>
-                <activemq.osgi.version>${project.version}</activemq.osgi.version>
-              </versions>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
