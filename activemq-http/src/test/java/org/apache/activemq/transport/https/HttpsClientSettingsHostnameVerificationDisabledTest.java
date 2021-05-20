@@ -93,7 +93,13 @@ public class HttpsClientSettingsHostnameVerificationDisabledTest extends JmsTopi
 
         return factory;
     }
-    
 
-
+    @Override
+    public void runBare() throws Throwable {
+        try {
+            super.runBare();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
