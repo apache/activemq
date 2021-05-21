@@ -134,7 +134,7 @@
     <maven-jar-plugin-version>3.1.0</maven-jar-plugin-version>
     <maven-archiver-version>2.5</maven-archiver-version>
     <maven-source-plugin-version>2.4</maven-source-plugin-version>
-    <maven-javadoc-plugin-version>2.9.1</maven-javadoc-plugin-version>
+    <maven-javadoc-plugin-version>3.0.1</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.4</maven-install-plugin-version>
     <maven-shade-plugin-version>2.1</maven-shade-plugin-version>
     <findbugs-maven-plugin-version>3.0.1</findbugs-maven-plugin-version>
@@ -1359,6 +1359,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin-version}</version>
         <configuration>
           <links>
             <link>${javase-javadoc-url}</link>
@@ -1378,7 +1379,7 @@
           <source>${source-version}</source>
           <additionalJOption>-J-Xmx2048m</additionalJOption>
           <!-- necessary for now under the javadocs can be fixed because jdk8 is much stricter -->
-          <additionalparam>${javadoc.options}</additionalparam>
+          <additionalJOption>${javadoc.options}</additionalJOption>
         </configuration>
         <executions>
             <execution>
@@ -1513,7 +1514,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>${maven-javadoc-plugin-version}</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
