@@ -148,7 +148,13 @@ public class AdvisoryBroker extends BrokerFilter {
             } finally {
                 consumersLock.writeLock().unlock();
             }
-            fireConsumerAdvisory(context, info.getDestination(), topic, info);
+
+            // Note: info.copy() does not copy the ConsumerInfo.additionalPredicate, which cannot be serialized via
+            // OpenWire marshallers, unless it implements org.apache.activemq.command.DataStructure (which regular
+            // org.apache.activemq.filter.Expression objects do not)
+            final ConsumerInfo clonedConsumerInfo = info.copy();
+            fireConsumerAdvisory(context, info.getDestination(), topic, clonedConsumerInfo);
+
         } else {
             // We need to replay all the previously collected state objects
             // for this newly added consumer.
