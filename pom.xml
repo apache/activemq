@@ -1067,7 +1067,7 @@
           <artifactId>maven-assembly-plugin</artifactId>
           <version>${maven-assembly-plugin-version}</version>
           <configuration>
-            <tarLongFileMode>gnu</tarLongFileMode>
+            <tarLongFileMode>posix</tarLongFileMode>
           </configuration>
         </plugin>
         <plugin>
@@ -1286,7 +1286,17 @@
           <showWarnings>true</showWarnings>
         </configuration>
       </plugin>
-
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>ianal-maven-plugin</artifactId>
