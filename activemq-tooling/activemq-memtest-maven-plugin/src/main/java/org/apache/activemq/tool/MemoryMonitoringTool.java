@@ -67,7 +67,7 @@ public class MemoryMonitoringTool implements Runnable {
     public Thread startMonitor() {
 
         String intervalStr = this.getTestSettings().getProperty("checkpoint_interval");
-        checkpointInterval = new Integer(intervalStr).intValue();
+        checkpointInterval = Integer.valueOf(intervalStr).intValue();
         this.getTestSettings().remove("checkpoint_interval");
 
         memoryBean = ManagementFactory.getMemoryMXBean();

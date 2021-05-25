@@ -50,9 +50,9 @@ public class ConnectionFactoryProvider {
         String jndiName = getString(config, OSGI_JNDI_SERVICE_NAME, "jms/local");
         String userName = getString(config, "userName", null);
         String password = getString(config, "password", null);
-        long expiryTimeout = new Long(getString(config, "expiryTimeout", "0"));
-        int idleTimeout = new Integer(getString(config, "idleTimeout", "30000"));
-        int maxConnections = new Integer(getString(config, "maxConnections", "8"));
+        long expiryTimeout = Long.valueOf(getString(config, "expiryTimeout", "0"));
+        int idleTimeout = Integer.valueOf(getString(config, "idleTimeout", "30000"));
+        int maxConnections = Integer.valueOf(getString(config, "maxConnections", "8"));
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(brokerURL);
         if (userName != null) {
             cf.setUserName(userName);

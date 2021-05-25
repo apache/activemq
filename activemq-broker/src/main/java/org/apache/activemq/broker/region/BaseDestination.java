@@ -706,9 +706,9 @@ public abstract class BaseDestination implements Destination {
                 }
 
                 if (isFlowControlLogRequired()) {
-                    getLog().warn("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((System.currentTimeMillis() - start) / 1000))});
+                    getLog().warn("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, Long.valueOf(((System.currentTimeMillis() - start) / 1000))});
                 } else {
-                    getLog().debug("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((System.currentTimeMillis() - start) / 1000))});
+                    getLog().debug("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, Long.valueOf(((System.currentTimeMillis() - start) / 1000))});
                 }
             }
             long finish = System.currentTimeMillis();

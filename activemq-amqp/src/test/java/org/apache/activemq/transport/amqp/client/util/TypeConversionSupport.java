@@ -151,7 +151,7 @@ public final class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Float.class, Double.class), new Converter() {
             @Override
             public Object convert(Object value) {
-                return new Double(((Number) value).doubleValue());
+                return Double.valueOf(((Number) value).doubleValue());
             }
         });
     }

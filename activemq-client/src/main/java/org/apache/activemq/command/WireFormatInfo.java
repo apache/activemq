@@ -285,7 +285,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     public void setMaxInactivityDuration(long maxInactivityDuration) throws IOException {
-        setProperty("MaxInactivityDuration", new Long(maxInactivityDuration));
+        setProperty("MaxInactivityDuration", Long.valueOf(maxInactivityDuration));
     }
 
     public long getMaxInactivityDurationInitalDelay() throws IOException {
@@ -294,7 +294,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     public void setMaxInactivityDurationInitalDelay(long maxInactivityDurationInitalDelay) throws IOException {
-        setProperty("MaxInactivityDurationInitalDelay", new Long(maxInactivityDurationInitalDelay));
+        setProperty("MaxInactivityDurationInitalDelay", Long.valueOf(maxInactivityDurationInitalDelay));
     }
 
     public long getMaxFrameSize() throws IOException {
@@ -303,7 +303,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     public void setMaxFrameSize(long maxFrameSize) throws IOException {
-        setProperty("MaxFrameSize", new Long(maxFrameSize));
+        setProperty("MaxFrameSize", Long.valueOf(maxFrameSize));
     }
 
     /**
@@ -315,7 +315,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     public void setCacheSize(int cacheSize) throws IOException {
-        setProperty("CacheSize", new Integer(cacheSize));
+        setProperty("CacheSize", Integer.valueOf(cacheSize));
     }
 
     /**

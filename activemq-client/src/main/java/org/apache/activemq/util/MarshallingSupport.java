@@ -184,10 +184,10 @@ public final class MarshallingSupport {
             value = Long.valueOf(in.readLong());
             break;
         case FLOAT_TYPE:
-            value = new Float(in.readFloat());
+            value = Float.valueOf(in.readFloat());
             break;
         case DOUBLE_TYPE:
-            value = new Double(in.readDouble());
+            value = Double.valueOf(in.readDouble());
             break;
         case BYTE_ARRAY_TYPE:
             value = new byte[in.readInt()];

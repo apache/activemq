@@ -57,7 +57,7 @@ public class ConstantExpression implements Expression {
 
         Number value;
         try {
-            value = new Long(text);
+            value = Long.valueOf(text);
         } catch (NumberFormatException e) {
             // The number may be too big to fit in a long.
             value = new BigDecimal(text);
@@ -89,7 +89,7 @@ public class ConstantExpression implements Expression {
     }
 
     public static ConstantExpression createFloat(String text) {
-        Number value = new Double(text);
+        Number value = Double.valueOf(text);
         return new ConstantExpression(value);
     }
 

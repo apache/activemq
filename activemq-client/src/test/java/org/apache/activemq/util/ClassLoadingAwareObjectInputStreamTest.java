@@ -321,7 +321,7 @@ public class ClassLoadingAwareObjectInputStreamTest {
         }
 
         // Replace the filtered type and try again
-        value[3] = new Integer(20);
+        value[3] = Integer.valueOf(20);
 
         serialized = serializeObject(value);
 

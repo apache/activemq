@@ -229,7 +229,7 @@ public class CronParser {
     }
 
     static boolean isCurrent(final CronEntry entry, final int current) throws MessageFormatException {
-        boolean result = entry.currentWhen.contains(new Integer(current));
+        boolean result = entry.currentWhen.contains(Integer.valueOf(current));
         return result;
     }
 

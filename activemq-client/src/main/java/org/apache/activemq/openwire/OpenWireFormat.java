@@ -520,13 +520,13 @@ public final class OpenWireFormat implements WireFormat {
         // We can only cache that item if there is space left.
         if (marshallCacheMap.size() < marshallCache.length) {
             marshallCache[i] = o;
-            Short index = new Short(i);
+            Short index = Short.valueOf(i);
             marshallCacheMap.put(o, index);
             return index;
         } else {
             // Use -1 to indicate that the value was not cached due to cache
             // being full.
-            return new Short((short)-1);
+            return Short.valueOf((short)-1);
         }
     }
 

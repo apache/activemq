@@ -23,7 +23,6 @@ import java.net.URL;
 
 import javax.jms.JMSException;
 
-import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.commons.net.ftp.FTPClient;
 
 public class FTPStrategy {

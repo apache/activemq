@@ -69,7 +69,7 @@ public class ResponseCorrelator extends TransportFilter {
         synchronized (requestMap) {
             priorError = this.error;
             if (priorError == null) {
-                requestMap.put(new Integer(command.getCommandId()), future);
+                requestMap.put(Integer.valueOf(command.getCommandId()), future);
             }
         }
 

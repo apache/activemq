@@ -634,28 +634,28 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readUTF();
             }
             if (type == MarshallingSupport.LONG_TYPE) {
-                return new Long(this.dataIn.readLong()).toString();
+                return Long.toString(this.dataIn.readLong());
             }
             if (type == MarshallingSupport.INTEGER_TYPE) {
-                return new Integer(this.dataIn.readInt()).toString();
+                return Integer.toString(this.dataIn.readInt());
             }
             if (type == MarshallingSupport.SHORT_TYPE) {
-                return new Short(this.dataIn.readShort()).toString();
+                return Short.toString(this.dataIn.readShort());
             }
             if (type == MarshallingSupport.BYTE_TYPE) {
-                return new Byte(this.dataIn.readByte()).toString();
+                return Byte.toString(this.dataIn.readByte());
             }
             if (type == MarshallingSupport.FLOAT_TYPE) {
-                return new Float(this.dataIn.readFloat()).toString();
+                return Float.toString(this.dataIn.readFloat());
             }
             if (type == MarshallingSupport.DOUBLE_TYPE) {
-                return new Double(this.dataIn.readDouble()).toString();
+                return Double.toString(this.dataIn.readDouble());
             }
             if (type == MarshallingSupport.BOOLEAN_TYPE) {
                 return (this.dataIn.readBoolean() ? Boolean.TRUE : Boolean.FALSE).toString();
             }
             if (type == MarshallingSupport.CHAR_TYPE) {
-                return new Character(this.dataIn.readChar()).toString();
+                return Character.toString(this.dataIn.readChar());
             } else {
                 this.dataIn.reset();
                 throw new MessageFormatException(" not a String type");
@@ -820,10 +820,10 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return Byte.valueOf(this.dataIn.readByte());
             }
             if (type == MarshallingSupport.FLOAT_TYPE) {
-                return new Float(this.dataIn.readFloat());
+                return Float.valueOf(this.dataIn.readFloat());
             }
             if (type == MarshallingSupport.DOUBLE_TYPE) {
-                return new Double(this.dataIn.readDouble());
+                return Double.valueOf(this.dataIn.readDouble());
             }
             if (type == MarshallingSupport.BOOLEAN_TYPE) {
                 return this.dataIn.readBoolean() ? Boolean.TRUE : Boolean.FALSE;

@@ -23,4 +23,6 @@ import java.io.IOException;
  * a reply or response is received
  */
 public class RequestTimedOutIOException extends IOException {
+
+	private static final long serialVersionUID = -5938342624821415513L;
 }
