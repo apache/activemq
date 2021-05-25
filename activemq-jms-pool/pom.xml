@@ -30,18 +30,6 @@
   <description>Generic JMS Pooled ConnectionFactory</description>
   <packaging>bundle</packaging>
 
-  <properties>
-    <activemq.osgi.import.pkg>
-      javax.jms*;version="[1.1,3)",
-      javax.transaction*;resolution:=optional,
-      org.apache.geronimo.transaction.manager*;resolution:=optional,
-      *
-    </activemq.osgi.import.pkg>
-    <activemq.osgi.export>
-      org.apache.activemq.jms.pool*;version=${project.version};-noimport:=true,
-    </activemq.osgi.export>
-  </properties>
-
   <dependencies>
 
     <!-- =============================== -->
@@ -111,6 +99,28 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <inherited>true</inherited>
+        <configuration>
+          <instructions>
+            <Export-Package>*</Export-Package>
+            <Import-Package>
+              javax.jms*;version="[1.1,3)",
+              javax.transaction*;resolution:=optional,
+              org.apache.geronimo.transaction.manager*;resolution:=optional,
+              *
+            </Import-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
   <profiles>
     <profile>

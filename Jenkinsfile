@@ -36,7 +36,7 @@ pipeline {
     tools {
         // ... tell Jenkins what java version, maven version or other tools are required ...
         maven 'maven_3_latest'
-        jdk 'jdk_1.8_latest'
+        jdk 'jdk_11_latest'
     }
 
     options {

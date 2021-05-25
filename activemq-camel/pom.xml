@@ -31,15 +31,6 @@
   <packaging>bundle</packaging>
 
   <properties>
-    <activemq.osgi.import.pkg>
-       org.springframework.jms*;version="[4,5)",
-       org.apache.activemq.pool,
-       org.apache.camel*;version="${camel-version-range}",
-       *
-    </activemq.osgi.import.pkg>
-    <activemq.osgi.export>
-        org.apache.activemq.camel*;version:="${project.version}";-noimport:=true
-    </activemq.osgi.export>
     <camel.osgi.export.service>
       org.apache.camel.spi.ComponentResolver;component=activemq,
       org.apache.camel.spi.ComponentResolver;component=broker
@@ -195,10 +186,38 @@
       <optional>true</optional>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <inherited>true</inherited>
+        <configuration>
+          <instructions>
+            <Export-Package>
+              org.apache.activemq.camel*;version:="${project.version}";-noimport:=true
+            </Export-Package>
+            <Import-Package>
+              org.springframework.jms*;version="[4,5)",
+              org.apache.activemq.pool,
+              org.apache.camel*;version="${camel-version-range}",
+              *
+            </Import-Package>
+            <Export-Service>
+              org.apache.camel.spi.ComponentResolver;component=activemq,
+              org.apache.camel.spi.ComponentResolver;component=broker
+            </Export-Service>
+          </instructions>
+        </configuration>
+      </plugin>
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>

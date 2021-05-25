@@ -46,6 +46,10 @@
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-openwire-legacy</artifactId>
     </dependency>
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>javax.annotation-api</artifactId>
+    </dependency>
 
     <!-- =============================== -->
     <!-- Optional Dependencies -->

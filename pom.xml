@@ -123,18 +123,18 @@
     <slf4j-javadoc-url>http://www.slf4j.org/apidocs/</slf4j-javadoc-url>
 
     <!-- Maven Plugin Version for this Project -->
-    <maven-bundle-plugin-version>2.3.7</maven-bundle-plugin-version>
-    <maven-surefire-plugin-version>2.22.1</maven-surefire-plugin-version>
-    <maven-antrun-plugin-version>1.3</maven-antrun-plugin-version>
-    <maven-assembly-plugin-version>2.4</maven-assembly-plugin-version>
+    <maven-bundle-plugin-version>5.1.2</maven-bundle-plugin-version>
+    <maven-surefire-plugin-version>2.22.2</maven-surefire-plugin-version>
+    <maven-antrun-plugin-version>1.8</maven-antrun-plugin-version>
+    <maven-assembly-plugin-version>2.6</maven-assembly-plugin-version>
     <maven-release-plugin-version>2.4.1</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
-    <maven-war-plugin-version>2.4</maven-war-plugin-version>
+    <maven-war-plugin-version>3.2.2</maven-war-plugin-version>
     <maven-compiler-plugin-version>3.8.1</maven-compiler-plugin-version>
-    <maven-jar-plugin-version>2.4</maven-jar-plugin-version>
+    <maven-jar-plugin-version>3.1.0</maven-jar-plugin-version>
     <maven-archiver-version>2.5</maven-archiver-version>
-    <maven-source-plugin-version>2.2.1</maven-source-plugin-version>
-    <maven-javadoc-plugin-version>2.9.1</maven-javadoc-plugin-version>
+    <maven-source-plugin-version>2.4</maven-source-plugin-version>
+    <maven-javadoc-plugin-version>3.0.1</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.4</maven-install-plugin-version>
     <maven-shade-plugin-version>2.1</maven-shade-plugin-version>
     <findbugs-maven-plugin-version>3.0.1</findbugs-maven-plugin-version>
@@ -502,7 +502,7 @@
      <dependency>
        <groupId>org.ow2.asm</groupId>
        <artifactId>asm</artifactId>
-       <version>7.3.1</version>
+       <version>9.1</version>
      </dependency>
 
       <!-- Servlet 3.1 and JSP -->
@@ -1034,6 +1034,16 @@
         <artifactId>org.apache.servicemix.bundles.josql</artifactId>
         <version>${josql-version}</version>
       </dependency>
+      <dependency>
+        <groupId>javax.xml.bind</groupId>
+        <artifactId>jaxb-api</artifactId>
+        <version>2.3.1</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.annotation</groupId>
+        <artifactId>javax.annotation-api</artifactId>
+        <version>1.3.2</version>
+      </dependency>
 
     </dependencies>
   </dependencyManagement>
@@ -1057,7 +1067,7 @@
           <artifactId>maven-assembly-plugin</artifactId>
           <version>${maven-assembly-plugin-version}</version>
           <configuration>
-            <tarLongFileMode>gnu</tarLongFileMode>
+            <tarLongFileMode>posix</tarLongFileMode>
           </configuration>
         </plugin>
         <plugin>
@@ -1276,7 +1286,17 @@
           <showWarnings>true</showWarnings>
         </configuration>
       </plugin>
-
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>ianal-maven-plugin</artifactId>
@@ -1291,43 +1311,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <inherited>true</inherited>
-        <configuration>
-          <instructions>
-            <Bundle-Name>${project.artifactId}</Bundle-Name>
-            <Bundle-SymbolicName>${activemq.osgi.symbolic.name}</Bundle-SymbolicName>
-            <Export-Package>${activemq.osgi.export}</Export-Package>
-            <Import-Package>${activemq.osgi.import}</Import-Package>
-            <DynamicImport-Package>${activemq.osgi.dynamic.import}</DynamicImport-Package>
-            <Private-Package>${activemq.osgi.private.pkg}</Private-Package>
-            <Implementation-Title>Apache ActiveMQ</Implementation-Title>
-            <Implementation-Version>${project.version}</Implementation-Version>
-            <_versionpolicy-impl>[$(version;==;$(@)),$(version;=+;$(@)))</_versionpolicy-impl>
-            <_versionpolicy-uses>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy-uses>
-            <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
-            <_failok>${servicemix.osgi.failok}</_failok>
-          </instructions>
-        </configuration>
-        <executions>
-          <execution>
-            <id>cleanVersions</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>cleanVersions</goal>
-            </goals>
-            <configuration>
-              <versions>
-                <activemq.osgi.version>${project.version}</activemq.osgi.version>
-              </versions>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
@@ -1386,6 +1369,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin-version}</version>
         <configuration>
           <links>
             <link>${javase-javadoc-url}</link>
@@ -1405,7 +1389,7 @@
           <source>${source-version}</source>
           <additionalJOption>-J-Xmx2048m</additionalJOption>
           <!-- necessary for now under the javadocs can be fixed because jdk8 is much stricter -->
-          <additionalparam>${javadoc.options}</additionalparam>
+          <additionalJOption>${javadoc.options}</additionalJOption>
         </configuration>
         <executions>
             <execution>
@@ -1540,7 +1524,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>${maven-javadoc-plugin-version}</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
