@@ -24,13 +24,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -43,7 +44,8 @@ import java.util.Arrays;
 @RunWith(SpringJUnit4ClassRunner.class)
 
 @ContextConfiguration(locations = {"classpath:spring/xa.xml"})
-@TransactionConfiguration(transactionManager = "transactionManager", defaultRollback = false)
+@Transactional
+@Commit
 public class ParallelXATransactionTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(ParallelXATransactionTest.class);

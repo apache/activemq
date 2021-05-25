@@ -155,6 +155,7 @@
               sun.misc*;resolution:=optional,
               sun.nio*;resolution:=optional,
               sun.rmi*;resolution:=optional,
+              javax.xml.bind*;version="[2,3)",
               javax.jmdns*;resolution:=optional,
               javax.resource*;resolution:=optional,
               javax.servlet*;resolution:=optional,
