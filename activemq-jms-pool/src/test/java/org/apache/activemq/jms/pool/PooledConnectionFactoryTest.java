@@ -408,7 +408,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
             }
 
             // all good, test succeeded
-            return Boolean.FALSE;
+            return Boolean.TRUE;
         }
     }
 }
