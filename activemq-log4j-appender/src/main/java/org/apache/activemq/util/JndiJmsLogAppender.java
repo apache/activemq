@@ -24,8 +24,6 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.apache.log4j.helpers.LogLog;
-
 /**
  * A JMS 1.1 log4j appender which uses JNDI to locate a JMS ConnectionFactory to
  * use for logging events.
@@ -117,7 +115,7 @@ public class JndiJmsLogAppender extends JmsLogAppenderSupport {
     // -------------------------------------------------------------------------
     protected Connection createConnection() throws JMSException, NamingException {
         InitialContext context = createInitialContext();
-        LogLog.debug("Looking up ConnectionFactory with jndiName: " + jndiName);
+        // LogLog.debug("Looking up ConnectionFactory with jndiName: " + jndiName);
         ConnectionFactory factory = (ConnectionFactory)context.lookup(jndiName);
         if (factory == null) {
             throw new JMSException("No such ConnectionFactory for name: " + jndiName);
@@ -138,7 +136,7 @@ public class JndiJmsLogAppender extends JmsLogAppenderSupport {
             if (providerURL != null) {
                 env.put(Context.PROVIDER_URL, providerURL);
             } else {
-                LogLog.warn("You have set InitialContextFactoryName option but not the " + "ProviderURL. This is likely to cause problems.");
+                // LogLog.warn("You have set InitialContextFactoryName option but not the " + "ProviderURL. This is likely to cause problems.");
             }
             if (urlPkgPrefixes != null) {
                 env.put(Context.URL_PKG_PREFIXES, urlPkgPrefixes);
@@ -149,10 +147,10 @@ public class JndiJmsLogAppender extends JmsLogAppenderSupport {
                 if (securityCredentials != null) {
                     env.put(Context.SECURITY_CREDENTIALS, securityCredentials);
                 } else {
-                    LogLog.warn("You have set SecurityPrincipalName option but not the " + "SecurityCredentials. This is likely to cause problems.");
+                    // LogLog.warn("You have set SecurityPrincipalName option but not the " + "SecurityCredentials. This is likely to cause problems.");
                 }
             }
-            LogLog.debug("Looking up JNDI context with environment: " + env);
+            // LogLog.debug("Looking up JNDI context with environment: " + env);
             return new InitialContext(env);
         }
     }

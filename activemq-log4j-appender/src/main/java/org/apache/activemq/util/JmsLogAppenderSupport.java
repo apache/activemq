@@ -16,6 +16,11 @@
  */
 package org.apache.activemq.util;
 
+import org.apache.logging.log4j.core.Filter;
+import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,18 +33,12 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.naming.NamingException;
 
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.spi.LoggingEvent;
 
 /**
  * An abstract base class for implementation inheritence for a log4j JMS
  * appender
- * 
- * 
  */
-public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
-
-    public static final int JMS_PUBLISH_ERROR_CODE = 61616;
+public abstract class JmsLogAppenderSupport extends AbstractAppender {
 
     private Connection connection;
     private Session session;
@@ -48,6 +47,11 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
     private String subjectPrefix = "log4j.";
 
     public JmsLogAppenderSupport() {
+        this("jmslog", (Filter) null);
+    }
+
+    protected JmsLogAppenderSupport(String name, Filter filter) {
+        super(name, filter, (Layout) null, true);
     }
 
     public Connection getConnection() throws JMSException, NamingException {
@@ -108,7 +112,7 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
         }
         for (Iterator<JMSException> iter = errors.iterator(); iter.hasNext();) {
             JMSException e = iter.next();
-            getErrorHandler().error("Error closing JMS resources: " + e, e, JMS_PUBLISH_ERROR_CODE);
+            getHandler().error("Error closing JMS resources: " + e, e);
         }
     }
 
@@ -121,7 +125,7 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
             // lets ensure we're all created
             getProducer();
         } catch (Exception e) {
-            getErrorHandler().error("Could not create JMS resources: " + e, e, JMS_PUBLISH_ERROR_CODE);
+            getHandler().error("Could not create JMS resources: " + e, e);
         }
     }
 
@@ -139,7 +143,7 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
 
     private static final ThreadLocal<Object> APPENDING = new ThreadLocal<Object>();
 
-    protected void append(LoggingEvent event) {
+    public void append(LogEvent event) {
         if( APPENDING.get()==null ) {
             APPENDING.set(true);
             try {
@@ -147,14 +151,14 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
                 Destination destination = getDestination(event);
                 getProducer().send(destination, message);
             } catch (Exception e) {
-                getErrorHandler().error("Could not send message due to: " + e, e, JMS_PUBLISH_ERROR_CODE, event);
+                getHandler().error("Could not send message due to: " + e, event, e);
             } finally {
                 APPENDING.remove();
             }
         }
     }
 
-    protected Message createMessage(LoggingEvent event) throws JMSException, NamingException {
+    protected Message createMessage(LogEvent event) throws JMSException, NamingException {
         Message answer = null;
         Object value = event.getMessage();
         if (allowTextMessages && value instanceof String) {
@@ -163,12 +167,12 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
             answer = getSession().createObjectMessage((Serializable)value);
         }
         answer.setStringProperty("level", event.getLevel().toString());
-        answer.setIntProperty("levelInt", event.getLevel().toInt());
+        answer.setIntProperty("levelInt", event.getLevel().intLevel());
         answer.setStringProperty("threadName", event.getThreadName());
         return answer;
     }
 
-    protected Destination getDestination(LoggingEvent event) throws JMSException, NamingException {
+    protected Destination getDestination(LogEvent event) throws JMSException, NamingException {
         String name = subjectPrefix + event.getLoggerName();
         return getSession().createTopic(name);
     }

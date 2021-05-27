@@ -50,13 +50,22 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.AppenderRef;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.LoggingEvent;
 
 
 public class JournalCorruptionEofIndexRecoveryTest {
@@ -225,23 +234,27 @@ public class JournalCorruptionEofIndexRecoveryTest {
         }
 
         AtomicBoolean trappedExpectedLogMessage = new AtomicBoolean(false);
-        DefaultTestAppender appender = new DefaultTestAppender() {
+
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
+            public void append(LogEvent event) {
                 if (event.getLevel() == Level.WARN
-                        && event.getRenderedMessage().contains("Cannot recover message audit")
-                        && event.getThrowableInformation().getThrowable().getLocalizedMessage().contains("Invalid location size")) {
+                        && event.getMessage().getFormattedMessage().contains("Cannot recover message audit")
+                        && event.getThrown().getLocalizedMessage().contains("Invalid location size")) {
                     trappedExpectedLogMessage.set(true);
                 }
             }
         };
-        org.apache.log4j.Logger.getRootLogger().addAppender(appender);
-
+        appender.start();
+        logger.addAppender(appender);
+        logger.get().addAppender(appender, Level.INFO, new AbstractFilter() {});
 
         try {
             restartBroker(false);
         } finally {
-            org.apache.log4j.Logger.getRootLogger().removeAppender(appender);
+            logger.removeAppender(appender);
+            logger.get().removeAppender("testAppender");
         }
 
         assertEquals("no missing message", 50, broker.getAdminView().getTotalMessageCount());

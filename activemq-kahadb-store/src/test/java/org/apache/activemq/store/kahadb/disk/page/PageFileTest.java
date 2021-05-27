@@ -18,11 +18,14 @@ package org.apache.activemq.store.kahadb.disk.page;
 
 import junit.framework.TestCase;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
-import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -365,19 +368,19 @@ public class PageFileTest extends TestCase {
         final int numberOfPages = 1000;
         final AtomicBoolean recoveryEnd = new AtomicBoolean();
 
-        Appender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(PageFile.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Recovered pageFile free list")) {
+            public void append(LogEvent event) {
+                if (event.toImmutable().getLevel().equals(Level.INFO) && event.toImmutable().getMessage().getFormattedMessage().contains("Recovered pageFile free list")) {
                     recoveryEnd.set(true);
                 }
             }
         };
+        appender.start();
 
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(PageFile.class);
-        log4jLogger.addAppender(appender);
-        log4jLogger.setLevel(Level.DEBUG);
+        logger.addAppender(appender);
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
         pf.delete();
@@ -415,19 +418,18 @@ public class PageFileTest extends TestCase {
         final int numberOfPages = 100000;
         final AtomicBoolean recoveryEnd = new AtomicBoolean();
 
-        Appender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(PageFile.class));
+        final var appender = new AbstractAppender("pageAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Recovered pageFile free list")) {
+            public void append(LogEvent event) {
+                if (event.toImmutable().getLevel().equals(Level.INFO) && event.toImmutable().getMessage().getFormattedMessage().contains("Recovered pageFile free list")) {
                     recoveryEnd.set(true);
                 }
             }
         };
-
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(PageFile.class);
-        log4jLogger.addAppender(appender);
-        log4jLogger.setLevel(Level.DEBUG);
+        appender.start();
+        logger.addAppender(appender);
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
         pf.delete();
@@ -499,7 +501,7 @@ public class PageFileTest extends TestCase {
                 pf2.flush();
                 long freePages = pf2.getFreePageCount();
                 LOG.info("free page count: " + freePages);
-                return  recoveryEnd.get();
+                return recoveryEnd.get();
             }
         }, 100000));
 

@@ -126,8 +126,8 @@
               org.apache.xbean*;version="[3.13,5)",
               org.slf4j;version="[1.6,2)";resolution:=optional,
               org.slf4j.spi;version="[1.6,2)";resolution:=optional,
-              org.apache.log4j;version="[1.2.14,2)";resolution:=optional,
-              org.apache.log4j.spi;version="[1.2.14,2)";resolution:=optional
+              org.apache.log4j;version="[2,3)";resolution:=optional,
+              org.apache.log4j.spi;version="[2,3)";resolution:=optional
             </Import-Package>
             <Export-Package>
               !*
@@ -178,6 +178,12 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>servlet-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
@@ -185,8 +191,8 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
       <scope>test</scope>
     </dependency>
 

@@ -278,6 +278,12 @@
       <artifactId>apacheds-server-integ</artifactId>
       <version>${directory-version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jmock</groupId>
