@@ -22,10 +22,11 @@ import org.slf4j.LoggerFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.transaction.TransactionConfiguration;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.jms.*;
@@ -33,7 +34,8 @@ import javax.jms.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 
 @ContextConfiguration(locations = {"classpath:spring/spring.xml"})
-@TransactionConfiguration(transactionManager = "transactionManager", defaultRollback = false)
+@Transactional
+@Commit
 public class ListenerTest {
     private static final Logger LOG = LoggerFactory.getLogger(ListenerTest.class);
 
