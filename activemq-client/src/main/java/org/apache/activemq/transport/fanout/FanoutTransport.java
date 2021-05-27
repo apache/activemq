@@ -115,7 +115,7 @@ public class FanoutTransport implements CompositeTransport {
         public void onCommand(Object o) {
             Command command = (Command) o;
             if (command.isResponse()) {
-                Integer id = new Integer(((Response) command).getCorrelationId());
+                Integer id = Integer.valueOf(((Response) command).getCorrelationId());
                 RequestCounter rc = requestMap.get(id);
                 if (rc != null) {
                     if (rc.ackCount.decrementAndGet() <= 0) {
@@ -403,7 +403,7 @@ public class FanoutTransport implements CompositeTransport {
                 boolean fanout = isFanoutCommand(command);
                 if (stateTracker.track(command) == null && command.isResponseRequired()) {
                     int size = fanout ? minAckCount : 1;
-                    requestMap.put(new Integer(command.getCommandId()), new RequestCounter(command, size));
+                    requestMap.put(Integer.valueOf(command.getCommandId()), new RequestCounter(command, size));
                 }
 
                 // Send the message.

@@ -157,7 +157,7 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
-                return new Integer(message.getGroupSequence());
+                return Integer.valueOf(message.getGroupSequence());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXProducerTXID", new SubExpression() {

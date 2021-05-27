@@ -17,7 +17,6 @@
 package org.apache.activemq.filter;
 
 import java.lang.IllegalStateException;
-import javax.jms.*;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /*

@@ -102,12 +102,12 @@ public class PortfolioPublishServlet extends MessageServletSupport {
     protected String createStockText(String stock) {
         Double value = LAST_PRICES.get(stock);
         if (value == null) {
-            value = new Double(Math.random() * 100);
+            value = Double.valueOf(Math.random() * 100);
         }
 
         // lets mutate the value by some percentage
         double oldPrice = value.doubleValue();
-        value = new Double(mutatePrice(oldPrice));
+        value = Double.valueOf(mutatePrice(oldPrice));
         LAST_PRICES.put(stock, value);
         double price = value.doubleValue();
 

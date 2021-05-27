@@ -302,7 +302,7 @@ public final class OpenTypeSupport {
                 // In 1.6 it seems it is supported.. but until then...
                 Byte data[] = new Byte[preview.length];
                 for (int i = 0; i < data.length; i++) {
-                    data[i] = new Byte(preview[i]);
+                    data[i] = Byte.valueOf(preview[i]);
                 }
 
                 rc.put(CompositeDataConstants.BODY_PREVIEW, data);

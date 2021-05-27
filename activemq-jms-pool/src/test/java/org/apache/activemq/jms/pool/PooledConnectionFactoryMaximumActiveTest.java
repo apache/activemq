@@ -109,7 +109,7 @@ public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport
 
                 if (PooledConnectionFactoryMaximumActiveTest.conn == null) {
                     TASK_LOG.error("Connection not yet initialized. Aborting test.");
-                    return new Boolean(false);
+                    return Boolean.FALSE;
                 }
 
                 one = PooledConnectionFactoryMaximumActiveTest.conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -118,7 +118,7 @@ public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport
                 Thread.sleep(2 * PooledConnectionFactoryMaximumActiveTest.sleepTimeout);
             } catch (Exception ex) {
                 TASK_LOG.error(ex.getMessage());
-                return new Boolean(false);
+                return Boolean.FALSE;
             } finally {
                 if (one != null)
                     try {
@@ -129,7 +129,7 @@ public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport
             }
 
             // all good, test succeeded
-            return new Boolean(true);
+            return Boolean.TRUE;
         }
     }
 }

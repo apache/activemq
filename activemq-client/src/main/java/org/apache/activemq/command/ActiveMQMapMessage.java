@@ -676,7 +676,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     @Override
     public void setFloat(String name, float value) throws JMSException {
         initializeWriting();
-        put(name, new Float(value));
+        put(name, Float.valueOf(value));
     }
 
     /**
@@ -693,7 +693,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     @Override
     public void setDouble(String name, double value) throws JMSException {
         initializeWriting();
-        put(name, new Double(value));
+        put(name, Double.valueOf(value));
     }
 
     /**

@@ -29,7 +29,7 @@ public class LRUCacheTest {
     public void testResize() throws Exception {
         LRUCache<Long, Long> underTest = new LRUCache<Long, Long>(1000);
         
-        Long count = new Long(0);
+        Long count = Long.valueOf(0);
         long max = 0;
         for (; count < 27276827; count++) {
             long start = System.currentTimeMillis();

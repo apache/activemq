@@ -181,13 +181,13 @@ public abstract class UnaryExpression implements Expression {
     private static Number negate(Number left) {
         Class clazz = left.getClass();
         if (clazz == Integer.class) {
-            return new Integer(-left.intValue());
+            return Integer.valueOf(-left.intValue());
         } else if (clazz == Long.class) {
-            return new Long(-left.longValue());
+            return Long.valueOf(-left.longValue());
         } else if (clazz == Float.class) {
-            return new Float(-left.floatValue());
+            return Float.valueOf(-left.floatValue());
         } else if (clazz == Double.class) {
-            return new Double(-left.doubleValue());
+            return Double.valueOf(-left.doubleValue());
         } else if (clazz == BigDecimal.class) {
             // We ussually get a big deciamal when we have Long.MIN_VALUE
             // constant in the

@@ -342,7 +342,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     private void corruptLocation(Location toCorrupt) throws IOException {
 
-        DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(new Integer(toCorrupt.getDataFileId()));
+        DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(Integer.valueOf(toCorrupt.getDataFileId()));
 
         RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
 
