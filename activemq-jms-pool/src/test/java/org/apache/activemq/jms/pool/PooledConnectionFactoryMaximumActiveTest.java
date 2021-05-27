@@ -30,7 +30,8 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 /**
@@ -40,7 +41,7 @@ import org.junit.Test;
  */
 public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport {
 
-    public final static Logger LOG = Logger.getLogger(PooledConnectionFactoryMaximumActiveTest.class);
+    public final static Logger LOG = LogManager.getLogger(PooledConnectionFactoryMaximumActiveTest.class);
     public static Connection conn = null;
     public static int sleepTimeout = 5000;
 
@@ -94,7 +95,7 @@ public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport
 
     static class TestRunner2 implements Callable<Boolean> {
 
-        public final static Logger TASK_LOG = Logger.getLogger(TestRunner2.class);
+        public final static Logger TASK_LOG = LogManager.getLogger(TestRunner2.class);
 
         /**
          * @return true if test succeeded, false otherwise

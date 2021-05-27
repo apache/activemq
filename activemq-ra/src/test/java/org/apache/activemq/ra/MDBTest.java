@@ -67,13 +67,12 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Layout;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.spi.ErrorHandler;
-import org.apache.log4j.spi.Filter;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.ErrorHandler;
+import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.LogEvent;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -481,27 +480,55 @@ public class MDBTest {
         final Appender testAppender = new Appender() {
 
             @Override
-            public void addFilter(Filter filter) {
+            public boolean ignoreExceptions() {
+                return false;
             }
 
             @Override
-            public Filter getFilter() {
+            public ErrorHandler getHandler() {
                 return null;
             }
 
             @Override
-            public void clearFilters() {
+            public void setHandler(ErrorHandler handler) {
+
             }
 
             @Override
-            public void close() {
+            public State getState() {
+                return null;
             }
 
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().isGreaterOrEqual(Level.ERROR)) {
-                    System.err.println("Event :" + event.getRenderedMessage());
-                    errorMessage.set(event.getRenderedMessage());
+            public void initialize() {
+
+            }
+
+            @Override
+            public void start() {
+
+            }
+
+            @Override
+            public void stop() {
+
+            }
+
+            @Override
+            public boolean isStarted() {
+                return false;
+            }
+
+            @Override
+            public boolean isStopped() {
+                return false;
+            }
+
+            @Override
+            public void append(LogEvent event) {
+                if (event.getLevel().isMoreSpecificThan(Level.ERROR)) {
+                    System.err.println("Event :" + event.getMessage().getFormattedMessage());
+                    errorMessage.set(event.getMessage().getFormattedMessage());
                 }
             }
 
@@ -511,34 +538,14 @@ public class MDBTest {
             }
 
             @Override
-            public void setErrorHandler(ErrorHandler errorHandler) {
-            }
-
-            @Override
-            public ErrorHandler getErrorHandler() {
-                return null;
-            }
-
-            @Override
-            public void setLayout(Layout layout) {
-            }
-
-            @Override
             public Layout getLayout() {
                 return null;
             }
 
-            @Override
-            public void setName(String s) {
-            }
-
-            @Override
-            public boolean requiresLayout() {
-                return false;
-            }
         };
 
-        LogManager.getRootLogger().addAppender(testAppender);
+        org.apache.logging.log4j.core.Logger rootLogger = (org.apache.logging.log4j.core.Logger) LogManager.getRootLogger();
+        rootLogger.addAppender(testAppender);
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = factory.createConnection();
@@ -606,7 +613,8 @@ public class MDBTest {
         assertNotNull("We got an error message", errorMessage.get());
         assertTrue("correct message: " +  errorMessage.get(), errorMessage.get().contains("zero"));
 
-        LogManager.getRootLogger().removeAppender(testAppender);
+        rootLogger.removeAppender(testAppender);
+
         brokerService.stop();
     }
 

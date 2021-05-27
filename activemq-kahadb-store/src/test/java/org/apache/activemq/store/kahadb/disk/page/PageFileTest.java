@@ -20,9 +20,9 @@ import junit.framework.TestCase;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -367,15 +367,14 @@ public class PageFileTest extends TestCase {
 
         Appender appender = new DefaultTestAppender() {
             @Override
-            public void doAppend(LoggingEvent event) {
+            public void append(LogEvent event) {
                 if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Recovered pageFile free list")) {
                     recoveryEnd.set(true);
                 }
             }
         };
 
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(PageFile.class);
+        org.apache.logging.log4j.core.Logger log4jLogger = (org.apache.logging.log4j.core.Logger) org.apache.logging.log4j.LogManager.getLogger(PageFile.class);
         log4jLogger.addAppender(appender);
         log4jLogger.setLevel(Level.DEBUG);
 
@@ -417,15 +416,14 @@ public class PageFileTest extends TestCase {
 
         Appender appender = new DefaultTestAppender() {
             @Override
-            public void doAppend(LoggingEvent event) {
+            public void append(LogEvent event) {
                 if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Recovered pageFile free list")) {
                     recoveryEnd.set(true);
                 }
             }
         };
 
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(PageFile.class);
+        org.apache.logging.log4j.core.Logger log4jLogger = (org.apache.logging.log4j.core.Logger) org.apache.logging.log4j.LogManager.getLogger(PageFile.class);
         log4jLogger.addAppender(appender);
         log4jLogger.setLevel(Level.DEBUG);
 

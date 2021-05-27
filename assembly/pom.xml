@@ -254,8 +254,12 @@
       <artifactId>xpp3</artifactId>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -360,18 +364,18 @@
     </dependency>
 
     <!-- copied dependencies from activemq-web-console -->
-    <!-- enable commons-logging when inside jetty6:run -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
     </dependency>
     <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>jcl-over-slf4j</artifactId>
+        <version>${slf4j-version}</version>
     </dependency>
     <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
@@ -430,16 +434,6 @@
       <groupId>com.googlecode.json-simple</groupId>
       <artifactId>json-simple</artifactId>
       <version>${json-simple-version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.fabric8.insight</groupId>
-      <artifactId>insight-log-core</artifactId>
-      <version>${insight-version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.fabric8.insight</groupId>
-      <artifactId>insight-log4j</artifactId>
-      <version>${insight-version}</version>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.url</groupId>

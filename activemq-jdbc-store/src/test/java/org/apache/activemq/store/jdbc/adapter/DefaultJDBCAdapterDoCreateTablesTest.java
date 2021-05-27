@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
-import static org.apache.log4j.Level.DEBUG;
-import static org.apache.log4j.Level.WARN;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.inOrder;
@@ -34,9 +32,10 @@ import java.util.List;
 import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +56,7 @@ public class DefaultJDBCAdapterDoCreateTablesTest {
 
 	private DefaultJDBCAdapter defaultJDBCAdapter;
 
-	private List<LoggingEvent> loggingEvents = new ArrayList<>();
+	private List<LogEvent> loggingEvents = new ArrayList<>();
 
 	@Mock
 	private TransactionContext transactionContext;
@@ -78,11 +77,11 @@ public class DefaultJDBCAdapterDoCreateTablesTest {
 	public void setUp() throws IOException, SQLException {
 		DefaultTestAppender appender = new DefaultTestAppender() {
 			@Override
-			public void doAppend(LoggingEvent event) {
+			public void append(LogEvent event) {
 				loggingEvents.add(event);
 			}
 		};
-		Logger rootLogger = Logger.getRootLogger();
+		Logger rootLogger = (Logger) LogManager.getRootLogger();
 		rootLogger.setLevel(Level.DEBUG);
 		rootLogger.addAppender(appender);
 
@@ -120,10 +119,10 @@ public class DefaultJDBCAdapterDoCreateTablesTest {
 		inOrder.verify(statement2).close();
 
 		assertEquals(4, loggingEvents.size());
-		assertLog(0, DEBUG, "Executing SQL: " + CREATE_STATEMENT1);
-		assertLog(1, DEBUG, "Executing SQL: " + CREATE_STATEMENT2);
-		assertLog(2, WARN, "Could not create JDBC tables; they could already exist. Failure was: " + CREATE_STATEMENT2 + " Message: " + MY_REASON + " SQLState: " + SQL_STATE + " Vendor code: " + VENDOR_CODE);
-		assertLog(3, WARN, "Failure details: " + MY_REASON);
+		assertLog(0, Level.DEBUG, "Executing SQL: " + CREATE_STATEMENT1);
+		assertLog(1, Level.DEBUG, "Executing SQL: " + CREATE_STATEMENT2);
+		assertLog(2, Level.WARN, "Could not create JDBC tables; they could already exist. Failure was: " + CREATE_STATEMENT2 + " Message: " + MY_REASON + " SQLState: " + SQL_STATE + " Vendor code: " + VENDOR_CODE);
+		assertLog(3, Level.WARN, "Failure details: " + MY_REASON);
 	}
 
 	@Test
@@ -144,9 +143,9 @@ public class DefaultJDBCAdapterDoCreateTablesTest {
 		inOrder.verify(statement2).close();
 
 		assertEquals(3, loggingEvents.size());
-		assertLog(0, DEBUG, "Executing SQL: " + CREATE_STATEMENT1);
-		assertLog(1, DEBUG, "Could not create JDBC tables; The message table already existed. Failure was: " + CREATE_STATEMENT1 + " Message: " + MY_REASON + " SQLState: " + SQL_STATE	+ " Vendor code: " + VENDOR_CODE);
-		assertLog(2, DEBUG, "Executing SQL: " + CREATE_STATEMENT2);
+		assertLog(0, Level.DEBUG, "Executing SQL: " + CREATE_STATEMENT1);
+		assertLog(1, Level.DEBUG, "Could not create JDBC tables; The message table already existed. Failure was: " + CREATE_STATEMENT1 + " Message: " + MY_REASON + " SQLState: " + SQL_STATE	+ " Vendor code: " + VENDOR_CODE);
+		assertLog(2, Level.DEBUG, "Executing SQL: " + CREATE_STATEMENT2);
 	}
 
 	@Test
@@ -169,12 +168,12 @@ public class DefaultJDBCAdapterDoCreateTablesTest {
 		inOrder.verify(statement2).close();
 
 		assertEquals(2, loggingEvents.size());
-		assertLog(0, DEBUG, "Executing SQL: " + CREATE_STATEMENT1);
-		assertLog(1, DEBUG, "Executing SQL: " + CREATE_STATEMENT2);
+		assertLog(0, Level.DEBUG, "Executing SQL: " + CREATE_STATEMENT1);
+		assertLog(1, Level.DEBUG, "Executing SQL: " + CREATE_STATEMENT2);
 	}
 
 	private void assertLog(int messageNumber, Level level, String message) {
-		LoggingEvent loggingEvent = loggingEvents.get(messageNumber);
+		LogEvent loggingEvent = loggingEvents.get(messageNumber);
 		assertEquals(level, loggingEvent.getLevel());
 		assertEquals(message, loggingEvent.getMessage());
 	}
