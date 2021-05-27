@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.stomp.Stomp;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -150,7 +151,7 @@ public class StompWSSubProtocolTest extends WSTransportTestSupport {
             request.setSubProtocols(subProtocol);
         }
 
-        wsClient = new WebSocketClient(new SslContextFactory.Client(true));
+        wsClient = new WebSocketClient(new HttpClient(new SslContextFactory.Client(true)));
         wsClient.start();
 
         wsClient.connect(wsStompConnection, wsConnectUri, request);

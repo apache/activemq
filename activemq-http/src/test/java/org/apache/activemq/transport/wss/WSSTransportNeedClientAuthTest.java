@@ -22,6 +22,7 @@ import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.transport.ws.MQTTWSConnection;
 import org.apache.activemq.transport.ws.StompWSConnection;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -84,28 +85,28 @@ public class WSSTransportNeedClientAuthTest {
         factory.setTrustStorePath(TRUST_KEYSTORE);
         factory.setTrustStorePassword(PASSWORD);
         factory.setTrustStoreType(KEYSTORE_TYPE);
-        WebSocketClient wsClient = new WebSocketClient(factory);
+        WebSocketClient wsClient = new WebSocketClient(new HttpClient(factory));
         wsClient.start();
 
         Future<Session> connected = wsClient.connect(wsStompConnection, new URI("wss://localhost:61618"));
-        Session sess = connected.get(30, TimeUnit.SECONDS);
+        try(Session sess = connected.get(30, TimeUnit.SECONDS)) {
 
-        String connectFrame = "STOMP\n" +
-                              "login:system\n" +
-                              "passcode:manager\n" +
-                              "accept-version:1.2\n" +
-                              "host:localhost\n" +
-                              "\n" + Stomp.NULL;
-
-        wsStompConnection.sendRawFrame(connectFrame);
-
-        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
-        assertNotNull(incoming);
-        assertTrue(incoming.startsWith("CONNECTED"));
-
-        wsStompConnection.sendFrame(new StompFrame(Stomp.Commands.DISCONNECT));
-        wsStompConnection.close();
-
+	        String connectFrame = "STOMP\n" +
+	                              "login:system\n" +
+	                              "passcode:manager\n" +
+	                              "accept-version:1.2\n" +
+	                              "host:localhost\n" +
+	                              "\n" + Stomp.NULL;
+	
+	        wsStompConnection.sendRawFrame(connectFrame);
+	
+	        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+	        assertNotNull(incoming);
+	        assertTrue(incoming.startsWith("CONNECTED"));
+	
+	        wsStompConnection.sendFrame(new StompFrame(Stomp.Commands.DISCONNECT));
+	        wsStompConnection.close();
+        }
     }
 
     @Test
@@ -117,7 +118,7 @@ public class WSSTransportNeedClientAuthTest {
         factory.setTrustStorePath(TRUST_KEYSTORE);
         factory.setTrustStorePassword(PASSWORD);
         factory.setTrustStoreType(KEYSTORE_TYPE);
-        WebSocketClient wsClient = new WebSocketClient(factory);
+        WebSocketClient wsClient = new WebSocketClient(new HttpClient(factory));
         wsClient.start();
 
         ClientUpgradeRequest request = new ClientUpgradeRequest();
