@@ -89,23 +89,24 @@ public class WSSTransportNeedClientAuthTest {
         wsClient.start();
 
         Future<Session> connected = wsClient.connect(wsStompConnection, new URI("wss://localhost:61618"));
+        
         try(Session sess = connected.get(30, TimeUnit.SECONDS)) {
 
-	        String connectFrame = "STOMP\n" +
-	                              "login:system\n" +
-	                              "passcode:manager\n" +
-	                              "accept-version:1.2\n" +
-	                              "host:localhost\n" +
-	                              "\n" + Stomp.NULL;
-	
-	        wsStompConnection.sendRawFrame(connectFrame);
-	
-	        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
-	        assertNotNull(incoming);
-	        assertTrue(incoming.startsWith("CONNECTED"));
-	
-	        wsStompConnection.sendFrame(new StompFrame(Stomp.Commands.DISCONNECT));
-	        wsStompConnection.close();
+           String connectFrame = "STOMP\n" +
+                                  "login:system\n" +
+                                  "passcode:manager\n" +
+                                  "accept-version:1.2\n" +
+                                  "host:localhost\n" +
+                                  "\n" + Stomp.NULL;
+
+            wsStompConnection.sendRawFrame(connectFrame);
+
+            String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+            assertNotNull(incoming);
+            assertTrue(incoming.startsWith("CONNECTED"));
+
+            wsStompConnection.sendFrame(new StompFrame(Stomp.Commands.DISCONNECT));
+            wsStompConnection.close();
         }
     }
 
