@@ -92,7 +92,7 @@ public class WSSTransportNeedClientAuthTest {
         
         try(Session sess = connected.get(30, TimeUnit.SECONDS)) {
 
-           String connectFrame = "STOMP\n" +
+        String connectFrame = "STOMP\n" +
                                   "login:system\n" +
                                   "passcode:manager\n" +
                                   "accept-version:1.2\n" +
