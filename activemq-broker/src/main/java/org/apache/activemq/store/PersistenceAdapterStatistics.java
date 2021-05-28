@@ -20,7 +20,7 @@ import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.management.TimeStatisticImpl;
 
 public class PersistenceAdapterStatistics extends StatsImpl {
-	protected TimeStatisticImpl slowCleanupTime;
+    protected TimeStatisticImpl slowCleanupTime;
     protected TimeStatisticImpl slowWriteTime;
     protected TimeStatisticImpl slowReadTime;
 
