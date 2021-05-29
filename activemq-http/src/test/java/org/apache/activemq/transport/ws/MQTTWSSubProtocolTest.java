@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -39,7 +40,7 @@ public class MQTTWSSubProtocolTest extends WSTransportTestSupport {
     public void setUp() throws Exception {
         super.setUp();
 
-        wsClient = new WebSocketClient(new SslContextFactory.Client(true));
+        wsClient = new WebSocketClient(new HttpClient(new SslContextFactory.Client(true)));
         wsClient.start();
     }
 

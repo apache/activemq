@@ -42,7 +42,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
     private String auth;
 
     private SslContext context;
-    private SslContextFactory contextFactory;
+    private SslContextFactory.Server contextFactory;
 
     public SecureSocketConnectorFactory() {
 
@@ -51,7 +51,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
         this.context = context;
     }
 
-    public SecureSocketConnectorFactory(SslContextFactory contextFactory) {
+    public SecureSocketConnectorFactory(SslContextFactory.Server contextFactory) {
         this.contextFactory = contextFactory;
     }
 
@@ -65,7 +65,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
 
         // Get a reference to the current ssl context factory...
 
-        SslContextFactory factory;
+        SslContextFactory.Server factory;
         if (contextFactory == null) {
             factory = new SslContextFactory.Server();
             if (context != null) {
