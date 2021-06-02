@@ -243,9 +243,8 @@ public class NIOSSLTransport extends NIOTransport {
         }
     }
 
-    //Prevent concurrent access to SSLEngine
     @Override
-    public synchronized void serviceRead() {
+    public void serviceRead() {
         try {
             if (handshakeInProgress) {
                 doHandshake();
@@ -374,7 +373,8 @@ public class NIOSSLTransport extends NIOTransport {
         }
     }
 
-    protected int secureRead(ByteBuffer plain) throws Exception {
+    //Prevent concurrent access while reading from the channel
+    protected synchronized int secureRead(ByteBuffer plain) throws Exception {
 
         if (!(inputBuffer.position() != 0 && inputBuffer.hasRemaining()) || status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
             int bytesRead = channel.read(inputBuffer);
