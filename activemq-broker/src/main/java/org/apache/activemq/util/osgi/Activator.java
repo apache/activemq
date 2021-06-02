@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -214,7 +215,12 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
                 throw new IOException(msg);
             }
         }
-        return clazz.newInstance();
+        
+        try {
+            return clazz.getConstructor().newInstance();
+        } catch (InvocationTargetException | NoSuchMethodException e) {
+        	throw new InstantiationException(e.getMessage());
+        }
     }
 
     // ================================================================

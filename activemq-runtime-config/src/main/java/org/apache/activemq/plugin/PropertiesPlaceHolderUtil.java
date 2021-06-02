@@ -137,7 +137,7 @@ public class PropertiesPlaceHolderUtil {
         }
         for (String value : propertiesClazzes) {
             try {
-                Object springBean = getClass().getClassLoader().loadClass(value).newInstance();
+                Object springBean = getClass().getClassLoader().loadClass(value).getConstructor().newInstance();
                 if (springBean instanceof FactoryBean) {
                     // can't access the factory or created properties from spring context so we got to recreate
                     initialProperties.putAll((Properties) FactoryBean.class.getMethod("getObject", (Class<?>[]) null).invoke(springBean));

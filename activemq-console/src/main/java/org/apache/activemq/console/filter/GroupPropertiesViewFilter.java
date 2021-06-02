@@ -59,7 +59,7 @@ public class GroupPropertiesViewFilter extends PropertiesViewFilter {
         Map newData;
         try {
             // Lets try to use the same class as the original
-            newData = data.getClass().newInstance();
+            newData = data.getClass().getConstructor().newInstance();
         } catch (Exception e) {
             // Lets use a default HashMap
             newData = new HashMap();

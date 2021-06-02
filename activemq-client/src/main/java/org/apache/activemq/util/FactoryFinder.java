@@ -19,6 +19,7 @@ package org.apache.activemq.util;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -60,7 +61,12 @@ public class FactoryFinder {
                 clazz = loadClass(loadProperties(path));
                 classMap.put(path, clazz);
             }
-            return clazz.newInstance();
+            
+            try {
+               return clazz.getConstructor().newInstance();
+            } catch (NoSuchMethodException | InvocationTargetException e) {
+               throw new InstantiationException(e.getMessage());
+            }
         }
 
         static public Class loadClass(Properties properties) throws ClassNotFoundException, IOException {

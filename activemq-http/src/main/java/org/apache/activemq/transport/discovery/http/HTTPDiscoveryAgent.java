@@ -276,7 +276,7 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
      */
     private Service createEmbeddedJettyServer() throws Exception {
         Class<?> clazz = HTTPDiscoveryAgent.class.getClassLoader().loadClass("org.apache.activemq.transport.discovery.http.EmbeddedJettyServer");
-        return (Service) clazz.newInstance();
+        return Service.class.cast(clazz.getConstructor().newInstance());
     }
 
     private void update() {

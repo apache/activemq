@@ -250,7 +250,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
         if (passwordFactory == null && passwordFactoryClassString != null) {
             try {
                 Class klass = Class.forName(passwordFactoryClassString);
-                passwordFactory = (PasswordFactory) klass.newInstance();
+                passwordFactory = PasswordFactory.class.cast(klass.getConstructor().newInstance());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

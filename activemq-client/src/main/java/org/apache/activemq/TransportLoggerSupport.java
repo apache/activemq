@@ -42,7 +42,7 @@ public class TransportLoggerSupport {
     static {
         SPI temp;
         try {
-            temp = (SPI) TransportLoggerSupport.class.getClassLoader().loadClass("org.apache.activemq.transport.TransportLoggerFactorySPI").newInstance();
+            temp = (SPI) TransportLoggerSupport.class.getClassLoader().loadClass("org.apache.activemq.transport.TransportLoggerFactorySPI").getConstructor().newInstance();
         } catch (Throwable e) {
             temp = null;
         }

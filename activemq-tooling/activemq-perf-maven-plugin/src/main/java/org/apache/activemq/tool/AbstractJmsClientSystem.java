@@ -237,7 +237,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
     protected ConnectionFactory loadJmsFactory(String spiClass, Properties factorySettings) throws JMSException {
         try {
             Class<?> spi = Class.forName(spiClass);
-            SPIConnectionFactory spiFactory = (SPIConnectionFactory)spi.newInstance();
+            SPIConnectionFactory spiFactory = SPIConnectionFactory.class.cast(spi.getConstructor().newInstance());
             ConnectionFactory jmsFactory = spiFactory.createConnectionFactory(factorySettings);
             LOG.info("Created: " + jmsFactory.getClass().getName() + " using SPIConnectionFactory: " + spiFactory.getClass().getName());
             return jmsFactory;

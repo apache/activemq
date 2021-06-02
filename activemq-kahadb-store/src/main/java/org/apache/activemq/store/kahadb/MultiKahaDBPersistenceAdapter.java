@@ -440,7 +440,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         File directory = null;
         File defaultDir = DEFAULT_DIRECTORY;
         try {
-            defaultDir = adapter.getClass().newInstance().getDirectory();
+            defaultDir = adapter.getClass().getConstructor().newInstance().getDirectory();
         } catch (Exception e) {
         }
         if (defaultDir.equals(adapter.getDirectory())) {
@@ -480,7 +480,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         try {
             Map<String, Object> configuration = new HashMap<String, Object>();
             IntrospectionSupport.getProperties(template, configuration, null);
-            PersistenceAdapter adapter = template.getClass().newInstance();
+            PersistenceAdapter adapter = template.getClass().getConstructor().newInstance();
             IntrospectionSupport.setProperties(adapter, configuration);
             return adapter;
         } catch (Exception e) {
