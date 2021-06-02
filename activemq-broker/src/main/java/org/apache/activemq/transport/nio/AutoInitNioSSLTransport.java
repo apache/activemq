@@ -158,9 +158,8 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
         return readSize;
     }
 
-    //Prevent concurrent access to SSLEngine
     @Override
-    public synchronized void serviceRead() {
+    public void serviceRead() {
         try {
             if (handshakeInProgress) {
                 doHandshake();
