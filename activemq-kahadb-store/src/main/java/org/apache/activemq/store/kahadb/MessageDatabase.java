@@ -4250,6 +4250,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             if (!(desc.getName().startsWith("java.lang.")
                     || desc.getName().startsWith("com.thoughtworks.xstream")
                     || desc.getName().startsWith("java.util.")
+                    || desc.getName().length() > 2 && desc.getName().substring(2).startsWith("java.util.") // Allow arrays
                     || desc.getName().startsWith("org.apache.activemq."))) {
                 throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
             }
