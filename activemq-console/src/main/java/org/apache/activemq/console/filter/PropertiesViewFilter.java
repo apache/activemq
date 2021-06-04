@@ -96,7 +96,7 @@ public class PropertiesViewFilter implements QueryFilter {
         Map<Object, Object> newData;
         try {
             // Lets try to use the same class as the original
-            newData = new LinkedHashMap(data.getClass().newInstance());
+            newData = new LinkedHashMap(data.getClass().getConstructor().newInstance());
         } catch (Exception e) {
             // Lets use a default HashMap
             newData = new LinkedHashMap<Object, Object>();

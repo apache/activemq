@@ -2477,7 +2477,7 @@ public class BrokerService implements Service {
             } else {
                 try {
                     String clazz = "org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter";
-                    PersistenceAdapter adaptor = (PersistenceAdapter)getClass().getClassLoader().loadClass(clazz).newInstance();
+                    PersistenceAdapter adaptor = (PersistenceAdapter)getClass().getClassLoader().loadClass(clazz).getConstructor().newInstance();
                     File dir = new File(getBrokerDataDirectory(),"KahaDB");
                     adaptor.setDirectory(dir);
                     return adaptor;

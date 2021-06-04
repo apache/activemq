@@ -38,7 +38,7 @@ public class ActiveMQCommandSupport extends OsgiCommandSupport {
     protected Object doExecute() throws Exception {
         CommandContext context2 = new CommandContext();
         context2.setFormatter(new CommandShellOutputFormatter(System.out));
-        Command currentCommand = command.getClass().newInstance();
+        Command currentCommand = command.getClass().getConstructor().newInstance();
 
         try {
             currentCommand.setCommandContext(context2);

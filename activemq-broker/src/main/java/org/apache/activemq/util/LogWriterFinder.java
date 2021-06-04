@@ -19,6 +19,7 @@ package org.apache.activemq.util;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -74,7 +75,11 @@ public class LogWriterFinder {
             clazz = newInstance(doFindLogWriterProperties(logWriterName));
             classMap.put(logWriterName, clazz);
         }
-        return (LogWriter)clazz.newInstance();
+        try {
+            return LogWriter.class.cast(clazz.getConstructor().newInstance());
+        } catch (InvocationTargetException | NoSuchMethodException e) {
+        	throw new InstantiationException(e.getMessage());
+        }
     }
 
     /**

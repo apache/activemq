@@ -137,9 +137,9 @@ public class HttpTransportServer extends WebTransportServerSupport {
     private void addGzipHandler(ServletContextHandler contextHandler) throws Exception {
         HandlerWrapper handler = null;
         try {
-            handler = (HandlerWrapper) forName("org.eclipse.jetty.servlets.gzip.GzipHandler").newInstance();
+            handler = (HandlerWrapper) forName("org.eclipse.jetty.servlets.gzip.GzipHandler").getConstructor().newInstance();
         } catch (Throwable t) {
-            handler = (HandlerWrapper) forName("org.eclipse.jetty.server.handler.gzip.GzipHandler").newInstance();
+            handler = (HandlerWrapper) forName("org.eclipse.jetty.server.handler.gzip.GzipHandler").getConstructor().newInstance();
         }
         contextHandler.insertHandler(handler);
     }

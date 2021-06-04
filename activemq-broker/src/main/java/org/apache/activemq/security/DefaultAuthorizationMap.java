@@ -246,7 +246,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         if (i < constructors.length) {
             instance = constructors[i].newInstance(param);
         } else {
-            instance = cls.newInstance();
+            instance = cls.getConstructor().newInstance();
             Method[] methods = cls.getMethods();
             i = 0;
             for (i = 0; i < methods.length; i++) {
