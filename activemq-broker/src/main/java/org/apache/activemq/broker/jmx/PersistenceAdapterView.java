@@ -93,6 +93,9 @@ public class PersistenceAdapterView implements PersistenceAdapterViewMBean {
         if (persistenceAdapterStatistics != null) {
             try {
                 Map<String, Object> result = new HashMap<String, Object>();
+                result.put("slowCleanupTime", getTimeStatisticAsMap(persistenceAdapterStatistics.getSlowCleanupTime()));
+                result.put("slowWriteTime", getTimeStatisticAsMap(persistenceAdapterStatistics.getSlowWriteTime()));
+                result.put("slowReadTime", getTimeStatisticAsMap(persistenceAdapterStatistics.getSlowReadTime()));
                 result.put("writeTime", getTimeStatisticAsMap(persistenceAdapterStatistics.getWriteTime()));
                 result.put("readTime", getTimeStatisticAsMap(persistenceAdapterStatistics.getReadTime()));
                 return mapper.writeValueAsString(result);
