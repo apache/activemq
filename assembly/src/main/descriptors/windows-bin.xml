@@ -26,7 +26,7 @@
     <!-- Copy over everything that needs to get dos line endings -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <excludes>
         <exclude>bin/**</exclude>
         <exclude>conf/*.ts</exclude>
@@ -41,7 +41,7 @@
     <!-- Copy over the files that need to be filtered -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>examples/**/pom.xml</include>
       </includes>
@@ -51,7 +51,7 @@
 
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>bin/*.bat</include>
         <include>bin/win32/*.bat</include>
@@ -64,7 +64,7 @@
 
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>bin/activemq</include>
         <include>bin/activemq-admin</include>
@@ -75,7 +75,7 @@
     <!-- Copy over files that should not get the line endings converted -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>bin/win32/*.exe</include>
         <include>bin/win32/*.dll</include>
@@ -86,7 +86,7 @@
     <!-- include patched JAR files -->
     <fileSet>
       <directory>src/patch</directory>
-      <outputDirectory>/lib</outputDirectory>
+      <outputDirectory>lib</outputDirectory>
       <includes>
         <include>*</include>
       </includes>

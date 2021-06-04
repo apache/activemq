@@ -27,7 +27,7 @@
     <!-- Copy over everything that needs to get unix line endings -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <excludes>
         <exclude>bin/**</exclude>
         <exclude>conf/*.ts</exclude>
@@ -46,7 +46,7 @@
     <!-- Copy over the files that need to be filtered -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>examples/**/pom.xml</include>
       </includes>
@@ -58,7 +58,7 @@
     
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>bin/macosx/wrapper.conf</include>
         <include>bin/linux-*/wrapper.conf</include>
@@ -71,7 +71,7 @@
     <!-- Copy over the files that should not get the line endings converted but need to be chmod to 755 -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>bin/linux-*/wrapper</include>
         <include>bin/linux-*/libwrapper.so</include>
@@ -84,7 +84,7 @@
     <!-- include patched JAR files -->
     <fileSet>
       <directory>src/patch</directory>
-      <outputDirectory>/lib</outputDirectory>
+      <outputDirectory>lib</outputDirectory>
       <includes>
         <include>*</include>
       </includes>
@@ -95,7 +95,7 @@
     <!-- Copy over the files that need unix line endings and also chmod to 755 -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>bin/activemq</include>
         <include>bin/activemq-diag</include>
@@ -110,7 +110,7 @@
     <!-- Copy over the unix-script configuration file that need unix line endings and also chmod to 644 -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>bin/env</include>
       </includes>
@@ -123,7 +123,7 @@
     <!-- Copy over example scripts that need unix line endings and also chmod to 755 -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>examples/**/*.sh</include>
         <include>examples/**/*.rb</include>
