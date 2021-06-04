@@ -22,7 +22,7 @@
     <!-- Copy over binary files -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <includes>
         <include>bin/*.jar</include>
         <include>conf/*.ts</include>
@@ -37,7 +37,7 @@
     <!-- lets copy the portions of the admin web app we need - as we can't exclude stuff from the WAR -->
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp/images</directory>
-      <outputDirectory>/webapps/images</outputDirectory>
+      <outputDirectory>webapps/images</outputDirectory>
       <includes>
         <include>*</include>
       </includes>
@@ -46,7 +46,7 @@
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp/styles</directory>
-      <outputDirectory>/webapps/styles</outputDirectory>
+      <outputDirectory>webapps/styles</outputDirectory>
       <includes>
         <include>*</include>
       </includes>
@@ -55,7 +55,7 @@
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp</directory>
-      <outputDirectory>/webapps/admin</outputDirectory>
+      <outputDirectory>webapps/admin</outputDirectory>
       <excludes>
         <exclude>**/activemq.xml</exclude>
         <exclude>**/webconsole-embedded.xml</exclude>
@@ -65,7 +65,7 @@
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/target/classes</directory>
-      <outputDirectory>/webapps/admin/WEB-INF/classes</outputDirectory>
+      <outputDirectory>webapps/admin/WEB-INF/classes</outputDirectory>
       <includes>
         <include>**/*.class</include>
       </includes>
@@ -76,7 +76,7 @@
     <!-- the web demo -->
     <fileSet>
       <directory>../activemq-web-demo/src/main/webapp</directory>
-      <outputDirectory>/webapps-demo/demo</outputDirectory>
+      <outputDirectory>webapps-demo/demo</outputDirectory>
       <excludes>
         <exclude>**/activemq.xml</exclude>
         <exclude>**/webconsole-embedded.xml</exclude>
@@ -86,19 +86,19 @@
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp/styles/</directory>
-      <outputDirectory>/webapps-demo/demo/styles/</outputDirectory>
+      <outputDirectory>webapps-demo/demo/styles/</outputDirectory>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp/images/</directory>
-      <outputDirectory>/webapps-demo/demo/images/</outputDirectory>
+      <outputDirectory>webapps-demo/demo/images/</outputDirectory>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp/js/</directory>
-      <outputDirectory>/webapps-demo/demo/js/</outputDirectory>
+      <outputDirectory>webapps-demo/demo/js/</outputDirectory>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
     </fileSet>
@@ -108,7 +108,7 @@
 
     <!-- Copy over jar files -->
     <dependencySet>
-      <outputDirectory>/bin</outputDirectory>
+      <outputDirectory>bin</outputDirectory>
       <unpack>false</unpack>
       <outputFileNameMapping>activemq.jar</outputFileNameMapping>
       <includes>
@@ -118,7 +118,7 @@
     </dependencySet>
 
     <dependencySet>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
@@ -127,7 +127,7 @@
       <fileMode>0755</fileMode>
     </dependencySet>
     <dependencySet>
-      <outputDirectory>/lib</outputDirectory>
+      <outputDirectory>lib</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
@@ -156,7 +156,7 @@
       <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
-      <outputDirectory>/lib/camel</outputDirectory>
+      <outputDirectory>lib/camel</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
@@ -169,7 +169,7 @@
       <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
-      <outputDirectory>/lib/optional</outputDirectory>
+      <outputDirectory>lib/optional</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
@@ -247,7 +247,7 @@
       <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
-      <outputDirectory>/lib/extra</outputDirectory>
+      <outputDirectory>lib/extra</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
       <useTransitiveFiltering>true</useTransitiveFiltering>
@@ -262,7 +262,7 @@
       <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
-      <outputDirectory>/lib/web</outputDirectory>
+      <outputDirectory>lib/web</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
