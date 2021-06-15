@@ -123,15 +123,16 @@ public class ActiveMQSessionExecutor implements Task {
         return !messageQueue.isClosed() && messageQueue.isRunning() && !messageQueue.isEmpty();
     }
 
-    void dispatch(MessageDispatch message) {
+    boolean dispatch(MessageDispatch message) {
         // TODO - we should use a Map for this indexed by consumerId
         for (ActiveMQMessageConsumer consumer : this.session.consumers) {
             ConsumerId consumerId = message.getConsumerId();
-            if (consumerId.equals(consumer.getConsumerId())) {
+            if (consumerId.equals(consumer.getConsumerId()) && consumer.unconsumedMessages.isEmpty()) {
                 consumer.dispatch(message);
-                break;
+                return true;
             }
         }
+        return false;
     }
 
     synchronized void start() {
@@ -199,7 +200,10 @@ public class ActiveMQSessionExecutor implements Task {
         if (message == null) {
             return false;
         } else {
-            dispatch(message);
+        	if (!dispatch(message)) {
+        		messageQueue.enqueue(message);
+        	}
+        		           
             return !messageQueue.isEmpty();
         }
     }
