@@ -115,7 +115,10 @@ public interface MessageActivationSpec extends ActivationSpec {
 
     String getMaxMessagesPerBatch();
 
+    @Deprecated
     double getBackOffMultiplier();
+
+    double getRedeliveryBackOffMultiplier();
     
     long getMaximumRedeliveryDelay();
 
@@ -123,7 +126,10 @@ public interface MessageActivationSpec extends ActivationSpec {
 
     int getMaximumRedeliveries();
 
+    @Deprecated
     boolean isUseExponentialBackOff();
+
+    boolean isRedeliveryUseExponentialBackOff();
 
     RedeliveryPolicy redeliveryPolicy();
 
