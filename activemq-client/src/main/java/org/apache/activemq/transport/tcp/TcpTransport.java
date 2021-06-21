@@ -211,7 +211,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         LOG.trace("TCP consumer thread for " + this + " starting");
         this.runnerThread=Thread.currentThread();
         try {
-            while (!isStopped()) {
+            while (!isStopped() && !isStopping()) {
                 doRun();
             }
         } catch (IOException e) {
