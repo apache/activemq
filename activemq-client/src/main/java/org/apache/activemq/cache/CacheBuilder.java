@@ -2,6 +2,7 @@ package org.apache.activemq.cache;
 
 import org.apache.activemq.util.LRUCache;
 import org.apache.activemq.util.LRUKCache;
+import org.apache.activemq.util.LRULevelCache;
 
 import java.util.Map;
 
@@ -51,6 +52,9 @@ public class CacheBuilder<K, V> {
         switch (cacheType){
             case LURK:
                 cache = new LRUKCache<>(this.cacheSize, this.threadSize);
+                break;
+            case LRUKLEVEL:
+                cache = new LRULevelCache<K, V>(this.cacheSize, 5);
                 break;
             default:
                 cache = new LRUCache<>(this.cacheSize);
