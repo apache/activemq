@@ -44,7 +44,7 @@
     <aries-version>1.1.0</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
     <camel-version>2.25.2</camel-version>
-    <camel-version-range>[2.20,3)</camel-version-range>
+    <camel-version-range>[2.20,4)</camel-version-range>
     <commons-beanutils-version>1.9.4</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
     <commons-daemon-version>1.2.4</commons-daemon-version>
@@ -68,7 +68,7 @@
     <jackson-version>2.12.3</jackson-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.2.11_1</jaxb-bundle-version>
-    <jetty9-version>9.4.41.v20210516</jetty9-version>
+    <jetty9-version>9.4.42.v20210604</jetty9-version>
     <jetty-version>${jetty9-version}</jetty-version>
     <jmdns-version>3.4.1</jmdns-version>
     <tomcat-api-version>9.0.41</tomcat-api-version>
