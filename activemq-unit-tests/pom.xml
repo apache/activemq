@@ -143,6 +143,11 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbytools</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>xalan</groupId>
       <artifactId>xalan</artifactId>
       <optional>true</optional>
