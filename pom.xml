@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>18</version>
+    <version>24</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -31,6 +31,9 @@
   <inceptionYear>2005</inceptionYear>
 
   <properties>
+    <!-- for reproducible builds -->	
+    <project.build.outputTimestamp>10</project.build.outputTimestamp>
+
     <activeio-version>3.1.4</activeio-version>
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
