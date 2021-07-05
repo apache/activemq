@@ -20,6 +20,14 @@ public class CacheBuilder<K, V> {
 
     private CacheType cacheType;
 
+    private float lfuEvictionFactor = 0.2f;
+
+    private float lruLoadFactor;
+
+    private int maxCacheSize;
+
+    private boolean accessOrder;
+
     public CacheBuilder setCacheType(CacheType cacheType){
         this.cacheType = cacheType;
         return this;
@@ -34,6 +42,11 @@ public class CacheBuilder<K, V> {
         return this;
     }
 
+    public CacheBuilder setMaxCacheSize(int maxCacheSize) {
+        this.maxCacheSize = maxCacheSize;
+        return this;
+    }
+
     public int getCacheSize() {
         return cacheSize;
     }
@@ -45,6 +58,21 @@ public class CacheBuilder<K, V> {
 
     public int getThreadSize() {
         return threadSize;
+    }
+
+    public CacheBuilder setLfuEvictionFactor(float lfuEvictionFactor) {
+        this.lfuEvictionFactor = lfuEvictionFactor;
+        return this;
+    }
+
+    public CacheBuilder setLruLoadFactor(float lruLoadFactor) {
+        this.lruLoadFactor = lruLoadFactor;
+        return this;
+    }
+
+    public CacheBuilder setAccessOrder(boolean accessOrder) {
+        this.accessOrder = accessOrder;
+        return this;
     }
 
     public Map<K, V> build(){
