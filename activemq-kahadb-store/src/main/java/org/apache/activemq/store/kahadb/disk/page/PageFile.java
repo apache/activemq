@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
+import org.apache.activemq.cache.CacheBuilder;
 import org.apache.activemq.store.kahadb.disk.util.Sequence;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.util.DataByteArrayOutputStream;
@@ -379,10 +380,17 @@ public class PageFile {
         if (loaded.compareAndSet(false, true)) {
 
             if (enablePageCaching) {
+                CacheBuilder cacheBuilder = new CacheBuilder<Long, Page>();
                 if (isUseLFRUEviction()) {
-                    pageCache = Collections.synchronizedMap(new LFUCache<Long, Page>(pageCacheSize, getLFUEvictionFactor()));
+                    Map<Long, Page> cache = cacheBuilder.setCacheSize(pageCacheSize).setLfuEvictionFactor(getLFUEvictionFactor()).build();
+                    pageCache = Collections.synchronizedMap(cache);
                 } else {
-                    pageCache = Collections.synchronizedMap(new LRUCache<Long, Page>(pageCacheSize, pageCacheSize, 0.75f, true));
+                    Map<Long, Page> cache = cacheBuilder.setCacheSize(pageCacheSize).
+                            setMaxCacheSize(pageCacheSize)
+                            .setLruLoadFactor(0.75f)
+                            .setAccessOrder(true)
+                            .build();
+                    pageCache = Collections.synchronizedMap(cache);
                 }
             }
 
