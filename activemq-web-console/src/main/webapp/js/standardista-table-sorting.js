@@ -423,11 +423,19 @@ var standardistaTableSorting = {
 
 function standardistaTableSortingInit() {
 	standardistaTableSorting.init();
-	if (document.getElementsByTagName("TH")[0] != null) {
+
+	const urlSearchParams = new URLSearchParams(location.search);
+	const sortColumnId = urlSearchParams.get("sortColumnId") || 0;
+	const sortOrder = urlSearchParams.get("sortOrder") || "a";
+
+	if (document.getElementsByTagName("TH")[sortColumnId] != null) {
 		var e = {};
-		var obj = document.getElementsByTagName("TH")[0].firstChild; // 0 points to the first column, use 3 if you want to sort on the 4th column
+		var obj = document.getElementsByTagName("TH")[sortColumnId].firstChild; // 0 points to the first column, use 3 if you want to sort on the 4th column
 		e.target = obj;
 		standardistaTableSorting.headingClicked(e);  // will sort Ascending
+		if(sortOrder.startsWith("d")) {
+			standardistaTableSorting.headingClicked(e);  // will sort Descending
+		}
 	}
 }
 
