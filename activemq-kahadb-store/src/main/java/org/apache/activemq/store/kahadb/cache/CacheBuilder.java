@@ -1,5 +1,6 @@
 package org.apache.activemq.store.kahadb.cache;
 
+import org.apache.activemq.util.LFUCache;
 import org.apache.activemq.util.LRUCache;
 import org.apache.activemq.util.LRUKCache;
 import org.apache.activemq.util.LRULevelCache;
@@ -85,6 +86,7 @@ public class CacheBuilder<K, V> {
                 cache = new LRULevelCache<K, V>(this.cacheSize, threadSize);
                 break;
             case LFU:
+                cache = new LFUCache<>(this.cacheSize, lfuEvictionFactor);
                 break;
             default:
                 cache = new LRUCache<>(cacheSize, maxCacheSize, lruLoadFactor, accessOrder);
