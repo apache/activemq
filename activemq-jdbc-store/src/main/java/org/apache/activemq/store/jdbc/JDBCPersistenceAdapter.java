@@ -632,7 +632,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
      * @deprecated use {@link #setUseLock(boolean)} instead
      *
      * Sets whether or not an exclusive database lock should be used to enable
-     * JDBC Master/Slave. Enabled by default.
+     * JDBC Active/Standby. Enabled by default.
      */
     @Deprecated
     public void setUseDatabaseLock(boolean useDatabaseLock) {

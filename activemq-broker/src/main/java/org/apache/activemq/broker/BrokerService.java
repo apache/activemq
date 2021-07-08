@@ -152,10 +152,15 @@ public class BrokerService implements Service {
     private boolean useShutdownHook = true;
     private boolean useLoggingForShutdownErrors;
     private boolean shutdownOnMasterFailure;
+    private boolean shutdownOnActiveFailure;
     private boolean shutdownOnSlaveFailure;
+    private boolean shutdownOnStandbyFailure;
     private boolean waitForSlave;
+    private boolean waitForStandby;
     private long waitForSlaveTimeout = DEFAULT_START_TIMEOUT;
+    private long waitForStandbyTimeout = DEFAULT_START_TIMEOUT;
     private boolean passiveSlave;
+    private boolean standbyInstance;
     private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectoryFile;
     private File tmpDataDirectory;
@@ -485,15 +490,15 @@ public class BrokerService implements Service {
     }
 
     public void masterFailed() {
-        if (shutdownOnMasterFailure) {
-            LOG.error("The Master has failed ... shutting down");
+        if (shutdownOnActiveFailure) {
+            LOG.error("The Active has failed ... shutting down");
             try {
                 stop();
             } catch (Exception e) {
-                LOG.error("Failed to stop for master failure", e);
+                LOG.error("Failed to stop for active failure", e);
             }
         } else {
-            LOG.warn("Master Failed - starting all connectors");
+            LOG.warn("Active Failed - starting all connectors");
             try {
                 startAllConnectors();
                 broker.nowMasterBroker();
@@ -613,7 +618,7 @@ public class BrokerService implements Service {
                 }
             }
 
-            // in jvm master slave, lets not publish over existing broker till we get the lock
+            // in jvm active standby, lets not publish over existing broker till we get the lock
             final BrokerRegistry brokerRegistry = BrokerRegistry.getInstance();
             if (brokerRegistry.lookup(getBrokerName()) == null) {
                 brokerRegistry.bind(getBrokerName(), BrokerService.this);
@@ -735,7 +740,7 @@ public class BrokerService implements Service {
         if (isUseJmx()) {
             if (getManagementContext().isCreateConnector() && !getManagementContext().isConnectorStarted()) {
                 // try to restart management context
-                // typical for slaves that use the same ports as master
+                // typical for stanbdy instances that use the same ports as the active instance
                 managementContext.stop();
                 startManagementContext();
             }
@@ -1665,18 +1670,39 @@ public class BrokerService implements Service {
     }
 
     /**
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
      * @return Returns the shutdownOnMasterFailure.
      */
+    @Deprecated
     public boolean isShutdownOnMasterFailure() {
         return shutdownOnMasterFailure;
     }
 
     /**
+     * Configuration `shutdownOnMasterFailure` is deprecated and will be removed in a future release. Use `shutdownOnActiveFailure` instead.
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
      * @param shutdownOnMasterFailure
-     *            The shutdownOnMasterFailure to set.
      */
+    @Deprecated
     public void setShutdownOnMasterFailure(boolean shutdownOnMasterFailure) {
         this.shutdownOnMasterFailure = shutdownOnMasterFailure;
+        this.shutdownOnActiveFailure = shutdownOnMasterFailure;
+        LOG.warn("Configuration `shutdownOnMasterFailure` is deprecated and will be removed in a future release. Use `shutdownOnActiveFailure` instead.");
+    }
+
+    /**
+     * @return Returns the shutdownOnActiveFailure.
+     */
+    public boolean isShutdownOnActiveFailure() {
+        return shutdownOnActiveFailure;
+    }
+
+    /**
+     * @param shutdownOnActiveFailure
+     */
+    public void setShutdownOnActiveFailure(boolean shutdownOnActiveFailure) {
+        this.shutdownOnMasterFailure = shutdownOnActiveFailure;
+        this.shutdownOnActiveFailure = shutdownOnActiveFailure;
     }
 
     public boolean isKeepDurableSubsActive() {
@@ -1686,11 +1712,11 @@ public class BrokerService implements Service {
     public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
         this.keepDurableSubsActive = keepDurableSubsActive;
     }
-    
+
     public boolean isEnableMessageExpirationOnActiveDurableSubs() {
     	return enableMessageExpirationOnActiveDurableSubs;
     }
-    
+
     public void setEnableMessageExpirationOnActiveDurableSubs(boolean enableMessageExpirationOnActiveDurableSubs) {
     	this.enableMessageExpirationOnActiveDurableSubs = enableMessageExpirationOnActiveDurableSubs;
     }
@@ -2896,51 +2922,142 @@ public class BrokerService implements Service {
         this.sslContext = sslContext;
     }
 
+    /**
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
+     */
+    @Deprecated
     public boolean isShutdownOnSlaveFailure() {
         return shutdownOnSlaveFailure;
     }
 
     /**
+     * Configuration `shutdownOnSlaveFailure` is deprecated and will be removed in a future release. Use `shutdownOnStandbyFailure` instead.
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
+     * @param shutdownOnSlaveFailure
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
      */
+    @Deprecated
     public void setShutdownOnSlaveFailure(boolean shutdownOnSlaveFailure) {
         this.shutdownOnSlaveFailure = shutdownOnSlaveFailure;
+        this.shutdownOnStandbyFailure = shutdownOnSlaveFailure;
+        LOG.warn("Configuration `shutdownOnSlaveFailure` is deprecated and will be removed in a future release. Use `shutdownOnStandbyFailure` instead.");
     }
 
+    public boolean isShutdownOnStandbyFailure() {
+        return shutdownOnStandbyFailure;
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
+     */
+    public void setShutdownOnStandbyFailure(boolean shutdownOnStandbyFailure) {
+        this.shutdownOnSlaveFailure = shutdownOnStandbyFailure;
+        this.shutdownOnStandbyFailure = shutdownOnStandbyFailure;
+    }
+
+    /**
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
+     */
+    @Deprecated
     public boolean isWaitForSlave() {
         return waitForSlave;
     }
 
     /**
+     * Configuration `waitForSlave` is deprecated and will be removed in a future release. Use `waitForStandby` instead.
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
+     * @param waitForSlave
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
      */
+    @Deprecated
     public void setWaitForSlave(boolean waitForSlave) {
         this.waitForSlave = waitForSlave;
+        this.waitForStandby = waitForSlave;
+        LOG.warn("Configuration `waitForSlave` is deprecated and will be removed in a future release. Use `waitForStandby` instead.");
     }
 
+    /**
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
+     */
+    @Deprecated
     public long getWaitForSlaveTimeout() {
         return this.waitForSlaveTimeout;
     }
 
+    /**
+     * Configuration `waitForSlaveTimeout` is deprecated and will be removed in a future release. Use `waitForStandbyTimeout` instead.
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
+     * @param waitForSlaveTimeout
+     */
+    @Deprecated
     public void setWaitForSlaveTimeout(long waitForSlaveTimeout) {
         this.waitForSlaveTimeout = waitForSlaveTimeout;
+        this.waitForStandbyTimeout = waitForSlaveTimeout;
+        LOG.warn("Configuration `waitForSlaveTimeout` is deprecated and will be removed in a future release. Use `waitForStandbyTimeout` instead.");
+
+    }
+
+    public boolean isWaitForStandby() {
+        return waitForStandby;
     }
 
     /**
-     * Get the passiveSlave
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
+     */
+    public void setWaitForStandby(boolean waitForStandby) {
+        this.waitForStandby = waitForStandby;
+        this.waitForSlave = waitForStandby;
+    }
+
+    public long getWaitForStandbyTimeout() {
+        return this.waitForStandbyTimeout;
+    }
+
+    public void setWaitForStandbyTimeout(long waitForStandbyTimeout) {
+        this.waitForSlaveTimeout = waitForStandbyTimeout;
+        this.waitForStandbyTimeout = waitForStandbyTimeout;
+    }
+
+    /**
+     * Configuration `passiveSlave` is deprecated and will be removed in a future release. Use `standbyInstance` instead.
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
      * @return the passiveSlave
      */
+    @Deprecated
     public boolean isPassiveSlave() {
+        LOG.warn("Configuration `passiveSlave` is deprecated and will be removed in a future release. Use `standbyInstance` instead.");
         return this.passiveSlave;
     }
 
     /**
-     * Set the passiveSlave
+     * Configuration `passiveSlave` is deprecated and will be removed in a future release. Use `standbyInstance` instead.
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
      * @param passiveSlave the passiveSlave to set
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
      */
+    @Deprecated
     public void setPassiveSlave(boolean passiveSlave) {
         this.passiveSlave = passiveSlave;
+        this.standbyInstance = passiveSlave;
+        LOG.warn("Configuration `passiveSlave` is deprecated and will be removed in a future release. Use `standbyInstance` instead.");
+    }
+
+    /**
+     * Get the standbyInstance
+     * @return the standbyInstance
+     */
+    public boolean isStandbyInstance() {
+        return this.standbyInstance;
+    }
+
+    /**
+     * Set the standbyInstance
+     * @param standbyInstance the standbyInstance to set
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
+     */
+    public void setStandbyInstance(boolean standbyInstance) {
+        this.passiveSlave = standbyInstance;
+        this.standbyInstance = standbyInstance;
     }
 
     /**

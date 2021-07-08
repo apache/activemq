@@ -199,7 +199,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
 
     /**
      * Sets whether or not an exclusive database lock should be used to enable
-     * JDBC Master/Slave. Enabled by default.
+     * JDBC Active/Standby. Enabled by default.
      */
     public void setUseDatabaseLock(boolean useDatabaseLock) {
         jdbcPersistenceAdapter.setUseLock(useDatabaseLock);
