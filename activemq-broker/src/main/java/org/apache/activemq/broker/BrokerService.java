@@ -151,8 +151,8 @@ public class BrokerService implements Service {
 
     private boolean useShutdownHook = true;
     private boolean useLoggingForShutdownErrors;
-    private boolean shutdownOnMasterFailure;
-    private boolean shutdownOnSlaveFailure;
+    private boolean shutdownOnActiveFailure;
+    private boolean shutdownOnStandbyFailure;
     private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectoryFile;
     private File tmpDataDirectory;
@@ -482,7 +482,7 @@ public class BrokerService implements Service {
     }
 
     public void masterFailed() {
-        if (shutdownOnMasterFailure) {
+        if (shutdownOnActiveFailure) {
             LOG.error("The Master has failed ... shutting down");
             try {
                 stop();
@@ -609,7 +609,7 @@ public class BrokerService implements Service {
                 }
             }
 
-            // in jvm master slave, lets not publish over existing broker till we get the lock
+            // in jvm active standby, lets not publish over existing broker till we get the lock
             final BrokerRegistry brokerRegistry = BrokerRegistry.getInstance();
             if (brokerRegistry.lookup(getBrokerName()) == null) {
                 brokerRegistry.bind(getBrokerName(), BrokerService.this);
@@ -731,7 +731,7 @@ public class BrokerService implements Service {
         if (isUseJmx()) {
             if (getManagementContext().isCreateConnector() && !getManagementContext().isConnectorStarted()) {
                 // try to restart management context
-                // typical for slaves that use the same ports as master
+                // typical for stanbdy instances that use the same ports as the active instance
                 managementContext.stop();
                 startManagementContext();
             }
@@ -1661,18 +1661,37 @@ public class BrokerService implements Service {
     }
 
     /**
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
      * @return Returns the shutdownOnMasterFailure.
      */
+    @Deprecated
     public boolean isShutdownOnMasterFailure() {
-        return shutdownOnMasterFailure;
+        return shutdownOnActiveFailure;
     }
 
     /**
+     * Configuration `shutdownOnMasterFailure` is deprecated and will be removed in a future release. Use `shutdownOnActiveFailure` instead.
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
      * @param shutdownOnMasterFailure
-     *            The shutdownOnMasterFailure to set.
      */
+    @Deprecated
     public void setShutdownOnMasterFailure(boolean shutdownOnMasterFailure) {
-        this.shutdownOnMasterFailure = shutdownOnMasterFailure;
+        this.shutdownOnActiveFailure = shutdownOnMasterFailure;
+        LOG.warn("Configuration `shutdownOnMasterFailure` is deprecated and will be removed in a future release. Use `shutdownOnActiveFailure` instead.");
+    }
+
+    /**
+     * @return Returns the shutdownOnActiveFailure.
+     */
+    public boolean isShutdownOnActiveFailure() {
+        return shutdownOnActiveFailure;
+    }
+
+    /**
+     * @param shutdownOnActiveFailure
+     */
+    public void setShutdownOnActiveFailure(boolean shutdownOnActiveFailure) {
+        this.shutdownOnActiveFailure = shutdownOnActiveFailure;
     }
 
     public boolean isKeepDurableSubsActive() {
@@ -1682,11 +1701,11 @@ public class BrokerService implements Service {
     public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
         this.keepDurableSubsActive = keepDurableSubsActive;
     }
-    
+
     public boolean isEnableMessageExpirationOnActiveDurableSubs() {
     	return enableMessageExpirationOnActiveDurableSubs;
     }
-    
+
     public void setEnableMessageExpirationOnActiveDurableSubs(boolean enableMessageExpirationOnActiveDurableSubs) {
     	this.enableMessageExpirationOnActiveDurableSubs = enableMessageExpirationOnActiveDurableSubs;
     }
@@ -2892,15 +2911,35 @@ public class BrokerService implements Service {
         this.sslContext = sslContext;
     }
 
+    /**
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
+     */
+    @Deprecated
     public boolean isShutdownOnSlaveFailure() {
-        return shutdownOnSlaveFailure;
+        return shutdownOnStandbyFailure;
+    }
+
+    /**
+     * Configuration `shutdownOnSlaveFailure` is deprecated and will be removed in a future release. Use `shutdownOnStandbyFailure` instead.
+     * @deprecated AMQ-7514 in the move to inclusive nomenclature
+     * @param shutdownOnSlaveFailure
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
+     */
+    @Deprecated
+    public void setShutdownOnSlaveFailure(boolean shutdownOnSlaveFailure) {
+        this.shutdownOnStandbyFailure = shutdownOnSlaveFailure;
+        LOG.warn("Configuration `shutdownOnSlaveFailure` is deprecated and will be removed in a future release. Use `shutdownOnStandbyFailure` instead.");
+    }
+
+    public boolean isShutdownOnStandbyFailure() {
+        return shutdownOnStandbyFailure;
     }
 
     /**
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
      */
-    public void setShutdownOnSlaveFailure(boolean shutdownOnSlaveFailure) {
-        this.shutdownOnSlaveFailure = shutdownOnSlaveFailure;
+    public void setShutdownOnStandbyFailure(boolean shutdownOnStandbyFailure) {
+        this.shutdownOnStandbyFailure = shutdownOnStandbyFailure;
     }
 
     /**
