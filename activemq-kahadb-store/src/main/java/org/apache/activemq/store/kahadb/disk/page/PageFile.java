@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
+import org.apache.activemq.store.kahadb.cache.CacheStrategy;
 import org.apache.activemq.store.kahadb.disk.util.Sequence;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.util.DataByteArrayOutputStream;
@@ -149,6 +150,9 @@ public class PageFile {
 
     private boolean useLFRUEviction = false;
     private float LFUEvictionFactor = 0.2f;
+
+    private boolean useLRUKEvication = false;
+    private int lrukThreadSize = 2;
 
     /**
      * Use to keep track of updated pages which have not yet been committed.
@@ -369,6 +373,19 @@ public class PageFile {
     }
 
     /**
+     * create cache by cache config
+     * there are 3 type cache
+     *   1. lru (default)
+     *   2. lfu
+     *   3. lruk
+     *
+     */
+    private void createCache(){
+        CacheStrategy<Long, Page> cacheStrategy = new CacheStrategy<>();
+        this.pageCache = cacheStrategy.createCache(this);
+    }
+
+    /**
      * Loads the page file so that it can be accessed for read/write purposes.  This allocates OS resources.  If this is the
      * first time the page file is loaded, then this creates the page file in the file system.
      *
@@ -380,10 +397,10 @@ public class PageFile {
         if (loaded.compareAndSet(false, true)) {
 
             if (enablePageCaching) {
-                if (isUseLFRUEviction()) {
-                    pageCache = Collections.synchronizedMap(new LFUCache<Long, Page>(pageCacheSize, getLFUEvictionFactor()));
-                } else {
-                    pageCache = Collections.synchronizedMap(new LRUCache<Long, Page>(pageCacheSize, pageCacheSize, 0.75f, true));
+                createCache();
+
+                if(pageCache == null){
+                    throw new IllegalStateException("");
                 }
             }
 
@@ -892,6 +909,22 @@ public class PageFile {
 
     public void setUseLFRUEviction(boolean useLFRUEviction) {
         this.useLFRUEviction = useLFRUEviction;
+    }
+
+    public void setUseLRUKEvication(boolean useLRUKEvication) {
+        this.useLRUKEvication = useLRUKEvication;
+    }
+
+    public boolean isUseLRUKEvication() {
+        return useLRUKEvication;
+    }
+
+    public void setLrukThreadSize(int lrukThreadSize) {
+        this.lrukThreadSize = lrukThreadSize;
+    }
+
+    public int getLrukThreadSize() {
+        return lrukThreadSize;
     }
 
     ///////////////////////////////////////////////////////////////////
