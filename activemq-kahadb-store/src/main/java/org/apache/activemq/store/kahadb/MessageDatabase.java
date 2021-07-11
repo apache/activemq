@@ -3390,6 +3390,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         index.setEnableDiskSyncs(isEnableIndexDiskSyncs());
         index.setEnableRecoveryFile(isEnableIndexRecoveryFile());
         index.setEnablePageCaching(isEnableIndexPageCaching());
+        index.setUseLRUKEvication(isUseLRUKEvication());
+        index.setLrukThreadSize(getLrukThreadSize());
         return index;
     }
 
