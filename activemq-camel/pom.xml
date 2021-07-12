@@ -32,7 +32,7 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-       org.springframework.jms*;version="[4,5)",
+       org.springframework.jms*;version="[4,6)",
        org.apache.activemq.pool,
        org.apache.camel*;version="${camel-version-range}",
        *
