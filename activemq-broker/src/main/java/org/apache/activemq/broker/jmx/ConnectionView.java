@@ -17,14 +17,23 @@
 package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.Connection;
+import org.apache.activemq.broker.region.ConnectionStatistics;
+import org.apache.activemq.management.CountStatisticImpl;
+import org.apache.activemq.management.PollCountStatisticImpl;
 import org.apache.activemq.util.IOExceptionSupport;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class ConnectionView implements ConnectionViewMBean {
+	
+    private final static ObjectMapper mapper = new ObjectMapper();
 
     private final Connection connection;
     private final ManagementContext managementContext;
@@ -175,5 +184,42 @@ public class ConnectionView implements ConnectionViewMBean {
     @Override
     public Long getOldestActiveTransactionDuration() {
         return connection.getOldestActiveTransactionDuration();
+    }
+    
+    /**
+     * @return A JSON string of the connector statistics
+     */
+    @Override
+    public String getStatistics() {
+        return serializeConnectorStatistics();
+    }
+    
+    private String serializeConnectorStatistics() {
+    	ConnectionStatistics tmpConnectionStatistics = this.connection.getStatistics();
+    	
+        if (tmpConnectionStatistics != null) {
+            try {
+                Map<String, Object> result = new HashMap<String, Object>();
+                result.put("dequeues", getCountStatisticsAsMap(tmpConnectionStatistics.getDequeues()));
+                result.put("enqueues", getCountStatisticsAsMap(tmpConnectionStatistics.getEnqueues()));
+                return mapper.writeValueAsString(result);
+            } catch (IOException e) {
+                return e.toString();
+            }
+        }
+
+        return null;
+    }
+
+    private Map<String, Object> getCountStatisticsAsMap(final CountStatisticImpl countStatistic) {
+        Map<String, Object> result = new HashMap<String, Object>();
+        result.put("count", countStatistic.getCount());
+        result.put("description", countStatistic.getDescription());
+        result.put("frequency", countStatistic.getFrequency());
+        result.put("lastSampleTime", countStatistic.getLastSampleTime());
+        result.put("period", countStatistic.getPeriod());
+        result.put("startTime", countStatistic.getStartTime());
+        result.put("unit", countStatistic.getUnit());
+        return result;
     }
 }
