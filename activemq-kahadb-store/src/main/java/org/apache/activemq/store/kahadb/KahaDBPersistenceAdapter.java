@@ -682,12 +682,12 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         return letter.isUseLRUKEvication();
     }
 
-    public void setLrukThreadSize(int lrukThreadSize) {
-        letter.setLrukThreadSize(lrukThreadSize);
+    public void setLrukThresholdValue(int lrukThresholdValue) {
+        letter.setLrukThresholdValue(lrukThresholdValue);
     }
 
-    public int getLrukThreadSize(){
-        return letter.getLrukThreadSize();
+    public int getLrukThresholdValue(){
+        return letter.getLrukThresholdValue();
     }
 
     public void setEnableIndexDiskSyncs(boolean diskSyncs) {

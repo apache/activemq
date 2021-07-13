@@ -23,13 +23,24 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 /**
- * improved lru-k cache
- * based on lru simple cache, a fifo linkedlist was add here, which store
+ * abstract:
+ *   improved lru-k cache based on lru simple cache, a fifo linkedlist was add here, which store
  * key not hit freqTh times.
  * otherwise, if the key is queryed by freqth times, it will be moved from linkedlist to simplecache
  *
- * The difference between LRUKCache and simplelrucahce was tested in org.apache.activemq.util.LRUKCachePerformanceTest
+ * The difference between LRUKCache and simplelrucahce was tested in
+ *
+ * @see org.apache.activemq.store.kahadb.cache.LRUKCachePerformanceTest
  * ,which also show why LRUKCache can be used!
+ *
+ * how to config:
+ *  you can enable this cache to config in activemq.xml like below:
+ *     <amq:kahaDB journalMaxFileLength="10mb" enableIndexPageCaching="true" useLRUKEvication="true" lrukThresholdValue="2"/>
+ *     two param is support:
+ *       1. set useLRUKEvication=true, enable lruk cache
+ *       2. lrukThresholdValue set the threshold to make element in cache moved from
+ *             linkedlist(low level) to simplecache (high level)
+ *          default value is 2
  *
  * @param <Key>
  * @param <Value>
@@ -59,15 +70,15 @@ public class LRUKCache<Key, Value> implements Map<Key, Value> {
     /**
      * threshold value for moving from fifo to lrucache
      */
-    private int freqTh;
+    private int threshold;
 
     public LRUKCache(){
         this(1000, 2);
     }
 
-    public LRUKCache(int capacity, int freqTh){
+    public LRUKCache(int capacity, int threshold){
         this.capacity = 2 * capacity;
-        this.freqTh = freqTh;
+        this.threshold = threshold;
         init();
     }
 
@@ -139,7 +150,7 @@ public class LRUKCache<Key, Value> implements Map<Key, Value> {
         cacheNode = findKeyFromFIFOList(predicate);
         if(cacheNode != null){
             if(increaseFreq){
-                if(++cacheNode.freq >= freqTh){
+                if(++cacheNode.freq >= threshold){
                     moveFromFifoListToLruCache(cacheNode);
                 }
             }

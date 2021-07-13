@@ -27,7 +27,7 @@ public class CacheStrategy<K, V> {
                             .setCacheType(CacheType.LURK)
                             .setCacheSize(0)
                             .setMaxCacheSize(pageFile.getPageCacheSize())
-                            .setThreadSize(pageFile.getLrukThreadSize())
+                            .setLrukThresholdValue(pageFile.getLrukThresholdValue())
                             .build();
             pageCache = Collections.synchronizedMap(cache);
         } else {

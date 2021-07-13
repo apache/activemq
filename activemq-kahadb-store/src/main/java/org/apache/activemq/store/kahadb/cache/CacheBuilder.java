@@ -15,7 +15,7 @@ public class CacheBuilder<K, V> {
 
     private int cacheSize;
 
-    private int threadSize;
+    private int lrukThresholdValue;
 
     private CacheType cacheType;
 
@@ -50,13 +50,13 @@ public class CacheBuilder<K, V> {
         return cacheSize;
     }
 
-    public CacheBuilder setThreadSize(int threadSize) {
-        this.threadSize = threadSize;
+    public CacheBuilder setLrukThresholdValue(int lrukThresholdValue) {
+        this.lrukThresholdValue = lrukThresholdValue;
         return this;
     }
 
-    public int getThreadSize() {
-        return threadSize;
+    public int getLrukThresholdValue() {
+        return lrukThresholdValue;
     }
 
     public CacheBuilder setLfuEvictionFactor(float lfuEvictionFactor) {
@@ -78,10 +78,7 @@ public class CacheBuilder<K, V> {
         Map<K, V> cache = null;
         switch (cacheType){
             case LURK:
-                cache = new LRUKCache<>(this.cacheSize, this.threadSize);
-                break;
-            case LRUKLEVEL:
-                cache = new LRULevelCache<K, V>(this.cacheSize, threadSize);
+                cache = new LRUKCache<>(this.cacheSize, this.lrukThresholdValue);
                 break;
             case LFU:
                 cache = new LFUCache<>(this.maxCacheSize, lfuEvictionFactor);

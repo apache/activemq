@@ -152,7 +152,7 @@ public class PageFile {
     private float LFUEvictionFactor = 0.2f;
 
     private boolean useLRUKEvication = false;
-    private int lrukThreadSize = 2;
+    private int lrukThresholdValue = 2;
 
     /**
      * Use to keep track of updated pages which have not yet been committed.
@@ -918,12 +918,12 @@ public class PageFile {
         return useLRUKEvication;
     }
 
-    public void setLrukThreadSize(int lrukThreadSize) {
-        this.lrukThreadSize = lrukThreadSize;
+    public void setLrukThresholdValue(int lrukThresholdValue) {
+        this.lrukThresholdValue = lrukThresholdValue;
     }
 
-    public int getLrukThreadSize() {
-        return lrukThreadSize;
+    public int getLrukThresholdValue() {
+        return lrukThresholdValue;
     }
 
     ///////////////////////////////////////////////////////////////////

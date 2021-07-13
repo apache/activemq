@@ -33,7 +33,8 @@
                             <amq:storeUsage percentLimit="10" total="500 mb"></amq:storeUsage>
                         </amq:usage>
                         <amq:persistenceAdapter>
-                            <amq:kahaDB journalMaxFileLength="10mb" enableIndexPageCaching="true" useLRUKEvication="true"/>
+                            <amq:kahaDB journalMaxFileLength="10mb" enableIndexPageCaching="true" useLRUKEvication="true"
+                            />
                         </amq:persistenceAdapter>
                     </amq:filteredKahaDB>
                 </amq:filteredPersistenceAdapters>

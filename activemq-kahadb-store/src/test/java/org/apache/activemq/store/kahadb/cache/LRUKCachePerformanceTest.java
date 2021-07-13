@@ -16,7 +16,7 @@ public class LRUKCachePerformanceTest {
      * test mothod:
      *   we prepare insert 2 times cache size data to simple cache and lrucache.
      *   The data was also queryed threahold times when it was pushed to lruk cache.
-     *   After that, we query first part of input data (it should be half of input data).
+     *   After that, we query first part of input data (it should be the first half of input data).
      *   The result is that the hit rate of simple lru cache reached 0.But that of lruk cache
      *   is 1.
      *   The test case show the worst case situation for lruk and simple cache.
