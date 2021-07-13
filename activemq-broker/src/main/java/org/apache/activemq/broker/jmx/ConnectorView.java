@@ -16,11 +16,21 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.activemq.broker.Connector;
+import org.apache.activemq.broker.region.ConnectorStatistics;
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.management.CountStatisticImpl;
+import org.apache.activemq.management.PollCountStatisticImpl;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ConnectorView implements ConnectorViewMBean {
 
+    private final static ObjectMapper mapper = new ObjectMapper();
     private final Connector connector;
 
     public ConnectorView(Connector connector) {
@@ -135,5 +145,57 @@ public class ConnectorView implements ConnectorViewMBean {
     @Override
     public boolean isAllowLinkStealingEnabled() {
         return this.connector.isAllowLinkStealing();
+    }
+    
+    /**
+     * @return A JSON string of the connector statistics
+     */
+    @Override
+    public String getStatistics() {
+        return serializeConnectorStatistics();
+    }
+    
+    private String serializeConnectorStatistics() {
+    	ConnectorStatistics tmpConnectorStatistics = this.connector.getStatistics();
+    	
+        if (tmpConnectorStatistics != null) {
+            try {
+                Map<String, Object> result = new HashMap<String, Object>();
+                result.put("consumers", getCountStatisticsAsMap(tmpConnectorStatistics.getConsumers()));
+                result.put("dequeues", getCountStatisticsAsMap(tmpConnectorStatistics.getDequeues()));
+                result.put("enqueues", getCountStatisticsAsMap(tmpConnectorStatistics.getEnqueues()));
+                result.put("messages", getCountStatisticsAsMap(tmpConnectorStatistics.getMessages()));
+                result.put("messagesCached", getPollCountStatisticsAsMap(tmpConnectorStatistics.getMessagesCached()));
+                return mapper.writeValueAsString(result);
+            } catch (IOException e) {
+                return e.toString();
+            }
+        }
+
+        return null;
+    }
+    
+    private Map<String, Object> getPollCountStatisticsAsMap(final PollCountStatisticImpl pollCountStatistic) {
+        Map<String, Object> result = new HashMap<String, Object>();
+        result.put("count", pollCountStatistic.getCount());
+        result.put("description", pollCountStatistic.getDescription());
+        result.put("frequency", pollCountStatistic.getFrequency());
+        result.put("lastSampleTime", pollCountStatistic.getLastSampleTime());
+        result.put("period", pollCountStatistic.getPeriod());
+        result.put("startTime", pollCountStatistic.getStartTime());
+        result.put("unit", pollCountStatistic.getUnit());
+        return result;
+    }
+
+    private Map<String, Object> getCountStatisticsAsMap(final CountStatisticImpl countStatistic) {
+        Map<String, Object> result = new HashMap<String, Object>();
+        result.put("count", countStatistic.getCount());
+        result.put("description", countStatistic.getDescription());
+        result.put("frequency", countStatistic.getFrequency());
+        result.put("lastSampleTime", countStatistic.getLastSampleTime());
+        result.put("period", countStatistic.getPeriod());
+        result.put("startTime", countStatistic.getStartTime());
+        result.put("unit", countStatistic.getUnit());
+        return result;
     }
 }

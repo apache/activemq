@@ -574,6 +574,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         ProducerBrokerExchange producerExchange = getProducerBrokerExchange(producerId);
         if (producerExchange.canDispatch(messageSend)) {
             broker.send(producerExchange, messageSend);
+            if(this.statistics.isEnabled()) {
+            	this.statistics.getEnqueues().increment();
+            }
         }
         return null;
     }
@@ -583,6 +586,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(ack.getConsumerId());
         if (consumerExchange != null) {
             broker.acknowledge(consumerExchange, ack);
+            if(this.statistics.isEnabled()) {
+            	this.statistics.getDequeues().increment();
+            }
         } else if (ack.isInTransaction()) {
             LOG.warn("no matching consumer {}, ignoring ack {}", consumerExchange, ack);
         }
