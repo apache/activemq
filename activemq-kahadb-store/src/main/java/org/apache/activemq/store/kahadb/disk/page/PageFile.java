@@ -373,7 +373,7 @@ public class PageFile {
 
     /**
      * create cache by cache config
-     * there are 3 type cache
+     * there are 3 type cache can be created here
      *   1. lru (default)
      *   2. lfu
      *   3. lruk
@@ -399,7 +399,7 @@ public class PageFile {
                 createCache();
 
                 if(pageCache == null){
-                    throw new IllegalStateException("");
+                    throw new IllegalStateException("page cache create failed!");
                 }
             }
 
