@@ -68,6 +68,8 @@ public abstract class AbstractKahaDBStore extends LockableServiceSupport {
     protected int indexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
     protected boolean useIndexLFRUEviction = false;
     protected float indexLFUEvictionFactor = 0.2f;
+    private boolean useLRUKEvication = false;
+    private int lrukThreadSize = 2;
     protected boolean ignoreMissingJournalfiles = false;
     protected int indexCacheSize = 1000;
     protected boolean enableIndexDiskSyncs = true;
@@ -349,6 +351,22 @@ public abstract class AbstractKahaDBStore extends LockableServiceSupport {
 
     public void setEnableIndexPageCaching(boolean enableIndexPageCaching) {
         this.enableIndexPageCaching = enableIndexPageCaching;
+    }
+
+    public void setUseLRUKEvication(boolean useLRUKEvication) {
+        this.useLRUKEvication = useLRUKEvication;
+    }
+
+    public boolean isUseLRUKEvication() {
+        return this.useLRUKEvication;
+    }
+
+    public void setLrukThreadSize(int lrukThreadSize) {
+        this.lrukThreadSize = lrukThreadSize;
+    }
+
+    public int getLrukThreadSize(){
+        return this.lrukThreadSize;
     }
 
     public boolean isPurgeStoreOnStartup() {
@@ -640,6 +658,8 @@ public abstract class AbstractKahaDBStore extends LockableServiceSupport {
         index.setEnableDiskSyncs(isEnableIndexDiskSyncs());
         index.setEnableRecoveryFile(isEnableIndexRecoveryFile());
         index.setEnablePageCaching(isEnableIndexPageCaching());
+        index.setUseLFRUEviction(isUseLRUKEvication());
+        index.setLrukThreadSize(getLrukThreadSize());
         return index;
     }
 

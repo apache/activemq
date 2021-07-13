@@ -674,6 +674,22 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         letter.setUseIndexLFRUEviction(useIndexLFRUEviction);
     }
 
+    public void setUseLRUKEvication(boolean useLRUKEvication) {
+        letter.setUseLRUKEvication(useLRUKEvication);
+    }
+
+    public boolean isUseLRUKEvication() {
+        return letter.isUseLRUKEvication();
+    }
+
+    public void setLrukThreadSize(int lrukThreadSize) {
+        letter.setLrukThreadSize(lrukThreadSize);
+    }
+
+    public int getLrukThreadSize(){
+        return letter.getLrukThreadSize();
+    }
+
     public void setEnableIndexDiskSyncs(boolean diskSyncs) {
         letter.setEnableIndexDiskSyncs(diskSyncs);
     }
