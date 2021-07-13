@@ -289,6 +289,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean archiveCorruptedIndex = false;
     private boolean useIndexLFRUEviction = false;
     private float indexLFUEvictionFactor = 0.2f;
+    private boolean useLRUKEvication = false;
+    private int lrukThresholdValue = 2;
     private boolean enableIndexDiskSyncs = true;
     private boolean enableIndexRecoveryFile = true;
     private boolean enableIndexPageCaching = true;
@@ -3388,6 +3390,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         index.setEnableDiskSyncs(isEnableIndexDiskSyncs());
         index.setEnableRecoveryFile(isEnableIndexRecoveryFile());
         index.setEnablePageCaching(isEnableIndexPageCaching());
+        index.setUseLRUKEvication(isUseLRUKEvication());
+        index.setLrukThresholdValue(getLrukThresholdValue());
         return index;
     }
 
@@ -3677,6 +3681,22 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public void setUseIndexLFRUEviction(boolean useIndexLFRUEviction) {
         this.useIndexLFRUEviction = useIndexLFRUEviction;
+    }
+
+    public void setUseLRUKEvication(boolean useLRUKEvication) {
+        this.useLRUKEvication = useLRUKEvication;
+    }
+
+    public boolean isUseLRUKEvication() {
+        return useLRUKEvication;
+    }
+
+    public int getLrukThresholdValue() {
+        return lrukThresholdValue;
+    }
+
+    public void setLrukThresholdValue(int lrukThresholdValue) {
+        this.lrukThresholdValue = lrukThresholdValue;
     }
 
     public void setEnableIndexDiskSyncs(boolean enableIndexDiskSyncs) {
