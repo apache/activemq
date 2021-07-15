@@ -307,6 +307,44 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     /**
      * Creates a <CODE>Session</CODE> object.
      *
+     * @throws JMSException if the <CODE>Connection</CODE> object fails to
+     *                 create a session due to some internal error or lack of
+     *                 support for the specific transaction and acknowledgement
+     *                 mode.
+     * @since 2.0
+     */
+	@Override
+	public Session createSession() throws JMSException {
+    	throw new UnsupportedOperationException("createSession() is unsupported"); 
+	}
+	
+	/**
+     * Creates a <CODE>Session</CODE> object.
+     *
+     * @param acknowledgeMode indicates whether the consumer or the client will
+     *                acknowledge any messages it receives; ignored if the
+     *                session is transacted. Legal values are
+     *                <code>Session.AUTO_ACKNOWLEDGE</code>,
+     *                <code>Session.CLIENT_ACKNOWLEDGE</code>, and
+     *                <code>Session.DUPS_OK_ACKNOWLEDGE</code>.
+     * @return a newly created session
+     * @throws JMSException if the <CODE>Connection</CODE> object fails to
+     *                 create a session due to some internal error or lack of
+     *                 support for the specific transaction and acknowledgement
+     *                 mode.
+     * @see Session#AUTO_ACKNOWLEDGE
+     * @see Session#CLIENT_ACKNOWLEDGE
+     * @see Session#DUPS_OK_ACKNOWLEDGE
+     * @since 2.0
+     */
+    @Override
+	public Session createSession(int sessionMode) throws JMSException {
+    	throw new UnsupportedOperationException("createSession(int sessionMode) is unsupported"); 
+	}
+
+	/**
+     * Creates a <CODE>Session</CODE> object.
+     *
      * @param transacted indicates whether the session is transacted
      * @param acknowledgeMode indicates whether the consumer or the client will
      *                acknowledge any messages it receives; ignored if the
@@ -826,10 +864,32 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         return new ActiveMQConnectionConsumer(this, sessionPool, info);
     }
 
-    // Properties
-    // -------------------------------------------------------------------------
+    /**
+     * 
+     * @see javax.jms.ConnectionConsumer
+     * @since 2.0
+     */
+    @Override
+  	public ConnectionConsumer createSharedConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool, 
+  			                                                 int maxMessages) throws JMSException {
+    	throw new UnsupportedOperationException("createSharedConnectionConsumer() is not supported");
+    }
 
     /**
+     * 
+     * @see javax.jms.ConnectionConsumer
+     * @since 2.0
+     */
+  	@Override
+  	public ConnectionConsumer createSharedDurableConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool,
+  			                                                        int maxMessages) throws JMSException {
+  		throw new UnsupportedOperationException("createSharedConnectionConsumer() is not supported");
+  	}
+    
+    // Properties
+    // -------------------------------------------------------------------------
+  
+	/**
      * Returns true if this connection has been started
      *
      * @return true if this Connection is started

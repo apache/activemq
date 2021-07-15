@@ -43,8 +43,8 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jms_1.1_spec</artifactId>
+      <groupId>jakarta.jms</groupId>
+      <artifactId>jakarta.jms-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.fusesource.hawtbuf</groupId>
@@ -58,12 +58,13 @@
       <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
     </dependency>
 
-    <!-- for ftp blob upload/download -->
+    <!-- for ftp blob upload/download --> 
     <dependency>
       <groupId>commons-net</groupId>
       <artifactId>commons-net</artifactId>
       <optional>true</optional>
     </dependency>
+
     <!-- for zerconf discovery -->
     <dependency>
       <groupId>javax.jmdns</groupId>

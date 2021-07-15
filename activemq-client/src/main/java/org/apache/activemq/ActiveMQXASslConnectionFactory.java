@@ -22,6 +22,7 @@ import java.util.Properties;
 import javax.jms.JMSException;
 import javax.jms.XAConnection;
 import javax.jms.XAConnectionFactory;
+import javax.jms.XAJMSContext;
 import javax.jms.XAQueueConnection;
 import javax.jms.XAQueueConnectionFactory;
 import javax.jms.XATopicConnection;
@@ -74,6 +75,16 @@ public class ActiveMQXASslConnectionFactory extends ActiveMQSslConnectionFactory
     }
 
     @Override
+	public XAJMSContext createXAContext() {
+		throw new UnsupportedOperationException("createXAContext() is not supported");
+	}
+
+	@Override
+	public XAJMSContext createXAContext(String userName, String password) {
+		throw new UnsupportedOperationException("createXAContext(userName, password) is not supported");
+	}
+
+	@Override
     protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
         ActiveMQXAConnection connection = new ActiveMQXAConnection(transport, getClientIdGenerator(), getConnectionIdGenerator(), stats);
         configureXAConnection(connection);

@@ -42,6 +42,31 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
         disableMessageTimestamp = session.connection.isDisableTimeStampsByDefault();
     }
 
+	/**
+     * Gets the delivery delay associated with this <CODE>MessageProducer</CODE>.
+     *
+     * @return this producer's <CODE>DeliveryDely/ <CODE>
+     * @throws JMSException if the JMS provider fails to close the producer due to
+     *                      some internal error.
+     * @since 2.0
+     */
+    @Override
+	public void setDeliveryDelay(long deliveryDelay) throws JMSException {
+    	throw new UnsupportedOperationException("setDeliveryDelay() is not supported");
+	}
+
+	/**
+     * Gets the delivery delay value for this <CODE>MessageProducer</CODE>.
+     *
+     * @return the delivery delay for this messageProducer
+     * @throws javax.jms.JMSException if the JMS provider fails to determine if deliver delay is
+     *                      disabled due to some internal error.
+     */
+	@Override
+	public long getDeliveryDelay() throws JMSException {
+    	throw new UnsupportedOperationException("getDeliveryDelay() is not supported");
+	}
+    
     /**
      * Sets whether message IDs are disabled.
      * <P>
@@ -66,7 +91,7 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
         this.disableMessageID = value;
     }
 
-    /**
+	/**
      * Gets an indication of whether message IDs are disabled.
      *
      * @return an indication of whether message IDs are disabled

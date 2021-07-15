@@ -32,13 +32,17 @@
 
   <properties>
     <xpp3-bundle-version>1.1.4c_5</xpp3-bundle-version>
-    <jodatime-bundle-version>2.9</jodatime-bundle-version>
     <dom4j-bundle-version>1.6.1_2</dom4j-bundle-version>
     <xstream-bundle-version>1.4.17_1</xstream-bundle-version>
     <servicemix.specs.version>2.4.0</servicemix.specs.version>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jms_2.0_spec</artifactId>
+      <version>1.0-alpha-2</version>
+    </dependency>
     <dependency>
       <groupId>org.ops4j.pax.logging</groupId>
       <artifactId>pax-logging-api</artifactId>
@@ -97,14 +101,32 @@
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-log4j-appender</artifactId>
+      <exclusions>
+      	<exclusion>
+      		<groupId>jakarta.jms</groupId>
+      		<artifactId>jakarta.jms-api</artifactId>
+      	</exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-console</artifactId>
+      <exclusions>
+      	<exclusion>
+      		<groupId>jakarta.jms</groupId>
+      		<artifactId>jakarta.jms-api</artifactId>
+      	</exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-pool</artifactId>
+      <exclusions>
+      	<exclusion>
+      		<groupId>jakarta.jms</groupId>
+      		<artifactId>jakarta.jms-api</artifactId>
+      	</exclusion>
+      </exclusions>
     </dependency>
     <!-- used for testing -->
     <dependency>

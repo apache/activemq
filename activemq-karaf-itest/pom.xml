@@ -34,6 +34,12 @@
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-client</artifactId>
       <scope>test</scope>
+      <exclusions>
+      	<exclusion>
+      		<groupId>jakarta.jms</groupId>
+      		<artifactId>jakarta.jms-api</artifactId>
+      	</exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>

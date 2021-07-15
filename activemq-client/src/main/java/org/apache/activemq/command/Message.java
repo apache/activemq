@@ -62,6 +62,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     protected ActiveMQDestination destination;
     protected TransactionId transactionId;
 
+    protected long deliveryTime;
     protected long expiration;
     protected long timestamp;
     protected long arrival;
@@ -143,6 +144,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         copy.messageId = messageId != null ? messageId.copy() : null;
         copy.originalDestination = originalDestination;
         copy.originalTransactionId = originalTransactionId;
+        copy.deliveryTime = deliveryTime;
         copy.expiration = expiration;
         copy.timestamp = timestamp;
         copy.correlationId = correlationId;

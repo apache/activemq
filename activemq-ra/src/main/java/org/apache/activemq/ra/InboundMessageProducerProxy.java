@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.ra;
 
+import javax.jms.CompletionListener;
 import javax.jms.Destination;
+import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
@@ -158,5 +160,64 @@ public class InboundMessageProducerProxy implements MessageProducer, QueueSender
 
     public void publish(Topic arg0, Message arg1, int arg2, int arg3, long arg4) throws JMSException {
         messageProducer.send(arg0, arg1, arg2, arg3, arg4);
+    }
+    
+    /**
+     *
+     * @param message the message to send
+     * @param CompletionListener to callback
+     * @throws JMSException if the JMS provider fails to send the message due to
+     *                 some internal error.
+     * @throws UnsupportedOperationException if an invalid destination is
+     *                 specified.
+     * @throws InvalidDestinationException if a client uses this method with an
+     *                 invalid destination.
+     * @see javax.jms.Session#createProducer
+     * @since 2.0
+     */
+    @Override
+    public void send(Message message, CompletionListener completionListener) throws JMSException {
+       throw new UnsupportedOperationException("send(Message, CompletionListener) is not supported");
+
+    }
+
+    @Override
+    public void send(Message message, int deliveryMode, int priority, long timeToLive, CompletionListener completionListener) throws JMSException {
+        throw new UnsupportedOperationException("send(Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+    }
+
+    @Override
+    public void send(Destination destination, Message message, CompletionListener completionListener) throws JMSException {
+        throw new UnsupportedOperationException("send(Destination, Message, CompletionListener) is not supported");
+    }
+
+    @Override
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, CompletionListener completionListener) throws JMSException {
+        throw new UnsupportedOperationException("send(Destination, Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+    }
+
+    /**
+     * Gets the delivery delay associated with this <CODE>MessageProducer</CODE>.
+     *
+     * @return this producer's <CODE>DeliveryDely/ <CODE>
+     * @throws JMSException if the JMS provider fails to close the producer due to
+     *                      some internal error.
+     * @since 2.0
+     */
+    @Override
+    public void setDeliveryDelay(long deliveryDelay) throws JMSException {
+        throw new UnsupportedOperationException("setDeliveryDelay() is not supported");
+    }
+
+    /**
+     * Gets the delivery delay value for this <CODE>MessageProducer</CODE>.
+     *
+     * @return the delivery delay for this messageProducer
+     * @throws javax.jms.JMSException if the JMS provider fails to determine if deliver delay is
+     *                      disabled due to some internal error.
+     */
+    @Override
+    public long getDeliveryDelay() throws JMSException {
+        throw new UnsupportedOperationException("getDeliveryDelay() is not supported");
     }
 }
