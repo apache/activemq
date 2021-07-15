@@ -31,7 +31,7 @@ public class ActiveMQAMQPBrokerFeatureTest extends AbstractFeatureTest {
     public static Option[] configure() {
         return new Option[] //
         {
-         CoreOptions.mavenBundle("org.apache.geronimo.specs","geronimo-jms_2.0_spec").version("1.0-alpha-2"),
+         CoreOptions.mavenBundle("jakarta.jms","jakarta.jms-api").version("2.0.3"),
          configure("activemq", "activemq-amqp-client"), //
          configureBrokerStart()
         };
