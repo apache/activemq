@@ -50,7 +50,7 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractFeatureTes
     public void test() throws Throwable {
         assertFeatureInstalled("activemq");
         installAndAssertFeature("camel");
-        installAndAssertFeature("activemq-camel");
+        installAndAssertFeature("camel-jms");
 
         assertBrokerStarted();
         withinReason(new Runnable() {
