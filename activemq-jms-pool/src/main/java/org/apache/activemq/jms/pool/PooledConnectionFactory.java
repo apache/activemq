@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
@@ -271,7 +272,39 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
         return newPooledConnection(connection);
     }
 
-    protected Connection newPooledConnection(ConnectionPool connection) {
+    /**
+     * @return Returns the JMSContext.
+     */
+    @Override
+	public JMSContext createContext() {
+    	throw new UnsupportedOperationException("createContext() is not supported");
+	}
+
+    /**
+     * @return Returns the JMSContext.
+     */
+	@Override
+	public JMSContext createContext(String userName, String password) {
+		throw new UnsupportedOperationException("createContext() is not supported");
+	}
+
+	/**
+     * @return Returns the JMSContext.
+     */
+	@Override
+	public JMSContext createContext(String userName, String password, int sessionMode) {
+		throw new UnsupportedOperationException("createContext() is not supported");
+	}
+
+	/**
+     * @return Returns the JMSContext.
+     */
+	@Override
+	public JMSContext createContext(int sessionMode) {
+		throw new UnsupportedOperationException("createContext() is not supported");
+	}
+
+	protected Connection newPooledConnection(ConnectionPool connection) {
         return new PooledConnection(connection);
     }
 

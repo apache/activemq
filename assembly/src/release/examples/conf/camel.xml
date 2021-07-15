@@ -50,7 +50,7 @@
     -->
 
     <!-- configure the camel activemq component to use the current broker -->
-    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent" >
+    <bean id="activemq" class="org.apache.camel.component.jms.JmsComponent" >
         <property name="connectionFactory">
           <bean class="org.apache.activemq.ActiveMQConnectionFactory">
             <property name="brokerURL" value="vm://amq-broker?create=false"/>

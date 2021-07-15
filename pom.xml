@@ -210,7 +210,7 @@
     <module>activemq-kahadb-store</module>
     <module>activemq-jdbc-store</module>
     <module>activemq-all</module>
-    <module>activemq-camel</module>
+    <!-- module>activemq-camel</module -->
     <module>activemq-console</module>
     <module>activemq-jaas</module>
     <module>activemq-karaf</module>
@@ -310,11 +310,13 @@
         <artifactId>activemq-all</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <!-- Remove activemq-camel
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-camel</artifactId>
         <version>${project.version}</version>
       </dependency>
+      -->
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-partition</artifactId>
@@ -470,9 +472,9 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-jms_1.1_spec</artifactId>
-        <version>1.1.1</version>
+        <groupId>jakarta.jms</groupId>
+        <artifactId>jakarta.jms-api</artifactId>
+        <version>2.0.3</version>
       </dependency>
 
       <dependency>
