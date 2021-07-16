@@ -832,19 +832,6 @@
         <version>${commons-pool2-version}</version>
       </dependency>
 
-      <!-- Optional Jabber support -->
-      <dependency>
-        <groupId>activemq</groupId>
-        <artifactId>smack</artifactId>
-        <version>1.5.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>activemq</groupId>
-        <artifactId>smackx</artifactId>
-        <version>1.5.0</version>
-      </dependency>
-
       <!-- To use XPath using JAXP 1.3 (std in Java 5) -->
       <dependency>
         <groupId>activesoap</groupId>
