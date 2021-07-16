@@ -86,14 +86,6 @@
           <artifactId>howl-logger</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>activemq</groupId>
-          <artifactId>smackx</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>activemq</groupId>
-          <artifactId>smack</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>mx4j</groupId>
           <artifactId>mx4j-jmx</artifactId>
         </exclusion>
