@@ -247,7 +247,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     private boolean suppressed(IOException e) {
-        return !connector.isWarnOnRemoteClose() && ((e instanceof SocketException && e.getMessage().indexOf("reset") != -1) || e instanceof EOFException);
+        return (isStomp() || !connector.isWarnOnRemoteClose()) && ((e instanceof SocketException && e.getMessage().indexOf("reset") != -1) || e instanceof EOFException);
+    }
+
+    private boolean isStomp() {
+        URI uri = connector.getUri();
+        return uri != null && uri.getScheme() != null && uri.getScheme().indexOf("stomp") != -1;
     }
 
     /**
