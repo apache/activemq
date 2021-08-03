@@ -752,6 +752,7 @@ public class ProtocolConverter {
         String passcode = headers.get(Stomp.Headers.Connect.PASSCODE);
         String clientId = headers.get(Stomp.Headers.Connect.CLIENT_ID);
         String heartBeat = headers.get(Stomp.Headers.Connect.HEART_BEAT);
+        String host = headers.get(Stomp.Headers.Connect.HOST);
 
         if (heartBeat == null) {
             heartBeat = defaultHeartBeat;
@@ -768,6 +769,7 @@ public class ProtocolConverter {
         } else {
             connectionInfo.setClientId("" + connectionInfo.getConnectionId().toString());
         }
+        connectionInfo.setClientIp(host);
 
         connectionInfo.setResponseRequired(true);
         connectionInfo.setUserName(login);
