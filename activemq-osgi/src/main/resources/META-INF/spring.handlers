@@ -18,5 +18,5 @@
 # manual creation to include camel handler so we can embed camel context in xbean xml config
 #
 http\://activemq.apache.org/schema/core=org.apache.xbean.spring.context.v2.XBeanNamespaceHandler
-http\://camel.apache.org/schema/spring=org.apache.camel.spring.handler.CamelNamespaceHandler
-http\://camel.apache.org/schema/spring/v2.10=org.apache.camel.spring.handler.CamelNamespaceHandler
+http\://camel.apache.org/schema/spring=org.apache.camel.spring.xml.handler.CamelNamespaceHandler
+http\://camel.apache.org/schema/spring/v2.10=org.apache.camel.spring.xml.handler.CamelNamespaceHandler
