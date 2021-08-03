@@ -71,6 +71,8 @@ http\://activemq.apache.org/schema/core/activemq-core-5.15.13.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.15.14.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.16.0.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.16.1.xsd=activemq.xsd
+http\://activemq.apache.org/schema/core/activemq-core-5.16.2.xsd=activemq.xsd
+http\://activemq.apache.org/schema/core/activemq-core-5.17.0.xsd=activemq.xsd
 
 http\://camel.apache.org/schema/spring/camel-spring.xsd=camel-spring.xsd
 
