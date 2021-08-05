@@ -209,7 +209,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 for (Iterator<ConsumerInfo> iter = virtualDestinationConsumers.keySet().iterator(); iter.hasNext(); ) {
                     ConsumerInfo key = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getVirtualDestinationConsumerAdvisoryTopic(key.getDestination());
-                    fireConsumerAdvisory(context, key.getDestination(), topic, key);
+                    fireConsumerAdvisory(context, key.getDestination(), topic, key, info.getConsumerId());
               }
             }
 
