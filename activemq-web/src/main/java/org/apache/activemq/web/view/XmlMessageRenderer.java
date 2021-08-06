@@ -42,6 +42,7 @@ public class XmlMessageRenderer extends SimpleMessageRenderer {
     public XStream getXstream() {
         if (xstream == null) {
             xstream = new XStream();
+            XStream.setupDefaultSecurity(xstream);
         }
         return xstream;
     }
