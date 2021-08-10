@@ -563,6 +563,7 @@
               <descriptors>
                  <descriptor>src/main/descriptors/unix-bin.xml</descriptor>
               </descriptors>
+	      <tarLongFileMode>posix</tarLongFileMode>
             </configuration>
           </execution>
           <execution>
