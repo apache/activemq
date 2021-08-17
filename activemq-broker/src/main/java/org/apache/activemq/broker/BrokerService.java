@@ -153,9 +153,6 @@ public class BrokerService implements Service {
     private boolean useLoggingForShutdownErrors;
     private boolean shutdownOnMasterFailure;
     private boolean shutdownOnSlaveFailure;
-    private boolean waitForSlave;
-    private long waitForSlaveTimeout = DEFAULT_START_TIMEOUT;
-    private boolean passiveSlave;
     private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectoryFile;
     private File tmpDataDirectory;
@@ -517,7 +514,6 @@ public class BrokerService implements Service {
         if (startDate == null) {
             return 0;
         }
-
         return new Date().getTime() - startDate.getTime();
     }
 
@@ -771,7 +767,7 @@ public class BrokerService implements Service {
      * delegates to stop, done to prevent backwards incompatible signature change
      */
     @PreDestroy
-    private void preDestroy () {
+    private void preDestroy() {
         try {
             stop();
         } catch (Exception ex) {
@@ -2905,42 +2901,6 @@ public class BrokerService implements Service {
      */
     public void setShutdownOnSlaveFailure(boolean shutdownOnSlaveFailure) {
         this.shutdownOnSlaveFailure = shutdownOnSlaveFailure;
-    }
-
-    public boolean isWaitForSlave() {
-        return waitForSlave;
-    }
-
-    /**
-     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
-     */
-    public void setWaitForSlave(boolean waitForSlave) {
-        this.waitForSlave = waitForSlave;
-    }
-
-    public long getWaitForSlaveTimeout() {
-        return this.waitForSlaveTimeout;
-    }
-
-    public void setWaitForSlaveTimeout(long waitForSlaveTimeout) {
-        this.waitForSlaveTimeout = waitForSlaveTimeout;
-    }
-
-    /**
-     * Get the passiveSlave
-     * @return the passiveSlave
-     */
-    public boolean isPassiveSlave() {
-        return this.passiveSlave;
-    }
-
-    /**
-     * Set the passiveSlave
-     * @param passiveSlave the passiveSlave to set
-     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
-     */
-    public void setPassiveSlave(boolean passiveSlave) {
-        this.passiveSlave = passiveSlave;
     }
 
     /**
