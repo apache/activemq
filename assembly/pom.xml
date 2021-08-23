@@ -39,10 +39,6 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-camel</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
     </dependency>
     <dependency>
