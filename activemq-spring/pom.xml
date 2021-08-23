@@ -213,7 +213,6 @@
               <includes>
                 <include>${basedir}/../activemq-client/src/main/java</include>
                 <include>${basedir}/../activemq-broker/src/main/java</include>
-                <include>${basedir}/../activemq-camel/src/main/java</include>
                 <include>${basedir}/../activemq-jdbc-store/src/main/java</include>
                 <include>${basedir}/../activemq-kahadb-store/src/main/java</include>
                 <include>${basedir}/../activemq-mqtt/src/main/java</include>
