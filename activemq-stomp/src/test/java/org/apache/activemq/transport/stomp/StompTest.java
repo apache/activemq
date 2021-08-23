@@ -138,6 +138,7 @@ public class StompTest extends StompTestSupport {
         connection.start();
         xstream = new XStream();
         xstream.processAnnotations(SamplePojo.class);
+        xstream.allowTypes(new Class[] { SamplePojo.class });
     }
 
     @Override
