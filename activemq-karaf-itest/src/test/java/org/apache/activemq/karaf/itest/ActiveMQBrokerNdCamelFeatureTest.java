@@ -51,7 +51,7 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractFeatureTest {
         assertBrokerStarted();
         withinReason(new Runnable() {
             public void run() {
-                getBundle("org.apache.activemq.activemq-camel");
+                getBundle("org.apache.camel.camel-jms");
                 assertTrue("we have camel consumers", executeCommand("activemq:dstat").trim().contains("camel_in"));
             }
         });

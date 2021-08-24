@@ -44,7 +44,6 @@
 
     <feature name="activemq-camel" version="${project.version}">
         <feature version="${project.version}">activemq-client</feature>
-        <bundle>mvn:org.apache.activemq/activemq-camel/${project.version}</bundle>
         <feature version="${camel-version-range}">camel-jms</feature>
         <feature version="${camel-version-range}">camel</feature>
         <feature version="${camel-version-range}">camel-spring</feature>
