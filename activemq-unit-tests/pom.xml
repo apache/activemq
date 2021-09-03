@@ -336,10 +336,6 @@
               <packages>org.apache.activemq.blob:org.apache.activemq.jndi</packages>
             </group>
             <group>
-              <title>Enterprise Integration Pattern support via Camel</title>
-              <packages>org.apache.activemq.camel:org.apache.activemq.camel.*</packages>
-            </group>
-            <group>
               <title>Spring support</title>
               <packages>org.apache.activemq.spring:org.apache.activemq.xbean:org.apache.activemq.pool</packages>
             </group>
@@ -834,20 +830,6 @@
                 <exclude>org/apache/activemq/bugs/TempStoreDataCleanupTest.*</exclude>
                 <exclude>org/apache/activemq/bugs/VMTransportClosureTest.*</exclude>
                 <exclude>org/apache/activemq/bugs/amq1095/MessageSelectorTest.*</exclude>
-                <exclude>org/apache/activemq/camel/AMQ2611Test.*</exclude>
-                <exclude>org/apache/activemq/camel/CamelDestinationExclusiveConsumerTest.*</exclude>
-                <exclude>org/apache/activemq/camel/CamelRedeliveryTest.*</exclude>
-                <exclude>org/apache/activemq/camel/CamelVMTransportRoutingTest.*</exclude>
-                <exclude>org/apache/activemq/camel/DlqTest.*</exclude>
-                <exclude>org/apache/activemq/camel/JmsJdbcXATest.*</exclude>
-                <exclude>org/apache/activemq/camel/SetHeaderTest.*</exclude>
-                <exclude>org/apache/activemq/camel/TransactedConsumeTest.*</exclude>
-                <exclude>org/apache/activemq/camel/component/ActiveMQJmsHeaderRouteTest.*</exclude>
-                <exclude>org/apache/activemq/camel/component/ActiveMQRouteTest.*</exclude>
-                <exclude>org/apache/activemq/camel/component/AutoExposeQueuesInCamelTest.*</exclude>
-                <exclude>org/apache/activemq/camel/component/InvokeRequestReplyUsingJmsReplyToHeaderTest.*</exclude>
-                <exclude>org/apache/activemq/camel/component/JmsSimpleRequestReplyTest.*</exclude>
-                <exclude>org/apache/activemq/camel/component/JournalRouteTest.*</exclude>
                 <exclude>org/apache/activemq/command/MessageCompressionTest.*</exclude>
                 <exclude>org/apache/activemq/config/BrokerXmlConfigFromJNDITest.*</exclude>
                 <exclude>org/apache/activemq/config/ConfigTest.*</exclude>
