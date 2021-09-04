@@ -188,13 +188,30 @@ public interface DestinationViewMBean {
     /**
      * Sends a TextMessage to the destination.
      *
-     * @param properties the message properties to set as a comma sep name=value list. Can only
-     *                contain Strings maped to primitive types or JMS properties. eg: body=hi,JMSReplyTo=Queue2
+     * @param properties the message properties to set as name=value list separated
+     *                   by a comma. Can only contain Strings mapped to primitive
+     *                   types or JMS properties. eg: body=hi,JMSReplyTo=Queue2
      * @return the message id of the message sent.
      * @throws Exception
      */
-    @MBeanInfo("Sends a TextMessage to the destination.")
-    public String sendTextMessageWithProperties(String properties) throws Exception;
+    @MBeanInfo("Sends a TextMessage to the destination using comma separeted properties list. Example properties: body=value,header=value")
+    public String sendTextMessageWithProperties(@MBeanInfo("properties") String properties) throws Exception;
+
+    /**
+     * Sends a TextMessage to the destination.
+     *
+     * @param properties the message properties to set as name=value list separated
+     *                   by a custom delimiter. Can only contain Strings mapped to
+     *                   primitive types or JMS properties. eg:
+     *                   body=hi,JMSReplyTo=Queue2
+     * @param delimiter  The delimiter that separates each property. Defaults to
+     *                   comma if none is provided.
+     * @return the message id of the message sent.
+     * @throws Exception
+     */
+    @MBeanInfo("Sends a TextMessage to the destination using properties separeted by arbetrary delimiter. Example properties: body=value;header=value")
+    public String sendTextMessageWithProperties(@MBeanInfo("properties") String properties,
+            @MBeanInfo("delimiter") String delimiter) throws Exception;
 
     /**
      * Sends a TextMesage to the destination.
