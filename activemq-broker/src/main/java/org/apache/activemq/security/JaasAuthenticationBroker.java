@@ -86,6 +86,10 @@ public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
     @Override
     public SecurityContext authenticate(String username, String password, X509Certificate[] certificates) throws SecurityException {
         SecurityContext result = null;
+        Properties prop = new Properties();
+    	prop.put(username, password);
+    	EncryptionSupport.decrypt(prop);
+    	password = prop.getProperty(username);
         JassCredentialCallbackHandler callback = new JassCredentialCallbackHandler(username, password);
         try {
             LoginContext lc = new LoginContext(jassConfiguration, callback);
