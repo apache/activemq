@@ -18,6 +18,7 @@ package org.apache.activemq.security;
 
 import java.security.Principal;
 import java.security.cert.X509Certificate;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.security.auth.Subject;
@@ -26,6 +27,7 @@ import javax.security.auth.login.LoginContext;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.jaas.EncryptionSupport;
 import org.apache.activemq.jaas.JassCredentialCallbackHandler;
 
 /**
@@ -86,6 +88,10 @@ public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
     @Override
     public SecurityContext authenticate(String username, String password, X509Certificate[] certificates) throws SecurityException {
         SecurityContext result = null;
+        Properties prop = new Properties();
+    	prop.put(username, password);
+    	EncryptionSupport.decrypt(prop);
+    	password = prop.getProperty(username);
         JassCredentialCallbackHandler callback = new JassCredentialCallbackHandler(username, password);
         try {
             LoginContext lc = new LoginContext(jassConfiguration, callback);
