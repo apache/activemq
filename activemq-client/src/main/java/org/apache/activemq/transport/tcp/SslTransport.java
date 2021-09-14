@@ -22,8 +22,9 @@ import java.net.SocketException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
+import java.util.Collections;
 
+import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
@@ -31,7 +32,6 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
@@ -70,15 +70,6 @@ public class SslTransport extends TcpTransport {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
         if (this.socket != null) {
             ((SSLSocket)this.socket).setNeedClientAuth(needClientAuth);
-
-            // Lets try to configure the SSL SNI field.  Handy in case your using
-            // a single proxy to route to different messaging apps.
-
-            // On java 1.7 it seems like it can only be configured via reflection.
-            // TODO: find out if this will work on java 1.8
-            HashMap props = new HashMap();
-            props.put("host", remoteLocation.getHost());
-            IntrospectionSupport.setProperties(this.socket, props);
         }
     }
 
@@ -127,12 +118,18 @@ public class SslTransport extends TcpTransport {
             }
         }
 
-        if (verifyHostName) {
-            SSLParameters sslParams = new SSLParameters();
-            sslParams.setEndpointIdentificationAlgorithm("HTTPS");
-            ((SSLSocket)this.socket).setSSLParameters(sslParams);
+        // Lets try to configure the SSL SNI field.  Handy in case your using
+        // a single proxy to route to different messaging apps.
+        final SSLParameters sslParams = new SSLParameters();
+        if (remoteLocation != null) {
+            sslParams.setServerNames(Collections.singletonList(new SNIHostName(remoteLocation.getHost())));
         }
 
+        if (verifyHostName) {
+            sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+        }
+
+        ((SSLSocket)this.socket).setSSLParameters(sslParams);
         super.initialiseSocket(sock);
     }
 
