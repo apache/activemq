@@ -34,7 +34,7 @@
         <property name="connectionFactory" ref="activemqConnectionFactory"/>
     </bean>
 
-    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent"
+    <bean id="activemq" class="org.apache.camel.component.jms.JmsComponent"
           depends-on="pooledConnectionFactory">
         <property name="connectionFactory" ref="pooledConnectionFactory"/>
         <property name="cacheLevel" value="0"/>

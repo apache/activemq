@@ -56,7 +56,7 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractFeatureTes
         withinReason(new Runnable() {
             @Override
             public void run() {
-                getBundle("org.apache.activemq.activemq-camel");
+                getBundle("org.apache.camel.camel-jms");
             }
         });
 

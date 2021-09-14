@@ -27,10 +27,6 @@
     <!-- activemq -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-camel</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
     <!-- Transports -->
@@ -92,7 +88,6 @@
                 <includes>
                   <include>${project.groupId}:activemq-client</include>
                   <include>${project.groupId}:activemq-openwire-legacy</include>
-                  <include>${project.groupId}:activemq-camel</include>
                   <include>${project.groupId}:activemq-jaas</include>
                   <include>${project.groupId}:activemq-broker</include>
                   <include>${project.groupId}:activemq-console</include>
@@ -207,13 +202,6 @@
         <dependency>
           <groupId>${project.groupId}</groupId>
           <artifactId>activemq-openwire-legacy</artifactId>
-          <version>${project.version}</version>
-          <classifier>sources</classifier>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>${project.groupId}</groupId>
-          <artifactId>activemq-camel</artifactId>
           <version>${project.version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>

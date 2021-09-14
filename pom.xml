@@ -48,11 +48,11 @@
     <commons-beanutils-version>1.9.4</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
     <commons-daemon-version>1.2.4</commons-daemon-version>
-    <commons-dbcp2-version>2.8.0</commons-dbcp2-version>
+    <commons-dbcp2-version>2.9.0</commons-dbcp2-version>
     <commons-io-version>2.11.0</commons-io-version>
     <commons-lang-version>3.12.0</commons-lang-version>
     <commons-logging-version>1.2</commons-logging-version>
-    <commons-pool2-version>2.10.0</commons-pool2-version>
+    <commons-pool2-version>2.11.1</commons-pool2-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <commons-net-version>3.8.0</commons-net-version>
     <directory-version>2.0.0.AM25</directory-version>
@@ -211,7 +211,6 @@
     <module>activemq-kahadb-store</module>
     <module>activemq-jdbc-store</module>
     <module>activemq-all</module>
-    <module>activemq-camel</module>
     <module>activemq-console</module>
     <module>activemq-jaas</module>
     <module>activemq-karaf</module>
@@ -309,11 +308,6 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-all</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-camel</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

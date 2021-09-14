@@ -81,7 +81,7 @@
     </bean>
 
     <!-- Define the activemq Camel component so we can integrate with the AMQ broker -->
-    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent"
+    <bean id="activemq" class="org.apache.camel.component.jms.JmsComponent"
           depends-on="pooledConnectionFactory">
         <property name="connectionFactory" ref="pooledConnectionFactory"/>
         <property name="cacheLevel" value="0"/>
