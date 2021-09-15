@@ -115,8 +115,8 @@
     <felix-framework-version>5.6.12</felix-framework-version>
 
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
-    <source-version>1.8</source-version>
-    <target-version>1.8</target-version>
+    <source-version>8</source-version>
+    <target-version>11</target-version>
     <javase-javadoc-url>http://docs.oracle.com/javase/8/docs/api/</javase-javadoc-url>
     <javaee-javadoc-url>http://download.oracle.com/javaee/6/api/</javaee-javadoc-url>
     <slf4j-javadoc-url>http://www.slf4j.org/apidocs/</slf4j-javadoc-url>
