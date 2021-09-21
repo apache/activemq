@@ -52,7 +52,11 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
                     + ", the lease duration. These values will allow the lease to expire.");
         }
 
-        LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the master");
+        if (isUseNonInclusiveTerminologyInLogs()) {
+            LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the master");
+        } else {
+            LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the Active");
+        }
         String sql = getStatements().getLeaseObtainStatement();
         LOG.debug(getLeaseHolderId() + " locking Query is "+sql);
 
@@ -105,7 +109,15 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
             throw new RuntimeException(getLeaseHolderId() + " failing lease acquire due to stop");
         }
 
-        LOG.info(getLeaseHolderId() + ", becoming master with lease expiry " + new Date(now + lockAcquireSleepInterval) + " on dataSource: " + dataSource);
+        if (isUseNonInclusiveTerminologyInLogs()) {
+            LOG.info(getLeaseHolderId() + ", becoming master with lease expiry " + new Date(now + lockAcquireSleepInterval) + " on dataSource: " +
+                dataSource);
+        } else {
+            LOG.info("{}, becoming master with lease expiry {} on dataSource: {}",
+                getLeaseHolderId(),
+                new Date(now + lockAcquireSleepInterval),
+                dataSource);
+        }
     }
 
     private void reportLeasOwnerShipAndDuration(Connection connection) throws SQLException {

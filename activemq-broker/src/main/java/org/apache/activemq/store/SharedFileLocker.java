@@ -65,11 +65,18 @@ public class SharedFileLocker extends AbstractLocker {
                         locked = keepAlive();
                         break;
                     } catch (IOException e) {
-                        if (!warned)
-                        {
-                            LOG.info("Database "
-                                         + lockFileName
-                                         + " is locked by another server. This broker is now in slave mode waiting a lock to be acquired");
+                        if (!warned) {
+                            if (isUseNonInclusiveTerminologyInLogs()) {
+                                LOG.info("Database "
+                                    + lockFileName
+                                    + " is locked by another server."
+                                    + " This broker is now in slave mode waiting a lock to be acquired");
+                            } else {
+                                LOG.info("Database "
+                                    + lockFileName
+                                    + " is locked by another server."
+                                    + " This broker is now in Active mode waiting a lock to be acquired");
+                            }
                             warned = true;
                         }
 

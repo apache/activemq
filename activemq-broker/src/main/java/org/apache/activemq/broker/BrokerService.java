@@ -141,6 +141,8 @@ public class BrokerService implements Service {
     @SuppressWarnings("unused")
     private static final long serialVersionUID = 7353129142305630237L;
 
+    private boolean useNonInclusiveTerminologyInLogs = false; // will remove in AMQ-7514
+
     private boolean useJmx = true;
     private boolean enableStatistics = true;
     private boolean persistent = true;
@@ -483,14 +485,26 @@ public class BrokerService implements Service {
 
     public void masterFailed() {
         if (shutdownOnActiveFailure) {
-            LOG.error("The Master has failed ... shutting down");
+            if (useNonInclusiveTerminologyInLogs) {
+                LOG.error("The Master has failed ... shutting down");
+            } else {
+                LOG.error("The Active has failed ... shutting down");
+            }
             try {
                 stop();
             } catch (Exception e) {
-                LOG.error("Failed to stop for master failure", e);
+                if (useNonInclusiveTerminologyInLogs) {
+                    LOG.error("Failed to stop for master failure", e);
+                } else {
+                    LOG.error("Failed to stop for Active failure", e);
+                }
             }
         } else {
-            LOG.warn("Master Failed - starting all connectors");
+            if (useNonInclusiveTerminologyInLogs) {
+                LOG.warn("Master Failed - starting all connectors");
+            } else {
+                LOG.warn("Active Failed - starting all connectors");
+            }
             try {
                 startAllConnectors();
                 broker.nowMasterBroker();
@@ -1128,6 +1142,20 @@ public class BrokerService implements Service {
      */
     public void setPersistent(boolean persistent) {
         this.persistent = persistent;
+    }
+
+    public boolean isUseNonInclusiveTerminologyInLogs() {
+        return useNonInclusiveTerminologyInLogs;
+    }
+
+    /**
+     * Sets whether or not to use non-inclusive terminology in logs to maintain backwards
+     * compatibility with previous releases.
+     * @deprecated will be removed in a future release
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
+     */
+    public void setUseNonInclusiveTerminologyInLogs(boolean useNonInclusiveTerminologyInLogs) {
+        this.useNonInclusiveTerminologyInLogs = useNonInclusiveTerminologyInLogs;
     }
 
     public boolean isPopulateJMSXUserID() {

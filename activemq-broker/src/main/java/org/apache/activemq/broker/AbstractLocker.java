@@ -28,6 +28,7 @@ public abstract class AbstractLocker extends ServiceSupport implements Locker {
     protected boolean failIfLocked = false;
     protected long lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
     protected LockableServiceSupport lockable;
+    private boolean useNonInclusiveTerminologyInLogs = false; // will remove in AMQ-7514
 
     @Override
     public boolean keepAlive() throws IOException {
@@ -58,4 +59,17 @@ public abstract class AbstractLocker extends ServiceSupport implements Locker {
         this.lockable = lockableServiceSupport;
     }
 
+    public boolean isUseNonInclusiveTerminologyInLogs() {
+        return useNonInclusiveTerminologyInLogs;
+    }
+
+    /**
+     * Sets whether or not to use non-inclusive terminology in logs to maintain backwards
+     * compatibility with previous releases.
+     * @deprecated will be removed in a future release
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
+     */
+    public void setUseNonInclusiveTerminologyInLogs(final boolean useNonInclusiveTerminologyInLogs) {
+        this.useNonInclusiveTerminologyInLogs = useNonInclusiveTerminologyInLogs;
+    }
 }

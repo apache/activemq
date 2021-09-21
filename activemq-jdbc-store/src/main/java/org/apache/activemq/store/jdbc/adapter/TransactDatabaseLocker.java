@@ -16,15 +16,12 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
-import java.io.IOException;
+import org.apache.activemq.store.jdbc.DefaultDatabaseLocker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import org.apache.activemq.store.jdbc.DefaultDatabaseLocker;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents an exclusive lock on a database to avoid multiple brokers running
@@ -39,7 +36,11 @@ public class TransactDatabaseLocker extends DefaultDatabaseLocker {
     @Override
     public void doStart() throws Exception {
 
-        LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
+        if (isUseNonInclusiveTerminologyInLogs()) {
+            LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
+        } else {
+            LOG.info("Attempting to acquire the exclusive lock to become the Active broker");
+        }
         PreparedStatement statement = null;
         while (true) {
             try {
@@ -87,11 +88,19 @@ public class TransactDatabaseLocker extends DefaultDatabaseLocker {
             try {
             	Thread.sleep(lockAcquireSleepInterval);
             } catch (InterruptedException ie) {
-            	LOG.warn("Master lock retry sleep interrupted", ie);
+                if (isUseNonInclusiveTerminologyInLogs()) {
+                    LOG.warn("Master lock retry sleep interrupted", ie);
+                } else {
+                    LOG.warn("Active lock retry sleep interrupted", ie);
+                }
             }
         }
 
-        LOG.info("Becoming the master on dataSource: " + dataSource);
+        if (isUseNonInclusiveTerminologyInLogs()) {
+            LOG.info("Becoming the master on dataSource: " + dataSource);
+        } else {
+            LOG.info("Becoming the Active on dataSource: {}", dataSource);
+        }
     }
 
 }

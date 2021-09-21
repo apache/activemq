@@ -576,7 +576,11 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     @Override
     public void nowMasterBroker() {
         if (isLogAll() || isLogInternalEvents()) {
-            LOG.info("Is now the master broker: {}", getBrokerName());
+            if (getBrokerService().isUseNonInclusiveTerminologyInLogs()) {
+                LOG.info("Is now the master broker: {}", getBrokerName());
+            } else {
+                LOG.info("Is now the Active broker: {}", getBrokerName());
+            }
         }
         super.nowMasterBroker();
     }
