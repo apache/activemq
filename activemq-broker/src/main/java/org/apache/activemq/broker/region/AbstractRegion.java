@@ -574,7 +574,7 @@ public abstract class AbstractRegion implements Region {
         if (sub != null) {
             sub.processMessageDispatchNotification(messageDispatchNotification);
         } else {
-            throw new JMSException("Slave broker out of sync with master - Subscription: "
+            throw new JMSException("Standby broker out of sync with Active - Subscription: "
                     + messageDispatchNotification.getConsumerId() + " on "
                     + messageDispatchNotification.getDestination() + " does not exist for dispatch of message: "
                     + messageDispatchNotification.getMessageId());
@@ -599,7 +599,7 @@ public abstract class AbstractRegion implements Region {
         if (dest != null) {
             dest.processDispatchNotification(messageDispatchNotification);
         } else {
-            throw new JMSException("Slave broker out of sync with master - Destination: "
+            throw new JMSException("Standby broker out of sync with Active - Destination: "
                     + messageDispatchNotification.getDestination() + " does not exist for consumer "
                     + messageDispatchNotification.getConsumerId() + " with message: "
                     + messageDispatchNotification.getMessageId());

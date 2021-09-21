@@ -2396,7 +2396,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
 
         if (message == null) {
-            throw new JMSException("Slave broker out of sync with master - Message: "
+            throw new JMSException("Standby broker out of sync with Active - Message: "
                     + messageDispatchNotification.getMessageId() + " on "
                     + messageDispatchNotification.getDestination() + " does not exist among pending("
                     + dispatchPendingList.size() + ") for subscription: "

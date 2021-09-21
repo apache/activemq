@@ -42,8 +42,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
     protected Handler<Exception> exceptionHandler;
 
     public void doStart() throws Exception {
-
-        LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
+        LOG.info("Attempting to acquire the exclusive lock to become the Active broker");
         String sql = getStatements().getLockCreateStatement();
         LOG.debug("Locking Query is "+sql);
         
@@ -111,11 +110,11 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
             try {
                 Thread.sleep(lockAcquireSleepInterval);
             } catch (InterruptedException ie) {
-                LOG.warn("Master lock retry sleep interrupted", ie);
+                LOG.warn("Active lock retry sleep interrupted", ie);
             }
         }
 
-        LOG.info("Becoming the master on dataSource: " + dataSource);
+        LOG.info("Becoming the Active on dataSource: " + dataSource);
     }
 
     public void doStop(ServiceStopper stopper) throws Exception {

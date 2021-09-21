@@ -59,7 +59,7 @@ public class MasterSlaveDiscoveryAgent extends SimpleDiscoveryAgent {
 
     protected void configureServices() {
         if ((msServices == null) || (msServices.length < 2)) {
-            LOG.error("masterSlave requires at least 2 URIs");
+            LOG.error("Active/Standby (masterSlave) requires at least 2 URIs");
             msServices = new String[]{};
             throw new IllegalArgumentException("Expecting at least 2 arguments");
         }

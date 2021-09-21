@@ -184,7 +184,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             }
         }
         throw new JMSException(
-                "Slave broker out of sync with master: Dispatched message ("
+                "Standby broker out of sync with Active: Dispatched message ("
                         + mdn.getMessageId() + ") was not in the pending list for "
                         + mdn.getConsumerId() + " on " + mdn.getDestination().getPhysicalName());
     }

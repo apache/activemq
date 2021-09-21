@@ -483,14 +483,14 @@ public class BrokerService implements Service {
 
     public void masterFailed() {
         if (shutdownOnActiveFailure) {
-            LOG.error("The Master has failed ... shutting down");
+            LOG.error("The Active has failed ... shutting down");
             try {
                 stop();
             } catch (Exception e) {
-                LOG.error("Failed to stop for master failure", e);
+                LOG.error("Failed to stop for Active failure", e);
             }
         } else {
-            LOG.warn("Master Failed - starting all connectors");
+            LOG.warn("Active Failed - starting all connectors");
             try {
                 startAllConnectors();
                 broker.nowMasterBroker();

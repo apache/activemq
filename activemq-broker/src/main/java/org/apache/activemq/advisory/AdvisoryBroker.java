@@ -756,7 +756,7 @@ public class AdvisoryBroker extends BrokerFilter {
             context.setBroker(getBrokerService().getBroker());
             fireAdvisory(context, topic, null, null, advisoryMessage);
         } catch (Exception e) {
-            handleFireFailure("now master broker", e);
+            handleFireFailure("now Active broker", e);
         }
     }
 
