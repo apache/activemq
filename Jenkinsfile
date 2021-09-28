@@ -27,12 +27,6 @@ pipeline {
         }
     }
 
-    environment {
-        // ... setup any environment variables ...
-        MVN_LOCAL_REPO_OPT = '-Dmaven.repo.local=.repository'
-        MVN_TEST_FAIL_IGNORE = '-Dmaven.test.failure.ignore=true'
-    }
-
     tools {
         // ... tell Jenkins what java version, maven version or other tools are required ...
         maven 'maven_3_latest'
@@ -43,8 +37,8 @@ pipeline {
         // Configure an overall timeout for the build of ten hours.
         timeout(time: 10, unit: 'HOURS')
         // When we have test-fails e.g. we don't need to run the remaining steps
-        skipStagesAfterUnstable()
         buildDiscarder(logRotator(numToKeepStr: '5', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
     }
 
     stages {
