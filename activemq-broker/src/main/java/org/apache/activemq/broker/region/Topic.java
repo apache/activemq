@@ -534,7 +534,7 @@ public class Topic extends BaseDestination implements Task {
 
         message.incrementReferenceCount();
 
-        if (context.isInTransaction()) {
+        if (context.isInTransaction() && (context.getTransaction() != null)) {
             context.getTransaction().addSynchronization(new Synchronization() {
                 @Override
                 public void afterCommit() throws Exception {
