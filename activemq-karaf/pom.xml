@@ -204,6 +204,7 @@
             </Private-Package>
             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
             <Embed-Transitive>true</Embed-Transitive>
+            <_noee>true</_noee>
           </instructions>
         </configuration>
       </plugin>

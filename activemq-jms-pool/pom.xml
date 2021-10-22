@@ -116,6 +116,7 @@
               org.apache.geronimo.transaction.manager*;resolution:=optional,
               *
             </Import-Package>
+            <_noee>true</_noee>
           </instructions>
         </configuration>
       </plugin>

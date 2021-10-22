@@ -59,6 +59,7 @@
                       *
                   </Import-Package>
                   <Fragment-Host>org.apache.activemq.activemq-osgi</Fragment-Host>
+                  <_noee>true</_noee>
               </instructions>
           </configuration>
       </plugin>

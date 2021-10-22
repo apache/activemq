@@ -215,6 +215,7 @@
               com.google.errorprone.annotations,
               com.google.errorprone.annotations.concurrent
             </Private-Package>
+            <_noee>true</_noee>
           </instructions>
         </configuration>
       </plugin>
