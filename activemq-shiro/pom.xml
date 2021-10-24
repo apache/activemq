@@ -126,6 +126,7 @@
                             org.apache.shiro*;version="[1.2,2]",
                             *
                         </Import-Package>
+                        <_noee>true</_noee>
                     </instructions>
                 </configuration>
             </plugin>

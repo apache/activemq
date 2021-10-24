@@ -220,6 +220,7 @@
             <DynamicImport-Package>
               *
             </DynamicImport-Package>
+            <_noee>true</_noee>
           </instructions>
         </configuration>
       </plugin>

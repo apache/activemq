@@ -67,6 +67,7 @@
                         <Private-Package>
 							org.apache.activemq.osgi.cf                        	
                         </Private-Package>
+						<_noee>true</_noee>
                     </instructions>
                 </configuration>
             </plugin>
