@@ -173,7 +173,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
      */
     @Override
     public Session createSession() throws JMSException {
-    	throw new UnsupportedOperationException("createSession() is unsupported"); 
+        throw new UnsupportedOperationException("createSession() is unsupported"); 
     }
 
     /**
@@ -196,9 +196,9 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
      * @since 2.0
      */
     @Override
-	public Session createSession(int sessionMode) throws JMSException {
-    	throw new UnsupportedOperationException("createSession(int sessionMode) is unsupported"); 
-	}
+    public Session createSession(int sessionMode) throws JMSException {
+        throw new UnsupportedOperationException("createSession(int sessionMode) is unsupported"); 
+    }
     
     @Override
     public Session createSession(boolean transacted, int ackMode) throws JMSException {

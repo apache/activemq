@@ -93,7 +93,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
     @Override
     public JMSContext createContext(String userName, String password) {
         throw new UnsupportedOperationException("createContext(userName, password) is not supported");
-        }
+    }
 
     /**
      * @return Returns the JMSContext.
@@ -101,7 +101,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
     @Override
     public JMSContext createContext(String userName, String password, int sessionMode) {
         throw new UnsupportedOperationException("createContext(userName, password, sessionMode) is not supported");
-        }
+    }
 
     /**
      * @return Returns the JMSContext.
@@ -109,7 +109,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
     @Override
     public JMSContext createContext(int sessionMode) {
         throw new UnsupportedOperationException("createContext(sessionMode) is not supported");
-        }
+    }
 
 	/**
      * @param connectionRequestInfo
