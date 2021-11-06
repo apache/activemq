@@ -165,6 +165,7 @@
               org.objectweb.asm*;version="[6,8)"
             </Import-Package>
             <_contract>!*</_contract>
+            <_noee>true</_noee>
           </instructions>
         </configuration>
       </plugin>
