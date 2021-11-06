@@ -18,12 +18,13 @@ package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.rmi.AlreadyBoundException;
+import java.lang.reflect.Proxy;
 import java.rmi.NoSuchObjectException;
-import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
@@ -54,6 +55,8 @@ import org.apache.activemq.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import static java.lang.ClassLoader.getSystemClassLoader;
 
 /**
  * An abstraction over JMX MBean registration
@@ -538,7 +541,7 @@ public class ManagementContext implements Service {
         try {
             if (registry == null) {
                 LOG.debug("Creating RMIRegistry on port {}", connectorPort);
-                registry = new JmxRegistry(connectorPort);
+                registry = jmxRegistry(connectorPort);
             }
 
             namingServiceObjectName = ObjectName.getInstance("naming:type=rmiregistry");
@@ -667,37 +670,32 @@ public class ManagementContext implements Service {
         return suppressMBean;
     }
 
-    /*
-     * Better to use the internal API than re-invent the wheel.
-     */
-    @SuppressWarnings("restriction")
-    private class JmxRegistry extends sun.rmi.registry.RegistryImpl {
-
-
-        public JmxRegistry(int port) throws RemoteException {
-            super(port);
-        }
-
-        @Override
-        public Remote lookup(String s) throws RemoteException, NotBoundException {
-            return lookupName.equals(s) ? serverStub : null;
-        }
-
-        @Override
-        public void bind(String s, Remote remote) throws RemoteException, AlreadyBoundException {
-        }
-
-        @Override
-        public void unbind(String s) throws RemoteException {
-        }
-
-        @Override
-        public void rebind(String s, Remote remote) throws RemoteException {
-        }
-
-        @Override
-        public String[] list() throws RemoteException {
-            return new String[] {lookupName};
-        }
+    // do not use sun.rmi.registry.RegistryImpl! it is not always easily available
+    private Registry jmxRegistry(final int port) throws RemoteException {
+        final var loader = Thread.currentThread().getContextClassLoader();
+        final var delegate = LocateRegistry.createRegistry(port);
+        return Registry.class.cast(Proxy.newProxyInstance(
+                loader == null ? getSystemClassLoader() : loader,
+                new Class<?>[]{Registry.class}, (proxy, method, args) -> {
+                    final var name = method.getName();
+                    if ("lookup".equals(name) &&
+                            method.getParameterCount() == 1 &&
+                            method.getParameterTypes()[0] == String.class) {
+                        return lookupName.equals(args[0]) ? serverStub : null;
+                    }
+                    switch (name) {
+                        case "bind":
+                        case "unbind":
+                        case "rebind":
+                            return null;
+                        case "list":
+                            return new String[] {lookupName};
+                    }
+                    try {
+                        return method.invoke(delegate, args);
+                    } catch (final InvocationTargetException ite) {
+                        throw ite.getTargetException();
+                    }
+                }));
     }
 }
