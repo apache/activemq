@@ -39,6 +39,7 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.XAConnection;
 import javax.jms.XAConnectionFactory;
+import javax.jms.XAJMSContext;
 import javax.naming.spi.ObjectFactory;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
@@ -417,6 +418,16 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
 
         XAConnectionFactoryOnly(XAConnectionFactory connectionFactory) {
             this.connectionFactory = connectionFactory;
+        }
+
+        @Override
+        public XAJMSContext createXAContext() {
+            throw new UnsupportedOperationException("createXAContext() is not supported");
+        }
+
+        @Override
+        public XAJMSContext createXAContext(String userName, String password) {
+            throw new UnsupportedOperationException("createXAContext(userName, password) is not supported");
         }
 
         @Override

@@ -104,7 +104,7 @@
                   <include>org.apache.activemq.protobuf:activemq-protobuf</include>
                   <include>org.fusesource.hawtbuf:hawtbuf</include>
                   <include>org.jasypt:jasypt</include>
-                  <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
+                  <include>jakarta.jms:jakarta.jms-api</include>
                   <include>org.apache.geronimo.specs:geronimo-jta_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
@@ -319,9 +319,9 @@
           <optional>true</optional>
         </dependency>
         <dependency>
-          <groupId>org.apache.geronimo.specs</groupId>
-          <artifactId>geronimo-jms_1.1_spec</artifactId>
-          <version>1.1.1</version>
+          <groupId>jakarta.jms</groupId>
+          <artifactId>jakarta.jms-api</artifactId>
+          <version>2.0.3</version>
           <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
