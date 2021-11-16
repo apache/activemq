@@ -245,4 +245,8 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     public void clearPendingMessages(int pendingAdditionsCount);
 
     void duplicateFromStore(Message message, Subscription subscription);
+
+    boolean isSendDuplicateFromStoreToDLQ();
+
+    void setSendDuplicateFromStoreToDLQ(boolean sendDuplicateFromStoreToDLQ);
 }

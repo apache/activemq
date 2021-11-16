@@ -88,6 +88,7 @@ public abstract class BaseDestination implements Destination {
     private boolean advisoryForDelivery;
     private boolean advisoryForConsumed;
     private boolean sendAdvisoryIfNoConsumers;
+    private boolean sendDuplicateFromStoreToDLQ = true;
     private boolean includeBodyForAdvisory;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     protected final BrokerService brokerService;
@@ -475,6 +476,14 @@ public abstract class BaseDestination implements Destination {
 
     public void setSendAdvisoryIfNoConsumers(boolean sendAdvisoryIfNoConsumers) {
         this.sendAdvisoryIfNoConsumers = sendAdvisoryIfNoConsumers;
+    }
+
+    public boolean isSendDuplicateFromStoreToDLQ() {
+        return this.sendDuplicateFromStoreToDLQ;
+    }
+
+    public void setSendDuplicateFromStoreToDLQ(boolean sendDuplicateFromStoreToDLQ) {
+        this.sendDuplicateFromStoreToDLQ = sendDuplicateFromStoreToDLQ;
     }
 
     public boolean isIncludeBodyForAdvisory() {
@@ -889,11 +898,14 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public void duplicateFromStore(Message message, Subscription subscription) {
+        destinationStatistics.getDuplicateFromStore().increment();
         ConnectionContext connectionContext = createConnectionContext();
         getLog().warn("{}{}, redirecting {} for dlq processing", DUPLICATE_FROM_STORE_MSG_PREFIX, destination, message.getMessageId());
         Throwable cause = new Throwable(DUPLICATE_FROM_STORE_MSG_PREFIX + destination);
         message.setRegionDestination(this);
-        broker.getRoot().sendToDeadLetterQueue(connectionContext, message, null, cause);
+        if(this.isSendDuplicateFromStoreToDLQ()) {
+            broker.getRoot().sendToDeadLetterQueue(connectionContext, message, null, cause);
+        }
         MessageAck messageAck = new MessageAck(message, MessageAck.POISON_ACK_TYPE, 1);
         messageAck.setPoisonCause(cause);
         try {

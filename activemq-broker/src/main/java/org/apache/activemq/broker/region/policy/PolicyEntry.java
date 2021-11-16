@@ -51,6 +51,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private DispatchPolicy dispatchPolicy;
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
+    private boolean sendDuplicateFromStoreToDLQ = true;
     private DeadLetterStrategy deadLetterStrategy = Destination.DEFAULT_DEAD_LETTER_STRATEGY;
     private PendingMessageLimitStrategy pendingMessageLimitStrategy;
     private MessageEvictionStrategy messageEvictionStrategy;
@@ -241,7 +242,6 @@ public class PolicyEntry extends DestinationMapEntry {
         if (isUpdate("maxBrowsePageSize", includedProperties)) {
             destination.setMaxBrowsePageSize(getMaxBrowsePageSize());
         }
-
         if (isUpdate("minimumMessageSize", includedProperties)) {
             destination.setMinimumMessageSize((int) getMinimumMessageSize());
         }
@@ -295,6 +295,9 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         if (isUpdate("sendAdvisoryIfNoConsumers", includedProperties)) {
             destination.setSendAdvisoryIfNoConsumers(isSendAdvisoryIfNoConsumers());
+        }
+        if (isUpdate("sendDuplicateFromStoreToDLQ", includedProperties)) {
+            destination.setSendDuplicateFromStoreToDLQ(isSendDuplicateFromStoreToDLQ());
         }
     }
 
@@ -454,6 +457,18 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     public void setSendAdvisoryIfNoConsumers(boolean sendAdvisoryIfNoConsumers) {
         this.sendAdvisoryIfNoConsumers = sendAdvisoryIfNoConsumers;
+    }
+
+    public boolean isSendDuplicateFromStoreToDLQ() {
+        return sendDuplicateFromStoreToDLQ;
+    }
+
+    /**
+     * Sends a copy of message to DLQ if a duplicate messages are paged-in from
+     * the messages store
+     */
+    public void setSendDuplicateFromStoreToDLQ(boolean sendDuplicateFromStoreToDLQ) {
+        this.sendDuplicateFromStoreToDLQ = sendDuplicateFromStoreToDLQ;
     }
 
     public DeadLetterStrategy getDeadLetterStrategy() {
