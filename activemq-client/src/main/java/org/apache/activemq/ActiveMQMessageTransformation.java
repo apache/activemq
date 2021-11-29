@@ -16,6 +16,8 @@
  */
 package org.apache.activemq;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.util.Enumeration;
 
@@ -179,6 +181,7 @@ public final class ActiveMQMessageTransformation {
         toMessage.setJMSReplyTo(transformDestination(fromMessage.getJMSReplyTo()));
         toMessage.setJMSDestination(transformDestination(fromMessage.getJMSDestination()));
         toMessage.setJMSDeliveryMode(fromMessage.getJMSDeliveryMode());
+        toMessage.setJMSDeliveryTime(getFromMessageDeliveryTime(fromMessage)); // TODO: AMQ-8500 DeliveryTime support ref: ActiveMQSession#send
         toMessage.setJMSRedelivered(fromMessage.getJMSRedelivered());
         toMessage.setJMSType(fromMessage.getJMSType());
         toMessage.setJMSExpiration(fromMessage.getJMSExpiration());
@@ -192,5 +195,24 @@ public final class ActiveMQMessageTransformation {
             Object obj = fromMessage.getObjectProperty(name);
             toMessage.setObjectProperty(name, obj);
         }
+    }
+
+    private static long getFromMessageDeliveryTime(Message fromMessage) throws JMSException {
+        Method deliveryTimeGetMethod = null;
+        try {
+            Class<?> clazz = fromMessage.getClass();
+            Method method = clazz.getMethod("getJMSDeliveryTime");
+            if (!Modifier.isAbstract(method.getModifiers())) {
+                deliveryTimeGetMethod = method;
+            }
+        } catch (NoSuchMethodException e) {
+            // We fallback to JMSTimestamp for jms v1.x
+        }
+
+        if (deliveryTimeGetMethod != null) {
+            return fromMessage.getJMSDeliveryTime();
+        }
+
+        return fromMessage.getJMSTimestamp();
     }
 }
