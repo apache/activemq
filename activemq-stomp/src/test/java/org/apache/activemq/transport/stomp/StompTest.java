@@ -2285,6 +2285,45 @@ public class StompTest extends StompTestSupport {
         doTestAckInTransaction(false);
     }
 
+    @Test(timeout = 60000)
+    public void testFrameHeaderEscapes() throws Exception {
+        String connectFrame = "STOMP\n" +
+                "login:system\n" +
+                "passcode:manager\n" +
+                "accept-version:1.0\n" +
+                "host:localhost\n" +
+                "\n" + Stomp.NULL;
+        stompConnection.sendFrame(connectFrame);
+
+        String f = stompConnection.receiveFrame();
+        LOG.debug("Broker sent: " + f);
+
+        assertTrue(f.startsWith("CONNECTED"));
+
+        String frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "id:12345\n" +
+                "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "colon:\\c\n" +
+                "linefeed:\\n\n" +
+                "backslash:\\\\\n" +
+                "carriagereturn:\\r\n" +
+                "\n" + Stomp.NULL;
+        stompConnection.sendFrame(message);
+
+        frame = stompConnection.receiveFrame();
+
+        LOG.debug("Broker sent: " + frame);
+        assertTrue(frame.startsWith("MESSAGE"));
+        assertFalse(frame.contains("colon:\\c\n"));
+        assertFalse(frame.contains("linefeed:\\n\n"));
+        assertFalse(frame.contains("backslash:\\\\\n"));
+        assertFalse(frame.contains("carriagereturn:\\\\r\n"));
+
+    }
+
     public void doTestAckInTransaction(boolean topic) throws Exception {
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
