@@ -25,9 +25,11 @@ public interface Stomp {
     byte BREAK = '\n';
     byte COLON = ':';
     byte ESCAPE = '\\';
+    byte CARRIAGE_RETURN = '\r';
     byte[] ESCAPE_ESCAPE_SEQ = { 92, 92 };
     byte[] COLON_ESCAPE_SEQ = { 92, 99 };
     byte[] NEWLINE_ESCAPE_SEQ = { 92, 110 };
+    byte[] CARRIAGE_ESCAPE_SEQ = { 92, 114 };
 
     String COMMA = ",";
     String V1_0 = "1.0";

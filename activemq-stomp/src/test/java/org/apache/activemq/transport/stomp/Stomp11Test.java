@@ -16,11 +16,6 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.DataInputStream;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.Executors;
@@ -42,6 +37,8 @@ import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 public class Stomp11Test extends StompTestSupport {
 
@@ -1206,6 +1203,44 @@ public class Stomp11Test extends StompTestSupport {
     @Test(timeout = 60000)
     public void testAckMessagesInTransactionOutOfOrderWithTXClientIndividualAck() throws Exception {
         doTestAckMessagesInTransactionOutOfOrderWithTXClientAck("client-individual");
+    }
+
+    @Test(timeout = 60000)
+    public void testFrameHeaderEscapes() throws Exception {
+        String connectFrame = "STOMP\n" +
+                "login:system\n" +
+                "passcode:manager\n" +
+                "accept-version:1.1\n" +
+                "host:localhost\n" +
+                "\n" + Stomp.NULL;
+        stompConnection.sendFrame(connectFrame);
+
+        String f = stompConnection.receiveFrame();
+        LOG.debug("Broker sent: " + f);
+
+        assertTrue(f.startsWith("CONNECTED"));
+
+        String frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "id:12345\n" +
+                "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "colon:\\c\n" +
+                "linefeed:\\n\n" +
+                "backslash:\\\\\n" +
+                "carriagereturn:\\r\n" +
+                "\n" + Stomp.NULL;
+        stompConnection.sendFrame(message);
+
+        frame = stompConnection.receiveFrame();
+
+        LOG.debug("Broker sent: " + frame);
+        assertTrue(frame.startsWith("MESSAGE"));
+        assertTrue(frame.contains("colon:\\c\n"));
+        assertTrue(frame.contains("linefeed:\\n\n"));
+        assertTrue(frame.contains("backslash:\\\\\n"));
+        assertFalse(frame.contains("carriagereturn:\\r\n"));
     }
 
     public void doTestAckMessagesInTransactionOutOfOrderWithTXClientAck(String ackMode) throws Exception {
