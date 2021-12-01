@@ -317,8 +317,10 @@ public class StompWireFormat implements WireFormat {
                     stream.write(Stomp.COLON_ESCAPE_SEQ);
                     break;
                 case Stomp.CARRIAGE_RETURN:
-                    stream.write(Stomp.CARRIAGE_ESCAPE_SEQ);
-                    break;
+                    if(stompVersion.equals(Stomp.V1_2)) {
+                        stream.write(Stomp.CARRIAGE_ESCAPE_SEQ);
+                        break;
+                    }
                 default:
                     stream.write(val);
                 }
@@ -351,8 +353,10 @@ public class StompWireFormat implements WireFormat {
                         decoded.write(Stomp.ESCAPE);
                         break;
                     case 114:
-                        decoded.write(Stomp.CARRIAGE_RETURN);
-                         break;
+                        if(stompVersion.equals(Stomp.V1_2)) {
+                            decoded.write(Stomp.CARRIAGE_RETURN);
+                            break;
+                        }
                     default:
                         stream.unread(next);
                         decoded.write(value);
