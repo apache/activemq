@@ -51,7 +51,7 @@ public class ValidateXMLConfigTest {
         File sampleConfDir = new File("target/conf");
 
         final HashSet<String> skipped = new HashSet<String>(java.util.Arrays.asList(new String[]{
-            "resin-web.xml", "web.xml"
+            "resin-web.xml", "web.xml", "camel.xml"
         }));
 
         for (File xmlFile : sampleConfDir.listFiles(new FileFilter() {
