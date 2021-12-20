@@ -37,6 +37,7 @@ public class DestinationStatistics extends StatsImpl {
     protected CountStatisticImpl messages;
     protected PollCountStatisticImpl messagesCached;
     protected CountStatisticImpl dispatched;
+    protected CountStatisticImpl duplicateFromStore;
     protected CountStatisticImpl inflight;
     protected CountStatisticImpl expired;
     protected TimeStatisticImpl processTime;
@@ -50,6 +51,7 @@ public class DestinationStatistics extends StatsImpl {
         enqueues = new CountStatisticImpl("enqueues", "The number of messages that have been sent to the destination");
         dispatched = new CountStatisticImpl("dispatched", "The number of messages that have been dispatched from the destination");
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the destination");
+        duplicateFromStore = new CountStatisticImpl("duplicateFromStore", "The number of duplicate messages that have been paged-in from the store for this destination");
         forwards = new CountStatisticImpl("forwards", "The number of messages that have been forwarded to a networked broker from the destination");
         inflight = new CountStatisticImpl("inflight", "The number of messages dispatched but awaiting acknowledgement");
         expired = new CountStatisticImpl("expired", "The number of messages that have expired");
@@ -68,6 +70,7 @@ public class DestinationStatistics extends StatsImpl {
         addStatistic("enqueues", enqueues);
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
+        addStatistic("duplicateFromStore", duplicateFromStore);
         addStatistic("inflight", inflight);
         addStatistic("expired", expired);
         addStatistic("consumers", consumers);
@@ -124,6 +127,10 @@ public class DestinationStatistics extends StatsImpl {
         return dispatched;
     }
 
+    public CountStatisticImpl getDuplicateFromStore() {
+        return duplicateFromStore;
+    }
+
     public TimeStatisticImpl getProcessTime() {
         return this.processTime;
     }
@@ -145,6 +152,7 @@ public class DestinationStatistics extends StatsImpl {
             dequeues.reset();
             forwards.reset();
             dispatched.reset();
+            duplicateFromStore.reset();
             inflight.reset();
             expired.reset();
             blockedSends.reset();
@@ -158,6 +166,7 @@ public class DestinationStatistics extends StatsImpl {
         enqueues.setEnabled(enabled);
         dispatched.setEnabled(enabled);
         dequeues.setEnabled(enabled);
+        duplicateFromStore.setEnabled(enabled);
         forwards.setEnabled(enabled);
         inflight.setEnabled(enabled);
         expired.setEnabled(true);
@@ -177,6 +186,7 @@ public class DestinationStatistics extends StatsImpl {
             enqueues.setParent(parent.enqueues);
             dispatched.setParent(parent.dispatched);
             dequeues.setParent(parent.dequeues);
+            duplicateFromStore.setParent(parent.duplicateFromStore);
             forwards.setParent(parent.forwards);
             inflight.setParent(parent.inflight);
             expired.setParent(parent.expired);
@@ -192,6 +202,7 @@ public class DestinationStatistics extends StatsImpl {
             enqueues.setParent(null);
             dispatched.setParent(null);
             dequeues.setParent(null);
+            duplicateFromStore.setParent(null);
             forwards.setParent(null);
             inflight.setParent(null);
             expired.setParent(null);
