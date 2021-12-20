@@ -70,6 +70,26 @@ public interface DestinationViewMBean {
     long getDequeueCount();
 
     /**
+     * Returns the number of duplicate messages that have been paged-in 
+     * from the store.
+     *
+     * @return The number of duplicate messages that have been paged-in 
+     *         from the store.
+     */
+    @MBeanInfo("Number of duplicate messages that have been paged-in from the store.")
+    long getDuplicateFromStoreCount();
+
+    /**
+     * Returns the config setting to send a duplicate message from store 
+     * to the dead letter queue.
+     *
+     * @return The config setting to send a duplicate message from store 
+     *         to the dead letter queue.
+     */
+    @MBeanInfo("Config setting to send a duplicate from store message to the dead letter queue.")
+    boolean isSendDuplicateFromStoreToDLQ();
+
+    /**
      * Returns the number of messages that have been acknowledged by network subscriptions from the
      * destination.
      *
