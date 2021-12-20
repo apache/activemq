@@ -81,4 +81,12 @@ public interface NetworkConnectorViewMBean extends Service {
 
     void setSuppressDuplicateTopicSubscriptions(boolean val);
 
+    String getRemoteUserName();
+
+    void setRemoteUserName(String remoteUserName);
+
+    String getRemotePassword();
+
+    void setRemotePassword(String remotePassword);
+
 }

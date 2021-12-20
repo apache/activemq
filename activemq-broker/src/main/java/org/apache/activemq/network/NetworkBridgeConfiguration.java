@@ -58,6 +58,8 @@ public class NetworkBridgeConfiguration {
     private String brokerURL = "";
     private String userName;
     private String password;
+    private String remoteUserName;
+    private String remotePassword;
     private String destinationFilter = null;
     private String name = "NC";
     private String clientIdToken = "_";
@@ -298,6 +300,34 @@ public class NetworkBridgeConfiguration {
      */
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    /**
+     * @return the remoteUserName
+     */
+    public String getRemoteUserName() {
+        return this.remoteUserName;
+    }
+
+    /**
+     * @param remoteUserName the remoteUserName to set
+     */
+    public void setRemoteUserName(String remoteUserName) {
+        this.remoteUserName = remoteUserName;
+    }
+
+    /**
+     * @return the remotePassword
+     */
+    public String getRemotePassword() {
+        return this.remotePassword;
+    }
+
+    /**
+     * @param userName the userName to set
+     */
+    public void setRemotePassword(String remotePassword) {
+        this.remotePassword = remotePassword;
     }
 
     /**

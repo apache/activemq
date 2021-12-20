@@ -20,6 +20,7 @@ import org.apache.activemq.network.NetworkConnector;
 
 public class NetworkConnectorView implements NetworkConnectorViewMBean {
 
+    private static final String PASSWORD_MASK = "****";
     private final NetworkConnector connector;
 
     public NetworkConnectorView(NetworkConnector connector) {
@@ -158,12 +159,8 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
 
     @Override
     public String getPassword() {
-        String pw = connector.getPassword();
-        // Hide the password for security reasons.
-        if (pw != null) {
-            pw = pw.replaceAll(".", "*");
-        }
-        return pw;
+        // Hide the password for security reasons
+        return PASSWORD_MASK;
     }
 
     @Override
@@ -180,4 +177,26 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
     public void setSuppressDuplicateTopicSubscriptions(boolean val) {
         connector.setSuppressDuplicateTopicSubscriptions(val);
     }
+
+    @Override
+    public String getRemotePassword() {
+        // Hide the password for security reasons.
+        return PASSWORD_MASK;
+    }
+
+    @Override
+    public void setRemotePassword(String remotePassword) {
+        connector.setRemotePassword(remotePassword);
+    }
+
+    @Override
+    public String getRemoteUserName() {
+        return connector.getRemoteUserName();
+    }
+
+    @Override
+    public void setRemoteUserName(String remoteUserName) {
+        connector.setRemoteUserName(remoteUserName);
+    }
+
 }
