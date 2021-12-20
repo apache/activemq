@@ -124,7 +124,7 @@ public class BlobTransferPolicy {
 
     /**
      * Returns the upload strategy depending on the information from the
-     * uploadURL. Currently supportet HTTP and FTP
+     * uploadURL. Currently supportet HTTP 
      * 
      * @return
      */
@@ -133,9 +133,7 @@ public class BlobTransferPolicy {
     	try {
             URL url = new URL(getUploadUrl());
 
-            if(url.getProtocol().equalsIgnoreCase("FTP")) {
-                strategy = new FTPBlobUploadStrategy(this);
-            } else if (url.getProtocol().equalsIgnoreCase("FILE")) {
+            if (url.getProtocol().equalsIgnoreCase("FILE")) {
                 strategy = new FileSystemBlobStrategy(this);
             } else {
                 strategy = new DefaultBlobUploadStrategy(this);
@@ -150,7 +148,7 @@ public class BlobTransferPolicy {
     
     /**
      * Returns the download strategy depending on the information from the
-     * uploadURL. Currently supportet HTTP and FTP
+     * uploadURL. Currently supportet HTTP
      * 
      * @return
      */
@@ -159,9 +157,7 @@ public class BlobTransferPolicy {
         try {
             URL url = new URL(getUploadUrl());
             
-            if(url.getProtocol().equalsIgnoreCase("FTP")) {
-                strategy = new FTPBlobDownloadStrategy(this);
-            } else if (url.getProtocol().equalsIgnoreCase("FILE")) {
+            if (url.getProtocol().equalsIgnoreCase("FILE")) {
                 strategy = new FileSystemBlobStrategy(this);
             } else {
                 strategy = new DefaultBlobDownloadStrategy(this);

@@ -192,7 +192,6 @@
         <include>org.apache.commons:commons-dbcp2</include>
         <include>org.apache.commons:commons-pool2</include>
         <include>commons-codec:commons-codec</include>
-        <include>commons-net:commons-net</include>
         <include>org.apache.commons:commons-lang3</include>
         <include>org.slf4j:slf4j-log4j12</include>
         <include>log4j:log4j</include>
