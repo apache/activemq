@@ -78,6 +78,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
     private boolean allowLinkStealing = false;
     private boolean warnOnRemoteClose = false;
+    private boolean displayStackTrace = false;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
 
@@ -663,5 +664,13 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     public void setWarnOnRemoteClose(boolean warnOnRemoteClose) {
         this.warnOnRemoteClose = warnOnRemoteClose;
+    }
+
+    public boolean isDisplayStackTrace() {
+        return displayStackTrace;
+    }
+
+    public void setDisplayStackTrace(boolean displayStackTrace) {
+        this.displayStackTrace = displayStackTrace;
     }
 }
