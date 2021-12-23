@@ -122,6 +122,7 @@ public class FailoverTransport implements CompositeTransport {
     private String updateURIsURL = null;
     private boolean rebalanceUpdateURIs = true;
     private boolean doRebalance = false;
+    private boolean doReconnect = false;
     private boolean connectedToPriority = false;
 
     private boolean priorityBackup = false;
@@ -750,6 +751,7 @@ public class FailoverTransport implements CompositeTransport {
             reconnect(rebalance);
         }
     }
+    
 
     @Override
     public void remove(boolean rebalance, URI u[]) {
@@ -943,7 +945,7 @@ public class FailoverTransport implements CompositeTransport {
                     failure = new IOException("No uris available to connect to.");
                 } else {
                     if (doRebalance) {
-                        if (connectedToPriority || compareURIs(connectList.get(0), connectedTransportURI)) {
+                        if (connectedToPriority || (!doReconnect && compareURIs(connectList.get(0), connectedTransportURI))) {
                             // already connected to first in the list, no need to rebalance
                             doRebalance = false;
                             return false;
@@ -958,6 +960,7 @@ public class FailoverTransport implements CompositeTransport {
                             } catch (Exception e) {
                                 LOG.debug("Caught an exception stopping existing transport for rebalance", e);
                             }
+                            doReconnect = false;
                         }
                         doRebalance = false;
                     }
@@ -1256,6 +1259,8 @@ public class FailoverTransport implements CompositeTransport {
 
     @Override
     public void reconnect(URI uri) throws IOException {
+        uris.clear();
+        doReconnect = true;
         add(true, new URI[]{uri});
     }
 
