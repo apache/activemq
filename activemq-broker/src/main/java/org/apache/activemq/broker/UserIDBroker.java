@@ -37,6 +37,10 @@ public class UserIDBroker extends BrokerFilter {
 
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
+        if(context.isNetworkConnection() && messageSend.getUserID() != null) {
+            super.send(producerExchange, messageSend);
+            return;
+        }
         String userID = context.getUserName();
         if (isUseAuthenticatePrincipal()) {
             SecurityContext securityContext = context.getSecurityContext();
