@@ -252,7 +252,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         String brokerName = getBrokerName();
         queueName = StringUtils.replace(queueName, "\"", "_");
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=\"" + brokerName
-                + "\",destinationType=Queue,destinationName\"" + queueName + "\",endpoint=Producer,*");
+                + "\",destinationType=Queue,destinationName=\"" + queueName + "\",endpoint=Producer,*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ProducerViewMBean.class);
     }
