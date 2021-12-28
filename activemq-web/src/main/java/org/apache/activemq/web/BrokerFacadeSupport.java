@@ -240,8 +240,8 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<SubscriptionViewMBean> getQueueConsumers(String queueName) throws Exception {
         String brokerName = getBrokerName();
         queueName = StringUtils.replace(queueName, "\"", "_");
-        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
-                + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Consumer,*");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=\"" + brokerName
+                + "\",destinationType=Queue,destinationName=\"" + queueName + "\",endpoint=Consumer,*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
     }
@@ -251,8 +251,8 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<ProducerViewMBean> getQueueProducers(String queueName) throws Exception {
         String brokerName = getBrokerName();
         queueName = StringUtils.replace(queueName, "\"", "_");
-        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
-                + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Producer,*");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=\"" + brokerName
+                + "\",destinationType=Queue,destinationName\"" + queueName + "\",endpoint=Producer,*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ProducerViewMBean.class);
     }
