@@ -38,8 +38,6 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 
-import com.sun.jndi.rmi.registry.RegistryContext;
-import com.sun.jndi.rmi.registry.RegistryContextFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ft.SyncCreateDataSource;

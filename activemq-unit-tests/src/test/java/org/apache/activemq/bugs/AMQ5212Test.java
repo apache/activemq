@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.jms.CompletionListener;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
@@ -123,7 +124,7 @@ public class AMQ5212Test {
                             }
                             ActiveMQTextMessage message = new ActiveMQTextMessage();
                             message.setDestination(dest);
-                            activeMQMessageProducer.send(message, null);
+                            activeMQMessageProducer.send(message, (CompletionListener) null);
 
                             // send a duplicate
                             activeMQConnection.syncSendPacket(message);
@@ -164,7 +165,7 @@ public class AMQ5212Test {
         ActiveMQMessageProducer activeMQMessageProducer = (ActiveMQMessageProducer) activeMQSession.createProducer(dest);
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setDestination(dest);
-        activeMQMessageProducer.send(message, null);
+        activeMQMessageProducer.send(message, (CompletionListener) null);
 
         // send a duplicate
         activeMQConnection.syncSendPacket(message);
@@ -209,7 +210,7 @@ public class AMQ5212Test {
         ActiveMQMessageProducer activeMQMessageProducer = (ActiveMQMessageProducer) activeMQSession.createProducer(dest);
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setDestination(dest);
-        activeMQMessageProducer.send(message, null);
+        activeMQMessageProducer.send(message, (CompletionListener) null);
 
         // send a duplicate
         activeMQConnection.syncSendPacket(message);
