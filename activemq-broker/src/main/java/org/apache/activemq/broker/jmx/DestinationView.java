@@ -103,6 +103,11 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     @Override
+    public long getDuplicateFromStoreCount() {
+        return destination.getDestinationStatistics().getDuplicateFromStore().getCount();
+    }
+
+    @Override
     public long getInFlightCount() {
         return destination.getDestinationStatistics().getInflight().getCount();
     }
@@ -570,4 +575,8 @@ public class DestinationView implements DestinationViewMBean {
         return destination.getDestinationStatistics().getBlockedTime().getTotalTime();
     }
 
+    @Override
+    public boolean isSendDuplicateFromStoreToDLQ() {
+        return destination.isSendDuplicateFromStoreToDLQ();
+    }
 }

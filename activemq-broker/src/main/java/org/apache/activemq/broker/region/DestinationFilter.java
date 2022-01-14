@@ -394,6 +394,16 @@ public class DestinationFilter implements Destination {
         next.duplicateFromStore(message, subscription);
     }
 
+    @Override
+    public boolean isSendDuplicateFromStoreToDLQ() {
+        return next.isSendDuplicateFromStoreToDLQ();
+    }
+
+    @Override
+    public void setSendDuplicateFromStoreToDLQ(boolean sendDuplicateFromStoreToDLQ) {
+        next.setSendDuplicateFromStoreToDLQ(sendDuplicateFromStoreToDLQ);
+    }
+
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
         if (next instanceof DestinationFilter) {
             DestinationFilter filter = (DestinationFilter) next;
