@@ -240,19 +240,18 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             if (TRANSPORTLOG.isDebugEnabled()) {
                 TRANSPORTLOG.debug("{} failed: {}", this, e.getMessage(), e);
             } else if (TRANSPORTLOG.isWarnEnabled() && !suppressed(e)) {
-                TRANSPORTLOG.warn("{} failed", this, e);
+                if (connector.isDisplayStackTrace()) {
+                    TRANSPORTLOG.warn("{} failed", this, e);
+                } else {
+                    TRANSPORTLOG.warn("{} failed: {}", this, e.getMessage());
+                }
             }
             stopAsync(e);
         }
     }
 
     private boolean suppressed(IOException e) {
-        return (isStomp() || !connector.isWarnOnRemoteClose()) && ((e instanceof SocketException && e.getMessage().indexOf("reset") != -1) || e instanceof EOFException);
-    }
-
-    private boolean isStomp() {
-        URI uri = connector.getUri();
-        return uri != null && uri.getScheme() != null && uri.getScheme().indexOf("stomp") != -1;
+        return (!connector.isWarnOnRemoteClose()) && ((e instanceof SocketException && e.getMessage().indexOf("reset") != -1) || e instanceof EOFException);
     }
 
     /**
