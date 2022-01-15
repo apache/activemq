@@ -147,10 +147,6 @@
       <artifactId>xalan</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>commons-net</groupId>
-      <artifactId>commons-net</artifactId>
-    </dependency>
 
     <!-- =============================== -->
     <!-- Testing Dependencies            -->
@@ -292,12 +288,6 @@
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
       <version>3.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.ftpserver</groupId>
-      <artifactId>ftpserver-core</artifactId>
-      <version>${ftpserver-version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

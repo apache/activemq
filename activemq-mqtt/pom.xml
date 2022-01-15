@@ -121,10 +121,6 @@
       <artifactId>xalan</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>commons-net</groupId>
-      <artifactId>commons-net</artifactId>
-    </dependency>
 
     <!-- =============================== -->
     <!-- Testing Dependencies            -->

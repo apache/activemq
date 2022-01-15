@@ -58,13 +58,6 @@
       <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
     </dependency>
 
-    <!-- for ftp blob upload/download --> 
-    <dependency>
-      <groupId>commons-net</groupId>
-      <artifactId>commons-net</artifactId>
-      <optional>true</optional>
-    </dependency>
-
     <!-- for zerconf discovery -->
     <dependency>
       <groupId>javax.jmdns</groupId>
