@@ -1066,6 +1066,44 @@ public class Stomp12Test extends StompTestSupport {
         doTestMixedAckNackWithMessageAckIds(true);
     }
 
+    @Test(timeout = 60000)
+    public void testFrameHeaderEscapes() throws Exception {
+        String connectFrame = "STOMP\n" +
+                "login:system\n" +
+                "passcode:manager\n" +
+                "accept-version:1.2\n" +
+                "host:localhost\n" +
+                "\n" + Stomp.NULL;
+        stompConnection.sendFrame(connectFrame);
+
+        String f = stompConnection.receiveFrame();
+        LOG.debug("Broker sent: " + f);
+
+        assertTrue(f.startsWith("CONNECTED"));
+
+        String frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "id:12345\n" +
+                "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "colon:\\c\n" +
+                "linefeed:\\n\n" +
+                "backslash:\\\\\n" +
+                "carriagereturn:\\r\n" +
+                "\n" + Stomp.NULL;
+        stompConnection.sendFrame(message);
+
+        frame = stompConnection.receiveFrame();
+
+        LOG.debug("Broker sent: " + frame);
+        assertTrue(frame.startsWith("MESSAGE"));
+        assertTrue(frame.contains("colon:\\c\n"));
+        assertTrue(frame.contains("linefeed:\\n\n"));
+        assertTrue(frame.contains("backslash:\\\\\n"));
+        assertTrue(frame.contains("carriagereturn:\\r\n"));
+    }
+
     public void doTestMixedAckNackWithMessageAckIds(boolean individual) throws Exception {
 
         final int MESSAGE_COUNT = 20;
