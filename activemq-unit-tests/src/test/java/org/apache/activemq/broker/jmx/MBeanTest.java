@@ -46,8 +46,6 @@ import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 
-import junit.textui.TestRunner;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
@@ -68,6 +66,9 @@ import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import junit.textui.TestRunner;
+
 
 /**
  * A test case of the various MBeans in ActiveMQ. If you want to look at the
@@ -117,6 +118,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         // messages on a queue
         assertSendViaMBean();
         assertSendCsnvViaMBean();
+        assertSendTextMessageWithCustomDelimitedPropsViaMBean();
         assertQueueBrowseWorks();
         assertCreateAndDestroyDurableSubscriptions();
         assertConsumerCounts();
@@ -723,6 +725,42 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             props += ",MyStringHeader=StringHeader" + i;
 
             proxy.sendTextMessageWithProperties(props);
+        }
+
+        browseAndVerifyTypes(proxy, true);
+    }
+
+    protected void assertSendTextMessageWithCustomDelimitedPropsViaMBean() throws Exception {
+        String queueName = getDestinationString() + ".SendMBBean";
+
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
+        echo("Create QueueView MBean...");
+        BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+        broker.addQueue(queueName);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + queueName);
+
+        echo("Create QueueView MBean...");
+        QueueViewMBean proxy = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        proxy.purge();
+
+        int count = 5;
+
+        String delimiter = ";";
+        for (int i = 0; i < count; i++) {
+            String props = String.join(delimiter,
+                    "body=message:" + i,
+                    "JMSCorrelationID=MyCorrId",
+                    "JMSDeliveryMode=1",
+                    "JMSXGroupID=MyGroupID",
+                    "JMSXGroupSeq=1234",
+                    "JMSPriority=" + (i + 1),
+                    "JMSType=MyType",
+                    "MyHeader=" + i,
+                    "MyStringHeader=StringHeader" + i);
+
+            proxy.sendTextMessageWithProperties(props, delimiter);
         }
 
         browseAndVerifyTypes(proxy, true);
