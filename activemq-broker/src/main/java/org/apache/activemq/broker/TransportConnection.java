@@ -1227,7 +1227,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         // from the broker.
         if (!broker.isStopped()) {
             List<TransportConnectionState> connectionStates = listConnectionStates();
-            connectionStates = listConnectionStates();
             for (TransportConnectionState cs : connectionStates) {
                 cs.getContext().getStopping().set(true);
                 try {
