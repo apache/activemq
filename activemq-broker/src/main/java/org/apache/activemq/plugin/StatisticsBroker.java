@@ -18,6 +18,8 @@ package org.apache.activemq.plugin;
 
 import java.io.File;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import javax.jms.JMSException;
@@ -33,7 +35,9 @@ import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMapMessage;
 import org.apache.activemq.command.Message;
@@ -54,11 +58,17 @@ import org.slf4j.LoggerFactory;
  */
 public class StatisticsBroker extends BrokerFilter {
     private static Logger LOG = LoggerFactory.getLogger(StatisticsBroker.class);
+    static final String STATS_PREFIX = "ActiveMQ.Statistics";
+
     static final String STATS_DESTINATION_PREFIX = "ActiveMQ.Statistics.Destination";
     static final String STATS_BROKER_PREFIX = "ActiveMQ.Statistics.Broker";
     static final String STATS_BROKER_RESET_HEADER = "ActiveMQ.Statistics.Broker.Reset";
     static final String STATS_SUBSCRIPTION_PREFIX = "ActiveMQ.Statistics.Subscription";
-    static final String STATS_DENOTE_END_LIST = STATS_DESTINATION_PREFIX + ".List.End.With.Null";
+
+    // Query-message properties controlling features of Destination-query replies:
+    static final String STATS_DENOTE_END_LIST = "ActiveMQ.Statistics.Destination.List.End.With.Null";
+    static final String STATS_FIRST_MESSAGE_TIMESTAMP = "ActiveMQ.Statistics.Destination.Include.First.Message.Timestamp";
+
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     protected final ProducerId advisoryProducerId = new ProducerId();
@@ -85,25 +95,26 @@ public class StatisticsBroker extends BrokerFilter {
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         ActiveMQDestination msgDest = messageSend.getDestination();
         ActiveMQDestination replyTo = messageSend.getReplyTo();
-        if (replyTo != null) {
+        if ((replyTo != null) && (msgDest.getPhysicalName().startsWith(STATS_PREFIX))) {
             String physicalName = msgDest.getPhysicalName();
-            boolean destStats = physicalName.regionMatches(true, 0, STATS_DESTINATION_PREFIX, 0,
-                    STATS_DESTINATION_PREFIX.length());
-            boolean brokerStats = physicalName.regionMatches(true, 0, STATS_BROKER_PREFIX, 0, STATS_BROKER_PREFIX
-                    .length());
-            boolean subStats = physicalName.regionMatches(true, 0, STATS_SUBSCRIPTION_PREFIX, 0, STATS_SUBSCRIPTION_PREFIX
-                    .length());
+            boolean destStats = physicalName.startsWith(STATS_DESTINATION_PREFIX);
+            boolean brokerStats = physicalName.startsWith(STATS_BROKER_PREFIX);
+            boolean subStats = physicalName.startsWith(STATS_SUBSCRIPTION_PREFIX);
             BrokerService brokerService = getBrokerService();
             RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
             if (destStats) {
-                String destinationName = physicalName.substring(STATS_DESTINATION_PREFIX.length(), physicalName.length());
+                String destinationName = physicalName.substring(STATS_DESTINATION_PREFIX.length());
                 if (destinationName.startsWith(".")) {
                     destinationName = destinationName.substring(1);
                 }
                 String destinationQuery = destinationName.replace(STATS_DENOTE_END_LIST,"");
-                boolean endListMessage = !destinationName.equals(destinationQuery);
+                boolean endListMessage = !destinationName.equals(destinationQuery)
+                        || messageSend.getProperties().containsKey(STATS_DENOTE_END_LIST);
                 ActiveMQDestination queryDestination = ActiveMQDestination.createDestination(destinationQuery,msgDest.getDestinationType());
                 Set<Destination> destinations = getDestinations(queryDestination);
+
+                boolean includeFirstMessageTimestamp = messageSend.getProperties().containsKey(STATS_FIRST_MESSAGE_TIMESTAMP);
+                List<Message> tempFirstMessage = includeFirstMessageTimestamp ? new ArrayList<>(1) : null;
 
                 for (Destination dest : destinations) {
                     DestinationStatistics stats = dest.getDestinationStatistics();
@@ -129,6 +140,21 @@ public class StatisticsBroker extends BrokerFilter {
                         statsMessage.setDouble("minEnqueueTime", stats.getProcessTime().getMinTime());
                         statsMessage.setLong("consumerCount", stats.getConsumers().getCount());
                         statsMessage.setLong("producerCount", stats.getProducers().getCount());
+                        if (includeFirstMessageTimestamp) {
+                            if (dest instanceof Queue) {
+                                ((Queue) dest).doBrowse(tempFirstMessage, 1);
+                            }
+                            else if (dest instanceof Topic) {
+                                ((Topic) dest).doBrowse(tempFirstMessage, 1);
+                            }
+                            if (!tempFirstMessage.isEmpty()) {
+                                Message message = tempFirstMessage.get(0);
+                                // NOTICE: Client-side, you may get the broker "now" Timestamp by msg.getJMSTimestamp()
+                                // This allows for calculating age.
+                                statsMessage.setLong("firstMessageTimestamp", message.getBrokerInTime());
+                                tempFirstMessage.clear();
+                            }
+                        }
                         statsMessage.setJMSCorrelationID(messageSend.getCorrelationId());
                         sendStats(producerExchange.getConnectionContext(), statsMessage, replyTo);
                     }
