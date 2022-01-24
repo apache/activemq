@@ -246,7 +246,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     TRANSPORTLOG.warn("{} failed: {}", this, e.getMessage());
                 }
             }
-            stopAsync(e);
+            if(e.getMessage().contains("Frame size of") && e.getMessage().contains("larger than max allowed")) {
+                stopAsync(e, true);
+            } else {
+                stopAsync(e);
+            }
         }
     }
 
@@ -1136,7 +1140,21 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public void stopAsync(Throwable cause) {
+        stopAsync(cause, false);
+    }
+
+    public void stopAsync(Throwable cause, boolean sendExceptionToClient) {
         transportException.set(cause);
+        
+        if(sendExceptionToClient) {
+            try {
+                ConnectionError ce = new ConnectionError();
+                ce.setException(cause);
+                dispatchSync(ce);
+            } catch (Throwable t) {
+                LOG.debug("The connection to '{}' errored when attempting to communicate connection close reason.", transport.getRemoteAddress());
+            }
+        }
         stopAsync();
     }
 
