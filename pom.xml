@@ -219,6 +219,7 @@
     <module>activemq-kahadb-store</module>
     <module>activemq-jdbc-store</module>
     <module>activemq-leveldb-store</module>
+    <module>activemq-redis-store</module>
     <module>activemq-unit-tests</module>
     <module>activemq-all</module>
     <module>activemq-camel</module>
@@ -294,6 +295,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-leveldb-store</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-redis-store</artifactId>
         <version>${project.version}</version>
       </dependency>
 

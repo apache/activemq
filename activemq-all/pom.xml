@@ -64,6 +64,10 @@
       <artifactId>activemq-leveldb-store</artifactId>
     </dependency>
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-redis-store</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-annotation_1.0_spec</artifactId>
     </dependency>
@@ -111,6 +115,7 @@
                   <include>${project.groupId}:activemq-kahadb-store</include>
                   <include>${project.groupId}:activemq-leveldb-store</include>
                   <include>${project.groupId}:activemq-jdbc-store</include>
+                  <include>${project.groupId}:activemq-redis-store</include>
                   <include>org.apache.activemq.protobuf:activemq-protobuf</include>
                   <include>org.fusesource.hawtbuf:hawtbuf</include>
                   <include>org.jasypt:jasypt</include>
@@ -317,6 +322,13 @@
         <dependency>
           <groupId>${project.groupId}</groupId>
           <artifactId>activemq-leveldb-store</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-redis-store</artifactId>
           <version>${project.version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>
