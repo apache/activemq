@@ -17,7 +17,6 @@
 package org.apache.activemq.plugin;
 
 import java.net.URI;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.MapMessage;
@@ -151,6 +150,76 @@ public class BrokerStatisticsPluginTest extends TestCase{
             System.err.println(name+"="+reply.getObject(name));
         }
         */
+    }
+
+    public void testDestinationStatsWithNullTermination() throws Exception {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue replyTo = session.createTemporaryQueue();
+        MessageConsumer consumer = session.createConsumer(replyTo);
+        Queue testQueue = session.createQueue("Test.Queue");
+        MessageProducer producer = session.createProducer(null);
+        Queue query = session.createQueue(StatisticsBroker.STATS_DESTINATION_PREFIX + "." + testQueue.getQueueName());
+        Message msg = session.createMessage();
+        // Instruct to terminate query reply with a null-message
+        msg.setBooleanProperty(StatisticsBroker.STATS_DENOTE_END_LIST, true);
+
+        producer.send(testQueue, msg);
+
+        msg.setJMSReplyTo(replyTo);
+        producer.send(query, msg);
+        MapMessage reply = (MapMessage) consumer.receive(10 * 1000);
+        assertNotNull(reply);
+        assertTrue(reply.getMapNames().hasMoreElements());
+        assertEquals(1, reply.getLong("size"));
+        assertTrue(reply.getJMSTimestamp() > 0);
+        assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
+
+        /*
+        for (Enumeration e = reply.getMapNames(); e.hasMoreElements();) {
+            String name = e.nextElement().toString();
+            System.err.println(name+"="+reply.getObject(name));
+        }
+         */
+
+        // Assert that we got a null-termination
+        MapMessage nullReply = (MapMessage) consumer.receive(10 * 1000);
+        assertNotNull(nullReply);
+        // No props in null-message
+        assertFalse(nullReply.getMapNames().hasMoreElements());
+        assertTrue(nullReply.getJMSTimestamp() > 0);
+        assertEquals(Message.DEFAULT_PRIORITY, nullReply.getJMSPriority());
+    }
+
+    public void testDestinationStatsWithFirstMessageTimestamp() throws Exception {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue replyTo = session.createTemporaryQueue();
+        MessageConsumer consumer = session.createConsumer(replyTo);
+        Queue testQueue = session.createQueue("Test.Queue");
+        MessageProducer producer = session.createProducer(null);
+        Queue query = session.createQueue(StatisticsBroker.STATS_DESTINATION_PREFIX + "." + testQueue.getQueueName());
+        Message msg = session.createMessage();
+        // Instruct to include timestamp of first message in the queue
+        msg.setBooleanProperty(StatisticsBroker.STATS_FIRST_MESSAGE_TIMESTAMP, true);
+
+        producer.send(testQueue, msg);
+
+        msg.setJMSReplyTo(replyTo);
+        producer.send(query, msg);
+        MapMessage reply = (MapMessage) consumer.receive(10 * 1000);
+        assertNotNull(reply);
+        assertTrue(reply.getMapNames().hasMoreElements());
+        assertEquals(1, reply.getLong("size"));
+        assertTrue(reply.getJMSTimestamp() > 0);
+        // Assert that we got the brokerInTime for the first message in queue as value of key "firstMessageTimestamp"
+        assertTrue(System.currentTimeMillis() >= reply.getLong("firstMessageTimestamp"));
+        assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
+
+        /*
+        for (Enumeration e = reply.getMapNames(); e.hasMoreElements();) {
+            String name = e.nextElement().toString();
+            System.err.println(name+"="+reply.getObject(name));
+        }
+         */
     }
 
     @SuppressWarnings("unused")
