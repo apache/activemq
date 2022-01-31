@@ -32,7 +32,7 @@
 
   <properties>
     <!-- for reproducible builds -->	
-    <project.build.outputTimestamp>10</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2022-01-31T01:02:00Z</project.build.outputTimestamp>
 
     <activeio-version>3.1.4</activeio-version>
     <siteId>activemq-${project.version}</siteId>
