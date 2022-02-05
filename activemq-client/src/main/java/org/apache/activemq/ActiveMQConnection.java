@@ -1448,12 +1448,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         if (isClosed()) {
             throw new ConnectionClosedException();
         } else {
-            if(command.isMessage()) {
-                int tmpMsgSize = Message.class.cast(command).getSize();
-                if(maxFrameSize.get() < tmpMsgSize) {
-                    throw new JMSException("Message size: " +  tmpMsgSize + " exceeds maximum allowed by broker: " + maxFrameSize.get(), "41300");
-                }
-            }
             try {
                 Response response = (Response)(timeout > 0
                         ? this.transport.request(command, timeout)

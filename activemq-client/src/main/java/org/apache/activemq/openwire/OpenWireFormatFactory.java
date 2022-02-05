@@ -41,6 +41,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     private long maxInactivityDurationInitalDelay = 10*1000;
     private int cacheSize = 1024;
     private long maxFrameSize = OpenWireFormat.DEFAULT_MAX_FRAME_SIZE;
+    private boolean maxFrameSizeEnabled = true;
     private String host=null;
     private String providerName = ActiveMQConnectionMetaData.PROVIDER_NAME;
     private String providerVersion = ActiveMQConnectionMetaData.PROVIDER_VERSION;
@@ -80,6 +81,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
         OpenWireFormat f = new OpenWireFormat(version);
         f.setMaxFrameSize(maxFrameSize);
         f.setPreferedWireFormatInfo(info);
+        f.setMaxFrameSizeEnabled(maxFrameSizeEnabled);
         return f;
     }
 
@@ -202,5 +204,13 @@ public class OpenWireFormatFactory implements WireFormatFactory {
 
     public void setIncludePlatformDetails(boolean includePlatformDetails) {
         this.includePlatformDetails = includePlatformDetails;
+    }
+
+    public void setMaxFrameSizeEnabled(boolean maxFrameSizeEnabled) {
+        this.maxFrameSizeEnabled = maxFrameSizeEnabled;
+    }
+
+    public boolean isMaxFrameSizeEnabled() {
+        return this.maxFrameSizeEnabled;
     }
 }

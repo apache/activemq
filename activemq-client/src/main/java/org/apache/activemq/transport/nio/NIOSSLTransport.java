@@ -40,6 +40,7 @@ import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 
+import org.apache.activemq.MaxFrameSizeExceededException;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -335,9 +336,11 @@ public class NIOSSLTransport extends NIOTransport {
             }
 
             if (wireFormat instanceof OpenWireFormat) {
-                long maxFrameSize = ((OpenWireFormat) wireFormat).getMaxFrameSize();
-                if (nextFrameSize > maxFrameSize) {
-                    throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) +
+                OpenWireFormat openWireFormat = (OpenWireFormat) wireFormat;
+                long maxFrameSize = openWireFormat.getMaxFrameSize();
+
+                if (openWireFormat.isMaxFrameSizeEnabled() && nextFrameSize > maxFrameSize) {
+                    throw new MaxFrameSizeExceededException("Frame size of " + (nextFrameSize / (1024 * 1024)) +
                                           " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
                 }
             }
