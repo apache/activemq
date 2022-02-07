@@ -621,6 +621,12 @@ public final class OpenWireFormat implements WireFormat {
         return maxFrameSizeEnabled;
     }
 
+    /**
+     * Set whether the maxFrameSize check will be enabled. Note this is only applied to this format
+     * and will NOT be negotiated
+     *
+     * @param maxFrameSizeEnabled
+     */
     public void setMaxFrameSizeEnabled(boolean maxFrameSizeEnabled) {
         this.maxFrameSizeEnabled = maxFrameSizeEnabled;
     }
@@ -636,6 +642,7 @@ public final class OpenWireFormat implements WireFormat {
 
         this.setMaxFrameSize(min(preferedWireFormatInfo.getMaxFrameSize(), info.getMaxFrameSize()));
         info.setMaxFrameSize(this.getMaxFrameSize());
+        //Note: Don't negotiate maxFrameSizeEnabled so the client and server can set independently
 
         this.stackTraceEnabled = info.isStackTraceEnabled() && preferedWireFormatInfo.isStackTraceEnabled();
         info.setStackTraceEnabled(this.stackTraceEnabled);

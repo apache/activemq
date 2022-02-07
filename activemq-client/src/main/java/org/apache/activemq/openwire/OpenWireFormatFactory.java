@@ -207,6 +207,12 @@ public class OpenWireFormatFactory implements WireFormatFactory {
         this.includePlatformDetails = includePlatformDetails;
     }
 
+    /**
+     * Set whether the maxFrameSize check will be enabled. Note this is only applied to this factory
+     * and will NOT be negotiated
+     *
+     * @param maxFrameSizeEnabled
+     */
     public void setMaxFrameSizeEnabled(boolean maxFrameSizeEnabled) {
         this.maxFrameSizeEnabled = maxFrameSizeEnabled;
     }
