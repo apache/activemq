@@ -63,6 +63,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
             info.setMaxInactivityDurationInitalDelay(maxInactivityDurationInitalDelay);
             info.setCacheSize(cacheSize);
             info.setMaxFrameSize(maxFrameSize);
+            info.setMaxFrameSizeEnabled(maxFrameSizeEnabled);
             if( host!=null ) {
                 info.setHost(host);
             }

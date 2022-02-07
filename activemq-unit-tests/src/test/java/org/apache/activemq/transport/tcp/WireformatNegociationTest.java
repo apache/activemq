@@ -233,4 +233,97 @@ public class WireformatNegociationTest extends CombinationTestSupport {
         assertEquals(1048576, serverWF.get().getMaxFrameSize());
     }
 
+
+    /**
+     * The property maxFrameSizeEnabled should NOT be negotiated as we don't want to allow
+     * clients to override a server setting. Verify both sides can change their setting and it won't
+     * affect the other side.
+     *
+     * @throws Exception
+     */
+    public void testWireFormatMaxFrameSizeBothEnabled() throws Exception {
+
+        startServer("tcp://localhost:61616");
+        startClient("tcp://localhost:61616");
+
+        assertTrue("Connect timeout", negociationCounter.await(10, TimeUnit.SECONDS));
+        assertNull("Async error: " + asyncError, asyncError.get());
+
+        //both should be enabled
+        assertNotNull(clientWF.get());
+        assertTrue(Boolean.valueOf(clientWF.get().getProperties().get("MaxFrameSizeEnabled").toString()));
+
+        assertNotNull(serverWF.get());
+        assertTrue(Boolean.valueOf(serverWF.get().getProperties().get("MaxFrameSizeEnabled").toString()));
+    }
+
+    //Make sure settin the flag to true explicitly and not default works
+    public void testWireFormatMaxFrameSizeBothEnabledExplicit() throws Exception {
+
+        startServer("tcp://localhost:61616?wireFormat.maxFrameSizeEnabled=true");
+        startClient("tcp://localhost:61616?wireFormat.maxFrameSizeEnabled=true");
+
+        assertTrue("Connect timeout", negociationCounter.await(10, TimeUnit.SECONDS));
+        assertNull("Async error: " + asyncError, asyncError.get());
+
+        //both should be enabled
+        assertNotNull(clientWF.get());
+        assertTrue(Boolean.valueOf(clientWF.get().getProperties().get("MaxFrameSizeEnabled").toString()));
+
+        assertNotNull(serverWF.get());
+        assertTrue(Boolean.valueOf(serverWF.get().getProperties().get("MaxFrameSizeEnabled").toString()));
+    }
+
+    //Verify disabling client doesn't change server
+    public void testWireFormatMaxFrameSizeClientDisabled() throws Exception {
+
+        startServer("tcp://localhost:61616");
+        startClient("tcp://localhost:61616?wireFormat.maxFrameSizeEnabled=false");
+
+        assertTrue("Connect timeout", negociationCounter.await(10, TimeUnit.SECONDS));
+        assertNull("Async error: " + asyncError, asyncError.get());
+
+        //Verify client disabled
+        assertNotNull(clientWF.get());
+        assertTrue(Boolean.valueOf(clientWF.get().getProperties().get("MaxFrameSizeEnabled").toString()));
+
+        //Make sure server is still enabled
+        assertNotNull(serverWF.get());
+        assertFalse(Boolean.valueOf(serverWF.get().getProperties().get("MaxFrameSizeEnabled").toString()));
+    }
+
+    //Verify disabling server doesn't change client
+    public void testWireFormatMaxFrameSizeServerDisabled() throws Exception {
+
+        startServer("tcp://localhost:61616?wireFormat.maxFrameSizeEnabled=false");
+        startClient("tcp://localhost:61616");
+
+        assertTrue("Connect timeout", negociationCounter.await(10, TimeUnit.SECONDS));
+        assertNull("Async error: " + asyncError, asyncError.get());
+
+        //Verify client enabled
+        assertNotNull(clientWF.get());
+        assertFalse(Boolean.valueOf(clientWF.get().getProperties().get("MaxFrameSizeEnabled").toString()));
+
+        //Make server disabled
+        assertNotNull(serverWF.get());
+        assertTrue(Boolean.valueOf(serverWF.get().getProperties().get("MaxFrameSizeEnabled").toString()));
+    }
+
+    //Verify disabling server and client
+    public void testWireFormatMaxFrameSizeBothDisabled() throws Exception {
+
+        startServer("tcp://localhost:61616?wireFormat.maxFrameSizeEnabled=false");
+        startClient("tcp://localhost:61616?wireFormat.maxFrameSizeEnabled=false");
+
+        assertTrue("Connect timeout", negociationCounter.await(10, TimeUnit.SECONDS));
+        assertNull("Async error: " + asyncError, asyncError.get());
+
+        //Make both disabled
+        assertNotNull(clientWF.get());
+        assertFalse(Boolean.valueOf(clientWF.get().getProperties().get("MaxFrameSizeEnabled").toString()));
+
+        assertNotNull(serverWF.get());
+        assertFalse(Boolean.valueOf(serverWF.get().getProperties().get("MaxFrameSizeEnabled").toString()));
+    }
 }

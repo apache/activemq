@@ -354,6 +354,14 @@ public class WireFormatInfo implements Command, MarshallAware {
         setProperty("PlatformDetails", platformDetails);
     }
 
+    public boolean isMaxFrameSizeEnabled() throws IOException {
+        return Boolean.TRUE == getProperty("MaxFrameSizeEnabled");
+    }
+
+    public void setMaxFrameSizeEnabled(boolean maxFrameSizeEnabled) throws IOException {
+        setProperty("MaxFrameSizeEnabled", maxFrameSizeEnabled ? Boolean.TRUE : Boolean.FALSE);
+    }
+
     @Override
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processWireFormat(this);
