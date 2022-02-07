@@ -21,6 +21,8 @@ import javax.jms.JMSSecurityException;
 import javax.jms.MessageEOFException;
 import javax.jms.MessageFormatException;
 
+import org.apache.activemq.MaxFrameSizeExceededException;
+
 public final class JMSExceptionSupport {
 
     private JMSExceptionSupport() {
@@ -60,6 +62,12 @@ public final class JMSExceptionSupport {
     public static JMSException create(Exception cause) {
         if (cause instanceof JMSException) {
             return (JMSException)cause;
+        }
+        if (cause instanceof MaxFrameSizeExceededException) {
+            JMSException jmsException = new JMSException(cause.getMessage(), "41300");
+            jmsException.setLinkedException(cause);
+            jmsException.initCause(cause);
+            return jmsException;
         }
         String msg = cause.getMessage();
         if (msg == null || msg.length() == 0) {

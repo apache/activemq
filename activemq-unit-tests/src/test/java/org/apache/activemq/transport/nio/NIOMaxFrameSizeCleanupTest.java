@@ -82,14 +82,14 @@ public class NIOMaxFrameSizeCleanupTest {
     public void testMaxFrameSizeCleanupNio() throws Exception {
         String transportType = "nio";
         broker = createBroker(transportType, transportType + "://localhost:0?wireFormat.maxFrameSize=1024");
-        testMaxFrameSizeCleanup(transportType, "tcp://localhost:" + broker.getConnectorByName(transportType).getConnectUri().getPort());
+        testMaxFrameSizeCleanup(transportType, "tcp://localhost:" + broker.getConnectorByName(transportType).getConnectUri().getPort() + "?wireFormat.maxFrameSizeEnabled=false");
     }
 
     @Test
     public void testMaxFrameSizeCleanupAutoNio() throws Exception {
         String transportType = "auto+nio";
         broker = createBroker(transportType, transportType + "://localhost:0?wireFormat.maxFrameSize=1024");
-        testMaxFrameSizeCleanup(transportType, "tcp://localhost:" + broker.getConnectorByName(transportType).getConnectUri().getPort());
+        testMaxFrameSizeCleanup(transportType, "tcp://localhost:" + broker.getConnectorByName(transportType).getConnectUri().getPort() + "?wireFormat.maxFrameSizeEnabled=false");
     }
 
     @Test
@@ -98,7 +98,7 @@ public class NIOMaxFrameSizeCleanupTest {
         broker = createBroker(transportType, transportType +
                 "://localhost:0?transport.needClientAuth=true&wireFormat.maxFrameSize=1024");
         testMaxFrameSizeCleanup(transportType, "ssl://localhost:" + broker.getConnectorByName(transportType).getConnectUri().getPort()
-                + "?socket.verifyHostName=false");
+                + "?socket.verifyHostName=false&wireFormat.maxFrameSizeEnabled=false");
     }
 
     @Test
@@ -107,7 +107,7 @@ public class NIOMaxFrameSizeCleanupTest {
         broker = createBroker(transportType, transportType +
                 "://localhost:0?transport.needClientAuth=true&wireFormat.maxFrameSize=1024");
         testMaxFrameSizeCleanup(transportType, "ssl://localhost:" + broker.getConnectorByName(transportType).getConnectUri().getPort()
-                + "?socket.verifyHostName=false");
+                + "?socket.verifyHostName=false&wireFormat.maxFrameSizeEnabled=false");
     }
 
     protected void testMaxFrameSizeCleanup(String transportType, String clientUri) throws Exception {

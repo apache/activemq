@@ -19,6 +19,8 @@ package org.apache.activemq.util;
 import java.io.IOException;
 import java.math.BigInteger;
 
+import org.apache.activemq.MaxFrameSizeExceededException;
+
 public final class IOExceptionSupport {
 
     private IOExceptionSupport() {
@@ -49,7 +51,7 @@ public final class IOExceptionSupport {
     }
 
     public static IOException createFrameSizeException(int size, long maxSize) {
-        return new IOException("Frame size of " + toHumanReadableSizeString(size) +
+        return new MaxFrameSizeExceededException("Frame size of " + toHumanReadableSizeString(size) +
             " larger than max allowed " + toHumanReadableSizeString(maxSize));
     }
 
