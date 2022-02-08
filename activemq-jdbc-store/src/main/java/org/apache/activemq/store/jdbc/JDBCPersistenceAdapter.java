@@ -307,7 +307,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 try {
                     getAdapter().doCreateTables(transactionContext);
                 } catch (SQLException e) {
-                    LOG.warn("Cannot create tables due to: {}", e);
+                    LOG.warn("Cannot create tables due to: {}", e.toString());
                     JDBCPersistenceAdapter.log("Failure Details: ", e);
                 }
             } finally {
@@ -350,13 +350,13 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         } catch (IOException e) {
             LOG.warn("Old message cleanup failed due to: {}", e, e);
         } catch (SQLException e) {
-            LOG.warn("Old message cleanup failed due to: {}", e);
+            LOG.warn("Old message cleanup failed due to: {}", e.toString());
             JDBCPersistenceAdapter.log("Failure Details: ", e);
         } finally {
             if (c != null) {
                 try {
                     c.close();
-                } catch (Throwable e) {
+                } catch (Exception e) {
                 }
             }
             LOG.debug("Cleanup done.");
@@ -366,13 +366,10 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     @Override
     public ScheduledThreadPoolExecutor getScheduledThreadPoolExecutor() {
         if (clockDaemon == null) {
-            clockDaemon = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable runnable) {
-                    Thread thread = new Thread(runnable, "ActiveMQ JDBC PA Scheduled Task");
-                    thread.setDaemon(true);
-                    return thread;
-                }
+            clockDaemon = new ScheduledThreadPoolExecutor(5, runnable -> {
+                Thread thread = new Thread(runnable, "ActiveMQ JDBC PA Scheduled Task");
+                thread.setDaemon(true);
+                return thread;
             });
         }
         return clockDaemon;

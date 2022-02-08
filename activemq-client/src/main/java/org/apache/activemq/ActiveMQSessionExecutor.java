@@ -67,7 +67,7 @@ public class ActiveMQSessionExecutor implements Task {
             } else {
                 long elapsedTime = System.currentTimeMillis() - connection.getTimeCreated();
 
-                // lets only warn when a significant amount of time has passed
+                // let's only warn when a significant amount of time has passed
                 // just in case its normal operation
                 if (elapsedTime > aboutUnstartedConnectionTimeout) {
                     LOG.warn("Received a message on a connection which is not yet started. Have you forgotten to call Connection.start()? Connection: " + connection

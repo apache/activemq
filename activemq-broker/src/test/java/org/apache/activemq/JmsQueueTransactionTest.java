@@ -48,7 +48,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
     }
 
     /**
-     * Tests if the the connection gets reset, the messages will still be
+     * Tests if the connection gets reset, the messages will still be
      * received.
      * 
      * @throws Exception
@@ -56,7 +56,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
     public void testReceiveTwoThenCloseConnection() throws Exception {
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
-        // lets consume any outstanding messages from previous test runs
+        // let's consume any outstanding messages from previous test runs
         beginTx();
         while (consumer.receive(1000) != null) {
         }
@@ -153,7 +153,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
     public void testReceiveBrowseReceive() throws Exception {
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message"), session.createTextMessage("Third Message")};
 
-        // lets consume any outstanding messages from previous test runs
+        // let's consume any outstanding messages from previous test runs
         beginTx();
         while (consumer.receive(1000) != null) {
         }

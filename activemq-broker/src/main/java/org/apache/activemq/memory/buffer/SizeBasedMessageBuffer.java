@@ -17,7 +17,6 @@
 package org.apache.activemq.memory.buffer;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -28,9 +27,9 @@ import java.util.List;
 public class SizeBasedMessageBuffer implements MessageBuffer {
 
     private int limit = 100 * 64 * 1024;
-    private List<MessageQueue> bubbleList = new ArrayList<MessageQueue>();
+    private final List<MessageQueue> bubbleList = new ArrayList<>();
     private int size;
-    private Object lock = new Object();
+    private final Object lock = new Object();
 
     public SizeBasedMessageBuffer() {
     }
@@ -79,8 +78,7 @@ public class SizeBasedMessageBuffer implements MessageBuffer {
 
     public void clear() {
         synchronized (lock) {
-            for (Iterator<MessageQueue> iter = bubbleList.iterator(); iter.hasNext();) {
-                MessageQueue queue = iter.next();
+            for (MessageQueue queue : bubbleList) {
                 queue.clear();
             }
             size = 0;
@@ -88,7 +86,7 @@ public class SizeBasedMessageBuffer implements MessageBuffer {
     }
 
     protected void bubbleUp(MessageQueue queue, int queueSize) {
-        // lets bubble up to head of queueif we need to
+        // let's bubble up to head of queue if we need to
         int position = queue.getPosition();
         while (--position >= 0) {
             MessageQueue pivot = bubbleList.get(position);

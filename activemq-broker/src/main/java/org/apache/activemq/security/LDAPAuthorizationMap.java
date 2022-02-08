@@ -19,7 +19,6 @@ package org.apache.activemq.security;
 import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -98,7 +97,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     private String writeAttribute;
 
     public LDAPAuthorizationMap() {
-        // lets setup some sensible defaults
+        // let's setup some sensible defaults
         initialContextFactory = "com.sun.jndi.ldap.LdapCtxFactory";
         connectionURL = "ldap://localhost:10389";
         connectionUsername = "uid=admin,ou=system";
@@ -138,8 +137,8 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         String queueSearchSubtree = options.get(QUEUE_SEARCH_SUBTREE);
         topicSearchMatchingFormat = new MessageFormat(topicSearchMatching);
         queueSearchMatchingFormat = new MessageFormat(queueSearchMatching);
-        topicSearchSubtreeBool = Boolean.valueOf(topicSearchSubtree).booleanValue();
-        queueSearchSubtreeBool = Boolean.valueOf(queueSearchSubtree).booleanValue();
+        topicSearchSubtreeBool = Boolean.parseBoolean(topicSearchSubtree);
+        queueSearchSubtreeBool = Boolean.parseBoolean(queueSearchSubtree);
     }
 
     public Set<GroupPrincipal> getTempDestinationAdminACLs() {
@@ -147,7 +146,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             context = open();
         } catch (NamingException e) {
             LOG.error(e.toString());
-            return new HashSet<GroupPrincipal>();
+            return new HashSet<>();
         }
         SearchControls constraints = new SearchControls();
         constraints.setReturningAttributes(new String[] {adminAttribute});
@@ -159,7 +158,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             context = open();
         } catch (NamingException e) {
             LOG.error(e.toString());
-            return new HashSet<GroupPrincipal>();
+            return new HashSet<>();
         }
         SearchControls constraints = new SearchControls();
         constraints.setReturningAttributes(new String[] {readAttribute});
@@ -171,7 +170,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             context = open();
         } catch (NamingException e) {
             LOG.error(e.toString());
-            return new HashSet<GroupPrincipal>();
+            return new HashSet<>();
         }
         SearchControls constraints = new SearchControls();
         constraints.setReturningAttributes(new String[] {writeAttribute});
@@ -381,7 +380,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             context = open();
         } catch (NamingException e) {
             LOG.error(e.toString());
-            return new HashSet<GroupPrincipal>();
+            return new HashSet<>();
         }
 
 
@@ -416,8 +415,8 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
 
     protected Set<GroupPrincipal> getACLs(String destinationBase, SearchControls constraints, String roleBase, String roleAttribute) {
         try {
-            Set<GroupPrincipal> roles = new HashSet<GroupPrincipal>();
-            Set<String> acls = new HashSet<String>();
+            Set<GroupPrincipal> roles = new HashSet<>();
+            Set<String> acls = new HashSet<>();
             NamingEnumeration<?> results = context.search(destinationBase, roleBase, constraints);
             while (results.hasMore()) {
                 SearchResult result = (SearchResult)results.next();
@@ -427,17 +426,16 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
                 }
                 acls = addAttributeValues(roleAttribute, attrs, acls);
             }
-            for (Iterator<String> iter = acls.iterator(); iter.hasNext();) {
-                String roleName = iter.next();
+            for (String roleName : acls) {
                 LdapName ldapname = new LdapName(roleName);
                 Rdn rdn = ldapname.getRdn(ldapname.size() - 1);
-                LOG.debug("Found role: [" + rdn.getValue().toString() + "]");
+                LOG.debug("Found role: [{}]", rdn.getValue());
                 roles.add(new GroupPrincipal(rdn.getValue().toString()));
             }
             return roles;
         } catch (NamingException e) {
             LOG.error(e.toString());
-            return new HashSet<GroupPrincipal>();
+            return new HashSet<>();
         }
     }
 
@@ -446,7 +444,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             return values;
         }
         if (values == null) {
-            values = new HashSet<String>();
+            values = new HashSet<>();
         }
         Attribute attr = attrs.get(attrId);
         if (attr == null) {
@@ -466,7 +464,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         }
 
         try {
-            Hashtable<String, String> env = new Hashtable<String, String>();
+            Hashtable<String, String> env = new Hashtable<>();
             env.put(Context.INITIAL_CONTEXT_FACTORY, initialContextFactory);
             if (connectionUsername != null && !"".equals(connectionUsername)) {
                 env.put(Context.SECURITY_PRINCIPAL, connectionUsername);

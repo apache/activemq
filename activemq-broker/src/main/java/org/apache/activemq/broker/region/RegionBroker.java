@@ -97,15 +97,15 @@ public class RegionBroker extends EmptyBroker {
     private boolean started;
     private boolean keepDurableSubsActive;
 
-    private final CopyOnWriteArrayList<Connection> connections = new CopyOnWriteArrayList<Connection>();
-    private final Map<ActiveMQDestination, ActiveMQDestination> destinationGate = new HashMap<ActiveMQDestination, ActiveMQDestination>();
-    private final Map<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
-    private final Map<BrokerId, BrokerInfo> brokerInfos = new HashMap<BrokerId, BrokerInfo>();
+    private final CopyOnWriteArrayList<Connection> connections = new CopyOnWriteArrayList<>();
+    private final Map<ActiveMQDestination, ActiveMQDestination> destinationGate = new HashMap<>();
+    private final Map<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<>();
+    private final Map<BrokerId, BrokerInfo> brokerInfos = new HashMap<>();
 
     private final LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();
     private BrokerId brokerId;
     private String brokerName;
-    private final Map<String, ConnectionContext> clientIdSet = new HashMap<String, ConnectionContext>();
+    private final Map<String, ConnectionContext> clientIdSet = new HashMap<>();
     private final DestinationInterceptor destinationInterceptor;
     private ConnectionContext adminConnectionContext;
     private final Scheduler scheduler;
@@ -128,7 +128,7 @@ public class RegionBroker extends EmptyBroker {
         public void run() {
             try {
                 purgeInactiveDestinations();
-            } catch (Throwable ignored) {
+            } catch (Exception ignored) {
                 LOG.error("Unexpected exception on purgeInactiveDestinations {}", this, ignored);
             } finally {
                 purgeInactiveDestinationsTaskInProgress.set(false);
@@ -156,7 +156,7 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
-        Map<ActiveMQDestination, Destination> answer = new HashMap<ActiveMQDestination, Destination>(getQueueRegion().getDestinationMap());
+        Map<ActiveMQDestination, Destination> answer = new HashMap<>(getQueueRegion().getDestinationMap());
         answer.putAll(getTopicRegion().getDestinationMap());
         return answer;
     }
@@ -296,11 +296,9 @@ public class RegionBroker extends EmptyBroker {
         synchronized (clientIdSet) {
             ConnectionContext oldValue = clientIdSet.get(clientId);
             // we may be removing the duplicate connection, not the first connection to be created
-            // so lets check that their connection IDs are the same
-            if (oldValue == context) {
-                if (isEqual(oldValue.getConnectionId(), info.getConnectionId())) {
-                    clientIdSet.remove(clientId);
-                }
+            // so let's check that their connection IDs are the same
+            if (oldValue == context && isEqual(oldValue.getConnectionId(), info.getConnectionId())) {
+                clientIdSet.remove(clientId);
             }
         }
         connections.remove(context.getConnection());
@@ -312,8 +310,8 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public Connection[] getClients() throws Exception {
-        ArrayList<Connection> l = new ArrayList<Connection>(connections);
-        Connection rc[] = new Connection[l.size()];
+        ArrayList<Connection> l = new ArrayList<>(connections);
+        Connection[] rc = new Connection[l.size()];
         l.toArray(rc);
         return rc;
     }
@@ -389,9 +387,9 @@ public class RegionBroker extends EmptyBroker {
     public ActiveMQDestination[] getDestinations() throws Exception {
         ArrayList<ActiveMQDestination> l;
 
-        l = new ArrayList<ActiveMQDestination>(getDestinationMap().keySet());
+        l = new ArrayList<>(getDestinationMap().keySet());
 
-        ActiveMQDestination rc[] = new ActiveMQDestination[l.size()];
+        ActiveMQDestination[] rc = new ActiveMQDestination[l.size()];
         l.toArray(rc);
         return rc;
     }
@@ -753,7 +751,7 @@ public class RegionBroker extends EmptyBroker {
         boolean stamped = false;
         if (message.getProperty(ORIGINAL_EXPIRATION) == null) {
             long expiration = message.getExpiration();
-            message.setProperty(ORIGINAL_EXPIRATION, Long.valueOf(expiration));
+            message.setProperty(ORIGINAL_EXPIRATION, expiration);
             stamped = true;
         }
         return stamped;
@@ -885,7 +883,7 @@ public class RegionBroker extends EmptyBroker {
     protected void purgeInactiveDestinations() {
         inactiveDestinationsPurgeLock.writeLock().lock();
         try {
-            List<Destination> list = new ArrayList<Destination>();
+            List<Destination> list = new ArrayList<>();
             Map<ActiveMQDestination, Destination> map = getDestinationMap();
             if (isAllowTempAutoCreationOnSend()) {
                 map.putAll(tempQueueRegion.getDestinationMap());

@@ -46,10 +46,10 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
     }
 
     /**
-     * Lets load the properties from some external URL or a relative file
+     * Let's load the properties from some external URL or a relative file
      */
     protected Map<Object, Object> loadProperties(URI brokerURI) throws IOException {
-        // lets load a URI
+        // let's load a URI
         String remaining = brokerURI.getSchemeSpecificPart();
         Properties properties = new Properties();
         File file = new File(remaining);
@@ -79,7 +79,7 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
             try {
                 url = new URL(remaining);
             } catch (MalformedURLException e) {
-                // lets now see if we can find the name on the classpath
+                // let's now see if we can find the name on the classpath
                 inputStream = findResourceOnClassPath(remaining);
                 if (inputStream == null) {
                     throw new IOException("File does not exist: " + remaining + ", could not be found on the classpath and is not a valid URL: " + e);

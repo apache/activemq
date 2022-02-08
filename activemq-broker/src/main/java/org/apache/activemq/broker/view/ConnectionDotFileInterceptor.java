@@ -18,10 +18,8 @@ package org.apache.activemq.broker.view;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,6 +37,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.filter.DestinationMapNode;
+import org.apache.activemq.filter.DestinationNode;
 
 /**
  *
@@ -49,12 +48,11 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
     private final boolean redrawOnRemove;
     private boolean clearProducerCacheAfterRender;
-    private final String domain = "org.apache.activemq";
     private BrokerViewMBean brokerView;
 
-    // until we have some MBeans for producers, lets do it all ourselves
-    private final Map<ProducerId, ProducerInfo> producers = new HashMap<ProducerId, ProducerInfo>();
-    private final Map<ProducerId, Set<ActiveMQDestination>> producerDestinations = new HashMap<ProducerId, Set<ActiveMQDestination>>();
+    // until we have some MBeans for producers, let's do it all ourselves
+    private final Map<ProducerId, ProducerInfo> producers = new HashMap<>();
+    private final Map<ProducerId, Set<ActiveMQDestination>> producerDestinations = new HashMap<>();
     private final Object lock = new Object();
 
     public ConnectionDotFileInterceptor(Broker next, String file, boolean redrawOnRemove) throws IOException {
@@ -109,7 +107,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         synchronized (lock) {
             Set<ActiveMQDestination> destinations = producerDestinations.get(producerId);
             if (destinations == null) {
-                destinations = new HashSet<ActiveMQDestination>();
+                destinations = new HashSet<>();
             }
             producerDestinations.put(producerId, destinations);
             destinations.add(destination);
@@ -126,9 +124,9 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         writer.println("node [style = \"rounded,filled\", fillcolor = yellow, fontname=\"Helvetica-Oblique\"];");
         writer.println();
 
-        Map<String, String> clients = new HashMap<String, String>();
-        Map<String, String> queues = new HashMap<String, String>();
-        Map<String, String> topics = new HashMap<String, String>();
+        Map<String, String> clients = new HashMap<>();
+        Map<String, String> queues = new HashMap<>();
+        Map<String, String> topics = new HashMap<>();
 
         printSubscribers(writer, clients, queues, "queue_", getBrokerView().getQueueSubscribers());
         writer.println();
@@ -153,18 +151,17 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
     protected void printProducers(PrintWriter writer, Map<String, String> clients, Map<String, String> queues, Map<String, String> topics) {
         synchronized (lock) {
-            for (Iterator iter = producerDestinations.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry entry = (Map.Entry)iter.next();
-                ProducerId producerId = (ProducerId)entry.getKey();
-                Set destinationSet = (Set)entry.getValue();
+            for (Map.Entry<ProducerId, Set<ActiveMQDestination>> producerIdSetEntry : producerDestinations.entrySet()) {
+                ProducerId producerId = producerIdSetEntry.getKey();
+                Set destinationSet = producerIdSetEntry.getValue();
                 printProducers(writer, clients, queues, topics, producerId, destinationSet);
             }
         }
     }
 
     protected void printProducers(PrintWriter writer, Map<String, String> clients, Map<String, String> queues, Map<String, String> topics, ProducerId producerId, Set destinationSet) {
-        for (Iterator iter = destinationSet.iterator(); iter.hasNext();) {
-            ActiveMQDestination destination = (ActiveMQDestination)iter.next();
+        for (Object o : destinationSet) {
+            ActiveMQDestination destination = (ActiveMQDestination) o;
 
             // TODO use clientId one day
             String clientId = producerId.getConnectionId();
@@ -183,7 +180,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
             String safeProducerId = asID(producerId.toString());
 
-            // lets write out the links
+            // let's write out the links
 
             writer.print(safeClientId);
             writer.print(" -> ");
@@ -195,20 +192,18 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
             writer.print(safeDestinationId);
             writer.println(";");
 
-            // now lets write out the label
+            // now let's write out the label
             writer.print(safeProducerId);
             writer.print(" [label = \"");
             String label = "Producer: " + producerId.getSessionId() + "-" + producerId.getValue();
             writer.print(label);
             writer.println("\"];");
-
         }
     }
 
     protected void printSubscribers(PrintWriter writer, Map<String, String> clients, Map<String, String> destinations, String type, ObjectName[] subscribers) {
-        for (int i = 0; i < subscribers.length; i++) {
-            ObjectName name = subscribers[i];
-            SubscriptionViewMBean subscriber = (SubscriptionViewMBean)getBrokerService().getManagementContext().newProxyInstance(name, SubscriptionViewMBean.class, true);
+        for (ObjectName name : subscribers) {
+            SubscriptionViewMBean subscriber = (SubscriptionViewMBean) getBrokerService().getManagementContext().newProxyInstance(name, SubscriptionViewMBean.class, true);
 
             String clientId = subscriber.getClientId();
             String safeClientId = asID(clientId);
@@ -220,7 +215,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
             String selector = subscriber.getSelector();
 
-            // lets write out the links
+            // let's write out the links
             String subscriberId = safeClientId + "_" + subscriber.getSessionId() + "_" + subscriber.getSubscriptionId();
 
             writer.print(subscriberId);
@@ -233,7 +228,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
             writer.print(subscriberId);
             writer.println(";");
 
-            // now lets write out the label
+            // now let's write out the label
             writer.print(subscriberId);
             writer.print(" [label = \"");
             String label = "Subscription: " + subscriber.getSessionId() + "-" + subscriber.getSubscriptionId();
@@ -246,10 +241,9 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     }
 
     protected void writeLabels(PrintWriter writer, String color, String prefix, Map<String, String> map) {
-        for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            String id = (String)entry.getKey();
-            String label = (String)entry.getValue();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            String id = entry.getKey();
+            String label = entry.getValue();
 
             writer.print(id);
             writer.print(" [ fillcolor = ");
@@ -262,7 +256,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     }
 
     /**
-     * Lets strip out any non supported characters
+     * Let's strip out any non-supported characters
      */
     protected String asID(String name) {
         StringBuffer buffer = new StringBuffer();
@@ -294,18 +288,16 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         writer.print(label);
         writer.println("\" ];");
 
-        Collection children = node.getChildren();
-        for (Iterator iter = children.iterator(); iter.hasNext();) {
-            DestinationMapNode child = (DestinationMapNode)iter.next();
+        for (DestinationNode destinationNode : node.getChildren()) {
+            DestinationMapNode child = (DestinationMapNode) destinationNode;
             printNodes(writer, child, prefix + ID_SEPARATOR + path);
         }
     }
 
     protected void printNodeLinks(PrintWriter writer, DestinationMapNode node, String prefix) {
         String path = getPath(node);
-        Collection children = node.getChildren();
-        for (Iterator iter = children.iterator(); iter.hasNext();) {
-            DestinationMapNode child = (DestinationMapNode)iter.next();
+        for (DestinationNode destinationNode : node.getChildren()) {
+            DestinationMapNode child = (DestinationMapNode) destinationNode;
 
             writer.print("  ");
             writer.print(prefix);

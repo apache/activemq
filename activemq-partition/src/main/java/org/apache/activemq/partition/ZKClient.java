@@ -16,7 +16,11 @@
  */
 package org.apache.activemq.partition;
 
-import org.apache.zookeeper.*;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.data.Stat;
@@ -25,14 +29,23 @@ import org.linkedin.util.clock.SystemClock;
 import org.linkedin.util.clock.Timespan;
 import org.linkedin.util.concurrent.ConcurrentUtils;
 import org.linkedin.util.io.PathUtils;
-import org.linkedin.zookeeper.client.*;
+import org.linkedin.zookeeper.client.ChrootedZKClient;
+import org.linkedin.zookeeper.client.IZooKeeper;
+import org.linkedin.zookeeper.client.IZooKeeperFactory;
+import org.linkedin.zookeeper.client.LifecycleListener;
+import org.linkedin.zookeeper.client.ZooKeeperFactory;
 import org.slf4j.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;

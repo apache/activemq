@@ -233,7 +233,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     public void onMessageRolledBack() {
         super.onMessageRolledBack();
 
-        // lets force the object to be deserialized again - as we could have
+        // let's force the object to be deserialized again - as we could have
         // changed the object
         object = null;
     }

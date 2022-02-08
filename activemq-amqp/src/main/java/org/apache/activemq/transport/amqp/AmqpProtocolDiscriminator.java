@@ -82,7 +82,7 @@ public class AmqpProtocolDiscriminator implements AmqpProtocolConverter {
                 }
             }
 
-            // Lets use first in the list if none are a good match.
+            // Let's use first in the list if none are a good match.
             if (match == null) {
                 match = DISCRIMINATORS.get(0);
             }

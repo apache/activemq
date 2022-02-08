@@ -187,7 +187,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         if (node != null) {
             Message msg = node.getMessage();
             if (isStarted() && !msg.isPersistent()) {
-                    nonPersistent.tryAddMessageLast(node, wait);
+                nonPersistent.tryAddMessageLast(node, wait);
             }
             if (msg.isPersistent()) {
                 Destination dest = (Destination) msg.getRegionDestination();

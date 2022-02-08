@@ -17,14 +17,14 @@
 package org.apache.activemq.broker.view;
 
 import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.Iterator;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapNode;
+import org.apache.activemq.filter.DestinationNode;
 
 /**
  * 
@@ -54,15 +54,14 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
     protected void generateFile(PrintWriter writer) throws Exception {
         ActiveMQDestination[] destinations = getDestinations();
 
-        // lets split into a tree
+        // let's split into a tree
         DestinationMap map = new DestinationMap();
 
-        for (int i = 0; i < destinations.length; i++) {
-            ActiveMQDestination destination = destinations[i];
+        for (ActiveMQDestination destination : destinations) {
             map.put(destination, destination);
         }
 
-        // now lets navigate the tree
+        // now let's navigate the tree
         writer.println("digraph \"ActiveMQ Destinations\" {");
         writer.println();
         writer.println("node [style = \"rounded,filled\", fontname=\"Helvetica-Oblique\"];");
@@ -134,18 +133,16 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         writer.print(label);
         writer.println("\" ];");
 
-        Collection children = node.getChildren();
-        for (Iterator iter = children.iterator(); iter.hasNext();) {
-            DestinationMapNode child = (DestinationMapNode)iter.next();
+        for (DestinationNode destinationNode : node.getChildren()) {
+            DestinationMapNode child = (DestinationMapNode) destinationNode;
             printNodes(writer, child, prefix + ID_SEPARATOR + path);
         }
     }
 
     protected void printNodeLinks(PrintWriter writer, DestinationMapNode node, String prefix) {
         String path = getPath(node);
-        Collection children = node.getChildren();
-        for (Iterator iter = children.iterator(); iter.hasNext();) {
-            DestinationMapNode child = (DestinationMapNode)iter.next();
+        for (DestinationNode destinationNode : node.getChildren()) {
+            DestinationMapNode child = (DestinationMapNode) destinationNode;
 
             writer.print("  ");
             writer.print(prefix);

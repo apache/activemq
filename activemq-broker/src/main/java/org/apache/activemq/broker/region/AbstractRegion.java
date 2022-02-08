@@ -342,7 +342,7 @@ public abstract class AbstractRegion implements Region {
                 broker.getBrokerName(), info.getConsumerId(), info.getDestination());
         ActiveMQDestination destination = info.getDestination();
         if (destination != null && !destination.isPattern() && !destination.isComposite()) {
-            // lets auto-create the destination
+            // let's auto-create the destination
             lookup(context, destination,true);
         }
 

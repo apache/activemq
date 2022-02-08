@@ -16,6 +16,20 @@
  */
 package org.apache.activemq.command;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageFormatException;
+import javax.jms.MessageNotWriteableException;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.scheduler.CronParser;
@@ -25,20 +39,6 @@ import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.TypeConversionSupport;
 import org.fusesource.hawtbuf.UTF8Buffer;
-
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageFormatException;
-import javax.jms.MessageNotWriteableException;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -139,7 +139,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
             } catch (NumberFormatException e) {
                 // we must be some foreign JMS provider or strange user-supplied
                 // String
-                // so lets set the IDs to be 1
+                // so let's set the IDs to be 1
                 MessageId id = new MessageId();
                 id.setTextView(value);
                 this.setMessageId(id);
@@ -305,7 +305,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     @SuppressWarnings("rawtypes")
     public Enumeration getPropertyNames() throws JMSException {
         try {
-            ArrayList<String> result = new ArrayList<>(this.getProperties().keySet());
+            Vector<String> result = new Vector<>(this.getProperties().keySet());
             if( getRedeliveryCounter()!=0 ) {
                 result.add("JMSXDeliveryCount");
             }
@@ -318,7 +318,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
             if( getUserID()!=null ) {
                 result.add("JMSXUserID");
             }
-            return Collections.enumeration(result);
+            return result.elements();
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
         }
@@ -332,9 +332,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     @SuppressWarnings("rawtypes")
     public Enumeration getAllPropertyNames() throws JMSException {
         try {
-            ArrayList<String> result = new ArrayList<>(this.getProperties().keySet());
+            Vector<String> result = new Vector<>(this.getProperties().keySet());
             result.addAll(JMS_PROPERTY_SETERS.keySet());
-            return Collections.enumeration(result);
+            return result.elements();
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
         }
@@ -510,7 +510,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public void setProperties(Map<String, ?> properties) throws JMSException {
         for (Map.Entry<String, ?> entry : properties.entrySet()) {
-            // Lets use the object property method as we may contain standard
+            // Let's use the object property method as we may contain standard
             // extension headers like JMSXGroupID
             setObjectProperty(entry.getKey(), entry.getValue());
         }

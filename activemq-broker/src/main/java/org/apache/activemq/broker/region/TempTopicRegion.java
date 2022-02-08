@@ -45,7 +45,7 @@ public class TempTopicRegion extends AbstractTempRegion {
         }
         try {
             TopicSubscription answer = new TopicSubscription(broker, context, info, usageManager);
-            // lets configure the subscription depending on the destination
+            // let's configure the subscription depending on the destination
             ActiveMQDestination destination = info.getDestination();
             if (destination != null && broker.getDestinationPolicy() != null) {
                 PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);

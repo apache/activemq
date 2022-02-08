@@ -137,7 +137,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected final ConcurrentMap<ConsumerId, DemandSubscription> subscriptionMapByLocalId = new ConcurrentHashMap<>();
     protected final ConcurrentMap<ConsumerId, DemandSubscription> subscriptionMapByRemoteId = new ConcurrentHashMap<>();
     protected final Set<ConsumerId> forcedDurableRemoteId = Collections.newSetFromMap(new ConcurrentHashMap<ConsumerId, Boolean>());
-    protected final BrokerId localBrokerPath[] = new BrokerId[]{null};
+    protected final BrokerId[] localBrokerPath = new BrokerId[]{null};
     protected final CountDownLatch startedLatch = new CountDownLatch(2);
     protected final CountDownLatch localStartedLatch = new CountDownLatch(1);
     protected final CountDownLatch staticDestinationsLatch = new CountDownLatch(1);
@@ -145,7 +145,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected NetworkBridgeConfiguration configuration;
     protected final NetworkBridgeFilterFactory defaultFilterFactory = new DefaultNetworkBridgeFilterFactory();
 
-    protected final BrokerId remoteBrokerPath[] = new BrokerId[]{null};
+    protected final BrokerId[] remoteBrokerPath = new BrokerId[]{null};
     protected BrokerId remoteBrokerId;
 
     protected final NetworkBridgeStatistics networkBridgeStatistics = new NetworkBridgeStatistics();
@@ -169,7 +169,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     private Transport duplexInboundLocalBroker = null;
     private ProducerInfo duplexInboundLocalProducerInfo;
 
-    public DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
+    protected DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
         this.configuration = configuration;
         this.localBroker = localBroker;
         this.remoteBroker = remoteBroker;
@@ -403,7 +403,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 return;
             }
 
-            // Before we try and build the bridge lets check if we are in a loop
+            // Before we try and build the bridge let's check if we are in a loop
             // and if so just stop now before registering anything.
             remoteBrokerId = remoteBrokerInfo.getBrokerId();
             if (localBrokerId.equals(remoteBrokerId)) {
@@ -422,7 +422,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (configuration.isUseBrokerNamesAsIdSeed()) {
                 idGenerator = new IdGenerator(brokerService.getBrokerName() + "->" + remoteBrokerName);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             serviceLocalException(e);
         }
     }
@@ -441,15 +441,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 IntrospectionSupport.getProperties(configuration, props, null);
                 if (configuration.getExcludedDestinations() != null) {
                     excludedDestinations = configuration.getExcludedDestinations().toArray(
-                            new ActiveMQDestination[configuration.getExcludedDestinations().size()]);
+                            new ActiveMQDestination[0]);
                 }
                 if (configuration.getStaticallyIncludedDestinations() != null) {
                     staticallyIncludedDestinations = configuration.getStaticallyIncludedDestinations().toArray(
-                            new ActiveMQDestination[configuration.getStaticallyIncludedDestinations().size()]);
+                            new ActiveMQDestination[0]);
                 }
                 if (configuration.getDynamicallyIncludedDestinations() != null) {
                     dynamicallyIncludedDestinations = configuration.getDynamicallyIncludedDestinations().toArray(
-                            new ActiveMQDestination[configuration.getDynamicallyIncludedDestinations().size()]);
+                            new ActiveMQDestination[0]);
                 }
             } catch (Throwable t) {
                 LOG.error("Error mapping remote configuration: {}", props, t);
@@ -475,7 +475,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 setupStaticDestinations();
                 staticDestinationsLatch.countDown();
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             serviceLocalException(e);
         }
     }
@@ -651,12 +651,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 LOG.warn("Network connection between {} and {} shutdown due to a remote error: {}", localBroker, remoteBroker, error.toString());
             }
             LOG.debug("The remote Exception was: {}", error, error);
-            brokerService.getTaskRunnerFactory().execute(new Runnable() {
-                @Override
-                public void run() {
-                    ServiceSupport.dispose(getControllingService());
-                }
-            });
+            brokerService.getTaskRunnerFactory().execute(() -> ServiceSupport.dispose(getControllingService()));
             fireBridgeFailed(error);
         }
     }
@@ -1106,12 +1101,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             LOG.info("Network connection between {} and {} shutdown due to a local error: {}", localBroker, remoteBroker, error);
             LOG.debug("The local Exception was: {}", error, error);
 
-            brokerService.getTaskRunnerFactory().execute(new Runnable() {
-                @Override
-                public void run() {
-                    ServiceSupport.dispose(getControllingService());
-                }
-            });
+            brokerService.getTaskRunnerFactory().execute(() -> ServiceSupport.dispose(getControllingService()));
             fireBridgeFailed(error);
         }
     }
@@ -1134,7 +1124,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
                 }
             } catch (Exception e) {
-                LOG.warn("failed to fire forward failure advisory, cause: {}", e);
+                LOG.warn("failed to fire forward failure advisory, cause: {}", e.toString());
                 LOG.debug("detail", e);
             }
         }
@@ -1322,7 +1312,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (brokerPath == null || brokerPath.length == 0) {
             return pathsToAppend;
         }
-        BrokerId rc[] = new BrokerId[brokerPath.length + pathsToAppend.length];
+        BrokerId[] rc = new BrokerId[brokerPath.length + pathsToAppend.length];
         System.arraycopy(brokerPath, 0, rc, 0, brokerPath.length);
         System.arraycopy(pathsToAppend, 0, rc, brokerPath.length, pathsToAppend.length);
         return rc;
@@ -1332,7 +1322,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (brokerPath == null || brokerPath.length == 0) {
             return new BrokerId[]{idToAppend};
         }
-        BrokerId rc[] = new BrokerId[brokerPath.length + 1];
+        BrokerId[] rc = new BrokerId[brokerPath.length + 1];
         System.arraycopy(brokerPath, 0, rc, 0, brokerPath.length);
         rc[brokerPath.length] = idToAppend;
         return rc;
@@ -1587,7 +1577,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return result;
     }
 
-    final protected DemandSubscription createDemandSubscription(ActiveMQDestination destination, final String subscriptionName) {
+    protected final DemandSubscription createDemandSubscription(ActiveMQDestination destination, final String subscriptionName) {
         ConsumerInfo info = new ConsumerInfo();
         info.setNetworkSubscription(true);
         info.setDestination(destination);

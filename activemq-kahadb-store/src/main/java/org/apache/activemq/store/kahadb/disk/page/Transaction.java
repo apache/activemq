@@ -106,7 +106,7 @@ public class Transaction implements Iterable<Page> {
     // If this transaction is updating stuff.. this is the tx of
     private long writeTransactionId=-1;
     // List of pages that this transaction has modified.
-    private final TreeMap<Long, PageWrite> writes=new TreeMap<>();
+    private final TreeMap<Long, PageWrite> writes = new TreeMap<>();
     // List of pages allocated in this transaction
     private final SequenceSet allocateList = new SequenceSet();
     // List of pages freed in this transaction

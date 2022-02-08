@@ -126,7 +126,7 @@ public class ManagementContext implements Service {
 
     @Override
     public void start() throws Exception {
-        // lets force the MBeanServer to be created if needed
+        // let's force the MBeanServer to be created if needed
         if (started.compareAndSet(false, true)) {
 
             populateMBeanSuppressionMap();
@@ -145,8 +145,8 @@ public class ManagementContext implements Service {
                         LOG.debug("Invoking start on MBean: {}", namingServiceObjectName);
                         getMBeanServer().invoke(namingServiceObjectName, "start", null, null);
                     }
-                } catch (Throwable t) {
-                    LOG.debug("Error invoking start on MBean {}. This exception is ignored.", namingServiceObjectName, t);
+                } catch (Exception e) {
+                    LOG.debug("Error invoking start on MBean {}. This exception is ignored.", namingServiceObjectName, e);
                 }
 
                 Thread t = new Thread("JMX connector") {
@@ -231,8 +231,8 @@ public class ManagementContext implements Service {
                         LOG.debug("Unregistering MBean {}", namingServiceObjectName);
                         getMBeanServer().unregisterMBean(namingServiceObjectName);
                     }
-                } catch (Throwable t) {
-                    LOG.warn("Error stopping and unregistering MBean {} due to {}", namingServiceObjectName, t.getMessage());
+                } catch (Exception e) {
+                    LOG.warn("Error stopping and unregistering MBean {} due to {}", namingServiceObjectName, e.getMessage());
                 }
                 namingServiceObjectName = null;
             }
@@ -465,9 +465,9 @@ public class ManagementContext implements Service {
                     result = findTigerMBeanServer();
                 }
                 if (result == null) {
-                    // lets piggy back on another MBeanServer - we could be in an appserver!
+                    // let's piggyback on another MBeanServer - we could be in an appserver!
                     List<MBeanServer> list = MBeanServerFactory.findMBeanServer(null);
-                    if (list != null && list.size() > 0) {
+                    if (list != null && !list.isEmpty()) {
                         result = list.get(0);
                     }
                 }
@@ -477,7 +477,7 @@ public class ManagementContext implements Service {
             }
         } catch (NoClassDefFoundError e) {
             LOG.error("Could not load MBeanServer", e);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             // probably don't have access to system properties
             LOG.error("Failed to initialize MBeanServer", e);
         }
@@ -674,7 +674,7 @@ public class ManagementContext implements Service {
     private Registry jmxRegistry(final int port) throws RemoteException {
         final var loader = Thread.currentThread().getContextClassLoader();
         final var delegate = LocateRegistry.createRegistry(port);
-        return Registry.class.cast(Proxy.newProxyInstance(
+        return (Registry) Proxy.newProxyInstance(
                 loader == null ? getSystemClassLoader() : loader,
                 new Class<?>[]{Registry.class}, (proxy, method, args) -> {
                     final var name = method.getName();
@@ -689,13 +689,13 @@ public class ManagementContext implements Service {
                         case "rebind":
                             return null;
                         case "list":
-                            return new String[] {lookupName};
+                            return new String[]{lookupName};
                     }
                     try {
                         return method.invoke(delegate, args);
                     } catch (final InvocationTargetException ite) {
                         throw ite.getTargetException();
                     }
-                }));
+                });
     }
 }

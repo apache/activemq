@@ -166,7 +166,7 @@ public abstract class AbstractSubscription implements Subscription {
         ConsumerInfo copy = info.copy();
         copy.setSelector(selector);
         BooleanExpression newSelector = parseSelector(copy);
-        // its valid so lets actually update it now
+        // its valid so let's actually update it now
         info.setSelector(selector);
         this.selectorExpression = newSelector;
     }

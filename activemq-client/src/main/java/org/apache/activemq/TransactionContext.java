@@ -793,7 +793,7 @@ public class TransactionContext implements XAResource {
      */
     public static XAException toXAException(JMSException e) {
         if (e.getCause() instanceof XAException) {
-            XAException original = (XAException)e.getCause();
+            XAException original = (XAException) e.getCause();
             XAException xae = new XAException(original.getMessage());
             xae.errorCode = original.errorCode;
             if (xae.errorCode == XA_OK) {

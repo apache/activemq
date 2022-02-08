@@ -19,7 +19,6 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,7 +55,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TopicRegion extends AbstractRegion {
     private static final Logger LOG = LoggerFactory.getLogger(TopicRegion.class);
-    protected final ConcurrentMap<SubscriptionKey, DurableTopicSubscription> durableSubscriptions = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
+    protected final ConcurrentMap<SubscriptionKey, DurableTopicSubscription> durableSubscriptions = new ConcurrentHashMap<>();
     private final LongSequenceGenerator recoveredDurableSubIdGenerator = new LongSequenceGenerator();
     private final SessionId recoveredDurableSubSessionId = new SessionId(new ConnectionId("OFFLINE"), recoveredDurableSubIdGenerator.getNextSequenceId());
     private boolean keepDurableSubsActive;
@@ -253,15 +252,14 @@ public class TopicRegion extends AbstractRegion {
     @Override
     protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest) throws Exception {
         List<Subscription> rc = super.addSubscriptionsForDestination(context, dest);
-        Set<Subscription> dupChecker = new HashSet<Subscription>(rc);
+        Set<Subscription> dupChecker = new HashSet<>(rc);
 
         TopicMessageStore store = (TopicMessageStore)dest.getMessageStore();
         // Eagerly recover the durable subscriptions
         if (store != null) {
             SubscriptionInfo[] infos = store.getAllSubscriptions();
-            for (int i = 0; i < infos.length; i++) {
+            for (SubscriptionInfo info : infos) {
 
-                SubscriptionInfo info = infos[i];
                 LOG.debug("Restoring durable subscription: {}", info);
                 SubscriptionKey key = new SubscriptionKey(info);
 
@@ -274,7 +272,7 @@ public class TopicRegion extends AbstractRegion {
                     c.setBroker(context.getBroker());
                     c.setClientId(key.getClientId());
                     c.setConnectionId(consumerInfo.getConsumerId().getParentId().getParentId());
-                    sub = (DurableTopicSubscription)createSubscription(c, consumerInfo);
+                    sub = (DurableTopicSubscription) createSubscription(c, consumerInfo);
                     sub.setOfflineTimestamp(System.currentTimeMillis());
                 }
 
@@ -359,7 +357,7 @@ public class TopicRegion extends AbstractRegion {
         }
         try {
             TopicSubscription answer = new TopicSubscription(broker, context, info, usageManager);
-            // lets configure the subscription depending on the destination
+            // let's configure the subscription depending on the destination
             if (destination != null && broker.getDestinationPolicy() != null) {
                 PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
                 if (entry != null) {
@@ -396,12 +394,7 @@ public class TopicRegion extends AbstractRegion {
     @Override
     protected Set<ActiveMQDestination> getInactiveDestinations() {
         Set<ActiveMQDestination> inactiveDestinations = super.getInactiveDestinations();
-        for (Iterator<ActiveMQDestination> iter = inactiveDestinations.iterator(); iter.hasNext();) {
-            ActiveMQDestination dest = iter.next();
-            if (!dest.isTopic()) {
-                iter.remove();
-            }
-        }
+        inactiveDestinations.removeIf(dest -> !dest.isTopic());
         return inactiveDestinations;
     }
 
@@ -415,7 +408,7 @@ public class TopicRegion extends AbstractRegion {
     }
 
     public List<DurableTopicSubscription> lookupSubscriptions(String clientId) {
-        List<DurableTopicSubscription> result = new ArrayList<DurableTopicSubscription>();
+        List<DurableTopicSubscription> result = new ArrayList<>();
 
         for (Map.Entry<SubscriptionKey, DurableTopicSubscription> subscriptionEntry : durableSubscriptions.entrySet()) {
             if (subscriptionEntry.getKey().getClientId().equals(clientId)) {

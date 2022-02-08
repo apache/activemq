@@ -55,14 +55,14 @@ public final class OpenTypeSupport {
         Map<String, Object> getFields(Object o) throws OpenDataException;
     }
 
-    private static final Map<Class, AbstractOpenTypeFactory> OPEN_TYPE_FACTORIES = new HashMap<Class, AbstractOpenTypeFactory>();
+    private static final Map<Class, AbstractOpenTypeFactory> OPEN_TYPE_FACTORIES = new HashMap<>();
 
     public abstract static class AbstractOpenTypeFactory implements OpenTypeFactory {
 
         private CompositeType compositeType;
-        private final List<String> itemNamesList = new ArrayList<String>();
-        private final List<String> itemDescriptionsList = new ArrayList<String>();
-        private final List<OpenType> itemTypesList = new ArrayList<OpenType>();
+        private final List<String> itemNamesList = new ArrayList<>();
+        private final List<String> itemDescriptionsList = new ArrayList<>();
+        private final List<OpenType> itemTypesList = new ArrayList<>();
 
         public synchronized CompositeType getCompositeType() throws OpenDataException {
             if (compositeType == null) {
@@ -76,9 +76,9 @@ public final class OpenTypeSupport {
         }
 
         protected CompositeType createCompositeType() throws OpenDataException {
-            String[] itemNames = itemNamesList.toArray(new String[itemNamesList.size()]);
-            String[] itemDescriptions = itemDescriptionsList.toArray(new String[itemDescriptionsList.size()]);
-            OpenType[] itemTypes = itemTypesList.toArray(new OpenType[itemTypesList.size()]);
+            String[] itemNames = itemNamesList.toArray(new String[0]);
+            String[] itemDescriptions = itemDescriptionsList.toArray(new String[0]);
+            OpenType[] itemTypes = itemTypesList.toArray(new OpenType[0]);
             return new CompositeType(getTypeName(), getDescription(), itemNames, itemDescriptions, itemTypes);
         }
 
@@ -95,7 +95,7 @@ public final class OpenTypeSupport {
         }
 
         public Map<String, Object> getFields(Object o) throws OpenDataException {
-            Map<String, Object> rc = new HashMap<String, Object>();
+            Map<String, Object> rc = new HashMap<>();
             return rc;
         }
     }
@@ -135,7 +135,7 @@ public final class OpenTypeSupport {
             addItem(CompositeDataConstants.ORIGINAL_DESTINATION, "Original Destination Before Senting To DLQ", SimpleType.STRING);
             addItem(CompositeDataConstants.PROPERTIES, "User Properties Text", SimpleType.STRING);
 
-            // now lets expose the type safe properties
+            // now let's expose the type safe properties
             stringPropertyTabularType = createTabularType(String.class, SimpleType.STRING);
             booleanPropertyTabularType = createTabularType(Boolean.class, SimpleType.BOOLEAN);
             bytePropertyTabularType = createTabularType(Byte.class, SimpleType.BYTE);
@@ -165,9 +165,9 @@ public final class OpenTypeSupport {
             rc.put("JMSReplyTo",toString(m.getJMSReplyTo()));
             rc.put("JMSType", m.getJMSType());
             rc.put("JMSDeliveryMode", m.getJMSDeliveryMode() == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON-PERSISTENT");
-            rc.put("JMSExpiration", Long.valueOf(m.getJMSExpiration()));
-            rc.put("JMSPriority", Integer.valueOf(m.getJMSPriority()));
-            rc.put("JMSRedelivered", Boolean.valueOf(m.getJMSRedelivered()));
+            rc.put("JMSExpiration", m.getJMSExpiration());
+            rc.put("JMSPriority", m.getJMSPriority());
+            rc.put("JMSRedelivered", m.getJMSRedelivered());
             rc.put("JMSTimestamp", new Date(m.getJMSTimestamp()));
             rc.put(CompositeDataConstants.JMSXGROUP_ID, m.getGroupID());
             rc.put(CompositeDataConstants.JMSXGROUP_SEQ, m.getGroupSequence());
@@ -258,7 +258,7 @@ public final class OpenTypeSupport {
         }
 
         protected CompositeDataSupport createTabularRowValue(TabularType type, String key, Object value) throws OpenDataException {
-            Map<String,Object> fields = new HashMap<String, Object>();
+            Map<String,Object> fields = new HashMap<>();
             fields.put("key", key);
             fields.put("value", value);
             return new CompositeDataSupport(type.getRowType(), fields);
@@ -277,7 +277,7 @@ public final class OpenTypeSupport {
         protected void init() throws OpenDataException {
             super.init();
             addItem(CompositeDataConstants.BODY_LENGTH, "Body length", SimpleType.LONG);
-            addItem(CompositeDataConstants.BODY_PREVIEW, "Body preview", new ArrayType(1, SimpleType.BYTE));
+            addItem(CompositeDataConstants.BODY_PREVIEW, "Body preview", new ArrayType<Byte>(1, SimpleType.BYTE));
         }
 
         @Override
@@ -288,21 +288,21 @@ public final class OpenTypeSupport {
             long length = 0;
             try {
                 length = m.getBodyLength();
-                rc.put(CompositeDataConstants.BODY_LENGTH, Long.valueOf(length));
+                rc.put(CompositeDataConstants.BODY_LENGTH, length);
             } catch (JMSException e) {
-                rc.put(CompositeDataConstants.BODY_LENGTH, Long.valueOf(0));
+                rc.put(CompositeDataConstants.BODY_LENGTH, 0L);
             }
             try {
-                byte preview[] = new byte[(int)Math.min(length, 255)];
+                byte[] preview = new byte[(int)Math.min(length, 255)];
                 m.readBytes(preview);
                 m.reset();
 
                 // This is whack! Java 1.5 JMX spec does not support primitive
                 // arrays!
                 // In 1.6 it seems it is supported.. but until then...
-                Byte data[] = new Byte[preview.length];
+                Byte[] data = new Byte[preview.length];
                 for (int i = 0; i < data.length; i++) {
-                    data[i] = Byte.valueOf(preview[i]);
+                    data[i] = preview[i];
                 }
 
                 rc.put(CompositeDataConstants.BODY_PREVIEW, data);

@@ -164,7 +164,7 @@ public class AmqpDescribedTypePayloadTest extends AmqpClientTestSupport {
 
         assertEquals(1, queue.getQueueSize());
 
-        // Now lets receive it with AMQP and see that we get back what we expected.
+        // Now let's receive it with AMQP and see that we get back what we expected.
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
         receiver.flow(1);
         AmqpMessage returned = receiver.receive(5, TimeUnit.SECONDS);

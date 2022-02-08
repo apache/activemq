@@ -97,7 +97,7 @@ public class TopicSubscription extends AbstractSubscription {
         if (isDuplicate(node)) {
             return;
         }
-        // Lets use an indirect reference so that we can associate a unique
+        // Let's use an indirect reference so that we can associate a unique
         // locator /w the message.
         node = new IndirectMessageReference(node.getMessage());
         getSubscriptionStatistics().getEnqueues().increment();
@@ -162,13 +162,13 @@ public class TopicSubscription extends AbstractSubscription {
                         if (!matched.isEmpty() && matched.size() > max) {
                             removeExpiredMessages();
                         }
-                        // lets discard old messages as we are a slow consumer
+                        // let's discard old messages as we are a slow consumer
                         while (!matched.isEmpty() && matched.size() > maximumPendingMessages) {
                             int pageInSize = matched.size() - maximumPendingMessages;
                             // only page in a 1000 at a time - else we could blow the memory
                             pageInSize = Math.max(1000, pageInSize);
                             LinkedList<MessageReference> list = null;
-                            MessageReference[] oldMessages=null;
+                            MessageReference[] oldMessages = null;
                             synchronized(matched){
                                 list = matched.pageInList(pageInSize);
                                 oldMessages = messageEvictionStrategy.evictMessages(list);
@@ -184,8 +184,8 @@ public class TopicSubscription extends AbstractSubscription {
                                     discard(oldMessage);
                                 }
                             }
-                            // lets avoid an infinite loop if we are given a bad eviction strategy
-                            // for a bad strategy lets just not evict
+                            // let's avoid an infinite loop if we are given a bad eviction strategy
+                            // for a bad strategy let's just not evict
                             if (messagesToEvict == 0) {
                                 LOG.warn("No messages to evict returned for {} from eviction strategy: {} out of {} candidates",
                                         destination, messageEvictionStrategy, list.size());
@@ -203,10 +203,8 @@ public class TopicSubscription extends AbstractSubscription {
         boolean duplicate = false;
         if (enableAudit && audit != null) {
             duplicate = audit.isDuplicate(node);
-            if (LOG.isDebugEnabled()) {
-                if (duplicate) {
-                    LOG.debug("{}, ignoring duplicate add: {}", this, node.getMessageId());
-                }
+            if (LOG.isDebugEnabled() && duplicate) {
+                LOG.debug("{}, ignoring duplicate add: {}", this, node.getMessageId());
             }
         }
         return duplicate;
@@ -341,13 +339,7 @@ public class TopicSubscription extends AbstractSubscription {
                 }
 
                 if (pull.getTimeout() > 0) {
-                    scheduler.executeAfterDelay(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            pullTimeout(currentDispatchedCount, pull.isAlwaysSignalDone());
-                        }
-                    }, pull.getTimeout());
+                    scheduler.executeAfterDelay(() -> pullTimeout(currentDispatchedCount, pull.isAlwaysSignalDone()), pull.getTimeout());
                 }
             }
         }

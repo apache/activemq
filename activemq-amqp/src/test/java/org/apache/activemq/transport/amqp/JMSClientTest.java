@@ -1220,7 +1220,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         producer.send(session.createTextMessage("Msg1"));
         producer.send(session.createTextMessage("Msg2"));
 
-        // now lets receive it
+        // now let's receive it
         MessageConsumer consumer1 = session.createConsumer(queue);
         MessageConsumer consumer2 = session.createConsumer(queue);
         TextMessage answer = (TextMessage)consumer1.receive(5000);

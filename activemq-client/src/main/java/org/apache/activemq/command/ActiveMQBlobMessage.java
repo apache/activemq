@@ -167,7 +167,7 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     public void onSend() throws JMSException {
         super.onSend();
 
-        // lets ensure we upload the BLOB first out of band before we send the
+        // let's ensure we upload the BLOB first out of band before we send the
         // message
         if (blobUploader != null) {
             try {

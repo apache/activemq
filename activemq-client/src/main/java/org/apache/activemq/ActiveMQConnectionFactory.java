@@ -394,19 +394,15 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         } catch (JMSException e) {
             // Clean up!
             try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (Throwable ignore) {
+                connection.close();
+            } catch (Exception ignore) {
             }
             throw e;
         } catch (Exception e) {
             // Clean up!
             try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (Throwable ignore) {
+                connection.close();
+            } catch (Exception ignore) {
             }
             throw JMSExceptionSupport.create("Could not connect to broker URL: " + brokerURL + ". Reason: " + e, e);
         }

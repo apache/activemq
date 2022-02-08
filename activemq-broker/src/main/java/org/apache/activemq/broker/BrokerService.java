@@ -579,8 +579,8 @@ public class BrokerService implements Service {
     @Override
     public void start() throws Exception {
         if (stopped.get() || !started.compareAndSet(false, true)) {
-            // lets just ignore redundant start() calls
-            // as its way too easy to not be completely sure if start() has been
+            // let's just ignore redundant start() calls
+            // as it's way too easy to not be completely sure if start() has been
             // called or not with the gazillion of different configuration
             // mechanisms
             // throw new IllegalStateException("Already started.");
@@ -613,7 +613,7 @@ public class BrokerService implements Service {
                 }
             }
 
-            // in jvm master slave, lets not publish over existing broker till we get the lock
+            // in jvm master slave, let's not publish over existing broker till we get the lock
             final BrokerRegistry brokerRegistry = BrokerRegistry.getInstance();
             if (brokerRegistry.lookup(getBrokerName()) == null) {
                 brokerRegistry.bind(getBrokerName(), BrokerService.this);

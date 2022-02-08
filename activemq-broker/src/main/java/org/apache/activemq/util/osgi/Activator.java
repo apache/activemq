@@ -207,7 +207,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
             }
 
             if( clazz == null ) {
-                // Since OSGi is such a tricky environment to work in.. lets give folks the
+                // Since OSGi is such a tricky environment to work in.. let's give folks the
                 // most information we can in the error message.
                 String msg = "Service not found: '" + path + "'";
                 if (warnings.length()!= 0) {

@@ -120,7 +120,7 @@ document.getElementsBySelector = function(selector) {
   var tokens = selector.split(' ');
   var currentContext = new Array(document);
   for (var i = 0; i < tokens.length; i++) {
-    let token = tokens[i].replace(/^\s+/,'').replace(/\s+$/,'');;
+    let token = tokens[i].replace(/^\s+/,'').replace(/\s+$/,'');
     if (token.indexOf('#') > -1) {
       // Token is an ID selector
       var bits = token.split('#');

@@ -40,6 +40,7 @@ public class ManagedTempQueueRegion extends TempQueueRegion {
         this.regionBroker = broker;
     }
 
+    @Override
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
         Subscription sub = super.createSubscription(context, info);
         ObjectName name = regionBroker.registerSubscription(context, sub);
@@ -47,17 +48,20 @@ public class ManagedTempQueueRegion extends TempQueueRegion {
         return sub;
     }
 
+    @Override
     protected void destroySubscription(Subscription sub) {
         regionBroker.unregisterSubscription(sub);
         super.destroySubscription(sub);
     }
 
+    @Override
     protected synchronized Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         Destination rc = super.createDestination(context, destination);
         regionBroker.register(destination, rc);
         return rc;
     }
 
+    @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         super.removeDestination(context, destination, timeout);
         regionBroker.unregister(destination);

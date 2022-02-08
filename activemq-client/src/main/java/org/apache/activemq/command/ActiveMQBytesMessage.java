@@ -909,8 +909,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
             return decompressed.toByteArray();
         } catch (Exception e) {
             throw new IOException(e);
-        }
-        finally {
+        } finally {
             inflater.end();
         }
     }

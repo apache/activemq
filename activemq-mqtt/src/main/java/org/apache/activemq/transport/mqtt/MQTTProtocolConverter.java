@@ -722,7 +722,7 @@ public class MQTTProtocolConverter {
     }
 
     void handleException(Throwable exception, MQTTFrame command) {
-        LOG.warn("Exception occurred processing: \n{}: {}", command, exception.toString());
+        LOG.warn("Exception occurred processing: \n{}: {}", command, exception);
         LOG.debug("Exception detail", exception);
 
         if (connected.get()) {

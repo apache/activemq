@@ -35,9 +35,9 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
     static {
         Constructor constructor = null;
         try {
-            constructor = StackTraceElement.class.getConstructor(new Class[] {String.class, String.class,
-                                                                              String.class, int.class});
-        } catch (Throwable e) {
+            constructor = StackTraceElement.class.getConstructor(String.class, String.class,
+                                                                 String.class, int.class);
+        } catch (Exception e) {
         }
         STACK_TRACE_ELEMENT_CONSTRUCTOR = constructor;
     }
@@ -111,13 +111,13 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
     }
 
     protected long toLong(short value) {
-        // lets handle negative values
+        // let's handle negative values
         long answer = value;
         return answer & 0xffffL;
     }
 
     protected long toLong(int value) {
-        // lets handle negative values
+        // let's handle negative values
         long answer = value;
         return answer & 0xffffffffL;
     }
@@ -176,10 +176,10 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
         if (wireFormat.isCacheEnabled()) {
             Short index = wireFormat.getMarshallCacheIndex(o);
             if (bs.readBoolean()) {
-                dataOut.writeShort(index.shortValue());
+                dataOut.writeShort(index);
                 wireFormat.tightMarshalNestedObject2(o, dataOut, bs);
             } else {
-                dataOut.writeShort(index.shortValue());
+                dataOut.writeShort(index);
             }
         } else {
             wireFormat.tightMarshalNestedObject2(o, dataOut, bs);
@@ -194,17 +194,17 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             Throwable o = createThrowable(clazz, message);
             if (wireFormat.isStackTraceEnabled()) {
                 if (STACK_TRACE_ELEMENT_CONSTRUCTOR != null) {
-                    StackTraceElement ss[] = new StackTraceElement[dataIn.readShort()];
+                    StackTraceElement[] ss = new StackTraceElement[dataIn.readShort()];
                     for (int i = 0; i < ss.length; i++) {
                         try {
                             ss[i] = (StackTraceElement)STACK_TRACE_ELEMENT_CONSTRUCTOR
-                                .newInstance(new Object[] {tightUnmarshalString(dataIn, bs),
-                                                           tightUnmarshalString(dataIn, bs),
-                                                           tightUnmarshalString(dataIn, bs),
-                                                           Integer.valueOf(dataIn.readInt())});
+                                .newInstance(tightUnmarshalString(dataIn, bs),
+                                             tightUnmarshalString(dataIn, bs),
+                                             tightUnmarshalString(dataIn, bs),
+                                             dataIn.readInt());
                         } catch (IOException e) {
                             throw e;
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                         }
                     }
                     o.setStackTrace(ss);
@@ -249,8 +249,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             if (wireFormat.isStackTraceEnabled()) {
                 rc += 2;
                 StackTraceElement[] stackTrace = o.getStackTrace();
-                for (int i = 0; i < stackTrace.length; i++) {
-                    StackTraceElement element = stackTrace[i];
+                for (StackTraceElement element : stackTrace) {
                     rc += tightMarshalString1(element.getClassName(), bs);
                     rc += tightMarshalString1(element.getMethodName(), bs);
                     rc += tightMarshalString1(element.getFileName(), bs);
@@ -270,8 +269,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             if (wireFormat.isStackTraceEnabled()) {
                 StackTraceElement[] stackTrace = o.getStackTrace();
                 dataOut.writeShort(stackTrace.length);
-                for (int i = 0; i < stackTrace.length; i++) {
-                    StackTraceElement element = stackTrace[i];
+                for (StackTraceElement element : stackTrace) {
                     tightMarshalString2(element.getClassName(), dataOut, bs);
                     tightMarshalString2(element.getMethodName(), dataOut, bs);
                     tightMarshalString2(element.getFileName(), dataOut, bs);
@@ -287,7 +285,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
         if (bs.readBoolean()) {
             if (bs.readBoolean()) {
                 int size = dataIn.readShort();
-                byte data[] = new byte[size];
+                byte[] data = new byte[size];
                 dataIn.readFully(data);
                 // Yes deprecated, but we know what we are doing.
                 // This allows us to create a String from a ASCII byte array. (no UTF-8 decoding)
@@ -354,8 +352,8 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             int rc = 0;
             bs.writeBoolean(true);
             rc += 2;
-            for (int i = 0; i < objects.length; i++) {
-                rc += tightMarshalNestedObject1(wireFormat, objects[i], bs);
+            for (DataStructure object : objects) {
+                rc += tightMarshalNestedObject1(wireFormat, object, bs);
             }
             return rc;
         } else {
@@ -368,8 +366,8 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
                                             DataOutput dataOut, BooleanStream bs) throws IOException {
         if (bs.readBoolean()) {
             dataOut.writeShort(objects.length);
-            for (int i = 0; i < objects.length; i++) {
-                tightMarshalNestedObject2(wireFormat, objects[i], dataOut, bs);
+            for (DataStructure object : objects) {
+                tightMarshalNestedObject2(wireFormat, object, dataOut, bs);
             }
         }
     }
@@ -385,7 +383,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
 
     protected byte[] tightUnmarshalConstByteArray(DataInput dataIn, BooleanStream bs, int i)
         throws IOException {
-        byte data[] = new byte[i];
+        byte[] data = new byte[i];
         dataIn.readFully(data);
         return data;
     }
@@ -408,7 +406,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
     }
 
     protected byte[] tightUnmarshalByteArray(DataInput dataIn, BooleanStream bs) throws IOException {
-        byte rc[] = null;
+        byte[] rc = null;
         if (bs.readBoolean()) {
             int size = dataIn.readInt();
             rc = new byte[size];
@@ -497,10 +495,10 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             dataOut.writeBoolean(index == null);
             if (index == null) {
                 index = wireFormat.addToMarshallCache(o);
-                dataOut.writeShort(index.shortValue());
+                dataOut.writeShort(index);
                 wireFormat.looseMarshalNestedObject(o, dataOut);
             } else {
-                dataOut.writeShort(index.shortValue());
+                dataOut.writeShort(index);
             }
         } else {
             wireFormat.looseMarshalNestedObject(o, dataOut);
@@ -515,17 +513,17 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             Throwable o = createThrowable(clazz, message);
             if (wireFormat.isStackTraceEnabled()) {
                 if (STACK_TRACE_ELEMENT_CONSTRUCTOR != null) {
-                    StackTraceElement ss[] = new StackTraceElement[dataIn.readShort()];
+                    StackTraceElement[] ss = new StackTraceElement[dataIn.readShort()];
                     for (int i = 0; i < ss.length; i++) {
                         try {
                             ss[i] = (StackTraceElement)STACK_TRACE_ELEMENT_CONSTRUCTOR
-                                .newInstance(new Object[] {looseUnmarshalString(dataIn),
-                                                           looseUnmarshalString(dataIn),
-                                                           looseUnmarshalString(dataIn),
-                                                           Integer.valueOf(dataIn.readInt())});
+                                .newInstance(looseUnmarshalString(dataIn),
+                                             looseUnmarshalString(dataIn),
+                                             looseUnmarshalString(dataIn),
+                                             dataIn.readInt());
                         } catch (IOException e) {
                             throw e;
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                         }
                     }
                     o.setStackTrace(ss);
@@ -556,8 +554,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             if (wireFormat.isStackTraceEnabled()) {
                 StackTraceElement[] stackTrace = o.getStackTrace();
                 dataOut.writeShort(stackTrace.length);
-                for (int i = 0; i < stackTrace.length; i++) {
-                    StackTraceElement element = stackTrace[i];
+                for (StackTraceElement element : stackTrace) {
                     looseMarshalString(element.getClassName(), dataOut);
                     looseMarshalString(element.getMethodName(), dataOut);
                     looseMarshalString(element.getFileName(), dataOut);
@@ -588,8 +585,8 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
         dataOut.writeBoolean(objects != null);
         if (objects != null) {
             dataOut.writeShort(objects.length);
-            for (int i = 0; i < objects.length; i++) {
-                looseMarshalNestedObject(wireFormat, objects[i], dataOut);
+            for (DataStructure object : objects) {
+                looseMarshalNestedObject(wireFormat, object, dataOut);
             }
         }
     }
@@ -600,7 +597,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
     }
 
     protected byte[] looseUnmarshalConstByteArray(DataInput dataIn, int i) throws IOException {
-        byte data[] = new byte[i];
+        byte[] data = new byte[i];
         dataIn.readFully(data);
         return data;
     }
@@ -615,7 +612,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
     }
 
     protected byte[] looseUnmarshalByteArray(DataInput dataIn) throws IOException {
-        byte rc[] = null;
+        byte[] rc = null;
         if (dataIn.readBoolean()) {
             int size = dataIn.readInt();
             rc = new byte[size];

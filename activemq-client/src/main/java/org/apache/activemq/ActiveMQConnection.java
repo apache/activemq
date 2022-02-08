@@ -674,7 +674,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     @Override
     public void close() throws JMSException {
         try {
-            // If we were running, lets stop first.
+            // If we were running, let's stop first.
             if (!closed.get() && !transportFailed.get()) {
                 // do not fail if already closed as according to JMS spec we must not
                 // throw exception if already closed

@@ -19,7 +19,6 @@ package org.apache.activemq.jndi;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -54,18 +53,16 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
     @Override
     public Context getInitialContext(Hashtable environment) throws NamingException {
-        // lets create a factory
-        Map<String, Object> data = new ConcurrentHashMap<String, Object>();
+        // let's create a factory
+        Map<String, Object> data = new ConcurrentHashMap<>();
         String[] names = getConnectionFactoryNames(environment);
-        for (int i = 0; i < names.length; i++) {
+        for (String name : names) {
             ActiveMQConnectionFactory factory = null;
-            String name = names[i];
 
             try {
                 factory = createConnectionFactory(name, environment);
             } catch (Exception e) {
                 throw new NamingException("Invalid broker URL");
-
             }
             /*
              * if( broker==null ) { try { broker = factory.getEmbeddedBroker(); }
@@ -133,9 +130,9 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
             temp.put("xa", String.valueOf(true));
         }
         String prefix = connectionPrefix + name + ".";
-        for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            String key = (String)entry.getKey();
+        for (Object o : environment.entrySet()) {
+            Map.Entry entry = (Map.Entry) o;
+            String key = (String) entry.getKey();
             if (key.startsWith(prefix)) {
                 // Rename the key...
                 temp.remove(key);
@@ -149,7 +146,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     protected String[] getConnectionFactoryNames(Map environment) {
         String factoryNames = (String)environment.get("connectionFactoryNames");
         if (factoryNames != null) {
-            List<String> list = new ArrayList<String>();
+            List<String> list = new ArrayList<>();
             for (StringTokenizer enumeration = new StringTokenizer(factoryNames, ","); enumeration.hasMoreTokens();) {
                 list.add(enumeration.nextToken().trim());
             }
@@ -164,8 +161,8 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     }
 
     protected void createQueues(Map<String, Object> data, Hashtable environment) {
-        for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
+        for (Object o : environment.entrySet()) {
+            Map.Entry entry = (Map.Entry) o;
             String key = entry.getKey().toString();
             if (key.startsWith(queuePrefix)) {
                 String jndiName = key.substring(queuePrefix.length());
@@ -175,8 +172,8 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     }
 
     protected void createTopics(Map<String, Object> data, Hashtable environment) {
-        for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
+        for (Object o : environment.entrySet()) {
+            Map.Entry entry = (Map.Entry) o;
             String key = entry.getKey().toString();
             if (key.startsWith(topicPrefix)) {
                 String jndiName = key.substring(topicPrefix.length());

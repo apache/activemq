@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -79,23 +78,23 @@ public class ManagedRegionBroker extends RegionBroker {
     private static final Logger LOG = LoggerFactory.getLogger(ManagedRegionBroker.class);
     private final ManagementContext managementContext;
     private final ObjectName brokerObjectName;
-    private final Map<ObjectName, DestinationView> topics = new ConcurrentHashMap<ObjectName, DestinationView>();
-    private final Map<ObjectName, DestinationView> queues = new ConcurrentHashMap<ObjectName, DestinationView>();
-    private final Map<ObjectName, DestinationView> temporaryQueues = new ConcurrentHashMap<ObjectName, DestinationView>();
-    private final Map<ObjectName, DestinationView> temporaryTopics = new ConcurrentHashMap<ObjectName, DestinationView>();
-    private final Map<ObjectName, SubscriptionView> queueSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, SubscriptionView> topicSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, SubscriptionView> durableTopicSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, SubscriptionView> inactiveDurableTopicSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, SubscriptionView> temporaryQueueSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, SubscriptionView> temporaryTopicSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, ProducerView> queueProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
-    private final Map<ObjectName, ProducerView> topicProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
-    private final Map<ObjectName, ProducerView> temporaryQueueProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
-    private final Map<ObjectName, ProducerView> temporaryTopicProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
-    private final Map<ObjectName, ProducerView> dynamicDestinationProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
-    private final Map<SubscriptionKey, ObjectName> subscriptionKeys = new ConcurrentHashMap<SubscriptionKey, ObjectName>();
-    private final Map<Subscription, ObjectName> subscriptionMap = new ConcurrentHashMap<Subscription, ObjectName>();
+    private final Map<ObjectName, DestinationView> topics = new ConcurrentHashMap<>();
+    private final Map<ObjectName, DestinationView> queues = new ConcurrentHashMap<>();
+    private final Map<ObjectName, DestinationView> temporaryQueues = new ConcurrentHashMap<>();
+    private final Map<ObjectName, DestinationView> temporaryTopics = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> queueSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> topicSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> durableTopicSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> inactiveDurableTopicSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> temporaryQueueSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> temporaryTopicSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, ProducerView> queueProducers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, ProducerView> topicProducers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, ProducerView> temporaryQueueProducers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, ProducerView> temporaryTopicProducers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, ProducerView> dynamicDestinationProducers = new ConcurrentHashMap<>();
+    private final Map<SubscriptionKey, ObjectName> subscriptionKeys = new ConcurrentHashMap<>();
+    private final Map<Subscription, ObjectName> subscriptionMap = new ConcurrentHashMap<>();
     private final Set<ObjectName> registeredMBeans = new ConcurrentHashMap<>().newKeySet();
     /* This is the first broker in the broker interceptor chain. */
     private Broker contextBroker;
@@ -109,7 +108,7 @@ public class ManagedRegionBroker extends RegionBroker {
         this.managementContext = context;
         this.brokerObjectName = brokerObjectName;
         this.mbeanTimeout = brokerService.getMbeanInvocationTimeout();
-        this.asyncInvokeService = mbeanTimeout > 0 ? executor : null;;
+        this.asyncInvokeService = mbeanTimeout > 0 ? executor : null;
     }
 
     @Override
@@ -122,9 +121,8 @@ public class ManagedRegionBroker extends RegionBroker {
     @Override
     protected void doStop(ServiceStopper stopper) {
         super.doStop(stopper);
-        // lets remove any mbeans not yet removed
-        for (Iterator<ObjectName> iter = registeredMBeans.iterator(); iter.hasNext();) {
-            ObjectName name = iter.next();
+        // let's remove any mbeans not yet removed
+        for (ObjectName name : registeredMBeans) {
             try {
                 managementContext.unregisterMBean(name);
             } catch (InstanceNotFoundException e) {
@@ -484,15 +482,14 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected void buildExistingSubscriptions() throws Exception {
-        Map<SubscriptionKey, SubscriptionInfo> subscriptions = new HashMap<SubscriptionKey, SubscriptionInfo>();
+        Map<SubscriptionKey, SubscriptionInfo> subscriptions = new HashMap<>();
         Set<ActiveMQDestination> destinations = destinationFactory.getDestinations();
         if (destinations != null) {
             for (ActiveMQDestination dest : destinations) {
                 if (dest.isTopic()) {
                     SubscriptionInfo[] infos = destinationFactory.getAllDurableSubscriptions((ActiveMQTopic)dest);
                     if (infos != null) {
-                        for (int i = 0; i < infos.length; i++) {
-                            SubscriptionInfo info = infos[i];
+                        for (SubscriptionInfo info : infos) {
                             SubscriptionKey key = new SubscriptionKey(info);
                             if (!alreadyKnown(key)) {
                                 LOG.debug("Restoring durable subscription MBean {}", info);
@@ -540,7 +537,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     public CompositeData[] browse(SubscriptionView view) throws OpenDataException {
         Message[] messages = getSubscriberMessages(view);
-        CompositeData c[] = new CompositeData[messages.length];
+        CompositeData[] c = new CompositeData[messages.length];
         for (int i = 0; i < c.length; i++) {
             try {
                 c[i] = OpenTypeSupport.convert(messages[i]);
@@ -557,8 +554,8 @@ public class ManagedRegionBroker extends RegionBroker {
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("MessageList", "MessageList", ct, new String[] {"JMSMessageID"});
         TabularDataSupport rc = new TabularDataSupport(tt);
-        for (int i = 0; i < messages.length; i++) {
-            rc.put(new CompositeDataSupport(ct, factory.getFields(messages[i])));
+        for (Message message : messages) {
+            rc.put(new CompositeDataSupport(ct, factory.getFields(message)));
         }
         return rc;
     }
@@ -609,18 +606,18 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     private ObjectName[] onlyNonSuppressed (Set<ObjectName> set){
-        List<ObjectName> nonSuppressed = new ArrayList<ObjectName>();
+        List<ObjectName> nonSuppressed = new ArrayList<>();
         for(ObjectName key : set){
             if (managementContext.isAllowedToRegister(key)){
                 nonSuppressed.add(key);
             }
         }
-        return nonSuppressed.toArray(new ObjectName[nonSuppressed.size()]);
+        return nonSuppressed.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getTopics() {
         Set<ObjectName> set = topics.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getTopicsNonSuppressed() {
@@ -629,7 +626,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getQueues() {
         Set<ObjectName> set = queues.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getQueuesNonSuppressed() {
@@ -638,7 +635,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getTemporaryTopics() {
         Set<ObjectName> set = temporaryTopics.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getTemporaryTopicsNonSuppressed() {
@@ -647,7 +644,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getTemporaryQueues() {
         Set<ObjectName> set = temporaryQueues.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getTemporaryQueuesNonSuppressed() {
@@ -656,7 +653,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getTopicSubscribers() {
         Set<ObjectName> set = topicSubscribers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getTopicSubscribersNonSuppressed() {
@@ -665,7 +662,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getDurableTopicSubscribers() {
         Set<ObjectName> set = durableTopicSubscribers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getDurableTopicSubscribersNonSuppressed() {
@@ -674,7 +671,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getQueueSubscribers() {
         Set<ObjectName> set = queueSubscribers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getQueueSubscribersNonSuppressed() {
@@ -683,7 +680,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getTemporaryTopicSubscribers() {
         Set<ObjectName> set = temporaryTopicSubscribers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getTemporaryTopicSubscribersNonSuppressed() {
@@ -692,7 +689,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getTemporaryQueueSubscribers() {
         Set<ObjectName> set = temporaryQueueSubscribers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getTemporaryQueueSubscribersNonSuppressed() {
@@ -701,7 +698,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getInactiveDurableTopicSubscribers() {
         Set<ObjectName> set = inactiveDurableTopicSubscribers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getInactiveDurableTopicSubscribersNonSuppressed() {
@@ -710,7 +707,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getTopicProducers() {
         Set<ObjectName> set = topicProducers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getTopicProducersNonSuppressed() {
@@ -719,7 +716,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getQueueProducers() {
         Set<ObjectName> set = queueProducers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getQueueProducersNonSuppressed() {
@@ -728,7 +725,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getTemporaryTopicProducers() {
         Set<ObjectName> set = temporaryTopicProducers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getTemporaryTopicProducersNonSuppressed() {
@@ -737,7 +734,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getTemporaryQueueProducers() {
         Set<ObjectName> set = temporaryQueueProducers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getTemporaryQueueProducersNonSuppressed() {
@@ -746,7 +743,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getDynamicDestinationProducers() {
         Set<ObjectName> set = dynamicDestinationProducers.keySet();
-        return set.toArray(new ObjectName[set.size()]);
+        return set.toArray(new ObjectName[0]);
     }
 
     protected ObjectName[] getDynamicDestinationProducersNonSuppressed() {

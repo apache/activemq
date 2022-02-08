@@ -92,7 +92,7 @@ public class FactoryFinder {
         }
 
         public static Properties loadProperties(String uri) throws IOException {
-            // lets try the thread context class loader first
+            // let's try the thread context class loader first
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             if (classLoader == null) {
                 classLoader = StandaloneObjectFactory.class.getClassLoader();
@@ -105,7 +105,7 @@ public class FactoryFinder {
                 }
             }
 
-            // lets load the file
+            // let's load the file
             try (BufferedInputStream reader = new BufferedInputStream(in)) {
                 Properties properties = new Properties();
                 properties.load(reader);

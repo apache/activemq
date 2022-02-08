@@ -203,7 +203,7 @@ public abstract class InboundTransformer {
 
         // If the jms expiration has not yet been set...
         if (header != null && jms.getJMSExpiration() == 0) {
-            // Then lets try to set it based on the message ttl.
+            // Then let's try to set it based on the message ttl.
             long ttl = Message.DEFAULT_TIME_TO_LIVE;
             if (header.getTtl() != null) {
                 ttl = header.getTtl().longValue();

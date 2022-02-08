@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,7 +47,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
      *
      * @throws Exception
      */
-    abstract public void init() throws Exception;
+    public abstract void init() throws Exception;
 
     @Override
     public void setUseLock(boolean useLock) {
@@ -103,11 +102,8 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
             } else {
                 getLocker().start();
                 if (lockKeepAlivePeriod > 0) {
-                    keepAliveTicket = getScheduledThreadPoolExecutor().scheduleAtFixedRate(new Runnable() {
-                        public void run() {
-                            keepLockAlive();
-                        }
-                    }, lockKeepAlivePeriod, lockKeepAlivePeriod, TimeUnit.MILLISECONDS);
+                    keepAliveTicket = getScheduledThreadPoolExecutor().scheduleAtFixedRate(
+                            this::keepLockAlive, lockKeepAlivePeriod, lockKeepAlivePeriod, TimeUnit.MILLISECONDS);
                 }
             }
         }
@@ -133,10 +129,8 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
         boolean stop = false;
         try {
             Locker locker = getLocker();
-            if (locker != null) {
-                if (!locker.keepAlive()) {
-                    stop = true;
-                }
+            if (locker != null && !locker.keepAlive()) {
+                stop = true;
             }
         } catch (SuppressReplyException e) {
             if (stopOnError) {
@@ -155,7 +149,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
     }
 
     protected void stopBroker() {
-        // we can no longer keep the lock so lets fail
+        // we can no longer keep the lock so let's fail
         LOG.error("{}, no longer able to keep the exclusive lock so giving up being a master", brokerService.getBrokerName());
         try {
             if( brokerService.isRestartAllowed() ) {
@@ -169,12 +163,10 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
 
     public ScheduledThreadPoolExecutor getScheduledThreadPoolExecutor() {
         if (clockDaemon == null) {
-            clockDaemon = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
-                public Thread newThread(Runnable runnable) {
-                    Thread thread = new Thread(runnable, "ActiveMQ Lock KeepAlive Timer");
-                    thread.setDaemon(true);
-                    return thread;
-                }
+            clockDaemon = new ScheduledThreadPoolExecutor(5, runnable -> {
+                Thread thread = new Thread(runnable, "ActiveMQ Lock KeepAlive Timer");
+                thread.setDaemon(true);
+                return thread;
             });
         }
         return clockDaemon;

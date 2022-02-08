@@ -149,7 +149,7 @@ public class VMTransport implements Transport, Task {
                 }
 
                 // We are now in sync mode and won't enqueue any more commands to the target
-                // transport so lets clean up its resources.
+                // transport so let's clean up its resources.
                 transport.messageQueue = null;
 
                 // Don't dispatch if either end was disposed already.
@@ -303,7 +303,7 @@ public class VMTransport implements Transport, Task {
                         throw new TransportDisposedIOException("The Transport has been disposed");
                     }
 
-                    messageQueue = result = new LinkedBlockingQueue<Object>(this.asyncQueueDepth);
+                    messageQueue = result = new LinkedBlockingQueue<>(this.asyncQueueDepth);
                 }
             }
         }
@@ -320,7 +320,7 @@ public class VMTransport implements Transport, Task {
                         throw new TransportDisposedIOException("The Transport has been disposed");
                     }
 
-                    String name = "ActiveMQ VMTransport: " + toString();
+                    String name = "ActiveMQ VMTransport: " + this;
                     if (taskRunnerFactory == null) {
                         taskRunnerFactory = new TaskRunnerFactory(name);
                         taskRunnerFactory.init();
