@@ -324,7 +324,7 @@ public class NetworkBridgeConfiguration {
     }
 
     /**
-     * @param userName the userName to set
+     * @param remotePassword the remotePassword to set
      */
     public void setRemotePassword(String remotePassword) {
         this.remotePassword = remotePassword;

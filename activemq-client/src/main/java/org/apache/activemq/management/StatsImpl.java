@@ -29,7 +29,7 @@ import javax.management.j2ee.statistics.Stats;
  */
 public class StatsImpl extends StatisticImpl implements Stats, Resettable {
     //use a Set instead of a Map - to conserve Space
-    private Set<StatisticImpl> set;
+    private final Set<StatisticImpl> set;
 
     public StatsImpl() {
         this(new CopyOnWriteArraySet<StatisticImpl>());
@@ -40,11 +40,10 @@ public class StatsImpl extends StatisticImpl implements Stats, Resettable {
         this.set = set;
     }
 
-    public void reset() {
+    @Override
+    public synchronized void reset() {
         Statistic[] stats = getStatistics();
-        int size = stats.length;
-        for (int i = 0; i < size; i++) {
-            Statistic stat = stats[i];
+        for (Statistic stat : stats) {
             if (stat instanceof Resettable) {
                 Resettable r = (Resettable) stat;
                 r.reset();
@@ -62,7 +61,7 @@ public class StatsImpl extends StatisticImpl implements Stats, Resettable {
     }
 
     public String[] getStatisticNames() {
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList<>();
         for (StatisticImpl stat : this.set) {
             names.add(stat.getName());
         }

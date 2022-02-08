@@ -100,7 +100,7 @@ public class PooledProducer implements MessageProducer {
     /** 
      *
      * @param message the message to send
-     * @param CompletionListener to callback
+     * @param completionListener CompletionListener to callback
      * @throws JMSException if the JMS provider fails to send the message due to
      *                 some internal error.
      * @throws UnsupportedOperationException if an invalid destination is
@@ -137,7 +137,6 @@ public class PooledProducer implements MessageProducer {
     /**
      * Gets the delivery delay associated with this <CODE>MessageProducer</CODE>.
      *
-     * @return this producer's <CODE>DeliveryDely/ <CODE>
      * @throws JMSException if the JMS provider fails to close the producer due to
      *                      some internal error.
      * @since 2.0

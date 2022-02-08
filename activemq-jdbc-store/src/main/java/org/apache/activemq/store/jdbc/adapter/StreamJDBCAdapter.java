@@ -57,7 +57,7 @@ public class StreamJDBCAdapter extends DefaultJDBCAdapter {
 
             return os.toByteArray();
         } catch (IOException e) {
-            throw (SQLException)new SQLException("Error reading binary parameter: " + index).initCause(e);
+            throw new SQLException("Error reading binary parameter: " + index, e);
         }
     }
 

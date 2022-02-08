@@ -130,7 +130,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected boolean useLocalHost = false;
     protected int minmumWireFormatVersion;
     protected SocketFactory socketFactory;
-    protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<CountDownLatch>();
+    protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<>();
     protected volatile int receiveCounter;
 
     protected Map<String, Object> socketOptions;
@@ -208,7 +208,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     @Override
     public void run() {
-        LOG.trace("TCP consumer thread for " + this + " starting");
+        LOG.trace("TCP consumer thread for {} starting", this);
         this.runnerThread=Thread.currentThread();
         try {
             while (!isStopped() && !isStopping()) {
@@ -219,8 +219,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             onException(e);
         } catch (Throwable e){
             stoppedLatch.get().countDown();
-            IOException ioe=new IOException("Unexpected error occurred: " + e);
-            ioe.initCause(e);
+            IOException ioe=new IOException("Unexpected error occurred: " + e, e);
             onException(ioe);
         }finally {
             stoppedLatch.get().countDown();
@@ -445,7 +444,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         if (socketOptions != null) {
             // copy the map as its used values is being removed when calling setProperties
             // and we need to be able to set the options again in case socket is re-initailized
-            Map<String, Object> copy = new HashMap<String, Object>(socketOptions);
+            Map<String, Object> copy = new HashMap<>(socketOptions);
             IntrospectionSupport.setProperties(socket, copy);
             if (!copy.isEmpty()) {
                 throw new IllegalArgumentException("Invalid socket parameters: " + copy);
@@ -461,13 +460,13 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                 LOG.warn("Socket buffer size was set to {}; Skipping this setting as the size must be a positive number.", socketBufferSize);
             }
         } catch (SocketException se) {
-            LOG.warn("Cannot set socket buffer size = " + socketBufferSize);
+            LOG.warn("Cannot set socket buffer size = {}", socketBufferSize);
             LOG.debug("Cannot set socket buffer size. Reason: " + se.getMessage() + ". This exception is ignored.", se);
         }
         sock.setSoTimeout(soTimeout);
 
         if (keepAlive != null) {
-            sock.setKeepAlive(keepAlive.booleanValue());
+            sock.setKeepAlive(keepAlive);
         }
 
         if (soLinger > -1) {
@@ -476,7 +475,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             sock.setSoLinger(false, 0);
         }
         if (tcpNoDelay != null) {
-            sock.setTcpNoDelay(tcpNoDelay.booleanValue());
+            sock.setTcpNoDelay(tcpNoDelay);
         }
         if (!this.trafficClassSet) {
             this.trafficClassSet = setTrafficClass(sock);
@@ -546,7 +545,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Stopping transport " + this);
+            LOG.debug("Stopping transport {}", this);
         }
 
         // Closing the streams flush the sockets before closing.. if the socket
@@ -656,7 +655,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     public void setSocketOptions(Map<String, Object> socketOptions) {
-        this.socketOptions = new HashMap<String, Object>(socketOptions);
+        this.socketOptions = new HashMap<>(socketOptions);
     }
 
     @Override
@@ -731,15 +730,17 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             // other reasons, emit a warning.
             if ((this.trafficClass >> 2) == (resultTrafficClass >> 2)
                     && (this.trafficClass & 3) != (resultTrafficClass & 3)) {
-                LOG.warn("Attempted to set the Traffic Class to "
-                    + this.trafficClass + " but the result Traffic Class was "
-                    + resultTrafficClass + ". Please check that your system "
-                    + "allows you to set the ECN bits (the first two bits).");
+                LOG.warn("Attempted to set the Traffic Class to {}"
+                    + " but the result Traffic Class was {}."
+                    + " Please check that your system "
+                    + "allows you to set the ECN bits (the first two bits).",
+                         this.trafficClass, resultTrafficClass);
             } else {
-                LOG.warn("Attempted to set the Traffic Class to "
-                    + this.trafficClass + " but the result Traffic Class was "
-                    + resultTrafficClass + ". Please check that your system "
-                         + "supports java.net.setTrafficClass.");
+                LOG.warn("Attempted to set the Traffic Class to {}"
+                    + " but the result Traffic Class was {}."
+                    + " Please check that your system "
+                    + "supports java.net.setTrafficClass.",
+                         this.trafficClass, resultTrafficClass);
             }
             return false;
         }

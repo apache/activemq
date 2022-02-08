@@ -17,15 +17,23 @@
 package org.apache.activemq.store.kahadb.disk.page;
 
 import org.apache.activemq.store.kahadb.disk.page.PageFile.PageWrite;
-import org.apache.activemq.store.kahadb.disk.util.*;
-import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayInputStream;
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
+import org.apache.activemq.store.kahadb.disk.util.Marshaller;
+import org.apache.activemq.store.kahadb.disk.util.Sequence;
+import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.TreeMap;
@@ -79,7 +87,7 @@ public class Transaction implements Iterable<Page> {
      * @param <T> The type of exceptions that operation will throw.
      */
     public interface Closure <T extends Throwable> {
-        public void execute(Transaction tx) throws T;
+        void execute(Transaction tx) throws T;
     }
 
     /**
@@ -89,7 +97,7 @@ public class Transaction implements Iterable<Page> {
      * @param <T> The type of exceptions that operation will throw.
      */
     public interface CallableClosure<R, T extends Throwable> {
-        public R execute(Transaction tx) throws T;
+        R execute(Transaction tx) throws T;
     }
 
 
@@ -98,13 +106,13 @@ public class Transaction implements Iterable<Page> {
     // If this transaction is updating stuff.. this is the tx of
     private long writeTransactionId=-1;
     // List of pages that this transaction has modified.
-    private TreeMap<Long, PageWrite> writes=new TreeMap<Long, PageWrite>();
+    private final TreeMap<Long, PageWrite> writes=new TreeMap<>();
     // List of pages allocated in this transaction
     private final SequenceSet allocateList = new SequenceSet();
     // List of pages freed in this transaction
     private final SequenceSet freeList = new SequenceSet();
 
-    private long maxTransactionSize = Long.getLong("maxKahaDBTxSize", 10485760L);
+    private final long maxTransactionSize = Long.getLong("maxKahaDBTxSize", 10485760L);
 
     private long size = 0;
 
@@ -377,7 +385,7 @@ public class Transaction implements Iterable<Page> {
      */
     public <T> Page<T> load(long pageId, Marshaller<T> marshaller) throws IOException {
         pageFile.assertLoaded();
-        Page<T> page = new Page<T>(pageId);
+        Page<T> page = new Page<>(pageId);
         load(page, marshaller);
         return page;
     }
@@ -501,11 +509,13 @@ public class Transaction implements Iterable<Page> {
                 pageCount++;
             }
 
+            @Override
             public int read(byte[] b) throws IOException {
                 return read(b, 0, b.length);
             }
 
-            public int read(byte b[], int off, int len) throws IOException {
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
                 if (!atEOF()) {
                     int rc = 0;
                     while (!atEOF() && rc < len) {
@@ -522,6 +532,7 @@ public class Transaction implements Iterable<Page> {
                 }
             }
 
+            @Override
             public long skip(long len) throws IOException {
                 if (atEOF()) {
                     int rc = 0;
@@ -538,22 +549,26 @@ public class Transaction implements Iterable<Page> {
                 }
             }
 
+            @Override
             public int available() {
                 return chunk.length - chunk.offset;
             }
 
+            @Override
             public boolean markSupported() {
                 return true;
             }
 
-            public void mark(int markpos) {
+            @Override
+            public synchronized void mark(int markpos) {
                 markPage = page;
-                byte data[] = new byte[pageFile.getPageSize()];
+                byte[] data = new byte[pageFile.getPageSize()];
                 System.arraycopy(chunk.getData(), 0, data, 0, pageFile.getPageSize());
                 markChunk = new ByteSequence(data, chunk.getOffset(), chunk.getLength());
             }
 
-            public void reset() {
+            @Override
+            public synchronized void reset() {
                 page = markPage;
                 chunk = markChunk;
             }
@@ -571,7 +586,7 @@ public class Transaction implements Iterable<Page> {
      *         if the PageFile is not loaded
      */
     public Iterator<Page> iterator() {
-        return (Iterator<Page>)iterator(false);
+        return iterator(false);
     }
 
     /**
@@ -586,7 +601,7 @@ public class Transaction implements Iterable<Page> {
 
         pageFile.assertLoaded();
 
-        return new Iterator<Page>() {
+        return new Iterator<>() {
 
             long nextId;
             Page nextPage;
@@ -634,6 +649,7 @@ public class Transaction implements Iterable<Page> {
                 }
             }
 
+            @Override
             @SuppressWarnings("unchecked")
             public void remove() {
                 if (lastPage == null) {
@@ -714,7 +730,7 @@ public class Transaction implements Iterable<Page> {
 
     protected File getTempFile() {
         if (txFile == null) {
-            txFile = new File(getPageFile().getDirectory(), IOHelper.toFileSystemSafeName("tx-" + Long.toString(getWriteTransactionId()) + "-" + Long.toString(System.currentTimeMillis()) + ".tmp"));
+            txFile = new File(getPageFile().getDirectory(), IOHelper.toFileSystemSafeName("tx-" + getWriteTransactionId() + "-" + System.currentTimeMillis() + ".tmp"));
         }
        return txFile;
     }
@@ -752,11 +768,7 @@ public class Transaction implements Iterable<Page> {
     private void freePages(SequenceSet list) throws RuntimeException {
         Sequence seq = list.getHead();
         while( seq!=null ) {
-            seq.each(new Sequence.Closure<RuntimeException>(){
-                public void execute(long value) {
-                    pageFile.freePage(value);
-                }
-            });
+            seq.each(pageFile::freePage);
             seq = seq.getNext();
         }
     }

@@ -44,7 +44,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
      * @param queue
      */
     public StoreQueueCursor(Broker broker,Queue queue) {
-        super((queue != null ? queue.isPrioritizedMessages():false));
+        super(queue != null && queue.isPrioritizedMessages());
         this.broker=broker;
         this.queue = queue;
         this.persistent = new QueueStorePrefetch(queue, broker);
@@ -133,7 +133,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             LOG.error("Failed to get current cursor ", e);
             throw new RuntimeException(e);
        }
-       return currentCursor != null ? currentCursor.hasNext() : false;
+       return currentCursor != null && currentCursor.hasNext();
     }
 
     @Override
@@ -235,7 +235,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
 
     @Override
-    public void setMaxProducersToAudit(int maxProducersToAudit) {
+    public synchronized void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         if (persistent != null) {
             persistent.setMaxProducersToAudit(maxProducersToAudit);
@@ -246,7 +246,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public void setMaxAuditDepth(int maxAuditDepth) {
+    public synchronized void setMaxAuditDepth(int maxAuditDepth) {
         super.setMaxAuditDepth(maxAuditDepth);
         if (persistent != null) {
             persistent.setMaxAuditDepth(maxAuditDepth);
@@ -257,7 +257,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public void setEnableAudit(boolean enableAudit) {
+    public synchronized void setEnableAudit(boolean enableAudit) {
         super.setEnableAudit(enableAudit);
         if (persistent != null) {
             persistent.setEnableAudit(enableAudit);
@@ -268,7 +268,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public void rollback(MessageId id) {
+    public synchronized void rollback(MessageId id) {
         nonPersistent.rollback(id);
         persistent.rollback(id);
     }
@@ -331,7 +331,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public boolean isCacheEnabled() {
+    public synchronized boolean isCacheEnabled() {
         boolean cacheEnabled = isUseCache();
         if (cacheEnabled) {
             if (persistent != null) {

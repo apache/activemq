@@ -55,8 +55,8 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private static final int MAX_BIND_ATTEMPTS = 50;
     private static final long BIND_ATTEMPT_DELAY = 100;
 
+    private final OpenWireFormat wireFormat;
     private CommandChannel commandChannel;
-    private OpenWireFormat wireFormat;
     private ByteBufferPool bufferPool;
     private ReplayStrategy replayStrategy = new ExceptionIfDroppedReplayStrategy();
     private ReplayBuffer replayBuffer;
@@ -79,7 +79,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     public UdpTransport(OpenWireFormat wireFormat, URI remoteLocation) throws UnknownHostException, IOException {
         this(wireFormat);
         this.targetAddress = createAddress(remoteLocation);
-        description = remoteLocation.toString() + "@";
+        description = remoteLocation + "@";
     }
 
     public UdpTransport(OpenWireFormat wireFormat, SocketAddress socketAddress) throws IOException {
@@ -121,7 +121,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      */
     public void oneway(Object command, SocketAddress address) throws IOException {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Sending oneway from: " + this + " to target: " + targetAddress + " command: " + command);
+            LOG.debug("Sending oneway from: {} to target: {} command: {}", this, targetAddress, command);
         }
         checkStarted();
         commandChannel.write((Command)command, address);
@@ -144,7 +144,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      */
     @Override
     public void run() {
-        LOG.trace("Consumer thread starting for: " + toString());
+        LOG.trace("Consumer thread starting for: {}", this);
         while (!isStopped()) {
             try {
                 Command command = commandChannel.read();
@@ -154,7 +154,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 try {
                     stop();
                 } catch (Exception e2) {
-                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: {} while closing: {}. Now Closed", this, e2, e2);
                 }
             } catch (SocketException e) {
                 // DatagramSocket closed
@@ -162,7 +162,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 try {
                     stop();
                 } catch (Exception e2) {
-                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: {} while closing: {}. Now Closed", this, e2, e2);
                 }
             } catch (EOFException e) {
                 // DataInputStream closed
@@ -170,13 +170,13 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 try {
                     stop();
                 } catch (Exception e2) {
-                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: {} while closing: {}. Now Closed", this, e2, e2);
                 }
             } catch (Exception e) {
                 try {
                     stop();
                 } catch (Exception e2) {
-                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: {} while closing: {}. Now Closed", this, e2, e2);
                 }
                 if (e instanceof IOException) {
                     onException((IOException)e);
@@ -382,7 +382,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         channel.configureBlocking(true);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Binding to address: " + localAddress);
+            LOG.debug("Binding to address: {}", localAddress);
         }
 
         //

@@ -79,16 +79,16 @@ public class AdvisoryBroker extends BrokerFilter {
     private static final Logger LOG = LoggerFactory.getLogger(AdvisoryBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
 
-    protected final ConcurrentMap<ConnectionId, ConnectionInfo> connections = new ConcurrentHashMap<ConnectionId, ConnectionInfo>();
+    protected final ConcurrentMap<ConnectionId, ConnectionInfo> connections = new ConcurrentHashMap<>();
 
     private final ReentrantReadWriteLock consumersLock = new ReentrantReadWriteLock();
-    protected final Map<ConsumerId, ConsumerInfo> consumers = new LinkedHashMap<ConsumerId, ConsumerInfo>();
+    protected final Map<ConsumerId, ConsumerInfo> consumers = new LinkedHashMap<>();
 
     /**
      * This is a set to track all of the virtual destinations that have been added to the broker so
      * they can be easily referenced later.
      */
-    protected final Set<VirtualDestination> virtualDestinations = Collections.newSetFromMap(new ConcurrentHashMap<VirtualDestination, Boolean>());
+    protected final Set<VirtualDestination> virtualDestinations = Collections.newSetFromMap(new ConcurrentHashMap<>());
     /**
      * This is a map to track all consumers that exist on the virtual destination so that we can fire
      * an advisory later when they go away to remove the demand.
@@ -100,14 +100,14 @@ public class AdvisoryBroker extends BrokerFilter {
      */
     protected final ConcurrentMap<VirtualConsumerPair, ConsumerInfo> brokerConsumerDests = new ConcurrentHashMap<>();
 
-    protected final ConcurrentMap<ProducerId, ProducerInfo> producers = new ConcurrentHashMap<ProducerId, ProducerInfo>();
-    protected final ConcurrentMap<ActiveMQDestination, DestinationInfo> destinations = new ConcurrentHashMap<ActiveMQDestination, DestinationInfo>();
-    protected final ConcurrentMap<BrokerInfo, ActiveMQMessage> networkBridges = new ConcurrentHashMap<BrokerInfo, ActiveMQMessage>();
+    protected final ConcurrentMap<ProducerId, ProducerInfo> producers = new ConcurrentHashMap<>();
+    protected final ConcurrentMap<ActiveMQDestination, DestinationInfo> destinations = new ConcurrentHashMap<>();
+    protected final ConcurrentMap<BrokerInfo, ActiveMQMessage> networkBridges = new ConcurrentHashMap<>();
     protected final ProducerId advisoryProducerId = new ProducerId();
 
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
 
-    private VirtualDestinationMatcher virtualDestinationMatcher = new DestinationFilterVirtualDestinationMatcher();
+    private final VirtualDestinationMatcher virtualDestinationMatcher = new DestinationFilterVirtualDestinationMatcher();
 
     public AdvisoryBroker(Broker next) {
         super(next);
@@ -577,8 +577,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
                         //loop through existing consumers to see if any of them are consuming on a destination
                         //that matches the new virtual destination
-                        for (Iterator<ConsumerInfo> iter = consumers.values().iterator(); iter.hasNext(); ) {
-                            ConsumerInfo info = iter.next();
+                        for (ConsumerInfo info : consumers.values()) {
                             if (virtualDestinationMatcher.matches(virtualDestination, info.getDestination())) {
                                 fireVirtualDestinationAddAdvisory(context, info, info.getDestination(), virtualDestination);
                             }
@@ -922,7 +921,7 @@ public class AdvisoryBroker extends BrokerFilter {
     public Collection<ConsumerInfo> getAdvisoryConsumers() {
         consumersLock.readLock().lock();
         try {
-            return new ArrayList<ConsumerInfo>(consumers.values());
+            return new ArrayList<>(consumers.values());
         } finally {
             consumersLock.readLock().unlock();
         }

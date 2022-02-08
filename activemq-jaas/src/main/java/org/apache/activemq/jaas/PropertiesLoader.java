@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 public class PropertiesLoader {
     private static final Logger LOG = LoggerFactory.getLogger(PropertiesLoader.class);
-    private static final Map<FileNameKey, ReloadableProperties> staticCache = new ConcurrentHashMap<FileNameKey, ReloadableProperties>();
+    private static final Map<FileNameKey, ReloadableProperties> staticCache = new ConcurrentHashMap<>();
     protected boolean debug;
 
     public void init(Map options) {
@@ -39,7 +39,7 @@ public class PropertiesLoader {
         FileNameKey key = new FileNameKey(nameProperty, fallbackName, options);
         key.setDebug(debug);
 
-        ReloadableProperties result = staticCache.computeIfAbsent(key, k -> new ReloadableProperties(k));
+        ReloadableProperties result = staticCache.computeIfAbsent(key, ReloadableProperties::new);
         return result.obtained();
     }
 
@@ -108,7 +108,7 @@ public class PropertiesLoader {
                 }
             }
             if (debug) {
-                LOG.debug("Using basedir=" + baseDir.getAbsolutePath());
+                LOG.debug("Using basedir={}", baseDir.getAbsolutePath());
             }
             return baseDir;
         }

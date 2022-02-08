@@ -124,8 +124,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         InputStream in = null;
         String version = "<unknown-5.x>";
         if ((in = AmqpConnection.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            try {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
                 version = reader.readLine();
             } catch(Exception e) {
             }
@@ -173,7 +172,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
             this.protonTransport.setMaxFrameSize(maxFrameSize);
             try {
                 this.protonTransport.setOutboundFrameSizeLimit(maxFrameSize);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 // Ignore if older proton-j was injected.
             }
         }
@@ -249,7 +248,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
     @Override
     public long keepAlive() throws IOException {
-        long rescheduleAt = 0l;
+        long rescheduleAt = 0L;
 
         LOG.trace("Performing connection:{} keep-alive processing", amqpTransport.getRemoteAddress());
 
@@ -585,7 +584,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         Object context = link.getContext();
 
         if (context instanceof AmqpLink) {
-            ((AmqpLink) context).close();;
+            ((AmqpLink) context).close();
         } else {
             link.close();
             link.free();
@@ -637,7 +636,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
     public void onActiveMQCommand(Command command) throws Exception {
         if (command.isResponse()) {
             Response response = (Response) command;
-            ResponseHandler rh = resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
+            ResponseHandler rh = resposeHandlers.remove(response.getCorrelationId());
             if (rh != null) {
                 rh.onResponse(this, response);
             } else {
@@ -800,7 +799,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         command.setCommandId(lastCommandId.incrementAndGet());
         if (handler != null) {
             command.setResponseRequired(true);
-            resposeHandlers.put(Integer.valueOf(command.getCommandId()), handler);
+            resposeHandlers.put(command.getCommandId(), handler);
         }
         amqpTransport.sendToActiveMQ(command);
     }

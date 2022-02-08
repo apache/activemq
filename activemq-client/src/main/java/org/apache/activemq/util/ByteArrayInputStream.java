@@ -25,12 +25,12 @@ import java.io.InputStream;
  */
 public class ByteArrayInputStream extends InputStream {
 
-    byte buffer[];
+    byte[] buffer;
     int limit;
     int pos;
     int mark;
 
-    public ByteArrayInputStream(byte data[]) {
+    public ByteArrayInputStream(byte[] data) {
         this(data, 0, data.length);
     }
 
@@ -38,7 +38,7 @@ public class ByteArrayInputStream extends InputStream {
         this(sequence.getData(), sequence.getOffset(), sequence.getLength());
     }
 
-    public ByteArrayInputStream(byte data[], int offset, int size) {
+    public ByteArrayInputStream(byte[] data, int offset, int size) {
         this.buffer = data;
         this.mark = offset;
         this.pos = offset;
@@ -53,11 +53,13 @@ public class ByteArrayInputStream extends InputStream {
         }
     }
 
+    @Override
     public int read(byte[] b) throws IOException {
         return read(b, 0, b.length);
     }
 
-    public int read(byte b[], int off, int len) {
+    @Override
+    public int read(byte[] b, int off, int len) {
         if (pos < limit) {
             len = Math.min(len, limit - pos);
             if (len > 0) {
@@ -70,6 +72,7 @@ public class ByteArrayInputStream extends InputStream {
         }
     }
 
+    @Override
     public long skip(long len) throws IOException {
         if (pos < limit) {
             len = Math.min(len, limit - pos);
@@ -82,19 +85,23 @@ public class ByteArrayInputStream extends InputStream {
         }
     }
 
+    @Override
     public int available() {
         return limit - pos;
     }
 
+    @Override
     public boolean markSupported() {
         return true;
     }
 
-    public void mark(int markpos) {
+    @Override
+    public synchronized void mark(int markpos) {
         mark = pos;
     }
 
-    public void reset() {
+    @Override
+    public synchronized void reset() {
         pos = mark;
     }
 }

@@ -77,7 +77,7 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
     }
 
     @Override
-    protected int secureRead(ByteBuffer plain) throws Exception {
+    protected synchronized int secureRead(ByteBuffer plain) throws Exception {
         if (initBuffer != null) {
             initBuffer.buffer.flip();
             if (initBuffer.buffer.hasRemaining()) {

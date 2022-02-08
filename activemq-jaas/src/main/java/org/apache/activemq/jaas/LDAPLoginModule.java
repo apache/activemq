@@ -65,7 +65,7 @@ public class LDAPLoginModule implements LoginModule {
     private static final String EXPAND_ROLES = "expandRoles";
     private static final String EXPAND_ROLES_MATCHING = "expandRolesMatching";
 
-    private static Logger log = LoggerFactory.getLogger(LDAPLoginModule.class);
+    private static final Logger log = LoggerFactory.getLogger(LDAPLoginModule.class);
 
     protected DirContext context;
 
@@ -73,7 +73,7 @@ public class LDAPLoginModule implements LoginModule {
     private CallbackHandler handler;  
     private LDAPLoginProperty [] config;
     private Principal user;
-    private Set<GroupPrincipal> groups = new HashSet<GroupPrincipal>();
+    private Set<GroupPrincipal> groups = new HashSet<>();
 
     /** the authentication status*/
     private boolean succeeded = false;
@@ -163,9 +163,7 @@ public class LDAPLoginModule implements LoginModule {
 
         Set<Principal> principals = subject.getPrincipals();
         principals.add(user);
-        for (GroupPrincipal gp : groups) {
-            principals.add(gp);
-        }
+        principals.addAll(groups);
 
         commitSucceeded = true;
         return true;
@@ -217,7 +215,7 @@ public class LDAPLoginModule implements LoginModule {
         	return false;
 
         userSearchMatchingFormat = new MessageFormat(getLDAPPropertyValue(USER_SEARCH_MATCHING));
-        userSearchSubtreeBool = Boolean.valueOf(getLDAPPropertyValue(USER_SEARCH_SUBTREE)).booleanValue();
+        userSearchSubtreeBool = Boolean.parseBoolean(getLDAPPropertyValue(USER_SEARCH_SUBTREE));
 
         try {
 
@@ -232,7 +230,7 @@ public class LDAPLoginModule implements LoginModule {
             }
 
             // setup attributes
-            List<String> list = new ArrayList<String>();
+            List<String> list = new ArrayList<>();
             if (isLoginPropertySet(USER_ROLE_NAME)) {
                 list.add(getLDAPPropertyValue(USER_ROLE_NAME));
             }
@@ -243,14 +241,14 @@ public class LDAPLoginModule implements LoginModule {
             if (log.isDebugEnabled()) {
                 log.debug("Get the user DN.");
                 log.debug("Looking for the user in LDAP with ");
-                log.debug("  base DN: " + getLDAPPropertyValue(USER_BASE));
-                log.debug("  filter: " + filter);
+                log.debug("  base DN: {}", getLDAPPropertyValue(USER_BASE));
+                log.debug("  filter: {}", filter);
             }
 
             NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(USER_BASE), filter, constraints);
 
             if (results == null || !results.hasMore()) {
-                log.warn("User " + username + " not found in LDAP.");
+                log.warn("User {} not found in LDAP.", username);
                 throw new FailedLoginException("User " + username + " not found in LDAP.");
             }
 
@@ -294,7 +292,7 @@ public class LDAPLoginModule implements LoginModule {
             }
 
             if (log.isDebugEnabled()) {
-                log.debug("Using DN [" + dn + "] for binding.");
+                log.debug("Using DN [{}] for binding.", dn);
             }
 
             Attributes attrs = result.getAttributes();
@@ -311,10 +309,10 @@ public class LDAPLoginModule implements LoginModule {
                 // if authenticated add more roles
                 roles = getRoles(context, dn, username, roles);
                 if (log.isDebugEnabled()) {
-                    log.debug("Roles " + roles + " for user " + username);
+                    log.debug("Roles {} for user {}", roles, username);
                 }
-                for (int i = 0; i < roles.size(); i++) {
-                    groups.add(new GroupPrincipal(roles.get(i)));
+                for (String role : roles) {
+                    groups.add(new GroupPrincipal(role));
                 }
             } else {
                 throw new FailedLoginException("Password does not match for user: " + username);
@@ -345,11 +343,11 @@ public class LDAPLoginModule implements LoginModule {
         boolean roleSearchSubtreeBool;
         boolean expandRolesBool;
         roleSearchMatchingFormat = new MessageFormat(getLDAPPropertyValue(ROLE_SEARCH_MATCHING));
-        roleSearchSubtreeBool = Boolean.valueOf(getLDAPPropertyValue(ROLE_SEARCH_SUBTREE)).booleanValue();
-        expandRolesBool = Boolean.valueOf(getLDAPPropertyValue(EXPAND_ROLES)).booleanValue();
+        roleSearchSubtreeBool = Boolean.parseBoolean(getLDAPPropertyValue(ROLE_SEARCH_SUBTREE));
+        expandRolesBool = Boolean.parseBoolean(getLDAPPropertyValue(EXPAND_ROLES));
         
         if (list == null) {
-            list = new ArrayList<String>();
+            list = new ArrayList<>();
         }
         if (!isLoginPropertySet(ROLE_NAME)) {
             return list;
@@ -367,11 +365,11 @@ public class LDAPLoginModule implements LoginModule {
         if (log.isDebugEnabled()) {
             log.debug("Get user roles.");
             log.debug("Looking for the user roles in LDAP with ");
-            log.debug("  base DN: " + getLDAPPropertyValue(ROLE_BASE));
-            log.debug("  filter: " + filter);
+            log.debug("  base DN: {}", getLDAPPropertyValue(ROLE_BASE));
+            log.debug("  filter: {}", filter);
         }
-        HashSet<String> haveSeenNames = new HashSet<String>();
-        Queue<String> pendingNameExpansion = new LinkedList<String>();
+        HashSet<String> haveSeenNames = new HashSet<>();
+        Queue<String> pendingNameExpansion = new LinkedList<>();
         NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(ROLE_BASE), filter, constraints);
         while (results.hasMore()) {
             SearchResult result = results.next();
@@ -447,12 +445,12 @@ public class LDAPLoginModule implements LoginModule {
             context.getAttributes("", null);
             isValid = true;
             if (log.isDebugEnabled()) {
-                log.debug("User " + dn + " successfully bound.");
+                log.debug("User {} successfully bound.", dn);
             }
         } catch (AuthenticationException e) {
             isValid = false;
             if (log.isDebugEnabled()) {
-                log.debug("Authentication failed for dn=" + dn);
+                log.debug("Authentication failed for dn={}", dn);
             }
         }
 
@@ -476,7 +474,7 @@ public class LDAPLoginModule implements LoginModule {
             return values;
         }
         if (values == null) {
-            values = new ArrayList<String>();
+            values = new ArrayList<>();
         }
         Attribute attr = attrs.get(attrId);
         if (attr == null) {
@@ -492,7 +490,7 @@ public class LDAPLoginModule implements LoginModule {
 
     protected DirContext open() throws NamingException {
         try {
-            Hashtable<String, String> env = new Hashtable<String, String>();
+            Hashtable<String, String> env = new Hashtable<>();
             env.put(Context.INITIAL_CONTEXT_FACTORY, getLDAPPropertyValue(INITIAL_CONTEXT_FACTORY));
             if (isLoginPropertySet(CONNECTION_USERNAME)) {
                 env.put(Context.SECURITY_PRINCIPAL, getLDAPPropertyValue(CONNECTION_USERNAME));
@@ -518,17 +516,17 @@ public class LDAPLoginModule implements LoginModule {
     }
     
     private String getLDAPPropertyValue (String propertyName){
-    	for (int i=0; i < config.length; i++ )
-    		if (config[i].getPropertyName() == propertyName)
-    			return config[i].getPropertyValue();
+        for (LDAPLoginProperty ldapLoginProperty : config)
+            if (ldapLoginProperty.getPropertyName().equals(propertyName))
+                return ldapLoginProperty.getPropertyValue();
     	return null;
     }
     
     private boolean isLoginPropertySet(String propertyName) {
-    	for (int i=0; i < config.length; i++ ) {
-    		if (config[i].getPropertyName() == propertyName && (config[i].getPropertyValue() != null && !"".equals(config[i].getPropertyValue())))
-    				return true;
-    	}
+        for (LDAPLoginProperty ldapLoginProperty : config) {
+            if (ldapLoginProperty.getPropertyName().equals(propertyName) && (ldapLoginProperty.getPropertyValue() != null && !"".equals(ldapLoginProperty.getPropertyValue())))
+                return true;
+        }
     	return false;
     }
 

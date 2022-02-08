@@ -39,10 +39,13 @@ public class SubscriptionKey {
     }
 
     public boolean equals(Object o) {
+        if (!(o instanceof SubscriptionKey)) {
+            return false;
+        }
         try {
             SubscriptionKey key = (SubscriptionKey)o;
             return key.clientId.equals(clientId) && key.subscriptionName.equals(subscriptionName);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return false;
         }
     }

@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /**
  */
 public class DiscardingDLQBroker extends BrokerFilter {
-    public static Logger log = LoggerFactory.getLogger(DiscardingDLQBroker.class);
+    public static final Logger log = LoggerFactory.getLogger(DiscardingDLQBroker.class);
     private boolean dropTemporaryTopics = true;
     private boolean dropTemporaryQueues = true;
     private boolean dropAll = true;

@@ -28,7 +28,7 @@ public class LinuxCpuSamplerPlugin implements CpuSamplerPlugin, Runnable {
     private String vmstat;
     private String result = "";
     private final Object mutex = new Object();
-    private AtomicBoolean stop = new AtomicBoolean(false);
+    private final AtomicBoolean stop = new AtomicBoolean(false);
 
     public LinuxCpuSamplerPlugin(long intervalInMs) {
         vmstat = "vmstat -n " + (int)(intervalInMs / 1000);

@@ -61,8 +61,8 @@ import org.slf4j.LoggerFactory;
 public class MultiKahaDBTransactionStore implements TransactionStore {
     static final Logger LOG = LoggerFactory.getLogger(MultiKahaDBTransactionStore.class);
     final MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter;
-    final ConcurrentMap<TransactionId, Tx> inflightTransactions = new ConcurrentHashMap<TransactionId, Tx>();
-    final ConcurrentMap<TransactionId, Tx> pendingCommit = new ConcurrentHashMap<TransactionId, Tx>();
+    final ConcurrentMap<TransactionId, Tx> inflightTransactions = new ConcurrentHashMap<>();
+    final ConcurrentMap<TransactionId, Tx> pendingCommit = new ConcurrentHashMap<>();
     private Journal journal;
     private int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
     private int journalWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
@@ -70,7 +70,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     private final AtomicBoolean recovered = new AtomicBoolean(false);
     private long journalCleanupInterval = Journal.DEFAULT_CLEANUP_INTERVAL;
     private boolean checkForCorruption = true;
-    private AtomicBoolean corruptJournalDetected = new AtomicBoolean(false);
+    private final AtomicBoolean corruptJournalDetected = new AtomicBoolean(false);
 
     public MultiKahaDBTransactionStore(MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter) {
         this.multiKahaDBPersistenceAdapter = multiKahaDBPersistenceAdapter;
@@ -211,7 +211,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     private static final XATransactionId NULL_XA_TRANSACTION_ID = new XATransactionId();
     public class Tx {
-        private final ConcurrentHashMap<TransactionStore, TransactionId> stores = new ConcurrentHashMap<TransactionStore, TransactionId>();
+        private final ConcurrentHashMap<TransactionStore, TransactionId> stores = new ConcurrentHashMap<>();
         private int prepareLocationId = 0;
 
         public void trackStore(TransactionStore store, XATransactionId xid) {
@@ -346,7 +346,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         if (started.compareAndSet(false, true)) {
             journal = new Journal() {
                 @Override
-                public void cleanup() {
+                public synchronized void cleanup() {
                     super.cleanup();
                     txStoreCleanup();
                 }
@@ -373,7 +373,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         if (!recovered.get() || corruptJournalDetected.get()) {
             return;
         }
-        Set<Integer> knownDataFileIds = new TreeSet<Integer>(journal.getFileMap().keySet());
+        Set<Integer> knownDataFileIds = new TreeSet<>(journal.getFileMap().keySet());
         for (Tx tx : inflightTransactions.values()) {
             knownDataFileIds.remove(tx.getPreparedLocationId());
         }
@@ -383,7 +383,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         try {
             journal.removeDataFiles(knownDataFileIds);
         } catch (Exception e) {
-            LOG.error(this + ", Failed to remove tx journal datafiles " + knownDataFileIds);
+            LOG.error("{}, Failed to remove tx journal datafiles {}", this, knownDataFileIds);
         }
     }
 
@@ -486,7 +486,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
                         logSomeContext(txid);
                     } else {
                         try {
-                            if (pendingCommit.keySet().contains(txid)) {
+                            if (pendingCommit.containsKey(txid)) {
                                 // we recorded the commit outcome, finish the job
                                 LOG.info("delivering pending commit outcome for tid: " + txid);
                                 broker.commitTransaction(null, txid, false);

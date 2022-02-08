@@ -245,7 +245,7 @@ org.activemq.Amq = function() {
 				// we need to ensure that messages which set headers are sent by themselves.
 				// if 2 'listen' messages were sent together, and a 'selector' header were added to one of them,
 				// AMQ would add the selector to both 'listen' commands.
-				for(i=0;i<messageQueue.length;i++) {
+				for(let i=0;i<messageQueue.length;i++) {
 					// a message with headers should always be sent by itself.	if other messages have been added, send this one later.
 					if ( messageQueue[ i ].headers && messagesToSend.length == 0 ) {
 						messagesToSend[ messagesToSend.length ] = messageQueue[ i ].message;

@@ -30,18 +30,16 @@ import javax.jms.TopicPublisher;
 /**
  * An implementation of {@link MessageProducer} which uses the ActiveMQ JCA ResourceAdapter's
  * current thread's JMS {@link javax.jms.Session} to send messages.
- *
- * 
  */
 public class InboundMessageProducerProxy implements MessageProducer, QueueSender, TopicPublisher {
     
-    private MessageProducer messageProducer;
-    private Destination destination;
-    private int deliveryMode;
-    private boolean disableMessageID;
-    private boolean disableMessageTimestamp;
-    private int priority;
-    private long timeToLive;
+    private final MessageProducer messageProducer;
+    private final Destination destination;
+    private final int deliveryMode;
+    private final boolean disableMessageID;
+    private final boolean disableMessageTimestamp;
+    private final int priority;
+    private final long timeToLive;
 
     public InboundMessageProducerProxy(MessageProducer messageProducer, Destination destination) throws JMSException {
         this.messageProducer = messageProducer;
@@ -165,7 +163,7 @@ public class InboundMessageProducerProxy implements MessageProducer, QueueSender
     /**
      *
      * @param message the message to send
-     * @param CompletionListener to callback
+     * @param completionListener CompletionListener to callback
      * @throws JMSException if the JMS provider fails to send the message due to
      *                 some internal error.
      * @throws UnsupportedOperationException if an invalid destination is
@@ -199,7 +197,6 @@ public class InboundMessageProducerProxy implements MessageProducer, QueueSender
     /**
      * Gets the delivery delay associated with this <CODE>MessageProducer</CODE>.
      *
-     * @return this producer's <CODE>DeliveryDely/ <CODE>
      * @throws JMSException if the JMS provider fails to close the producer due to
      *                      some internal error.
      * @since 2.0

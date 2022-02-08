@@ -53,9 +53,7 @@ public class ReportGenerator {
             reportDir.mkdirs();
         }
 
-        if (reportDir != null) {
-            reportFile = new File(this.getReportDirectory() + File.separator + this.getReportName() + ".xml");
-        }
+        reportFile = new File(this.getReportDirectory() + File.separator + this.getReportName() + ".xml");
 
         try {
             this.writer = new PrintWriter(new FileOutputStream(reportFile));
@@ -69,7 +67,7 @@ public class ReportGenerator {
         writeWithIndent(0, "</test-report>");
         this.getWriter().flush();
         this.getWriter().close();
-        LOG.info(" TEST REPORT OUTPUT : " + reportFile.getAbsolutePath());
+        LOG.info(" TEST REPORT OUTPUT : {}", reportFile.getAbsolutePath());
 
     }
 
@@ -116,12 +114,10 @@ public class ReportGenerator {
     protected void writeWithIndent(int indent, String result) {
         StringBuffer buffer = new StringBuffer();
 
-        for (int i = 0; i < indent; ++i) {
-            buffer.append(" ");
-        }
+        buffer.append(" ".repeat(Math.max(0, indent)));
 
         buffer.append(result);
-        writer.println(buffer.toString());
+        writer.println(buffer);
     }
 
     public PrintWriter getWriter() {

@@ -60,7 +60,7 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
         return DATA_STRUCTURE_TYPE;
     }
 
-    final int XID_PREFIX_SIZE = 16;
+    static final int XID_PREFIX_SIZE = 16;
     //+|-,(long)lastAck,(byte)priority,(int)formatid,(short)globalLength....
     private void initFromEncodedBytes() throws IOException {
         DataByteArrayInputStream inputStream = new DataByteArrayInputStream(encodedXidBytes);

@@ -38,7 +38,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
 
     private static final Logger logger = LoggerFactory.getLogger(CallerBufferingDataFileAppender.class);
 
-    final DataByteArrayOutputStream cachedBuffers[] = new DataByteArrayOutputStream[] {
+    final DataByteArrayOutputStream[] cachedBuffers = new DataByteArrayOutputStream[] {
             new DataByteArrayOutputStream(maxWriteBatchSize),
             new DataByteArrayOutputStream(maxWriteBatchSize)
     };
@@ -149,7 +149,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                         stats[statIdx++] = sequence.getLength();
                     } else {
                         long all = 0;
-                        for (;statIdx > 0;) {
+                        while (statIdx > 0) {
                             all+= stats[--statIdx];
                         }
                         System.err.println("Ave writeSize: " + all/maxStat);

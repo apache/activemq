@@ -116,7 +116,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected boolean startLogging = true;
     protected int jmxPort = TransportLoggerSupport.defaultJmxPort;
     protected final ServerSocketFactory serverSocketFactory;
-    protected final BlockingQueue<Socket> socketQueue = new LinkedBlockingQueue<Socket>();
+    protected final BlockingQueue<Socket> socketQueue = new LinkedBlockingQueue<>();
     protected Thread socketHandlerThread;
 
     /**
@@ -331,6 +331,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             final ServerSocket serverSocket = this.serverSocket;
             if (serverSocket == null) {
                 onAcceptError(new IOException("Server started without a valid ServerSocket"));
+                return;
             }
 
             final ServerSocketChannel channel = serverSocket.getChannel();

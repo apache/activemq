@@ -27,8 +27,8 @@ import org.apache.activemq.util.IndentPrinter;
  * 
  */
 public class JMSConnectionStatsImpl extends StatsImpl {
-    private List sessions;
-    private boolean transactional;
+    private final List sessions;
+    private final boolean transactional;
 
     public JMSConnectionStatsImpl(List sessions, boolean transactional) {
         this.sessions = sessions;
@@ -49,10 +49,8 @@ public class JMSConnectionStatsImpl extends StatsImpl {
 
     public void reset() {
         super.reset();
-        JMSSessionStatsImpl[] stats = getSessions();
-        int size = stats.length;
-        for (int i = 0; i < size; i++) {
-            stats[i].reset();
+        for (JMSSessionStatsImpl stat : getSessions()) {
+            stat.reset();
         }
     }
 
@@ -61,10 +59,8 @@ public class JMSConnectionStatsImpl extends StatsImpl {
      */
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
-        JMSSessionStatsImpl[] stats = getSessions();
-        int size = stats.length;
-        for (int i = 0; i < size; i++) {
-            stats[i].setEnabled(enabled);
+        for (JMSSessionStatsImpl stat : getSessions()) {
+            stat.setEnabled(enabled);
         }
 
     }
@@ -73,14 +69,14 @@ public class JMSConnectionStatsImpl extends StatsImpl {
         return transactional;
     }
 
-    public String toString() {
-        StringBuffer buffer = new StringBuffer("connection{ ");
+    public synchronized String toString() {
+        StringBuilder buffer = new StringBuilder("connection{ ");
         JMSSessionStatsImpl[] array = getSessions();
         for (int i = 0; i < array.length; i++) {
             if (i > 0) {
                 buffer.append(", ");
             }
-            buffer.append(Integer.toString(i));
+            buffer.append(i);
             buffer.append(" = ");
             buffer.append(array[i]);
         }
@@ -93,12 +89,11 @@ public class JMSConnectionStatsImpl extends StatsImpl {
         out.println("connection {");
         out.incrementIndent();
         JMSSessionStatsImpl[] array = getSessions();
-        for (int i = 0; i < array.length; i++) {
-            JMSSessionStatsImpl sessionStat = (JMSSessionStatsImpl)array[i];
+        for (JMSSessionStatsImpl jmsSessionStats : array) {
             out.printIndent();
             out.println("session {");
             out.incrementIndent();
-            sessionStat.dump(out);
+            jmsSessionStats.dump(out);
             out.decrementIndent();
             out.printIndent();
             out.println("}");

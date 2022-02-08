@@ -48,7 +48,7 @@ public final class OpenWireFormat implements WireFormat {
     private static final int MARSHAL_CACHE_SIZE = Short.MAX_VALUE / 2;
     private static final int MARSHAL_CACHE_FREE_SPACE = 100;
 
-    private DataStreamMarshaller dataMarshallers[];
+    private DataStreamMarshaller[] dataMarshallers;
     private int version;
     private boolean stackTraceEnabled;
     private boolean tcpNoDelayEnabled;
@@ -61,9 +61,9 @@ public final class OpenWireFormat implements WireFormat {
     // The following fields are used for value caching
     private short nextMarshallCacheIndex;
     private short nextMarshallCacheEvictionIndex;
-    private Map<DataStructure, Short> marshallCacheMap = new HashMap<DataStructure, Short>();
-    private DataStructure marshallCache[] = null;
-    private DataStructure unmarshallCache[] = null;
+    private Map<DataStructure, Short> marshallCacheMap = new HashMap<>();
+    private DataStructure[] marshallCache = null;
+    private DataStructure[] unmarshallCache = null;
     private DataByteArrayOutputStream bytesOut = new DataByteArrayOutputStream();
     private DataByteArrayInputStream bytesIn = new DataByteArrayInputStream();
     private WireFormatInfo preferedWireFormatInfo;
@@ -99,7 +99,7 @@ public final class OpenWireFormat implements WireFormat {
 
     @Override
     public boolean equals(Object object) {
-        if (object == null) {
+        if (!(object instanceof OpenWireFormat)) {
             return false;
         }
         OpenWireFormat o = (OpenWireFormat)object;
@@ -349,9 +349,9 @@ public final class OpenWireFormat implements WireFormat {
                 .initCause(e);
         }
         try {
-            Method method = mfClass.getMethod("createMarshallerMap", new Class[] {OpenWireFormat.class});
-            dataMarshallers = (DataStreamMarshaller[])method.invoke(null, new Object[] {this});
-        } catch (Throwable e) {
+            Method method = mfClass.getMethod("createMarshallerMap", OpenWireFormat.class);
+            dataMarshallers = (DataStreamMarshaller[])method.invoke(null, this);
+        } catch (Exception e) {
             throw (IllegalArgumentException)new IllegalArgumentException(
                                                                          "Invalid version: "
                                                                              + version
@@ -532,13 +532,13 @@ public final class OpenWireFormat implements WireFormat {
         // We can only cache that item if there is space left.
         if (marshallCacheMap.size() < marshallCache.length) {
             marshallCache[i] = o;
-            Short index = Short.valueOf(i);
+            Short index = i;
             marshallCacheMap.put(o, index);
             return index;
         } else {
             // Use -1 to indicate that the value was not cached due to cache
             // being full.
-            return Short.valueOf((short)-1);
+            return (short) -1;
         }
     }
 
@@ -674,7 +674,7 @@ public final class OpenWireFormat implements WireFormat {
             unmarshallCache = new DataStructure[size];
             nextMarshallCacheIndex = 0;
             nextMarshallCacheEvictionIndex = 0;
-            marshallCacheMap = new HashMap<DataStructure, Short>();
+            marshallCacheMap = new HashMap<>();
         } else {
             marshallCache = null;
             unmarshallCache = null;
@@ -685,14 +685,14 @@ public final class OpenWireFormat implements WireFormat {
 
     }
 
-    protected int min(int version1, int version2) {
+    private int min(int version1, int version2) {
         if (version1 < version2 && version1 > 0 || version2 <= 0) {
             return version1;
         }
         return version2;
     }
 
-    protected long min(long version1, long version2) {
+    private long min(long version1, long version2) {
         if (version1 < version2 && version1 > 0 || version2 <= 0) {
             return version1;
         }

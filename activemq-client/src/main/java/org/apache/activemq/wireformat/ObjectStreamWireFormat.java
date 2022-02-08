@@ -64,7 +64,7 @@ public class ObjectStreamWireFormat implements WireFormat {
             in.close();
             return command;
         } catch (ClassNotFoundException e) {
-            throw (IOException)new IOException("unmarshal failed: " + e).initCause(e);
+            throw new IOException("unmarshal failed: " + e, e);
         }
     }
 

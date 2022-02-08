@@ -27,9 +27,9 @@ public class StatisticImpl implements Statistic, Resettable {
 
     protected boolean enabled;
 
-    private String name;
-    private String unit;
-    private String description;
+    private final String name;
+    private final String unit;
+    private final String description;
     private long startTime;
     private long lastSampleTime;
     private boolean doReset = true;

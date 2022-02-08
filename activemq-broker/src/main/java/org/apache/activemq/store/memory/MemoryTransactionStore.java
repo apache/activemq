@@ -48,17 +48,17 @@ import org.apache.activemq.store.TransactionStore;
  */
 public class MemoryTransactionStore implements TransactionStore {
 
-    protected ConcurrentMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
-    protected Map<TransactionId, Tx> preparedTransactions = Collections.synchronizedMap(new LinkedHashMap<TransactionId, Tx>());
+    protected ConcurrentMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<>();
+    protected Map<TransactionId, Tx> preparedTransactions = Collections.synchronizedMap(new LinkedHashMap<>());
     protected final PersistenceAdapter persistenceAdapter;
 
     private boolean doingRecover;
 
     public class Tx {
 
-        public List<AddMessageCommand> messages = Collections.synchronizedList(new ArrayList<AddMessageCommand>());
+        public List<AddMessageCommand> messages = Collections.synchronizedList(new ArrayList<>());
 
-        public final List<RemoveMessageCommand> acks = Collections.synchronizedList(new ArrayList<RemoveMessageCommand>());
+        public final List<RemoveMessageCommand> acks = Collections.synchronizedList(new ArrayList<>());
 
         public void add(AddMessageCommand msg) {
             messages.add(msg);
@@ -69,20 +69,18 @@ public class MemoryTransactionStore implements TransactionStore {
         }
 
         public Message[] getMessages() {
-            Message rc[] = new Message[messages.size()];
+            Message[] rc = new Message[messages.size()];
             int count = 0;
-            for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
-                AddMessageCommand cmd = iter.next();
+            for (AddMessageCommand cmd : messages) {
                 rc[count++] = cmd.getMessage();
             }
             return rc;
         }
 
         public MessageAck[] getAcks() {
-            MessageAck rc[] = new MessageAck[acks.size()];
+            MessageAck[] rc = new MessageAck[acks.size()];
             int count = 0;
-            for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext();) {
-                RemoveMessageCommand cmd = iter.next();
+            for (RemoveMessageCommand cmd : acks) {
                 rc[count++] = cmd.getMessageAck();
             }
             return rc;
@@ -97,13 +95,11 @@ public class MemoryTransactionStore implements TransactionStore {
             try {
 
                 // Do all the message adds.
-                for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
-                    AddMessageCommand cmd = iter.next();
+                for (AddMessageCommand cmd : messages) {
                     cmd.run(ctx);
                 }
                 // And removes..
-                for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext();) {
-                    RemoveMessageCommand cmd = iter.next();
+                for (RemoveMessageCommand cmd : acks) {
                     cmd.run(ctx);
                 }
 

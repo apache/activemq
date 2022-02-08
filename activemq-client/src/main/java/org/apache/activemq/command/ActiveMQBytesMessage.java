@@ -778,21 +778,21 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         }
         initializeWriting();
         if (value instanceof Boolean) {
-            writeBoolean(((Boolean)value).booleanValue());
+            writeBoolean((Boolean) value);
         } else if (value instanceof Character) {
-            writeChar(((Character)value).charValue());
+            writeChar((Character) value);
         } else if (value instanceof Byte) {
-            writeByte(((Byte)value).byteValue());
+            writeByte((Byte) value);
         } else if (value instanceof Short) {
-            writeShort(((Short)value).shortValue());
+            writeShort((Short) value);
         } else if (value instanceof Integer) {
-            writeInt(((Integer)value).intValue());
+            writeInt((Integer) value);
         } else if (value instanceof Long) {
-            writeLong(((Long)value).longValue());
+            writeLong((Long) value);
         } else if (value instanceof Float) {
-            writeFloat(((Float)value).floatValue());
+            writeFloat((Float) value);
         } else if (value instanceof Double) {
-            writeDouble(((Double)value).doubleValue());
+            writeDouble((Double) value);
         } else if (value instanceof String) {
             writeUTF(value.toString());
         } else if (value instanceof byte[]) {
@@ -898,8 +898,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     protected byte[] decompress(ByteSequence dataSequence) throws IOException {
         Inflater inflater = new Inflater();
-        ByteArrayOutputStream decompressed = new ByteArrayOutputStream();
-        try {
+        try (ByteArrayOutputStream decompressed = new ByteArrayOutputStream()) {
             length = ByteSequenceData.readIntBig(dataSequence);
             dataSequence.offset = 0;
             byte[] data = Arrays.copyOfRange(dataSequence.getData(), 4, dataSequence.getLength());
@@ -910,9 +909,9 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
             return decompressed.toByteArray();
         } catch (Exception e) {
             throw new IOException(e);
-        } finally {
+        }
+        finally {
             inflater.end();
-            decompressed.close();
         }
     }
 
@@ -934,10 +933,9 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         ByteSequence bytes = getContent();
         if (bytes != null) {
             int length = bytes.getLength();
-            ByteArrayOutputStream compressed = new ByteArrayOutputStream();
-            compressed.write(new byte[4]);
             Deflater deflater = new Deflater();
-            try {
+            try (ByteArrayOutputStream compressed = new ByteArrayOutputStream()) {
+                compressed.write(new byte[4]);
                 deflater.setInput(bytes.data);
                 deflater.finish();
                 byte[] buffer = new byte[1024];
@@ -950,9 +948,9 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
                 ByteSequenceData.writeIntBig(bytes, length);
                 bytes.offset = 0;
                 setContent(bytes);
-            } finally {
+            }
+            finally {
                 deflater.end();
-                compressed.close();
             }
         }
     }

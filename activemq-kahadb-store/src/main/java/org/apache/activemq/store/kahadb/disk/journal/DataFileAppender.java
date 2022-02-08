@@ -64,11 +64,11 @@ class DataFileAppender implements FileAppender {
 
         public final DataFile dataFile;
 
-        public final LinkedNodeList<Journal.WriteCommand> writes = new LinkedNodeList<Journal.WriteCommand>();
+        public final LinkedNodeList<Journal.WriteCommand> writes = new LinkedNodeList<>();
         public final CountDownLatch latch = new CountDownLatch(1);
         protected final int offset;
         public int size = Journal.BATCH_CONTROL_RECORD_SIZE;
-        public AtomicReference<IOException> exception = new AtomicReference<IOException>();
+        public AtomicReference<IOException> exception = new AtomicReference<>();
 
         public WriteBatch(DataFile dataFile,int offset) {
             this.dataFile = dataFile;
@@ -166,12 +166,7 @@ class DataFileAppender implements FileAppender {
 
             if (!running) {
                 running = true;
-                thread = new Thread() {
-                    @Override
-                    public void run() {
-                        processQueue();
-                    }
-                };
+                thread = new Thread(this::processQueue);
                 thread.setPriority(Thread.MAX_PRIORITY);
                 thread.setDaemon(true);
                 thread.setName("ActiveMQ Data File Writer");
@@ -196,8 +191,8 @@ class DataFileAppender implements FileAppender {
                                 final long start = System.currentTimeMillis();
                                 enqueueMutex.wait();
                                 if (maxStat > 0) {
-                                    logger.info("Waiting for write to finish with full batch... millis: " +
-                                                (System.currentTimeMillis() - start));
+                                    logger.info("Waiting for write to finish with full batch... millis: {}",
+                                                System.currentTimeMillis() - start);
                                }
                             }
                         } catch (InterruptedException e) {
@@ -255,7 +250,7 @@ class DataFileAppender implements FileAppender {
         DataFile dataFile = null;
         RecoverableRandomAccessFile file = null;
         WriteBatch wb = null;
-        try (DataByteArrayOutputStream buff = new DataByteArrayOutputStream(maxWriteBatchSize);) {
+        try (DataByteArrayOutputStream buff = new DataByteArrayOutputStream(maxWriteBatchSize)) {
 
             while (true) {
 
@@ -326,10 +321,10 @@ class DataFileAppender implements FileAppender {
                         stats[statIdx++] = sequence.getLength();
                     } else {
                         long all = 0;
-                        for (;statIdx > 0;) {
+                        while (statIdx > 0) {
                             all+= stats[--statIdx];
                         }
-                        logger.info("Ave writeSize: " + all/maxStat);
+                        logger.info("Ave writeSize: {}", all/maxStat);
                     }
                 }
                 file.write(sequence.getData(), sequence.getOffset(), sequence.getLength());
@@ -348,7 +343,7 @@ class DataFileAppender implements FileAppender {
 
                 signalDone(wb);
             }
-        } catch (Throwable error) {
+        } catch (Exception error) {
             logger.warn("Journal failed while writing at: " + wb.dataFile.getDataFileId() + ":" + wb.offset, error);
             synchronized (enqueueMutex) {
                 shutdown = true;

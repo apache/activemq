@@ -87,7 +87,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             long now = System.currentTimeMillis();
 
             if ((now - startTime) >= connectAttemptTimeout && connectCheckerTask != null && !ASYNC_TASKS.isShutdown()) {
-                LOG.debug("No connection attempt made in time for {}! Throwing InactivityIOException.", AbstractInactivityMonitor.this.toString());
+                LOG.debug("No connection attempt made in time for {}! Throwing InactivityIOException.", AbstractInactivityMonitor.this);
                 try {
                     ASYNC_TASKS.execute(new Runnable() {
                         @Override
@@ -162,7 +162,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         }
     };
 
-    public AbstractInactivityMonitor(Transport next, WireFormat wireFormat) {
+    protected AbstractInactivityMonitor(Transport next, WireFormat wireFormat) {
         super(next);
         this.wireFormat = wireFormat;
     }
@@ -395,7 +395,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         return this.monitorStarted.get();
     }
 
-    abstract protected boolean configuredOk() throws IOException;
+    protected abstract boolean configuredOk() throws IOException;
 
     public synchronized void startConnectCheckTask() {
         startConnectCheckTask(getConnectAttemptTimeout());
@@ -550,7 +550,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     private BlockingQueue<Runnable> newWorkQueue() {
         final int workQueueCapacity = getDefaultWorkQueueCapacity();
-        return workQueueCapacity > 0 ? new LinkedBlockingQueue<Runnable>(workQueueCapacity) : new SynchronousQueue<Runnable>();
+        return workQueueCapacity > 0 ? new LinkedBlockingQueue<>(workQueueCapacity) : new SynchronousQueue<>();
     }
 
     private RejectedExecutionHandler newRejectionHandler() {

@@ -43,8 +43,8 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private static final Logger LOG = LoggerFactory.getLogger(StoreDurableSubscriberCursor.class);
     private final String clientId;
     private final String subscriberName;
-    private final Map<Destination, TopicStorePrefetch> topics = new HashMap<Destination, TopicStorePrefetch>();
-    private final List<PendingMessageCursor> storePrefetches = new CopyOnWriteArrayList<PendingMessageCursor>();
+    private final Map<Destination, TopicStorePrefetch> topics = new HashMap<>();
+    private final List<PendingMessageCursor> storePrefetches = new CopyOnWriteArrayList<>();
     private final PendingMessageCursor nonPersistent;
     private PendingMessageCursor currentCursor;
     private final DurableTopicSubscription subscription;
@@ -145,7 +145,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         if (tsp != null) {
             storePrefetches.remove(tsp);
         }
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     /**
@@ -186,10 +186,8 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     public synchronized boolean tryAddMessageLast(MessageReference node, long wait) throws Exception {
         if (node != null) {
             Message msg = node.getMessage();
-            if (isStarted()) {
-                if (!msg.isPersistent()) {
+            if (isStarted() && !msg.isPersistent()) {
                     nonPersistent.tryAddMessageLast(node, wait);
-                }
             }
             if (msg.isPersistent()) {
                 Destination dest = (Destination) msg.getRegionDestination();
@@ -254,7 +252,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                 LOG.error("Failed to get current cursor ", e);
                 throw new RuntimeException(e);
             }
-            result = currentCursor != null ? currentCursor.hasNext() : false;
+            result = currentCursor != null && currentCursor.hasNext();
         }
         return result;
     }
@@ -344,7 +342,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public void setMaxProducersToAudit(int maxProducersToAudit) {
+    public synchronized void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setMaxProducersToAudit(maxProducersToAudit);
@@ -352,7 +350,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public void setMaxAuditDepth(int maxAuditDepth) {
+    public synchronized void setMaxAuditDepth(int maxAuditDepth) {
         super.setMaxAuditDepth(maxAuditDepth);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setMaxAuditDepth(maxAuditDepth);
@@ -360,7 +358,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public void setEnableAudit(boolean enableAudit) {
+    public synchronized void setEnableAudit(boolean enableAudit) {
         super.setEnableAudit(enableAudit);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setEnableAudit(enableAudit);
@@ -368,7 +366,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public  void setUseCache(boolean useCache) {
+    public void setUseCache(boolean useCache) {
         super.setUseCache(useCache);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setUseCache(useCache);

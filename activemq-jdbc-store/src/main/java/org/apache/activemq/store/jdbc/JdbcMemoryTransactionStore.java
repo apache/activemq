@@ -18,7 +18,6 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -68,13 +67,11 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
         try {
 
             // Do all the message adds.
-            for (Iterator<AddMessageCommand> iter = tx.messages.iterator(); iter.hasNext();) {
-                AddMessageCommand cmd = iter.next();
+            for (AddMessageCommand cmd : tx.messages) {
                 cmd.run(ctx);
             }
             // And removes..
-            for (Iterator<RemoveMessageCommand> iter = tx.acks.iterator(); iter.hasNext();) {
-                RemoveMessageCommand cmd = iter.next();
+            for (RemoveMessageCommand cmd : tx.acks) {
                 cmd.run(ctx);
             }
 
@@ -87,9 +84,8 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
 
         ctx.setXid(null);
         // setup for commit outcome
-        ArrayList<AddMessageCommand> updateFromPreparedStateCommands = new ArrayList<AddMessageCommand>();
-        for (Iterator<AddMessageCommand> iter = tx.messages.iterator(); iter.hasNext();) {
-            final AddMessageCommand addMessageCommand = iter.next();
+        ArrayList<AddMessageCommand> updateFromPreparedStateCommands = new ArrayList<>();
+        for (final AddMessageCommand addMessageCommand : tx.messages) {
             updateFromPreparedStateCommands.add(new CommitAddOutcome(addMessageCommand));
         }
         tx.messages = updateFromPreparedStateCommands;
@@ -166,19 +162,18 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                 persistenceAdapter.beginTransaction(ctx);
                 try {
 
-                    for (Iterator<AddMessageCommand> iter = tx.messages.iterator(); iter.hasNext(); ) {
-                        final Message message = iter.next().getMessage();
+                    for (AddMessageCommand addMessageCommand : tx.messages) {
+                        final Message message = addMessageCommand.getMessage();
                         // need to delete the row
                         ((JDBCPersistenceAdapter) persistenceAdapter).commitRemove(ctx, new MessageAck(message, MessageAck.STANDARD_ACK_TYPE, 1));
                     }
 
-                    for (Iterator<RemoveMessageCommand> iter = tx.acks.iterator(); iter.hasNext(); ) {
-                        RemoveMessageCommand removeMessageCommand = iter.next();
-                        if (removeMessageCommand instanceof LastAckCommand ) {
-                            ((LastAckCommand)removeMessageCommand).rollback(ctx);
+                    for (RemoveMessageCommand removeMessageCommand : tx.acks) {
+                        if (removeMessageCommand instanceof LastAckCommand) {
+                            ((LastAckCommand) removeMessageCommand).rollback(ctx);
                         } else {
                             MessageId messageId = removeMessageCommand.getMessageAck().getLastMessageId();
-                            long sequence = (Long)messageId.getEntryLocator();
+                            long sequence = (Long) messageId.getEntryLocator();
                             // need to unset the txid flag on the existing row
                             ((JDBCPersistenceAdapter) persistenceAdapter).commitAdd(ctx, messageId, sequence, sequence);
 
@@ -197,7 +192,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
     }
 
     @Override
-    public void recover(TransactionRecoveryListener listener) throws IOException {
+    public synchronized void recover(TransactionRecoveryListener listener) throws IOException {
         ((JDBCPersistenceAdapter)persistenceAdapter).recover(this);
         super.recover(listener);
     }

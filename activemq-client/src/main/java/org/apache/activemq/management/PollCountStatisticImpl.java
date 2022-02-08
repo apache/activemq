@@ -24,8 +24,6 @@ import javax.management.j2ee.statistics.CountStatistic;
 
 /**
  * A count statistic implementation
- * 
- * 
  */
 public class PollCountStatisticImpl extends StatisticImpl implements CountStatistic {
 
@@ -67,26 +65,27 @@ public class PollCountStatisticImpl extends StatisticImpl implements CountStatis
 
     private synchronized void addChild(PollCountStatisticImpl child) {
         if (children == null) {
-            children = new ArrayList<PollCountStatisticImpl>();
+            children = new ArrayList<>();
         }
         children.add(child);
     }
 
+    @Override
     public synchronized long getCount() {
         if (children == null) {
             return 0;
         }
         long count = 0;
-        for (Iterator<PollCountStatisticImpl> iter = children.iterator(); iter.hasNext();) {
-            PollCountStatisticImpl child = iter.next();
+        for (PollCountStatisticImpl child : children) {
             count += child.getCount();
         }
         return count;
     }
 
-    protected void appendFieldDescription(StringBuffer buffer) {
+    @Override
+    protected synchronized void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" count: ");
-        buffer.append(Long.toString(getCount()));
+        buffer.append(getCount());
         super.appendFieldDescription(buffer);
     }
 

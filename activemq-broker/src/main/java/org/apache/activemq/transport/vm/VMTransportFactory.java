@@ -44,9 +44,9 @@ import org.slf4j.MDC;
 
 public class VMTransportFactory extends TransportFactory {
 
-    public static final ConcurrentMap<String, BrokerService> BROKERS = new ConcurrentHashMap<String, BrokerService>();
-    public static final ConcurrentMap<String, TransportConnector> CONNECTORS = new ConcurrentHashMap<String, TransportConnector>();
-    public static final ConcurrentMap<String, VMTransportServer> SERVERS = new ConcurrentHashMap<String, VMTransportServer>();
+    public static final ConcurrentMap<String, BrokerService> BROKERS = new ConcurrentHashMap<>();
+    public static final ConcurrentMap<String, TransportConnector> CONNECTORS = new ConcurrentHashMap<>();
+    public static final ConcurrentMap<String, VMTransportServer> SERVERS = new ConcurrentHashMap<>();
     private static final Logger LOG = LoggerFactory.getLogger(VMTransportFactory.class);
 
     BrokerFactoryHandler brokerFactoryHandler;
@@ -148,11 +148,11 @@ public class VMTransportFactory extends TransportFactory {
         }
 
         VMTransport vmtransport = server.connect();
-        IntrospectionSupport.setProperties(vmtransport.peer, new HashMap<String,String>(options));
+        IntrospectionSupport.setProperties(vmtransport.peer, new HashMap<>(options));
         IntrospectionSupport.setProperties(vmtransport, options);
         Transport transport = vmtransport;
         if (vmtransport.isMarshal()) {
-            Map<String, String> optionsCopy = new HashMap<String, String>(options);
+            Map<String, String> optionsCopy = new HashMap<>(options);
             transport = new MarshallingTransportFilter(transport, createWireFormat(options),
                                                        createWireFormat(optionsCopy));
         }
@@ -195,14 +195,14 @@ public class VMTransportFactory extends TransportFactory {
                     long timeout = Math.max(0, expiry - System.currentTimeMillis());
                     if (broker == null) {
                         try {
-                            LOG.debug("waiting for broker named: " + brokerName + " to enter registry");
+                            LOG.debug("waiting for broker named: {} to enter registry", brokerName);
                             registry.getRegistryMutext().wait(timeout);
                             broker = registry.lookup(brokerName);
                         } catch (InterruptedException ignored) {
                         }
                     }
                     if (broker != null && !broker.isStarted()) {
-                        LOG.debug("waiting for broker named: " + brokerName + " to start");
+                        LOG.debug("waiting for broker named: {} to start", brokerName);
                         timeout = Math.max(0, expiry - System.currentTimeMillis());
                         // Wait for however long we have left for broker to be started, if
                         // it doesn't get started we need to clear broker so it doesn't get
@@ -230,7 +230,7 @@ public class VMTransportFactory extends TransportFactory {
      */
     private TransportServer bind(URI location, boolean dispose) throws IOException {
         String host = extractHost(location);
-        LOG.debug("binding to broker: " + host);
+        LOG.debug("binding to broker: {}", host);
         VMTransportServer server = new VMTransportServer(location, dispose);
         Object currentBoundValue = SERVERS.get(host);
         if (currentBoundValue != null) {
@@ -249,7 +249,7 @@ public class VMTransportFactory extends TransportFactory {
         SERVERS.remove(host);
         TransportConnector connector = CONNECTORS.remove(host);
         if (connector != null) {
-            LOG.debug("Shutting down VM connectors for broker: " + host);
+            LOG.debug("Shutting down VM connectors for broker: {}", host);
             ServiceSupport.dispose(connector);
             BrokerService broker = BROKERS.remove(host);
             if (broker != null) {
@@ -280,9 +280,7 @@ public class VMTransportFactory extends TransportFactory {
                 SERVERS.remove(host);
                 if (connector != null) {
                     CONNECTORS.remove(host);
-                    if (connector != null) {
-                        ServiceSupport.dispose(connector);
-                    }
+                    ServiceSupport.dispose(connector);
                 }
             }
         }

@@ -78,19 +78,19 @@ public class FailoverTransport implements CompositeTransport {
     private static final int INFINITE = -1;
     private TransportListener transportListener;
     private volatile boolean disposed;
-    private final CopyOnWriteArrayList<URI> uris = new CopyOnWriteArrayList<URI>();
-    private final CopyOnWriteArrayList<URI> updated = new CopyOnWriteArrayList<URI>();
+    private final CopyOnWriteArrayList<URI> uris = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<URI> updated = new CopyOnWriteArrayList<>();
 
     private final Object reconnectMutex = new Object();
     private final Object backupMutex = new Object();
     private final Object sleepMutex = new Object();
     private final Object listenerMutex = new Object();
     private final ConnectionStateTracker stateTracker = new ConnectionStateTracker();
-    private final Map<Integer, Command> requestMap = new LinkedHashMap<Integer, Command>();
+    private final Map<Integer, Command> requestMap = new LinkedHashMap<>();
 
     private URI connectedTransportURI;
     private URI failedConnectTransportURI;
-    private final AtomicReference<Transport> connectedTransport = new AtomicReference<Transport>();
+    private final AtomicReference<Transport> connectedTransport = new AtomicReference<>();
     private final TaskRunnerFactory reconnectTaskFactory;
     private final TaskRunner reconnectTask;
     private volatile boolean started;
@@ -109,7 +109,7 @@ public class FailoverTransport implements CompositeTransport {
     private boolean firstConnection = true;
     // optionally always have a backup created
     private boolean backup = false;
-    private final List<BackupTransport> backups = new CopyOnWriteArrayList<BackupTransport>();
+    private final List<BackupTransport> backups = new CopyOnWriteArrayList<>();
     private int backupPoolSize = 1;
     private boolean trackMessages = false;
     private boolean trackTransactionProducers = true;
@@ -126,7 +126,7 @@ public class FailoverTransport implements CompositeTransport {
     private boolean connectedToPriority = false;
 
     private boolean priorityBackup = false;
-    private final ArrayList<URI> priorityList = new ArrayList<URI>();
+    private final ArrayList<URI> priorityList = new ArrayList<>();
     private boolean priorityBackupAvailable = false;
     private String nestedExtraQueryOptions;
     private volatile boolean shuttingDown = false;
@@ -190,7 +190,7 @@ public class FailoverTransport implements CompositeTransport {
         if (command.isResponse()) {
             Object object = null;
             synchronized (requestMap) {
-                object = requestMap.remove(Integer.valueOf(((Response) command).getCorrelationId()));
+                object = requestMap.remove(((Response) command).getCorrelationId());
             }
             if (object != null && object.getClass() == Tracked.class) {
                 ((Tracked) object).onResponses(command);
@@ -317,7 +317,7 @@ public class FailoverTransport implements CompositeTransport {
                     URI uri = new URI(reconnectStr);
                     if (isReconnectSupported()) {
                         reconnect(uri);
-                        LOG.info("Reconnected to: " + uri);
+                        LOG.info("Reconnected to: {}", uri);
                     }
                 } catch (Exception e) {
                     LOG.error("Failed to handle ConnectionControl reconnect to " + reconnectStr, e);
@@ -327,11 +327,11 @@ public class FailoverTransport implements CompositeTransport {
         processNewTransports(control.isRebalanceConnection(), control.getConnectedBrokers());
     }
 
-    private final void processNewTransports(boolean rebalance, String newTransports) {
+    private void processNewTransports(boolean rebalance, String newTransports) {
         if (newTransports != null) {
             newTransports = newTransports.trim();
             if (newTransports.length() > 0 && isUpdateURIsSupported()) {
-                List<URI> list = new ArrayList<URI>();
+                List<URI> list = new ArrayList<>();
                 StringTokenizer tokenizer = new StringTokenizer(newTransports, ",");
                 while (tokenizer.hasMoreTokens()) {
                     String str = tokenizer.nextToken();
@@ -344,7 +344,7 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 if (list.isEmpty() == false) {
                     try {
-                        updateURIs(rebalance, list.toArray(new URI[list.size()]));
+                        updateURIs(rebalance, list.toArray(new URI[0]));
                     } catch (IOException e) {
                         LOG.error("Failed to update transport URI's from: " + newTransports, e);
                     }
@@ -375,7 +375,7 @@ public class FailoverTransport implements CompositeTransport {
     @Override
     public void stop() throws Exception {
         Transport transportToStop = null;
-        List<Transport> backupsToStop = new ArrayList<Transport>(backups.size());
+        List<Transport> backupsToStop = new ArrayList<>(backups.size());
 
         try {
             synchronized (reconnectMutex) {
@@ -658,9 +658,9 @@ public class FailoverTransport implements CompositeTransport {
                         // it later.
                         synchronized (requestMap) {
                             if (tracked != null && tracked.isWaitingForResponse()) {
-                                requestMap.put(Integer.valueOf(command.getCommandId()), tracked);
+                                requestMap.put(command.getCommandId(), tracked);
                             } else if (tracked == null && command.isResponseRequired()) {
-                                requestMap.put(Integer.valueOf(command.getCommandId()), command);
+                                requestMap.put(command.getCommandId(), command);
                             }
                         }
 
@@ -682,7 +682,7 @@ public class FailoverTransport implements CompositeTransport {
                                 // map so that it is not sent 2 times on
                                 // recovery
                                 if (command.isResponseRequired()) {
-                                    requestMap.remove(Integer.valueOf(command.getCommandId()));
+                                    requestMap.remove(command.getCommandId());
                                 }
 
                                 // Rethrow the exception so it will handled by
@@ -739,7 +739,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     @Override
-    public void add(boolean rebalance, URI u[]) {
+    public void add(boolean rebalance, URI[] u) {
         boolean newURI = false;
         for (URI uri : u) {
             if (!contains(uri)) {
@@ -754,7 +754,7 @@ public class FailoverTransport implements CompositeTransport {
     
 
     @Override
-    public void remove(boolean rebalance, URI u[]) {
+    public void remove(boolean rebalance, URI[] u) {
         for (URI uri : u) {
             uris.remove(uri);
         }
@@ -794,7 +794,7 @@ public class FailoverTransport implements CompositeTransport {
 
     private List<URI> getConnectList() {
         // updated have precedence
-        LinkedHashSet<URI> uniqueUris = new LinkedHashSet<URI>(updated);
+        LinkedHashSet<URI> uniqueUris = new LinkedHashSet<>(updated);
         uniqueUris.addAll(uris);
 
         boolean removed = false;
@@ -802,7 +802,7 @@ public class FailoverTransport implements CompositeTransport {
             removed = uniqueUris.remove(failedConnectTransportURI);
         }
 
-        ArrayList<URI> l = new ArrayList<URI>(uniqueUris);
+        ArrayList<URI> l = new ArrayList<>(uniqueUris);
         if (randomize) {
             // Randomly, reorder the list by random swapping
             for (int i = 0; i < l.size(); i++) {
@@ -856,7 +856,7 @@ public class FailoverTransport implements CompositeTransport {
         stateTracker.restore(t);
         Map<Integer, Command> tmpMap = null;
         synchronized (requestMap) {
-            tmpMap = new LinkedHashMap<Integer, Command>(requestMap);
+            tmpMap = new LinkedHashMap<>(requestMap);
         }
         for (Command command : tmpMap.values()) {
             LOG.trace("restore requestMap, replay: {}", command);
@@ -897,12 +897,10 @@ public class FailoverTransport implements CompositeTransport {
         // Note: Could track file timestamp to avoid unnecessary reading.
         String fileURL = getUpdateURIsURL();
         if (fileURL != null) {
-            BufferedReader in = null;
             String newUris = null;
             StringBuffer buffer = new StringBuffer();
 
-            try {
-                in = new BufferedReader(getURLStream(fileURL));
+            try (BufferedReader in = new BufferedReader(getURLStream(fileURL))) {
                 while (true) {
                     String line = in.readLine();
                     if (line == null) {
@@ -913,14 +911,6 @@ public class FailoverTransport implements CompositeTransport {
                 newUris = buffer.toString();
             } catch (IOException ioe) {
                 LOG.error("Failed to read updateURIsURL: {} {}",fileURL, ioe);
-            } finally {
-                if (in != null) {
-                    try {
-                        in.close();
-                    } catch (IOException ioe) {
-                        // ignore
-                    }
-                }
             }
 
             processNewTransports(isRebalanceUpdateURIs(), newUris);
@@ -973,7 +963,7 @@ public class FailoverTransport implements CompositeTransport {
                     // If we have a backup already waiting lets try it.
                     synchronized (backupMutex) {
                         if ((priorityBackup || backup) && !backups.isEmpty()) {
-                            ArrayList<BackupTransport> l = new ArrayList<BackupTransport>(backups);
+                            ArrayList<BackupTransport> l = new ArrayList<>(backups);
                             if (randomize) {
                                 Collections.shuffle(l);
                             }
@@ -1170,7 +1160,7 @@ public class FailoverTransport implements CompositeTransport {
     final boolean buildBackups() {
         synchronized (backupMutex) {
             if (!disposed && shouldBuildBackups()) {
-                ArrayList<URI> backupList = new ArrayList<URI>(priorityList);
+                ArrayList<URI> backupList = new ArrayList<>(priorityList);
                 List<URI> connectList = getConnectList();
                 for (URI uri: connectList) {
                     if (!backupList.contains(uri)) {
@@ -1178,7 +1168,7 @@ public class FailoverTransport implements CompositeTransport {
                     }
                 }
                 // removed disposed backups
-                List<BackupTransport> disposedList = new ArrayList<BackupTransport>();
+                List<BackupTransport> disposedList = new ArrayList<>();
                 for (BackupTransport bt : backups) {
                     if (bt.isDisposed()) {
                         disposedList.add(bt);
@@ -1285,7 +1275,7 @@ public class FailoverTransport implements CompositeTransport {
     @Override
     public void updateURIs(boolean rebalance, URI[] updatedURIs) throws IOException {
         if (isUpdateURIsSupported()) {
-            HashSet<URI> copy = new HashSet<URI>();
+            HashSet<URI> copy = new HashSet<>();
             synchronized (reconnectMutex) {
                 copy.addAll(this.updated);
                 updated.clear();
@@ -1300,7 +1290,7 @@ public class FailoverTransport implements CompositeTransport {
                     }
                 }
             }
-            if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(new HashSet<URI>(updated))) {
+            if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(new HashSet<>(updated))) {
                 buildBackups();
                 reconnect(rebalance);
             }

@@ -35,7 +35,7 @@ import org.apache.activemq.usage.SystemUsage;
 
 public class HealthView implements HealthViewMBean {
 
-    private ManagedRegionBroker broker;
+    private final ManagedRegionBroker broker;
     private volatile String currentState = "Good";
 
     public HealthView(ManagedRegionBroker broker) {
@@ -58,7 +58,7 @@ public class HealthView implements HealthViewMBean {
 
     @Override
     public List<HealthStatus> healthList() throws Exception {
-        List<HealthStatus> answer = new ArrayList<HealthStatus>();
+        List<HealthStatus> answer = new ArrayList<>();
         Map<ObjectName, DestinationView> queueViews = broker.getQueueViews();
         for (Map.Entry<ObjectName, DestinationView> entry : queueViews.entrySet()) {
             DestinationView queue = entry.getValue();
@@ -69,7 +69,7 @@ public class HealthView implements HealthViewMBean {
             }
         }
 
-        /**
+        /*
          * Check persistence store directory limits
          */
         BrokerService brokerService = broker.getBrokerService();
@@ -167,18 +167,18 @@ public class HealthView implements HealthViewMBean {
             }
         }
 
-        StringBuilder currentState = new StringBuilder();
-        if (answer != null && !answer.isEmpty()) {
-            currentState.append("Getting Worried {");
+        StringBuilder newCurrentState = new StringBuilder();
+        if (!answer.isEmpty()) {
+            newCurrentState.append("Getting Worried {");
             for (HealthStatus hs : answer) {
-                currentState.append(hs).append(" , ");
+                newCurrentState.append(hs).append(" , ");
             }
-            currentState.append(" }");
+            newCurrentState.append(" }");
         } else {
-            currentState.append("Good");
+            newCurrentState.append("Good");
         }
 
-        this.currentState = currentState.toString();
+        this.currentState = newCurrentState.toString();
 
         return answer;
     }

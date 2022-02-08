@@ -710,8 +710,8 @@ public class BrokerService implements Service {
                             }
                         }
                         doStartBroker();
-                    } catch (Throwable t) {
-                        setStartException(t);
+                    } catch (Exception e) {
+                        setStartException(e);
                     }
                 }
             }.start();
@@ -820,10 +820,8 @@ public class BrokerService implements Service {
             this.scheduler.stop();
             this.scheduler = null;
         }
-        if (services != null) {
-            for (Service service : services) {
-                stopper.stop(service);
-            }
+        for (Service service : services) {
+            stopper.stop(service);
         }
         stopAllConnectors(stopper);
         this.slave = true;
@@ -1326,17 +1324,17 @@ public class BrokerService implements Service {
         return managementContext;
     }
 
-    synchronized private void checkStartException() {
+    private synchronized void checkStartException() {
         if (startException != null) {
             throw new BrokerStoppedException(startException);
         }
     }
 
-    synchronized private boolean hasStartException() {
+    private synchronized boolean hasStartException() {
         return startException != null;
     }
 
-    synchronized private void setStartException(Throwable t) {
+    private synchronized void setStartException(Throwable t) {
         startException = t;
     }
 
@@ -1756,7 +1754,7 @@ public class BrokerService implements Service {
 
             try {
                 PersistenceAdapter pa = getPersistenceAdapter();
-                if( pa!=null && pa instanceof PListStore) {
+                if(pa instanceof PListStore) {
                     return (PListStore) pa;
                 }
             } catch (IOException e) {
@@ -1814,7 +1812,7 @@ public class BrokerService implements Service {
      */
     public void setUseLocalHostBrokerName(boolean useLocalHostBrokerName) {
         this.useLocalHostBrokerName = useLocalHostBrokerName;
-        if (useLocalHostBrokerName && !started.get() && brokerName == null || brokerName.equals(DEFAULT_BROKER_NAME)) {
+        if (useLocalHostBrokerName && !started.get() && brokerName == null || DEFAULT_BROKER_NAME.equals(brokerName)) {
             brokerName = LOCAL_HOST_NAME;
         }
     }
@@ -1938,7 +1936,7 @@ public class BrokerService implements Service {
 
             try {
                 PersistenceAdapter pa = getPersistenceAdapter();
-                if (pa != null && pa instanceof JobSchedulerStore) {
+                if (pa instanceof JobSchedulerStore) {
                     this.jobSchedulerStore = (JobSchedulerStore) pa;
                     configureService(jobSchedulerStore);
                     return this.jobSchedulerStore;
@@ -2036,7 +2034,7 @@ public class BrokerService implements Service {
                 long maxJournalFileSize;
 
                 PListStore store = usage.getTempUsage().getStore();
-                if (store != null && store instanceof JournaledStore) {
+                if (store instanceof JournaledStore) {
                     maxJournalFileSize = ((JournaledStore) store).getJournalMaxFileLength();
                 } else {
                     maxJournalFileSize = DEFAULT_MAX_FILE_LENGTH;
@@ -2207,21 +2205,17 @@ public class BrokerService implements Service {
     }
 
     public void stopAllConnectors(ServiceStopper stopper) {
-        for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-            NetworkConnector connector = iter.next();
+        for (NetworkConnector connector : getNetworkConnectors()) {
             unregisterNetworkConnectorMBean(connector);
             stopper.stop(connector);
         }
-        for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
-            ProxyConnector connector = iter.next();
+        for (ProxyConnector connector : getProxyConnectors()) {
             stopper.stop(connector);
         }
-        for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
-            JmsConnector connector = iter.next();
+        for (JmsConnector connector : jmsConnectors) {
             stopper.stop(connector);
         }
-        for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            TransportConnector connector = iter.next();
+        for (TransportConnector connector : getTransportConnectors()) {
             try {
                 unregisterConnectorMBean(connector);
             } catch (IOException e) {
@@ -2461,8 +2455,7 @@ public class BrokerService implements Service {
             broker = new ConnectionSplitBroker(broker);
         }
         if (plugins != null) {
-            for (int i = 0; i < plugins.length; i++) {
-                BrokerPlugin plugin = plugins[i];
+            for (BrokerPlugin plugin : plugins) {
                 broker = plugin.installPlugin(broker);
             }
         }
@@ -2579,9 +2572,8 @@ public class BrokerService implements Service {
     protected void startDestinations() throws Exception {
         if (destinations != null) {
             ConnectionContext adminConnectionContext = getAdminConnectionContext();
-            for (int i = 0; i < destinations.length; i++) {
-                ActiveMQDestination destination = destinations[i];
-                getBroker().addDestination(adminConnectionContext, destination,true);
+            for (ActiveMQDestination destination : destinations) {
+                getBroker().addDestination(adminConnectionContext, destination, true);
             }
         }
         if (isUseVirtualTopics()) {
@@ -2613,8 +2605,7 @@ public class BrokerService implements Service {
     public void startAllConnectors() throws Exception {
         final Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
         List<TransportConnector> al = new ArrayList<>();
-        for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            TransportConnector connector = iter.next();
+        for (TransportConnector connector : getTransportConnectors()) {
             al.add(startTransportConnector(connector));
         }
         if (al.size() > 0) {
@@ -2629,7 +2620,7 @@ public class BrokerService implements Service {
             if (isNetworkConnectorStartAsync()) {
                 // spin up as many threads as needed
                 networkConnectorStartExecutor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                    10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+                    10, TimeUnit.SECONDS, new SynchronousQueue<>(),
                     new ThreadFactory() {
                         int count=0;
                         @Override
@@ -2641,8 +2632,7 @@ public class BrokerService implements Service {
                     });
             }
 
-            for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-                final NetworkConnector connector = iter.next();
+            for (final NetworkConnector connector : getNetworkConnectors()) {
                 connector.setLocalUri(getVmConnectorURI());
                 startNetworkConnector(connector, durableDestinations, networkConnectorStartExecutor);
             }
@@ -2651,12 +2641,10 @@ public class BrokerService implements Service {
                 ThreadPoolUtils.shutdown(networkConnectorStartExecutor);
             }
 
-            for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
-                ProxyConnector connector = iter.next();
+            for (ProxyConnector connector : getProxyConnectors()) {
                 connector.start();
             }
-            for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
-                JmsConnector connector = iter.next();
+            for (JmsConnector connector : jmsConnectors) {
                 connector.start();
             }
             for (Service service : services) {
@@ -2760,7 +2748,7 @@ public class BrokerService implements Service {
         DestinationFilter filter = getVirtualTopicConsumerDestinationFilter();
         if (!destinations.isEmpty()) {
             for (ActiveMQDestination destination : destinations) {
-                if (filter.matches(destination) == true) {
+                if (filter.matches(destination)) {
                     broker.addDestination(adminConnectionContext, destination, false);
                 }
             }
@@ -2800,7 +2788,7 @@ public class BrokerService implements Service {
 
     protected synchronized ThreadPoolExecutor getExecutor() {
         if (this.executor == null) {
-            this.executor = new ThreadPoolExecutor(1, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+            this.executor = new ThreadPoolExecutor(1, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadFactory() {
 
                 private long i = 0;
 
@@ -2809,12 +2797,7 @@ public class BrokerService implements Service {
                     this.i++;
                     Thread thread = new Thread(runnable, "ActiveMQ BrokerService.worker." + this.i);
                     thread.setDaemon(true);
-                    thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-                        @Override
-                        public void uncaughtException(final Thread t, final Throwable e) {
-                            LOG.error("Error in thread '{}'", t.getName(), e);
-                        }
-                    });
+                    thread.setUncaughtExceptionHandler((t, e) -> LOG.error("Error in thread '{}'", t.getName(), e));
                     return thread;
                 }
             }, new RejectedExecutionHandler() {
@@ -3134,7 +3117,7 @@ public class BrokerService implements Service {
                getVirtualTopicConsumerDestinationFilter().matches(destination);
     }
 
-    synchronized public Throwable getStartException() {
+    public synchronized Throwable getStartException() {
         return startException;
     }
 

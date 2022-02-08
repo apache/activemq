@@ -50,7 +50,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     protected MessageReference last = null;
     protected final boolean prioritizedMessages;
 
-    public AbstractPendingMessageCursor(boolean prioritizedMessages) {
+    protected AbstractPendingMessageCursor(boolean prioritizedMessages) {
         this.prioritizedMessages=prioritizedMessages;
     }
 
@@ -76,7 +76,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     @Override
     @SuppressWarnings("unchecked")
     public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     @Override
@@ -174,7 +174,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     @Override
     public boolean hasSpace() {
         // allow isFull to verify parent usage and otherwise enforce local memoryUsageHighWaterMark
-        return systemUsage != null ? (!isParentFull() && systemUsage.getMemoryUsage().getPercentUsage() < memoryUsageHighWaterMark) : true;
+        return systemUsage == null || (!isParentFull() && systemUsage.getMemoryUsage().getPercentUsage() < memoryUsageHighWaterMark);
     }
 
     boolean parentHasSpace(int waterMark) {
@@ -199,7 +199,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
 
     @Override
     public boolean isFull() {
-        return systemUsage != null ? systemUsage.getMemoryUsage().isFull() : false;
+        return systemUsage != null && systemUsage.getMemoryUsage().isFull();
     }
 
     @Override

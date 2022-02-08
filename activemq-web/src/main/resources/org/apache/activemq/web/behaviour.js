@@ -51,19 +51,20 @@ var Behaviour = {
 	},
 	
 	apply : function(){
-		for (var h=0;sheet=Behaviour.list[h];h++){
-			for (selector in sheet){
-				list = document.getElementsBySelector(selector);
+        let sheet;
+        for (let h = 0; sheet = Behaviour.list[h]; h++) {
+            for (let selector in sheet) {
+                let list = document.getElementsBySelector(selector);
 
-				if (!list){
-					continue;
-				}
+                if (!list) {
+                    continue;
+                }
 
-				for (var i=0;element=list[i];i++){
-					sheet[selector](element);
-				}
-			}
-		}
+                for (let i = 0; element = list[i]; i++) {
+                    sheet[selector](element);
+                }
+            }
+        }
 	},
 	
 	addLoadEvent : function(func){
@@ -119,7 +120,7 @@ document.getElementsBySelector = function(selector) {
   var tokens = selector.split(' ');
   var currentContext = new Array(document);
   for (var i = 0; i < tokens.length; i++) {
-    token = tokens[i].replace(/^\s+/,'').replace(/\s+$/,'');;
+    let token = tokens[i].replace(/^\s+/,'').replace(/\s+$/,'');;
     if (token.indexOf('#') > -1) {
       // Token is an ID selector
       var bits = token.split('#');

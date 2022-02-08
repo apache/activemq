@@ -114,7 +114,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public static final String DEFAULT_USER = ActiveMQConnectionFactory.DEFAULT_USER;
     public static final String DEFAULT_PASSWORD = ActiveMQConnectionFactory.DEFAULT_PASSWORD;
     public static final String DEFAULT_BROKER_URL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
-    public static int DEFAULT_THREAD_POOL_SIZE = 1000;
+    public static final int DEFAULT_THREAD_POOL_SIZE = 1000;
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQConnection.class);
 
@@ -230,7 +230,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         // Configure a single threaded executor who's core thread can timeout if
         // idle
-        executor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+        executor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
                 Thread thread = new Thread(r, "ActiveMQ Connection Executor: " + transport);
@@ -323,7 +323,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     /**
      * Creates a <CODE>Session</CODE> object.
      *
-     * @param acknowledgeMode indicates whether the consumer or the client will
+     * @param sessionMode indicates whether the consumer or the client will
      *                acknowledge any messages it receives; ignored if the
      *                session is transacted. Legal values are
      *                <code>Session.AUTO_ACKNOWLEDGE</code>,
@@ -567,8 +567,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         checkClosedOrFailed();
         ensureConnectionInfoSent();
         if (started.compareAndSet(false, true)) {
-            for (Iterator<ActiveMQSession> i = sessions.iterator(); i.hasNext();) {
-                ActiveMQSession session = i.next();
+            for (ActiveMQSession session : sessions) {
                 session.start();
             }
         }
@@ -622,8 +621,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         }
         if (started.compareAndSet(true, false)) {
             synchronized(sessions) {
-                for (Iterator<ActiveMQSession> i = sessions.iterator(); i.hasNext();) {
-                    ActiveMQSession s = i.next();
+                for (ActiveMQSession s : sessions) {
                     s.stop();
                 }
             }
@@ -707,13 +705,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     }
 
                     long lastDeliveredSequenceId = -1;
-                    for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
-                        ActiveMQSession s = i.next();
+                    for (ActiveMQSession s : this.sessions) {
                         s.dispose();
                         lastDeliveredSequenceId = Math.max(lastDeliveredSequenceId, s.getLastDeliveredSequenceId());
                     }
-                    for (Iterator<ActiveMQConnectionConsumer> i = this.connectionConsumers.iterator(); i.hasNext();) {
-                        ActiveMQConnectionConsumer c = i.next();
+                    for (ActiveMQConnectionConsumer c : this.connectionConsumers) {
                         c.dispose();
                     }
 
@@ -1635,12 +1631,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             advisoryConsumer = null;
         }
 
-        for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
-            ActiveMQSession s = i.next();
+        for (ActiveMQSession s : this.sessions) {
             s.dispose();
         }
-        for (Iterator<ActiveMQConnectionConsumer> i = this.connectionConsumers.iterator(); i.hasNext();) {
-            ActiveMQConnectionConsumer c = i.next();
+        for (ActiveMQConnectionConsumer c : this.connectionConsumers) {
             c.dispose();
         }
 
@@ -1936,12 +1930,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
                     @Override
                     public Response processConnectionError(final ConnectionError error) throws Exception {
-                        executor.execute(new Runnable() {
-                            @Override
-                            public void run() {
-                                onAsyncException(error.getException());
-                            }
-                        });
+                        executor.execute(() -> onAsyncException(error.getException()));
                         return null;
                     }
 
@@ -1973,8 +1962,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             }
         }
 
-        for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
-            TransportListener listener = iter.next();
+        for (TransportListener listener : transportListeners) {
             listener.onCommand(command);
         }
     }
@@ -2007,12 +1995,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void onClientInternalException(final Throwable error) {
         if ( !closed.get() && !closing.get() ) {
             if ( this.clientInternalExceptionListener != null ) {
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        ActiveMQConnection.this.clientInternalExceptionListener.onException(error);
-                    }
-                });
+                executor.execute(() -> ActiveMQConnection.this.clientInternalExceptionListener.onException(error));
             } else {
                 LOG.debug("Async client internal exception occurred with no exception listener registered: {}",
                         error, error);
@@ -2034,12 +2017,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 }
                 final JMSException e = (JMSException)error;
 
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        ActiveMQConnection.this.exceptionListener.onException(e);
-                    }
-                });
+                executor.execute(() -> ActiveMQConnection.this.exceptionListener.onException(e));
 
             } else {
                 LOG.debug("Async exception with no exception listener: {}", error, error);
@@ -2062,8 +2040,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     } catch (JMSException e) {
                         LOG.warn("Exception during connection cleanup, " + e, e);
                     }
-                    for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
-                        TransportListener listener = iter.next();
+                    for (TransportListener listener : transportListeners) {
                         listener.onException(error);
                     }
                 }
@@ -2074,8 +2051,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     @Override
     public void transportInterupted() {
         transportInterruptionProcessingComplete.set(1);
-        for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
-            ActiveMQSession s = i.next();
+        for (ActiveMQSession s : this.sessions) {
             s.clearMessagesInProgress(transportInterruptionProcessingComplete);
         }
 
@@ -2085,21 +2061,19 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         if (transportInterruptionProcessingComplete.decrementAndGet() > 0) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("transport interrupted - processing required, dispatchers: " + transportInterruptionProcessingComplete.get());
+                LOG.debug("transport interrupted - processing required, dispatchers: {}", transportInterruptionProcessingComplete.get());
             }
             signalInterruptionProcessingNeeded();
         }
 
-        for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
-            TransportListener listener = iter.next();
+        for (TransportListener listener : transportListeners) {
             listener.transportInterupted();
         }
     }
 
     @Override
     public void transportResumed() {
-        for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
-            TransportListener listener = iter.next();
+        for (TransportListener listener : transportListeners) {
             listener.transportResumed();
         }
     }
@@ -2308,8 +2282,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected void onConnectionControl(ConnectionControl command) {
         if (command.isFaultTolerant()) {
             this.optimizeAcknowledge = false;
-            for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
-                ActiveMQSession s = i.next();
+            for (ActiveMQSession s : this.sessions) {
                 s.setOptimizeAcknowledge(false);
             }
         }
@@ -2397,7 +2370,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     protected void waitForTransportInterruptionProcessingToComplete() throws InterruptedException {
         if (!closed.get() && !transportFailed.get() && transportInterruptionProcessingComplete.get()>0) {
-            LOG.warn("dispatch with outstanding dispatch interruption processing count " + transportInterruptionProcessingComplete.get());
+            LOG.warn("dispatch with outstanding dispatch interruption processing count {}", transportInterruptionProcessingComplete.get());
             signalInterruptionProcessingComplete();
         }
     }
@@ -2527,14 +2500,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void cleanUpTempDestinations() {
 
-        if (this.activeTempDestinations == null || this.activeTempDestinations.isEmpty()) {
+        if (this.activeTempDestinations.isEmpty()) {
             return;
         }
 
-        Iterator<ConcurrentMap.Entry<ActiveMQTempDestination, ActiveMQTempDestination>> entries
-            = this.activeTempDestinations.entrySet().iterator();
-        while(entries.hasNext()) {
-            ConcurrentMap.Entry<ActiveMQTempDestination, ActiveMQTempDestination> entry = entries.next();
+        for (Map.Entry<ActiveMQTempDestination, ActiveMQTempDestination> entry : this.activeTempDestinations.entrySet()) {
             try {
                 // Only delete this temp destination if it was created from this connection. The connection used
                 // for the advisory consumer may also have a reference to this temp destination.

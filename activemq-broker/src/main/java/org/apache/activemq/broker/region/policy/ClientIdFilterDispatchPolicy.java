@@ -57,8 +57,7 @@ public class ClientIdFilterDispatchPolicy extends SimpleDispatchPolicy {
                 sub.unmatched(node);
                 continue;
             }
-            if (_clientId != null && _destination.isTopic() && _clientId.equals(sub.getContext().getClientId())
-                    && _destination.getQualifiedName().endsWith(this.ptpSuffix)) {
+            if (_destination.isTopic() && _clientId.equals(sub.getContext().getClientId()) && _destination.getQualifiedName().endsWith(this.ptpSuffix)) {
                 sub.add(node);
                 count++;
             } else {

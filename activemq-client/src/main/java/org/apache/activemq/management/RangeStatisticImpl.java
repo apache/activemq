@@ -19,8 +19,6 @@ package org.apache.activemq.management;
 
 /**
  * A range statistic implementation
- *
- * 
  */
 public class RangeStatisticImpl extends StatisticImpl {
     private long highWaterMark;
@@ -31,7 +29,8 @@ public class RangeStatisticImpl extends StatisticImpl {
         super(name, unit, description);
     }
 
-    public void reset() {
+    @Override
+    public synchronized void reset() {
         if (isDoReset()) {
             super.reset();
             current = 0;
@@ -63,13 +62,14 @@ public class RangeStatisticImpl extends StatisticImpl {
         updateSampleTime();
     }
 
-    protected void appendFieldDescription(StringBuffer buffer) {
+    @Override
+    protected synchronized void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" current: ");
-        buffer.append(Long.toString(current));
+        buffer.append(current);
         buffer.append(" lowWaterMark: ");
-        buffer.append(Long.toString(lowWaterMark));
+        buffer.append(lowWaterMark);
         buffer.append(" highWaterMark: ");
-        buffer.append(Long.toString(highWaterMark));
+        buffer.append(highWaterMark);
         super.appendFieldDescription(buffer);
     }
 }

@@ -27,7 +27,7 @@ import java.io.InputStream;
  */
 public class TcpBufferedInputStream extends FilterInputStream {
     private static final int DEFAULT_BUFFER_SIZE = 8192;
-    protected byte internalBuffer[];
+    protected byte[] internalBuffer;
     protected int count;
     protected int position;
 
@@ -83,7 +83,7 @@ public class TcpBufferedInputStream extends FilterInputStream {
     }
 
     @Override
-    public int read(byte b[], int off, int len) throws IOException {
+    public int read(byte[] b, int off, int len) throws IOException {
         if ((off | len | (off + len) | (b.length - (off + len))) < 0) {
             throw new IndexOutOfBoundsException();
         } else if (len == 0) {

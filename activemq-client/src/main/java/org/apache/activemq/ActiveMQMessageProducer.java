@@ -227,7 +227,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     /**
      *
      * @param message the message to send
-     * @param CompletionListener to callback
+     * @param completionListener CompletionListener to callback
      * @throws JMSException if the JMS provider fails to send the message due to
      *                 some internal error.
      * @throws UnsupportedOperationException if an invalid destination is

@@ -39,7 +39,7 @@ var css = {
 	 *					(e.g. '*', 'div', 'li')
 	 **/
 	getElementsByClass : function(node, searchClass, tag) {
-		var classElements = new Array();
+		var classElements = [];
 		var els = node.getElementsByTagName(tag);
 		var elsLen = els.length;
 		var pattern = new RegExp("(^|\\s)"+searchClass+"(\\s|$)");
@@ -133,7 +133,7 @@ var css = {
 	removeClassFromElement: function(el, classString) {
 		var classArray = this.privateGetClassArray(el);
 
-		for (x in classArray) {
+		for (let x in classArray) {
 			if (classString == classArray[x]) {
 				classArray[x] = '';
 				break;

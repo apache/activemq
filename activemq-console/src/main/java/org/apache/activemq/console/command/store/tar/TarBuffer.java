@@ -167,12 +167,12 @@ public class TarBuffer {
      * Determine if an archive record indicate End of Archive. End of
      * archive is indicated by a record that consists entirely of null bytes.
      *
-     * @param record The record data to check.
+     * @param archiveRecord The record data to check.
      * @return true if the record data is an End of Archive
      */
-    public boolean isEOFRecord(byte[] record) {
+    public boolean isEOFRecord(byte[] archiveRecord) {
         for (int i = 0, sz = getRecordSize(); i < sz; ++i) {
-            if (record[i] != 0) {
+            if (archiveRecord[i] != 0) {
                 return false;
             }
         }
@@ -327,10 +327,10 @@ public class TarBuffer {
     /**
      * Write an archive record to the archive.
      *
-     * @param record The record data to write to the archive.
+     * @param archiveRecord The record data to write to the archive.
      * @throws IOException on error
      */
-    public void writeRecord(byte[] record) throws IOException {
+    public void writeRecord(byte[] archiveRecord) throws IOException {
         if (debug) {
             System.err.println("WriteRecord: recIdx = " + currRecIdx
                                + " blkIdx = " + currBlkIdx);
@@ -340,9 +340,9 @@ public class TarBuffer {
             throw new IOException("writing to an input buffer");
         }
 
-        if (record.length != recordSize) {
+        if (archiveRecord.length != recordSize) {
             throw new IOException("record to write has length '"
-                                  + record.length
+                                  + archiveRecord.length
                                   + "' which is not the record size of '"
                                   + recordSize + "'");
         }
@@ -351,7 +351,7 @@ public class TarBuffer {
             writeBlock();
         }
 
-        System.arraycopy(record, 0, blockBuffer,
+        System.arraycopy(archiveRecord, 0, blockBuffer,
                          (currRecIdx * recordSize),
                          recordSize);
 

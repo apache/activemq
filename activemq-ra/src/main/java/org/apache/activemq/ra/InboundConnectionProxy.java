@@ -126,7 +126,7 @@ public class InboundConnectionProxy implements Connection, QueueConnection, Topi
     /**
      * Creates a <CODE>Session</CODE> object.
      *
-     * @param acknowledgeMode indicates whether the consumer or the client will
+     * @param sessionMode indicates whether the consumer or the client will
      *                acknowledge any messages it receives; ignored if the
      *                session is transacted. Legal values are
      *                <code>Session.AUTO_ACKNOWLEDGE</code>,

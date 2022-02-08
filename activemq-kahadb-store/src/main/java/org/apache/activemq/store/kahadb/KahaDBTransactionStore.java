@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
  */
 public class KahaDBTransactionStore implements TransactionStore {
     static final Logger LOG = LoggerFactory.getLogger(KahaDBTransactionStore.class);
-    ConcurrentMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
+    ConcurrentMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<>();
     private final KahaDBStore theStore;
 
     public KahaDBTransactionStore(KahaDBStore theStore) {
@@ -87,20 +87,18 @@ public class KahaDBTransactionStore implements TransactionStore {
         }
 
         public Message[] getMessages() {
-            Message rc[] = new Message[messages.size()];
+            Message[] rc = new Message[messages.size()];
             int count = 0;
-            for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
-                AddMessageCommand cmd = iter.next();
+            for (AddMessageCommand cmd : messages) {
                 rc[count++] = cmd.getMessage();
             }
             return rc;
         }
 
         public MessageAck[] getAcks() {
-            MessageAck rc[] = new MessageAck[acks.size()];
+            MessageAck[] rc = new MessageAck[acks.size()];
             int count = 0;
-            for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext();) {
-                RemoveMessageCommand cmd = iter.next();
+            for (RemoveMessageCommand cmd : acks) {
                 rc[count++] = cmd.getMessageAck();
             }
             return rc;
@@ -111,16 +109,13 @@ public class KahaDBTransactionStore implements TransactionStore {
          * @throws IOException
          */
         public List<Future<Object>> commit() throws IOException {
-            List<Future<Object>> results = new ArrayList<Future<Object>>();
+            List<Future<Object>> results = new ArrayList<>();
             // Do all the message adds.
-            for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
-                AddMessageCommand cmd = iter.next();
+            for (AddMessageCommand cmd : messages) {
                 results.add(cmd.run());
-
             }
             // And removes..
-            for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext();) {
-                RemoveMessageCommand cmd = iter.next();
+            for (RemoveMessageCommand cmd : acks) {
                 cmd.run();
                 results.add(cmd.run());
             }
@@ -347,8 +342,8 @@ public class KahaDBTransactionStore implements TransactionStore {
     public synchronized void recover(TransactionRecoveryListener listener) throws IOException {
         for (Map.Entry<TransactionId, List<Operation>> entry : theStore.preparedTransactions.entrySet()) {
             XATransactionId xid = (XATransactionId) entry.getKey();
-            ArrayList<Message> messageList = new ArrayList<Message>();
-            ArrayList<MessageAck> ackList = new ArrayList<MessageAck>();
+            ArrayList<Message> messageList = new ArrayList<>();
+            ArrayList<MessageAck> ackList = new ArrayList<>();
 
             for (Operation op : entry.getValue()) {
                 if (op.getClass() == MessageDatabase.AddOperation.class) {

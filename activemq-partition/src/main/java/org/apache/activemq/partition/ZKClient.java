@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -69,13 +70,11 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
 
     @Override
     public void close() {
-        if (_stateChangeDispatcher != null) {
-            _stateChangeDispatcher.end();
-            try {
-                _stateChangeDispatcher.join(1000);
-            } catch (Exception e) {
-                LOG.debug("ignored exception", e);
-            }
+        _stateChangeDispatcher.end();
+        try {
+            _stateChangeDispatcher.join(1000);
+        } catch (Exception e) {
+            LOG.debug("ignored exception", e);
         }
         synchronized(_lock) {
             if (_zk != null) {
@@ -97,7 +96,7 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
     protected Thread getSendThread() {
         try {
             return (Thread) getField(_zk, "_zk", "cnxn", "sendThread");
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return null;
         }
     }
@@ -156,7 +155,7 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
         synchronized (_lock) {
             try {
                 connect();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOG.warn("Error while restarting:", e);
                 if (_expiredSessionRecovery == null) {
                     _expiredSessionRecovery = new ExpiredSessionRecovery();
@@ -172,7 +171,7 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
             changeState(State.CONNECTING);
             _zk = _factory.createZooKeeper(this);
             if (password != null) {
-                _zk.addAuthInfo("digest", ("fabric:" + password).getBytes("UTF-8"));
+                _zk.addAuthInfo("digest", ("fabric:" + password).getBytes(StandardCharsets.UTF_8));
             }
         }
     }
@@ -282,14 +281,12 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
         return _factory.getConnectString();
     }
 
-    public static enum State {
+    public enum State {
         NONE,
         CONNECTING,
         CONNECTED,
         RECONNECTING
     }
-
-    private final static String CHARSET = "UTF-8";
 
     private final Clock _clock = SystemClock.instance();
     private final List<LifecycleListener> _listeners = new CopyOnWriteArrayList<>();
@@ -356,14 +353,14 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
         for (LifecycleListener listener : _listeners) {
             Boolean previousEvent = history.get(listener);
             // we propagate the event only if it was not already sent
-            if (previousEvent == null || previousEvent != connectedEvent) {
+            if (previousEvent == null || !previousEvent.equals(connectedEvent)) {
                 try {
                     if (connectedEvent) {
                         listener.onConnected();
                     } else {
                         listener.onDisconnected();
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     LOG.warn("Exception while executing listener (ignored)", e);
                 }
             }
@@ -389,7 +386,7 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
                             count++;
                             LOG.warn("Recovery mode: trying to reconnect to zookeeper [{}]", count);
                             ZKClient.this.connect();
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                             LOG.warn("Recovery mode: reconnect attempt failed [{}]... waiting for {}", count, _reconnectTimeout, e);
                             try {
                                 _lock.wait(_reconnectTimeout.getDurationInMilliseconds());
@@ -423,7 +420,7 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
         setACLs(acls);
     }
 
-    static private int getPermFromString(String permString) {
+    private static int getPermFromString(String permString) {
         int perm = 0;
         for (int i = 0; i < permString.length(); i++) {
             switch (permString.charAt(i)) {
@@ -451,7 +448,7 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
 
     private static List<ACL> parseACLs(String aclString) {
         List<ACL>  acl;
-        String acls[] = aclString.split(",");
+        String[] acls = aclString.split(",");
         acl = new ArrayList<>();
         for (String a : acls) {
             int firstColon = a.indexOf(':');
@@ -575,7 +572,7 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
             } catch (KeeperException.NodeExistsException e) {
                 // ok we continue...
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("parent already exists " + p);
+                    LOG.debug("parent already exists {}", p);
                 }
             }
         }
@@ -585,11 +582,7 @@ public class ZKClient  extends org.linkedin.zookeeper.client.AbstractZKClient im
         if (data == null) {
             return null;
         } else {
-            try {
-                return data.getBytes(CHARSET);
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException(e);
-            }
+            return data.getBytes(StandardCharsets.UTF_8);
         }
     }
 

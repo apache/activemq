@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -103,12 +104,12 @@ public class MQTTProtocolConverter {
     private final ProducerId producerId = new ProducerId(sessionId, 1);
     private final LongSequenceGenerator publisherIdGenerator = new LongSequenceGenerator();
 
-    private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
-    private final Map<String, ActiveMQDestination> activeMQDestinationMap = new LRUCache<String, ActiveMQDestination>(DEFAULT_CACHE_SIZE);
-    private final Map<ActiveMQDestination, String> mqttTopicMap = new LRUCache<ActiveMQDestination, String>(DEFAULT_CACHE_SIZE);
+    private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<>();
+    private final Map<String, ActiveMQDestination> activeMQDestinationMap = new LRUCache<>(DEFAULT_CACHE_SIZE);
+    private final Map<ActiveMQDestination, String> mqttTopicMap = new LRUCache<>(DEFAULT_CACHE_SIZE);
 
-    private final Map<Short, MessageAck> consumerAcks = new LRUCache<Short, MessageAck>(DEFAULT_CACHE_SIZE);
-    private final Map<Short, PUBREC> publisherRecs = new LRUCache<Short, PUBREC>(DEFAULT_CACHE_SIZE);
+    private final Map<Short, MessageAck> consumerAcks = new LRUCache<>(DEFAULT_CACHE_SIZE);
+    private final Map<Short, PUBREC> publisherRecs = new LRUCache<>(DEFAULT_CACHE_SIZE);
 
     private final MQTTTransport mqttTransport;
     private final BrokerService brokerService;
@@ -126,7 +127,7 @@ public class MQTTProtocolConverter {
 
     public int version;
 
-    private final FactoryFinder STRATAGY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/strategies/");
+    private final FactoryFinder STRATEGY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/strategies/");
 
     /*
      * Subscription strategy configuration element.
@@ -194,10 +195,10 @@ public class MQTTProtocolConverter {
     public void onMQTTCommand(MQTTFrame frame) throws IOException, JMSException {
         switch (frame.messageType()) {
             case PINGREQ.TYPE:
-                LOG.debug("Received a ping from client: " + getClientId());
+                LOG.debug("Received a ping from client: {}", getClientId());
                 checkConnected();
                 sendToMQTT(PING_RESP_FRAME);
-                LOG.debug("Sent Ping Response to " + getClientId());
+                LOG.debug("Sent Ping Response to {}", getClientId());
                 break;
             case CONNECT.TYPE:
                 CONNECT connect = new CONNECT().decode(frame);
@@ -397,14 +398,14 @@ public class MQTTProtocolConverter {
                 LOG.warn("Couldn't send SUBACK for " + command, e);
             }
         } else {
-            LOG.warn("No topics defined for Subscription " + command);
+            LOG.warn("No topics defined for Subscription {}", command);
             throw new MQTTProtocolException("SUBSCRIBE command received with no topic filter");
         }
     }
 
     public void onUnSubscribe(UNSUBSCRIBE command) throws MQTTProtocolException {
         checkConnected();
-        if (command.qos() != QoS.AT_LEAST_ONCE && (version != V3_1 || publishDollarTopics != true)) {
+        if (command.qos() != QoS.AT_LEAST_ONCE && (version != V3_1 || !publishDollarTopics)) {
             throw new MQTTProtocolException("Failed to process unsubscribe request", true, new Exception("UNSUBSCRIBE frame not properly formatted, QoS"));
         }
         UTF8Buffer[] topics = command.topics();
@@ -421,7 +422,7 @@ public class MQTTProtocolConverter {
             ack.messageId(command.messageId());
             sendToMQTT(ack.encode());
         } else {
-            LOG.warn("No topics defined for Subscription " + command);
+            LOG.warn("No topics defined for Subscription {}", command);
             throw new MQTTProtocolException("UNSUBSCRIBE command received with no topic filter");
         }
     }
@@ -432,7 +433,7 @@ public class MQTTProtocolConverter {
     public void onActiveMQCommand(Command command) throws Exception {
         if (command.isResponse()) {
             Response response = (Response) command;
-            ResponseHandler rh = resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
+            ResponseHandler rh = resposeHandlers.remove(response.getCorrelationId());
             if (rh != null) {
                 rh.onResponse(this, response);
             } else {
@@ -611,7 +612,7 @@ public class MQTTProtocolConverter {
             msg.setReadOnlyBody(true);
             String messageText = msg.getText();
             if (messageText != null) {
-                result.payload(new Buffer(messageText.getBytes("UTF-8")));
+                result.payload(new Buffer(messageText.getBytes(StandardCharsets.UTF_8)));
             }
         } else if (message.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE) {
             ActiveMQBytesMessage msg = (ActiveMQBytesMessage) message.copy();
@@ -624,7 +625,7 @@ public class MQTTProtocolConverter {
             msg.setReadOnlyBody(true);
             Map<String, Object> map = msg.getContentMap();
             if (map != null) {
-                result.payload(new Buffer(map.toString().getBytes("UTF-8")));
+                result.payload(new Buffer(map.toString().getBytes(StandardCharsets.UTF_8)));
             }
         } else {
             ByteSequence byteSequence = message.getContent();
@@ -672,7 +673,7 @@ public class MQTTProtocolConverter {
 
                             sendToActiveMQ(message, null);
                         } catch (Exception e) {
-                            LOG.warn("Failed to publish Will Message " + connect.willMessage());
+                            LOG.warn("Failed to publish Will Message {}", connect.willMessage());
                         }
                     }
                     // remove connection info
@@ -714,17 +715,17 @@ public class MQTTProtocolConverter {
             monitor.startReadChecker();
 
             LOG.debug("MQTT Client {} established heart beat of  {} ms ({} ms + {} ms grace period)",
-                      new Object[] { getClientId(), keepAliveMS, keepAliveMS, readGracePeriod });
+                      getClientId(), keepAliveMS, keepAliveMS, readGracePeriod);
         } catch (Exception ex) {
             LOG.warn("Failed to start MQTT InactivityMonitor ", ex);
         }
     }
 
     void handleException(Throwable exception, MQTTFrame command) {
-        LOG.warn("Exception occurred processing: \n" + command + ": " + exception.toString());
+        LOG.warn("Exception occurred processing: \n{}: {}", command, exception.toString());
         LOG.debug("Exception detail", exception);
 
-        if (connected.get() && connectionInfo != null) {
+        if (connected.get()) {
             connected.set(false);
             sendToActiveMQ(connectionInfo.createRemoveCommand(), null);
         }
@@ -861,7 +862,7 @@ public class MQTTProtocolConverter {
 
     protected MQTTSubscriptionStrategy findSubscriptionStrategy() throws IOException {
         if (subsciptionStrategy == null) {
-            synchronized (STRATAGY_FINDER) {
+            synchronized (STRATEGY_FINDER) {
                 if (subsciptionStrategy != null) {
                     return subsciptionStrategy;
                 }
@@ -869,7 +870,7 @@ public class MQTTProtocolConverter {
                 MQTTSubscriptionStrategy strategy = null;
                 if (subscriptionStrategyName != null && !subscriptionStrategyName.isEmpty()) {
                     try {
-                        strategy = (MQTTSubscriptionStrategy) STRATAGY_FINDER.newInstance(subscriptionStrategyName);
+                        strategy = (MQTTSubscriptionStrategy) STRATEGY_FINDER.newInstance(subscriptionStrategyName);
                         LOG.debug("MQTT Using subscription strategy: {}", subscriptionStrategyName);
                         if (strategy instanceof BrokerServiceAware) {
                             ((BrokerServiceAware)strategy).setBrokerService(brokerService);

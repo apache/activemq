@@ -162,7 +162,7 @@ var standardistaTableSorting = {
 		// but just getting the first cell is no good if it contains no data
 		// so if the first cell just contains white space then we need to track
 		// down until we find a cell which does contain some actual data
-		var itm = ''
+		var itm = '';
 		var rowNum = 0;
 		while ('' == itm && rowNum < table.tBodies[0].rows.length) {
 			itm = that.getInnerText(table.tBodies[0].rows[rowNum].cells[column]);
@@ -272,7 +272,7 @@ var standardistaTableSorting = {
 		if (itm.match(/^\d\d[\/-]\d\d[\/-]\d\d$/)) {
 			sortfn = this.sortDate;
 		}
-		if (itm.match(/^[£$]/)) {
+		if (itm.match(/^[ï¿½$]/)) {
 			sortfn = this.sortCurrency;
 		}
 		if (itm.match(/^\d?\.?\d+$/)) {
@@ -368,7 +368,7 @@ var standardistaTableSorting = {
 	makeStandardIPAddress : function(val) {
 		var vals = val.split('.');
 
-		for (x in vals) {
+		for (let x in vals) {
 			val = vals[x];
 
 			while (3 > val.length) {

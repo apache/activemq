@@ -101,11 +101,12 @@ public class ActiveMQTopicSubscriber extends ActiveMQMessageConsumer implements
 
     /**
      * @param theSession
-     * @param value 
+     * @param consumerId
      * @param dest
      * @param name
      * @param selector
-     * @param cnum
+     * @param prefetch
+     * @param maximumPendingMessageCount
      * @param noLocalValue
      * @param browserValue
      * @param asyncDispatch 

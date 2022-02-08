@@ -48,7 +48,7 @@ org.activemq.AmqAdapter = {
  *  - headers: An object containing additional headers for the ajax request.
  */
 	ajax: function(uri, options) {
-		request = {
+		var request = {
 			onSuccess: options.success ? function(xhr, header) {
 				if (options.success) {
 					var ct = xhr.getResponseHeader("content-type");

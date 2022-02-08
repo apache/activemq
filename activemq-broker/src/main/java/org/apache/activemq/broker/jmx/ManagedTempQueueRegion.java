@@ -52,7 +52,7 @@ public class ManagedTempQueueRegion extends TempQueueRegion {
         super.destroySubscription(sub);
     }
 
-    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
+    protected synchronized Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         Destination rc = super.createDestination(context, destination);
         regionBroker.register(destination, rc);
         return rc;

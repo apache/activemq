@@ -78,6 +78,7 @@ public abstract class MessageServletSupport extends HttpServlet {
     private String destinationOptions;
     private long maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE;
 
+    @Override
     public void init(ServletConfig servletConfig) throws ServletException {
         super.init(servletConfig);
 
@@ -89,7 +90,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Defaulting to use topics: " + defaultTopicFlag);
+            LOG.debug("Defaulting to use topics: {}", defaultTopicFlag);
         }
         name = servletConfig.getInitParameter("destination");
         if (name != null) {
@@ -134,33 +135,33 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
         Long expiration = asLong(parameters.remove("JMSExpiration"));
         if (expiration != null) {
-            message.setJMSExpiration(expiration.longValue());
+            message.setJMSExpiration(expiration);
         }
         Destination replyTo = asDestination(parameters.remove("JMSReplyTo"));
         if (replyTo != null) {
             message.setJMSReplyTo(replyTo);
         }
-        String type = (String)asString(parameters.remove("JMSType"));
+        String type = asString(parameters.remove("JMSType"));
         if (type != null) {
             message.setJMSType(type);
         }
 
-        for (Iterator iter = parameters.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            String name = (String)entry.getKey();
+        for (Object o : parameters.entrySet()) {
+            Map.Entry entry = (Map.Entry) o;
+            String name = (String) entry.getKey();
             if (!destinationParameter.equals(name) && !typeParameter.equals(name) && !bodyParameter.equals(name) && !"JMSDeliveryMode".equals(name) && !"JMSPriority".equals(name)
-                && !"JMSTimeToLive".equals(name)) {
+                    && !"JMSTimeToLive".equals(name)) {
                 Object value = entry.getValue();
                 if (value instanceof Object[]) {
-                    Object[] array = (Object[])value;
+                    Object[] array = (Object[]) value;
                     if (array.length == 1) {
                         value = array[0];
                     } else {
-                        LOG.warn("Can't use property: " + name + " which is of type: " + value.getClass().getName() + " value");
+                        LOG.warn("Can't use property: {} which is of type: {} value", name, value.getClass().getName());
                         value = null;
                         int size = array.length;
                         for (int i = 0; i < size; i++) {
-                            LOG.debug("value[" + i + "] = " + array[i]);
+                            LOG.debug("value[{}] = {}", i, array[i]);
                         }
                     }
                 }
@@ -197,10 +198,7 @@ public abstract class MessageServletSupport extends HttpServlet {
 
     protected boolean isSync(HttpServletRequest request) {
         String text = request.getParameter("sync");
-        if (text != null) {
-            return true;
-        }
-        return false;
+        return text != null;
     }
 
     protected Destination asDestination(Object value) {
@@ -302,7 +300,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
 
         uri = uri.replace('/', '.');
-        LOG.debug("destination uri=" + uri);
+        LOG.debug("destination uri={}", uri);
         return getDestination(client, request, uri);
     }
 
@@ -321,14 +319,14 @@ public abstract class MessageServletSupport extends HttpServlet {
         } else {
             isTopic = isTopic(request);
         }
-        if (destinationName.indexOf("://") != -1) {
+        if (destinationName.contains("://")) {
             destinationName = destinationName.substring(destinationName.indexOf("://") + 3);
         }
 
         if (destinationOptions != null) {
             destinationName += "?" + destinationOptions;
         }
-        LOG.debug(destinationName + " (" + (isTopic ? "topic" : "queue") + ")");
+        LOG.debug("{} ({})", destinationName, (isTopic ? "topic" : "queue"));
         if (isTopic) {
             return client.getSession().createTopic(destinationName);
         } else {
@@ -338,7 +336,7 @@ public abstract class MessageServletSupport extends HttpServlet {
 
     /**
      * @return true if the current request is for a topic destination, else
-     *         false if its for a queue
+     *         false if it's for a queue
      */
     protected boolean isTopic(HttpServletRequest request) {
         String typeText = request.getParameter(typeParameter);
@@ -357,7 +355,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         String contentType = request.getContentType();
         if (answer == null && contentType != null) {
             LOG.debug("Content-Type={}", contentType);
-            // lets read the message body instead
+            // let's read the message body instead
             BoundedInputStream boundedInputStream = new BoundedInputStream(request.getInputStream(), maxMessageSize);
             BufferedReader reader = new BufferedReader(new InputStreamReader(boundedInputStream));
             StringBuilder buffer = new StringBuilder();

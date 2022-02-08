@@ -147,7 +147,7 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     private int getMaxPrefetchLimit(int value) {
         int result = Math.min(value, MAX_PREFETCH_SIZE);
         if (result < value) {
-            LOG.warn("maximum prefetch limit has been reset from " + value + " to " + MAX_PREFETCH_SIZE);
+            LOG.warn("maximum prefetch limit has been reset from {} to {}", value, MAX_PREFETCH_SIZE);
         }
         return result;
     }

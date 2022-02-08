@@ -37,8 +37,8 @@ import org.slf4j.LoggerFactory;
 public class CommandJoiner extends TransportFilter {
     private static final Logger LOG = LoggerFactory.getLogger(CommandJoiner.class);
 
+    private final OpenWireFormat wireFormat;
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
-    private OpenWireFormat wireFormat;
 
     public CommandJoiner(Transport next, OpenWireFormat wireFormat) {
         super(next);
@@ -61,7 +61,7 @@ public class CommandJoiner extends TransportFilter {
                     byte[] fullData = out.toByteArray();
                     out.reset();
                     DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(fullData));
-                    Command completeCommand = (Command)wireFormat.unmarshal(dataIn);
+                    Command completeCommand = (Command) wireFormat.unmarshal(dataIn);
 
                     LastPartialCommand lastCommand = (LastPartialCommand)command;
                     lastCommand.configure(completeCommand);

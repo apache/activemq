@@ -34,7 +34,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     private transient String key;
     private transient int hashCode;
 
-    private transient AtomicReference<Object> dataLocator = new AtomicReference<Object>();
+    private transient AtomicReference<Object> dataLocator = new AtomicReference<>();
     private transient Object entryLocator;
     private transient Object plistLocator;
     private transient Object futureOrSequenceLong;
@@ -194,7 +194,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     }
 
     /**
-     * @param
+     * @param other
      * @return
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
@@ -246,7 +246,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     }
 
     private Object readResolve() {
-        dataLocator = new AtomicReference<Object>();
+        dataLocator = new AtomicReference<>();
         return this;
     }
 }

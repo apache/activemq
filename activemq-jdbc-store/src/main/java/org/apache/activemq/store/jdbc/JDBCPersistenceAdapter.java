@@ -142,7 +142,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     @SuppressWarnings("unchecked")
     private Set<ActiveMQDestination> emptyDestinationSet() {
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
     protected void createMessageAudit() {
@@ -152,12 +152,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
             try {
                 c = getTransactionContext();
-                getAdapter().doMessageIdScan(c, auditRecoveryDepth, new JDBCMessageIdScanListener() {
-                    @Override
-                    public void messageId(MessageId id) {
-                        audit.isDuplicate(id);
-                    }
-                });
+                getAdapter().doMessageIdScan(c, auditRecoveryDepth, id -> audit.isDuplicate(id));
             } catch (Exception e) {
                 LOG.error("Failed to reload store message audit for JDBC persistence adapter", e);
             } finally {
@@ -175,12 +170,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         TransactionContext c = null;
         try {
             c = getTransactionContext();
-            getAdapter().doMessageIdScan(c, auditRecoveryDepth, new JDBCMessageIdScanListener() {
-                @Override
-                public void messageId(MessageId id) {
-                    audit.isDuplicate(id);
-                }
-            });
+            getAdapter().doMessageIdScan(c, auditRecoveryDepth, id -> audit.isDuplicate(id));
         } catch (Exception e) {
             LOG.error("Failed to reload store message audit for JDBC persistence adapter", e);
         } finally {
@@ -317,7 +307,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 try {
                     getAdapter().doCreateTables(transactionContext);
                 } catch (SQLException e) {
-                    LOG.warn("Cannot create tables due to: " + e);
+                    LOG.warn("Cannot create tables due to: {}", e);
                     JDBCPersistenceAdapter.log("Failure Details: ", e);
                 }
             } finally {
@@ -335,12 +325,8 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
         // Cleanup the db periodically.
         if (cleanupPeriod > 0) {
-            cleanupTicket = getScheduledThreadPoolExecutor().scheduleWithFixedDelay(new Runnable() {
-                @Override
-                public void run() {
-                    cleanup();
-                }
-            }, 0, cleanupPeriod, TimeUnit.MILLISECONDS);
+            cleanupTicket = getScheduledThreadPoolExecutor().scheduleWithFixedDelay(
+                    this::cleanup, 0, cleanupPeriod, TimeUnit.MILLISECONDS);
         }
         createMessageAudit();
     }
@@ -362,9 +348,9 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             c.getExclusiveConnection();
             getAdapter().doDeleteOldMessages(c);
         } catch (IOException e) {
-            LOG.warn("Old message cleanup failed due to: " + e, e);
+            LOG.warn("Old message cleanup failed due to: {}", e, e);
         } catch (SQLException e) {
-            LOG.warn("Old message cleanup failed due to: " + e);
+            LOG.warn("Old message cleanup failed due to: {}", e);
             JDBCPersistenceAdapter.log("Failure Details: ", e);
         } finally {
             if (c != null) {

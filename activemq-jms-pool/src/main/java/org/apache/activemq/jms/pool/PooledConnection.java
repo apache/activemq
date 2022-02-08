@@ -56,9 +56,9 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
 
     protected ConnectionPool pool;
     private volatile boolean stopped;
-    private final List<TemporaryQueue> connTempQueues = new CopyOnWriteArrayList<TemporaryQueue>();
-    private final List<TemporaryTopic> connTempTopics = new CopyOnWriteArrayList<TemporaryTopic>();
-    private final List<PooledSession> loanedSessions = new CopyOnWriteArrayList<PooledSession>();
+    private final List<TemporaryQueue> connTempQueues = new CopyOnWriteArrayList<>();
+    private final List<TemporaryTopic> connTempTopics = new CopyOnWriteArrayList<>();
+    private final List<PooledSession> loanedSessions = new CopyOnWriteArrayList<>();
 
     /**
      * Creates a new PooledConnection instance that uses the given ConnectionPool to create
@@ -179,7 +179,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
     /**
      * Creates a <CODE>Session</CODE> object.
      *
-     * @param acknowledgeMode indicates whether the consumer or the client will
+     * @param sessionMode indicates whether the consumer or the client will
      *                acknowledge any messages it receives; ignored if the
      *                session is transacted. Legal values are
      *                <code>Session.AUTO_ACKNOWLEDGE</code>,
@@ -290,7 +290,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
             try {
                 tempQueue.delete();
             } catch (JMSException ex) {
-                LOG.info("failed to delete Temporary Queue \"" + tempQueue.toString() + "\" on closing pooled connection: " + ex.getMessage());
+                LOG.info("failed to delete Temporary Queue \"{}\" on closing pooled connection: {}", tempQueue, ex.getMessage());
             }
         }
         connTempQueues.clear();
@@ -299,7 +299,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
             try {
                 tempTopic.delete();
             } catch (JMSException ex) {
-                LOG.info("failed to delete Temporary Topic \"" + tempTopic.toString() + "\" on closing pooled connection: " + ex.getMessage());
+                LOG.info("failed to delete Temporary Topic \"{}\" on closing pooled connection: {}", tempTopic, ex.getMessage());
             }
         }
         connTempTopics.clear();

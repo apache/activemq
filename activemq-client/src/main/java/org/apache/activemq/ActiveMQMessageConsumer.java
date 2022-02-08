@@ -110,7 +110,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             this.transactionId = transactionId;
         }
     }
-    class PreviouslyDelivered {
+    static class PreviouslyDelivered {
         org.apache.activemq.command.Message message;
         boolean redelivered;
 
@@ -134,7 +134,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     // The are the messages that were delivered to the consumer but that have
     // not been acknowledged. It's kept in reverse order since we
     // Always walk list in reverse order.
-    protected final LinkedList<MessageDispatch> deliveredMessages = new LinkedList<MessageDispatch>();
+    protected final LinkedList<MessageDispatch> deliveredMessages = new LinkedList<>();
     // track duplicate deliveries in a transaction such that the tx integrity can be validated
     private PreviouslyDeliveredMap<MessageId, PreviouslyDelivered> previouslyDeliveredMessages;
     private int deliveredCounter;
@@ -142,7 +142,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private long redeliveryDelay;
     private int ackCounter;
     private int dispatchedCount;
-    private final AtomicReference<MessageListener> messageListener = new AtomicReference<MessageListener>();
+    private final AtomicReference<MessageListener> messageListener = new AtomicReference<>();
     private final JMSConsumerStatsImpl stats;
 
     private final String selector;
@@ -205,7 +205,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
             String connectionID = session.connection.getConnectionInfo().getConnectionId().getValue();
 
-            if (physicalName.indexOf(connectionID) < 0) {
+            if (!physicalName.contains(connectionID)) {
                 throw new InvalidDestinationException("Cannot use a Temporary destination from another Connection");
             }
 
@@ -855,7 +855,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     // rollback duplicates that aren't acknowledged
                     List<MessageDispatch> tmp = null;
                     synchronized (this.deliveredMessages) {
-                        tmp = new ArrayList<MessageDispatch>(this.deliveredMessages);
+                        tmp = new ArrayList<>(this.deliveredMessages);
                     }
                     for (MessageDispatch old : tmp) {
                         this.session.connection.rollbackDuplicate(this, old.getMessage());
@@ -1259,8 +1259,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
                 MessageId firstMsgId = deliveredMessages.getLast().getMessage().getMessageId();
 
-                for (Iterator<MessageDispatch> iter = deliveredMessages.iterator(); iter.hasNext();) {
-                    MessageDispatch md = iter.next();
+                for (MessageDispatch md : deliveredMessages) {
                     md.getMessage().onMessageRolledBack();
                     // ensure we don't filter this as a duplicate
                     session.connection.rollbackDuplicate(this, md.getMessage());
@@ -1294,7 +1293,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
 
                     final LinkedList<MessageDispatch> pendingSessionRedelivery =
-                            new LinkedList<MessageDispatch>(deliveredMessages);
+                            new LinkedList<>(deliveredMessages);
 
                     captureDeliveredMessagesForDuplicateSuppressionWithRequireRedelivery(false);
 
@@ -1420,7 +1419,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             synchronized (unconsumedMessages.getMutex()) {
                 if (!unconsumedMessages.isClosed()) {
                     // deliverySequenceId non zero means previously queued dispatch
-                    if (this.info.isBrowser() || md.getDeliverySequenceId() != 0l || !session.connection.isDuplicate(this, md.getMessage())) {
+                    if (this.info.isBrowser() || md.getDeliverySequenceId() != 0L || !session.connection.isDuplicate(this, md.getMessage())) {
                         if (listener != null && unconsumedMessages.isRunning()) {
                             if (redeliveryExceeded(md)) {
                                 poisonAck(md, "listener dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
@@ -1562,7 +1561,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     private void captureDeliveredMessagesForDuplicateSuppressionWithRequireRedelivery(boolean requireRedelivery) {
         if (previouslyDeliveredMessages == null) {
-            previouslyDeliveredMessages = new PreviouslyDeliveredMap<MessageId, PreviouslyDelivered>(session.getTransactionContext().getTransactionId());
+            previouslyDeliveredMessages = new PreviouslyDeliveredMap<>(session.getTransactionContext().getTransactionId());
         }
         for (MessageDispatch delivered : deliveredMessages) {
             previouslyDeliveredMessages.put(delivered.getMessage().getMessageId(), new PreviouslyDelivered(delivered, !requireRedelivery));

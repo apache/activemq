@@ -120,7 +120,7 @@ public class TopicSubscription extends AbstractSubscription {
                         if (context != null && context.getConnection() != null) {
                             remoteAddr = context.getConnection().getRemoteAddress();
                         }
-                        LOG.warn("{}: has twice its prefetch limit pending, without an ack; it appears to be slow{}", toString(), (remoteAddr != null) ? ": " + remoteAddr : "");
+                        LOG.warn("{}: has twice its prefetch limit pending, without an ack; it appears to be slow{}", this, (remoteAddr != null) ? ": " + remoteAddr : "");
                         setSlowConsumer(true);
                         for (Destination dest: destinations) {
                             dest.slowConsumer(getContext(), this);
@@ -132,13 +132,13 @@ public class TopicSubscription extends AbstractSubscription {
                     while (active) {
                         while (matched.isFull()) {
                             if (getContext().getStopping().get()) {
-                                LOG.warn("{}: stopped waiting for space in pendingMessage cursor for: {}", toString(), node.getMessageId());
+                                LOG.warn("{}: stopped waiting for space in pendingMessage cursor for: {}", this, node.getMessageId());
                                 getSubscriptionStatistics().getEnqueues().decrement();
                                 return;
                             }
                             if (!warnedAboutWait) {
                                 LOG.info("{}: Pending message cursor [{}] is full, temp usage ({}%) or memory usage ({}%) limit reached, blocking message add() pending the release of resources.",
-                                        toString(),
+                                        this,
                                         matched,
                                         matched.getSystemUsage().getTempUsage().getPercentUsage(),
                                         matched.getSystemUsage().getMemoryUsage().getPercentUsage());
@@ -358,7 +358,7 @@ public class TopicSubscription extends AbstractSubscription {
      * Occurs when a pull times out. If nothing has been dispatched since the
      * timeout was setup, then send the NULL message.
      */
-    private final void pullTimeout(long currentDispatchedCount, boolean alwaysSendDone) {
+    private void pullTimeout(long currentDispatchedCount, boolean alwaysSendDone) {
         synchronized (matchedListMutex) {
             if (currentDispatchedCount == getSubscriptionStatistics().getDispatched().getCount() || alwaysSendDone) {
                 try {
@@ -527,7 +527,7 @@ public class TopicSubscription extends AbstractSubscription {
         }
     }
 
-    public boolean isEnableAudit() {
+    public synchronized boolean isEnableAudit() {
         return enableAudit;
     }
 

@@ -52,7 +52,7 @@ public class FactoryFinder {
      * The default implementation of Object factory which works well in standalone applications.
      */
     protected static class StandaloneObjectFactory implements ObjectFactory {
-        final ConcurrentMap<String, Class> classMap = new ConcurrentHashMap<String, Class>();
+        final ConcurrentMap<String, Class> classMap = new ConcurrentHashMap<>();
 
         @Override
         public Object create(final String path) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException {
@@ -69,7 +69,7 @@ public class FactoryFinder {
             }
         }
 
-        static public Class loadClass(Properties properties) throws ClassNotFoundException, IOException {
+        public static Class loadClass(Properties properties) throws ClassNotFoundException, IOException {
 
             String className = properties.getProperty("class");
             if (className == null) {
@@ -91,7 +91,7 @@ public class FactoryFinder {
             return clazz;
         }
 
-        static public Properties loadProperties(String uri) throws IOException {
+        public static Properties loadProperties(String uri) throws IOException {
             // lets try the thread context class loader first
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             if (classLoader == null) {
@@ -106,17 +106,10 @@ public class FactoryFinder {
             }
 
             // lets load the file
-            BufferedInputStream reader = null;
-            try {
-                reader = new BufferedInputStream(in);
+            try (BufferedInputStream reader = new BufferedInputStream(in)) {
                 Properties properties = new Properties();
                 properties.load(reader);
                 return properties;
-            } finally {
-                try {
-                    reader.close();
-                } catch (Exception e) {
-                }
             }
         }
     }

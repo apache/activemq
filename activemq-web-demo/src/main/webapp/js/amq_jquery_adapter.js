@@ -48,7 +48,7 @@ org.activemq.AmqAdapter = {
 	 *  - headers: An object containing additional headers for the ajax request.
 	 */
 	ajax: function(uri, options) {
-		request = {
+		var request = {
 			url: uri,
 			data: options.data,
 			success: options.success || function(){},
@@ -73,7 +73,7 @@ org.activemq.AmqAdapter = {
 		
 		if( headers ) {
 			request.beforeSend = function(xhr) {
-				for( h in headers ) {
+				for( let h in headers ) {
 					xhr.setRequestHeader( h, headers[ h ] );
 				}
 			}

@@ -30,7 +30,7 @@ import org.apache.activemq.util.MarshallingSupport;
  */
 public class DataByteArrayOutputStream extends OutputStream implements DataOutput, AutoCloseable {
     private static final int DEFAULT_SIZE = PageFile.DEFAULT_PAGE_SIZE;
-    protected byte buf[];
+    protected byte[] buf;
     protected int pos;
 
     /**
@@ -105,7 +105,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
      * @throws IOException
      */
     @Override
-    public void write(byte b[], int off, int len) throws IOException {
+    public void write(byte[] b, int off, int len) throws IOException {
         if (len == 0) {
             return;
         }
@@ -237,7 +237,6 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
         ensureEnoughBuffer((int)(pos + encodedsize + 2));
         writeShort((int)encodedsize);
 
-        byte[] buffer = new byte[(int)encodedsize];
         MarshallingSupport.writeUTFBytesToBuffer(text, (int) encodedsize, buf, pos);
         pos += encodedsize;
         onWrite();
@@ -245,7 +244,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
 
     private void ensureEnoughBuffer(int newcount) {
         if (newcount > buf.length) {
-            byte newbuf[] = new byte[Math.max(buf.length << 1, newcount)];
+            byte[] newbuf = new byte[Math.max(buf.length << 1, newcount)];
             System.arraycopy(buf, 0, newbuf, 0, pos);
             buf = newbuf;
         }

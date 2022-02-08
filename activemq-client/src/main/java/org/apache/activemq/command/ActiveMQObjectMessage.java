@@ -201,16 +201,13 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
                 if (isCompressed()) {
                     is = new InflaterInputStream(is);
                 }
-                DataInputStream dataIn = new DataInputStream(is);
-                ClassLoadingAwareObjectInputStream objIn = new ClassLoadingAwareObjectInputStream(dataIn);
-                objIn.setTrustedPackages(trustedPackages);
-                objIn.setTrustAllPackages(trustAllPackages);
-                try {
+                try (DataInputStream dataIn = new DataInputStream(is);
+                     ClassLoadingAwareObjectInputStream objIn = new ClassLoadingAwareObjectInputStream(dataIn)) {
+                    objIn.setTrustedPackages(trustedPackages);
+                    objIn.setTrustAllPackages(trustAllPackages);
                     object = (Serializable)objIn.readObject();
                 } catch (ClassNotFoundException ce) {
                     throw JMSExceptionSupport.create("Failed to build body from content. Serializable class not available to broker. Reason: " + ce, ce);
-                } finally {
-                    dataIn.close();
                 }
             } catch (IOException e) {
                 throw JMSExceptionSupport.create("Failed to build body from bytes. Reason: " + e, e);

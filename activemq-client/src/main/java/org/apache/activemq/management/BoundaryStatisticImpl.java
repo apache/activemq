@@ -19,12 +19,10 @@ package org.apache.activemq.management;
 
 /**
  * A boundary statistic implementation
- *
- * 
  */
 public class BoundaryStatisticImpl extends StatisticImpl {
-    private long lowerBound;
-    private long upperBound;
+    private final long lowerBound;
+    private final long upperBound;
 
     public BoundaryStatisticImpl(String name, String unit, String description, long lowerBound, long upperBound) {
         super(name, unit, description);
@@ -40,7 +38,7 @@ public class BoundaryStatisticImpl extends StatisticImpl {
         return upperBound;
     }
 
-    protected void appendFieldDescription(StringBuffer buffer) {
+    protected synchronized void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" lowerBound: ");
         buffer.append(Long.toString(lowerBound));
         buffer.append(" upperBound: ");

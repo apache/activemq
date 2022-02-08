@@ -19,7 +19,6 @@ package org.apache.activemq.filter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -68,8 +67,8 @@ import javax.jms.JMSException;
  */
 public class MultiExpressionEvaluator {
 
-    Map<String, ExpressionListenerSet> rootExpressions = new HashMap<String, ExpressionListenerSet>();
-    Map<Expression, CacheExpression> cachedExpressions = new HashMap<Expression, CacheExpression>();
+    Map<String, ExpressionListenerSet> rootExpressions = new HashMap<>();
+    Map<Expression, CacheExpression> cachedExpressions = new HashMap<>();
 
     int view;
 
@@ -106,7 +105,7 @@ public class MultiExpressionEvaluator {
         }
 
         public boolean equals(Object o) {
-            if (o == null) {
+            if (!(o instanceof CacheExpression)) {
                 return false;
             }
             return ((CacheExpression)o).right.equals(right);
@@ -128,14 +127,14 @@ public class MultiExpressionEvaluator {
      */
     static class ExpressionListenerSet {
         Expression expression;
-        List<ExpressionListener> listeners = new ArrayList<ExpressionListener>();
+        List<ExpressionListener> listeners = new ArrayList<>();
     }
 
     /**
      * Objects that are interested in the results of an expression should
      * implement this interface.
      */
-    static interface ExpressionListener {
+    interface ExpressionListener {
         void evaluateResultEvent(Expression selector, MessageEvaluationContext message, Object result);
     }
 
@@ -171,7 +170,7 @@ public class MultiExpressionEvaluator {
         }
 
         // If there are no more listeners for this expression....
-        if (d.listeners.size() == 0) {
+        if (d.listeners.isEmpty()) {
             // Un-cache it...
             removeFromCache((CacheExpression)d.expression);
             rootExpressions.remove(expKey);
@@ -243,12 +242,10 @@ public class MultiExpressionEvaluator {
      */
     public void evaluate(MessageEvaluationContext message) {
         Collection<ExpressionListenerSet> expressionListeners = rootExpressions.values();
-        for (Iterator<ExpressionListenerSet> iter = expressionListeners.iterator(); iter.hasNext();) {
-            ExpressionListenerSet els = iter.next();
+        for (ExpressionListenerSet els : expressionListeners) {
             try {
                 Object result = els.expression.evaluate(message);
-                for (Iterator<ExpressionListener> iterator = els.listeners.iterator(); iterator.hasNext();) {
-                    ExpressionListener l = iterator.next();
+                for (ExpressionListener l : els.listeners) {
                     l.evaluateResultEvent(els.expression, message, result);
                 }
             } catch (Throwable e) {

@@ -56,7 +56,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     protected Broker broker;
     private final PListStore store;
     private final String name;
-    private PendingList memoryList;
+    private final PendingList memoryList;
     private PList diskList;
     private Iterator<MessageReference> iter;
     private Destination regionDestination;
@@ -85,7 +85,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     @Override
-    public void start() throws Exception {
+    public synchronized void start() throws Exception {
         if (started.compareAndSet(false, true)) {
             if( this.broker != null) {
                 wireFormat.setVersion(this.broker.getBrokerService().getStoreOpenWireVersion());
@@ -98,7 +98,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     @Override
-    public void stop() throws Exception {
+    public synchronized void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
             super.stop();
             if (systemUsage != null) {
@@ -148,7 +148,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         iterating = false;
         if (iter instanceof DiskIterator) {
            ((DiskIterator)iter).release();
-        };
+        }
         if (flushRequired) {
             flushRequired = false;
             if (!hasSpace()) {
@@ -162,8 +162,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     @Override
     public synchronized void destroy() throws Exception {
         stop();
-        for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext();) {
-            MessageReference node = i.next();
+        for (MessageReference node : memoryList) {
             node.decrementReferenceCount();
         }
         memoryList.clear();
@@ -179,7 +178,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     @Override
     public synchronized LinkedList<MessageReference> pageInList(int maxItems) {
-        LinkedList<MessageReference> result = new LinkedList<MessageReference>();
+        LinkedList<MessageReference> result = new LinkedList<>();
         int count = 0;
         for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext() && count < maxItems;) {
             MessageReference ref = i.next();
@@ -422,7 +421,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     private synchronized List<MessageReference> expireOldMessages() {
-        List<MessageReference> expired = new ArrayList<MessageReference>();
+        List<MessageReference> expired = new ArrayList<>();
         if (!memoryList.isEmpty()) {
             for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
                 MessageReference node = iterator.next();
@@ -446,8 +445,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                         name, memoryList.size(),
                         (systemUsage != null ? systemUsage.getMemoryUsage() : ""));
             }
-            for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
-                MessageReference node = iterator.next();
+            for (MessageReference node : memoryList) {
                 node.decrementReferenceCount();
                 ByteSequence bs;
                 try {
@@ -457,7 +455,6 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     LOG.error("Failed to write to disk list", e);
                     throw new RuntimeException(e);
                 }
-
             }
             memoryList.clear();
             setCacheEnabled(false);

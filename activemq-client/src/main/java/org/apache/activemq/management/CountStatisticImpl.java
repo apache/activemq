@@ -43,13 +43,15 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
         super(name, unit, description);
     }
 
-    public void reset() {
+    @Override
+    public synchronized void reset() {
         if (isDoReset()) {
             super.reset();
             counter.set(0);
         }
     }
 
+    @Override
     public long getCount() {
         return counter.get();
     }
@@ -111,9 +113,10 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
         this.parent = parent;
     }
 
-    protected void appendFieldDescription(StringBuffer buffer) {
+    @Override
+    protected synchronized void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" count: ");
-        buffer.append(Long.toString(counter.get()));
+        buffer.append(counter.get());
         super.appendFieldDescription(buffer);
     }
 

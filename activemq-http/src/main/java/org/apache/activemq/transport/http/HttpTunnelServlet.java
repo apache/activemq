@@ -17,13 +17,13 @@
 package org.apache.activemq.transport.http;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
-import javax.jms.JMSException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -50,12 +50,12 @@ import org.slf4j.LoggerFactory;
 public class HttpTunnelServlet extends HttpServlet {
     private static final long serialVersionUID = -3826714430767484333L;
     private static final Logger LOG = LoggerFactory.getLogger(HttpTunnelServlet.class);
+    private static final long requestTimeout = 30000L;
 
     private TransportAcceptListener listener;
     private HttpTransportFactory transportFactory;
     private TextWireFormat wireFormat;
-    private ConcurrentMap<String, BlockingQueueTransport> clients = new ConcurrentHashMap<String, BlockingQueueTransport>();
-    private final long requestTimeout = 30000L;
+    private ConcurrentMap<String, BlockingQueueTransport> clients = new ConcurrentHashMap<>();
     private HashMap<String, Object> transportOptions;
     private HashMap<String, Object> wireFormatOptions;
 
@@ -92,7 +92,7 @@ public class HttpTunnelServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // lets return the next response
+        // let's return the next response
         Command packet = null;
         int count = 0;
         try {
@@ -134,7 +134,7 @@ public class HttpTunnelServlet extends HttpServlet {
         }
 
         // Read the command directly from the reader, assuming UTF8 encoding
-        Command command = (Command) wireFormat.unmarshalText(new InputStreamReader(stream, "UTF-8"));
+        Command command = (Command) wireFormat.unmarshalText(new InputStreamReader(stream, StandardCharsets.UTF_8));
 
         if (command instanceof WireFormatInfo) {
             WireFormatInfo info = (WireFormatInfo) command;
@@ -170,7 +170,7 @@ public class HttpTunnelServlet extends HttpServlet {
         }
         BlockingQueueTransport answer = clients.get(clientID);
         if (answer == null) {
-            LOG.warn("The clientID header specified is invalid. Client sesion has not yet been established for it: " + clientID);
+            LOG.warn("The clientID header specified is invalid. Client sesion has not yet been established for it: {}", clientID);
             return null;
         }
         return answer;
@@ -192,7 +192,7 @@ public class HttpTunnelServlet extends HttpServlet {
         // thread to register the client
         if (clients.putIfAbsent(clientID, answer) != null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for the given clientID has already been established");
-            LOG.warn("A session for clientID '" + clientID + "' has already been established");
+            LOG.warn("A session for clientID '{}' has already been established", clientID);
             return null;
         }
 
@@ -214,7 +214,7 @@ public class HttpTunnelServlet extends HttpServlet {
         Transport transport = answer;
         try {
             // Preserve the transportOptions for future use by making a copy before applying (they are removed when applied).
-            HashMap<String, Object> options = new HashMap<String, Object>(transportOptions);
+            HashMap<String, Object> options = new HashMap<>(transportOptions);
             transport = transportFactory.serverConfigure(answer, null, options);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
@@ -232,7 +232,7 @@ public class HttpTunnelServlet extends HttpServlet {
         // Ensure that the transport was not prematurely disposed.
         if (transport.isDisposed()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "The session for the given clientID was prematurely disposed");
-            LOG.warn("The session for clientID '" + clientID + "' was prematurely disposed");
+            LOG.warn("The session for clientID '{}' was prematurely disposed", clientID);
             return null;
         }
 
@@ -240,7 +240,7 @@ public class HttpTunnelServlet extends HttpServlet {
     }
 
     protected BlockingQueueTransport createTransportChannel() {
-       return new BlockingQueueTransport(new LinkedBlockingQueue<Object>());
+       return new BlockingQueueTransport(new LinkedBlockingQueue<>());
     }
 
     protected TextWireFormat createWireFormat() {

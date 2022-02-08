@@ -28,13 +28,13 @@ import org.apache.activemq.util.IndentPrinter;
  * 
  */
 public class JMSSessionStatsImpl extends StatsImpl {
-    private List producers;
-    private List consumers;
-    private CountStatisticImpl messageCount;
-    private CountStatisticImpl pendingMessageCount;
-    private CountStatisticImpl expiredMessageCount;
-    private TimeStatisticImpl messageWaitTime;
-    private CountStatisticImpl durableSubscriptionCount;
+    private final List producers;
+    private final List consumers;
+    private final CountStatisticImpl messageCount;
+    private final CountStatisticImpl pendingMessageCount;
+    private final CountStatisticImpl expiredMessageCount;
+    private final TimeStatisticImpl messageWaitTime;
+    private final CountStatisticImpl durableSubscriptionCount;
 
     private TimeStatisticImpl messageRateTime;
 
@@ -48,8 +48,6 @@ public class JMSSessionStatsImpl extends StatsImpl {
                                                      "Time spent by a message before being delivered");
         this.durableSubscriptionCount = new CountStatisticImpl("durableSubscriptionCount",
                                                                "The number of durable subscriptions");
-        this.messageWaitTime = new TimeStatisticImpl("messageWaitTime",
-                                                     "Time spent by a message before being delivered");
         this.messageRateTime = new TimeStatisticImpl("messageRateTime",
                                                      "Time taken to process a message (thoughtput rate)");
 
@@ -142,8 +140,8 @@ public class JMSSessionStatsImpl extends StatsImpl {
         return messageRateTime;
     }
 
-    public String toString() {
-        StringBuffer buffer = new StringBuffer(" ");
+    public synchronized String toString() {
+        StringBuilder buffer = new StringBuilder(" ");
         buffer.append(messageCount);
         buffer.append(" ");
         buffer.append(messageRateTime);
@@ -162,7 +160,7 @@ public class JMSSessionStatsImpl extends StatsImpl {
             if (i > 0) {
                 buffer.append(", ");
             }
-            buffer.append(Integer.toString(i));
+            buffer.append(i);
             buffer.append(" = ");
             buffer.append(producerArray[i]);
         }
@@ -172,7 +170,7 @@ public class JMSSessionStatsImpl extends StatsImpl {
             if (i > 0) {
                 buffer.append(", ");
             }
-            buffer.append(Integer.toString(i));
+            buffer.append(i);
             buffer.append(" = ");
             buffer.append(consumerArray[i]);
         }
@@ -199,9 +197,8 @@ public class JMSSessionStatsImpl extends StatsImpl {
         out.println("producers {");
         out.incrementIndent();
         JMSProducerStatsImpl[] producerArray = getProducers();
-        for (int i = 0; i < producerArray.length; i++) {
-            JMSProducerStatsImpl producer = (JMSProducerStatsImpl)producerArray[i];
-            producer.dump(out);
+        for (JMSProducerStatsImpl jmsProducerStats : producerArray) {
+            jmsProducerStats.dump(out);
         }
         out.decrementIndent();
         out.printIndent();
@@ -211,9 +208,8 @@ public class JMSSessionStatsImpl extends StatsImpl {
         out.println("consumers {");
         out.incrementIndent();
         JMSConsumerStatsImpl[] consumerArray = getConsumers();
-        for (int i = 0; i < consumerArray.length; i++) {
-            JMSConsumerStatsImpl consumer = (JMSConsumerStatsImpl)consumerArray[i];
-            consumer.dump(out);
+        for (JMSConsumerStatsImpl jmsConsumerStats : consumerArray) {
+            jmsConsumerStats.dump(out);
         }
         out.decrementIndent();
         out.printIndent();

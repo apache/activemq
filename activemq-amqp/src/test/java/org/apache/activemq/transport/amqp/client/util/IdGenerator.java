@@ -34,9 +34,9 @@ public class IdGenerator {
     private static final String UNIQUE_STUB;
     private static int instanceCount;
     private static String hostName;
-    private String seed;
+    private final String seed;
     private final AtomicLong sequence = new AtomicLong(1);
-    private int length;
+    private final int length;
     public static final String PROPERTY_IDGENERATOR_PORT = "activemq.idgenerator.port";
 
     static {
