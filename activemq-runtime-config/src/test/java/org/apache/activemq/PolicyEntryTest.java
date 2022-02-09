@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class PolicyEntryTest extends RuntimeConfigTestSupport {
 
@@ -42,6 +43,18 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
 
         // change to existing dest
         verifyQueueLimit("Before", 4194304);
+    }
+
+    @Test
+    public void testModSendDuplicateFromStoreToDLQ() throws Exception {
+        final String brokerConfig = configurationSeed + "-policy-ml-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-sendDuplicateFromStoreToDLQ");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        verifyBooleanField("AMQ.8397", "sendDuplicateFromStoreToDLQ", true);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-sendDuplicateFromStoreToDLQ-mod", SLEEP);
+        verifyBooleanField("AMQ.8397", "sendDuplicateFromStoreToDLQ", false);
     }
 
     @Test
@@ -100,6 +113,26 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
         verifyQueueLimit("queue.child.test2", 4194304);
     }
 
+    private void verifyBooleanField(String dest, String fieldName, boolean value) throws Exception {
+        ActiveMQConnection connection = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection();
+        try {
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session.createConsumer(session.createQueue(dest));
+
+            switch(fieldName) {
+            case "sendDuplicateFromStoreToDLQ":
+                assertEquals(value, brokerService.getRegionBroker().getDestinationMap().get(new ActiveMQQueue(dest)).isSendDuplicateFromStoreToDLQ());
+                break;
+            default:
+                fail("Unsupported field specified: " + fieldName);
+            }
+            
+        } finally {
+            connection.close();
+        }
+    }
+    
     private void verifyQueueLimit(String dest, int memoryLimit) throws Exception {
         ActiveMQConnection connection = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection();
         try {
