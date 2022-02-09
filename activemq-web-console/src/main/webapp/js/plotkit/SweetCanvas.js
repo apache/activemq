@@ -20,7 +20,7 @@ try {
     }
 } 
 catch (e) {    
-    throw "SweetCanvas depends on MochiKit.{Base,Color,DOM,Format} and PlotKit.{Layout, Canvas}"
+    throw "SweetCanvas depends on MochiKit.{Base,Color,DOM,Format} and PlotKit.{Layout, Canvas}";
 }
 
 

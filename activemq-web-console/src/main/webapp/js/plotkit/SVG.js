@@ -536,7 +536,7 @@ PlotKit.SVGRenderer.prototype._renderPieAxis = function() {
             }
             else {
                 var label = this.createSVGElement("text", svgattrib);
-                label.appendChild(this.document.createTextNode(this.layout.xticks[i][1]))
+                label.appendChild(this.document.createTextNode(this.layout.xticks[i][1]));
                 this.root.appendChild(label);
             }
       }
@@ -668,7 +668,7 @@ PlotKit.SVGRenderer.isSupported = function() {
     */
 
     if (operaVersion && (operaVersion[1] > 8.9))
-        return true
+        return true;
     
     if (mozillaVersion && (mozillaVersion > 1.7))
         return true;
