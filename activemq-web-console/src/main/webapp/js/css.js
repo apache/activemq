@@ -133,7 +133,7 @@ var css = {
 	removeClassFromElement: function(el, classString) {
 		var classArray = this.privateGetClassArray(el);
 
-		for (x in classArray) {
+		for (let x in classArray) {
 			if (classString == classArray[x]) {
 				classArray[x] = '';
 				break;

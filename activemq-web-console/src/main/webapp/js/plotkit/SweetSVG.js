@@ -21,7 +21,7 @@ try {
     }
 } 
 catch (e) {    
-    throw "SweetSVG depends on MochiKit.{Base,Color,DOM,Format} and PlotKit.{Layout, SVG}"
+    throw "SweetSVG depends on MochiKit.{Base,Color,DOM,Format} and PlotKit.{Layout, SVG}";
 }
 
 
