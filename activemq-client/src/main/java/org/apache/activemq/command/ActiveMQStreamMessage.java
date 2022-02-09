@@ -1164,15 +1164,12 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             try {
                 if (compressed) {
                     ByteArrayInputStream input = new ByteArrayInputStream(this.content.getData(), this.content.getOffset(), this.content.getLength());
-                    InflaterInputStream inflater = new InflaterInputStream(input);
-                    try {
-                        byte[] buffer = new byte[8*1024];
+                    try (InflaterInputStream inflater = new InflaterInputStream(input)) {
+                        byte[] buffer = new byte[8 * 1024];
                         int read = 0;
                         while ((read = inflater.read(buffer)) != -1) {
                             this.dataOut.write(buffer, 0, read);
                         }
-                    } finally {
-                        inflater.close();
                     }
                 } else {
                     this.dataOut.write(this.content.getData(), this.content.getOffset(), this.content.getLength());

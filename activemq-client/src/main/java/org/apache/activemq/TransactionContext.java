@@ -67,8 +67,7 @@ public class TransactionContext implements XAResource {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionContext.class);
 
     // XATransactionId -> ArrayList of TransactionContext objects
-    private final static HashMap<TransactionId, List<TransactionContext>> ENDED_XA_TRANSACTION_CONTEXTS =
-            new HashMap<TransactionId, List<TransactionContext>>();
+    private static final HashMap<TransactionId, List<TransactionContext>> ENDED_XA_TRANSACTION_CONTEXTS = new HashMap<>();
 
     private ActiveMQConnection connection;
     private final LongSequenceGenerator localTransactionIdGenerator;
@@ -149,7 +148,7 @@ public class TransactionContext implements XAResource {
 
     public void addSynchronization(Synchronization s) {
         if (synchronizations == null) {
-            synchronizations = new ArrayList<Synchronization>(10);
+            synchronizations = new ArrayList<>(10);
         }
         synchronizations.add(s);
     }
@@ -160,12 +159,11 @@ public class TransactionContext implements XAResource {
         }
 
         Throwable firstException = null;
-        int size = synchronizations.size();
-        for (int i = 0; i < size; i++) {
+        for (Synchronization synchronization : synchronizations) {
             try {
-                synchronizations.get(i).afterRollback();
+                synchronization.afterRollback();
             } catch (Throwable t) {
-                LOG.debug("Exception from afterRollback on {}", synchronizations.get(i), t);
+                LOG.debug("Exception from afterRollback on {}", synchronization, t);
                 if (firstException == null) {
                     firstException = t;
                 }
@@ -183,12 +181,11 @@ public class TransactionContext implements XAResource {
         }
 
         Throwable firstException = null;
-        int size = synchronizations.size();
-        for (int i = 0; i < size; i++) {
+        for (Synchronization synchronization : synchronizations) {
             try {
-                synchronizations.get(i).afterCommit();
+                synchronization.afterCommit();
             } catch (Throwable t) {
-                LOG.debug("Exception from afterCommit on {}", synchronizations.get(i), t);
+                LOG.debug("Exception from afterCommit on {}", synchronization, t);
                 if (firstException == null) {
                     firstException = t;
                 }
@@ -207,7 +204,7 @@ public class TransactionContext implements XAResource {
 
         int size = synchronizations.size();
         try {
-            for (;beforeEndIndex < size;) {
+            while (beforeEndIndex < size) {
                 synchronizations.get(beforeEndIndex++).beforeEnd();
             }
         } catch (JMSException e) {
@@ -479,12 +476,10 @@ public class TransactionContext implements XAResource {
                 }
                 // After commit may be expensive and can deadlock, do it outside global synch block
                 // No risk for concurrent updates as we own the list now
-                if (l != null) {
-                    if(! l.isEmpty()) {
-                        LOG.debug("firing afterCommit callbacks on XA_RDONLY from prepare: {}", xid);
-                        for (TransactionContext ctx : l) {
-                            ctx.afterCommit();
-                        }
+                if (l != null && ! l.isEmpty()) {
+                    LOG.debug("firing afterCommit callbacks on XA_RDONLY from prepare: {}", xid);
+                    for (TransactionContext ctx : l) {
+                        ctx.afterCommit();
                     }
                 }
             }
@@ -516,7 +511,7 @@ public class TransactionContext implements XAResource {
     public void rollback(Xid xid) throws XAException {
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Rollback: " + xid);
+            LOG.debug("Rollback: {}", xid);
         }
 
         // We allow interleaving multiple transactions, so
@@ -769,7 +764,7 @@ public class TransactionContext implements XAResource {
                 synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                     l = ENDED_XA_TRANSACTION_CONTEXTS.get(transactionId);
                     if (l == null) {
-                        l = new ArrayList<TransactionContext>(3);
+                        l = new ArrayList<>(3);
                         ENDED_XA_TRANSACTION_CONTEXTS.put(transactionId, l);
                     }
                     if (!l.contains(this)) {
@@ -796,8 +791,8 @@ public class TransactionContext implements XAResource {
      * @return XAException wrapping original exception or its message
      */
     public static XAException toXAException(JMSException e) {
-        if (e.getCause() != null && e.getCause() instanceof XAException) {
-            XAException original = (XAException)e.getCause();
+        if (e.getCause() instanceof XAException) {
+            XAException original = (XAException) e.getCause();
             XAException xae = new XAException(original.getMessage());
             if (original != null) {
                 xae.errorCode = original.errorCode;

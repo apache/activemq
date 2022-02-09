@@ -117,27 +117,14 @@ public class ServerMojo extends AbstractMojo {
      * @throws IOException
      */
     public File copy(File source) throws IOException {
-        FileChannel in = null;
-        FileChannel out = null;
-
         File dest = new File(outputDirectory.getAbsolutePath() + File.separator + "activemq.xml");
 
-        try {
-            in = new FileInputStream(source).getChannel();
-            out = new FileOutputStream(dest).getChannel();
+        try (FileChannel in = new FileInputStream(source).getChannel();
+             FileChannel out = new FileOutputStream(dest).getChannel()) {
 
             long size = in.size();
             MappedByteBuffer buf = in.map(FileChannel.MapMode.READ_ONLY, 0, size);
-
             out.write(buf);
-
-        } finally {
-            if (in != null) {
-                in.close();
-            }
-            if (out != null) {
-                out.close();
-            }
         }
 
         return dest;

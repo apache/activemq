@@ -124,8 +124,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         InputStream in = null;
         String version = "<unknown-5.x>";
         if ((in = AmqpConnection.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            try {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
                 version = reader.readLine();
             } catch(Exception e) {
             }
@@ -249,7 +248,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
     @Override
     public long keepAlive() throws IOException {
-        long rescheduleAt = 0l;
+        long rescheduleAt = 0L;
 
         LOG.trace("Performing connection:{} keep-alive processing", amqpTransport.getRemoteAddress());
 
@@ -585,7 +584,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         Object context = link.getContext();
 
         if (context instanceof AmqpLink) {
-            ((AmqpLink) context).close();;
+            ((AmqpLink) context).close();
         } else {
             link.close();
             link.free();

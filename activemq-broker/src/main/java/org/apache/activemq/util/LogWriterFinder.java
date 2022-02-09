@@ -116,30 +116,23 @@ public class LogWriterFinder {
 
         String uri = path + logWriterName;
 
-        // lets try the thread context class loader first
+        // let's try the thread context class loader first
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         if (classLoader == null) classLoader = getClass().getClassLoader();
         InputStream in = classLoader.getResourceAsStream(uri);
         if (in == null) {
             in = LogWriterFinder.class.getClassLoader().getResourceAsStream(uri);
             if (in == null) {
-                log.error("Could not find log writer for resource: " + uri);
+                log.error("Could not find log writer for resource: {}", uri);
                 throw new IOException("Could not find log writer for resource: " + uri);
             }
         }
 
-        // lets load the file
-        BufferedInputStream reader = null;
+        // let's load the file
         Properties properties = new Properties();
-        try {
-            reader = new BufferedInputStream(in);
+        try (BufferedInputStream reader = new BufferedInputStream(in)) {
             properties.load(reader);
             return properties;
-        } finally {
-            try {
-                reader.close();
-            } catch (Exception e) {
-            }
         }
     }
 

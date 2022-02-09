@@ -101,11 +101,11 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_MAP_MESSAGE;
 
-    protected transient Map<String, Object> map = new HashMap<String, Object>();
+    protected transient Map<String, Object> map = new HashMap<>();
 
     private Object readResolve() throws ObjectStreamException {
         if (this.map == null) {
-            this.map = new HashMap<String, Object>();
+            this.map = new HashMap<>();
         }
         return this;
     }
@@ -181,9 +181,9 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
                 if (isCompressed()) {
                     is = new InflaterInputStream(is);
                 }
-                DataInputStream dataIn = new DataInputStream(is);
-                map = MarshallingSupport.unmarshalPrimitiveMap(dataIn);
-                dataIn.close();
+                try (DataInputStream dataIn = new DataInputStream(is)) {
+                    map = MarshallingSupport.unmarshalPrimitiveMap(dataIn);
+                }
             }
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);

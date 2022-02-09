@@ -142,29 +142,21 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doDropTables(TransactionContext c) throws SQLException, IOException {
-        Statement s = null;
-        try {
-            s = c.getConnection().createStatement();
-            String[] dropStatments = this.statements.getDropSchemaStatements();
-            for (int i = 0; i < dropStatments.length; i++) {
+        try (Statement s = c.getConnection().createStatement()) {
+            String[] dropStatements = this.statements.getDropSchemaStatements();
+            for (String dropStatement : dropStatements) {
                 // This will fail usually since the tables will be
                 // created already.
                 try {
-                    LOG.debug("Executing SQL: " + dropStatments[i]);
-                    s.execute(dropStatments[i]);
+                    LOG.debug("Executing SQL: {}", dropStatement);
+                    s.execute(dropStatement);
                 } catch (SQLException e) {
-                    LOG.warn("Could not drop JDBC tables; they may not exist." + " Failure was: " + dropStatments[i]
-                            + " Message: " + e.getMessage() + " SQLState: " + e.getSQLState() + " Vendor code: "
-                            + e.getErrorCode());
+                    LOG.warn("Could not drop JDBC tables; they may not exist. Failure was: {} Message: {} SQLState: {} Vendor code: {}",
+                             dropStatement, e.getMessage(), e.getSQLState(), e.getErrorCode());
                     JDBCPersistenceAdapter.log("Failure details: ", e);
                 }
             }
             commitIfAutoCommitIsDisabled(c);
-        } finally {
-            try {
-                s.close();
-            } catch (Throwable e) {
-            }
         }
     }
 
@@ -435,7 +427,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setMaxRows(limit);
             rs = s.executeQuery();
             // jdbc scrollable cursor requires jdbc ver > 1.0 and is often implemented locally so avoid
-            LinkedList<MessageId> reverseOrderIds = new LinkedList<MessageId>();
+            LinkedList<MessageId> reverseOrderIds = new LinkedList<>();
             while (rs.next()) {
                 reverseOrderIds.addFirst(new MessageId(rs.getString(2), rs.getLong(3)));
             }
@@ -537,9 +529,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doClearLastAck(TransactionContext c, ActiveMQDestination destination, byte priority, String clientId, String subName) throws SQLException, IOException {
-        PreparedStatement s = null;
-        try {
-            s = c.getConnection().prepareStatement(this.statements.getClearDurableLastAckInTxStatement());
+        try (PreparedStatement s = c.getConnection().prepareStatement(this.statements.getClearDurableLastAckInTxStatement())) {
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subName);
@@ -547,8 +537,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             if (s.executeUpdate() != 1) {
                 throw new IOException("Could not remove prepared transaction state from message ack for: " + clientId + ":" + subName);
             }
-        } finally {
-            close(s);
         }
     }
 
@@ -769,7 +757,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s = c.getConnection().prepareStatement(this.statements.getFindAllDurableSubsStatement());
             s.setString(1, destination.getQualifiedName());
             rs = s.executeQuery();
-            ArrayList<SubscriptionInfo> rc = new ArrayList<SubscriptionInfo>();
+            ArrayList<SubscriptionInfo> rc = new ArrayList<>();
             while (rs.next()) {
                 SubscriptionInfo subscription = new SubscriptionInfo();
                 subscription.setDestination(destination);
@@ -780,7 +768,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                         ActiveMQDestination.QUEUE_TYPE));
                 rc.add(subscription);
             }
-            return rc.toArray(new SubscriptionInfo[rc.size()]);
+            return rc.toArray(new SubscriptionInfo[0]);
         } finally {
             close(rs);
             close(s);
@@ -830,7 +818,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setInt(1, priority);
             s.setInt(2, priority);
             int i = s.executeUpdate();
-            LOG.debug("Deleted " + i + " old message(s) at priority: " + priority);
+            LOG.debug("Deleted {} old message(s) at priority: {}", i,  priority);
         } finally {
             close(s);
         }
@@ -877,7 +865,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public Set<ActiveMQDestination> doGetDestinations(TransactionContext c) throws SQLException, IOException {
-        HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
+        HashSet<ActiveMQDestination> rc = new HashSet<>();
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
@@ -1136,8 +1124,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 + "WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
                 + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
                 + " ORDER BY M.ID");
-      s.setString(1,destinationName); s.setString(2,clientId); s.setString(3,subscriptionName);
-      printQuery(s,System.out); }
+        s.setString(1,destinationName); s.setString(2,clientId); s.setString(3,subscriptionName);
+        printQuery(s,System.out);
+    }
 
     public static void dumpTables(java.sql.Connection c) throws SQLException {
         printQuery(c, "SELECT COUNT(*) from ACTIVEMQ_MSGS", System.out);
@@ -1156,9 +1145,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public static void printQuery(java.sql.PreparedStatement s, java.io.PrintStream out)
             throws SQLException {
 
-        ResultSet set = null;
-        try {
-            set = s.executeQuery();
+        try (s; ResultSet set = s.executeQuery()) {
             java.sql.ResultSetMetaData metaData = set.getMetaData();
             for (int i = 1; i <= metaData.getColumnCount(); i++) {
                 if (i == 1)
@@ -1173,15 +1160,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     out.print(set.getString(i) + "|");
                 }
                 out.println();
-            }
-        } finally {
-            try {
-                set.close();
-            } catch (Throwable ignore) {
-            }
-            try {
-                s.close();
-            } catch (Throwable ignore) {
             }
         }
     }

@@ -48,7 +48,7 @@ public class TransactionContext {
     private PreparedStatement updateLastAckStatement;
     // a cheap dirty level that we can live with    
     private int transactionIsolation = Connection.TRANSACTION_READ_UNCOMMITTED;
-    private LinkedList<Runnable> completions = new LinkedList<Runnable>();
+    private LinkedList<Runnable> completions = new LinkedList<>();
     private ReentrantReadWriteLock exclusiveConnectionLock = new ReentrantReadWriteLock();
     private int networkTimeout;
     private int queryTimeout;
@@ -134,18 +134,13 @@ public class TransactionContext {
             return;
         }
 
-        try {
+        try (p) {
             int[] rc = p.executeBatch();
-            for (int i = 0; i < rc.length; i++) {
-                int code = rc[i];
+            for (int code : rc) {
                 if (code < 0 && code != Statement.SUCCESS_NO_INFO) {
                     throw new SQLException(message + ". Response code: " + code);
                 }
             }
-        } finally {
-            try {
-                p.close();
-            } catch (Throwable ignored) {}
         }
     }
 
@@ -286,7 +281,7 @@ public class TransactionContext {
         completions.add(runnable);
     }
 
-    final private class UnlockOnCloseConnection implements Connection {
+    private final class UnlockOnCloseConnection implements Connection {
 
         private final Connection delegate;
         private final Lock lock;

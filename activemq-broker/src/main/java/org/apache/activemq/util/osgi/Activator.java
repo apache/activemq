@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -58,10 +59,10 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     private static final Logger LOG = LoggerFactory.getLogger(Activator.class);
 
-    private final ConcurrentMap<String, Class<?>> serviceCache = new ConcurrentHashMap<String, Class<?>>();
-    private final ConcurrentMap<Long, BundleWrapper> bundleWrappers = new ConcurrentHashMap<Long, BundleWrapper>();
+    private final ConcurrentMap<String, Class<?>> serviceCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Long, BundleWrapper> bundleWrappers = new ConcurrentHashMap<>();
     private BundleContext bundleContext;
-    private Set<BundleCapability> packageCapabilities = new HashSet<BundleCapability>();
+    private Set<BundleCapability> packageCapabilities = new HashSet<>();
 
     // ================================================================
     // BundleActivator interface impl
@@ -97,7 +98,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
      */
     private void cachePackageCapabilities(Class<?> ... classes) {
         BundleWiring ourWiring = bundleContext.getBundle().adapt(BundleWiring.class);
-        Set<String> packageNames = new HashSet<String>();
+        Set<String> packageNames = new HashSet<>();
         for (Class<?> clazz: classes) {
             packageNames.add(clazz.getPackage().getName());
         }
@@ -177,7 +178,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
         if (clazz == null) {
             StringBuffer warnings = new StringBuffer();
             // We need to look for a bundle that has that class.
-            int wrrningCounter=1;
+            int warningCounter=1;
             for (BundleWrapper wrapper : bundleWrappers.values()) {
                 URL resource = wrapper.bundle.getResource(path);
                 if( resource == null ) {
@@ -188,14 +189,14 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
                 String className = properties.getProperty("class");
                 if (className == null) {
-                    warnings.append("("+(wrrningCounter++)+") Invalid service file in bundle "+wrapper+": 'class' property not defined.");
+                    warnings.append("("+(warningCounter++)+") Invalid service file in bundle "+wrapper+": 'class' property not defined.");
                     continue;
                 }
 
                 try {
                     clazz = wrapper.bundle.loadClass(className);
                 } catch (ClassNotFoundException e) {
-                    warnings.append("("+(wrrningCounter++)+") Bundle "+wrapper+" could not load "+className+": "+e);
+                    warnings.append("("+(warningCounter++)+") Bundle "+wrapper+" could not load "+className+": "+e);
                     continue;
                 }
 
@@ -206,7 +207,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
             }
 
             if( clazz == null ) {
-                // Since OSGi is such a tricky environment to work in.. lets give folks the
+                // Since OSGi is such a tricky environment to work in.. let's give folks the
                 // most information we can in the error message.
                 String msg = "Service not found: '" + path + "'";
                 if (warnings.length()!= 0) {
@@ -228,21 +229,15 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     // ================================================================
 
     private void debug(Object msg) {
-        LOG.debug(msg.toString());
+        LOG.debug("{}", msg);
     }
 
     private Properties loadProperties(URL resource) throws IOException {
-        InputStream in = resource.openStream();
-        try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+        try (InputStream in = resource.openStream();
+             BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             Properties properties = new Properties();
-            properties.load(in);
+            properties.load(br);
             return properties;
-        } finally {
-            try {
-                in.close();
-            } catch (Exception e) {
-            }
         }
     }
 
@@ -266,7 +261,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     private static class BundleWrapper {
         private final Bundle bundle;
-        private final List<String> cachedServices = new ArrayList<String>();
+        private final List<String> cachedServices = new ArrayList<>();
 
         public BundleWrapper(Bundle bundle) {
             this.bundle = bundle;
