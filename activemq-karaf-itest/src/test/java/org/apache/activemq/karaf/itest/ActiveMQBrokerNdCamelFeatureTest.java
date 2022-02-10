@@ -18,6 +18,7 @@ package org.apache.activemq.karaf.itest;
 
 import java.io.File;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -37,7 +38,7 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractFeatureTest {
     public static Option[] configure() {
         return new Option[] //
         {
-         composite(configure("activemq", "activemq-camel")),
+         composite(configure("activemq-broker", "activemq-shell", "activemq-camel")),
          editConfigurationFilePut("etc/system.properties", "camel.version", camelVersion()),
          replaceConfigurationFile("etc/activemq.xml", new File(RESOURCE_BASE + "activemq-nd-camel.xml")),
          replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(RESOURCE_BASE + "org.apache.activemq.server-default.cfg"))
@@ -45,9 +46,11 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractFeatureTest {
     }
 
     @Test(timeout = 2 * 60 * 1000)
+    @Ignore("camel-jms should be used")
     public void test() throws Throwable {
         System.err.println(executeCommand("feature:list -i").trim());
         assertFeatureInstalled("activemq");
+        assertFeatureInstalled("activemq-shell");
         assertBrokerStarted();
         withinReason(new Runnable() {
             public void run() {
