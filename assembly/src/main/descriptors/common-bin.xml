@@ -193,8 +193,8 @@
         <include>commons-codec:commons-codec</include>
         <include>commons-net:commons-net</include>
         <include>org.apache.commons:commons-lang3</include>
-        <include>org.slf4j:slf4j-log4j12</include>
-        <include>log4j:log4j</include>
+        <include>org.slf4j:slf4j-reload4j</include>
+        <include>ch.qos.reload4j:reload4j</include>
         <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
         <include>org.apache.httpcomponents:httpclient</include>
         <include>org.apache.httpcomponents:httpcore</include>

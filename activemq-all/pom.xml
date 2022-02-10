@@ -69,7 +69,7 @@
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
+      <artifactId>slf4j-reload4j</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -119,9 +119,9 @@
                   <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
                   <include>org.slf4j:slf4j-api</include>
-                  <include>org.slf4j:slf4j-log4j12</include>
+                  <include>org.slf4j:slf4j-reload4j</include>
                   <include>org.slf4j:jcl-over-slf4j</include>
-                  <include>log4j:log4j</include>
+                  <include>ch.qos.reload4j:reload4j</include>
                   <include>org.springframework:spring-core</include>
                   <include>org.springframework:spring-beans</include>
                   <include>org.springframework:spring-context</include>
@@ -372,15 +372,15 @@
         </dependency>
         <dependency>
           <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
+          <artifactId>slf4j-reload4j</artifactId>
           <version>${slf4j-version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-          <version>${log4j-version}</version>
+          <groupId>ch.qos.reload4j</groupId>
+          <artifactId>reload4j</artifactId>
+          <version>${reload4j-version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
