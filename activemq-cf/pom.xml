@@ -63,9 +63,13 @@
                     	<Export-Package>
                     		!*
                     	</Export-Package>
-                        <Private-Package>
-							org.apache.activemq.osgi.cf                        	
-                        </Private-Package>
+                      <Import-Package>
+                        javax.jms*;version="[1,3)",
+                        *
+                      </Import-Package>
+                      <Private-Package>
+							          org.apache.activemq.osgi.cf                        	
+                      </Private-Package>
                     </instructions>
                 </configuration>
             </plugin>
