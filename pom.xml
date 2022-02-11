@@ -151,7 +151,7 @@
     <cobertura-maven-plugin-version>2.5.2</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>2.4</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>1.8</build-helper-maven-plugin-version>
-    <apache-rat-plugin-version>0.11</apache-rat-plugin-version>
+    <apache-rat-plugin-version>0.13</apache-rat-plugin-version>
     <ianal-maven-plugin-version>1.0-alpha-1</ianal-maven-plugin-version>
     <depends-maven-plugin-version>1.2</depends-maven-plugin-version>
     <maven-dependency-plugin-version>2.8</maven-dependency-plugin-version>
