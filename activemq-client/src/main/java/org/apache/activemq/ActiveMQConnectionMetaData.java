@@ -43,7 +43,7 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
         int major = 0;
         int minor = 0;
         try {
-            Package p = Package.getPackage("org.apache.activemq");
+            Package p = ActiveMQConnectionMetaData.class.getPackage();
             if (p != null) {
                 version = p.getImplementationVersion();
                 if (version != null) {
