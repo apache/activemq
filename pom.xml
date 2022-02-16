@@ -130,7 +130,7 @@
     <maven-assembly-plugin-version>3.3.0</maven-assembly-plugin-version>
     <maven-release-plugin-version>2.5.3</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
-    <maven-enforcer-plugin-version>3.0.0-M3</maven-enforcer-plugin-version>
+    <maven-enforcer-plugin-version>3.0.0</maven-enforcer-plugin-version>
     <maven-war-plugin-version>3.2.2</maven-war-plugin-version>
     <maven-compiler-plugin-version>3.9.0</maven-compiler-plugin-version>
     <maven-jar-plugin-version>3.2.2</maven-jar-plugin-version>
@@ -1259,6 +1259,7 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -1286,6 +1287,20 @@
                 <requireMavenVersion>
                   <version>3.0.5</version>
                 </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+          <execution>
+            <id>enforce-java-version</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[11,)</version>
+                  <message>You must use Java 11+ to build.</message>
+                </requireJavaVersion>
               </rules>
             </configuration>
           </execution>
