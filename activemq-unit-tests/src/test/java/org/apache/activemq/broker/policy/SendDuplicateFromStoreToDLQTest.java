@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.policy;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
@@ -96,6 +97,14 @@ public class SendDuplicateFromStoreToDLQTest {
         applySendDuplicateFromStoreToDLQPolicy(false);
         doProcessSendDuplicateFromStoreToDLQ(false);
     }
+    
+    @Test
+    public void testSendDuplicateFromStoreToDLQDefaultValue() throws Exception {
+        PolicyMap policyMap = applySendDuplicateFromStoreToDLQPolicy(null);
+        assertFalse(policyMap.getDefaultEntry().isSendDuplicateFromStoreToDLQ());
+        org.apache.activemq.broker.region.Queue queue = (org.apache.activemq.broker.region.Queue)broker.getDestination(new ActiveMQQueue("AMQ.8440"));
+        assertFalse(queue.isSendDuplicateFromStoreToDLQ());
+    }
 
     protected void doProcessSendDuplicateFromStoreToDLQ(boolean enabled) throws Exception {
         createQueue("AMQ.8397");
@@ -139,10 +148,14 @@ public class SendDuplicateFromStoreToDLQTest {
         }
     }
 
-    private PolicyMap applySendDuplicateFromStoreToDLQPolicy(boolean enabled) {
+    private PolicyMap applySendDuplicateFromStoreToDLQPolicy(Boolean enabled) {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
-        defaultEntry.setSendDuplicateFromStoreToDLQ(enabled);
+        
+        if(enabled != null) {
+            defaultEntry.setSendDuplicateFromStoreToDLQ(enabled);
+        }
+
         defaultEntry.setDeadLetterStrategy(new IndividualDeadLetterStrategy());
         policyMap.setDefaultEntry(defaultEntry);
         broker.setDestinationPolicy(policyMap);

@@ -52,9 +52,9 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
 
-        verifyBooleanField("AMQ.8397", "sendDuplicateFromStoreToDLQ", true);
-        applyNewConfig(brokerConfig, configurationSeed + "-policy-sendDuplicateFromStoreToDLQ-mod", SLEEP);
         verifyBooleanField("AMQ.8397", "sendDuplicateFromStoreToDLQ", false);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-sendDuplicateFromStoreToDLQ-mod", SLEEP);
+        verifyBooleanField("AMQ.8397", "sendDuplicateFromStoreToDLQ", true);
     }
 
     @Test

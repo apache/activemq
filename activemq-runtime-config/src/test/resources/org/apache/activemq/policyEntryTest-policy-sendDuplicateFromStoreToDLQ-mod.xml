@@ -28,7 +28,7 @@
     <destinationPolicy>
       <policyMap>
         <policyEntries>
-          <policyEntry queue="AMQ.8397" sendDuplicateFromStoreToDLQ="false"/>
+          <policyEntry queue="AMQ.8397" sendDuplicateFromStoreToDLQ="true"/>
         </policyEntries>
       </policyMap>
     </destinationPolicy>
