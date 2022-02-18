@@ -149,6 +149,27 @@
         <artifactId>maven-bundle-plugin</artifactId>
         <inherited>true</inherited>
         <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Export-Package>org.apache.activemq.karaf*;version=${project.version};-split-package:=merge-first</Export-Package>
+            <Import-Package>
+              !com.google.errorprone.annotations,
+              !com.google.errorprone.annotations.concurrent,
+              org.apache.felix.gogo.commands,
+              org.apache.karaf.shell.console;version="[2,4)",
+              org.apache.karaf.shell.console.commands;version="[2,4)",
+              *
+            </Import-Package>
+            <Private-Package>
+              com.google.errorprone.annotations,
+              com.google.errorprone.annotations.concurrent
+            </Private-Package>
+            <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
+            <Embed-Transitive>true</Embed-Transitive>
+            <_noee>true</_noee>
+          </instructions>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -204,31 +225,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <instructions>
-            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Export-Package>org.apache.activemq.karaf*;version=${project.version};-split-package:=merge-first</Export-Package>
-            <Import-Package>
-              !com.google.errorprone.annotations,
-              !com.google.errorprone.annotations.concurrent,
-              org.apache.felix.gogo.commands,
-              org.apache.karaf.shell.console;version="[2,4)",
-              org.apache.karaf.shell.console.commands;version="[2,4)",
-              *
-            </Import-Package>
-            <Private-Package>
-              com.google.errorprone.annotations,
-              com.google.errorprone.annotations.concurrent
-            </Private-Package>
-            <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
-            <Embed-Transitive>true</Embed-Transitive>
-            <_noee>true</_noee>
-          </instructions>
-        </configuration>
       </plugin>
     </plugins>
   </build>
