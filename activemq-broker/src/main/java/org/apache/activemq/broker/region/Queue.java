@@ -1058,12 +1058,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             pagedInMessages.clear();
 
             systemUsage.getMemoryUsage().removeUsageListener(this);
+
             if (memoryUsage != null) {
                 memoryUsage.stop();
             }
+
             if (systemUsage.getStoreUsage() != null) {
                 systemUsage.getStoreUsage().stop();
             }
+            
+            if (this.systemUsage.getTempUsage() != null) {
+                this.systemUsage.getTempUsage().stop();
+            }
+
             if (store != null) {
                 store.stop();
             }
