@@ -16,6 +16,15 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.Message;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerView;
@@ -24,11 +33,6 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.jms.*;
-import javax.management.ObjectName;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tests to ensure when the temp usage limit is updated on the broker the queues also have their
@@ -94,6 +98,10 @@ public class AMQ7085Test
         brokerView.setTempLimit(newBrokerTempLimit);
         assertEquals(brokerView.getTempLimit(), newBrokerTempLimit);
         assertEquals(queueViewMBean.getTempUsageLimit(), queueTempLimit);
+
+        //Verify that TempUsage is cleaned up on Queue stop
+        brokerService.getDestination(queue).stop();
+        assertFalse(brokerService.getDestination(queue).getTempUsage().isStarted());
     }
 
     @Test
@@ -112,5 +120,9 @@ public class AMQ7085Test
         brokerView.setTempLimit(newBrokerTempLimit);
         assertEquals(brokerView.getTempLimit(), newBrokerTempLimit);
         assertEquals(queueViewMBean.getTempUsageLimit(), newBrokerTempLimit);
+
+        //Verify that TempUsage is cleaned up on Queue stop
+        brokerService.getDestination(queue).stop();
+        assertFalse(brokerService.getDestination(queue).getTempUsage().isStarted());
     }
 }
