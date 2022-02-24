@@ -88,7 +88,7 @@ public abstract class BaseDestination implements Destination {
     private boolean advisoryForDelivery;
     private boolean advisoryForConsumed;
     private boolean sendAdvisoryIfNoConsumers;
-    private boolean sendDuplicateFromStoreToDLQ = true;
+    private boolean sendDuplicateFromStoreToDLQ = false;
     private boolean includeBodyForAdvisory;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     protected final BrokerService brokerService;

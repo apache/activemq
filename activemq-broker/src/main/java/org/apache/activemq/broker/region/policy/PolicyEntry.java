@@ -51,7 +51,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private DispatchPolicy dispatchPolicy;
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
-    private boolean sendDuplicateFromStoreToDLQ = true;
+    private boolean sendDuplicateFromStoreToDLQ = false;
     private DeadLetterStrategy deadLetterStrategy = Destination.DEFAULT_DEAD_LETTER_STRATEGY;
     private PendingMessageLimitStrategy pendingMessageLimitStrategy;
     private MessageEvictionStrategy messageEvictionStrategy;
