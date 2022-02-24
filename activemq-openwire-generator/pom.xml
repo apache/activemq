@@ -41,9 +41,14 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>groovy</groupId>
-      <artifactId>groovy-all</artifactId>
-      <version>1.0-jsr-03</version>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>4.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-ant</artifactId>
+      <version>4.0.1</version>
     </dependency>
     <dependency>
       <groupId>annogen</groupId>
