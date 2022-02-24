@@ -100,7 +100,6 @@ public class AmqpTestSupport {
     @Before
     public void setUp() throws Exception {
         LOG.info("========== start " + getTestName() + " ==========");
-        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
         exceptions.clear();
 
         startBroker();
@@ -356,7 +355,10 @@ public class AmqpTestSupport {
         }
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireURI);
-
+        List<String> trustedPackages = new ArrayList<>();
+        trustedPackages.addAll(factory.getTrustedPackages());
+        trustedPackages.add("java.util");
+        factory.setTrustedPackages(trustedPackages);
         return factory.createConnection();
     }
 
