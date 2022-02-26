@@ -39,6 +39,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.activemq.MaxFrameSizeExceededException;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
@@ -697,6 +698,9 @@ public class FailoverTransport implements CompositeTransport {
                         }
 
                         return;
+                    } catch (MaxFrameSizeExceededException e) {
+                        LOG.debug("MaxFrameSizeExceededException for command: {}", command);
+                        throw e;
                     } catch (IOException e) {
                         LOG.debug("Send oneway attempt: {} failed for command: {}", i, command);
                         handleTransportFailure(e);
