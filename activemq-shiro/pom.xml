@@ -83,12 +83,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>${commons-logging-version}</version>
-            <scope>test</scope>
-        </dependency>
         <!-- <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>activemq-jaas</artifactId>
@@ -100,13 +94,18 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -163,7 +162,7 @@
                             <name>org.apache.activemq.default.directory.prefix</name>
                             <value>target/</value>
                         </property>
-                        <!- - Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
+                        <!- - Uncomment the following if you want to configure custom logging (using src/test/resources/log4j2-test.properties)
                              while running mvn:test
                              Note: if you want to see log messages on the console window remove
                                    "redirectTestOutputToFile" from the parent pom
@@ -171,7 +170,7 @@
                         <!- -
                         <property>
                           <name>log4j.configuration</name>
-                          <value>file:target/test-classes/log4j.properties</value>
+                          <value>file:target/test-classes/log4j2-test.properties</value>
                         </property>
                         - ->
                     </systemProperties>

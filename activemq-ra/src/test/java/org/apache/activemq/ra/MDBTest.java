@@ -67,13 +67,13 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Layout;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.spi.ErrorHandler;
-import org.apache.log4j.spi.Filter;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -478,67 +478,20 @@ public class MDBTest {
         brokerService.start();
 
         final AtomicReference<String> errorMessage = new AtomicReference<String>();
-        final Appender testAppender = new Appender() {
-
+        final var appender = new AbstractAppender("test", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void addFilter(Filter filter) {
-            }
-
-            @Override
-            public Filter getFilter() {
-                return null;
-            }
-
-            @Override
-            public void clearFilters() {
-            }
-
-            @Override
-            public void close() {
-            }
-
-            @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().isGreaterOrEqual(Level.ERROR)) {
-                    System.err.println("Event :" + event.getRenderedMessage());
-                    errorMessage.set(event.getRenderedMessage());
+            public void append(LogEvent event) {
+                if (event.getLevel().isMoreSpecificThan(Level.ERROR)) {
+                    System.err.println("Event :" + event.getMessage().getFormattedMessage());
+                    errorMessage.set(event.getMessage().getFormattedMessage());
                 }
             }
-
-            @Override
-            public String getName() {
-                return null;
-            }
-
-            @Override
-            public void setErrorHandler(ErrorHandler errorHandler) {
-            }
-
-            @Override
-            public ErrorHandler getErrorHandler() {
-                return null;
-            }
-
-            @Override
-            public void setLayout(Layout layout) {
-            }
-
-            @Override
-            public Layout getLayout() {
-                return null;
-            }
-
-            @Override
-            public void setName(String s) {
-            }
-
-            @Override
-            public boolean requiresLayout() {
-                return false;
-            }
         };
+        appender.start();
 
-        LogManager.getRootLogger().addAppender(testAppender);
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        logger.addAppender(appender);
+        logger.get().addAppender(appender, Level.INFO, new AbstractFilter() {});
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = factory.createConnection();
@@ -606,7 +559,9 @@ public class MDBTest {
         assertNotNull("We got an error message", errorMessage.get());
         assertTrue("correct message: " +  errorMessage.get(), errorMessage.get().contains("zero"));
 
-        LogManager.getRootLogger().removeAppender(testAppender);
+        logger.removeAppender(appender);
+        logger.get().removeAppender("test");
+
         brokerService.stop();
     }
 

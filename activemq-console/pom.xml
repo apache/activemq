@@ -104,13 +104,13 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -165,10 +165,10 @@
               <name>org.apache.activemq.default.directory.prefix</name>
               <value>target/</value>
             </property>
-            <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
+            <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j2-test.properties)
               while running mvn:test Note: if you want to see log messages on the console window remove "redirectTestOutputToFile"
               from the parent pom -->
-            <!-- <property> <name>log4j.configuration</name> <value>file:target/test-classes/log4j.properties</value>
+            <!-- <property> <name>log4j.configuration</name> <value>file:target/test-classes/log4j2-test.properties</value>
               </property> -->
           </systemProperties>
           <includes>

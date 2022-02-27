@@ -36,7 +36,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -52,7 +53,7 @@ import static org.junit.Assert.*;
  */
 public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
 
-    public final static Logger LOG = Logger.getLogger(PooledConnectionFactoryTest.class);
+    public final static Logger LOG = LogManager.getLogger(PooledConnectionFactoryTest.class);
 
     @Test(timeout = 60000)
     public void testInstanceOf() throws  Exception {
@@ -345,7 +346,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
 
     static class TestRunner implements Callable<Boolean> {
 
-        public final static Logger LOG = Logger.getLogger(TestRunner.class);
+        public final static Logger LOG = LogManager.getLogger(TestRunner.class);
 
         /**
          * @return true if test succeeded, false otherwise
