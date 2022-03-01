@@ -71,7 +71,7 @@
     <jackson-version>2.13.1</jackson-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.2.11_1</jaxb-bundle-version>
-    <jetty9-version>9.4.43.v20210629</jetty9-version>
+    <jetty9-version>9.4.45.v20220203</jetty9-version>
     <jetty-version>${jetty9-version}</jetty-version>
     <jmdns-version>3.4.1</jmdns-version>
     <tomcat-api-version>9.0.48</tomcat-api-version>
@@ -926,39 +926,14 @@
         <version>${xpp3-version}</version>
       </dependency>
 
-
       <dependency>
         <groupId>org.eclipse.jetty</groupId>
-        <artifactId>apache-jsp</artifactId>
+        <artifactId>jetty-bom</artifactId>
         <version>${jetty-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>apache-jstl</artifactId>
-        <version>${jetty-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
-      <dependency>
-        <groupId>org.eclipse.jetty.aggregate</groupId>
-        <artifactId>jetty-all</artifactId>
-        <version>${jetty-version}</version>
-        <classifier>uber</classifier>
-        <exclusions>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.websocket</groupId>
-            <artifactId>javax.websocket-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty.websocket</groupId>
-        <artifactId>websocket-server</artifactId>
-        <version>${jetty-version}</version>
-      </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>

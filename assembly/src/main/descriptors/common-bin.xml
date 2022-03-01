@@ -268,7 +268,21 @@
       <includes>
         <include>org.springframework:spring-web</include>
         <include>org.springframework:spring-webmvc</include>
-        <include>org.eclipse.jetty.aggregate:jetty-all</include>
+        <include>org.eclipse.jetty:jetty-annotations</include>
+        <include>org.eclipse.jetty:jetty-server</include>
+        <include>org.eclipse.jetty:jetty-xml</include>
+        <include>org.eclipse.jetty:jetty-webapp</include>
+        <include>org.eclipse.jetty:jetty-util</include>
+        <include>org.eclipse.jetty:jetty-http</include>
+        <include>org.eclipse.jetty:jetty-io</include>
+        <include>org.eclipse.jetty:jetty-plus</include>
+        <include>org.eclipse.jetty:jetty-servlet</include>
+        <include>org.eclipse.jetty:jetty-security</include>
+        <include>org.eclipse.jetty:jetty-rewrite</include>
+        <include>org.eclipse.jetty.websocket:websocket-api</include>
+        <include>org.eclipse.jetty.websocket:websocket-common</include>
+        <include>org.eclipse.jetty.websocket:websocket-server</include>
+        <include>org.eclipse.jetty.websocket:websocket-servlet</include>
         <include>org.eclipse.jetty.orbit:javax.security.auth.message</include>
         <include>org.apache.tomcat:tomcat-servlet-api</include>
         <include>org.apache.tomcat:tomcat-websocket-api</include>
