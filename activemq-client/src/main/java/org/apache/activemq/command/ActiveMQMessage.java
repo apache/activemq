@@ -784,25 +784,4 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         //which is already marshalled
         return true;
     }
-
-	@Override
-	public long getJMSDeliveryTime() throws JMSException {
-        return deliveryTime;
-	}
-
-	@Override
-	public void setJMSDeliveryTime(long deliveryTime) throws JMSException {
-        this.deliveryTime = deliveryTime;
-	}
-
-	@Override
-	public <T> T getBody(Class<T> c) throws JMSException {
-        throw new UnsupportedOperationException("getBody(Class<T>) is not supported");
-	}
-
-	@Override
-	public boolean isBodyAssignableTo(Class c) throws JMSException {
-        throw new UnsupportedOperationException("isBodyAssignableTo(Class) is not supported");
-	}
-
 }

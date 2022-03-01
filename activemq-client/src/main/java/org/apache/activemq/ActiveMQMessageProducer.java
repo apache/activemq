@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.CompletionListener;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
 import javax.jms.InvalidDestinationException;
@@ -221,43 +220,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.send(destination, message, deliveryMode, priority, timeToLive, (AsyncCallback)null);
-    }
-    
-    /**
-     *
-     * @param message the message to send
-     * @param CompletionListener to callback
-     * @throws JMSException if the JMS provider fails to send the message due to
-     *                 some internal error.
-     * @throws UnsupportedOperationException if an invalid destination is
-     *                 specified.
-     * @throws InvalidDestinationException if a client uses this method with an
-     *                 invalid destination.
-     * @see javax.jms.Session#createProducer
-     * @since 2.0
-     */
-    @Override
-    public void send(Message message, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Message, CompletionListener) is not supported");
-
-    }
-
-    @Override
-    public void send(Message message, int deliveryMode, int priority, long timeToLive,
-                      CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
-    }
-
-    @Override
-    public void send(Destination destination, Message message, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Destination, Message, CompletionListener) is not supported");
-    }
-
-    @Override
-    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
-                     CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Destination, Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+        this.send(destination, message, deliveryMode, priority, timeToLive, null);
     }
 
     public void send(Message message, AsyncCallback onComplete) throws JMSException {

@@ -444,9 +444,9 @@
       <!-- =============================== -->
 
       <dependency>
-        <groupId>jakarta.jms</groupId>
-        <artifactId>jakarta.jms-api</artifactId>
-        <version>2.0.3</version>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jms_1.1_spec</artifactId>
+        <version>1.1.1</version>
       </dependency>
 
       <dependency>
