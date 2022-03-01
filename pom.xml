@@ -212,6 +212,7 @@
     <module>activemq-amqp</module>
     <module>activemq-kahadb-store</module>
     <module>activemq-jdbc-store</module>
+    <module>activemq-unit-tests</module>
     <module>activemq-all</module>
     <module>activemq-console</module>
     <module>activemq-jaas</module>
@@ -232,6 +233,8 @@
     <module>activemq-blueprint</module>
     <module>activemq-web-demo</module>
     <module>activemq-web-console</module>
+    <module>activemq-karaf-itest</module>
+    <module>activemq-itests-spring31</module>
     <module>assembly</module>
     <module>activemq-log4j-appender</module>
     <module>activemq-http</module>
@@ -1515,15 +1518,6 @@
   </reporting>
 
   <profiles>
-
-    <profile>
-      <id>full.test</id>
-      <modules>
-        <module>activemq-unit-tests</module>
-        <module>activemq-karaf-itest</module>
-        <module>activemq-itests-spring31</module>
-      </modules>
-    </profile>
 
     <!-- If you enable this profile, the console message will have a timestamp -->
     <profile>
