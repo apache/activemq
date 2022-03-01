@@ -18,7 +18,6 @@ package org.apache.activemq.ra;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
-import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
@@ -56,37 +55,5 @@ public class InboundConnectionProxyFactory implements ConnectionFactory, QueueCo
 
     public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
         return createTopicConnection();
-    }
-    
-    /**
-     * @return Returns the JMSContext.
-     */
-    @Override
-    public JMSContext createContext() {
-        throw new UnsupportedOperationException("createContext() is not supported");
-    }
-
-    /**
-     * @return Returns the JMSContext.
-     */
-    @Override
-    public JMSContext createContext(String userName, String password) {
-        throw new UnsupportedOperationException("createContext(userName, password) is not supported");
-    }
-
-    /**
-     * @return Returns the JMSContext.
-     */
-    @Override
-    public JMSContext createContext(String userName, String password, int sessionMode) {
-        throw new UnsupportedOperationException("createContext(userName, password, sessionMode) is not supported");
-    }
-
-    /**
-     * @return Returns the JMSContext.
-     */
-    @Override
-    public JMSContext createContext(int sessionMode) {
-        throw new UnsupportedOperationException("createContext(sessionMode) is not supported");
     }
 }

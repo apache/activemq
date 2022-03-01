@@ -406,36 +406,6 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
         throw new RuntimeException("Operation not supported.");
     }
 
-    @Override
-    public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) throws JMSException {
-        throw new UnsupportedOperationException("createSharedConsumer(Topic, sharedSubscriptionName) is not supported");
-    }
-
-    @Override
-    public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName, String messageSelector) throws JMSException {
-        throw new UnsupportedOperationException("createSharedConsumer(Topic, sharedSubscriptionName, messageSelector) is not supported");
-    }
-
-    @Override
-    public MessageConsumer createDurableConsumer(Topic topic, String name) throws JMSException {
-        throw new UnsupportedOperationException("createDurableConsumer(Topic, name) is not supported");
-    }
-
-    @Override
-    public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
-        throw new UnsupportedOperationException("createDurableConsumer(Topic, name, messageSelector, noLocal) is not supported");
-    }
-
-    @Override
-    public MessageConsumer createSharedDurableConsumer(Topic topic, String name) throws JMSException {
-        throw new UnsupportedOperationException("createSharedDurableConsumer(Topic, name) is not supported");
-    }
-
-    @Override
-    public MessageConsumer createSharedDurableConsumer(Topic topic, String name, String messageSelector) throws JMSException {
-        throw new UnsupportedOperationException("createSharedDurableConsumer(Topic, name, messageSelector) is not supported");
-    }
-    
     public String toString() {
         return "ManagedSessionProxy { " + session + " }";
     }
