@@ -34,7 +34,6 @@ import javax.jms.TextMessage;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Queue;
-import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
@@ -42,9 +41,10 @@ import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStorag
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -261,22 +261,24 @@ public class ProducerFlowControlTest extends JmsTestSupport {
 
         Appender appender = new DefaultTestAppender() {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.WARN) && event.getMessage().toString().contains("Usage Manager Memory Limit")) {
+            public void append(LogEvent event) {
+                if (event.getLevel().equals(Level.WARN) && event.getMessage().getFormattedMessage().contains("Usage Manager Memory Limit")) {
                     LOG.info("received warn log message: " + event.getMessage());
                     warnings.incrementAndGet();
                 }
-                if (event.getLevel().equals(Level.DEBUG) && event.getMessage().toString().contains("Usage Manager Memory Limit")) {
+                if (event.getLevel().equals(Level.DEBUG) && event.getMessage().getFormattedMessage().contains("Usage Manager Memory Limit")) {
                     LOG.info("received debug log message: " + event.getMessage());
                     debugs.incrementAndGet();
                 }
 
             }
         };
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(Queue.class);
+        appender.start();
+
+        org.apache.logging.log4j.core.Logger log4jLogger = (org.apache.logging.log4j.core.Logger)LogManager.getLogger(Queue.class);
         log4jLogger.addAppender(appender);
         log4jLogger.setLevel(Level.DEBUG);
+
         try {
             ConnectionFactory factory = createConnectionFactory();
             connection = (ActiveMQConnection)factory.createConnection();

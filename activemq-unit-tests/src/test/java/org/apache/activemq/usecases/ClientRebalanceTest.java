@@ -30,11 +30,12 @@ import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ConnectionControl;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
 public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
-    private static final Logger LOG = Logger.getLogger(ClientRebalanceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClientRebalanceTest.class);
     private static final String QUEUE_NAME = "Test.ClientRebalanceTest";
 
     protected void setUp() throws Exception {

@@ -31,16 +31,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.log4j.Appender;
-import org.apache.log4j.spi.LoggingEvent;
-
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
-import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
 
 import org.slf4j.Logger;
@@ -75,25 +77,30 @@ public class AMQ5844Test {
 
     static boolean abortingSlowConsumer = false;
     static boolean successfullyReconnected = false;
+    static final AbstractAppender appender;
 
-    static final Appender appender = new DefaultTestAppender() {
-        @Override
-        public void doAppend(LoggingEvent event) {
-            if(event.getMessage().toString().contains("aborting slow consumer")) {
-                abortingSlowConsumer = true;
-            }
+    static {
+        appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
+            @Override
+            public void append(LogEvent event) {
+                if(event.getMessage().getFormattedMessage().contains("aborting slow consumer")) {
+                    abortingSlowConsumer = true;
+                }
 
-            if(event.getMessage().toString().contains("Successfully reconnected to")) {
-                successfullyReconnected = true;
+                if(event.getMessage().getFormattedMessage().contains("Successfully reconnected to")) {
+                    successfullyReconnected = true;
+                }
             }
-        }
-    };
+        };
+        appender.start();
+    }
 
     @BeforeClass
     public static void setUp() throws Exception {
-        org.apache.log4j.Logger.getRootLogger().addAppender(appender);
+        org.apache.logging.log4j.core.Logger rootLogger = ((org.apache.logging.log4j.core.Logger)LogManager.getRootLogger());
+        rootLogger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        rootLogger.addAppender(appender);
     }
-
 
     @Before
     /**
@@ -133,7 +140,7 @@ public class AMQ5844Test {
             broker.stop();
             broker.waitUntilStopped();
         }
-        org.apache.log4j.Logger.getRootLogger().removeAppender(appender);
+        ((org.apache.logging.log4j.core.Logger)LogManager.getRootLogger()).removeAppender(appender);
     }
 
     @Test

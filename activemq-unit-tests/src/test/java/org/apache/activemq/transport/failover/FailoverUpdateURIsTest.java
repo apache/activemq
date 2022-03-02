@@ -33,12 +33,13 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.NetworkConnector;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FailoverUpdateURIsTest extends TestCase {
 
     private static final String QUEUE_NAME = "test.failoverupdateuris";
-    private static final Logger LOG = Logger.getLogger(FailoverUpdateURIsTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FailoverUpdateURIsTest.class);
 
     String firstTcpUri = "tcp://localhost:61616";
     String secondTcpUri = "tcp://localhost:61626";
@@ -64,10 +65,10 @@ public class FailoverUpdateURIsTest extends TestCase {
         String targetDir = "target/" + getName();
         new File(targetDir).mkdir();
         File updateFile = new File(targetDir + "/updateURIsFile.txt");
-        LOG.info(updateFile);
-        LOG.info(updateFile.toURI());
-        LOG.info(updateFile.getAbsoluteFile());
-        LOG.info(updateFile.getAbsoluteFile().toURI());
+        LOG.info("updateFile:" + updateFile);
+        LOG.info("updateFileUri:" + updateFile.toURI());
+        LOG.info("updateFileAbsoluteFile:" + updateFile.getAbsoluteFile());
+        LOG.info("updateFileAbsoluteFileUri:" + updateFile.getAbsoluteFile().toURI());
         FileOutputStream out = new FileOutputStream(updateFile);
         out.write(firstTcpUri.getBytes());
         out.close();

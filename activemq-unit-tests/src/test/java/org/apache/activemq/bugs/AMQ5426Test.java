@@ -41,10 +41,13 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.log4j.Appender;
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,7 +64,6 @@ public class AMQ5426Test {
 	private AtomicBoolean hasFailureInProducer = new AtomicBoolean(false);
 	private Thread producerThread;
 	private AtomicBoolean hasErrorInLogger;
-	private Appender errorDetectorAppender;
 
 	protected ConnectionFactory createConnectionFactory() throws Exception {
 		ActiveMQConnectionFactory conFactory = new ActiveMQConnectionFactory(
@@ -92,25 +94,20 @@ public class AMQ5426Test {
 		// ActiveMQConnection.setClientInternalExceptionListener
 		// since ActiveMQMessageConsumer.dispatch will silently catch and
 		// discard any RuntimeException
-		errorDetectorAppender = new AppenderSkeleton() {
-			@Override
-			public void close() {
-				// Do nothing
-			}
-
-			@Override
-			public boolean requiresLayout() {
-				return false;
-			}
-
-			@Override
-			protected void append(LoggingEvent event) {
-				if (event.getLevel().isGreaterOrEqual(Level.ERROR))
-					hasErrorInLogger.set(true);
-			}
+		
+		final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+		final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
+		    @Override
+		    public void append(LogEvent event) {
+		        if (event.getLevel().isMoreSpecificThan(Level.WARN))
+                    hasErrorInLogger.set(true);
+		    }
 		};
+		appender.start();
 
-		org.apache.log4j.Logger.getRootLogger().addAppender(errorDetectorAppender);
+		logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+		logger.addAppender(appender);
+
 		producerThread = new Thread(new Runnable() {
 			@Override
 			public void run() {

@@ -48,7 +48,8 @@ import org.apache.activemq.store.kahadb.MessageDatabase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,8 +97,7 @@ public class AMQ6133PersistJMSRedeliveryTest {
     public void setup() throws Exception {
 
         // Investigate loss of messages on message update in store.
-        org.apache.log4j.Logger.getLogger(MessageDatabase.class).setLevel(Level.TRACE);
-
+        ((org.apache.logging.log4j.core.Logger)LogManager.getLogger(MessageDatabase.class)).setLevel(Level.TRACE);
         createBroker(true);
     }
 

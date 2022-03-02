@@ -38,7 +38,8 @@ import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.MessageDatabase;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -108,7 +109,7 @@ public class TransactedStoreUsageSuspendResumeTest {
     public void setup() throws Exception {
 
         // investigate liner gc issue - store usage not getting released
-        org.apache.log4j.Logger.getLogger(MessageDatabase.class).setLevel(Level.TRACE);
+        org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(MessageDatabase.class)).setLevel(Level.TRACE);
 
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(true);

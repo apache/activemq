@@ -34,11 +34,14 @@ import org.apache.activemq.store.kahadb.MultiKahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.MultiKahaDBTransactionStore;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -280,20 +283,22 @@ public class MKahaDBTxRecoveryTest {
         corruptTxStoreJournal(pathToDataDir);
 
         // verify failure to load txStore via logging
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(MultiKahaDBTransactionStore.class);
-
         AtomicBoolean foundSomeCorruption = new AtomicBoolean();
-        Appender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(MultiKahaDBTransactionStore.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.ERROR) && event.getMessage().toString().startsWith("Corrupt ")) {
+            public void append(LogEvent event) {
+                if (Level.ERROR.equals(event.getLevel()) && event.getMessage().getFormattedMessage().startsWith("Corrupt ")) {
                     LOG.info("received expected log message: " + event.getMessage());
                     foundSomeCorruption.set(true);
                 }
             }
         };
-        log4jLogger.addAppender(appender);
+        appender.start();
+
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+
         try {
 
             prepareBrokerWithMultiStore(false);
@@ -367,7 +372,7 @@ public class MKahaDBTxRecoveryTest {
             assertEquals(101, destination.getMessageStore().getMessageCount());
 
         } finally {
-            log4jLogger.removeAppender(appender);
+            logger.removeAppender(appender);
         }
     }
 
@@ -401,24 +406,26 @@ public class MKahaDBTxRecoveryTest {
         corruptTxStoreJournalAndTruncate(pathToDataDir);
 
         // verify failure to load txStore via logging
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(MultiKahaDBTransactionStore.class);
-
         AtomicBoolean foundSomeCorruption = new AtomicBoolean();
         AtomicBoolean ignoringCorruption = new AtomicBoolean();
 
-        Appender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(MultiKahaDBTransactionStore.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.ERROR) && event.getMessage().toString().startsWith("Corrupt ")) {
+            public void append(LogEvent event) {
+                if (Level.ERROR.equals(event.getLevel()) && event.getMessage().getFormattedMessage().startsWith("Corrupt ")) {
                     LOG.info("received expected log message: " + event.getMessage());
                     foundSomeCorruption.set(true);
-                } else if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("auto resolving")) {
+                } else if (Level.INFO.equals(event.getLevel()) && event.getMessage().getFormattedMessage().contains("auto resolving")) {
                     ignoringCorruption.set(true);
                 }
             }
         };
-        log4jLogger.addAppender(appender);
+        appender.start();
+
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+
         try {
             prepareBrokerWithMultiStore(false);
 
@@ -453,7 +460,7 @@ public class MKahaDBTxRecoveryTest {
 
             broker.stop();
         } finally {
-            log4jLogger.removeAppender(appender);
+            logger.removeAppender(appender);
         }
     }
 

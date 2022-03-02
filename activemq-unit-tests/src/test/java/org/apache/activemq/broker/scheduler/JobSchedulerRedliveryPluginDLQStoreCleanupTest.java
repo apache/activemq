@@ -52,7 +52,8 @@ import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,7 +77,7 @@ public class JobSchedulerRedliveryPluginDLQStoreCleanupTest {
     public void setUp() throws Exception {
 
         // investigate gc issue - store usage not getting released
-        org.apache.log4j.Logger.getLogger(JobSchedulerStoreImpl.class).setLevel(Level.TRACE);
+        org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(JobSchedulerStoreImpl.class)).setLevel(Level.TRACE);
 
         File directory = new File("target/test/ScheduledJobsDB");
         IOHelper.mkdirs(directory);

@@ -30,35 +30,47 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompConnection;
-import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class AMQ3622Test {
 
+    protected static final Appender appender;
+    protected static final AtomicBoolean failed = new AtomicBoolean(false);
     protected BrokerService broker;
-    protected AtomicBoolean failed = new AtomicBoolean(false);
     protected String connectionUri;
-    protected Appender appender = new DefaultTestAppender() {
+    protected Logger logger;
 
+    static {
+       appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
         @Override
-        public void doAppend(LoggingEvent event) {
+        public void append(LogEvent event) {
             System.err.println(event.getMessage());
-            if (event.getThrowableInformation() != null) {
-                if (event.getThrowableInformation().getThrowable() instanceof NullPointerException) {
+            if (event.getThrown() != null) {
+                if (event.getThrown() instanceof NullPointerException) {
                     failed.set(true);
                 }
             }
-        }
-    };
+            }
+        };
+        appender.start();
+    }
 
     @Before
     public void before() throws Exception {
-        Logger.getRootLogger().addAppender(appender);
+
+        logger = Logger.class.cast(LogManager.getRootLogger());
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
 
         broker = new BrokerService();
         broker.setDataDirectory("target" + File.separator + "activemq-data");
@@ -88,7 +100,7 @@ public class AMQ3622Test {
     public void after() throws Exception {
         broker.stop();
         broker.waitUntilStopped();
-        Logger.getRootLogger().removeAppender(appender);
+        logger.removeAppender(appender);
     }
 
     @Test

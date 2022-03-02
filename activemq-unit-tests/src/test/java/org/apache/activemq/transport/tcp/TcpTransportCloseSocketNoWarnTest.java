@@ -19,11 +19,16 @@ package org.apache.activemq.transport.tcp;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.*;
 import java.net.Socket;
 import java.net.URI;
-import java.sql.Time;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,9 +52,11 @@ public class TcpTransportCloseSocketNoWarnTest {
     public static final String PASSWORD = "password";
     public static final String SERVER_KEYSTORE = "src/test/resources/server.keystore";
     public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
+    public static final Appender appender;
+    public static final AtomicBoolean gotExceptionInLog = new AtomicBoolean();
 
     private BrokerService brokerService;
-
+    private Logger rootLogger;
 
     static {
         System.setProperty("javax.net.ssl.trustStore", TRUST_KEYSTORE);
@@ -59,20 +65,20 @@ public class TcpTransportCloseSocketNoWarnTest {
         System.setProperty("javax.net.ssl.keyStore", SERVER_KEYSTORE);
         System.setProperty("javax.net.ssl.keyStorePassword", PASSWORD);
         System.setProperty("javax.net.ssl.keyStoreType", KEYSTORE_TYPE);
-    }
-
-    final AtomicBoolean gotExceptionInLog = new AtomicBoolean();
-    Appender appender = new DefaultTestAppender() {
-        @Override
-        public void doAppend(LoggingEvent event) {
-            if (event.getLevel().equals(Level.WARN) && event.getRenderedMessage().contains("failed:")) {
-                gotExceptionInLog.set(Boolean.TRUE);
-                LOG.error("got event: " + event + ", ex:" + event.getRenderedMessage());
-                LOG.error("Event source: ", new Throwable("Here"));
+        
+        appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
+            @Override
+            public void append(LogEvent event) {
+                if (event.getLevel().equals(Level.WARN) && event.getMessage().getFormattedMessage().contains("failed:")) {
+                    gotExceptionInLog.set(Boolean.TRUE);
+                    LOG.error("got event: " + event + ", ex:" + event.getMessage().getFormattedMessage());
+                    LOG.error("Event source: ", new Throwable("Here"));
+                }
+                return;
             }
-            return;
-        }
-    };
+        };
+        appender.start();
+    }
 
     @Before
     public void before() throws Exception {
@@ -80,8 +86,11 @@ public class TcpTransportCloseSocketNoWarnTest {
         brokerService.setPersistent(false);
         brokerService.setUseJmx(false);
 
-        Logger.getRootLogger().addAppender(appender);
-        Logger.getLogger(TransportConnection.class.getName() + ".Transport").setLevel(Level.WARN);
+        rootLogger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        rootLogger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        rootLogger.addAppender(appender);
+
+        org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(TransportConnection.class.getName() + ".Transport")).setLevel(Level.WARN);
     }
 
     @After
@@ -90,7 +99,7 @@ public class TcpTransportCloseSocketNoWarnTest {
             brokerService.stop();
             brokerService.waitUntilStopped();
         }
-        Logger.getRootLogger().removeAppender(appender);
+        rootLogger.removeAppender(appender);
     }
 
     @Test(timeout = 60000)

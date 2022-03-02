@@ -32,10 +32,15 @@ import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.cursors.AbstractStoreCursor;
 import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -71,15 +76,15 @@ public class AMQ3567Test {
     @Test
     public void runTest() throws Exception {
         produceSingleMessage();
-        org.apache.log4j.Logger log4jLogger = org.apache.log4j.Logger.getLogger("org.apache.activemq.util.ServiceSupport");
-        final AtomicBoolean failed = new AtomicBoolean(false);
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger("org.apache.activemq.util.ServiceSupport"));
 
-        Appender appender = new DefaultTestAppender() {
+        final AtomicBoolean failed = new AtomicBoolean(false);
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getThrowableInformation() != null) {
-                    if (event.getThrowableInformation().getThrowable() instanceof InterruptedException) {
-                        InterruptedException ie = (InterruptedException)event.getThrowableInformation().getThrowable();
+            public void append(LogEvent event) {
+                if (event.getThrown() != null) {
+                    if (event.getThrown() instanceof InterruptedException) {
+                        InterruptedException ie = (InterruptedException)event.getThrown();
                         if (ie.getMessage().startsWith("Could not stop service:")) {
                             logger.info("Received an interrupted exception : ", ie);
                             failed.set(true);
@@ -88,11 +93,14 @@ public class AMQ3567Test {
                 }
             }
         };
-        log4jLogger.addAppender(appender);
+        appender.start();
 
-        Level level = log4jLogger.getLevel();
-        log4jLogger.setLevel(Level.DEBUG);
+        Level level = logger.getLevel();
 
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+        logger.setLevel(Level.DEBUG);
+      
         try {
             stopConsumer();
             stopBroker();
@@ -101,8 +109,8 @@ public class AMQ3567Test {
             }
 
         } finally {
-            log4jLogger.setLevel(level);
-            log4jLogger.removeAppender(appender);
+            logger.setLevel(level);
+            logger.removeAppender(appender);
         }
     }
 

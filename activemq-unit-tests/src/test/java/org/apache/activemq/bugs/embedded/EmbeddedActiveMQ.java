@@ -26,12 +26,13 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EmbeddedActiveMQ
 {
  
-        private static Logger logger = Logger.getLogger(EmbeddedActiveMQ.class);
+        private static Logger logger = LoggerFactory.getLogger(EmbeddedActiveMQ.class);
  
         public static void main(String[] args)
         {

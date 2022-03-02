@@ -35,10 +35,14 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.network.DurableConduitBridge;
 import org.apache.activemq.network.NetworkConnector;
 
-import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,16 +162,20 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         vmConnection.close();
 
         final AtomicInteger logCounts = new AtomicInteger(0);
-        DefaultTestAppender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(DurableConduitBridge.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel() == Level.ERROR) {
+            public void append(LogEvent event) {
+                if (Level.ERROR.equals(event.getLevel())) {
                     logCounts.incrementAndGet();
                 }
             }
         };
+        appender.start();
 
-        org.apache.log4j.Logger.getLogger(DurableConduitBridge.class).addAppender(appender);
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+
         try {
 
             NetworkConnector networkConnector = forwarder.addNetworkConnector("static:("
@@ -185,7 +193,7 @@ public class VmTransportNetworkBrokerTest extends TestCase {
             assertEquals("no errors", 0, logCounts.get());
 
         } finally {
-            org.apache.log4j.Logger.getLogger(DurableConduitBridge.class).removeAppender(appender);
+            logger.removeAppender(appender);
         }
     }
 

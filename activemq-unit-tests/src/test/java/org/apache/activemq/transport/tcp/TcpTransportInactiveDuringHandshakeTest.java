@@ -18,10 +18,15 @@ package org.apache.activemq.transport.tcp;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +64,7 @@ public class TcpTransportInactiveDuringHandshakeTest {
     }
 
     private BrokerService brokerService;
-    private DefaultTestAppender appender;
+    private Appender appender;
     CountDownLatch inactivityMonitorFired;
     CountDownLatch handShakeComplete;
 
@@ -71,23 +76,24 @@ public class TcpTransportInactiveDuringHandshakeTest {
 
         inactivityMonitorFired = new CountDownLatch(1);
         handShakeComplete = new CountDownLatch(1);
-        appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.WARN) && event.getRenderedMessage().contains("InactivityIOException")) {
+            public void append(LogEvent event) {
+                if (Level.WARN.equals(event.getLevel()) && event.getMessage().getFormattedMessage().contains("InactivityIOException")) {
                     inactivityMonitorFired.countDown();
                 }
             }
         };
-        org.apache.log4j.Logger rootLogger = org.apache.log4j.Logger.getRootLogger();
-        rootLogger.addAppender(appender);
+        appender.start();
 
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
     }
 
     @After
     public void after() throws Exception {
-        org.apache.log4j.Logger rootLogger = org.apache.log4j.Logger.getRootLogger();
-        rootLogger.removeAppender(appender);
+        org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger()).removeAppender(appender);;
 
         if (brokerService != null) {
             brokerService.stop();

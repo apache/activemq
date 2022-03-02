@@ -36,7 +36,6 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.IOHelper;
-import org.apache.log4j.BasicConfigurator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,7 +73,9 @@ public class LostScheduledMessagesTest {
     @After
     public void tearDown() throws Exception {
         broker.stop();
-        BasicConfigurator.resetConfiguration();
+        
+        // [AMQ-8520] FIXME: Convert or remove if not needed
+        //BasicConfigurator.resetConfiguration();
     }
 
     @Test

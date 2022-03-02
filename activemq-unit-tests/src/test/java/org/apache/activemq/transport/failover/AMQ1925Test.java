@@ -43,7 +43,8 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TestCase showing the message-destroying described in AMQ-1925
@@ -51,7 +52,7 @@ import org.apache.log4j.Logger;
  * 
  */
 public class AMQ1925Test extends TestCase implements ExceptionListener {
-	private static final Logger log = Logger.getLogger(AMQ1925Test.class);
+	private static final Logger log = LoggerFactory.getLogger(AMQ1925Test.class);
 
 	private static final String QUEUE_NAME = "test.amq1925";
 	private static final String PROPERTY_MSG_NUMBER = "NUMBER";
