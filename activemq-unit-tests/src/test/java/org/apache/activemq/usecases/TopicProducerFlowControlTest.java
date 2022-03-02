@@ -35,17 +35,19 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnection;
-import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,18 +143,21 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         });
 
         final AtomicInteger warnings = new AtomicInteger();
-        Appender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(Topic.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.WARN) && event.getMessage().toString().contains("Usage Manager memory limit reached")) {
+            public void append(LogEvent event) {
+                if (event.getLevel().equals(Level.WARN) && event.getMessage().getFormattedMessage().contains("Usage Manager memory limit reached")) {
                     LOG.info("received  log message: " + event.getMessage());
                     warnings.incrementAndGet();
                 }
             }
         };
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(Topic.class);
-        log4jLogger.addAppender(appender);
+        appender.start();
+
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+
         try {
 
             // Start producing the test messages
@@ -204,7 +209,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
             assertTrue("warning limited", warnings.get() < blockedCounter.get());
 
         } finally {
-            log4jLogger.removeAppender(appender);
+            logger.removeAppender(appender);
         }
     }
 
@@ -234,20 +239,22 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         Session listenerSession = c.createSession(false, 1);
         Destination destination = createDestination(listenerSession);
 
-
         final AtomicInteger warnings = new AtomicInteger();
-        Appender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(Topic.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.WARN) && event.getMessage().toString().contains("Usage Manager memory limit reached")) {
+            public void append(LogEvent event) {
+                if (event.getLevel().equals(Level.WARN) && event.getMessage().getFormattedMessage().contains("Usage Manager memory limit reached")) {
                     LOG.info("received  log message: " + event.getMessage());
                     warnings.incrementAndGet();
                 }
             }
         };
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(Topic.class);
-        log4jLogger.addAppender(appender);
+        appender.start();
+
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+
         try {
 
             // Start producing the test messages
@@ -319,7 +326,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
                 assertEquals("nothing sent during close", enqueueCountWhenBlocked, broker.getDestination(ActiveMQDestination.transform(destination)).getDestinationStatistics().getEnqueues().getCount());
             }
         } finally {
-            log4jLogger.removeAppender(appender);
+            logger.removeAppender(appender);
         }
     }
 

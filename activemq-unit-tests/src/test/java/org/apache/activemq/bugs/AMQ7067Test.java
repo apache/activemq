@@ -21,6 +21,7 @@ import org.apache.activemq.ActiveMQXAConnection;
 import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
@@ -34,7 +35,8 @@ import org.apache.activemq.store.kahadb.MessageDatabase;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -166,8 +168,8 @@ public class AMQ7067Test {
     public void testXAPrepareWithAckCompactionDoesNotLooseInflight() throws Exception {
 
         // investigate liner gc issue - store usage not getting released
-        org.apache.log4j.Logger.getLogger(MessageDatabase.class).setLevel(Level.TRACE);
-
+        org.apache.logging.log4j.core.Logger logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(MessageDatabase.class));
+        logger.setLevel(org.apache.logging.log4j.Level.TRACE);
 
         setupXAConnection();
 
@@ -242,8 +244,7 @@ public class AMQ7067Test {
 
         ((KahaDBPersistenceAdapter)broker.getPersistenceAdapter()).setCompactAcksAfterNoGC(2);
         // investigate liner gc issue - store usage not getting released
-        org.apache.log4j.Logger.getLogger(MessageDatabase.class).setLevel(Level.TRACE);
-
+        org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(MessageDatabase.class)).setLevel(Level.TRACE);
 
         setupXAConnection();
 

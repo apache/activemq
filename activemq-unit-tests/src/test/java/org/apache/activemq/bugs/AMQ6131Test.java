@@ -46,7 +46,7 @@ import org.apache.activemq.util.Wait.Condition;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,7 +61,8 @@ public class AMQ6131Test {
 
     @Before
     public void startBroker() throws Exception {
-        org.apache.log4j.Logger.getLogger(MessageDatabase.class).setLevel(Level.TRACE);
+        org.apache.logging.log4j.core.Logger logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(MessageDatabase.class));
+        logger.setLevel(org.apache.logging.log4j.Level.TRACE);
         setUpBroker(true);
     }
 

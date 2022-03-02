@@ -27,14 +27,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.broker.LockableServiceSupport;
 import org.apache.activemq.broker.Locker;
-import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LockFile;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,16 +90,22 @@ public class SharedFileLockerTest {
 
     private void internalLoop(long timewait) throws Exception {
         final AtomicInteger logCounts = new AtomicInteger(0);
-        DefaultTestAppender appender = new DefaultTestAppender() {
+        
+     // start new
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel() == Level.INFO) {
+            public void append(LogEvent event) {
+                if (Level.INFO.equals(event.getLevel())) {
                     logCounts.incrementAndGet();
                 }
             }
         };
+        appender.start();
 
-        Logger.getRootLogger().addAppender(appender);
+        Configurator.setRootLevel(Level.DEBUG);
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
 
         final AtomicInteger errors = new AtomicInteger(0);
 
@@ -163,8 +173,7 @@ public class SharedFileLockerTest {
 
         } finally {
 
-
-            Logger.getRootLogger().removeAppender(appender);
+            logger.removeAppender(appender);
 
             // to make sure we won't leak threads if the test ever failed for any reason
             thread.join(1000);
@@ -182,14 +191,18 @@ public class SharedFileLockerTest {
     public void verifyLockAcquireWaitsForLockDrop() throws Exception {
 
         final AtomicInteger logCounts = new AtomicInteger(0);
-        DefaultTestAppender appender = new DefaultTestAppender() {
+     // start new
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(SharedFileLocker.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
+            public void append(LogEvent event) {
                 logCounts.incrementAndGet();
             }
         };
-        Logger sharedFileLogger = Logger.getLogger(SharedFileLocker.class);
-        sharedFileLogger.addAppender(appender);
+        appender.start();
+
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
 
         LockableServiceSupport config = new LockableServiceSupport() {
 
@@ -261,7 +274,7 @@ public class SharedFileLockerTest {
             executorService.shutdownNow();
             underTest.stop();
             lockFile.delete();
-            sharedFileLogger.removeAppender(appender);
+            logger.removeAppender(appender);
         }
     }
 }

@@ -17,21 +17,23 @@
 package org.apache.activemq.transport.nio;
 
 import javax.jms.Connection;
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.net.ssl.SSLHandshakeException;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -114,21 +116,25 @@ public class NIOSSLBasicTest {
 
         final CountDownLatch gotLogMessage = new CountDownLatch(1);
         final AtomicBoolean gotRemoteAddressInLog = new AtomicBoolean();
-        final DefaultTestAppender appender = new DefaultTestAppender() {
+     // start new
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.WARN) && event.getRenderedMessage().contains("Could not accept connection")) {
+            public void append(LogEvent event) {
+                if (event.getLevel().equals(Level.WARN) && event.getMessage().getFormattedMessage().contains("Could not accept connection")) {
                     gotLogMessage.countDown();
-                    if (event.getRenderedMessage().contains("tcp")) {
+                    if (event.getMessage().getFormattedMessage().contains("tcp")) {
                         // got remote address
                         gotRemoteAddressInLog.set(true);
                     }
                 }
             }
         };
-        org.apache.log4j.Logger rootLogger = org.apache.log4j.Logger.getRootLogger();
-        rootLogger.addAppender(appender);
+        appender.start();
 
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+ 
         BrokerService broker = null;
         try {
             broker = createBroker("nio+ssl", getTransportType() + "://localhost:61616?transport.needClientAuth=true");
@@ -138,7 +144,7 @@ public class NIOSSLBasicTest {
             if (broker != null) {
                 stopBroker(broker);
             }
-            rootLogger.removeAppender(appender);
+            logger.removeAppender(appender);
             assertTrue("Got remote address in log", gotRemoteAddressInLog.get());
         }
     }

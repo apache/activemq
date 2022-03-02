@@ -18,11 +18,13 @@ package org.apache.activemq.bugs.embedded;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ThreadExplorer
 {
-    static Logger logger = Logger.getLogger(ThreadExplorer.class);
+    static Logger logger = LoggerFactory.getLogger(ThreadExplorer.class);
 
     public static Thread[] listThreads()
     {

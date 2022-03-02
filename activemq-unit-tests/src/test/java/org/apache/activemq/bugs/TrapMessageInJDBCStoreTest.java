@@ -41,7 +41,8 @@ import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.derby.jdbc.EmbeddedDataSource;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +110,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
 
     public void testDBCommitException() throws Exception {
 
-        org.apache.log4j.Logger serviceLogger = org.apache.log4j.Logger.getLogger(TransportConnection.class.getName() + ".Service");
+        org.apache.logging.log4j.core.Logger serviceLogger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(TransportConnection.class.getName() + ".Service"));
         serviceLogger.setLevel (Level.TRACE);
 
         broker = this.createBroker(false);

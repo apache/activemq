@@ -52,9 +52,13 @@ import org.apache.activemq.network.DemandForwardingBridgeSupport;
 import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +89,7 @@ public class RequestReplyTempDestRemovalAdvisoryRaceTest extends JmsMultipleBrok
     protected final AtomicBoolean shutdown = new AtomicBoolean(false);
     HashSet<NetworkConnector> networkConnectors = new HashSet<NetworkConnector>();
     HashSet<Connection> advisoryConsumerConnections = new HashSet<Connection>();
-    Appender slowDownAppender;
+    AbstractAppender slowDownAppender;
 
     CountDownLatch consumerDemandExists;
 
@@ -263,15 +267,16 @@ public class RequestReplyTempDestRemovalAdvisoryRaceTest extends JmsMultipleBrok
 
     private void slowDownAdvisoryDispatch() throws Exception {
 
-        org.apache.log4j.Logger.getLogger(DemandForwardingBridgeSupport.class).setLevel(Level.DEBUG);
+        org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(DemandForwardingBridgeSupport.class)).setLevel(Level.DEBUG);
 
         // instrument a logger to block the processing of a remove sub advisory
         // simulate a slow thread
-        slowDownAppender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        slowDownAppender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent loggingEvent) {
-                if (Level.DEBUG.equals(loggingEvent.getLevel())) {
-                    String message = loggingEvent.getMessage().toString();
+            public void append(LogEvent event) {
+                if (Level.DEBUG.equals(event.getLevel())) {
+                    String message = event.getMessage().getFormattedMessage();
                     if (message.startsWith("BrokerB") && message.contains("remove local subscription")) {
                         // sleep for a bit
                         try {
@@ -285,8 +290,10 @@ public class RequestReplyTempDestRemovalAdvisoryRaceTest extends JmsMultipleBrok
                 }
             }
         };
+        slowDownAppender.start();
 
-        org.apache.log4j.Logger.getRootLogger().addAppender(slowDownAppender);
+        logger.get().addAppender(slowDownAppender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(slowDownAppender);
     }
 
     @Override
@@ -320,7 +327,7 @@ public class RequestReplyTempDestRemovalAdvisoryRaceTest extends JmsMultipleBrok
     @Override
     protected void tearDown() throws Exception {
         if (slowDownAppender != null) {
-            org.apache.log4j.Logger.getRootLogger().removeAppender(slowDownAppender);
+            org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger()).removeAppender(slowDownAppender);
         }
         for (Connection connection : advisoryConsumerConnections) {
             connection.close();

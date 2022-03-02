@@ -40,9 +40,10 @@ import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.ProducerThread;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -224,8 +225,8 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
 
         Appender appender = new DefaultTestAppender() {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getMessage().toString().contains("Removed Job past last appened in the journal")) {
+            public void append(LogEvent event) {
+                if (event.getMessage() != null && event.getMessage().getFormattedMessage().contains("Removed Job past last appened in the journal")) {
                     numberOfDiscardedJobs.incrementAndGet();
                 }
             }
@@ -263,8 +264,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
     }
 
     private void registerLogAppender(final Appender appender) {
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(JobSchedulerStoreImpl.class);
+        org.apache.logging.log4j.core.Logger log4jLogger = (org.apache.logging.log4j.core.Logger)LogManager.getLogger(JobSchedulerStoreImpl.class);
         log4jLogger.addAppender(appender);
         log4jLogger.setLevel(Level.TRACE);
     }

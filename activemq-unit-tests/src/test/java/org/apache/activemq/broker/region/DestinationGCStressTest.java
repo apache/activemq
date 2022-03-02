@@ -24,9 +24,13 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,20 +94,22 @@ public class DestinationGCStressTest {
     @Test(timeout = 60000)
     public void testClashWithPublishAndGC() throws Exception {
 
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(RegionBroker.class);
         final AtomicBoolean failed = new AtomicBoolean(false);
-
-        Appender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(RegionBroker.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.ERROR) && event.getMessage().toString().startsWith("Failed to remove inactive")) {
+            public void append(LogEvent event) {
+                if (event.getLevel().equals(Level.ERROR) && event.getMessage().getFormattedMessage().startsWith("Failed to remove inactive")) {
                     logger.info("received unexpected log message: " + event.getMessage());
                     failed.set(true);
                 }
             }
         };
-        log4jLogger.addAppender(appender);
+        appender.start();
+
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+
         try {
 
             final AtomicInteger max = new AtomicInteger(20000);
@@ -147,7 +153,7 @@ public class DestinationGCStressTest {
             connection.close();
 
         } finally {
-            log4jLogger.removeAppender(appender);
+            logger.removeAppender(appender);
         }
         assertFalse("failed on unexpected log event", failed.get());
 
@@ -156,16 +162,14 @@ public class DestinationGCStressTest {
     @Test(timeout = 60000)
     public void testAddRemoveWildcardWithGc() throws Exception {
 
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(RegionBroker.class);
         final AtomicBoolean failed = new AtomicBoolean(false);
-
-        Appender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(RegionBroker.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.ERROR) && event.getMessage().toString().startsWith("Failed to remove inactive")) {
-                    if (event.getThrowableInformation().getThrowable() != null
-                            && event.getThrowableInformation().getThrowable().getCause() instanceof BrokerStoppedException) {
+            public void append(LogEvent event) {
+                if (event.getLevel().equals(Level.ERROR) && event.getMessage().getFormattedMessage().startsWith("Failed to remove inactive")) {
+                    if (event.getThrown() != null
+                            && event.getThrown().getCause() instanceof BrokerStoppedException) {
                         // ok
                     } else {
                         logger.info("received unexpected log message: " + event.getMessage());
@@ -174,7 +178,11 @@ public class DestinationGCStressTest {
                 }
             }
         };
-        log4jLogger.addAppender(appender);
+        appender.start();
+
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+
         try {
 
             final AtomicInteger max = new AtomicInteger(10000);
@@ -241,7 +249,7 @@ public class DestinationGCStressTest {
             connection.close();
 
         } finally {
-            log4jLogger.removeAppender(appender);
+            logger.removeAppender(appender);
         }
         assertFalse("failed on unexpected log event", failed.get());
 

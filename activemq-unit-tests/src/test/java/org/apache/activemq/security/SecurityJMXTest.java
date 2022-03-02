@@ -45,8 +45,9 @@ import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,17 +72,17 @@ public class SecurityJMXTest extends TestCase {
         final AtomicReference<Object> stackTrace = new AtomicReference<Object>();
 
         final Appender appender = new DefaultTestAppender() {
-            public void doAppend(LoggingEvent event) {
-                String message =  event.getMessage().toString();
+            @Override
+            public void append(LogEvent event) {
+                String message =  event.getMessage().getFormattedMessage();
                 if (message.contains("Async error occurred")) {
                     gotExpected.set(true);
-                    stackTrace.set(event.getThrowableInformation());
+                    stackTrace.set(event.getThrown());
                 }
             }
         };
 
-        final org.apache.log4j.Logger toVerify = org.apache.log4j.Logger.getLogger(TransportConnection.class.getName() + ".Service");
-
+        org.apache.logging.log4j.core.Logger toVerify = (org.apache.logging.log4j.core.Logger)LogManager.getLogger(TransportConnection.class.getName() + ".Service");
         toVerify.addAppender(appender);
 
         try {

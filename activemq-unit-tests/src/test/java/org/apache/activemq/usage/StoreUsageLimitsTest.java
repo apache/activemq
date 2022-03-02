@@ -24,11 +24,13 @@ import org.apache.activemq.ConfigurationException;
 import org.junit.Test;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
-
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -52,42 +54,50 @@ public class StoreUsageLimitsTest {
     public void testCheckLimitsLogLevel() throws Exception {
 
         final CountDownLatch foundMessage = new CountDownLatch(1);
-        DefaultTestAppender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                String message = (String) event.getMessage();
+            public void append(LogEvent event) {
+                String message = event.getMessage().getFormattedMessage();
                 if (message.contains(toMatch) && event.getLevel().equals(Level.WARN)) {
                     foundMessage.countDown();
                 }
             }
         };
+        appender.start();
 
-        Logger.getRootLogger().addAppender(appender);
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+
         BrokerService brokerService = createBroker();
         brokerService.start();
         brokerService.stop();
 
         assertTrue("Fount log message", foundMessage.await(WAIT_TIME_MILLS, TimeUnit.MILLISECONDS));
 
-        Logger.getRootLogger().removeAppender(appender);
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testCheckLimitsFailStart() throws Exception {
 
         final CountDownLatch foundMessage = new CountDownLatch(1);
-        DefaultTestAppender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                String message = (String) event.getMessage();
+            public void append(LogEvent event) {
+                String message = event.getMessage().getFormattedMessage();
                 if (message.contains(toMatch) && event.getLevel().equals(Level.ERROR)) {
                     foundMessage.countDown();
                 }
             }
         };
+        appender.start();
 
-        Logger.getRootLogger().addAppender(appender);
-        BrokerService brokerService = createBroker();
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+
+         BrokerService brokerService = createBroker();
         brokerService.setAdjustUsageLimits(false);
         try {
             brokerService.start();
@@ -99,6 +109,6 @@ public class StoreUsageLimitsTest {
 
         assertTrue("Fount log message", foundMessage.await(WAIT_TIME_MILLS, TimeUnit.MILLISECONDS));
 
-        Logger.getRootLogger().removeAppender(appender);
+        logger.removeAppender(appender);
     }
 }
