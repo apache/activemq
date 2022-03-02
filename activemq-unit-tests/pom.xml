@@ -184,13 +184,18 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -260,9 +265,8 @@
     </dependency>
     <dependency>
       <!-- using it for Jetty's JNDI context to work /w Joram tests. -->
-      <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all</artifactId>
-      <classifier>uber</classifier>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-jndi</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -507,6 +511,24 @@
   </build>
   <profiles>
     <profile>
+      <!-- Default - no tests -->
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <skipTests>true</skipTests>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>activemq.tests-all</id>
       <activation>
         <property>
@@ -595,9 +617,9 @@
     <profile>
       <id>activemq.exclude-broken-tests</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
         <property>
           <name>activemq.tests</name>
+          <value>excludeBroken</value>
         </property>
       </activation>
       <build>
@@ -653,7 +675,10 @@
     <profile>
       <id>activemq.tests-quick</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>activemq.tests</name>
+          <value>quick</value>
+        </property>
       </activation>
       <build>
         <plugins>
