@@ -32,10 +32,13 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 
 /**
  * @author chirino
@@ -209,16 +212,19 @@ public class KahaDBTest extends TestCase {
         kaha.setCheckForCorruptJournalFiles(true);
 
         final AtomicBoolean didSomeRecovery = new AtomicBoolean(false);
-        DefaultTestAppender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel() == Level.INFO && event.getRenderedMessage().contains("Recovering from the journal @")) {
+            public void append(LogEvent event) {
+                if (Level.INFO.equals(event.getLevel()) && event.getMessage().getFormattedMessage().contains("Recovering from the journal @")) {
                     didSomeRecovery.set(true);
                 }
             }
         };
+        appender.start();
 
-        Logger.getRootLogger().addAppender(appender);
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
 
         broker = createBroker(kaha);
 
@@ -226,7 +232,7 @@ public class KahaDBTest extends TestCase {
         assertEquals("Expected to received all messages.", count, 100);
         broker.stop();
 
-        Logger.getRootLogger().removeAppender(appender);
+        logger.removeAppender(appender);
         assertFalse("Did not replay any records from the journal", didSomeRecovery.get());
     }
 

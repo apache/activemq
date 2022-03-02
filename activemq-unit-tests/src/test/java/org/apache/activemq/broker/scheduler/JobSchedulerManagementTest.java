@@ -32,7 +32,6 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
-import org.apache.log4j.Level;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +48,8 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.util.IdGenerator;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,7 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
 
     @Test
     public void testRemoveAllScheduled() throws Exception {
-        org.apache.log4j.Logger.getLogger(Transaction.class).setLevel(Level.DEBUG);
+        org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(Transaction.class)).setLevel(Level.DEBUG);
         final int COUNT = 5000;
         System.setProperty("maxKahaDBTxSize", "" + (500*1024));
         Connection connection = createConnection();

@@ -22,9 +22,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.MessageDatabase;
-import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.spi.LoggingEvent;
-import org.junit.experimental.theories.Theories;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -34,6 +31,14 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
+
 public class EmptyTransactionTest extends TestCase {
 
     private static final int CHECKPOINT_INTERVAL = 500;
@@ -42,16 +47,20 @@ public class EmptyTransactionTest extends TestCase {
     public void testEmptyTransactionsCheckpoint() throws Exception {
 
         AtomicBoolean hadRecovery = new AtomicBoolean(false);
-        DefaultTestAppender appender = new DefaultTestAppender() {
+
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(MessageDatabase.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-               if (event.getMessage().toString().contains("Recovering from the journal @")) {
-                   hadRecovery.set(true);
-               }
+            public void append(LogEvent event) {
+                if (event.getMessage().toString().contains("Recovering from the journal @")) {
+                    hadRecovery.set(true);
+                }
             }
         };
+        appender.start();
 
-        org.apache.log4j.Logger.getLogger(MessageDatabase.class).addAppender(appender);
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
 
         start(true);
 

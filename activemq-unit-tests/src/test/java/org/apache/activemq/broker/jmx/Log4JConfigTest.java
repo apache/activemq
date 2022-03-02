@@ -27,8 +27,9 @@ import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Logger;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
@@ -112,7 +113,7 @@ public class Log4JConfigTest extends EmbeddedBrokerTestSupport {
         String level = log4jConfigView.getLogLevel("not.a.logger");
         assertNotNull(level);
         assertFalse(level.isEmpty());
-        assertEquals(Logger.getRootLogger().getLevel().toString(), level);
+        assertEquals(LogManager.getRootLogger().getLevel().toString(), level);
     }
 
     @Test
@@ -166,7 +167,7 @@ public class Log4JConfigTest extends EmbeddedBrokerTestSupport {
         assertNotNull(level);
         assertFalse(level.isEmpty());
 
-        String currentRootLevel = Logger.getRootLogger().getLevel().toString();
+        String currentRootLevel = LogManager.getRootLogger().getLevel().toString();
         assertEquals(currentRootLevel, level);
     }
 
@@ -177,12 +178,12 @@ public class Log4JConfigTest extends EmbeddedBrokerTestSupport {
         Log4JConfigViewMBean log4jConfigView =  MBeanServerInvocationHandler.newProxyInstance(
             mbeanServer, log4jConfigViewName, Log4JConfigViewMBean.class, true);
 
-        String currentRootLevel = Logger.getRootLogger().getLevel().toString();
+        String currentRootLevel = LogManager.getRootLogger().getLevel().toString();
         log4jConfigView.setRootLogLevel("WARN");
-        currentRootLevel = Logger.getRootLogger().getLevel().toString();
+        currentRootLevel = LogManager.getRootLogger().getLevel().toString();
         assertEquals("WARN", currentRootLevel);
         log4jConfigView.setRootLogLevel("INFO");
-        currentRootLevel = Logger.getRootLogger().getLevel().toString();
+        currentRootLevel = LogManager.getRootLogger().getLevel().toString();
         assertEquals("INFO", currentRootLevel);
 
         Level level;

@@ -48,8 +48,13 @@ import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -124,25 +129,27 @@ public class JDBCIOExceptionHandlerTest {
         final AtomicBoolean connectorStarted = new AtomicBoolean(false);
         final AtomicBoolean connectorStopped = new AtomicBoolean(false);
 
-        DefaultTestAppender appender = new DefaultTestAppender() {
-
+        // start new
+        final var rootLogger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getMessage().toString().startsWith("JMX consoles can connect to")) {
+            public void append(LogEvent event) {
+                if (event.getMessage().getFormattedMessage().startsWith("JMX consoles can connect to")) {
                     connectorStarted.set(true);
                 }
 
-                if (event.getMessage().toString().equals("Stopping jmx connector")) {
+                if (event.getMessage().getFormattedMessage().equals("Stopping jmx connector")) {
                     connectorStopped.set(true);
                 }
             }
         };
+        appender.start();
 
-        org.apache.log4j.Logger rootLogger = org.apache.log4j.Logger.getRootLogger();
         Level previousLevel = rootLogger.getLevel();
-        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
         rootLogger.addAppender(appender);
-
+        rootLogger.setLevel(Level.DEBUG);
+        // end new
 
         BrokerService broker = new BrokerService();
         broker.getManagementContext().setCreateConnector(true);

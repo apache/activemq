@@ -18,39 +18,44 @@
 package org.apache.activemq;
 
 import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Appender;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.*;
 
 import static org.junit.Assert.assertFalse;
 
 import java.util.concurrent.*;
-
 import org.apache.activemq.broker.BrokerService;
-
 import javax.management.JMException;
 import javax.management.ObjectName;
 
 public class TcpTransportCloseConnectionTest {
 
     static boolean transportConnectionFailed = false;
-
+    static final org.apache.logging.log4j.core.Appender appender; 
     private BrokerService broker;
 
     private final String uri = "tcp://localhost:0?wireFormat.maxInactivityDuration=500";
 
-    static final Appender appender = new DefaultTestAppender() {
-        @Override
-        public void doAppend(LoggingEvent event) {
-            if(event.getMessage().toString().contains("Transport Connection")
-                    && event.getMessage().toString().contains("failed")
-                    && (event.getMessage().toString().contains("java.net.SocketException") || event.getMessage().toString().contains("java.io.EOFException"))) {
-                transportConnectionFailed = true;
+    static {
+        appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
+            @Override
+            public void append(LogEvent event) {
+                String message = event.getMessage().getFormattedMessage();
+                if(message.contains("Transport Connection")
+                        && message.contains("failed")
+                        && (message.contains("java.net.SocketException") || message.contains("java.io.EOFException"))) {
+                    transportConnectionFailed = true;
+                }
             }
-        }
-    };
+        };
+        appender.start();
+    }
 
     class CustomManagementContext extends ManagementContext {
         @Override
@@ -67,12 +72,12 @@ public class TcpTransportCloseConnectionTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        org.apache.log4j.Logger.getRootLogger().addAppender(appender);
+        org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger()).addAppender(appender);
     }
 
     @AfterClass
     public static void setDown() throws Exception {
-        org.apache.log4j.Logger.getRootLogger().removeAppender(appender);
+        org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger()).removeAppender(appender);
     }
 
     @Before

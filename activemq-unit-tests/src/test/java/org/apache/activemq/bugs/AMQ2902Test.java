@@ -28,10 +28,10 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
 import org.slf4j.LoggerFactory;
 
 public class AMQ2902Test extends TestCase {
@@ -41,10 +41,11 @@ public class AMQ2902Test extends TestCase {
     final AtomicBoolean failedToFindMDC = new AtomicBoolean(Boolean.FALSE);
 
     Appender appender = new DefaultTestAppender() {
+        @SuppressWarnings("deprecation")
         @Override
-        public void doAppend(LoggingEvent event) {
-            if (event.getThrowableInformation() != null
-                    && event.getThrowableInformation().getThrowable() instanceof TransportDisposedIOException) {
+        public void append(LogEvent event) {
+            if (event.getThrown() != null
+                    && event.getThrown() instanceof TransportDisposedIOException) {
 
                 // Prevent StackOverflowException so we can see a sane stack trace.
                 if (gotExceptionInLog.get()) {
@@ -52,11 +53,11 @@ public class AMQ2902Test extends TestCase {
                 }
 
                 gotExceptionInLog.set(Boolean.TRUE);
-                LOG.error("got event: " + event + ", ex:" + event.getThrowableInformation().getThrowable(), event.getThrowableInformation().getThrowable());
+                LOG.error("got event: " + event + ", ex:" + event.getThrown(), event);
                 LOG.error("Event source: ", new Throwable("Here"));
             }
-            if( !((String) event.getMessage()).startsWith("Loaded the Bouncy Castle security provider at position") ) {
-                if (event.getMDC("activemq.broker") == null) {
+            if( !((String) event.getMessage().getFormattedMessage()).startsWith("Loaded the Bouncy Castle security provider at position") ) {
+                if (event.getContextData().getValue("activemq.broker") == null) {
                     failedToFindMDC.set(Boolean.TRUE);
                 }
             }
@@ -84,14 +85,14 @@ public class AMQ2902Test extends TestCase {
     public void setUp() throws Exception {
         gotExceptionInLog.set(Boolean.FALSE);
         failedToFindMDC.set(Boolean.FALSE);
-        Logger.getRootLogger().addAppender(appender);
-        Logger.getLogger(TransportConnection.class.getName() + ".Transport").setLevel(Level.DEBUG);
-        Logger.getLogger(TransportConnection.class.getName()).setLevel(Level.DEBUG);
+        ((org.apache.logging.log4j.core.Logger)LogManager.getRootLogger()).addAppender(appender);
+        ((org.apache.logging.log4j.core.Logger)LogManager.getLogger(TransportConnection.class.getName() + ".Transport")).setLevel(Level.DEBUG);
+        ((org.apache.logging.log4j.core.Logger)LogManager.getLogger(TransportConnection.class)).setLevel(Level.DEBUG);
     }
 
     @Override
     public void tearDown() throws Exception {
-        Logger.getRootLogger().removeAppender(appender);
+        ((org.apache.logging.log4j.core.Logger)LogManager.getRootLogger()).removeAppender(appender);
         assertFalse("got unexpected ex in log on graceful close", gotExceptionInLog.get());
         assertFalse("MDC is there", failedToFindMDC.get());
     }

@@ -19,12 +19,15 @@ package org.apache.activemq.usecases;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import javax.jms.Connection;
@@ -49,16 +52,19 @@ public class AMQ6446Test {
         final HashSet<String> loggers = new HashSet<String>();
         final HashSet<String> messages = new HashSet<String>();
 
-        DefaultTestAppender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
+            public void append(LogEvent event) {
                 loggers.add(event.getLoggerName());
-                messages.add(event.getRenderedMessage());
+                messages.add(event.getMessage().getFormattedMessage());
             }
         };
+        appender.start();
 
-        Logger.getRootLogger().addAppender(appender);
-        Logger.getRootLogger().setLevel(Level.DEBUG);
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+        Configurator.setRootLevel(Level.DEBUG);
 
         String brokerUrlWithTrace = brokerService.getTransportConnectorByScheme("tcp").getPublishableConnectString() +
                 urlTraceParam;
@@ -70,7 +76,7 @@ public class AMQ6446Test {
             connections.add(c);
         }
 
-        Logger.getRootLogger().removeAppender(appender);
+        logger.removeAppender(appender);
 
         // no logger ends with :2
         assertFalse(foundMatch(loggers, ".*:2$"));
@@ -101,16 +107,19 @@ public class AMQ6446Test {
         final HashSet<String> loggers = new HashSet<String>();
         final HashSet<String> messages = new HashSet<String>();
 
-        DefaultTestAppender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
+            public void append(LogEvent event) {
                 loggers.add(event.getLoggerName());
-                messages.add(event.getRenderedMessage());
+                messages.add(event.getMessage().getFormattedMessage());
             }
         };
+        appender.start();
 
-        Logger.getRootLogger().addAppender(appender);
-        Logger.getRootLogger().setLevel(Level.TRACE);
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+        Configurator.setRootLevel(Level.TRACE);
 
         String brokerUrlWithTrace = brokerService.getTransportConnectorByScheme("tcp").getPublishableConnectString() +
                 legacySupportParam;
@@ -122,7 +131,7 @@ public class AMQ6446Test {
             connections.add(c);
         }
 
-        Logger.getRootLogger().removeAppender(appender);
+        logger.removeAppender(appender);
 
         // logger ends with :2
         assertTrue(foundMatch(loggers, ".*:2$"));

@@ -23,9 +23,14 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
-import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,22 +66,31 @@ public class JDBCConcurrentDLQTest {
         broker.start();
         broker.waitUntilStarted();
 
-        appender = new DefaultTestAppender() {
+        final var jdbcLogger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(JDBCPersistenceAdapter.class));
+        final var regionLogger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(RegionBroker.class));
+
+        appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(org.apache.log4j.spi.LoggingEvent event) {
-                if (event.getLevel().toInt() > Level.INFO_INT) {
-                    LOG.error("Got error from log:" + event.getRenderedMessage());
+            public void append(LogEvent event) {
+                if (event.getLevel().isMoreSpecificThan(Level.INFO)) {
+                    LOG.error("Got error from log:" + event.getMessage().getFormattedMessage());
                     gotError.set(true);
                 }
             }
         };
+        appender.start();
+
+        jdbcLogger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        jdbcLogger.addAppender(appender);
+        
+        regionLogger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        regionLogger.addAppender(appender);
     }
 
     @After
     public void tearDown() throws Exception {
-        org.apache.log4j.Logger.getLogger(RegionBroker.class).removeAppender(appender);
-        org.apache.log4j.Logger.getLogger(JDBCPersistenceAdapter.class).removeAppender(appender);
-
+        ((org.apache.logging.log4j.core.Logger)LogManager.getLogger(RegionBroker.class)).removeAppender(appender);
+        ((org.apache.logging.log4j.core.Logger)LogManager.getLogger(JDBCPersistenceAdapter.class)).removeAppender(appender);
         broker.stop();
     }
 
@@ -108,8 +122,15 @@ public class JDBCConcurrentDLQTest {
                 gotError.set(true);
             }
         });
-        org.apache.log4j.Logger.getLogger(RegionBroker.class).addAppender(appender);
-        org.apache.log4j.Logger.getLogger(JDBCPersistenceAdapter.class).addAppender(appender);
+
+        final var loggerRB = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(RegionBroker.class));
+        final var loggerJDBC = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(JDBCPersistenceAdapter.class));
+
+        loggerRB.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        loggerRB.addAppender(appender);
+
+        loggerJDBC.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        loggerJDBC.addAppender(appender);
 
         final int numMessages = 100;
         final AtomicInteger consumed = new AtomicInteger(numMessages);

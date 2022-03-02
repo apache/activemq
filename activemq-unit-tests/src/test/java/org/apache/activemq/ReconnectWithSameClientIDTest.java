@@ -24,9 +24,13 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 
 import junit.framework.Test;
-import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,20 +52,22 @@ public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
 
     public void testReconnectMultipleTimesWithSameClientID() throws Exception {
 
-        org.apache.log4j.Logger log4jLogger =
-                org.apache.log4j.Logger.getLogger(org.apache.activemq.broker.jmx.ManagedTransportConnection.class);
         final AtomicBoolean failed = new AtomicBoolean(false);
-
-        Appender appender = new DefaultTestAppender() {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger((org.apache.activemq.broker.jmx.ManagedTransportConnection.class)));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getMessage().toString().startsWith("Failed to register MBean")) {
+            public void append(LogEvent event) {
+                if (event.getMessage().getFormattedMessage().startsWith("Failed to register MBean")) {
                     LOG.info("received unexpected log message: " + event.getMessage());
                     failed.set(true);
                 }
             }
         };
-        log4jLogger.addAppender(appender);
+        appender.start();
+
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        logger.addAppender(appender);
+
         try {
             connection = connectionFactory.createConnection();
             useConnection(connection);
@@ -85,7 +91,7 @@ public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
             connection = connectionFactory.createConnection();
             useConnection(connection);
         } finally {
-            log4jLogger.removeAppender(appender);
+            logger.removeAppender(appender);
         }
         assertFalse("failed on unexpected log event", failed.get());
     }

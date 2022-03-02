@@ -30,11 +30,14 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,23 +122,25 @@ public class OfflineDurableSubscriberTimeoutTest extends org.apache.activemq.Tes
     public void testOfflineDurableSubscriberTimeout() throws Exception {
 
         final AtomicBoolean foundLogMessage = new AtomicBoolean(false);
-        Appender appender = new DefaultTestAppender() {
+     // start new
+        final var loggerMRB = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(ManagedRegionBroker.class));
+        final var loggerTopic = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(org.apache.activemq.broker.region.Topic.class));
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
-            public void doAppend(LoggingEvent event) {
-                if (event.getLevel().isGreaterOrEqual(Level.WARN)) {
+            public void append(LogEvent event) {
+                if (event.getLevel().isLessSpecificThan(Level.WARN)) {
                     LOG.info("received unexpected log message: " + event.getMessage());
                     foundLogMessage.set(true);
                 }
             }
         };
+        appender.start();
 
-        org.apache.log4j.Logger log4jLoggerMRB =
-                org.apache.log4j.Logger.getLogger(ManagedRegionBroker.class);
-        org.apache.log4j.Logger log4jLoggerT =
-                org.apache.log4j.Logger.getLogger(org.apache.activemq.broker.region.Topic.class);
+        loggerMRB.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        loggerMRB.addAppender(appender);
 
-        log4jLoggerMRB.addAppender(appender);
-        log4jLoggerT.addAppender(appender);
+        loggerTopic.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        loggerTopic.addAppender(appender);
 
         try {
 
@@ -199,8 +204,8 @@ public class OfflineDurableSubscriberTimeoutTest extends org.apache.activemq.Tes
 
             assertFalse("have not found any log warn/error", foundLogMessage.get());
         } finally {
-            log4jLoggerMRB.removeAppender(appender);
-            log4jLoggerT.removeAppender(appender);
+            loggerMRB.removeAppender(appender);
+            loggerTopic.removeAppender(appender);
         }
     }
 
