@@ -193,7 +193,7 @@ public class SharedFileLockerTest {
         final AtomicInteger logCounts = new AtomicInteger(0);
      // start new
         final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(SharedFileLocker.class));
-        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
+        final var appender = new AbstractAppender("testAppender2", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
             public void append(LogEvent event) {
                 logCounts.incrementAndGet();

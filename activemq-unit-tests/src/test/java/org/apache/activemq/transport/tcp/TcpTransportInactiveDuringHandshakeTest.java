@@ -80,7 +80,8 @@ public class TcpTransportInactiveDuringHandshakeTest {
         appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
             public void append(LogEvent event) {
-                if (Level.WARN.equals(event.getLevel()) && event.getMessage().getFormattedMessage().contains("InactivityIOException")) {
+                if (Level.WARN.equals(event.getLevel()) &&
+                    event.getMessage().getFormattedMessage().contains("CONNECT frame not received with in connectionTimeout")) {
                     inactivityMonitorFired.countDown();
                 }
             }

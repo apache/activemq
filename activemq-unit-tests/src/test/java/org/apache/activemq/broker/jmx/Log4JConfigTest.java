@@ -17,19 +17,16 @@
 package org.apache.activemq.broker.jmx;
 
 import java.util.List;
-
 import javax.jms.ConnectionFactory;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.Logger;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
@@ -136,6 +133,9 @@ public class Log4JConfigTest extends EmbeddedBrokerTestSupport {
         level = log4jConfigView.getLogLevel(BROKER_LOGGER);
         assertNotNull(level);
         assertEquals("INFO", level);
+
+        List<String> loggers = log4jConfigView.getLoggers();
+        assertEquals(2, loggers.size());
     }
 
     @Test
