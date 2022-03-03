@@ -20,12 +20,14 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 
+import org.apache.activemq.store.kahadb.MessageDatabase;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
 import org.apache.logging.log4j.core.layout.MessageLayout;
@@ -82,6 +84,7 @@ public class TcpTransportCloseSocketNoWarnTest {
 
     @Before
     public void before() throws Exception {
+        gotExceptionInLog.set(false);
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
         brokerService.setUseJmx(false);
@@ -90,7 +93,7 @@ public class TcpTransportCloseSocketNoWarnTest {
         rootLogger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
         rootLogger.addAppender(appender);
 
-        org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(TransportConnection.class.getName() + ".Transport")).setLevel(Level.WARN);
+        Configurator.setLevel(TransportConnection.class.getName() + ".Transport", Level.WARN);
     }
 
     @After

@@ -48,6 +48,10 @@ import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +75,7 @@ public class SecurityJMXTest extends TestCase {
         final AtomicBoolean gotExpected = new AtomicBoolean(false);
         final AtomicReference<Object> stackTrace = new AtomicReference<Object>();
 
-        final Appender appender = new DefaultTestAppender() {
+        final Appender appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
             public void append(LogEvent event) {
                 String message =  event.getMessage().getFormattedMessage();
@@ -82,6 +86,7 @@ public class SecurityJMXTest extends TestCase {
             }
         };
 
+        appender.start();
         org.apache.logging.log4j.core.Logger toVerify = (org.apache.logging.log4j.core.Logger)LogManager.getLogger(TransportConnection.class.getName() + ".Service");
         toVerify.addAppender(appender);
 

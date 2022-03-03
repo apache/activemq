@@ -22,10 +22,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
-
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,12 +40,13 @@ public class Log4JConfigView implements Log4JConfigViewMBean {
             return null;
         }
 
+        Class<?> logManagerClass = getLogManagerClass(cl);
         Class<?> loggerClass = getLoggerClass(cl);
-        if (loggerClass == null) {
+        if (logManagerClass == null || loggerClass == null) {
             return null;
         }
 
-        Method getRootLogger = loggerClass.getMethod("getRootLogger", new Class[]{});
+        Method getRootLogger = logManagerClass.getMethod("getRootLogger", new Class[]{});
         Method getLevel = loggerClass.getMethod("getLevel", new Class[]{});
         Object rootLogger = getRootLogger.invoke(null, (Object[])null);
 
@@ -61,16 +61,15 @@ public class Log4JConfigView implements Log4JConfigViewMBean {
             return;
         }
 
+        Class<?> configuratorClass = getConfiguratorClass(cl);
         Class<?> loggerClass = getLoggerClass(cl);
         Class<?> levelClass = getLevelClass(cl);
-        if (levelClass == null || loggerClass == null) {
+        if (configuratorClass == null || levelClass == null || loggerClass == null) {
             return;
         }
 
         String targetLevel = level.toUpperCase(Locale.US);
-        Method getRootLogger = loggerClass.getMethod("getRootLogger", new Class[]{});
-        Method setLevel = loggerClass.getMethod("setLevel", levelClass);
-        Object rootLogger = getRootLogger.invoke(null, (Object[])null);
+        Method setRootLevel = configuratorClass.getMethod("setRootLevel", levelClass);
         Method toLevel = levelClass.getMethod("toLevel", String.class);
         Object newLevel = toLevel.invoke(null, targetLevel);
 
@@ -80,7 +79,7 @@ public class Log4JConfigView implements Log4JConfigViewMBean {
         // matched what the user asked for.
         if (newLevel != null && newLevel.toString().equals(targetLevel)) {
             LOG.debug("Set level {} for root logger.", level);
-            setLevel.invoke(rootLogger, newLevel);
+            setRootLevel.invoke(configuratorClass, newLevel);
         }
     }
 
@@ -95,18 +94,23 @@ public class Log4JConfigView implements Log4JConfigViewMBean {
 
         Class<?> logManagerClass = getLogManagerClass(cl);
         Class<?> loggerClass = getLoggerClass(cl);
-        if (logManagerClass == null || loggerClass == null) {
+        Class<?> loggerConfigClass = getLoggerConfigClass(cl);
+        if (logManagerClass == null || loggerClass == null || loggerConfigClass == null) {
             return Collections.emptyList();
         }
 
-        Method getCurrentLoggers = logManagerClass.getMethod("getCurrentLoggers", new Class[]{});
-        Method getName = loggerClass.getMethod("getName", new Class[]{});
+        Method getContext = logManagerClass.getMethod("getContext", boolean.class);
+        Object logContext = getContext.invoke(logManagerClass, false);
+        Method getConfiguration = logContext.getClass().getMethod("getConfiguration");
+        Object configuration = getConfiguration.invoke(logContext);
+        Method getLoggers = configuration.getClass().getMethod("getLoggers");
+
+        Method getName = loggerConfigClass.getMethod("getName");
 
         List<String> list = new ArrayList<String>();
-        Enumeration<?> loggers = (Enumeration<?>)getCurrentLoggers.invoke(null, (Object[])null);
+        Map<String, ?> loggers = (Map<String, ?>)getLoggers.invoke(configuration);
 
-        while (loggers.hasMoreElements()) {
-            Object logger = loggers.nextElement();
+        for (Object logger : loggers.values()) {
             if (logger != null) {
                 list.add((String) getName.invoke(logger, (Object[])null));
             }
@@ -126,12 +130,13 @@ public class Log4JConfigView implements Log4JConfigViewMBean {
             return null;
         }
 
+        Class<?> logManagerClass = getLogManagerClass(cl);
         Class<?> loggerClass = getLoggerClass(cl);
-        if (loggerClass == null) {
+        if (logManagerClass == null || loggerClass == null) {
             return null;
         }
 
-        Method getLogger = loggerClass.getMethod("getLogger", String.class);
+        Method getLogger = logManagerClass.getMethod("getLogger", String.class);
         String logLevel = null;
 
         if (loggerName != null && !loggerName.isEmpty()) {
@@ -172,29 +177,26 @@ public class Log4JConfigView implements Log4JConfigViewMBean {
             return;
         }
 
+        Class<?> configuratorClass = getConfiguratorClass(cl);
         Class<?> loggerClass = getLoggerClass(cl);
         Class<?> levelClass = getLevelClass(cl);
-        if (loggerClass == null || levelClass == null) {
+        if (configuratorClass == null || loggerClass == null || levelClass == null) {
             return;
         }
 
         String targetLevel = level.toUpperCase(Locale.US);
-        Method getLogger = loggerClass.getMethod("getLogger", String.class);
-        Method setLevel = loggerClass.getMethod("setLevel", levelClass);
+        Method setLevel = configuratorClass.getMethod("setLevel", String.class, levelClass);
         Method toLevel = levelClass.getMethod("toLevel", String.class);
 
-        Object logger = getLogger.invoke(null, loggerName);
-        if (logger != null) {
-            Object newLevel = toLevel.invoke(null, targetLevel);
+        Object newLevel = toLevel.invoke(null, targetLevel);
 
-            // Check that the level conversion worked and that we got a level
-            // that matches what was asked for.  A bad level name will result
-            // in the lowest level value and we don't want to change unless we
-            // matched what the user asked for.
-            if (newLevel != null && newLevel.toString().equals(targetLevel)) {
-                LOG.debug("Set level {} for logger: {}", level, loggerName);
-                setLevel.invoke(logger, newLevel);
-            }
+        // Check that the level conversion worked and that we got a level
+        // that matches what was asked for.  A bad level name will result
+        // in the lowest level value and we don't want to change unless we
+        // matched what the user asked for.
+        if (newLevel != null && newLevel.toString().equals(targetLevel)) {
+            LOG.debug("Set level {} for logger: {}", level, loggerName);
+            setLevel.invoke(configuratorClass, loggerName, newLevel);
         }
     }
 
@@ -258,29 +260,31 @@ public class Log4JConfigView implements Log4JConfigViewMBean {
     }
 
     private static Class<?> getLogManagerClass(ClassLoader cl) {
-        Class<?> logManagerClass = null;
-        try {
-            logManagerClass = cl.loadClass("org.apache.log4j.LogManager");
-        } catch (ClassNotFoundException e) {
-        }
-        return logManagerClass;
+        return getClass(cl, "org.apache.logging.log4j.LogManager");
     }
 
     private static Class<?> getLoggerClass(ClassLoader cl) {
-        Class<?> loggerClass = null;
-        try {
-            loggerClass = cl.loadClass("org.apache.log4j.Logger");
-        } catch (ClassNotFoundException e) {
-        }
-        return loggerClass;
+        return getClass(cl, "org.apache.logging.log4j.Logger");
+    }
+
+    private static Class<?> getLoggerConfigClass(ClassLoader cl) {
+        return getClass(cl, "org.apache.logging.log4j.core.config.LoggerConfig");
     }
 
     private static Class<?> getLevelClass(ClassLoader cl) {
-        Class<?> levelClass = null;
+        return getClass(cl, "org.apache.logging.log4j.Level");
+    }
+
+    private static Class<?> getConfiguratorClass(ClassLoader cl) {
+        return getClass(cl, "org.apache.logging.log4j.core.config.Configurator");
+    }
+
+    private static Class<?> getClass(ClassLoader cl, String clazz) {
+        Class<?> configuratorClass = null;
         try {
-            levelClass = cl.loadClass("org.apache.log4j.Level");
+            configuratorClass = cl.loadClass(clazz);
         } catch (ClassNotFoundException e) {
         }
-        return levelClass;
+        return configuratorClass;
     }
 }
