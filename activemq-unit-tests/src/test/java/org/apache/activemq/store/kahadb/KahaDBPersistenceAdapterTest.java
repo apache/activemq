@@ -28,7 +28,11 @@ import org.apache.logging.log4j.core.LogEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.filter.AbstractFilter;
+import org.apache.logging.log4j.core.layout.MessageLayout;
 
 /**
  * 
@@ -52,7 +56,7 @@ public class KahaDBPersistenceAdapterTest extends PersistenceAdapterTestSupport 
         final AtomicBoolean gotSomeReplay = new AtomicBoolean(Boolean.FALSE);
         final AtomicBoolean trappedLogMessages = new AtomicBoolean(Boolean.FALSE);
 
-        Appender appender = new DefaultTestAppender() {
+        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
             public void append(LogEvent event) {
                 trappedLogMessages.set(true);
@@ -66,7 +70,7 @@ public class KahaDBPersistenceAdapterTest extends PersistenceAdapterTestSupport 
         appender.start();
 
         try {
-            Configurator.setLevel(MessageDatabase.class.getName(), Level.INFO);
+            Configurator.setLevel(MessageDatabase.class.getName(), Level.DEBUG);
             ((org.apache.logging.log4j.core.Logger)LogManager.getLogger(MessageDatabase.class)).addAppender(appender);
 
             brokerService = new BrokerService();
