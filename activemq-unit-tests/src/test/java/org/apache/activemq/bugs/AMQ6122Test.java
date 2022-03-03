@@ -21,7 +21,10 @@ import static org.junit.Assert.assertNotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jms.*;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -108,7 +111,7 @@ public class AMQ6122Test {
         ActiveMQMessageProducer activeMQMessageProducer = (ActiveMQMessageProducer) activeMQSession.createProducer(dest);
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setDestination(dest);
-        activeMQMessageProducer.send(message, (CompletionListener) null);
+        activeMQMessageProducer.send(message, null);
 
         // send a duplicate
         activeMQConnection.syncSendPacket(message);
@@ -146,7 +149,7 @@ public class AMQ6122Test {
         @Override
         public void run() {
             try {
-                producer.send(message, (CompletionListener) null);
+                producer.send(message, null);
             } catch (JMSException e) {
                 e.printStackTrace();
             }

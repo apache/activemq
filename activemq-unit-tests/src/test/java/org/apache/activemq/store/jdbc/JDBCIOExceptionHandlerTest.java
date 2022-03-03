@@ -16,35 +16,20 @@
  */
 package org.apache.activemq.store.jdbc;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.PrintWriter;
-import java.net.Socket;
-import java.rmi.registry.Registry;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
 import javax.jms.Connection;
-import javax.management.*;
-import javax.management.loading.ClassLoaderRepository;
-import javax.management.remote.JMXConnectorServer;
-import javax.management.remote.JMXConnectorServerFactory;
-import javax.management.remote.JMXServiceURL;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ft.SyncCreateDataSource;
-import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.bugs.embedded.ThreadExplorer;
-import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
@@ -56,14 +41,9 @@ import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
 import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Test to see if the JDBCExceptionIOHandler will restart the transport connectors correctly after
