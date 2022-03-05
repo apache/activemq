@@ -726,6 +726,7 @@
                 <exclude>org/apache/activemq/advisory/TempDestLoadTest.*</exclude>
                 <exclude>org/apache/activemq/advisory/TempQueueMemoryTest.*</exclude>
                 <exclude>org/apache/activemq/blob/FilesystemBlobTest.*</exclude>
+                <exclude>org/apache/activemq/broker/BrokerRedeliveryTest.*</exclude>
                 <exclude>org/apache/activemq/broker/DoubleSubscriptionTest.*</exclude>
                 <exclude>org/apache/activemq/broker/JdbcXARecoveryBrokerTest.*</exclude>
                 <exclude>org/apache/activemq/broker/QueueMbeanRestartTest.*</exclude>
@@ -777,6 +778,7 @@
                 <exclude>org/apache/activemq/broker/util/TraceBrokerPathPluginTest.*</exclude>
                 <exclude>org/apache/activemq/broker/virtual/CompositeTopicTest.*</exclude>
                 <exclude>org/apache/activemq/broker/virtual/FilteredQueueTest.*</exclude>
+                <exclude>org/apache/activemq/broker/virtual/MessageDestinationVirtualTopicTest.*</exclude>
                 <exclude>org/apache/activemq/broker/virtual/MirroredQueueCorrectMemoryUsageTest.*</exclude>
                 <exclude>org/apache/activemq/broker/virtual/VirtualTopicDLQTest.*</exclude>
                 <exclude>org/apache/activemq/broker/virtual/VirtualTopicDisconnectSelectorTest.*</exclude>
@@ -828,6 +830,7 @@
                 <exclude>org/apache/activemq/bugs/AMQ3445Test.*</exclude>
                 <exclude>org/apache/activemq/bugs/AMQ3454Test.*</exclude>
                 <exclude>org/apache/activemq/bugs/AMQ3529Test.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ3537Test.*</exclude>
                 <exclude>org/apache/activemq/bugs/AMQ3567Test.*</exclude>
                 <exclude>org/apache/activemq/bugs/AMQ3622Test.*</exclude>
                 <exclude>org/apache/activemq/bugs/AMQ3625Test.*</exclude>
@@ -838,6 +841,9 @@
                 <exclude>org/apache/activemq/bugs/AMQ3841Test.*</exclude>
                 <exclude>org/apache/activemq/bugs/AMQ4221Test.*</exclude>
                 <exclude>org/apache/activemq/bugs/AMQ4677Test.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ4952Test.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ5212Test.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ6122Test.*</exclude>
                 <exclude>org/apache/activemq/bugs/ActiveMQSlowConsumerManualTest.*</exclude>
                 <exclude>org/apache/activemq/bugs/ConnectionPerMessageTest.*</exclude>
                 <exclude>org/apache/activemq/bugs/CraigsBugTest.*</exclude>
@@ -870,15 +876,18 @@
                 <exclude>org/apache/activemq/network/DemandForwardingBridgeFilterTest.*</exclude>
                 <exclude>org/apache/activemq/network/DuplexNetworkMBeanTest.*</exclude>
                 <exclude>org/apache/activemq/network/DuplexNetworkTest.*</exclude>
+                <exclude>org/apache/activemq/network/DurableFiveBrokerNetworkBridgeTest.*</exclude>
                 <exclude>org/apache/activemq/network/FailoverStaticNetworkTest.*</exclude>
                 <exclude>org/apache/activemq/network/NetworkBrokerDetachTest.*</exclude>
                 <exclude>org/apache/activemq/network/NetworkConnectionsTest.*</exclude>
+                <exclude>org/apache/activemq/network/NetworkFailoverTest.*</exclude>
                 <exclude>org/apache/activemq/network/NetworkLoadTest.*</exclude>
                 <exclude>org/apache/activemq/network/NetworkReconnectTest.*</exclude>
                 <exclude>org/apache/activemq/network/NetworkRemovesSubscriptionsTest.*</exclude>
                 <exclude>org/apache/activemq/network/NetworkRestartPlainTest.*</exclude>
                 <exclude>org/apache/activemq/network/NetworkRestartTest.*</exclude>
                 <exclude>org/apache/activemq/network/SimpleNetworkTest.*</exclude>
+                <exclude>org/apache/activemq/network/SSHTunnelNetworkReconnectTest.*</exclude>
                 <exclude>org/apache/activemq/network/jms/QueueBridgeStandaloneReconnectTest.*</exclude>
                 <exclude>org/apache/activemq/network/jms/QueueBridgeTest.*</exclude>
                 <exclude>org/apache/activemq/network/jms/QueueBridgeXBeanTest.*</exclude>
@@ -891,6 +900,7 @@
                 <exclude>org/apache/activemq/pool/ConnectionExpiryEvictsFromPoolTest.*</exclude>
                 <exclude>org/apache/activemq/pool/PooledConnectionFactoryMaximumActiveTest.*</exclude>
                 <exclude>org/apache/activemq/pool/PooledConnectionFactoryTest.*</exclude>
+                <exclude>org/apache/activemq/proxy/ProxyConnectorTest.*</exclude>
                 <exclude>org/apache/activemq/proxy/ProxyFailoverTest.*</exclude>
                 <exclude>org/apache/activemq/ra/FailoverManagedClusterTest.*</exclude>
                 <exclude>org/apache/activemq/ra/FailoverManagedConnectionTest.*</exclude>
@@ -901,15 +911,18 @@
                 <exclude>org/apache/activemq/security/XBeanSslContextTest.*</exclude>
                 <exclude>org/apache/activemq/spring/ListenerTest.*</exclude>
                 <exclude>org/apache/activemq/spring/ParallelXATransactionTest.*</exclude>
+                <exclude>org/apache/activemq/spring/SpringTest.*</exclude>
                 <exclude>org/apache/activemq/spring/Spring2XmlNamespacesTest.*</exclude>
                 <exclude>org/apache/activemq/spring/Spring2XmlNamespacesWithoutRemoteSchemaTest.*</exclude>
                 <exclude>org/apache/activemq/store/AutoStorePerDestinationTest.*</exclude>
                 <exclude>org/apache/activemq/store/StorePerDestinationTest.*</exclude>
                 <exclude>org/apache/activemq/store/jdbc/JDBCCommitExceptionTest.*</exclude>
+                <exclude>org/apache/activemq/store/jdbc/JDBCConcurrentDLQTest.*</exclude>
                 <exclude>org/apache/activemq/store/jdbc/JDBCMessagePriorityTest.*</exclude>
                 <exclude>org/apache/activemq/store/jdbc/JDBCNegativeQueueTest.*</exclude>
                 <exclude>org/apache/activemq/store/jdbc/JDBCNetworkBrokerDetachTest.*</exclude>
                 <exclude>org/apache/activemq/store/jdbc/JDBCPersistenceAdapterTest.*</exclude>
+                <exclude>org/apache/activemq/store/jdbc/JDBCPersistenceAdapterExpiredMessageTest.*</exclude>
                 <exclude>org/apache/activemq/store/jdbc/JDBCStoreBrokerTest.*</exclude>
                 <exclude>org/apache/activemq/store/jdbc/JDBCStoreOrderTest.*</exclude>
                 <exclude>org/apache/activemq/store/jdbc/JDBCXACommitExceptionTest.*</exclude>
@@ -1034,6 +1047,7 @@
                 <exclude>org/apache/activemq/usecases/NetworkOfTwentyBrokersTest.*</exclude>
                 <exclude>org/apache/activemq/usecases/NoDuplicateOnTopicNetworkTest.*</exclude>
                 <exclude>org/apache/activemq/usecases/NonBlockingConsumerRedeliveryTest.*</exclude>
+                <exclude>org/apache/activemq/usecases/OfflineDurableSubscriberTimeoutTest.*</exclude>
                 <exclude>org/apache/activemq/usecases/PublishOnQueueConsumedMessageInTransactionTest.*</exclude>
                 <exclude>org/apache/activemq/usecases/PublishOnQueueConsumedMessageUsingActivemqXMLTest.*</exclude>
                 <exclude>org/apache/activemq/usecases/PublishOnTopicConsumedMessageTest.*</exclude>
@@ -1096,6 +1110,49 @@
                 <exclude>**/NetworkFailoverTest.*/**</exclude>
                 <!-- This test only works on machines which have ssh properly configured -->
                 <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
+
+                <!-- Start PASSING, but slow tests for 5.17.0 release -->
+                <exclude>org/apache/activemq/broker/JdbcXARecoveryBrokerNoCacheTest.*</exclude>
+                <exclude>org/apache/activemq/broker/policy/AbortSlowAckConsumer0Test.*</exclude>
+                <exclude>org/apache/activemq/broker/policy/DiscardingDeadLetterPolicyTest.*</exclude>
+                <exclude>org/apache/activemq/broker/scheduler/memory/InMemoryJmsCronSchedulerTest.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ4485LowLimitTest.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ5266SingleDestTest.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ6432Test.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ6459Test.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ6815Test.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ7067Test.*</exclude>
+                <exclude>org/apache/activemq/bugs/MKahaDBTxVirtualTopicTest.*</exclude>
+                <exclude>org/apache/activemq/bugs/TransactedStoreUsageSuspendResumeTest.*</exclude>
+                <exclude>org/apache/activemq/store/jdbc/XACompletionTest.*</exclude>
+                <exclude>org/apache/activemq/store/kahadb/disk/index/ListIndexTest.*</exclude>
+                <exclude>org/apache/activemq/store/kahadb/disk/journal/PreallocationJournalLatencyTest.*</exclude>
+                <exclude>org/apache/activemq/store/kahadb/JournalFdRecoveryTest.*</exclude>
+                <exclude>org/apache/activemq/transport/MaxFrameSizeEnabledTest.*</exclude>
+                <exclude>org/apache/activemq/transport/mqtt/auto/MQTTAutoNioSslTest.*</exclude>
+                <exclude>org/apache/activemq/transport/mqtt/auto/MQTTAutoNioTest.*</exclude>
+                <exclude>org/apache/activemq/transport/mqtt/auto/MQTTAutoSslTest.*</exclude>
+                <exclude>org/apache/activemq/transport/mqtt/auto/MQTTAutoTest.*</exclude>
+                <exclude>org/apache/activemq/transport/mqtt/MQTTNIOSSLTest.*</exclude>
+                <exclude>org/apache/activemq/transport/mqtt/MQTTNIOTest.*</exclude>
+                <exclude>org/apache/activemq/transport/mqtt/MQTTSSLTest.*</exclude>
+                <exclude>org/apache/activemq/transport/mqtt/MQTTTest.*</exclude>
+                <exclude>org/apache/activemq/transport/mqtt/MQTTVirtualTopicSubscriptionsTest.*</exclude>
+                <exclude>org/apache/activemq/usecases/BacklogNetworkCrossTalkTest.*</exclude>
+                <exclude>org/apache/activemq/usecases/DuplexAdvisoryRaceTest.*</exclude>
+                <exclude>org/apache/activemq/usecases/DurableSubscriptionOffline1Test.*</exclude>
+                <exclude>org/apache/activemq/usecases/DurableSubscriptionOffline3Test.*</exclude>
+                <exclude>org/apache/activemq/usecases/DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest.*</exclude>
+                <exclude>org/apache/activemq/usecases/RequestReplyTempDestRemovalAdvisoryRaceTest.*</exclude>
+                <exclude>org/apache/activemq/usecases/TopicProducerDurableSubFlowControlTest.*</exclude>
+                <exclude>org/apache/activemq/VirtualDestTest.*</exclude>
+                <!-- End PASSING, but slow tests for 5.17.0 release -->
+                <!-- Start FLAKY tests for 5.17.0 release -->
+                <exclude>org/apache/activemq/bugs/AMQ4083Test.*</exclude>
+                <exclude>org/apache/activemq/store/jdbc/JDBCIOExceptionHandlerTest.*</exclude>
+                <exclude>org/apache/activemq/usecases/StartAndConcurrentStopBrokerTest.*</exclude>
+                <!-- End FLAKY tests for 5.17.0 release -->
               </excludes>
             </configuration>
           </plugin>
