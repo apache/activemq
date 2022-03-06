@@ -30,8 +30,9 @@
 # ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
 
 # Set jvm memory configuration (minimal/maximum amount of memory)
-ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
-
+if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
+    ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
+fi
 if [ -z "$ACTIVEMQ_OPTS" ] ; then
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
 fi
