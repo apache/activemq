@@ -280,7 +280,7 @@
         <include>org.mortbay.jasper:apache-el</include>
         <include>org.apache.taglibs:taglibs-standard-impl</include>
 
-        <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
+        <include>org.apache.geronimo.specs:geronimo-annotation_1.3_spec</include>
         <include>org.ow2.asm:asm</include>
         <include>org.eclipse.jdt:ecj</include>
 
