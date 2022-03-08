@@ -128,7 +128,8 @@ public class OfflineDurableSubscriberTimeoutTest extends org.apache.activemq.Tes
         final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
             public void append(LogEvent event) {
-                if (event.getLevel().isLessSpecificThan(Level.WARN)) {
+                if (event.getLevel().isMoreSpecificThan(Level.WARN) &&
+                    !event.getMessage().getFormattedMessage().contains("Store limit")) {
                     LOG.info("received unexpected log message: " + event.getMessage());
                     foundLogMessage.set(true);
                 }

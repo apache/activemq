@@ -72,7 +72,8 @@ public class JDBCConcurrentDLQTest {
         appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
             public void append(LogEvent event) {
-                if (event.getLevel().isMoreSpecificThan(Level.INFO)) {
+                //isMoreSpecificThan is actually greather or equal so poorly named
+                if (event.getLevel().isMoreSpecificThan(Level.WARN)) {
                     LOG.error("Got error from log:" + event.getMessage().getFormattedMessage());
                     gotError.set(true);
                 }

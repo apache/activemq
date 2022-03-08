@@ -418,6 +418,7 @@ public class AMQ4952Test {
         policy.setQueue(">");
         policy.setEnableAudit(enableCursorAudit);
         policy.setExpireMessagesPeriod(0);
+        policy.setSendDuplicateFromStoreToDLQ(true);
 
         // set replay with no consumers
         ConditionalNetworkBridgeFilterFactory conditionalNetworkBridgeFilterFactory = new ConditionalNetworkBridgeFilterFactory();
