@@ -57,7 +57,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-annotation_1.0_spec</artifactId>
+      <artifactId>geronimo-annotation_1.3_spec</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
@@ -103,7 +103,7 @@
                   <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-jta_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
-                  <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
+                  <include>org.apache.geronimo.specs:geronimo-annotation_1.3_spec</include>
                   <include>org.slf4j:slf4j-api</include>
                   <include>org.apache.logging.log4j:log4j-slf4j-impl</include>
                   <include>org.slf4j:jcl-over-slf4j</include>
@@ -329,8 +329,8 @@
         </dependency>
         <dependency>
           <groupId>org.apache.geronimo.specs</groupId>
-          <artifactId>geronimo-annotation_1.0_spec</artifactId>
-          <version>1.1.1</version>
+          <artifactId>geronimo-annotation_1.3_spec</artifactId>
+          <version>1.0</version>
           <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
