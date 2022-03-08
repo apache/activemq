@@ -146,6 +146,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
         PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setUseCache(false); // disable the cache such that duplicates are not suppressed on send
+        policyEntry.setSendDuplicateFromStoreToDLQ(true);
 
         PolicyMap policyMap = new PolicyMap();
         policyMap.setDefaultEntry(policyEntry);
