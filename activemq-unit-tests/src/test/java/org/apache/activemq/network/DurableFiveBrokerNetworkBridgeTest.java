@@ -52,6 +52,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         NetworkConnector connector = super.bridgeBrokers(localBrokerName, remoteBrokerName);
         ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
         includedDestinations.add(new ActiveMQTopic("TEST.FOO?forceDurable=true"));
+        connector.setDynamicallyIncludedDestinations(includedDestinations);
         connector.setDuplex(duplex);
         connector.setDecreaseNetworkConsumerPriority(false);
         connector.setConduitSubscriptions(true);

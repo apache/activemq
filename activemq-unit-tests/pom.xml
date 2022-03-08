@@ -1074,6 +1074,11 @@
                 <exclude>org/apache/activemq/store/kahadb/disk/util/DataByteArrayInputStreamTest.*</exclude>
                 <exclude>org/apache/activemq/bugs/AMQ5266StarvedConsumerTest.*</exclude>
                 <exclude>org/apache/activemq/bugs/AMQ5266Test.*</exclude>
+
+                <!--Broken tests -->
+                <exclude>**/NetworkFailoverTest.*/**</exclude>
+                <!-- This test only works on machines which have ssh properly configured -->
+                <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
