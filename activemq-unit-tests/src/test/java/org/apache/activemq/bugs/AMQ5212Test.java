@@ -28,16 +28,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.jms.CompletionListener;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageProducer;
 import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.AsyncCallback;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -124,7 +122,7 @@ public class AMQ5212Test {
                             }
                             ActiveMQTextMessage message = new ActiveMQTextMessage();
                             message.setDestination(dest);
-                            activeMQMessageProducer.send(message, (CompletionListener) null);
+                            activeMQMessageProducer.send(message, (AsyncCallback) null);
 
                             // send a duplicate
                             activeMQConnection.syncSendPacket(message);
@@ -165,7 +163,7 @@ public class AMQ5212Test {
         ActiveMQMessageProducer activeMQMessageProducer = (ActiveMQMessageProducer) activeMQSession.createProducer(dest);
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setDestination(dest);
-        activeMQMessageProducer.send(message, (CompletionListener) null);
+        activeMQMessageProducer.send(message, (AsyncCallback) null);
 
         // send a duplicate
         activeMQConnection.syncSendPacket(message);
@@ -210,7 +208,7 @@ public class AMQ5212Test {
         ActiveMQMessageProducer activeMQMessageProducer = (ActiveMQMessageProducer) activeMQSession.createProducer(dest);
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setDestination(dest);
-        activeMQMessageProducer.send(message, (CompletionListener) null);
+        activeMQMessageProducer.send(message, (AsyncCallback) null);
 
         // send a duplicate
         activeMQConnection.syncSendPacket(message);
