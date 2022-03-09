@@ -75,7 +75,7 @@ pipeline {
                 echo 'Running tests'
                 // all tests is very very long (10 hours on Apache Jenkins)
                 // sh 'mvn -B -e test -pl activemq-unit-tests -Dactivemq.tests=all'
-                sh 'mvn -B -e -fae test'
+                sh 'mvn -B -e -X -fae test'
             }
             post {
                 always {
