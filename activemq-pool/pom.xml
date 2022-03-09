@@ -131,7 +131,7 @@
         <inherited>true</inherited>
         <configuration>
           <instructions>
-            <Export-Package>*</Export-Package>
+            <Export-Package>org.apache.activemq.pool*;version=${project.version};-noimport:=true</Export-Package>
             <Import-Package>
               javax.transaction*;resolution:=optional,
               org.apache.activemq.jms.pool*;resolution:=optional,

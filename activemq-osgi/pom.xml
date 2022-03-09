@@ -213,7 +213,7 @@
               org.apache.tools.ant*;resolution:=optional,
               org.apache.log4j*;resolution:=optional,
               org.json*;resolution:=optional,
-              org.objectweb.asm;version="[5,8)";resolution:=optional,
+              org.objectweb.asm;version="[5,10)";resolution:=optional,
               mx4j.tools*;resolution:=optional,
               org.slf4j*;resolution:=optional,
               org.osgi.service.blueprint;resolution:=optional,
