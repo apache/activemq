@@ -1,4 +1,4 @@
-<%@ page contentType="text/xml;charset=ISO-8859-1"%>
+<%@ page contentType="text/xml;charset=UTF-8"%>
 <%--
     Licensed to the Apache Software Foundation (ASF) under one or more
     contributor license agreements.  See the NOTICE file distributed with
