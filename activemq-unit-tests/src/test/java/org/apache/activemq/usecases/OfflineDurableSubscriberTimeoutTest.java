@@ -129,8 +129,9 @@ public class OfflineDurableSubscriberTimeoutTest extends org.apache.activemq.Tes
             @Override
             public void append(LogEvent event) {
                 if (event.getLevel().isMoreSpecificThan(Level.WARN) &&
-                    !event.getMessage().getFormattedMessage().contains("Store limit")) {
-                    LOG.info("received unexpected log message: " + event.getMessage());
+                    !event.getMessage().getFormattedMessage().contains("Store limit") &&
+                    !event.getMessage().getFormattedMessage().contains("resetting to 70% of maximum available")) {
+                    LOG.info("** received unexpected log message: " + event.getMessage().getFormattedMessage() + " [" + event.getLoggerName() + "] (" + event.getLevel().toString() + ")");
                     foundLogMessage.set(true);
                 }
             }
