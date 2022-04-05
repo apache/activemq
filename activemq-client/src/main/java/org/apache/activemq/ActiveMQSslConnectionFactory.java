@@ -132,7 +132,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         if (trustStore != null) {
             try(InputStream tsStream = getInputStream(trustStore)) {
 
-                trustedCertStore.load(tsStream, trustStorePassword.toCharArray());
+                trustedCertStore.load(tsStream, trustStorePassword != null ? trustStorePassword.toCharArray() : null);
                 TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 
                 tmf.init(trustedCertStore);
@@ -151,8 +151,11 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
 
             if (sslCert != null && sslCert.length > 0) {
                 try(ByteArrayInputStream bin = new ByteArrayInputStream(sslCert)) {
-                    ks.load(bin, keyStorePassword.toCharArray());
-                    kmf.init(ks, keyStoreKeyPassword !=null ? keyStoreKeyPassword.toCharArray() : keyStorePassword.toCharArray());
+                    //A null password may not be allowed depending on implementation
+                    //Check for null so an UnrecoverableKeyException is thrown if not supported or wrong instead of NullPointerException here
+                    final char[] keyStorePass = keyStorePassword != null ? keyStorePassword.toCharArray() : null;
+                    ks.load(bin, keyStorePass);
+                    kmf.init(ks, keyStoreKeyPassword != null ? keyStoreKeyPassword.toCharArray() : keyStorePass);
                     keystoreManagers = kmf.getKeyManagers();
                 }
             }
