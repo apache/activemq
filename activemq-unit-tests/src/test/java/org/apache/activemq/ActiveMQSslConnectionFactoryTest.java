@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -102,6 +103,26 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         brokerStop();
     }
 
+    public void testCreateSslConnectionKeyStore() throws Exception {
+        // Create SSL/TLS connection with trusted cert from truststore.
+        String sslUri = "ssl://localhost:61611";
+        broker = createSslBroker(sslUri);
+        assertNotNull(broker);
+
+        // This should create the connection.
+        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        cf.setKeyStore("server.keystore");
+        cf.setKeyStorePassword("password");
+        cf.setTrustStore("server.keystore");
+        cf.setTrustStorePassword("password");
+        connection = (ActiveMQConnection)cf.createConnection();
+        LOG.info("Created client connection");
+        assertNotNull(connection);
+        connection.start();
+        connection.stop();
+        brokerStop();
+    }
+
     public void testFailoverSslConnection() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
         String sslUri = "ssl://localhost:61611";
@@ -137,7 +158,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         brokerStop();
     }
 
-    public void testNegativeCreateSslConnectionWithWrongPassword() throws Exception {
+    public void testNegativeCreateSslConnectionWithWrongTrustStorePassword() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
         String sslUri = "ssl://localhost:61611";
         broker = createSslBroker(sslUri);
@@ -151,6 +172,8 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
             connection = (ActiveMQConnection)cf.createConnection();
         }
         catch (javax.jms.JMSException ignore) {
+            //Make sure it's an UnrecoverableKeyException
+            assertTrue(getRootCause(ignore) instanceof UnrecoverableKeyException);
             // Expected exception
             LOG.info("Expected java.io.Exception [" + ignore + "]");
         }
@@ -158,6 +181,80 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
         brokerStop();
     }
+
+    public void testCreateSslConnectionWithNullTrustStorePassword() throws Exception {
+        // Create SSL/TLS connection with trusted cert from truststore.
+        String sslUri = "ssl://localhost:61611";
+        broker = createSslBroker(sslUri);
+        assertNotNull(broker);
+
+        // This should create the connection.
+        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        cf.setTrustStore("server.keystore");
+        //don't set a truststore password so it's null, this caused an NPE
+        //before AMQ-8550. truststore password is used to protect the integrity
+        //but isn't needed to read the truststore
+        connection = (ActiveMQConnection)cf.createConnection();
+        LOG.info("Created client connection");
+        assertNotNull(connection);
+        connection.start();
+        connection.stop();
+        brokerStop();
+    }
+
+    public void testNegativeCreateSslConnectionWithWrongKeyStorePassword() throws Exception {
+        // Create SSL/TLS connection with keystore and trusted cert from truststore.
+        String sslUri = "ssl://localhost:61611";
+        broker = createSslBroker(sslUri);
+        assertNotNull(broker);
+
+        // This should FAIL to connect, due to wrong keystore password.
+        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        cf.setKeyStore("server.keystore");
+        cf.setKeyStorePassword("badPassword");
+        cf.setTrustStore("server.keystore");
+        cf.setTrustStorePassword("password");
+        try {
+            connection = (ActiveMQConnection)cf.createConnection();
+        }
+        catch (javax.jms.JMSException ignore) {
+            //Make sure it's an UnrecoverableKeyException
+            assertTrue(getRootCause(ignore) instanceof UnrecoverableKeyException);
+            // Expected exception
+            LOG.info("Expected java.io.Exception [" + ignore + "]");
+        }
+        assertNull(connection);
+
+        brokerStop();
+    }
+
+    public void testNegativeCreateSslConnectionWithNullKeyStorePassword() throws Exception {
+        // Create SSL/TLS connection with keystore and trusted cert from truststore.
+        String sslUri = "ssl://localhost:61611";
+        broker = createSslBroker(sslUri);
+        assertNotNull(broker);
+
+        // This should FAIL to connect, due to null password for keystore.
+        //Before AMQ-8550 this would fail with a NPE
+        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        cf.setKeyStore("server.keystore");
+        //don't set keystore password so it's null
+        cf.setTrustStore("server.keystore");
+        cf.setTrustStorePassword("password");
+        try {
+            connection = (ActiveMQConnection)cf.createConnection();
+        }
+        catch (javax.jms.JMSException ignore) {
+            //Make sure it's an UnrecoverableKeyException and not NullPointerException
+            assertTrue(getRootCause(ignore) instanceof UnrecoverableKeyException);
+            // Expected exception
+            LOG.info("Expected java.io.Exception [" + ignore + "]");
+        }
+        assertNull(connection);
+
+        brokerStop();
+    }
+
 
     public void testNegativeCreateSslConnectionWithWrongCert() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
@@ -262,6 +359,16 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         }
         in.close();
         return out.toByteArray();
+    }
+
+    private static Throwable getRootCause(Throwable throwable) {
+        Throwable cause = throwable.getCause();
+        Throwable rootCause = null;
+        while (cause != null) {
+            rootCause = cause;
+            cause = cause.getCause();
+        }
+        return rootCause;
     }
 
 }
