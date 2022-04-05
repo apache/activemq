@@ -202,6 +202,7 @@
             <Import-Package>
               !com.google.errorprone.annotations,
               !com.google.errorprone.annotations.concurrent,
+              com.thoughtworks.xstream.*;resolution:="optional",
               *
             </Import-Package>
             <Private-Package>
