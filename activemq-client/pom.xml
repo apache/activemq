@@ -35,6 +35,7 @@
     <activemq.osgi.import.pkg>
       !com.google.errorprone.annotations,
       !com.google.errorprone.annotations.concurrent,
+      com.thoughtworks.xstream.*;resolution:="optional",
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.private.pkg>
