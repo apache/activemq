@@ -70,17 +70,17 @@
     </feature>
 
     <feature name="activemq-amqp-client" version="${pom.version}" description="ActiveMQ AMQP protocol client libraries">
-      <bundle>mvn:io.netty/netty-common/${qpid-jms-netty-version}</bundle>
-      <bundle>mvn:io.netty/netty-transport/${qpid-jms-netty-version}</bundle>
-      <bundle>mvn:io.netty/netty-transport-native-epoll/${qpid-jms-netty-version}</bundle>
-      <bundle>mvn:io.netty/netty-transport-native-kqueue/${qpid-jms-netty-version}</bundle>
-      <bundle>mvn:io.netty/netty-transport-native-unix-common/${qpid-jms-netty-version}</bundle>
-      <bundle>mvn:io.netty/netty-buffer/${qpid-jms-netty-version}</bundle>
-      <bundle>mvn:io.netty/netty-codec/${qpid-jms-netty-version}</bundle>
-      <bundle>mvn:io.netty/netty-codec-http/${qpid-jms-netty-version}</bundle>
-      <bundle>mvn:io.netty/netty-handler/${netty-all-version}</bundle>
-      <bundle>mvn:io.netty/netty-resolver/${netty-all-version}</bundle>
-      <bundle>mvn:org.apache.qpid/proton-j/${qpid-jms-proton-version}</bundle>
+      <bundle>mvn:io.netty/netty-common/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-transport/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-transport-native-epoll/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-transport-native-kqueue/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-transport-native-unix-common/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-buffer/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-codec/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-codec-http/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-handler/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-resolver/${netty-version}</bundle>
+      <bundle>mvn:org.apache.qpid/proton-j/${qpid-proton-version}</bundle>
       <bundle>mvn:org.apache.qpid/qpid-jms-client/${qpid-jms-version}</bundle>
     </feature>
 

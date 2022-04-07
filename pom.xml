@@ -91,11 +91,9 @@
     <osgi-version>6.0.0</osgi-version>
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
     <zookeeper-version>3.4.14</zookeeper-version>
-    <qpid-proton-version>0.33.8</qpid-proton-version>
-    <qpid-jms-version>0.58.0</qpid-jms-version>
-    <qpid-jms-netty-version>4.1.63.Final</qpid-jms-netty-version>
-    <qpid-jms-proton-version>0.33.8</qpid-jms-proton-version>
-    <netty-all-version>4.1.63.Final</netty-all-version>
+    <qpid-proton-version>0.33.10</qpid-proton-version>
+    <qpid-jms-version>1.6.0</qpid-jms-version>
+    <netty-version>4.1.75.Final</netty-version>
     <regexp-version>1.3</regexp-version>
     <rome-version>1.18.0</rome-version>
     <shiro-version>1.8.0</shiro-version>
