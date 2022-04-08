@@ -116,6 +116,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-partition</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-stomp</artifactId>
       <optional>true</optional>
     </dependency>
@@ -195,7 +200,7 @@
       <plugin>
         <groupId>org.apache.xbean</groupId>
         <artifactId>maven-xbean-plugin</artifactId>
-        <version>3.12</version>
+        <version>4.20</version>
         <executions>
           <execution>
             <phase>process-classes</phase>
@@ -215,7 +220,7 @@
               <schema>${basedir}/target/classes/activemq.xsd</schema>
               <outputDir>${basedir}/target/classes</outputDir>
               <generateSpringSchemasFile>false</generateSpringSchemasFile>
-              <excludedClasses>org.apache.activemq.broker.jmx.AnnotatedMBean,org.apache.activemq.broker.jmx.DestinationViewMBean</excludedClasses>
+              <excludedClasses>org.apache.activemq.broker.jmx.AnnotatedMBean,org.apache.activemq.broker.jmx.DestinationViewMBean,org.apache.activemq.broker.jmx.AsyncAnnotatedMBean,org.apache.activemq.broker.jmx.Sensitive,org.apache.activemq.store.kahadb.disk.journal.Journal</excludedClasses>
             </configuration>
             <goals>
               <goal>mapping</goal>
@@ -226,7 +231,7 @@
           <dependency>
             <groupId>com.thoughtworks.qdox</groupId>
             <artifactId>qdox</artifactId>
-            <version>1.12</version>
+            <version>1.12.1</version>
           </dependency>
         </dependencies>
       </plugin>
