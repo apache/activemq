@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.store;
 
 import java.io.File;
@@ -48,55 +47,37 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertTrue;
 
-public class SharedFileLockerTest {
-    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SharedFileLockerTest.class);
+public class SharedFileLockerLoggingTest {
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SharedFileLockerLoopTest.class);
 
     @Rule
     public TemporaryFolder testFolder;
 
 
-    public SharedFileLockerTest() {
+    public SharedFileLockerLoggingTest() {
         File file = new File(IOHelper.getDefaultDataDirectory());
         file.mkdir();
 
         // TemporaryFolder will make sure the files are removed after the test is done
         testFolder = new TemporaryFolder(file);
-
     }
-
-    @Test
-    public void testStopNoStart() throws Exception {
-        SharedFileLocker locker1 = new SharedFileLocker();
-        locker1.setDirectory(testFolder.getRoot());
-        locker1.stop();
-    }
-
-    @Test
-    public void testLoop() throws Exception {
-        // Increase the number of iterations if you are debugging races
-        for (int i = 0; i < 100; i++) {
-            internalLoop(5);
-        }
-
-    }
-
 
     @Test
     public void testLogging() throws Exception {
         // using a bigger wait here
         // to make sure we won't log any extra info
-        internalLoop(100);
+        internalLoop(5);
     }
 
     private void internalLoop(long timewait) throws Exception {
         final AtomicInteger logCounts = new AtomicInteger(0);
-        
-     // start new
+
+        // start new
         final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
         final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
             public void append(LogEvent event) {
-                if (Level.INFO.equals(event.getLevel())) {
+                if (event.getLevel() == Level.INFO) {
                     logCounts.incrementAndGet();
                 }
             }
@@ -187,94 +168,4 @@ public class SharedFileLockerTest {
 
     }
 
-    @Test
-    public void verifyLockAcquireWaitsForLockDrop() throws Exception {
-
-        final AtomicInteger logCounts = new AtomicInteger(0);
-     // start new
-        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(SharedFileLocker.class));
-        final var appender = new AbstractAppender("testAppender2", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
-            @Override
-            public void append(LogEvent event) {
-                logCounts.incrementAndGet();
-            }
-        };
-        appender.start();
-
-        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
-        logger.addAppender(appender);
-
-        LockableServiceSupport config = new LockableServiceSupport() {
-
-            @Override
-            public long getLockKeepAlivePeriod() {
-                return 500;
-            }
-
-            @Override
-            public Locker createDefaultLocker() throws IOException {
-                return null;
-            }
-
-            public void init() throws Exception {
-            }
-
-            protected void doStop(ServiceStopper stopper) throws Exception {
-            }
-
-            protected void doStart() throws Exception {
-            }
-        };
-
-        final SharedFileLocker underTest = new SharedFileLocker();
-        underTest.setDirectory(testFolder.getRoot());
-        underTest.setLockAcquireSleepInterval(5);
-        underTest.setLockable(config);
-
-        // get the in jvm lock
-        File lockFile = new File(testFolder.getRoot(), "lock");
-        String jvmProp = LockFile.class.getName() + ".lock." + lockFile.getCanonicalPath();
-        System.getProperties().put(jvmProp, jvmProp);
-
-        final CountDownLatch locked = new CountDownLatch(1);
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        try {
-            final AtomicLong acquireTime = new AtomicLong(0l);
-            executorService.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        underTest.start();
-                        acquireTime.set(System.currentTimeMillis());
-                        locked.countDown();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-
-            assertTrue("locker failed to obtain lock", Wait.waitFor(new Wait.Condition() {
-                @Override
-                public boolean isSatisified() throws Exception {
-                    return logCounts.get() > 0;
-                }
-            }, 5000, 10));
-
-            // release vm lock
-            long releaseTime = System.currentTimeMillis();
-            System.getProperties().remove(jvmProp);
-
-            assertTrue("locker got lock", locked.await(5, TimeUnit.SECONDS));
-
-            // verify delay in start
-            LOG.info("ReleaseTime: " + releaseTime + ", AcquireTime:" + acquireTime.get());
-            assertTrue("acquire delayed for keepAlive: " + config.getLockKeepAlivePeriod(), acquireTime.get() >= releaseTime + config.getLockKeepAlivePeriod());
-
-        } finally {
-            executorService.shutdownNow();
-            underTest.stop();
-            lockFile.delete();
-            logger.removeAppender(appender);
-        }
-    }
 }

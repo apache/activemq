@@ -224,7 +224,7 @@
     <module>activemq-run</module>
     <module>activemq-shiro</module>
     <module>activemq-spring</module>
-    <module>activemq-runtime-config</module>
+    <!-- <module>activemq-runtime-config</module> -->
     <module>activemq-tooling</module>
     <module>activemq-web</module>
     <module>activemq-partition</module>
