@@ -235,7 +235,7 @@ public class DestinationMapNode implements DestinationNode {
         int size = paths.length;
         for (int i = startIndex; i < size && node != null; i++) {
             String path = paths[i];
-            if (deep && path.equals(ANY_DESCENDENT)) {
+            if (deep && path != null && path.equals(ANY_DESCENDENT)) {
                 answer.addAll(node.getDesendentValues());
                 couldMatchAny = false;
                 break;
