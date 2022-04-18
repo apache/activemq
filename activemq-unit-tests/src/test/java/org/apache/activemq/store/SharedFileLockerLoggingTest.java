@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertTrue;
 
 public class SharedFileLockerLoggingTest {
-    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SharedFileLockerLoopTest.class);
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SharedFileLockerLoggingTest.class);
 
     @Rule
     public TemporaryFolder testFolder;
