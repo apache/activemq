@@ -73,7 +73,7 @@ org.activemq.AmqAdapter = {
 		
 		if( headers ) {
 			request.beforeSend = function(xhr) {
-				for( h in headers ) {
+				for( let h in headers ) {
 					xhr.setRequestHeader( h, headers[ h ] );
 				}
 			}

@@ -62,7 +62,7 @@ $(document).ready(function(){
   $('#send_form').submit(function() {
     var text = $('#send_form_input').val();
     if (text) {
-      message = new Messaging.Message(text);
+      let message = new Messaging.Message(text);
       message.destinationName = destination;
       client.send(message);
       $('#send_form_input').val("");

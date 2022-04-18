@@ -74,7 +74,7 @@ function fixedDigits(t, digits) {
  * Find direct child of an element, by id. 
  */
 function find(t, id) {
-    for (i = 0; i < t.childNodes.length; i++) {
+    for (let i = 0; i < t.childNodes.length; i++) {
         var child = t.childNodes[i]
         if (child.id == id) {
             return child

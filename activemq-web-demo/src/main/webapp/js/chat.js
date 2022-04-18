@@ -169,8 +169,8 @@ org.activemq.Chat = function() {
 		chat: function(text) {
 			if (text != null && text.length > 0) {
 				// TODO more encoding?
-				text = text.replace('<', '&lt;');
-				text = text.replace('>', '&gt;');
+				text = text.replace(/</g, '&lt;');
+				text = text.replace(/>/g, '&gt;');
 
 				amq.sendMessage(chatTopic, '<message type="chat" from="' + user + '">' + text + '</message>');
 			}
