@@ -234,7 +234,6 @@
     <module>activemq-web-demo</module>
     <module>activemq-web-console</module>
     <module>activemq-karaf-itest</module>
-    <module>activemq-itests-spring31</module>
     <module>assembly</module>
     <module>activemq-log4j-appender</module>
     <module>activemq-http</module>
