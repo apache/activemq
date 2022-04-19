@@ -78,7 +78,6 @@ import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.activemq.transport.amqp.AmqpTransport;
 import org.apache.activemq.transport.amqp.AmqpTransportFilter;
 import org.apache.activemq.transport.amqp.AmqpWireFormat;
-import org.apache.activemq.transport.amqp.ResponseHandler;
 import org.apache.activemq.transport.amqp.sasl.AmqpAuthenticator;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;

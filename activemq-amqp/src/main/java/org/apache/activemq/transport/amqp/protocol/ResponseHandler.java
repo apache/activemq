@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
+package org.apache.activemq.transport.amqp.protocol;
 
 import java.io.IOException;
 
 import org.apache.activemq.command.Response;
+import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 
 /**
  * Interface used by the AmqpProtocolConverter for callbacks from the broker.
