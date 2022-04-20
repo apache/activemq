@@ -53,6 +53,10 @@
           <param-value>Apache ActiveMQ</param-value>
         </init-param>
         -->
+        <init-param>
+            <param-name>policyLocation</param-name>
+            <param-value>file:${prop:activemq.conf}/jolokia-access.xml</param-value>
+        </init-param>
         <!-- turn off returning exceptions and stacktraces from jolokia -->
         <init-param>
           <param-name>allowErrorDetails</param-name>
