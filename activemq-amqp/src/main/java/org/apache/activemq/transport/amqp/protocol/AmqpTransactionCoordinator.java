@@ -30,7 +30,6 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
-import org.apache.activemq.transport.amqp.ResponseHandler;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
