@@ -29,7 +29,7 @@
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_2.0_spec/1.0-alpha-2</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
         <bundle dependency="true">mvn:org.jvnet.jaxb2_commons/jaxb2-basics-runtime/${jaxb-basics-version}</bundle>
-        <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jaxb-impl/${jaxb-bundle-version}</bundle>
+        <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jaxb-runtime/${jaxb-bundle-version}</bundle>
         <bundle>mvn:org.apache.commons/commons-pool2/${commons-pool2-version}</bundle>
         <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
         <bundle>mvn:org.apache.activemq/activemq-osgi/${project.version}</bundle>
