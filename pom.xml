@@ -99,7 +99,7 @@
     <qpid-proton-version>0.33.10</qpid-proton-version>
     <qpid-jms-version>0.61.0</qpid-jms-version>
     <netty-version>4.1.75.Final</netty-version>
-    <reload4j-version>1.2.19</reload4j-version>
+    <reload4j-version>1.2.20</reload4j-version>
     <regexp-version>1.3</regexp-version>
     <rome-version>1.18.0</rome-version>
     <scala-plugin-version>3.1.0</scala-plugin-version>
