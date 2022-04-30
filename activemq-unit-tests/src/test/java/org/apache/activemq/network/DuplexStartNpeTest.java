@@ -57,7 +57,7 @@ public class DuplexStartNpeTest {
     public void reproduceNpe() throws Exception {
         BrokerService broker0 = createBroker();
 
-        NetworkConnector networkConnector = broker0.addNetworkConnector("masterslave:(" + urlString + "," + urlString + ")");
+        NetworkConnector networkConnector = broker0.addNetworkConnector("staticfailover:(" + urlString + "," + urlString + ")");
         networkConnector.setDuplex(true);
         networkConnector.setStaticBridge(true);
 
