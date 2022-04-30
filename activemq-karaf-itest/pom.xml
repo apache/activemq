@@ -170,6 +170,31 @@
           </execution>
         </executions>
       </plugin>
+      <plugin><!-- workaround for https://issues.apache.org/jira/browse/SM-5021 -->
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+        <version>1.5.3</version>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>replace</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <includes>
+            <include>${project.build.directory}/classes/META-INF/maven/dependencies.properties</include>
+          </includes>
+          <replacements>
+            <replacement>
+              <token># Generated at: ... ... .+</token>
+              <value>#</value>
+            </replacement>
+          </replacements>
+          <regex>true</regex>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>

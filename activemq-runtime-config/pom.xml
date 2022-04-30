@@ -136,6 +136,7 @@
                  <xsd>${basedir}/../activemq-spring/target/classes/activemq.xsd</xsd>
                  <bindingFile>${basedir}/src/main/resources/binding.xjb</bindingFile>
                  <extensionArgs>
+            		<extensionArgs>-no-header</extensionArgs>
             		<extensionArgs>-XtoString</extensionArgs>
             		<extensionArgs>-XhashCode</extensionArgs>
             		<extensionArgs>-Xequals</extensionArgs>
