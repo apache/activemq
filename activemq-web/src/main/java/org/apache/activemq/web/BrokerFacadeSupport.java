@@ -240,8 +240,9 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<SubscriptionViewMBean> getQueueConsumers(String queueName) throws Exception {
         String brokerName = getBrokerName();
         queueName = StringUtils.replace(queueName, "\"", "_");
-        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=\"" + brokerName
-                + "\",destinationType=Queue,destinationName=\"" + queueName + "\",endpoint=Consumer,*");
+        queueName = StringUtils.replace(queueName, ":", "_");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+                + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Consumer,*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
     }
@@ -251,8 +252,9 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<ProducerViewMBean> getQueueProducers(String queueName) throws Exception {
         String brokerName = getBrokerName();
         queueName = StringUtils.replace(queueName, "\"", "_");
-        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=\"" + brokerName
-                + "\",destinationType=Queue,destinationName=\"" + queueName + "\",endpoint=Producer,*");
+        queueName = StringUtils.replace(queueName, ":", "_");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+                + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Producer,*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ProducerViewMBean.class);
     }
@@ -262,6 +264,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<ProducerViewMBean> getTopicProducers(String topicName) throws Exception {
         String brokerName = getBrokerName();
         topicName = StringUtils.replace(topicName, "\"", "_");
+        topicName = StringUtils.replace(topicName, ":", "_");
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
                 + ",destinationType=Topic,destinationName=" + topicName + ",endpoint=Producer,*");
         Set<ObjectName> queryResult = queryNames(query, null);
