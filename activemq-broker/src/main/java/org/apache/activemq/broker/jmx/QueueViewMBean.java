@@ -219,5 +219,10 @@ public interface QueueViewMBean extends DestinationViewMBean {
     @MBeanInfo("Dispatch to consumers is paused")
     boolean isPaused();
 
+    @MBeanInfo("age of the first message in milliseconds")
+    Long getFirstMessageAge();
+
+    @MBeanInfo("timestamp of the first message in milliseconds")
+    Long getFirstMessageTimestamp();
 
 }
