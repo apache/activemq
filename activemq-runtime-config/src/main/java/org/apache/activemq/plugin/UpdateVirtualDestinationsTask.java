@@ -90,7 +90,7 @@ public abstract class UpdateVirtualDestinationsTask implements Runnable {
                     if (plugin.getBrokerService().isUseVirtualDestSubs()) {
                         for (VirtualDestination removedVirtualDest : removedVirtualDests) {
                             plugin.virtualDestinationRemoved(connectionContext, removedVirtualDest);
-                            LOG.info("Removing virtual destination: {}", removedVirtualDest);
+                            LOG.info("Removed virtual destination: {}", removedVirtualDest);
                         }
 
                         for (VirtualDestination addedVirtualDest : addedVirtualDests) {

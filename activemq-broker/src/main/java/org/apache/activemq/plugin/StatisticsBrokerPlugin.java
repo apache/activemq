@@ -43,8 +43,8 @@ public class StatisticsBrokerPlugin implements BrokerPlugin {
      * @see org.apache.activemq.broker.BrokerPlugin#installPlugin(org.apache.activemq.broker.Broker)
      */
     public Broker installPlugin(Broker broker) throws Exception {
-        StatisticsBroker answer = new StatisticsBroker(broker);
         LOG.info("Installing StaticsBroker");
+        StatisticsBroker answer = new StatisticsBroker(broker);
         return answer;
     }
 }
