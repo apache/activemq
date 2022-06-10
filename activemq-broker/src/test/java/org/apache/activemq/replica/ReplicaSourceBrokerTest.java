@@ -68,6 +68,17 @@ public class ReplicaSourceBrokerTest {
     }
 
     @Test
+    public void createsQueueOnInitialization() throws Exception {
+        source.start();
+
+        ArgumentCaptor<ActiveMQDestination> destinationArgumentCaptor = ArgumentCaptor.forClass(ActiveMQDestination.class);
+        verify(broker).addDestination(eq(connectionContext), destinationArgumentCaptor.capture(), anyBoolean());
+
+        ActiveMQDestination replicationDestination = destinationArgumentCaptor.getValue();
+        assertThat(replicationDestination.getPhysicalName()).isEqualTo(ReplicaSupport.REPLICATION_QUEUE_NAME);
+    }
+
+    @Test
     public void createsDestinationEventsOnStartup() throws Exception {
         doAnswer(invocation -> {
             source.addDestination(connectionContext, testDestination, true);

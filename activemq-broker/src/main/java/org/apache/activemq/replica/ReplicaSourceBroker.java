@@ -88,6 +88,8 @@ public class ReplicaSourceBroker extends BrokerFilter implements Task {
         taskRunner = getBrokerService().getTaskRunnerFactory().createTaskRunner(this, "ReplicationPlugin.dropMessages");
 
         super.start();
+
+        ensureDestinationsAreReplicated();
     }
 
     @Override
@@ -95,6 +97,14 @@ public class ReplicaSourceBroker extends BrokerFilter implements Task {
         super.stop();
         if (taskRunner != null) {
             taskRunner.shutdown();
+        }
+    }
+
+    private void ensureDestinationsAreReplicated() throws Exception { // TODO: probably not needed
+        for (ActiveMQDestination d : getDurableDestinations()) { // TODO: support non-durable?
+            if (shouldReplicateDestination(d)) { // TODO: specific queues?
+                replicateDestinationCreation(getAdminConnectionContext(), d);
+            }
         }
     }
 
