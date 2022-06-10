@@ -10,10 +10,13 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.XAConnection;
+import javax.jms.XASession;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 
 public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
 
@@ -141,6 +144,122 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
         secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
 
         receivedMessage = secondBrokerConsumer.receive(SHORT_TIMEOUT);
+        assertNull(receivedMessage);
+
+        firstBrokerSession.close();
+        secondBrokerSession.close();
+    }
+
+    public void testSendMessageTransactionCommit() throws Exception {
+        Session firstBrokerSession = firstBrokerConnection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
+        MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
+
+        Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
+
+        ActiveMQTextMessage message  = new ActiveMQTextMessage();
+        message.setText(getName());
+        firstBrokerProducer.send(message);
+
+        Message receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNull(receivedMessage);
+
+        firstBrokerSession.commit();
+
+        receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNotNull(receivedMessage);
+        assertTrue(receivedMessage instanceof TextMessage);
+        assertEquals(getName(), ((TextMessage) receivedMessage).getText());
+
+        firstBrokerSession.close();
+        secondBrokerSession.close();
+    }
+
+    public void testSendMessageTransactionRollback() throws Exception {
+        Session firstBrokerSession = firstBrokerConnection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
+        MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
+
+        Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
+
+        ActiveMQTextMessage message  = new ActiveMQTextMessage();
+        message.setText(getName());
+        firstBrokerProducer.send(message);
+
+        Message receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNull(receivedMessage);
+
+        firstBrokerSession.rollback();
+
+        receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNull(receivedMessage);
+
+        firstBrokerSession.close();
+        secondBrokerSession.close();
+    }
+
+    public void testSendMessageXATransactionCommit() throws Exception {
+        XASession firstBrokerSession = firstBrokerXAConnection.createXASession();
+        MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
+
+        Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
+
+        XAResource xaRes = firstBrokerSession.getXAResource();
+        Xid xid = createXid();
+        xaRes.start(xid, XAResource.TMNOFLAGS);
+
+        TextMessage message  = firstBrokerSession.createTextMessage(getName());
+        firstBrokerProducer.send(message);
+
+        xaRes.end(xid, XAResource.TMSUCCESS);
+
+        Message receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNull(receivedMessage);
+
+        xaRes.prepare(xid);
+
+        receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNull(receivedMessage);
+
+        xaRes.commit(xid, false);
+
+        receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNotNull(receivedMessage);
+        assertTrue(receivedMessage instanceof TextMessage);
+        assertEquals(getName(), ((TextMessage) receivedMessage).getText());
+
+        firstBrokerSession.close();
+        secondBrokerSession.close();
+    }
+
+    public void testSendMessageXATransactionRollback() throws Exception {
+        XASession firstBrokerSession = firstBrokerXAConnection.createXASession();
+        MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
+
+        Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
+
+        XAResource xaRes = firstBrokerSession.getXAResource();
+        Xid xid = createXid();
+        xaRes.start(xid, XAResource.TMNOFLAGS);
+
+        TextMessage message  = firstBrokerSession.createTextMessage(getName());
+        firstBrokerProducer.send(message);
+
+        xaRes.end(xid, XAResource.TMSUCCESS);
+
+        Message receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNull(receivedMessage);
+
+        xaRes.prepare(xid);
+
+        receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNull(receivedMessage);
+
+        xaRes.rollback(xid);
+
+        receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
         assertNull(receivedMessage);
 
         firstBrokerSession.close();

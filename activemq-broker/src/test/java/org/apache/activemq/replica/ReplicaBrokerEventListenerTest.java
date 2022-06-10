@@ -8,7 +8,10 @@ import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.TransactionId;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -175,4 +178,113 @@ public class ReplicaBrokerEventListenerTest {
         verify(replicaEventMessage).acknowledge();
     }
 
+    @Test
+    public void canHandleEventOfType_TRANSACTION_BEGIN() throws Exception {
+        MessageId messageId = new MessageId("1:1");
+        TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
+        ActiveMQMessage message = spy(new ActiveMQMessage());
+        message.setMessageId(messageId);
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.TRANSACTION_BEGIN)
+                .setEventData(eventSerializer.serializeReplicationData(transactionId));
+        message.setContent(event.getEventData());
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+
+        listener.onMessage(message);
+
+        ArgumentCaptor<TransactionId> messageArgumentCaptor = ArgumentCaptor.forClass(TransactionId.class);
+        verify(broker).beginTransaction(any(), messageArgumentCaptor.capture());
+        TransactionId value = messageArgumentCaptor.getValue();
+        assertThat(value).isEqualTo(transactionId);
+        verify(message).acknowledge();
+    }
+
+    @Test
+    public void canHandleEventOfType_TRANSACTION_PREPARE() throws Exception {
+        MessageId messageId = new MessageId("1:1");
+        TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
+        ActiveMQMessage message = spy(new ActiveMQMessage());
+        message.setMessageId(messageId);
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.TRANSACTION_PREPARE)
+                .setEventData(eventSerializer.serializeReplicationData(transactionId));
+        message.setContent(event.getEventData());
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+
+        listener.onMessage(message);
+
+        ArgumentCaptor<TransactionId> messageArgumentCaptor = ArgumentCaptor.forClass(TransactionId.class);
+        verify(broker).prepareTransaction(any(), messageArgumentCaptor.capture());
+        TransactionId value = messageArgumentCaptor.getValue();
+        assertThat(value).isEqualTo(transactionId);
+        verify(message).acknowledge();
+    }
+
+    @Test
+    public void canHandleEventOfType_TRANSACTION_FORGET() throws Exception {
+        MessageId messageId = new MessageId("1:1");
+        TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
+        ActiveMQMessage message = spy(new ActiveMQMessage());
+        message.setMessageId(messageId);
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.TRANSACTION_FORGET)
+                .setEventData(eventSerializer.serializeReplicationData(transactionId));
+        message.setContent(event.getEventData());
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+
+        listener.onMessage(message);
+
+        ArgumentCaptor<TransactionId> messageArgumentCaptor = ArgumentCaptor.forClass(TransactionId.class);
+        verify(broker).forgetTransaction(any(), messageArgumentCaptor.capture());
+        TransactionId value = messageArgumentCaptor.getValue();
+        assertThat(value).isEqualTo(transactionId);
+        verify(message).acknowledge();
+    }
+
+    @Test
+    public void canHandleEventOfType_TRANSACTION_ROLLBACK() throws Exception {
+        MessageId messageId = new MessageId("1:1");
+        TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
+        ActiveMQMessage message = spy(new ActiveMQMessage());
+        message.setMessageId(messageId);
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.TRANSACTION_ROLLBACK)
+                .setEventData(eventSerializer.serializeReplicationData(transactionId));
+        message.setContent(event.getEventData());
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+
+        listener.onMessage(message);
+
+        ArgumentCaptor<TransactionId> messageArgumentCaptor = ArgumentCaptor.forClass(TransactionId.class);
+        verify(broker).rollbackTransaction(any(), messageArgumentCaptor.capture());
+        TransactionId value = messageArgumentCaptor.getValue();
+        assertThat(value).isEqualTo(transactionId);
+        verify(message).acknowledge();
+    }
+
+    @Test
+    public void canHandleEventOfType_TRANSACTION_COMMIT() throws Exception {
+        MessageId messageId = new MessageId("1:1");
+        TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
+        ActiveMQMessage message = spy(new ActiveMQMessage());
+        message.setMessageId(messageId);
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.TRANSACTION_COMMIT)
+                .setEventData(eventSerializer.serializeReplicationData(transactionId))
+                .setReplicationProperty(ReplicaSupport.TRANSACTION_ONE_PHASE_PROPERTY, true);
+        message.setContent(event.getEventData());
+        message.setProperties(event.getReplicationProperties());
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+
+        listener.onMessage(message);
+
+        ArgumentCaptor<TransactionId> messageArgumentCaptor = ArgumentCaptor.forClass(TransactionId.class);
+        ArgumentCaptor<Boolean> onePhaseArgumentCaptor = ArgumentCaptor.forClass(Boolean.class);
+        verify(broker).commitTransaction(any(), messageArgumentCaptor.capture(), onePhaseArgumentCaptor.capture());
+        TransactionId value = messageArgumentCaptor.getValue();
+        assertThat(value).isEqualTo(transactionId);
+        Boolean onePhase = onePhaseArgumentCaptor.getValue();
+        assertThat(onePhase).isTrue();
+        verify(message).acknowledge();
+    }
 }
