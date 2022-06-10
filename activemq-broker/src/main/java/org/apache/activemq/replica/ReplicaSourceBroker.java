@@ -4,10 +4,12 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.filter.DestinationMap;
@@ -81,6 +83,13 @@ public class ReplicaSourceBroker extends BrokerFilter {
         replicateDestinationRemoval(context, destination);
     }
 
+    @Override
+    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
+        ActiveMQDestination destination = messageSend.getDestination();
+        replicateSend(producerExchange, messageSend, destination);
+        super.send(producerExchange, messageSend);
+    }
+
     private boolean shouldReplicateDestination(ActiveMQDestination destination) {
         boolean isReplicationQueue = isReplicationQueue(destination);
         boolean isAdvisoryDestination = isAdvisoryDestination(destination);
@@ -131,6 +140,29 @@ public class ReplicaSourceBroker extends BrokerFilter {
             );
         } catch (Exception e) {
             logger.error("Failed to replicate remove of destination {}", destination.getPhysicalName(), e);
+        }
+    }
+
+    private void replicateSend(ProducerBrokerExchange context, Message message, ActiveMQDestination destination) {
+        if (isReplicationQueue(message.getDestination())) {
+            return;
+        }
+        if (destination.isTemporary()) {
+            return;
+        }
+        if (message.isAdvisory()) {  // TODO: only replicate what we care about
+            return;
+        }
+
+        try {
+            enqueueReplicaEvent(
+                    context.getConnectionContext(),
+                    new ReplicaEvent()
+                            .setEventType(ReplicaEventType.MESSAGE_SEND)
+                            .setEventData(eventSerializer.serializeMessageData(message))
+            );
+        } catch (Exception e) {
+            logger.error("Failed to replicate message {} for destination {}", message.getMessageId(), destination.getPhysicalName());
         }
     }
 

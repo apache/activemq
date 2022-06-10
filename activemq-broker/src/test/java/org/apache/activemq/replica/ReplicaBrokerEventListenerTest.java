@@ -5,9 +5,13 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.MessageId;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -28,6 +32,7 @@ public class ReplicaBrokerEventListenerTest {
         ConnectionContext adminConnectionContext = mock(ConnectionContext.class);
         when(adminConnectionContext.copy()).thenReturn(connectionContext);
         when(broker.getAdminConnectionContext()).thenReturn(adminConnectionContext);
+        when(connectionContext.isProducerFlowControl()).thenReturn(true);
 
         listener = new ReplicaBrokerEventListener(broker);
     }
@@ -104,5 +109,35 @@ public class ReplicaBrokerEventListenerTest {
         verify(replicaEventMessage).acknowledge();
     }
 
+    @Test
+    public void canHandleEventOfType_MESSAGE_SEND() throws Exception {
+        MessageId messageId = new MessageId("1:1");
+
+        ActiveMQMessage message = new ActiveMQMessage();
+        message.setMessageId(messageId);
+
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.MESSAGE_SEND)
+                .setEventData(eventSerializer.serializeMessageData(message));
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+
+        listener.onMessage(replicaEventMessage);
+
+        verify(broker).getAdminConnectionContext();
+        ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
+        verify(broker).send(any(), messageArgumentCaptor.capture());
+
+        ActiveMQMessage value = messageArgumentCaptor.getValue();
+        assertThat(value).isEqualTo(message);
+
+        verify(connectionContext).isProducerFlowControl();
+        verify(connectionContext).setProducerFlowControl(false);
+        verify(connectionContext).setProducerFlowControl(true);
+
+        verify(replicaEventMessage).acknowledge();
+    }
 
 }

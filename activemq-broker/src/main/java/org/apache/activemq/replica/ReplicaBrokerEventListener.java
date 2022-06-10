@@ -24,11 +24,13 @@ public class ReplicaBrokerEventListener implements MessageListener {
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final Broker broker;
     private final ConnectionContext connectionContext;
+    private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
 
     ReplicaBrokerEventListener(Broker broker) {
         this.broker = requireNonNull(broker);
         connectionContext = broker.getAdminConnectionContext().copy();
         connectionContext.setUserName(ReplicaSupport.REPLICATION_PLUGIN_USER_NAME);
+        replicaInternalMessageProducer = new ReplicaInternalMessageProducer(broker, connectionContext);
     }
 
     @Override
@@ -48,6 +50,10 @@ public class ReplicaBrokerEventListener implements MessageListener {
                     case DESTINATION_DELETE:
                         logger.trace("Processing replicated destination deletion");
                         deleteDestination((ActiveMQDestination) deserializedData);
+                        return;
+                    case MESSAGE_SEND:
+                        logger.trace("Processing replicated message send");
+                        persistMessage((ActiveMQMessage) deserializedData);
                         return;
                 default:
                     logger.warn("Unhandled event type \"{}\" for replication message id: {}", eventType, message.getJMSMessageID());
@@ -108,6 +114,14 @@ public class ReplicaBrokerEventListener implements MessageListener {
             broker.removeDestination(connectionContext, destination, 1000);
         } catch (Exception e) {
             logger.error("Unable to remove destination [{}]", destination, e);
+        }
+    }
+
+    private void persistMessage(ActiveMQMessage message) {
+        try {
+            replicaInternalMessageProducer.produceToReplicaQueue(message);
+        } catch (Exception e) {
+            logger.error("Failed to process message {} with JMS message id: {}", message.getMessageId(), message.getJMSMessageID(), e);
         }
     }
 }
