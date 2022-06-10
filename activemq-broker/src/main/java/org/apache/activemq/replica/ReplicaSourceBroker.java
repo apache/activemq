@@ -7,6 +7,11 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.IndirectMessageReference;
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.QueueMessageReference;
+import org.apache.activemq.broker.region.cursors.OrderedPendingList;
+import org.apache.activemq.broker.region.cursors.PendingList;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.Message;
@@ -14,6 +19,8 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.thread.Task;
+import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
@@ -21,10 +28,18 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ReplicaSourceBroker extends BrokerFilter {
+public class ReplicaSourceBroker extends BrokerFilter implements Task {
 
     private final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
     private static final DestinationMapEntry<Boolean> IS_REPLICATED = new DestinationMapEntry<>() {}; // used in destination map to indicate mirrored status
@@ -42,7 +57,12 @@ public class ReplicaSourceBroker extends BrokerFilter {
     private final URI transportConnectorUri;
     private ReplicaInternalMessageProducer replicaInternalMessageProducer;
 
+    private final ReentrantReadWriteLock dropMessagesLock = new ReentrantReadWriteLock();
+    final PendingList dropMessages = new OrderedPendingList();
+    private final Object iteratingMutex = new Object();
     private final Object sendingMutex = new Object();
+    private final AtomicLong pendingWakeups = new AtomicLong();
+    private TaskRunner taskRunner;
 
     private final AtomicBoolean initialized = new AtomicBoolean();
 
@@ -63,6 +83,8 @@ public class ReplicaSourceBroker extends BrokerFilter {
         initialized.compareAndSet(false, true);
 
         replicaInternalMessageProducer = new ReplicaInternalMessageProducer(next, getAdminConnectionContext());
+
+        taskRunner = getBrokerService().getTaskRunnerFactory().createTaskRunner(this, "ReplicationPlugin.dropMessages");
 
         super.start();
     }
@@ -87,7 +109,35 @@ public class ReplicaSourceBroker extends BrokerFilter {
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         ActiveMQDestination destination = messageSend.getDestination();
         replicateSend(producerExchange, messageSend, destination);
-        super.send(producerExchange, messageSend);
+        try {
+            super.send(producerExchange, messageSend);
+        } catch (Exception e) {
+            if (destination.isQueue()) {
+                queueMessageDropped(producerExchange.getConnectionContext(), new IndirectMessageReference(messageSend));
+            }
+            if (destination.isTopic()) {
+                // TODO have correct handling of durable subscribers if there is such a situation
+            }
+            throw e;
+        }
+    }
+    @Override
+    public void queueMessageDropped(ConnectionContext context, QueueMessageReference reference) {
+        if (isReplicaContext(context)) {
+            return;
+        }
+        Message message = reference.getMessage();
+        if (!isReplicatedDestination(message.getDestination())) {
+            return;
+        }
+
+        dropMessagesLock.writeLock().lock();
+        try {
+            dropMessages.addMessageLast(reference);
+        } finally {
+            dropMessagesLock.writeLock().unlock();
+        }
+        asyncWakeup();
     }
 
     private boolean shouldReplicateDestination(ActiveMQDestination destination) {
@@ -205,6 +255,66 @@ public class ReplicaSourceBroker extends BrokerFilter {
             eventMessage.setContent(event.getEventData());
             eventMessage.setProperties(event.getReplicationProperties());
             replicaInternalMessageProducer.produceToReplicaQueue(eventMessage);
+        }
+    }
+
+    private void asyncWakeup() {
+        try {
+            pendingWakeups.incrementAndGet();
+            taskRunner.wakeup();
+        } catch (InterruptedException e) {
+            logger.warn("Async task runner failed to wakeup ", e);
+        }
+    }
+
+    @Override
+    public boolean iterate() {
+        synchronized (iteratingMutex) {
+            PendingList messages = new OrderedPendingList();
+            dropMessagesLock.readLock().lock();
+            try {
+                messages.addAll(dropMessages);
+            } finally {
+                dropMessagesLock.readLock().unlock();
+            }
+
+            if (!messages.isEmpty()) {
+                Map<ActiveMQDestination, Set<String>> map = new HashMap<>();
+                for (MessageReference message : messages) {
+                    Set<String> messageIds = map.computeIfAbsent(message.getMessage().getDestination(), k -> new HashSet<>());
+                    messageIds.add(message.getMessageId().toString());
+
+                    dropMessagesLock.writeLock().lock();
+                    try {
+                        dropMessages.remove(message);
+                    } finally {
+                        dropMessagesLock.writeLock().unlock();
+                    }
+                }
+
+                for (Map.Entry<ActiveMQDestination, Set<String>> entry : map.entrySet()) {
+                    replicateDropMessages(entry.getKey(), new ArrayList<>(entry.getValue()));
+                }
+            }
+
+            if (pendingWakeups.get() > 0) {
+                pendingWakeups.decrementAndGet();
+            }
+            return pendingWakeups.get() > 0;
+        }
+    }
+
+    private void replicateDropMessages(ActiveMQDestination destination, List<String> messageIds) {
+        try {
+            enqueueReplicaEvent(
+                    null,
+                    new ReplicaEvent()
+                            .setEventType(ReplicaEventType.MESSAGES_DROPPED)
+                            .setEventData(eventSerializer.serializeReplicationData(destination))
+                            .setReplicationProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, messageIds)
+            );
+        } catch (Exception e) {
+            logger.error("Failed to replicate drop messages {} - {}", destination, messageIds, e);
         }
     }
 }

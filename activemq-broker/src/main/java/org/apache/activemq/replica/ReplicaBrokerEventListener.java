@@ -2,6 +2,9 @@ package org.apache.activemq.replica;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.MessageReferenceFilter;
+import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.util.ByteSequence;
@@ -14,7 +17,10 @@ import javax.jms.MessageListener;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -54,6 +60,16 @@ public class ReplicaBrokerEventListener implements MessageListener {
                     case MESSAGE_SEND:
                         logger.trace("Processing replicated message send");
                         persistMessage((ActiveMQMessage) deserializedData);
+                        return;
+                    case MESSAGES_DROPPED:
+                        logger.trace("Processing replicated messages dropped");
+                        try {
+                            dropMessages(
+                                    (ActiveMQDestination) deserializedData,
+                                    (List<String>) message.getObjectProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY));
+                        } catch (JMSException e) {
+                            logger.error("Failed to extract property to replicate messages dropped [{}]", deserializedData, e);
+                        }
                         return;
                 default:
                     logger.warn("Unhandled event type \"{}\" for replication message id: {}", eventType, message.getJMSMessageID());
@@ -122,6 +138,29 @@ public class ReplicaBrokerEventListener implements MessageListener {
             replicaInternalMessageProducer.produceToReplicaQueue(message);
         } catch (Exception e) {
             logger.error("Failed to process message {} with JMS message id: {}", message.getMessageId(), message.getJMSMessageID(), e);
+        }
+    }
+
+    private void dropMessages(ActiveMQDestination destination, List<String> messageIds) {
+        try {
+            Queue queue = broker.getDestinations(destination).stream()
+                    .findFirst().map(DestinationExtractor::extractQueue).orElseThrow();
+            queue.removeMatchingMessages(connectionContext, new ListMessageReferenceFilter(messageIds), messageIds.size());
+        } catch (Exception e) {
+            logger.error("Unable to replicate messages dropped [{}]", destination, e);
+        }
+    }
+
+    static class ListMessageReferenceFilter implements MessageReferenceFilter {
+        final Set<String> messageIds;
+
+        public ListMessageReferenceFilter(List<String> messageIds) {
+            this.messageIds = new HashSet<>(messageIds);
+        }
+
+        @Override
+        public boolean evaluate(ConnectionContext context, MessageReference messageReference) throws JMSException {
+            return messageIds.contains(messageReference.getMessageId().toString());
         }
     }
 }
