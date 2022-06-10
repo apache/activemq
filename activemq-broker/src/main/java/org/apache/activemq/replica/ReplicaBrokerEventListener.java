@@ -2,11 +2,17 @@ package org.apache.activemq.replica;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.MessageReferenceFilter;
 import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.util.ByteSequence;
 import org.slf4j.Logger;
@@ -18,6 +24,7 @@ import javax.jms.MessageListener;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -97,6 +104,29 @@ public class ReplicaBrokerEventListener implements MessageListener {
                                     message.getBooleanProperty(ReplicaSupport.TRANSACTION_ONE_PHASE_PROPERTY));
                         } catch (JMSException e) {
                             logger.error("Failed to extract property to replicate transaction commit with id [{}]", deserializedData, e);
+                        }
+                        return;
+                    case ADD_DURABLE_CONSUMER:
+                        logger.trace("Processing replicated add consumer");
+                        try {
+                            addDurableConsumer((ConsumerInfo) deserializedData,
+                                    message.getStringProperty(ReplicaSupport.CLIENT_ID_PROPERTY));
+                        } catch (JMSException e) {
+                            logger.error("Failed to extract property to replicate add consumer [{}]", deserializedData, e);
+                        }
+                        return;
+                    case REMOVE_DURABLE_CONSUMER:
+                        logger.trace("Processing replicated remove consumer");
+                        removeDurableConsumer((ConsumerInfo) deserializedData);
+                        return;
+                    case TOPIC_MESSAGE_ACK:
+                        logger.trace("Processing replicated topic message ack");
+                        try {
+                            consumeTopicAck((org.apache.activemq.command.Message) deserializedData,
+                                    message.getStringProperty(ReplicaSupport.CLIENT_ID_PROPERTY),
+                                    message.getByteProperty(ReplicaSupport.ACK_TYPE_PROPERTY));
+                        } catch (JMSException e) {
+                            logger.error("Failed to extract property to replicate topic message ack [{}]", deserializedData, e);
                         }
                         return;
                 default:
@@ -220,6 +250,62 @@ public class ReplicaBrokerEventListener implements MessageListener {
             broker.commitTransaction(connectionContext, xid, onePhase);
         } catch (Exception e) {
             logger.error("Unable to replicate commit transaction [{}]", xid, e);
+        }
+    }
+
+    private void addDurableConsumer(ConsumerInfo consumerInfo, String clientId) {
+        try {
+            ConnectionContext context = connectionContext.copy();
+            context.setClientId(clientId);
+            context.setConnection(new DummyConnection());
+            DurableTopicSubscription subscription = (DurableTopicSubscription) broker.addConsumer(context, consumerInfo);
+            // We don't want to keep it active to be able to connect to it on the other side when needed
+            // but we want to have keepDurableSubsActive to be able to acknowledge
+            subscription.deactivate(true, 0);
+        } catch (Exception e) {
+            logger.error("Unable to replicate add durable consumer [{}]", consumerInfo, e);
+        }
+    }
+
+    private void removeDurableConsumer(ConsumerInfo consumerInfo) {
+        try {
+            ConnectionContext context = broker.getDestinations(consumerInfo.getDestination()).stream()
+                    .findFirst()
+                    .map(Destination::getConsumers)
+                    .stream().flatMap(Collection::stream)
+                    .filter(v -> v.getConsumerInfo().getClientId().equals(consumerInfo.getClientId()))
+                    .findFirst()
+                    .map(Subscription::getContext)
+                    .orElse(null);
+            if (context == null || !ReplicaSupport.REPLICATION_PLUGIN_USER_NAME.equals(context.getUserName())) {
+                // a real consumer had stolen the context before we got the message
+                return;
+            }
+
+            broker.removeConsumer(context, consumerInfo);
+        } catch (Exception e) {
+            logger.error("Unable to replicate remove durable consumer [{}]", consumerInfo, e);
+        }
+    }
+
+    private void consumeTopicAck(org.apache.activemq.command.Message message, String clientId, byte ackType) {
+        try {
+            Topic topic = broker.getDestinations(message.getDestination()).stream().findFirst().map(DestinationExtractor::extractTopic).orElseThrow();
+            DurableTopicSubscription subscription = topic.getConsumers().stream().filter(c -> c.getConsumerInfo().getClientId().equals(clientId))
+                    .findFirst().filter(DurableTopicSubscription.class::isInstance).map(DurableTopicSubscription.class::cast)
+                    .orElseThrow();
+
+            message.setRegionDestination(topic);
+
+            subscription.removePending(message);
+
+            topic.getDestinationStatistics().getDequeues().increment();
+            subscription.getSubscriptionStatistics().getDequeues().increment();
+
+            MessageAck messageAck = new MessageAck(message, ackType, 1);
+            topic.acknowledge(connectionContext, subscription, messageAck, message);
+        } catch (Exception e) {
+            logger.error("Failed to process ack with last message id: {}", message.getMessageId(), e);
         }
     }
 

@@ -18,6 +18,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
@@ -199,7 +200,15 @@ public class ReplicaSourceBroker extends BrokerFilter implements Task {
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo consumerInfo) throws Exception {
         assertAuthorized(context, consumerInfo.getDestination());
 
-        return super.addConsumer(context, consumerInfo);
+        Subscription subscription = super.addConsumer(context, consumerInfo);
+        replicateAddConsumer(context, consumerInfo);
+        return subscription;
+    }
+
+    @Override
+    public void removeConsumer(ConnectionContext context, ConsumerInfo consumerInfo) throws Exception {
+        super.removeConsumer(context, consumerInfo);
+        replicateRemoveConsumer(context, consumerInfo);
     }
 
     @Override
@@ -213,6 +222,25 @@ public class ReplicaSourceBroker extends BrokerFilter implements Task {
         super.addProducer(context, producerInfo);
     }
 
+    @Override
+    public void topicMessageAcknowledged(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) {
+        try {
+            enqueueReplicaEvent(
+                    context,
+                    new ReplicaEvent()
+                            .setEventType(ReplicaEventType.TOPIC_MESSAGE_ACK)
+                            .setEventData(eventSerializer.serializeReplicationData(node.getMessage()))
+                            .setReplicationProperty(ReplicaSupport.CLIENT_ID_PROPERTY, sub.getConsumerInfo().getClientId())
+                            .setReplicationProperty(ReplicaSupport.ACK_TYPE_PROPERTY, ack.getAckType())
+            );
+        } catch (Exception e) {
+            logger.error(
+                    "Failed to replicate ACK {} for consumer {}",
+                    node.getMessageId(),
+                    sub.getConsumerInfo()
+            );
+        }
+    }
 
     private boolean shouldReplicateDestination(ActiveMQDestination destination) {
         boolean isReplicationQueue = isReplicationQueue(destination);
@@ -357,6 +385,45 @@ public class ReplicaSourceBroker extends BrokerFilter implements Task {
         }
     }
 
+    private void replicateAddConsumer(ConnectionContext context, ConsumerInfo consumerInfo) {
+        if (!needToReplicateConsumer(consumerInfo)) {
+            return;
+        }
+        if (isReplicationTransport(context.getConnector())) {
+            return;
+        }
+        try {
+            enqueueReplicaEvent(
+                    context,
+                    new ReplicaEvent()
+                            .setEventType(ReplicaEventType.ADD_DURABLE_CONSUMER)
+                            .setEventData(eventSerializer.serializeReplicationData(consumerInfo))
+                            .setReplicationProperty(ReplicaSupport.CLIENT_ID_PROPERTY, context.getClientId())
+            );
+        } catch (Exception e) {
+            logger.error("Failed to replicate adding {}", consumerInfo, e);
+        }
+    }
+
+    private void replicateRemoveConsumer(ConnectionContext context, ConsumerInfo consumerInfo) {
+        if (!needToReplicateConsumer(consumerInfo)) {
+            return;
+        }
+        if (isReplicationTransport(context.getConnector())) {
+            return;
+        }
+        try {
+            enqueueReplicaEvent(
+                    context,
+                    new ReplicaEvent()
+                            .setEventType(ReplicaEventType.REMOVE_DURABLE_CONSUMER)
+                            .setEventData(eventSerializer.serializeReplicationData(consumerInfo))
+            );
+        } catch (Exception e) {
+            logger.error("Failed to replicate adding {}", consumerInfo, e);
+        }
+    }
+
     private boolean isReplicatedDestination(ActiveMQDestination destination) {
         if (destinationsToReplicate.chooseValue(destination) == null) {
             logger.debug("{} is not a replicated destination", destination.getPhysicalName());
@@ -488,5 +555,11 @@ public class ReplicaSourceBroker extends BrokerFilter implements Task {
 
     private String createUnauthorizedMessage(ActiveMQDestination destination) {
         return "Not authorized to access destination: " + destination;
+    }
+
+    private boolean needToReplicateConsumer(ConsumerInfo consumerInfo) {
+        return consumerInfo.getDestination().isTopic() &&
+                consumerInfo.isDurable() &&
+                !consumerInfo.isNetworkSubscription();
     }
 }

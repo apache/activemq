@@ -414,4 +414,9 @@ public class BrokerFilter implements Broker {
     public void queueMessageDropped(ConnectionContext context, QueueMessageReference reference) {
         getNext().queueMessageDropped(context, reference);
     }
+
+    @Override
+    public void topicMessageAcknowledged(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) {
+        getNext().topicMessageAcknowledged(context, sub, ack, node);
+    }
 }

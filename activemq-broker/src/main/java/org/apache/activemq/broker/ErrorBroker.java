@@ -411,4 +411,9 @@ public class ErrorBroker implements Broker {
     public void queueMessageDropped(ConnectionContext context, QueueMessageReference reference) {
         throw new BrokerStoppedException(this.message);
     }
+
+    @Override
+    public void topicMessageAcknowledged(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) {
+        throw new BrokerStoppedException(this.message);
+    }
 }
