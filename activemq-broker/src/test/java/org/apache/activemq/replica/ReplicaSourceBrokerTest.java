@@ -18,6 +18,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.thread.TaskRunner;
@@ -232,6 +233,24 @@ public class ReplicaSourceBrokerTest {
     }
 
     @Test
+    public void replicates_PREPARE_TRANSACTION() throws Exception {
+        source.start();
+
+        TransactionId transactionId = new LocalTransactionId(new ConnectionId("101010101"), 101010);
+
+        source.prepareTransaction(connectionContext, transactionId);
+
+        verify(broker, times(1)).prepareTransaction(any(), eq(transactionId));
+        ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
+        verify(broker, times(1)).send(any(), messageArgumentCaptor.capture());
+        ActiveMQMessage replicationMessage = messageArgumentCaptor.getValue();
+        final TransactionId replicatedTransactionId = (TransactionId) eventSerializer.deserializeMessageData(replicationMessage.getContent());
+        assertThat(replicationMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.TRANSACTION_PREPARE.name());
+        assertThat(replicatedTransactionId).isEqualTo(transactionId);
+        verifyConnectionContext(connectionContext);
+    }
+
+    @Test
     public void replicates_ROLLBACK_TRANSACTION() throws Exception {
         source.start();
 
@@ -348,6 +367,54 @@ public class ReplicaSourceBrokerTest {
         source.addConsumer(connectionContext, consumerInfo);
     }
 
+    @Test(expected = ActiveMQReplicaException.class)
+    public void doesNotLetCreateProducerForReplicaQueueFromNonReplicaConnection() throws Exception {
+        source.start();
+
+        when(transportConnector.getName()).thenReturn("test");
+
+        ProducerInfo producerInfo = new ProducerInfo();
+        producerInfo.setDestination(source.queueProvider.get());
+        source.addProducer(connectionContext, producerInfo);
+    }
+
+    @Test
+    public void letsCreateProducerForReplicaQueueFromReplicaConnection() throws Exception {
+        source.start();
+
+        when(transportConnector.getName()).thenReturn(ReplicaSourceBroker.REPLICATION_CONNECTOR_NAME);
+
+        ProducerInfo producerInfo = new ProducerInfo();
+        producerInfo.setDestination(source.queueProvider.get());
+        source.addProducer(connectionContext, producerInfo);
+
+        verify(broker).addProducer(eq(connectionContext), eq(producerInfo));
+    }
+
+    @Test
+    public void letsCreateProducerForNonReplicaQueueFromNonReplicaConnection() throws Exception {
+        source.start();
+
+        when(transportConnector.getName()).thenReturn("test");
+
+        ProducerInfo producerInfo = new ProducerInfo();
+        producerInfo.setDestination(testDestination);
+        source.addProducer(connectionContext, producerInfo);
+
+        verify(broker).addProducer(eq(connectionContext), eq(producerInfo));
+    }
+
+    @Test(expected = ActiveMQReplicaException.class)
+    public void doesNotLetCreateProducerForNonReplicaQueueFromReplicaConnection() throws Exception {
+        source.start();
+
+        when(transportConnector.getName()).thenReturn(ReplicaSourceBroker.REPLICATION_CONNECTOR_NAME);
+
+        ProducerInfo producerInfo = new ProducerInfo();
+        producerInfo.setDestination(testDestination);
+        source.addProducer(connectionContext, producerInfo);
+    }
+
     @Test
     public void replicates_ADD_DURABLE_CONSUMER() throws Exception {
         source.start();
@@ -433,5 +500,33 @@ public class ReplicaSourceBrokerTest {
         assertThat(replicationMessage.getProperty(ReplicaSupport.CLIENT_ID_PROPERTY)).isEqualTo(clientId);
         assertThat(replicationMessage.getProperty(ReplicaSupport.ACK_TYPE_PROPERTY)).isEqualTo(messageAck.getAckType());
         verifyConnectionContext(connectionContext);
+    }
+
+    @Test
+    public void doesNotReplicateAdvisoryTopics() throws Exception {
+        source.start();
+
+        MessageId messageId = new MessageId("1:1");
+
+        ActiveMQMessage message = new ActiveMQMessage();
+        message.setMessageId(messageId);
+        message.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
+        message.setDestination(testDestination);
+
+        ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+        producerExchange.setConnectionContext(connectionContext);
+
+        source.send(producerExchange, message);
+
+        ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
+        verify(broker).send(any(), messageArgumentCaptor.capture());
+
+        final List<ActiveMQMessage> values = messageArgumentCaptor.getAllValues();
+
+        ActiveMQMessage originalMessage = values.get(0);
+        assertThat(originalMessage).isEqualTo(message);
+
+        verify(connectionContext, never()).isProducerFlowControl();
+        verify(connectionContext, never()).setProducerFlowControl(anyBoolean());
     }
 }
