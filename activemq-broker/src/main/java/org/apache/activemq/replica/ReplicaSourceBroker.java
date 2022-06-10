@@ -4,22 +4,27 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.IndirectMessageReference;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.QueueMessageReference;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.cursors.OrderedPendingList;
 import org.apache.activemq.broker.region.cursors.PendingList;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.util.IdGenerator;
@@ -189,6 +194,25 @@ public class ReplicaSourceBroker extends BrokerFilter implements Task {
         super.commitTransaction(context, xid, onePhase);
         replicateCommitTransaction(context, xid, onePhase);
     }
+
+    @Override
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo consumerInfo) throws Exception {
+        assertAuthorized(context, consumerInfo.getDestination());
+
+        return super.addConsumer(context, consumerInfo);
+    }
+
+    @Override
+    public void addProducer(ConnectionContext context, ProducerInfo producerInfo) throws Exception {
+        // JMS allows producers to be created without first specifying a destination.  In these cases, every send
+        // operation must specify a destination.  Because of this, we only authorize 'addProducer' if a destination is
+        // specified. If not specified, the authz check in the 'send' method below will ensure authorization.
+        if (producerInfo.getDestination() != null) {
+            assertAuthorized(context, producerInfo.getDestination());
+        }
+        super.addProducer(context, producerInfo);
+    }
+
 
     private boolean shouldReplicateDestination(ActiveMQDestination destination) {
         boolean isReplicationQueue = isReplicationQueue(destination);
@@ -433,5 +457,36 @@ public class ReplicaSourceBroker extends BrokerFilter implements Task {
         } catch (Exception e) {
             logger.error("Failed to replicate drop messages {} - {}", destination, messageIds, e);
         }
+    }
+
+    protected void assertAuthorized(ConnectionContext context, ActiveMQDestination destination) {
+        boolean replicationQueue = isReplicationQueue(destination);
+        boolean replicationTransport = isReplicationTransport(context.getConnector());
+
+        if (isSystemBroker(context)) {
+            return;
+        }
+        if (replicationTransport && (replicationQueue || isAdvisoryDestination(destination))) {
+            return;
+        }
+        if (!replicationTransport && !replicationQueue) {
+            return;
+        }
+
+        String msg = createUnauthorizedMessage(destination);
+        throw new ActiveMQReplicaException(msg);
+    }
+
+    private boolean isReplicationTransport(Connector connector) {
+        return connector instanceof TransportConnector && ((TransportConnector) connector).getName().equals(REPLICATION_CONNECTOR_NAME);
+    }
+
+    private boolean isSystemBroker(ConnectionContext context) {
+        SecurityContext securityContext = context.getSecurityContext();
+        return securityContext != null && securityContext.isBrokerContext();
+    }
+
+    private String createUnauthorizedMessage(ActiveMQDestination destination) {
+        return "Not authorized to access destination: " + destination;
     }
 }
