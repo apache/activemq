@@ -91,6 +91,14 @@ public class ReplicaSourceBroker extends BrokerFilter implements Task {
     }
 
     @Override
+    public void stop() throws Exception {
+        super.stop();
+        if (taskRunner != null) {
+            taskRunner.shutdown();
+        }
+    }
+
+    @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean createIfTemporary)
             throws Exception {
         Destination newDestination = super.addDestination(context, destination, createIfTemporary);
