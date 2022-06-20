@@ -1,5 +1,6 @@
 package org.apache.activemq.replica;
 
+import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
@@ -193,10 +194,18 @@ public class ReplicaBrokerEventListener implements MessageListener {
 
     private void persistMessage(ActiveMQMessage message) {
         try {
+            removeScheduledMessageProperties(message);
             replicaInternalMessageProducer.produceToReplicaQueue(message);
         } catch (Exception e) {
             logger.error("Failed to process message {} with JMS message id: {}", message.getMessageId(), message.getJMSMessageID(), e);
         }
+    }
+
+    private void removeScheduledMessageProperties(ActiveMQMessage message) throws IOException {
+        message.removeProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
+        message.removeProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
+        message.removeProperty(ScheduledMessage.AMQ_SCHEDULED_CRON);
+        message.removeProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
     }
 
     private void dropMessages(ActiveMQDestination destination, List<String> messageIds) {

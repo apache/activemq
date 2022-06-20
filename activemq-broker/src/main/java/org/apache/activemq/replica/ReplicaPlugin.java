@@ -3,6 +3,8 @@ package org.apache.activemq.replica;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPluginSupport;
+import org.apache.activemq.broker.MutableBrokerFilter;
+import org.apache.activemq.broker.scheduler.SchedulerBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +33,25 @@ public class ReplicaPlugin extends BrokerPluginSupport {
     @Override
     public Broker installPlugin(final Broker broker) {
         logger.info("{} installed, running as {}", ReplicaPlugin.class.getName(), role);
+        Broker replicaBrokerFilter = createReplicaPluginBrokerFilter(broker);
+        if (role == ReplicaRole.replica) {
+            return replicaBrokerFilter;
+        }
+        final MutableBrokerFilter scheduledBroker = (MutableBrokerFilter) broker.getAdaptor(SchedulerBroker.class);
+        if (scheduledBroker != null) {
+            scheduledBroker.setNext(new ReplicaSchedulerSourceBroker(scheduledBroker.getNext()));
+        }
+        return replicaBrokerFilter;
+    }
+
+    private Broker createReplicaPluginBrokerFilter(Broker broker) {
         switch (role) {
             case replica:
                 return new ReplicaBroker(broker, otherBrokerConnectionFactory);
             case source:
                 return new ReplicaSourceBroker(broker, transportConnectorUri);
             case dual:
-                return new ReplicaBroker(new ReplicaSourceBroker(broker, transportConnectorUri), otherBrokerConnectionFactory);
+                return new ReplicaSourceBroker(new ReplicaBroker(broker, otherBrokerConnectionFactory), transportConnectorUri);
             default:
                 throw new IllegalArgumentException("Unknown replica role:" + role);
         }
