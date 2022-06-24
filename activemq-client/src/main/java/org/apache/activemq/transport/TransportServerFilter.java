@@ -32,35 +32,53 @@ public class TransportServerFilter implements TransportServer {
         this.next = next;
     }
 
+    @Override
     public URI getConnectURI() {
         return next.getConnectURI();
     }
 
+    @Override
     public void setAcceptListener(TransportAcceptListener acceptListener) {
         next.setAcceptListener(acceptListener);
     }
 
+    @Override
     public void setBrokerInfo(BrokerInfo brokerInfo) {
         next.setBrokerInfo(brokerInfo);
     }
 
+    @Override
     public void start() throws Exception {
         next.start();
     }
 
+    @Override
     public void stop() throws Exception {
         next.stop();
     }
 
+    @Override
     public InetSocketAddress getSocketAddress() {
         return next.getSocketAddress();
     }
 
+    @Override
     public boolean isSslServer() {
         return next.isSslServer();
     }
 
+    @Override
     public boolean isAllowLinkStealing() {
         return next.isAllowLinkStealing();
+    }
+
+    @Override
+    public long getMaxConnectionExceededCount() {
+        return next.getMaxConnectionExceededCount();
+    }
+
+    @Override
+    public void resetStatistics() {
+        next.resetStatistics();
     }
 }

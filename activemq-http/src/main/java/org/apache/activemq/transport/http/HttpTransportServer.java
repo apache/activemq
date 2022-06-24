@@ -189,4 +189,15 @@ public class HttpTransportServer extends WebTransportServerSupport {
     public boolean isSslServer() {
         return false;
     }
+
+    @Override
+    public long getMaxConnectionExceededCount() {
+        // Max Connection Count not supported for http
+        return -1l;
+    }
+
+    @Override
+    public void resetStatistics() {
+        // Statistics not implemented for http
+    }
 }

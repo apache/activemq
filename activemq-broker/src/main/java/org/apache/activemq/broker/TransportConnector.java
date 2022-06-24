@@ -190,6 +190,15 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         return statistics;
     }
 
+    /**
+     * Reset the statistics for this connector
+     */
+    @Override
+    public void resetStatistics() {
+        statistics.reset();
+        server.resetStatistics();
+    }
+
     public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
         return messageAuthorizationPolicy;
     }
@@ -672,5 +681,10 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     public void setDisplayStackTrace(boolean displayStackTrace) {
         this.displayStackTrace = displayStackTrace;
+    }
+
+    @Override
+    public long getMaxConnectionExceededCount() {
+        return (server != null ? server.getMaxConnectionExceededCount() : 0l);
     }
 }

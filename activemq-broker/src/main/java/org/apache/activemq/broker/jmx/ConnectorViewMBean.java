@@ -83,5 +83,10 @@ public interface ConnectorViewMBean extends Service {
     @MBeanInfo("Comma separated list of regex patterns to match broker names for cluster client updates.")
     String getUpdateClusterFilter();
 
-
+    /**
+     * @return The number of occurrences the max connection count
+     * has been exceed
+     */
+    @MBeanInfo("Max connection exceeded count")
+    long getMaxConnectionExceededCount();
 }

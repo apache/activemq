@@ -38,6 +38,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLParameters;
@@ -123,6 +124,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * The maximum number of sockets allowed for this server
      */
     protected int maximumConnections = Integer.MAX_VALUE;
+    protected final AtomicLong maximumConnectionsExceededCount = new AtomicLong(0l);
     protected final AtomicInteger currentTransportCount = new AtomicInteger();
 
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException,
@@ -579,10 +581,11 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             do {
                 currentCount = currentTransportCount.get();
                 if (currentCount >= this.maximumConnections) {
-                     throw new ExceededMaximumConnectionsException(
-                         "Exceeded the maximum number of allowed client connections. See the '" +
-                         "maximumConnections' property on the TCP transport configuration URI " +
-                         "in the ActiveMQ configuration file (e.g., activemq.xml)");
+                    this.maximumConnectionsExceededCount.incrementAndGet();
+                    throw new ExceededMaximumConnectionsException(
+                        "Exceeded the maximum number of allowed client connections. See the '" +
+                        "maximumConnections' property on the TCP transport configuration URI " +
+                        "in the ActiveMQ configuration file (e.g., activemq.xml)");
                  }
 
             //Increment this value before configuring the transport
@@ -725,5 +728,15 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     @Override
     public void setAllowLinkStealing(boolean allowLinkStealing) {
         this.allowLinkStealing = allowLinkStealing;
+    }
+
+    @Override
+    public long getMaxConnectionExceededCount() {
+        return this.maximumConnectionsExceededCount.get();
+    }
+
+    @Override
+    public void resetStatistics() {
+        this.maximumConnectionsExceededCount.set(0l);
     }
 }
