@@ -35,7 +35,7 @@ pipeline {
 
     options {
         // Configure an overall timeout for the build of ten hours.
-        timeout(time: 10, unit: 'HOURS')
+        timeout(time: 20, unit: 'HOURS')
         // When we have test-fails e.g. we don't need to run the remaining steps
         buildDiscarder(logRotator(numToKeepStr: '5', artifactNumToKeepStr: '5'))
         disableConcurrentBuilds()
