@@ -75,7 +75,7 @@ public class SocketTstFactory extends SocketFactory {
                                     lastDelayVal += 1;
                             }
 
-                            lastDelay = new Integer(lastDelayVal);
+                            lastDelay = Integer.valueOf(lastDelayVal);
 
                             LOG.info("Trying to close client socket " + socket.toString() + " in " + lastDelayVal + " milliseconds");
 

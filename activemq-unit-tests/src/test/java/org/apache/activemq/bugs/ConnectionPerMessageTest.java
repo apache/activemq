@@ -48,7 +48,7 @@ public class ConnectionPerMessageTest extends EmbeddedBrokerTestSupport {
 		for (int i = 0; i < COUNT; i++) {
 
 			if (i % 100 == 0) {
-				LOG.info(new Integer(i).toString());
+				LOG.info(Integer.toString(i));
 			}
 
 			Connection conn = null;

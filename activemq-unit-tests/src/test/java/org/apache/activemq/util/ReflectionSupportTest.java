@@ -103,7 +103,7 @@ public class ReflectionSupportTest extends TestCase {
     }
 
     public static class TestWitBoolean {
-        private Boolean keepAlive = new Boolean(false);
+        private Boolean keepAlive = Boolean.FALSE;
         public Boolean getKeepAlive() {
             return keepAlive;
         }

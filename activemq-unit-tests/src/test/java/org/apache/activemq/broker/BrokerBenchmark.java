@@ -55,9 +55,9 @@ public class BrokerBenchmark extends BrokerTestSupport {
 
     public void initCombosForTestPerformance() {
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST")});
-        addCombinationValues("PRODUCER_COUNT", new Object[] {new Integer("1"), new Integer("10")});
-        addCombinationValues("CONSUMER_COUNT", new Object[] {new Integer("1"), new Integer("10")});
-        addCombinationValues("CONSUMER_COUNT", new Object[] {new Integer("1"), new Integer("10")});
+        addCombinationValues("PRODUCER_COUNT", new Object[] {Integer.valueOf("1"), Integer.valueOf("10")});
+        addCombinationValues("CONSUMER_COUNT", new Object[] {Integer.valueOf("1"), Integer.valueOf("10")});
+        addCombinationValues("CONSUMER_COUNT", new Object[] {Integer.valueOf("1"), Integer.valueOf("10")});
         addCombinationValues("deliveryMode", new Object[] {Boolean.TRUE});
     }
 
