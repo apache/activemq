@@ -74,7 +74,7 @@ public final class SimpleQueueSender {
         queueName = args[0];
         LOG.info("Queue name is " + queueName);
         if (args.length == 2) {
-            numMsgs = (new Integer(args[1])).intValue();
+            numMsgs = (Integer.valueOf(args[1])).intValue();
         } else {
             numMsgs = 1;
         }

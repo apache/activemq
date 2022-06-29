@@ -208,7 +208,7 @@ public class ActiveMQMapMessageTest {
         Boolean booleanValue = Boolean.TRUE;
         Byte byteValue = Byte.valueOf("1");
         byte[] bytesValue = new byte[3];
-        Character charValue = new Character('a');
+        Character charValue = Character.valueOf('a');
         Double doubleValue = Double.valueOf("1.5");
         Float floatValue = Float.valueOf("1.5");
         Integer intValue = Integer.valueOf("1");

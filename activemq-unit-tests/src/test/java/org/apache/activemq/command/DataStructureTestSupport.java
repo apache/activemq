@@ -70,7 +70,7 @@ public abstract class DataStructureTestSupport extends CombinationTestSupport {
             throw new AssertionFailedError("Not equals, classes don't match. expected: " + expect.getClass() + ", was: " + was.getClass());
         }
         if (expect.getClass().isArray()) {
-            Class componentType = expect.getClass().getComponentType();
+            Class<?> componentType = expect.getClass().getComponentType();
             if (componentType.isPrimitive()) {
                 boolean ok = false;
                 if (componentType == byte.class) {
