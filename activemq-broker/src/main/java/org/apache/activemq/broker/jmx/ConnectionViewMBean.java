@@ -116,4 +116,11 @@ public interface ConnectionViewMBean extends Service {
     @MBeanInfo("The age in ms of the oldest active transaction established on this Connection.")
     public Long getOldestActiveTransactionDuration();
 
+    /**
+     * Returns JSON string containing connector statistics data
+     *
+     * @return String containing JSON data for connector statistics
+     */
+    @MBeanInfo("JSON string of connector statistics")
+    String getStatistics();
 }

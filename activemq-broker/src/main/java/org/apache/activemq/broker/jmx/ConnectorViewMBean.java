@@ -83,5 +83,11 @@ public interface ConnectorViewMBean extends Service {
     @MBeanInfo("Comma separated list of regex patterns to match broker names for cluster client updates.")
     String getUpdateClusterFilter();
 
-
+    /**
+     * Returns JSON string containing connector statistics data
+     *
+     * @return String containing JSON data for connector statistics
+     */
+    @MBeanInfo("JSON string of connector statistics")
+    String getStatistics();    
 }
