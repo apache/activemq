@@ -146,6 +146,28 @@ public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
     }
 
     @Test
+    public void testAESEncryptedLogin() throws LoginException {
+
+        LoginContext context = new LoginContext("EncryptedAESLDAPLogin", new CallbackHandler() {
+            @Override
+            public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+                for (int i = 0; i < callbacks.length; i++) {
+                    if (callbacks[i] instanceof NameCallback) {
+                        ((NameCallback) callbacks[i]).setName("first");
+                    } else if (callbacks[i] instanceof PasswordCallback) {
+                        ((PasswordCallback) callbacks[i]).setPassword("secret".toCharArray());
+                    } else {
+                        throw new UnsupportedCallbackException(callbacks[i]);
+                    }
+                }
+            }
+        });
+        context.login();
+        context.logout();
+    }
+
+
+    @Test
     public void testUnauthenticated() throws LoginException {
         LoginContext context = new LoginContext("UnAuthenticatedLDAPLogin", new CallbackHandler() {
             @Override

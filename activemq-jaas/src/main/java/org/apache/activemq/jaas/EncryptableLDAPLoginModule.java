@@ -23,6 +23,7 @@ import javax.security.auth.callback.CallbackHandler;
 
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig;
+import org.jasypt.iv.RandomIvGenerator;
 import org.jasypt.properties.EncryptableProperties;
 
 /**
@@ -49,6 +50,10 @@ public class EncryptableLDAPLoginModule extends LDAPLoginModule {
 
         EnvironmentStringPBEConfig envConfig = new EnvironmentStringPBEConfig();
         envConfig.setAlgorithm(passwordAlgorithm);
+
+        if (passwordAlgorithm.startsWith("PBE") && passwordAlgorithm.contains("AES")) {
+            envConfig.setIvGenerator(new RandomIvGenerator());
+        }
 
         //If the password was set, use it
         //else look up the password from the environment
