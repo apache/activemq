@@ -266,6 +266,6 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     @Override
     public Long getFirstMessageTimestamp() {
         QueueMessageReference firstMessage = ((Queue) destination).getFirstMessage();
-        return Optional.ofNullable(firstMessage).map(MessageReference::getMessage).map(Message::getTimestamp).orElse(null);
+        return Optional.ofNullable(firstMessage).map(MessageReference::getMessage).map(Message::getBrokerInTime).orElse(null);
     }
 }
