@@ -73,4 +73,8 @@ public interface TransportServer extends Service {
      * @return true if allow link stealing is enabled.
      */
     boolean isAllowLinkStealing();
+
+    long getMaxConnectionExceededCount();
+
+    void resetStatistics();
 }

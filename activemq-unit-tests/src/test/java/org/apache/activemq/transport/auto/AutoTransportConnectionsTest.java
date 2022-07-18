@@ -147,6 +147,8 @@ public class AutoTransportConnectionsTest {
         assertEquals(maxConnections, transportServer.getMaximumConnections());
         // No connections at first
         assertEquals(0, connector.getConnections().size());
+        // No connections exceeded at first
+        assertEquals(Long.valueOf(0l), Long.valueOf(connector.getMaxConnectionExceededCount()));
         // Release the latch to set up connections in parallel
         startupLatch.countDown();
 
@@ -162,6 +164,12 @@ public class AutoTransportConnectionsTest {
             })
         );
 
+        // The 10 extra connections exceeded connection count
+        assertEquals(Long.valueOf(10l), Long.valueOf(connector.getMaxConnectionExceededCount()));
+
+        // Confirm reset statistics
+        connector.resetStatistics();
+        assertEquals(Long.valueOf(0l), Long.valueOf(connector.getMaxConnectionExceededCount()));
     }
 
     @Test

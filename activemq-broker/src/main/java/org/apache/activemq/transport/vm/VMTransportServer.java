@@ -155,4 +155,15 @@ public class VMTransportServer implements TransportServer {
     public void setAllowLinkStealing(boolean allowLinkStealing) {
         this.allowLinkStealing = allowLinkStealing;
     }
+
+    @Override
+    public long getMaxConnectionExceededCount() {
+        // VM transport is not limited
+        return -1l;
+    }
+
+    @Override
+    public void resetStatistics() {
+        // VM transport does not implement statistics
+    }
 }
