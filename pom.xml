@@ -114,7 +114,7 @@
 
     <pax-logging-version>1.11.4</pax-logging-version>
     <pax-exam-version>4.13.1</pax-exam-version>
-    <pax-url-version>2.6.2</pax-url-version>
+    <pax-url-version>2.6.11</pax-url-version>
     <felix-framework-version>5.6.12</felix-framework-version>
 
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
