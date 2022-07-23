@@ -24,9 +24,9 @@
     <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}">
         <feature version="[5,6)">spring</feature>
         <feature>aries-blueprint</feature>
+        <feature>activemq-combined-jms-spec</feature>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.3_spec/1.0</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
-        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_2.0_spec/1.0-alpha-2</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
         <bundle dependency="true">mvn:org.jvnet.jaxb2_commons/jaxb2-basics-runtime/${jaxb-basics-version}</bundle>
         <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jaxb-runtime/${jaxb-bundle-version}</bundle>
@@ -62,5 +62,13 @@
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${jackson-version}</bundle>
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${jackson-databind-version}</bundle>
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson-version}</bundle>
+    </feature>
+
+    <!-- JMS1.1 and JMS2.0 support via the same Geronimo JMS 2 bundle  -->
+    <!-- Ideal since all JMS code shares the same class definitions    -->
+    <!-- Fortunately, JMS2.0 is fully backward compatible with JMS 1.1 -->
+    <feature name="activemq-combined-jms-spec">
+        <feature prerequisite="true">wrap</feature>
+        <bundle dependency="true">wrap:mvn:org.apache.geronimo.specs/geronimo-jms_2.0_spec/1.0-alpha-2$overwrite=merge&amp;Export-Package=javax.jms;version=1.1,javax.jms;version=2.0</bundle>
     </feature>
 </features>
