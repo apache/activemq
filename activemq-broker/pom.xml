@@ -67,13 +67,6 @@
       <optional>true</optional>
     </dependency>
 
-    <!-- to support XPath based Selectors -->
-    <dependency>
-      <groupId>xalan</groupId>
-      <artifactId>xalan</artifactId>
-      <optional>true</optional>
-    </dependency>
-
     <!-- =============================== -->
     <!-- Testing Dependencies -->
     <!-- =============================== -->

@@ -118,10 +118,6 @@
           <artifactId>jmdns</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>xalan</groupId>
-          <artifactId>xalan</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>xmlbeans</groupId>
           <artifactId>xbean</artifactId>
         </exclusion>
@@ -250,10 +246,6 @@
         <exclusion>
           <groupId>javax.jmdns</groupId>
           <artifactId>jmdns</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>xalan</groupId>
-          <artifactId>xalan</artifactId>
         </exclusion>
         <exclusion>
           <groupId>xmlbeans</groupId>
