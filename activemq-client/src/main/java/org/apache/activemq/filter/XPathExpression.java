@@ -42,7 +42,7 @@ public final class XPathExpression implements BooleanExpression {
 
     private static final Logger LOG = LoggerFactory.getLogger(XPathExpression.class);
     private static final String EVALUATOR_SYSTEM_PROPERTY = "org.apache.activemq.XPathEvaluatorClassName";
-    private static final String DEFAULT_EVALUATOR_CLASS_NAME = "org.apache.activemq.filter.XalanXPathEvaluator";
+    private static final String DEFAULT_EVALUATOR_CLASS_NAME = "org.apache.activemq.filter.JAXPXPathEvaluator";
     public static final String DOCUMENT_BUILDER_FACTORY_FEATURE = "org.apache.activemq.documentBuilderFactory.feature";
 
     private static final Constructor EVALUATOR_CONSTRUCTOR;
