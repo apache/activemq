@@ -49,7 +49,7 @@
       <bundle dependency="true">mvn:commons-io/commons-io/${commons-io-version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
       <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang-version}</bundle>
-      <bundle dependency="true">mvn:commons-codec/commons-codec/1.9</bundle>
+      <bundle dependency="true">mvn:commons-codec/commons-codec/1.15</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_6</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.2_1</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt-spring31/1.9.2_1</bundle>
