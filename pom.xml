@@ -139,7 +139,7 @@
     <findbugs-maven-plugin-version>3.0.5</findbugs-maven-plugin-version>
     <javacc-maven-plugin-version>2.6</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.5.2</cobertura-maven-plugin-version>
-    <taglist-maven-plugin-version>2.4</taglist-maven-plugin-version>
+    <taglist-maven-plugin-version>3.0.0</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>3.3.0</build-helper-maven-plugin-version>
     <apache-rat-plugin-version>0.13</apache-rat-plugin-version>
     <ianal-maven-plugin-version>1.0-alpha-1</ianal-maven-plugin-version>
