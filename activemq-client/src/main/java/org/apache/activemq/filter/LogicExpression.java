@@ -141,7 +141,6 @@ public abstract class LogicExpression implements BooleanExpression {
         public String getExpressionSymbol() {
             return "OR";
         }
-
     }
 
     private static class ANDExpression extends LogicExpression {
