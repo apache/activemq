@@ -482,12 +482,12 @@
             <id>package</id>
             <phase>package</phase>
             <configuration>
-              <tasks>
+              <target>
                 <echo>Deleting unwanted resources from the test-jar</echo>
                 <delete dir="${project.build.directory}/test-classes" verbose="true">
                   <include name="*.*" />
                 </delete>
-              </tasks>
+              </target>
             </configuration>
             <goals>
               <goal>run</goal>
