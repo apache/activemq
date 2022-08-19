@@ -146,7 +146,7 @@
     <depends-maven-plugin-version>1.4.0</depends-maven-plugin-version>
     <maven-dependency-plugin-version>2.8</maven-dependency-plugin-version>
     <maven-project-info-reports-plugin-version>3.4.0</maven-project-info-reports-plugin-version>
-    <maven-graph-plugin-version>1.30</maven-graph-plugin-version>
+    <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
     <maven-plugin-plugin-version>3.6.4</maven-plugin-plugin-version>
     <maven-core-version>3.6.1</maven-core-version>
     <!-- OSGi bundles properties -->
@@ -1523,7 +1523,7 @@
           <plugin>
             <groupId>org.fusesource.mvnplugins</groupId>
             <artifactId>maven-consolets-plugin</artifactId>
-            <version>1.30</version>
+            <version>1.45</version>
             <configuration>
               <enabled>true</enabled>
             </configuration>
