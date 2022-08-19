@@ -148,7 +148,7 @@
     <maven-project-info-reports-plugin-version>3.4.0</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
     <maven-plugin-plugin-version>3.6.4</maven-plugin-plugin-version>
-    <maven-core-version>3.6.1</maven-core-version>
+    <maven-core-version>3.8.6</maven-core-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
