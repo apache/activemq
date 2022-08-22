@@ -236,6 +236,7 @@
               *
             </DynamicImport-Package>
             <_noee>true</_noee>
+            <_contract>!*</_contract>
           </instructions>
         </configuration>
       </plugin>
