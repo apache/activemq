@@ -53,10 +53,17 @@ public class BaseNetworkTest {
     }
 
     protected void doTearDown() throws Exception {
-        localConnection.close();
-        remoteConnection.close();
-        localBroker.stop();
-        remoteBroker.stop();
+        if(localConnection != null)
+            localConnection.close();
+
+        if(remoteConnection != null)
+            remoteConnection.close();
+
+        if(localBroker != null)
+            localBroker.stop();
+
+        if(remoteBroker != null)
+            remoteBroker.stop();
     }
 
     protected void doSetUp(boolean deleteAllMessages) throws Exception {
