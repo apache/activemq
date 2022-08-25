@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.17.2</version>
+    <version>5.17.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-openwire-legacy</artifactId>
