@@ -56,7 +56,6 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SubscriptionInfo;
-import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.AbstractMessageStore;
@@ -106,8 +105,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
     protected ExecutorService queueExecutor;
     protected ExecutorService topicExecutor;
-    protected final List<Map<AsyncJobKey, StoreTask>> asyncQueueMaps = new LinkedList<Map<AsyncJobKey, StoreTask>>();
-    protected final List<Map<AsyncJobKey, StoreTask>> asyncTopicMaps = new LinkedList<Map<AsyncJobKey, StoreTask>>();
+    protected final List<Map<AsyncJobKey, StoreTask>> asyncQueueMaps = new LinkedList<>();
+    protected final List<Map<AsyncJobKey, StoreTask>> asyncTopicMaps = new LinkedList<>();
     final WireFormat wireFormat = new OpenWireFormat();
     private SystemUsage usageManager;
     private LinkedBlockingQueue<Runnable> asyncQueueJobQueue;
@@ -118,19 +117,13 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     // when true, message order may be compromised when cache is exhausted if store is out
     // or order w.r.t cache
     private boolean concurrentStoreAndDispatchTopics = false;
-    private final boolean concurrentStoreAndDispatchTransactions = false;
     private int maxAsyncJobs = MAX_ASYNC_JOBS;
     private final KahaDBTransactionStore transactionStore;
     private TransactionIdTransformer transactionIdTransformer;
 
     public KahaDBStore() {
         this.transactionStore = new KahaDBTransactionStore(this);
-        this.transactionIdTransformer = new TransactionIdTransformer() {
-            @Override
-            public TransactionId transform(TransactionId txid) {
-                return txid;
-            }
-        };
+        this.transactionIdTransformer = txid -> txid;
     }
 
     @Override
@@ -179,10 +172,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
      */
     public void setConcurrentStoreAndDispatchTopics(boolean concurrentStoreAndDispatch) {
         this.concurrentStoreAndDispatchTopics = concurrentStoreAndDispatch;
-    }
-
-    public boolean isConcurrentStoreAndDispatchTransactions() {
-        return this.concurrentStoreAndDispatchTransactions;
     }
 
     /**
