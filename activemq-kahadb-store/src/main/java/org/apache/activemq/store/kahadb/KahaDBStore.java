@@ -118,7 +118,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     // when true, message order may be compromised when cache is exhausted if store is out
     // or order w.r.t cache
     private boolean concurrentStoreAndDispatchTopics = false;
-    private final boolean concurrentStoreAndDispatchTransactions = false;
     private int maxAsyncJobs = MAX_ASYNC_JOBS;
     private final KahaDBTransactionStore transactionStore;
     private TransactionIdTransformer transactionIdTransformer;
@@ -179,10 +178,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
      */
     public void setConcurrentStoreAndDispatchTopics(boolean concurrentStoreAndDispatch) {
         this.concurrentStoreAndDispatchTopics = concurrentStoreAndDispatch;
-    }
-
-    public boolean isConcurrentStoreAndDispatchTransactions() {
-        return this.concurrentStoreAndDispatchTransactions;
     }
 
     /**
