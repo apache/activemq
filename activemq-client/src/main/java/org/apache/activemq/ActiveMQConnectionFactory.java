@@ -292,7 +292,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public JMSContext createContext() {
-        throw new UnsupportedOperationException("createContext() is not supported");
+        try {
+            return new ActiveMQContext(createActiveMQConnection());
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     /**
@@ -300,7 +304,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public JMSContext createContext(String userName, String password) {
-        throw new UnsupportedOperationException("createContext() is not supported");
+        try {
+            return new ActiveMQContext(createActiveMQConnection(userName, password));
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     /**
@@ -308,7 +316,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public JMSContext createContext(String userName, String password, int sessionMode) {
-        throw new UnsupportedOperationException("createContext() is not supported");
+        try {
+            return new ActiveMQContext(createActiveMQConnection(userName, password), sessionMode);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     /**

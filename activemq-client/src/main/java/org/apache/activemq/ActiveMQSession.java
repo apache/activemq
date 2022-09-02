@@ -19,6 +19,8 @@ package org.apache.activemq;
 import java.io.File;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
@@ -1394,12 +1396,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     @Override
     public MessageConsumer createDurableConsumer(Topic topic, String name) throws JMSException {
-        throw new UnsupportedOperationException("createDurableConsumer(Topic, name) is not supported");
+        checkClosed();
+        return createDurableSubscriber(topic, name, null, false);
     }
 
     @Override
     public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
-        throw new UnsupportedOperationException("createDurableConsumer(Topic, name, messageSelector, noLocal) is not supported");
+        checkClosed();
+        return createDurableSubscriber(topic, name, messageSelector, noLocal);
     }
 
     @Override
@@ -1939,6 +1943,26 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
                         MemoryUsage producerWindow, int sendTimeout, AsyncCallback onComplete) throws JMSException {
+        send(producer, destination, message, deliveryMode, priority, timeToLive, producer.getDisableMessageID(), producer.getDisableMessageID(), producerWindow, sendTimeout, onComplete);
+    }
+
+    /**
+     * Sends the message for dispatch by the broker.
+     *
+     * @param producer - message producer.
+     * @param destination - message destination.
+     * @param message - message to be sent.
+     * @param deliveryMode - JMS message delivery mode.
+     * @param priority - message priority.
+     * @param timeToLive - message expiration.
+     * @param disableTimestamp - disable timestamp.
+     * @param disableMessageID - optionally, disable messageID.
+     * @param producerWindow
+     * @param onComplete
+     * @throws JMSException
+     */
+    protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
+                        boolean disableMessageID, boolean disableMessageTimestamp, MemoryUsage producerWindow, int sendTimeout, AsyncCallback onComplete) throws JMSException {
 
         checkClosed();
         if (destination.isTemporary() && connection.isDeleted(destination)) {
@@ -1956,12 +1980,22 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             //Set the "JMS" header fields on the original message, see 1.1 spec section 3.4.11
             message.setJMSDeliveryMode(deliveryMode);
             long expiration = 0L;
-            if (!producer.getDisableMessageTimestamp()) {
-                long timeStamp = System.currentTimeMillis();
+            long timeStamp = System.currentTimeMillis();
+            if (timeToLive > 0) {
+                expiration = timeToLive + timeStamp;
+            }
+
+            // TODO: AMQ-8500 - update this when openwire supports JMSDeliveryTime
+            // ref: ActiveMQMessageTransformation#copyProperties
+            if(!(message instanceof ActiveMQMessage)) {
+                setForeignMessageDeliveryTime(message, timeStamp);
+            } else {
+                message.setJMSDeliveryTime(timeStamp);
+            }
+            if (!disableMessageTimestamp && !producer.getDisableMessageTimestamp()) {
                 message.setJMSTimestamp(timeStamp);
-                if (timeToLive > 0) {
-                    expiration = timeToLive + timeStamp;
-                }
+            } else {
+                message.setJMSTimestamp(0l);
             }
             message.setJMSExpiration(expiration);
             message.setJMSPriority(priority);
@@ -2286,5 +2320,23 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     protected ThreadPoolExecutor getConnectionExecutor() {
         return this.connectionExecutor;
+    }
+
+    private static void setForeignMessageDeliveryTime(final Message foreignMessage, final long deliveryTime) throws JMSException {
+        // Check for JMS v2 message via presence of setJMSDeliveryTime
+        Method deliveryTimeMethod = null;
+        try {
+            Class<?> clazz = foreignMessage.getClass();
+            Method method = clazz.getMethod("setJMSDeliveryTime", new Class[] { long.class });
+            if (!Modifier.isAbstract(method.getModifiers())) {
+                deliveryTimeMethod = method;
+            }
+        } catch (NoSuchMethodException e) {
+            // non-JMS v2 message
+        }
+
+        if (deliveryTimeMethod != null) {
+            foreignMessage.setJMSDeliveryTime(deliveryTime);
+        }
     }
 }
