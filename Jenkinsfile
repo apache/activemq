@@ -87,6 +87,13 @@ pipeline {
             }
         }
 
+        stage('Verify') {
+            steps {
+                echo 'Running apache-rat:check'
+                sh 'mvn apache-rat:check'
+            }
+        }
+
         stage('Tests') {
             steps {
                 echo 'Running tests'

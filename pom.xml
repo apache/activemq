@@ -1402,6 +1402,7 @@
             <exclude>**/kahadb/**/*.data</exclude>
             <exclude>**/resources/*.xsd</exclude>
             <exclude>**/src/test/resources/keystore</exclude>
+            <exclude>**/*.ts</exclude>
             <!-- web, web-console, web-demo files -->
             <exclude>**/webapp/mqtt/mqttws31.js</exclude>
             <exclude>**/webapp/js/dojo.js</exclude>
