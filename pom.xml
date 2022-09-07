@@ -1461,9 +1461,9 @@
             <link>http://logging.apache.org/log4j/docs/api/</link>
           </links>
           <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
-          <linksource>true</linksource>
           <maxmemory>2048m</maxmemory>
           <source>${source-version}</source>
+          <noindex>true</noindex>
           <additionalJOption>-J-Xmx2048m</additionalJOption>
           <!-- necessary for now under the javadocs can be fixed because jdk8 is much stricter -->
           <additionalJOption>${javadoc.options}</additionalJOption>
@@ -1592,6 +1592,9 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <noindex>true</noindex>
+            </configuration>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
