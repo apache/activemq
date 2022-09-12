@@ -110,12 +110,13 @@ public class ReplicaPluginTopicTest extends ReplicaPluginTestSupport {
     public void testAcknowledgeMessage() throws Exception {
         Session firstBrokerSession = firstBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
-        MessageConsumer firstBrokerConsumer = firstBrokerSession.createDurableSubscriber((Topic) destination, CLIENT_ID_ONE);
+        firstBrokerSession.createDurableSubscriber((Topic) destination, CLIENT_ID_ONE);
         firstBrokerConnection2.createSession(false, Session.CLIENT_ACKNOWLEDGE).createDurableSubscriber((Topic) destination, CLIENT_ID_TWO);
 
         ActiveMQTextMessage message  = new ActiveMQTextMessage();
         message.setText(getName());
         firstBrokerProducer.send(message);
+        firstBrokerSession.close();
 
         Thread.sleep(LONG_TIMEOUT);
 
@@ -128,6 +129,8 @@ public class ReplicaPluginTopicTest extends ReplicaPluginTestSupport {
         assertEquals(getName(), ((TextMessage) receivedMessage).getText());
         secondBrokerSession.close();
 
+        firstBrokerSession = firstBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer firstBrokerConsumer = firstBrokerSession.createDurableSubscriber((Topic) destination, CLIENT_ID_ONE);
         receivedMessage = firstBrokerConsumer.receive(SHORT_TIMEOUT);
         assertNotNull(receivedMessage);
         assertTrue(receivedMessage instanceof TextMessage);

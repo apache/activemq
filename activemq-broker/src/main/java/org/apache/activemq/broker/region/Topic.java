@@ -605,7 +605,6 @@ public class Topic extends BaseDestination implements Task {
                     convertToNonRangedAck(ack, node));
         }
         messageConsumed(context, node);
-        broker.topicMessageAcknowledged(context, sub, ack, node);
     }
 
     @Override

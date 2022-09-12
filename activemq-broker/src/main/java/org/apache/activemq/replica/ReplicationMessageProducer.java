@@ -32,7 +32,7 @@ class ReplicationMessageProducer {
     void enqueueReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event) throws Exception {
         synchronized (sendingMutex) {
             logger.debug("Replicating {} event", event.getEventType());
-            logger.trace("Replicating {} event: data:\n{}", event.getEventType(), new Object() {
+            logger.trace("Replicating {} event: data:\n{}\nproperties:{}", event.getEventType(), new Object() {
                 @Override
                 public String toString() {
                     try {
@@ -41,7 +41,7 @@ class ReplicationMessageProducer {
                         return "<some event data>";
                     }
                 }
-            }); // FIXME: remove
+            }, event.getReplicationProperties()); // FIXME: remove
             ActiveMQMessage eventMessage = new ActiveMQMessage();
             eventMessage.setPersistent(true);
             eventMessage.setType("ReplicaEvent");

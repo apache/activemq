@@ -4,7 +4,8 @@ public enum ReplicaEventType {
     DESTINATION_UPSERT,
     DESTINATION_DELETE,
     MESSAGE_SEND,
-    MESSAGES_DROPPED,
+    MESSAGE_ACK,
+    QUEUE_PURGED,
     TRANSACTION_BEGIN,
     TRANSACTION_PREPARE,
     TRANSACTION_ROLLBACK,
@@ -12,7 +13,7 @@ public enum ReplicaEventType {
     TRANSACTION_FORGET,
     ADD_DURABLE_CONSUMER,
     REMOVE_DURABLE_CONSUMER,
-    TOPIC_MESSAGE_ACK;
+    ;
 
     static final String EVENT_TYPE_PROPERTY = "ActiveMQ.Replication.EventType";
 }

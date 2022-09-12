@@ -11,6 +11,5 @@ public class ReplicaSupport {
 
     public static final String TRANSACTION_ONE_PHASE_PROPERTY = "TRANSACTION_ONE_PHASE_PROPERTY";
     public static final String CLIENT_ID_PROPERTY = "CLIENT_ID_PROPERTY";
-    public static final String ACK_TYPE_PROPERTY = "ACK_TYPE_PROPERTY";
     public static final String MESSAGE_IDS_PROPERTY = "MESSAGE_IDS_PROPERTY";
 }

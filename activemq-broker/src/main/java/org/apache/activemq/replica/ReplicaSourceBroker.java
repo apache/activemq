@@ -5,27 +5,26 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Connector;
+import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.QueueMessageReference;
+import org.apache.activemq.broker.region.PrefetchSubscription;
+import org.apache.activemq.broker.region.QueueBrowserSubscription;
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.cursors.OrderedPendingList;
-import org.apache.activemq.broker.region.cursors.PendingList;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.security.SecurityContext;
-import org.apache.activemq.thread.Task;
-import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,17 +32,12 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task {
+public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     private static final DestinationMapEntry<Boolean> IS_REPLICATED = new DestinationMapEntry<>() {
     }; // used in destination map to indicate mirrored status
@@ -54,11 +48,6 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task
     private final URI transportConnectorUri;
 
     final DestinationMap destinationsToReplicate = new DestinationMap();
-    private final ReentrantReadWriteLock dropMessagesLock = new ReentrantReadWriteLock();
-    final PendingList dropMessages = new OrderedPendingList();
-    private final Object iteratingMutex = new Object();
-    private final AtomicLong pendingWakeups = new AtomicLong();
-    private TaskRunner taskRunner;
     private final LongSequenceGenerator localTransactionIdGenerator = new LongSequenceGenerator();
 
     public ReplicaSourceBroker(Broker next, URI transportConnectorUri) {
@@ -70,17 +59,8 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task
     public void start() throws Exception {
         TransportConnector transportConnector = next.getBrokerService().addConnector(transportConnectorUri);
         transportConnector.setName(REPLICATION_CONNECTOR_NAME);
-        taskRunner = getBrokerService().getTaskRunnerFactory().createTaskRunner(this, "ReplicationPlugin.dropMessages");
         super.start();
         ensureDestinationsAreReplicated();
-    }
-
-    @Override
-    public void stop() throws Exception {
-        super.stop();
-        if (taskRunner != null) {
-            taskRunner.shutdown();
-        }
     }
 
     private void ensureDestinationsAreReplicated() {
@@ -140,23 +120,8 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task
         return true;
     }
 
-    private void replicateSend(ConnectionContext context, Message message, ActiveMQDestination destination, TransactionId transactionId) {
-        if (isReplicationQueue(message.getDestination())) {
-            return;
-        }
-        if (destination.isTemporary()) {
-            return;
-        }
-        if (message.isAdvisory()) {  // TODO: only replicate what we care about
-            return;
-        }
-
+    private void replicateSend(ConnectionContext context, Message message, TransactionId transactionId) {
         try {
-            final String jobId = (String) message.getProperty(ScheduledMessage.AMQ_SCHEDULED_ID);
-            if (isScheduled(message) || jobId != null) {
-                return;
-            }
-
             enqueueReplicaEvent(
                     context,
                     new ReplicaEvent()
@@ -165,8 +130,34 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task
                             .setTransactionId(transactionId)
             );
         } catch (Exception e) {
-            logger.error("Failed to replicate message {} for destination {}", message.getMessageId(), destination.getPhysicalName(), e);
+            logger.error("Failed to replicate message {} for destination {}", message.getMessageId(), message.getDestination().getPhysicalName(), e);
         }
+    }
+
+    private boolean needToReplicateSend(ConnectionContext connectionContext, Message message) {
+        if (isReplicaContext(connectionContext)) {
+            return false;
+        }
+        if (isReplicationQueue(message.getDestination())) {
+            return false;
+        }
+        if (message.getDestination().isTemporary()) {
+            return false;
+        }
+        if (message.isAdvisory()) {  // TODO: only replicate what we care about
+            return false;
+        }
+
+        try {
+            String jobId = (String) message.getProperty(ScheduledMessage.AMQ_SCHEDULED_ID);
+            if (isScheduled(message) || jobId != null) {
+                return false;
+            }
+        } catch (Exception e) {
+            logger.error("Failed to get jobId", e);
+        }
+
+        return true;
     }
 
     private boolean isScheduled(Message message) throws IOException {
@@ -393,12 +384,10 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         final ConnectionContext connectionContext = producerExchange.getConnectionContext();
-        if (isReplicaContext(connectionContext)) {
+        if (!needToReplicateSend(connectionContext, messageSend)) {
             super.send(producerExchange, messageSend);
             return;
         }
-
-        ActiveMQDestination destination = messageSend.getDestination();
 
         boolean isInternalTransaction = false;
         TransactionId transactionId = null;
@@ -413,7 +402,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task
         }
         try {
             super.send(producerExchange, messageSend);
-            replicateSend(connectionContext, messageSend, destination, transactionId);
+            replicateSend(connectionContext, messageSend, transactionId);
             if (isInternalTransaction) {
                 super.commitTransaction(connectionContext, transactionId, true);
             }
@@ -441,6 +430,26 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task
         }
     }
 
+    private boolean needToReplicateAck(ConnectionContext connectionContext, MessageAck ack, PrefetchSubscription subscription) {
+        if (isReplicaContext(connectionContext)) {
+            return false;
+        }
+        if (isReplicationQueue(ack.getDestination())) {
+            return false;
+        }
+        if (ack.getDestination().isTemporary()) {
+            return false;
+        }
+        if (!ack.isStandardAck() && !ack.isIndividualAck()) {
+            return false;
+        }
+        if (subscription instanceof QueueBrowserSubscription && !connectionContext.isNetworkConnection()) {
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean createIfTemporary)
             throws Exception {
@@ -458,101 +467,118 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task
     }
 
     @Override
-    public void queueMessageDropped(ConnectionContext context, QueueMessageReference reference) {
-        if (isReplicaContext(context)) {
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
+        ConnectionContext connectionContext = consumerExchange.getConnectionContext();
+
+        PrefetchSubscription subscription = getDestinations(ack.getDestination()).stream().findFirst()
+                .map(Destination::getConsumers).stream().flatMap(Collection::stream)
+                .filter(c -> c.getConsumerInfo().getConsumerId().equals(ack.getConsumerId()))
+                .findFirst().filter(PrefetchSubscription.class::isInstance).map(PrefetchSubscription.class::cast)
+                .orElse(null);
+        if (subscription == null) {
+            super.acknowledge(consumerExchange, ack);
             return;
         }
-        Message message = reference.getMessage();
-        if (!isReplicatedDestination(message.getDestination())) {
+
+        if (!needToReplicateAck(connectionContext, ack, subscription)) {
+            super.acknowledge(consumerExchange, ack);
             return;
         }
 
-        dropMessagesLock.writeLock().lock();
-        try {
-            dropMessages.addMessageLast(reference);
-        } finally {
-            dropMessagesLock.writeLock().unlock();
+        List<String> messageIdsToAck = getMessageIdsToAck(ack, subscription);
+        if (messageIdsToAck == null) {
+            super.acknowledge(consumerExchange, ack);
+            return;
         }
-        asyncWakeup();
-    }
 
-    private void asyncWakeup() {
-        try {
-            pendingWakeups.incrementAndGet();
-            taskRunner.wakeup();
-        } catch (InterruptedException e) {
-            logger.warn("Async task runner failed to wakeup ", e);
+        boolean isInternalTransaction = false;
+        TransactionId transactionId = null;
+        if (ack.getTransactionId() != null && !ack.getTransactionId().isXATransaction()) {
+            transactionId = ack.getTransactionId();
+        } else if (ack.getTransactionId() == null) {
+            transactionId = new LocalTransactionId(new ConnectionId(REPLICATION_PLUGIN_CONNECTION_ID),
+                    localTransactionIdGenerator.getNextSequenceId());
+            super.beginTransaction(connectionContext, transactionId);
+            ack.setTransactionId(transactionId);
+            isInternalTransaction = true;
         }
-    }
-
-    @Override
-    public boolean iterate() {
-        synchronized (iteratingMutex) {
-            PendingList messages = new OrderedPendingList();
-            dropMessagesLock.readLock().lock();
-            try {
-                messages.addAll(dropMessages);
-            } finally {
-                dropMessagesLock.readLock().unlock();
+        try {
+            super.acknowledge(consumerExchange, ack);
+            replicateAck(connectionContext, ack, transactionId, messageIdsToAck);
+            if (isInternalTransaction) {
+                super.commitTransaction(connectionContext, transactionId, true);
             }
+        } catch (Exception e) {
+            if (isInternalTransaction) {
+                super.rollbackTransaction(connectionContext, transactionId);
+            }
+            throw e;
+        }
+    }
 
-            if (!messages.isEmpty()) {
-                Map<ActiveMQDestination, Set<String>> map = new HashMap<>();
-                for (MessageReference message : messages) {
-                    Set<String> messageIds = map.computeIfAbsent(message.getMessage().getDestination(), k -> new HashSet<>());
-                    messageIds.add(message.getMessageId().toString());
-
-                    dropMessagesLock.writeLock().lock();
-                    try {
-                        dropMessages.remove(message);
-                    } finally {
-                        dropMessagesLock.writeLock().unlock();
+    private List<String> getMessageIdsToAck(MessageAck ack, PrefetchSubscription subscription) {
+        if (ack.isStandardAck() || ack.isExpiredAck() || ack.isPoisonAck()) {
+            boolean inAckRange = false;
+            List<String> removeList = new ArrayList<>();
+            for (final MessageReference node : subscription.getDispatched()) {
+                MessageId messageId = node.getMessageId();
+                if (ack.getFirstMessageId() == null || ack.getFirstMessageId().equals(messageId)) {
+                    inAckRange = true;
+                }
+                if (inAckRange) {
+                    removeList.add(messageId.toString());
+                    if (ack.getLastMessageId().equals(messageId)) {
+                        break;
                     }
                 }
-
-                for (Map.Entry<ActiveMQDestination, Set<String>> entry : map.entrySet()) {
-                    replicateDropMessages(entry.getKey(), new ArrayList<>(entry.getValue()));
-                }
             }
 
-            if (pendingWakeups.get() > 0) {
-                pendingWakeups.decrementAndGet();
-            }
-            return pendingWakeups.get() > 0;
+            return removeList;
         }
+
+        if (ack.isIndividualAck()) {
+            return List.of(ack.getLastMessageId().toString());
+        }
+
+        return null;
     }
 
-    private void replicateDropMessages(ActiveMQDestination destination, List<String> messageIds) {
+    private void replicateAck(ConnectionContext connectionContext, MessageAck ack, TransactionId transactionId,
+            List<String> messageIdsToAck) {
         try {
             enqueueReplicaEvent(
-                    null,
+                    connectionContext,
                     new ReplicaEvent()
-                            .setEventType(ReplicaEventType.MESSAGES_DROPPED)
-                            .setEventData(eventSerializer.serializeReplicationData(destination))
-                            .setReplicationProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, messageIds)
+                            .setEventType(ReplicaEventType.MESSAGE_ACK)
+                            .setEventData(eventSerializer.serializeReplicationData(ack))
+                            .setTransactionId(transactionId)
+                            .setReplicationProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, messageIdsToAck)
             );
         } catch (Exception e) {
-            logger.error("Failed to replicate drop messages {} - {}", destination, messageIds, e);
+            logger.error("Failed to replicate ack messages [{} <-> {}] for consumer {}",
+                    ack.getFirstMessageId(),
+                    ack.getLastMessageId(),
+                    ack.getConsumerId(), e);
         }
     }
 
     @Override
-    public void topicMessageAcknowledged(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) {
+    public void queuePurged(ConnectionContext context, ActiveMQDestination destination) {
+        super.queuePurged(context, destination);
+        replicateQueuePurged(context, destination);
+
+    }
+
+    private void replicateQueuePurged(ConnectionContext connectionContext, ActiveMQDestination destination) {
         try {
             enqueueReplicaEvent(
-                    context,
+                    connectionContext,
                     new ReplicaEvent()
-                            .setEventType(ReplicaEventType.TOPIC_MESSAGE_ACK)
-                            .setEventData(eventSerializer.serializeReplicationData(node.getMessage()))
-                            .setReplicationProperty(ReplicaSupport.CLIENT_ID_PROPERTY, sub.getConsumerInfo().getClientId())
-                            .setReplicationProperty(ReplicaSupport.ACK_TYPE_PROPERTY, ack.getAckType())
+                            .setEventType(ReplicaEventType.QUEUE_PURGED)
+                            .setEventData(eventSerializer.serializeReplicationData(destination))
             );
         } catch (Exception e) {
-            logger.error(
-                    "Failed to replicate ACK {} for consumer {}",
-                    node.getMessageId(),
-                    sub.getConsumerInfo()
-            );
+            logger.error("Failed to replicate queue purge {}", destination, e);
         }
     }
 }

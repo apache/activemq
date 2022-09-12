@@ -3,17 +3,20 @@ package org.apache.activemq.replica;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.MessageReferenceFilter;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.util.ByteSequence;
 import org.slf4j.Logger;
@@ -36,6 +39,7 @@ import static java.util.Objects.requireNonNull;
 
 public class ReplicaBrokerEventListener implements MessageListener {
 
+    public static final String REPLICATION_CONSUMER_CLIENT_ID = "DUMMY_REPLICATION_CONSUMER";
     private final Logger logger = LoggerFactory.getLogger(ReplicaBrokerEventListener.class);
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final Broker broker;
@@ -71,15 +75,18 @@ public class ReplicaBrokerEventListener implements MessageListener {
                         logger.trace("Processing replicated message send");
                         persistMessage((ActiveMQMessage) deserializedData);
                         return;
-                    case MESSAGES_DROPPED:
+                    case MESSAGE_ACK:
                         logger.trace("Processing replicated messages dropped");
                         try {
-                            dropMessages(
-                                    (ActiveMQDestination) deserializedData,
+                            messageAck((MessageAck) deserializedData,
                                     (List<String>) message.getObjectProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY));
                         } catch (JMSException e) {
                             logger.error("Failed to extract property to replicate messages dropped [{}]", deserializedData, e);
                         }
+                        return;
+                    case QUEUE_PURGED:
+                        logger.trace("Processing queue purge");
+                        purgeQueue((ActiveMQDestination) deserializedData);
                         return;
                     case TRANSACTION_BEGIN:
                         logger.trace("Processing replicated transaction begin");
@@ -120,18 +127,8 @@ public class ReplicaBrokerEventListener implements MessageListener {
                         logger.trace("Processing replicated remove consumer");
                         removeDurableConsumer((ConsumerInfo) deserializedData);
                         return;
-                    case TOPIC_MESSAGE_ACK:
-                        logger.trace("Processing replicated topic message ack");
-                        try {
-                            consumeTopicAck((org.apache.activemq.command.Message) deserializedData,
-                                    message.getStringProperty(ReplicaSupport.CLIENT_ID_PROPERTY),
-                                    message.getByteProperty(ReplicaSupport.ACK_TYPE_PROPERTY));
-                        } catch (JMSException e) {
-                            logger.error("Failed to extract property to replicate topic message ack [{}]", deserializedData, e);
-                        }
-                        return;
-                default:
-                    logger.warn("Unhandled event type \"{}\" for replication message id: {}", eventType, message.getJMSMessageID());
+                    default:
+                        logger.warn("Unhandled event type \"{}\" for replication message id: {}", eventType, message.getJMSMessageID());
                 }
             });
             message.acknowledge();
@@ -204,6 +201,14 @@ public class ReplicaBrokerEventListener implements MessageListener {
         }
     }
 
+    private void messageDispatch(ConsumerId consumerId, ActiveMQDestination destination, String messageId) throws Exception {
+        MessageDispatchNotification mdn = new MessageDispatchNotification();
+        mdn.setConsumerId(consumerId);
+        mdn.setDestination(destination);
+        mdn.setMessageId(new MessageId(messageId));
+        broker.processDispatchNotification(mdn);
+    }
+
     private void removeScheduledMessageProperties(ActiveMQMessage message) throws IOException {
         message.removeProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
         message.removeProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
@@ -211,13 +216,15 @@ public class ReplicaBrokerEventListener implements MessageListener {
         message.removeProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
     }
 
-    private void dropMessages(ActiveMQDestination destination, List<String> messageIds) {
+    private void purgeQueue(ActiveMQDestination destination) {
         try {
-            Queue queue = broker.getDestinations(destination).stream()
-                    .findFirst().map(DestinationExtractor::extractQueue).orElseThrow();
-            queue.removeMatchingMessages(connectionContext, new ListMessageReferenceFilter(messageIds), messageIds.size());
+            Optional<Queue> queue = broker.getDestinations(destination).stream()
+                    .findFirst().map(DestinationExtractor::extractQueue);
+            if (queue.isPresent()) {
+                queue.get().purge(connectionContext);
+            }
         } catch (Exception e) {
-            logger.error("Unable to replicate messages dropped [{}]", destination, e);
+            logger.error("Unable to replicate queue purge {}", destination, e);
         }
     }
 
@@ -267,6 +274,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
 
     private void addDurableConsumer(ConsumerInfo consumerInfo, String clientId) {
         try {
+            consumerInfo.setPrefetchSize(0);
             ConnectionContext context = connectionContext.copy();
             context.setClientId(clientId);
             context.setConnection(new DummyConnection());
@@ -300,24 +308,43 @@ public class ReplicaBrokerEventListener implements MessageListener {
         }
     }
 
-    private void consumeTopicAck(org.apache.activemq.command.Message message, String clientId, byte ackType) {
+    private void messageAck(MessageAck ack, List<String> messageIdsToAck) {
+        ActiveMQDestination destination = ack.getDestination();
         try {
-            Topic topic = broker.getDestinations(message.getDestination()).stream().findFirst().map(DestinationExtractor::extractTopic).orElseThrow();
-            DurableTopicSubscription subscription = topic.getConsumers().stream().filter(c -> c.getConsumerInfo().getClientId().equals(clientId))
-                    .findFirst().filter(DurableTopicSubscription.class::isInstance).map(DurableTopicSubscription.class::cast)
-                    .orElseThrow();
 
-            message.setRegionDestination(topic);
+            ConnectionContext context = connectionContext.copy();
+            context.setClientId(REPLICATION_CONSUMER_CLIENT_ID);
+            context.setConnection(new DummyConnection());
 
-            subscription.removePending(message);
+            ConsumerInfo consumerInfo = null;
+            if (destination.isQueue()) {
+                consumerInfo = new ConsumerInfo();
+                consumerInfo.setConsumerId(ack.getConsumerId());
+                consumerInfo.setPrefetchSize(0);
+                consumerInfo.setDestination(destination);
+                broker.addConsumer(context, consumerInfo);
+            }
 
-            topic.getDestinationStatistics().getDequeues().increment();
-            subscription.getSubscriptionStatistics().getDequeues().increment();
+            for (String messageId : messageIdsToAck) {
+                messageDispatch(ack.getConsumerId(), destination, messageId);
+            }
 
-            MessageAck messageAck = new MessageAck(message, ackType, 1);
-            topic.acknowledge(connectionContext, subscription, messageAck, message);
+            if (ack.getTransactionId() != null && !ack.getTransactionId().isXATransaction()) {
+                ack.setTransactionId(null); // remove transactionId as it has been already handled on source broker
+            }
+
+            ConsumerBrokerExchange consumerBrokerExchange = new ConsumerBrokerExchange();
+            consumerBrokerExchange.setConnectionContext(connectionContext);
+            broker.acknowledge(consumerBrokerExchange, ack);
+
+            if (consumerInfo != null) {
+                broker.removeConsumer(context, consumerInfo);
+            }
         } catch (Exception e) {
-            logger.error("Failed to process ack with last message id: {}", message.getMessageId(), e);
+            logger.error("Unable to ack messages ack messages [{} <-> {}] for consumer {}",
+                    ack.getFirstMessageId(),
+                    ack.getLastMessageId(),
+                    ack.getConsumerId(), e);
         }
     }
 

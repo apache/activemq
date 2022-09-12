@@ -1297,8 +1297,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     public void purge() throws Exception {
-        ConnectionContext c = createConnectionContext();
-        List<MessageReference> list = null;
+        purge(createConnectionContext());
+    }
+
+    public void purge(ConnectionContext c) throws Exception {
+        List<MessageReference> list;
         try {
             sendLock.lock();
             long originalMessageCount = this.destinationStatistics.getMessages().getCount();
@@ -1329,6 +1332,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         } finally {
             sendLock.unlock();
         }
+        broker.queuePurged(c, destination);
     }
 
     @Override
@@ -1391,19 +1395,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      * @return the number of messages removed
      */
     public int removeMatchingMessages(MessageReferenceFilter filter, int maximumMessages) throws Exception {
-        return removeMatchingMessages(null, filter, maximumMessages);
-    }
-
-    /**
-     * Removes the messages matching the given filter up to the maximum number
-     * of matched messages
-     *
-     * @return the number of messages removed
-     */
-    public int removeMatchingMessages(ConnectionContext c, MessageReferenceFilter filter, int maximumMessages) throws Exception {
         int movedCounter = 0;
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
-        ConnectionContext context = c != null ? c : createConnectionContext();
+        ConnectionContext context = createConnectionContext();
         do {
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
@@ -1867,7 +1861,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         // This sends the ack the the journal..
         if (!ack.isInTransaction()) {
             acknowledge(context, sub, ack, reference);
-            dropMessage(context, reference);
+            dropMessage(reference);
         } else {
             try {
                 acknowledge(context, sub, ack, reference);
@@ -1876,7 +1870,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                     @Override
                     public void afterCommit() throws Exception {
-                        dropMessage(context, reference);
+                        dropMessage(reference);
                         wakeup();
                     }
 
@@ -1904,7 +1898,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         reference.setAcked(true);
     }
 
-    private void dropMessage(ConnectionContext context, QueueMessageReference reference) {
+    private void dropMessage(QueueMessageReference reference) {
         //use dropIfLive so we only process the statistics at most one time
         if (reference.dropIfLive()) {
             getDestinationStatistics().getDequeues().increment();
@@ -1916,7 +1910,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 pagedInMessagesLock.writeLock().unlock();
             }
         }
-        broker.queueMessageDropped(context, reference);
     }
 
     public void messageExpired(ConnectionContext context, MessageReference reference) {
@@ -2110,7 +2103,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             LOG.warn("{}, duplicate message {} - {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessageId(), ref.getMessage().getMessageId().getFutureOrSequenceLong());
                             if (store != null) {
                                 ConnectionContext connectionContext = createConnectionContext();
-                                dropMessage(connectionContext, ref);
+                                dropMessage(ref);
                                 if (gotToTheStore(ref.getMessage())) {
                                     LOG.debug("Duplicate message {} from cursor, removing from store", ref.getMessage());
                                     store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POISON_ACK_TYPE, 1));
@@ -2358,56 +2351,33 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         QueueMessageReference message = null;
         MessageId messageId = messageDispatchNotification.getMessageId();
 
-        pagedInPendingDispatchLock.writeLock().lock();
-        try {
-            for (MessageReference ref : dispatchPendingList) {
-                if (messageId.equals(ref.getMessageId())) {
-                    message = (QueueMessageReference)ref;
-                    dispatchPendingList.remove(ref);
-                    break;
-                }
-            }
-        } finally {
-            pagedInPendingDispatchLock.writeLock().unlock();
-        }
-
-        if (message == null) {
+        long totalCount = 0;
+        do {
+            doPageIn(true);
             pagedInMessagesLock.readLock().lock();
+            List<MessageReference> list = new ArrayList<>();
             try {
-                message = (QueueMessageReference)pagedInMessages.get(messageId);
+                if (!list.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    break;
+                };
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
-        }
-
-        if (message == null) {
-            messagesLock.writeLock().lock();
-            try {
-                try {
-                    messages.setMaxBatchSize(getMaxPageSize());
-                    messages.reset();
-                    while (messages.hasNext()) {
-                        MessageReference node = messages.next();
-                        messages.remove();
-                        if (messageId.equals(node.getMessageId())) {
-                            message = this.createMessageReference(node.getMessage());
-                            break;
-                        }
+            totalCount += list.size();
+            for (MessageReference ref : list) {
+                if (messageId.equals(ref.getMessageId())) {
+                    message = (QueueMessageReference)ref;
+                    pagedInPendingDispatchLock.writeLock().lock();
+                    try {
+                        dispatchPendingList.remove(ref);
+                    } finally {
+                        pagedInPendingDispatchLock.writeLock().unlock();
                     }
-                } finally {
-                    messages.release();
+                    break;
                 }
-            } finally {
-                messagesLock.writeLock().unlock();
             }
-        }
-
-        if (message == null) {
-            Message msg = loadMessage(messageId);
-            if (msg != null) {
-                message = this.createMessageReference(msg);
-            }
-        }
+        } while (totalCount < this.destinationStatistics.getMessages().getCount());
 
         if (message == null) {
             throw new JMSException("Slave broker out of sync with master - Message: "
