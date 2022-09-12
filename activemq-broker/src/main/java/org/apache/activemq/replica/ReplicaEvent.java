@@ -1,5 +1,6 @@
 package org.apache.activemq.replica;
 
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.util.ByteSequence;
 
 import java.util.HashMap;
@@ -10,9 +11,15 @@ import static java.util.Objects.requireNonNull;
 
 public class ReplicaEvent {
 
+    private TransactionId transactionId;
     private ReplicaEventType eventType;
     private byte[] eventData;
     private Map<String, Object> replicationProperties = new HashMap<>();
+
+    ReplicaEvent setTransactionId(TransactionId transactionId) {
+        this.transactionId = transactionId;
+        return this;
+    }
 
     ReplicaEvent setEventType(final ReplicaEventType eventType) {
         this.eventType = requireNonNull(eventType);
@@ -32,6 +39,10 @@ public class ReplicaEvent {
         }
         replicationProperties.put(propertyKey, propertyValue);
         return this;
+    }
+
+    TransactionId getTransactionId() {
+        return transactionId;
     }
 
     ByteSequence getEventData() {

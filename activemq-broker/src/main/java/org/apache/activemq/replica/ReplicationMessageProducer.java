@@ -1,5 +1,6 @@
 package org.apache.activemq.replica;
 
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
@@ -28,7 +29,7 @@ class ReplicationMessageProducer {
         replicationProducerId.setConnectionId(idGenerator.generateId());
     }
 
-    void enqueueReplicaEvent(ReplicaEvent event) throws Exception {
+    void enqueueReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event) throws Exception {
         synchronized (sendingMutex) {
             logger.debug("Replicating {} event", event.getEventType());
             logger.trace("Replicating {} event: data:\n{}", event.getEventType(), new Object() {
@@ -51,7 +52,8 @@ class ReplicationMessageProducer {
             eventMessage.setResponseRequired(false);
             eventMessage.setContent(event.getEventData());
             eventMessage.setProperties(event.getReplicationProperties());
-            replicaInternalMessageProducer.produceToReplicaQueue(eventMessage);
+            eventMessage.setTransactionId(event.getTransactionId());
+            replicaInternalMessageProducer.produceToReplicaQueue(connectionContext, eventMessage);
         }
     }
 

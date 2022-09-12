@@ -29,14 +29,14 @@ public abstract class ReplicaSourceBaseBroker extends BrokerFilter {
     }
 
 
-    protected void enqueueReplicaEvent(ConnectionContext initialContext, ReplicaEvent event) throws Exception {
-        if (isReplicaContext(initialContext)) {
+    protected void enqueueReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event) throws Exception {
+        if (isReplicaContext(connectionContext)) {
             return;
         }
         if (!initialized.get()) {
             return;
         }
-        replicationMessageProducer.enqueueReplicaEvent(event);
+        replicationMessageProducer.enqueueReplicaEvent(connectionContext, event);
     }
 
     protected boolean isReplicaContext(ConnectionContext initialContext) {

@@ -20,6 +20,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -218,7 +219,7 @@ public class ReplicaSourceBrokerTest {
     public void replicates_BEGIN_TRANSACTION() throws Exception {
         source.start();
 
-        TransactionId transactionId = new LocalTransactionId(new ConnectionId("101010101"), 101010);
+        TransactionId transactionId =  new XATransactionId();
 
         source.beginTransaction(connectionContext, transactionId);
 
@@ -236,7 +237,7 @@ public class ReplicaSourceBrokerTest {
     public void replicates_PREPARE_TRANSACTION() throws Exception {
         source.start();
 
-        TransactionId transactionId = new LocalTransactionId(new ConnectionId("101010101"), 101010);
+        TransactionId transactionId = new XATransactionId();
 
         source.prepareTransaction(connectionContext, transactionId);
 
@@ -254,7 +255,7 @@ public class ReplicaSourceBrokerTest {
     public void replicates_ROLLBACK_TRANSACTION() throws Exception {
         source.start();
 
-        TransactionId transactionId = new LocalTransactionId(new ConnectionId("101010101"), 101010);
+        TransactionId transactionId = new XATransactionId();
 
         source.rollbackTransaction(connectionContext, transactionId);
 
@@ -272,7 +273,7 @@ public class ReplicaSourceBrokerTest {
     public void replicates_FORGET_TRANSACTION() throws Exception {
         source.start();
 
-        TransactionId transactionId = new LocalTransactionId(new ConnectionId("101010101"), 101010);
+        TransactionId transactionId =  new XATransactionId();
 
         source.forgetTransaction(connectionContext, transactionId);
 
@@ -290,7 +291,7 @@ public class ReplicaSourceBrokerTest {
     public void replicates_COMMIT_TRANSACTION() throws Exception {
         source.start();
 
-        TransactionId transactionId = new LocalTransactionId(new ConnectionId("101010101"), 101010);
+        TransactionId transactionId = new XATransactionId();
 
         source.commitTransaction(connectionContext, transactionId, true);
 

@@ -134,7 +134,7 @@ public class ReplicaBroker extends BrokerFilter {
                 .orElseThrow(() -> new IllegalStateException(
                         MessageFormat.format("There is no replication queue on the source broker {0}", replicaSourceConnectionFactory.getBrokerURL())
                 ));
-        logger.debug("Plugin will mirror events from queue {}", replicationSourceQueue.getPhysicalName());
+        logger.info("Plugin will mirror events from queue {}", replicationSourceQueue.getPhysicalName());
         eventConsumer.set((ActiveMQMessageConsumer)
                 connectionSession.get().createConsumer(replicationSourceQueue, new ReplicaBrokerEventListener(getNext()))
         );

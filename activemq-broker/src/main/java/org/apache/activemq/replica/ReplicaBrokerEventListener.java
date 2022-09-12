@@ -136,7 +136,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
             });
             message.acknowledge();
         } catch (IOException | ClassCastException e) {
-            logger.error("Failed to deserialize replication message (id={}), {}", message.getMessageId(), new String(messageContent.data));
+            logger.error("Failed to deserialize replication message (id={}), {}", message.getMessageId(), new String(messageContent.data), e);
             logger.debug("Deserialization error for replication message (id={})", message.getMessageId(), e);
         } catch (
         JMSException e) {
@@ -194,6 +194,9 @@ public class ReplicaBrokerEventListener implements MessageListener {
 
     private void persistMessage(ActiveMQMessage message) {
         try {
+            if (message.getTransactionId() != null && !message.getTransactionId().isXATransaction()) {
+                message.setTransactionId(null); // remove transactionId as it has been already handled on source broker
+            }
             removeScheduledMessageProperties(message);
             replicaInternalMessageProducer.produceToReplicaQueue(message);
         } catch (Exception e) {

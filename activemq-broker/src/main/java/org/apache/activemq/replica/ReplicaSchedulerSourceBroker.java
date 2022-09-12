@@ -2,6 +2,7 @@ package org.apache.activemq.replica;
 
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -21,16 +22,16 @@ public class ReplicaSchedulerSourceBroker extends ReplicaSourceBaseBroker {
         ActiveMQDestination destination = messageSend.getDestination();
         final String jobId = (String) messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_ID);
         if (jobId != null) {
-            replicateSend(producerExchange, messageSend, destination);
+            replicateSend(producerExchange.getConnectionContext(), messageSend, destination);
         }
         super.send(producerExchange, messageSend);
     }
 
 
-    private void replicateSend(ProducerBrokerExchange context, Message message, ActiveMQDestination destination) {
+    private void replicateSend(ConnectionContext connectionContext, Message message, ActiveMQDestination destination) {
         try {
             enqueueReplicaEvent(
-                    context.getConnectionContext(),
+                    connectionContext,
                     new ReplicaEvent()
                             .setEventType(ReplicaEventType.MESSAGE_SEND)
                             .setEventData(eventSerializer.serializeMessageData(message))
