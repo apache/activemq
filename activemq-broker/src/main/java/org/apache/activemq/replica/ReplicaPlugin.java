@@ -51,7 +51,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
             case source:
                 return new ReplicaSourceBroker(broker, transportConnectorUri);
             case dual:
-                return new ReplicaSourceBroker(new ReplicaBroker(broker, otherBrokerConnectionFactory), transportConnectorUri);
+                return new ReplicaBroker(new ReplicaSourceBroker(broker, transportConnectorUri), otherBrokerConnectionFactory);
             default:
                 throw new IllegalArgumentException("Unknown replica role:" + role);
         }

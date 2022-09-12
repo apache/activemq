@@ -95,15 +95,23 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task
         }
     }
 
-    private void replicateDestinationCreation(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        enqueueReplicaEvent(
-                context,
-                new ReplicaEvent()
-                        .setEventType(ReplicaEventType.DESTINATION_UPSERT)
-                        .setEventData(eventSerializer.serializeReplicationData(destination))
-        );
-        if (destinationsToReplicate.chooseValue(destination) == null) {
-            destinationsToReplicate.put(destination, IS_REPLICATED);
+    private void replicateDestinationCreation(ConnectionContext context, ActiveMQDestination destination) {
+        if (destinationsToReplicate.get(destination) != null) {
+            return;
+        }
+
+        try {
+            enqueueReplicaEvent(
+                    context,
+                    new ReplicaEvent()
+                            .setEventType(ReplicaEventType.DESTINATION_UPSERT)
+                            .setEventData(eventSerializer.serializeReplicationData(destination))
+            );
+            if (destinationsToReplicate.chooseValue(destination) == null) {
+                destinationsToReplicate.put(destination, IS_REPLICATED);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to replicate creation of destination {}", destination.getPhysicalName(), e);
         }
     }
 
@@ -251,6 +259,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Task
                             .setEventType(ReplicaEventType.DESTINATION_DELETE)
                             .setEventData(eventSerializer.serializeReplicationData(destination))
             );
+            destinationsToReplicate.remove(destination, IS_REPLICATED);
         } catch (Exception e) {
             logger.error("Failed to replicate remove of destination {}", destination.getPhysicalName(), e);
         }
