@@ -36,7 +36,12 @@ public interface Connector extends Service {
      * @return the statistics for this connector
      */
     ConnectorStatistics getStatistics();
-    
+
+    /**
+     * Reset Connector statistics
+     */
+    void resetStatistics();
+
     /**
      * @return true if update client connections when brokers leave/join a cluster
      */
@@ -46,13 +51,13 @@ public interface Connector extends Service {
      * @return true if clients should be re-balanced across the cluster
      */
     public boolean isRebalanceClusterClients();
-    
+
     /**
      * Update all the connections with information
      * about the connected brokers in the cluster
      */
     public void updateClientClusterInfo();
-    
+
     /**
      * @return true if clients should be updated when
      * a broker is removed from a broker
@@ -66,10 +71,12 @@ public interface Connector extends Service {
      * @return true/false if link stealing is enabled
      */
     boolean isAllowLinkStealing();
-    
+
     /**
      * @return The comma separated string of regex patterns to match 
      * broker names for cluster client updates
      */
     String getUpdateClusterFilter();
+
+    long getMaxConnectionExceededCount();
 }

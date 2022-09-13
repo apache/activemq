@@ -240,8 +240,8 @@ public class ActiveMQBytesMessageTest extends TestCase {
             msg.writeObject(Short.valueOf((short) 3));
             msg.writeObject(Integer.valueOf(3));
             msg.writeObject(Long.valueOf(300L));
-            msg.writeObject(new Float(3.3f));
-            msg.writeObject(new Double(3.3));
+            msg.writeObject(Float.valueOf(3.3f));
+            msg.writeObject(Double.valueOf(3.3));
             msg.writeObject(new byte[3]);
         } catch (MessageFormatException mfe) {
             fail("objectified primitives should be allowed");

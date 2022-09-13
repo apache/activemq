@@ -147,11 +147,6 @@
       <artifactId>derbytools</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>xalan</groupId>
-      <artifactId>xalan</artifactId>
-      <optional>true</optional>
-    </dependency>
 
     <!-- =============================== -->
     <!-- Testing Dependencies            -->
@@ -328,9 +323,9 @@
             <link>http://junit.sourceforge.net/javadoc/</link>
           </links>
           <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
-          <linksource>true</linksource>
           <maxmemory>256m</maxmemory>
           <source>${source-version}</source>
+          <noindex>true</noindex>
           <groups>
             <group>
               <title>JMS Client</title>
@@ -487,12 +482,12 @@
             <id>package</id>
             <phase>package</phase>
             <configuration>
-              <tasks>
+              <target>
                 <echo>Deleting unwanted resources from the test-jar</echo>
                 <delete dir="${project.build.directory}/test-classes" verbose="true">
                   <include name="*.*" />
                 </delete>
-              </tasks>
+              </target>
             </configuration>
             <goals>
               <goal>run</goal>

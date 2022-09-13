@@ -152,7 +152,7 @@ public class ActiveMQTextMessageTest extends TestCase {
     }
 
     public void testTransient() throws Exception {
-        Method method = ActiveMQTextMessage.class.getMethod("getRegionDestination", null);
+        Method method = ActiveMQTextMessage.class.getMethod("getRegionDestination");
         assertTrue(method.isAnnotationPresent(Transient.class));
     }
     

@@ -16,10 +16,21 @@
  */
 package org.apache.activemq.util;
 
+import javax.jms.IllegalStateRuntimeException;
+import javax.jms.InvalidClientIDRuntimeException;
+import javax.jms.InvalidDestinationRuntimeException;
+import javax.jms.InvalidSelectorRuntimeException;
 import javax.jms.JMSException;
+import javax.jms.JMSRuntimeException;
 import javax.jms.JMSSecurityException;
+import javax.jms.JMSSecurityRuntimeException;
 import javax.jms.MessageEOFException;
 import javax.jms.MessageFormatException;
+import javax.jms.MessageFormatRuntimeException;
+import javax.jms.MessageNotWriteableRuntimeException;
+import javax.jms.ResourceAllocationRuntimeException;
+import javax.jms.TransactionInProgressRuntimeException;
+import javax.jms.TransactionRolledBackRuntimeException;
 
 import org.apache.activemq.MaxFrameSizeExceededException;
 
@@ -104,5 +115,39 @@ public final class JMSExceptionSupport {
         exception.setLinkedException(cause);
         exception.initCause(cause);
         return exception;
+    }
+
+    public static JMSRuntimeException convertToJMSRuntimeException(JMSException e) {
+        if (e instanceof javax.jms.IllegalStateException) {
+            return new IllegalStateRuntimeException(e.getMessage(), e.getErrorCode(), e);
+        }
+        if (e instanceof javax.jms.InvalidClientIDException) {
+            return new InvalidClientIDRuntimeException(e.getMessage(), e.getErrorCode(), e);
+        }
+        if (e instanceof javax.jms.InvalidDestinationException) {
+            return new InvalidDestinationRuntimeException(e.getMessage(), e.getErrorCode(), e);
+        }
+        if (e instanceof javax.jms.InvalidSelectorException) {
+            return new InvalidSelectorRuntimeException(e.getMessage(), e.getErrorCode(), e);
+        }
+        if (e instanceof javax.jms.JMSSecurityException) {
+            return new JMSSecurityRuntimeException(e.getMessage(), e.getErrorCode(), e);
+        }
+        if (e instanceof javax.jms.MessageFormatException) {
+            return new MessageFormatRuntimeException(e.getMessage(), e.getErrorCode(), e);
+        }
+        if (e instanceof javax.jms.MessageNotWriteableException) {
+            return new MessageNotWriteableRuntimeException(e.getMessage(), e.getErrorCode(), e);
+        }
+        if (e instanceof javax.jms.ResourceAllocationException) {
+            return new ResourceAllocationRuntimeException(e.getMessage(), e.getErrorCode(), e);
+        }
+        if (e instanceof javax.jms.TransactionInProgressException) {
+            return new TransactionInProgressRuntimeException(e.getMessage(), e.getErrorCode(), e);
+        }
+        if (e instanceof javax.jms.TransactionRolledBackException) {
+            return new TransactionRolledBackRuntimeException(e.getMessage(), e.getErrorCode(), e);
+        }
+        return new JMSRuntimeException(e.getMessage(), e.getErrorCode(), e);
     }
 }

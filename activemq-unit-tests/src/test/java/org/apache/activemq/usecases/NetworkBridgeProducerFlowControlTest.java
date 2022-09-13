@@ -118,9 +118,9 @@ public class NetworkBridgeProducerFlowControlTest extends
 
     public void initCombosForTestFastAndSlowRemoteConsumers() {
         addCombinationValues("persistentTestMessages", new Object[]{
-                new Boolean(true), new Boolean(false)});
+                Boolean.TRUE, Boolean.FALSE});
         addCombinationValues("networkIsAlwaysSendSync", new Object[]{
-                new Boolean(true), new Boolean(false)});
+                Boolean.TRUE, Boolean.FALSE});
     }
 
     @Override

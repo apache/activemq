@@ -27,7 +27,7 @@
     <networkConnectors>
       <networkConnector uri="static:(tcp://localhost:61617)" name="networkConnector">
           <bridgeFactory>
-              <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.network.CustomBridgeFactoryTest.CustomNetworkBridgeFactory" />
+              <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.network.CustomNetworkBridgeFactory" />
           </bridgeFactory>
       </networkConnector>
     </networkConnectors>

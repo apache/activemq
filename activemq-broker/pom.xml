@@ -67,13 +67,6 @@
       <optional>true</optional>
     </dependency>
 
-    <!-- to support XPath based Selectors -->
-    <dependency>
-      <groupId>xalan</groupId>
-      <artifactId>xalan</artifactId>
-      <optional>true</optional>
-    </dependency>
-
     <!-- =============================== -->
     <!-- Testing Dependencies -->
     <!-- =============================== -->
@@ -113,9 +106,9 @@
             <link>http://junit.sourceforge.net/javadoc/</link>
           </links>
           <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
-          <linksource>true</linksource>
           <maxmemory>256m</maxmemory>
           <source>${source-version}</source>
+          <noindex>true</noindex>
           <groups>
             <group>
               <title>JMS Client</title>
