@@ -71,6 +71,7 @@ public class AmqpTestSupport {
     protected Vector<Throwable> exceptions = new Vector<>();
     protected int numberOfMessages;
 
+    protected boolean advisorySupport = false;
     protected URI amqpURI;
     protected int amqpPort;
     protected URI amqpSslURI;
@@ -118,7 +119,7 @@ public class AmqpTestSupport {
             brokerService.setPersistenceAdapter(kaha);
         }
         brokerService.setSchedulerSupport(isSchedulerEnabled());
-        brokerService.setAdvisorySupport(false);
+        brokerService.setAdvisorySupport(advisorySupport);
         brokerService.setUseJmx(isUseJmx());
         brokerService.getManagementContext().setCreateConnector(false);
 

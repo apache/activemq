@@ -417,7 +417,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             		removeMap.put(ConsumerId.class.getSimpleName(), ((ConsumerId)removeInfo.getObjectId()).getValue());
             		removeMap.put("SessionId", ((ConsumerId)removeInfo.getObjectId()).getSessionId());
             		removeMap.put("ConnectionId", ((ConsumerId)removeInfo.getObjectId()).getConnectionId());
-            		removeMap.put("ParentId", ((ConsumerId)removeInfo.getObjectId()).getParentId());
+            		removeMap.put("ParentId", ((ConsumerId)removeInfo.getObjectId()).getParentId().getValue());
             	}
             	
             	body = new AmqpValue(removeMap);
