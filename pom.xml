@@ -67,7 +67,8 @@
     <httpclient-version>4.5.13</httpclient-version>
     <httpcore-version>4.4.15</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
-    <jackson-version>2.13.3</jackson-version>
+    <jackson-version>2.13.4</jackson-version>
+    <jackson-databind-version>2.13.4.1</jackson-databind-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty9-version>9.4.48.v20220622</jetty9-version>
@@ -715,7 +716,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>${jackson-version}</version>
+        <version>${jackson-databind-version}</version>
       </dependency>
 
       <!-- Used to configure the activemq logs -->
