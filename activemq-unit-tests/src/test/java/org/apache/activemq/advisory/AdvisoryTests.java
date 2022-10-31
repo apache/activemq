@@ -23,8 +23,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashSet;
 
+import java.util.function.Function;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -34,7 +36,9 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
+import javax.jms.QueueBrowser;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.jms.Topic;
 
 import org.apache.activemq.ActiveMQConnection;
@@ -65,10 +69,8 @@ public class AdvisoryTests {
     protected BrokerService broker;
     protected Connection connection;
     protected String bindAddress = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
-    protected int topicCount;
     protected final boolean includeBodyForAdvisory;
     protected final int EXPIRE_MESSAGE_PERIOD = 10000;
-
 
     @Parameters(name = "includeBodyForAdvisory={0}")
     public static Collection<Object[]> data() {
@@ -163,16 +165,93 @@ public class AdvisoryTests {
     }
 
     @Test(timeout = 60000)
-    public void testMessageDeliveryAdvisory() throws Exception {
+    public void testQueueMessageDeliveryAdvisory() throws Exception {
+        testMessageConsumerAdvisory(new ActiveMQQueue(getClass().getName()), AdvisorySupport::getMessageDeliveredAdvisoryTopic);
+    }
+
+    @Test(timeout = 60000)
+    public void testQueueMessageDispatchedAdvisory() throws Exception {
+        testMessageConsumerAdvisory(new ActiveMQQueue(getClass().getName()), AdvisorySupport::getMessageDispatchedAdvisoryTopic);
+    }
+
+    @Test(timeout = 60000)
+    public void testQueueMessageDispatchedAdvisorySync() throws Exception {
+        ((ActiveMQConnection)connection).setDispatchAsync(false);
+        testMessageConsumerAdvisory(new ActiveMQQueue(getClass().getName()), AdvisorySupport::getMessageDispatchedAdvisoryTopic);
+    }
+
+    @Test(timeout = 60000)
+    public void testTopicMessageDeliveryAdvisory() throws Exception {
+        testMessageConsumerAdvisory(new ActiveMQTopic(getClass().getName()), AdvisorySupport::getMessageDeliveredAdvisoryTopic);
+    }
+
+    @Test(timeout = 60000)
+    public void testTopicMessageDispatchedAdvisory() throws Exception {
+        testMessageConsumerAdvisory(new ActiveMQTopic(getClass().getName()), AdvisorySupport::getMessageDispatchedAdvisoryTopic);
+    }
+
+    @Test(timeout = 60000)
+    public void testTopicMessageDispatchedAdvisorySync() throws Exception {
+        ((ActiveMQConnection)connection).setDispatchAsync(false);
+        testMessageConsumerAdvisory(new ActiveMQTopic(getClass().getName()), AdvisorySupport::getMessageDispatchedAdvisoryTopic);
+    }
+
+    @Test(timeout = 60000)
+    public void testDurableMessageDispatchedAdvisory() throws Exception {
+        testDurableSubscriptionAdvisory(AdvisorySupport::getMessageDispatchedAdvisoryTopic);
+    }
+
+    @Test(timeout = 60000)
+    public void testDurableMessageDispatchedAdvisorySync() throws Exception {
+        ((ActiveMQConnection)connection).setDispatchAsync(false);
+        testDurableSubscriptionAdvisory(AdvisorySupport::getMessageDispatchedAdvisoryTopic);
+    }
+
+    @Test(timeout = 60000)
+    public void testQueueBrowserDispatchedAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = s.createQueue(getClass().getName());
-        MessageConsumer consumer = s.createConsumer(queue);
-        assertNotNull(consumer);
 
-        Topic advisoryTopic = AdvisorySupport.getMessageDeliveredAdvisoryTopic((ActiveMQDestination) queue);
+        Topic advisoryTopic = AdvisorySupport.getMessageDispatchedAdvisoryTopic(
+            (ActiveMQDestination) queue);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
         // start throwing messages at the consumer
         MessageProducer producer = s.createProducer(queue);
+
+        BytesMessage m = s.createBytesMessage();
+        m.writeBytes(new byte[1024]);
+        producer.send(m);
+
+        QueueBrowser browser = s.createBrowser(queue);
+        Enumeration enumeration = browser.getEnumeration();
+        //Should have 1 message to browser
+        assertTrue(enumeration.hasMoreElements());
+        assertNotNull(enumeration.nextElement());
+
+        Message msg = advisoryConsumer.receive(1000);
+        assertNotNull(msg);
+        ActiveMQMessage message = (ActiveMQMessage) msg;
+        ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+
+        //This should always be tcp:// because that is the transport that is used to connect even though
+        //the nio transport is the first one in the list
+        assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
+        assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), ((ActiveMQDestination) queue).getQualifiedName());
+
+        //Add assertion to make sure body is included for advisory topics
+        //when includeBodyForAdvisory is true
+        assertIncludeBodyForAdvisory(payload);
+    }
+
+    private void testMessageConsumerAdvisory(ActiveMQDestination dest, Function<ActiveMQDestination, Topic> advisoryTopicSupplier) throws Exception {
+        Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = s.createConsumer(dest);
+        assertNotNull(consumer);
+
+        Topic advisoryTopic = advisoryTopicSupplier.apply(dest);
+        MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
+        // start throwing messages at the consumer
+        MessageProducer producer = s.createProducer(dest);
 
         BytesMessage m = s.createBytesMessage();
         m.writeBytes(new byte[1024]);
@@ -186,7 +265,37 @@ public class AdvisoryTests {
         //This should always be tcp:// because that is the transport that is used to connect even though
         //the nio transport is the first one in the list
         assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
-        assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), ((ActiveMQDestination) queue).getQualifiedName());
+        assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), dest.getQualifiedName());
+
+        //Add assertion to make sure body is included for advisory topics
+        //when includeBodyForAdvisory is true
+        assertIncludeBodyForAdvisory(payload);
+    }
+
+    private void testDurableSubscriptionAdvisory(Function<ActiveMQDestination, Topic> advisoryTopicSupplier) throws Exception {
+        Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic topic = s.createTopic(getClass().getName());
+        MessageConsumer consumer = s.createDurableSubscriber(topic, "sub");
+        assertNotNull(consumer);
+
+        Topic advisoryTopic = advisoryTopicSupplier.apply((ActiveMQDestination) topic);
+        MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
+        // start throwing messages at the consumer
+        MessageProducer producer = s.createProducer(topic);
+
+        BytesMessage m = s.createBytesMessage();
+        m.writeBytes(new byte[1024]);
+        producer.send(m);
+
+        Message msg = advisoryConsumer.receive(1000);
+        assertNotNull(msg);
+        ActiveMQMessage message = (ActiveMQMessage) msg;
+        ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+
+        //This should always be tcp:// because that is the transport that is used to connect even though
+        //the nio transport is the first one in the list
+        assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
+        assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), ((ActiveMQDestination) topic).getQualifiedName());
 
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
@@ -405,6 +514,7 @@ public class AdvisoryTests {
         policy.setAdvisoryForFastProducers(true);
         policy.setAdvisoryForConsumed(true);
         policy.setAdvisoryForDelivery(true);
+        policy.setAdvisoryForDispatched(true);
         policy.setAdvisoryForDiscardingMessages(true);
         policy.setAdvisoryForSlowConsumers(true);
         policy.setAdvisoryWhenFull(true);
