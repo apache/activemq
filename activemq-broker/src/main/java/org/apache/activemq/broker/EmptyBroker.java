@@ -309,6 +309,11 @@ public class EmptyBroker implements Broker {
     }
 
     @Override
+    public void messageDispatched(ConnectionContext context, MessageReference messageReference) {
+
+    }
+
+    @Override
     public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
     }
 

@@ -325,6 +325,11 @@ public class DestinationFilter implements Destination {
     }
 
     @Override
+    public void messageDispatched(ConnectionContext context, MessageReference messageReference) {
+        next.messageDispatched(context, messageReference);
+    }
+
+    @Override
     public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         next.messageDiscarded(context, sub, messageReference);
     }

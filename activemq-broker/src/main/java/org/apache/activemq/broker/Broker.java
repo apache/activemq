@@ -354,6 +354,13 @@ public interface Broker extends Region, Service {
     void messageDelivered(ConnectionContext context, MessageReference messageReference);
 
     /**
+     * Called when message is dispatched to a consumer
+     * @param context
+     * @param messageReference
+     */
+    void messageDispatched(ConnectionContext context, MessageReference messageReference);
+
+    /**
      * Called when a message is discarded - e.g. running low on memory
      * This will happen only if the policy is enabled - e.g. non durable topics
      * @param context

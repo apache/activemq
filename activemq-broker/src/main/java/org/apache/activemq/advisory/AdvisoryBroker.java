@@ -489,6 +489,27 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
+    public void messageDispatched(ConnectionContext context, MessageReference messageReference) {
+        super.messageDispatched(context, messageReference);
+        try {
+            if (!messageReference.isAdvisory()) {
+                BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
+                ActiveMQTopic topic = AdvisorySupport.getMessageDispatchedAdvisoryTopic(baseDestination.getActiveMQDestination());
+                Message payload = messageReference.getMessage().copy();
+                if (!baseDestination.isIncludeBodyForAdvisory()) {
+                    payload.clearBody();
+                }
+                ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, baseDestination.getActiveMQDestination().getQualifiedName());
+                fireAdvisory(context, topic, payload, null, advisoryMessage);
+            }
+        } catch (Exception e) {
+            handleFireFailure("delivered", e);
+        }
+    }
+
+    @Override
     public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         super.messageDiscarded(context, sub, messageReference);
         try {

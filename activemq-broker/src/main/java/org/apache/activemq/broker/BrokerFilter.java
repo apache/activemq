@@ -352,6 +352,11 @@ public class BrokerFilter implements Broker {
     }
 
     @Override
+    public void messageDispatched(ConnectionContext context, MessageReference messageReference) {
+        getNext().messageDispatched(context, messageReference);
+    }
+
+    @Override
     public void messageDiscarded(ConnectionContext context,Subscription sub, MessageReference messageReference) {
         getNext().messageDiscarded(context, sub, messageReference);
     }

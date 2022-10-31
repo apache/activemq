@@ -87,6 +87,7 @@ public abstract class BaseDestination implements Destination {
     private boolean advisoryWhenFull;
     private boolean advisoryForDelivery;
     private boolean advisoryForConsumed;
+    private boolean advisoryForDispatched;
     private boolean sendAdvisoryIfNoConsumers;
     private boolean sendDuplicateFromStoreToDLQ = false;
     private boolean includeBodyForAdvisory;
@@ -456,6 +457,14 @@ public abstract class BaseDestination implements Destination {
         this.advisoryForConsumed = advisoryForConsumed;
     }
 
+    public boolean isAdvisoryForDispatched() {
+        return advisoryForDispatched;
+    }
+
+    public void setAdvisoryForDispatched(boolean advisoryForDispatched) {
+        this.advisoryForDispatched = advisoryForDispatched;
+    }
+
     /**
      * @return the advisdoryForFastProducers
      */
@@ -545,6 +554,13 @@ public abstract class BaseDestination implements Destination {
         this.lastActiveTime = 0L;
         if (advisoryForDelivery) {
             broker.messageDelivered(context, messageReference);
+        }
+    }
+
+    @Override
+    public void messageDispatched(ConnectionContext context, MessageReference messageReference) {
+        if (advisoryForDispatched) {
+            broker.messageDispatched(context, messageReference);
         }
     }
 

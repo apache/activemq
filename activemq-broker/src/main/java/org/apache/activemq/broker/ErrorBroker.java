@@ -349,6 +349,11 @@ public class ErrorBroker implements Broker {
     }
 
     @Override
+    public void messageDispatched(ConnectionContext context,MessageReference messageReference) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    @Override
     public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         throw new BrokerStoppedException(this.message);
     }
