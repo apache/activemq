@@ -2210,6 +2210,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         // no further dispatch of list to a full consumer to
                         // avoid out of order message receipt
                         fullConsumers.add(s);
+
+                        //For full consumers we need to mark that they are slow and
+                        // then call the broker.slowConsumer() hook if implemented
+                        if (s instanceof PrefetchSubscription) {
+                            final PrefetchSubscription sub = (PrefetchSubscription) s;
+                            if (!sub.isSlowConsumer()) {
+                                sub.setSlowConsumer(true);
+                                broker.slowConsumer(sub.getContext(), this, sub);
+                            }
+                        }
                         LOG.trace("Subscription full {}", s);
                     }
                 }
