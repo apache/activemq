@@ -23,9 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.function.Consumer;
 
 import javax.jms.IllegalStateException;
+import javax.jms.JMSException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -42,6 +42,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
+import org.apache.activemq.broker.region.AbstractRegion;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
 import org.apache.activemq.broker.region.DestinationInterceptor;
@@ -61,6 +62,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -97,8 +99,7 @@ public class ManagedRegionBroker extends RegionBroker {
     private final Map<ObjectName, ProducerView> dynamicDestinationProducers = new ConcurrentHashMap<>();
     private final Map<SubscriptionKey, ObjectName> subscriptionKeys = new ConcurrentHashMap<>();
     private final Map<Subscription, ObjectName> subscriptionMap = new ConcurrentHashMap<>();
-    private final Map<ConsumerInfo, Subscription> consumerSubscriptionMap = new ConcurrentHashMap<>();
-    private final Set<ObjectName> registeredMBeans = new ConcurrentHashMap<>().newKeySet();
+    private final Set<ObjectName> registeredMBeans = ConcurrentHashMap.newKeySet();
     /* This is the first broker in the broker interceptor chain. */
     private Broker contextBroker;
 
@@ -217,7 +218,6 @@ public class ManagedRegionBroker extends RegionBroker {
                 registerSubscription(objectName, sub.getConsumerInfo(), key, view);
             }
             subscriptionMap.put(sub, objectName);
-            consumerSubscriptionMap.put(sub.getConsumerInfo(), sub);
             return objectName;
         } catch (Exception e) {
             LOG.error("Failed to register subscription {}", sub, e);
@@ -252,11 +252,60 @@ public class ManagedRegionBroker extends RegionBroker {
 
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        if (consumerSubscriptionMap.containsKey(info)){
-            Subscription sub = consumerSubscriptionMap.get(info);
-            unregisterSubscription(subscriptionMap.get(sub), true);
+        //Find subscriptions quickly by relying on the maps contained in the different Regions
+        //that map consumer ids and subscriptions
+        final Set<Subscription> subscriptions = findSubscriptions(info);
+
+        if (!subscriptions.isEmpty()) {
+            for (Subscription sub : subscriptions) {
+                // unregister all consumer subs
+                unregisterSubscription(subscriptionMap.get(sub), true);
+                break;
+            }
+        } else {
+            //Fall back to old slow approach where we go through the entire subscription map case something went wrong
+            //and no subscriptions were found - should generally not happen
+            for (Subscription sub : subscriptionMap.keySet()) {
+                if (sub.getConsumerInfo().equals(info)) {
+                    unregisterSubscription(subscriptionMap.get(sub), true);
+                }
+            }
         }
+
         super.removeConsumer(context, info);
+    }
+
+    private Set<Subscription> findSubscriptions(final ConsumerInfo info) {
+        final Set<Subscription> subscriptions = new HashSet<>();
+
+        try {
+            if (info.getDestination() != null) {
+                final ActiveMQDestination consumerDest = info.getDestination();
+                //If it's composite then go through and find the subscription for every dest in case different
+                if (consumerDest.isComposite()) {
+                    ActiveMQDestination[] destinations = consumerDest.getCompositeDestinations();
+                    for (ActiveMQDestination destination : destinations) {
+                        addSubscriptionToList(subscriptions, info.getConsumerId(), destination);
+                    }
+                } else {
+                    //This is the case for a non-composite destination which would be most of the time
+                    addSubscriptionToList(subscriptions, info.getConsumerId(), info.getDestination());
+                }
+            }
+        } catch (Exception e) {
+            LOG.warn("Error finding subscription {}: {}", info, e.getMessage());
+        }
+
+        return subscriptions;
+    }
+
+    private void addSubscriptionToList(Set<Subscription> subscriptions,
+        ConsumerId consumerId, ActiveMQDestination dest) throws JMSException {
+        final Subscription matchingSub = ((AbstractRegion) this.getRegion(dest))
+            .getSubscriptions().get(consumerId);
+        if (matchingSub != null) {
+            subscriptions.add(matchingSub);
+        }
     }
 
     @Override
@@ -296,7 +345,6 @@ public class ManagedRegionBroker extends RegionBroker {
 
     public void unregisterSubscription(Subscription sub) {
         ObjectName name = subscriptionMap.remove(sub);
-        consumerSubscriptionMap.remove(sub.getConsumerInfo());
         if (name != null) {
             try {
                 SubscriptionKey subscriptionKey = new SubscriptionKey(sub.getContext().getClientId(), sub.getConsumerInfo().getSubscriptionName());
