@@ -216,7 +216,6 @@ public class TopicSubscription extends AbstractSubscription {
      * Discard any expired messages from the matched list. Called from a
      * synchronized block.
      *
-     * @throws IOException
      */
     protected void removeExpiredMessages() throws IOException {
         try {
@@ -352,6 +351,23 @@ public class TopicSubscription extends AbstractSubscription {
             }
         }
         return null;
+    }
+
+    @Override
+    public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
+        if (isUseTopicSubscriptionInflightStats()) {
+            synchronized(dispatchLock) {
+                for (DispatchedNode node : dispatched) {
+                    if (node.getDestination()== destination) {
+                        //We only need to clean up inflight message size here on the sub stats as
+                        //inflight on destination stat is cleaned up on destroy
+                        getSubscriptionStatistics().getInflightMessageSize().addSize(-node.getSize());
+                    }
+                }
+                dispatched.clear();
+            }
+        }
+        return super.remove(context, destination);
     }
 
     /**
@@ -692,6 +708,8 @@ public class TopicSubscription extends AbstractSubscription {
                     public void onFailure() {
                         Destination regionDestination = (Destination) node.getRegionDestination();
                         regionDestination.getDestinationStatistics().getDispatched().increment();
+                        //We still increment here as metrics get cleaned up on destroy()
+                        //as the failure causes the subscription to close
                         regionDestination.getDestinationStatistics().getInflight().increment();
                         node.decrementReferenceCount();
                     }
@@ -749,6 +767,10 @@ public class TopicSubscription extends AbstractSubscription {
         setSlowConsumer(false);
         synchronized(dispatchLock) {
             dispatched.clear();
+            //Clear any unacked messages from destination inflight stats
+            if (destination != null) {
+                destination.getDestinationStatistics().getInflight().subtract(getDispatchedQueueSize());
+            }
         }
     }
 
