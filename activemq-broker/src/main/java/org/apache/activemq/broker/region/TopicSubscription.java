@@ -358,7 +358,7 @@ public class TopicSubscription extends AbstractSubscription {
         if (isUseTopicSubscriptionInflightStats()) {
             synchronized(dispatchLock) {
                 for (DispatchedNode node : dispatched) {
-                    if (node.getDestination()== destination) {
+                    if (node.getDestination() == destination) {
                         //We only need to clean up inflight message size here on the sub stats as
                         //inflight on destination stat is cleaned up on destroy
                         getSubscriptionStatistics().getInflightMessageSize().addSize(-node.getSize());
