@@ -141,4 +141,9 @@ public class ConnectorView implements ConnectorViewMBean {
     public long getMaxConnectionExceededCount() {
         return this.connector.getMaxConnectionExceededCount();
     }
+
+    @Override
+    public boolean isStarted() {
+        return this.connector.isStarted();
+    }
 }
