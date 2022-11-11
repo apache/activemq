@@ -169,9 +169,9 @@ public class CHeadersGenerator extends SingleSourceGenerator {
                 out.println("   ow_" + type + " " + name + ";");
             } else if (type.equals("byte[]")) {
                 out.println("   ow_byte_array *" + name + ";");
-            } else if (type.equals("org.apache.activeio.packet.ByteSequence")) {
+            } else if (type.equals("org.apache.activemq.store.journal.packet.ByteSequence")) {
                 out.println("   ow_byte_array *" + name + ";");
-            } else if (type.equals("org.apache.activeio.packet.ByteSequence")) {
+            } else if (type.equals("org.apache.activemq.store.journal.packet.ByteSequence")) {
                 out.println("   ow_byte_array *" + name + ";");
             } else if (type.equals("java.lang.String")) {
                 out.println("   ow_string *" + name + ";");

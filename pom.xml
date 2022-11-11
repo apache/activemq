@@ -34,7 +34,6 @@
     <!-- for reproducible builds -->	
     <project.build.outputTimestamp>2022-03-01T14:36:07Z</project.build.outputTimestamp>
 
-    <activeio-version>3.1.4</activeio-version>
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
@@ -409,18 +408,6 @@
         <artifactId>activemq-web</artifactId>
         <version>${project.version}</version>
         <type>war</type>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activeio-core</artifactId>
-        <version>${activeio-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activeio-core</artifactId>
-        <version>${activeio-version}</version>
-        <type>test-jar</type>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>

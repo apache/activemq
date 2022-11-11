@@ -146,7 +146,7 @@ public class CSourcesGenerator extends CHeadersGenerator {
                 if (size == null) {
                     out.println("   ow_bit_buffer_append(buffer,  object->" + propname + "!=0 );");
                 }
-            } else if (type.equals("org.apache.activeio.packet.ByteSequence")) {
+            } else if (type.equals("org.apache.activemq.store.journal.packet.ByteSequence")) {
                 if (size == null) {
                     out.println("   ow_bit_buffer_append(buffer,  object->" + propname + "!=0 );");
                 }
@@ -205,7 +205,7 @@ public class CSourcesGenerator extends CHeadersGenerator {
                 } else {
                     out.println("   SUCCESS_CHECK(ow_marshal2_byte_array(buffer, bitbuffer, object->" + propname + "));");
                 }
-            } else if (type.equals("org.apache.activeio.packet.ByteSequence")) {
+            } else if (type.equals("org.apache.activemq.store.journal.packet.ByteSequence")) {
                 if (size != null) {
                     out.println("   SUCCESS_CHECK(ow_marshal2_byte_array_const_size(buffer, object->" + propname + ", " + size.asInt() + "));");
                 } else {
@@ -268,7 +268,7 @@ public class CSourcesGenerator extends CHeadersGenerator {
                 } else {
                     out.println("   SUCCESS_CHECK(ow_unmarshal_byte_array(buffer, bitbuffer, &object->" + propname + ", pool));");
                 }
-            } else if (type.equals("org.apache.activeio.packet.ByteSequence")) {
+            } else if (type.equals("org.apache.activemq.store.journal.packet.ByteSequence")) {
                 if (size != null) {
                     out.println("   SUCCESS_CHECK(ow_unmarshal_byte_array_const_size(buffer, &object->" + propname + ", " + size.asInt() + ", pool));");
                 } else {

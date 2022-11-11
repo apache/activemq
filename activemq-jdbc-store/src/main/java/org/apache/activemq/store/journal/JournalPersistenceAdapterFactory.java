@@ -19,9 +19,8 @@ package org.apache.activemq.store.journal;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.activeio.journal.Journal;
-import org.apache.activeio.journal.active.JournalImpl;
-import org.apache.activeio.journal.active.JournalLockedException;
+import org.apache.activemq.store.journal.active.JournalImpl;
+import org.apache.activemq.store.journal.active.JournalLockedException;
 import org.apache.activemq.broker.Locker;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
@@ -40,6 +39,7 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean
  * 
  */
+@Deprecated(forRemoval = true)
 public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport implements PersistenceAdapterFactory {
 
     private static final int JOURNAL_LOCKED_WAIT_DELAY = 10 * 1000;

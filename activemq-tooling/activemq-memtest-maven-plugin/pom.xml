@@ -44,10 +44,6 @@
       <artifactId>activemq-console</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activeio-core</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
     </dependency>

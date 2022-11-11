@@ -53,12 +53,6 @@
       <artifactId>derbytools</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activeio-core</artifactId>
-      <optional>true</optional>
-    </dependency>
-
     <!-- =============================== -->
     <!-- Testing Dependencies -->
     <!-- =============================== -->

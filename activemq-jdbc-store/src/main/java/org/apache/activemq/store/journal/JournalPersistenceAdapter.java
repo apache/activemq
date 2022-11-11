@@ -33,12 +33,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.activeio.journal.InvalidRecordLocationException;
-import org.apache.activeio.journal.Journal;
-import org.apache.activeio.journal.JournalEventListener;
-import org.apache.activeio.journal.RecordLocation;
-import org.apache.activeio.packet.ByteArrayPacket;
-import org.apache.activeio.packet.Packet;
+import org.apache.activemq.store.journal.packet.ByteArrayPacket;
+import org.apache.activemq.store.journal.packet.Packet;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
@@ -85,6 +81,7 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean
  *
  */
+@Deprecated(forRemoval = true)
 public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEventListener, UsageListener, BrokerServiceAware {
 
     private BrokerService brokerService;
@@ -752,11 +749,11 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public Packet toPacket(ByteSequence sequence) {
-        return new ByteArrayPacket(new org.apache.activeio.packet.ByteSequence(sequence.data, sequence.offset, sequence.length));
+        return new ByteArrayPacket(new org.apache.activemq.store.journal.packet.ByteSequence(sequence.data, sequence.offset, sequence.length));
     }
 
     public ByteSequence toByteSequence(Packet packet) {
-        org.apache.activeio.packet.ByteSequence sequence = packet.asByteSequence();
+        org.apache.activemq.store.journal.packet.ByteSequence sequence = packet.asByteSequence();
         return new ByteSequence(sequence.getData(), sequence.getOffset(), sequence.getLength());
     }
 

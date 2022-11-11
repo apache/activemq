@@ -47,7 +47,7 @@
     </amq:broker>
 
     <!-- The journal implementation that will be used -->
-    <bean id="myJournalImpl" class="org.apache.activeio.journal.active.JournalImpl">
+    <bean id="myJournalImpl" class="org.apache.activemq.store.journal.active.JournalImpl">
         <constructor-arg index="0">
             <bean id="myFile" class="java.io.File">
                 <constructor-arg index="0">
