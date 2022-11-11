@@ -702,7 +702,7 @@ public class TopicSubscription extends AbstractSubscription {
                         Destination regionDestination = (Destination) node.getRegionDestination();
                         regionDestination.getDestinationStatistics().getDispatched().increment();
                         regionDestination.getDestinationStatistics().getInflight().increment();
-                        regionDestination.messageDispatched(context, node);
+                        regionDestination.messageDispatched(context, TopicSubscription.this, node);
                         node.decrementReferenceCount();
                     }
 
@@ -724,7 +724,7 @@ public class TopicSubscription extends AbstractSubscription {
                 Destination regionDestination = (Destination) node.getRegionDestination();
                 regionDestination.getDestinationStatistics().getDispatched().increment();
                 regionDestination.getDestinationStatistics().getInflight().increment();
-                regionDestination.messageDispatched(context, node);
+                regionDestination.messageDispatched(context, this, node);
                 node.decrementReferenceCount();
             }
         }

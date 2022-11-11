@@ -489,8 +489,8 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
-    public void messageDispatched(ConnectionContext context, MessageReference messageReference) {
-        super.messageDispatched(context, messageReference);
+    public void messageDispatched(ConnectionContext context, Subscription sub, MessageReference messageReference) {
+        super.messageDispatched(context, sub, messageReference);
         try {
             if (!messageReference.isAdvisory()) {
                 BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
@@ -502,6 +502,9 @@ public class AdvisoryBroker extends BrokerFilter {
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, baseDestination.getActiveMQDestination().getQualifiedName());
+                if (sub.getConsumerInfo() != null) {
+                    advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID, sub.getConsumerInfo().getConsumerId().toString());
+                }
                 fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {

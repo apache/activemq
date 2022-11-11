@@ -271,6 +271,11 @@ public class AdvisoryTests {
         assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
         assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), dest.getQualifiedName());
 
+        //Make sure consumer id exists if dispatched advisory
+        if (AdvisorySupport.isMessageDispatchedAdvisoryTopic(advisoryTopic)) {
+            assertNotNull(message.getStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID));
+        }
+
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
         assertIncludeBodyForAdvisory(payload);

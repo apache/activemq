@@ -194,9 +194,10 @@ public interface Destination extends Service, Task, Message.MessageDestination {
      * Called when message is dispatched to a consumer
      *
      * @param context
+     * @param sub
      * @param messageReference
      */
-    void messageDispatched(ConnectionContext context, MessageReference messageReference);
+    void messageDispatched(ConnectionContext context, Subscription sub, MessageReference messageReference);
 
     /**
      * Called when a message is discarded - e.g. running low on memory This will

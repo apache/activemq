@@ -542,12 +542,12 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void messageDispatched(ConnectionContext context, MessageReference messageReference) {
+    public void messageDispatched(ConnectionContext context,  Subscription sub, MessageReference messageReference) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
             String msg = messageReference.getMessage().toString();
             LOG.info("Message dispatched: {}", msg);
         }
-        super.messageDispatched(context, messageReference);
+        super.messageDispatched(context, sub, messageReference);
     }
 
     @Override

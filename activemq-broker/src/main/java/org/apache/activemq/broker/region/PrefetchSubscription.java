@@ -760,7 +760,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             if (node != QueueMessageReference.NULL_MESSAGE) {
                 nodeDest.getDestinationStatistics().getDispatched().increment();
                 incrementPrefetchCounter(node);
-                nodeDest.messageDispatched(context, node);
+                nodeDest.messageDispatched(context, this, node);
                 LOG.trace("{} dispatched: {} - {}, dispatched: {}, inflight: {}",
                         info.getConsumerId(), message.getMessageId(), message.getDestination(),
                         getSubscriptionStatistics().getDispatched().getCount(), dispatched.size());

@@ -558,9 +558,9 @@ public abstract class BaseDestination implements Destination {
     }
 
     @Override
-    public void messageDispatched(ConnectionContext context, MessageReference messageReference) {
+    public void messageDispatched(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         if (advisoryForDispatched) {
-            broker.messageDispatched(context, messageReference);
+            broker.messageDispatched(context, sub, messageReference);
         }
     }
 
