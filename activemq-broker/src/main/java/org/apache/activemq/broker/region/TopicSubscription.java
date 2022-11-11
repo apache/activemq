@@ -357,14 +357,15 @@ public class TopicSubscription extends AbstractSubscription {
     public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
         if (isUseTopicSubscriptionInflightStats()) {
             synchronized(dispatchLock) {
-                for (DispatchedNode node : dispatched) {
+                dispatched.removeIf(node -> {
                     if (node.getDestination() == destination) {
                         //We only need to clean up inflight message size here on the sub stats as
                         //inflight on destination stat is cleaned up on destroy
                         getSubscriptionStatistics().getInflightMessageSize().addSize(-node.getSize());
+                        return true;
                     }
-                }
-                dispatched.clear();
+                    return false;
+                });
             }
         }
         return super.remove(context, destination);
