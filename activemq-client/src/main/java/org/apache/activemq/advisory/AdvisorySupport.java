@@ -577,6 +577,24 @@ public final class AdvisorySupport {
         }
     }
 
+    public static boolean isMessageDispatchedAdvisoryTopic(Destination destination) throws JMSException {
+        return isMessageDispatchedAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
+    public static boolean isMessageDispatchedAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isComposite()) {
+            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+            for (int i = 0; i < compositeDestinations.length; i++) {
+                if (isMessageDispatchedAdvisoryTopic(compositeDestinations[i])) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return destination.isTopic() && destination.getPhysicalName().startsWith(MESSAGE_DISPATCHED_TOPIC_PREFIX);
+        }
+    }
+
     /**
      * Returns the agent topic which is used to send commands to the broker
      */

@@ -214,6 +214,10 @@ public class AdvisoryTests {
 
         Topic advisoryTopic = AdvisorySupport.getMessageDispatchedAdvisoryTopic(
             (ActiveMQDestination) queue);
+
+        //Test util method
+        assertTrue(AdvisorySupport.isMessageDispatchedAdvisoryTopic(advisoryTopic));
+
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
         // start throwing messages at the consumer
         MessageProducer producer = s.createProducer(queue);
