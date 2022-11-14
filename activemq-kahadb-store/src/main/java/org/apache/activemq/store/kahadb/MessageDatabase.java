@@ -457,6 +457,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public void open() throws IOException {
+        LOG.info("Opening MessageDatabase");
         if( opened.compareAndSet(false, true) ) {
             getJournal().start();
             try {

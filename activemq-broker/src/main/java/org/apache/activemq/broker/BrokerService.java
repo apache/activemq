@@ -668,10 +668,13 @@ public class BrokerService implements Service {
         persistenceAdapterToStart.setBrokerName(getBrokerName());
         LOG.info("Using Persistence Adapter: {}", persistenceAdapterToStart);
         if (deleteAllMessagesOnStartup) {
+            LOG.info("Deleting all messages on startup because deleteAllMessagesOnStartup configuration has been provided");
             deleteAllMessages();
         }
+        LOG.info("Starting Persistence Adapter: {}", persistenceAdapterToStart);
         persistenceAdapterToStart.start();
 
+        LOG.info("Starting Temp Data Store");
         getTempDataStore();
         if (tempDataStore != null) {
             try {
@@ -685,6 +688,7 @@ public class BrokerService implements Service {
             }
         }
 
+        LOG.info("Starting Job Scheduler Store");
         getJobSchedulerStore();
         if (jobSchedulerStore != null) {
             try {
@@ -696,6 +700,7 @@ public class BrokerService implements Service {
                 throw exception;
             }
         }
+        LOG.info("Persistence Adapter successfully started");
     }
 
     private void startBroker(boolean async) throws Exception {
