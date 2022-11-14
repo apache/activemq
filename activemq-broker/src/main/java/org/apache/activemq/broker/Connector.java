@@ -79,4 +79,9 @@ public interface Connector extends Service {
     String getUpdateClusterFilter();
 
     long getMaxConnectionExceededCount();
+
+    /**
+     * @return true if connector is started
+     */
+    public boolean isStarted();
 }

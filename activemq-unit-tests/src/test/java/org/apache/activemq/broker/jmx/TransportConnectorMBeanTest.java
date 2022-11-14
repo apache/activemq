@@ -18,10 +18,16 @@ package org.apache.activemq.broker.jmx;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
+import java.lang.management.ManagementFactory;
 import java.net.Socket;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
+import javax.management.JMX;
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnection;
@@ -58,6 +64,18 @@ public class TransportConnectorMBeanTest {
     @Test
     public void verifyClientIdDuplexNetwork() throws Exception {
         doVerifyClientIdNetwork(true);
+    }
+
+    @Test
+    public void testStartStop() throws Exception {
+        createBroker(true);
+        final ConnectorViewMBean connectorViewMBean = JMX.newMBeanProxy(ManagementFactory.getPlatformMBeanServer(), BrokerMBeanSupport.createConnectorName(BrokerMBeanSupport.createBrokerObjectName("org.apache.activemq", "localhost").toString(), "clientConnectors", broker.getTransportConnectorByScheme("tcp").getPublishableConnectString()), ConnectorViewMBean.class);
+        assertNotNull(connectorViewMBean);
+        assertTrue(connectorViewMBean.isStarted());
+        connectorViewMBean.stop();
+        assertFalse(connectorViewMBean.isStarted());
+        connectorViewMBean.start();
+        assertTrue(connectorViewMBean.isStarted());
     }
 
     private void doVerifyClientIdNetwork(boolean duplex) throws Exception {
