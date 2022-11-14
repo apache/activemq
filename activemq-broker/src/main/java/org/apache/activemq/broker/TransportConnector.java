@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import javax.management.ObjectName;
@@ -81,6 +82,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean displayStackTrace = false;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
+    private AtomicBoolean started = new AtomicBoolean(false);
 
     public TransportConnector() {
     }
@@ -264,6 +266,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             this.statusDector.start();
         }
 
+        started.set(true);
         LOG.info("Connector {} started", getName());
     }
 
@@ -308,6 +311,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             ss.stop(connection);
         }
         server = null;
+        started.set(false);
         ss.throwFirstException();
         LOG.info("Connector {} stopped", getName());
     }
@@ -672,5 +676,10 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     public void setDisplayStackTrace(boolean displayStackTrace) {
         this.displayStackTrace = displayStackTrace;
+    }
+
+    @Override
+    public boolean isStarted() {
+        return started.get();
     }
 }

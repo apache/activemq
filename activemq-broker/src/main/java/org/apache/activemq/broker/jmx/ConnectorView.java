@@ -136,4 +136,9 @@ public class ConnectorView implements ConnectorViewMBean {
     public boolean isAllowLinkStealingEnabled() {
         return this.connector.isAllowLinkStealing();
     }
+
+    @Override
+    public boolean isStarted() {
+        return this.connector.isStarted();
+    }
 }

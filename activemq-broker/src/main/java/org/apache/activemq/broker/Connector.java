@@ -72,4 +72,9 @@ public interface Connector extends Service {
      * broker names for cluster client updates
      */
     String getUpdateClusterFilter();
+
+    /**
+     * @return true if connector is started
+     */
+    public boolean isStarted();
 }

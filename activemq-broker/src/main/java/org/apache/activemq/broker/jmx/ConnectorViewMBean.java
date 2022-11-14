@@ -83,5 +83,9 @@ public interface ConnectorViewMBean extends Service {
     @MBeanInfo("Comma separated list of regex patterns to match broker names for cluster client updates.")
     String getUpdateClusterFilter();
 
-
+    /**
+     * @return true if transport connector is started
+     */
+    @MBeanInfo("Connector started")
+    boolean isStarted();
 }
