@@ -208,7 +208,7 @@ public class AdvisoryTests {
     }
 
     @Test(timeout = 60000)
-    public void testQueueBrowserDispatchedAdvisory() throws Exception {
+    public void testQueueBrowserDispatchedAdvisoryNotSent() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = s.createQueue(getClass().getName());
 
@@ -232,19 +232,9 @@ public class AdvisoryTests {
         assertTrue(enumeration.hasMoreElements());
         assertNotNull(enumeration.nextElement());
 
+        //We should not be sending an advisory for dispatching to a browser
         Message msg = advisoryConsumer.receive(1000);
-        assertNotNull(msg);
-        ActiveMQMessage message = (ActiveMQMessage) msg;
-        ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
-
-        //This should always be tcp:// because that is the transport that is used to connect even though
-        //the nio transport is the first one in the list
-        assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
-        assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), ((ActiveMQDestination) queue).getQualifiedName());
-
-        //Add assertion to make sure body is included for advisory topics
-        //when includeBodyForAdvisory is true
-        assertIncludeBodyForAdvisory(payload);
+        assertNull(msg);
     }
 
     private void testMessageConsumerAdvisory(ActiveMQDestination dest, Function<ActiveMQDestination, Topic> advisoryTopicSupplier) throws Exception {

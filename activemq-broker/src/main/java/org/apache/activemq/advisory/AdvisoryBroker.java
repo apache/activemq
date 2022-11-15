@@ -492,7 +492,8 @@ public class AdvisoryBroker extends BrokerFilter {
     public void messageDispatched(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         super.messageDispatched(context, sub, messageReference);
         try {
-            if (!messageReference.isAdvisory()) {
+            //Don't dispatch for queue browsers
+            if (!messageReference.isAdvisory() && !sub.getConsumerInfo().isBrowser()) {
                 BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
                 ActiveMQTopic topic = AdvisorySupport.getMessageDispatchedAdvisoryTopic(baseDestination.getActiveMQDestination());
                 Message payload = messageReference.getMessage().copy();
