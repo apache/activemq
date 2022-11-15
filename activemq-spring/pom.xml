@@ -230,6 +230,32 @@
           </dependency>
         </dependencies>
       </plugin>
+      <plugin><!-- workaround for https://issues.apache.org/jira/browse/XBEAN-335 -->
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+        <version>1.5.3</version>
+        <executions>
+          <execution>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>replace</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <basedir>${project.build.directory}/classes/META-INF</basedir>
+          <includes>
+            <include>spring.*</include>
+          </includes>
+          <replacements>
+            <replacement>
+              <token>#... ... .+</token>
+              <value>#</value>
+            </replacement>
+          </replacements>
+          <regex>true</regex>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>

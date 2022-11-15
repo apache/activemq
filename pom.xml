@@ -125,13 +125,13 @@
     <maven-surefire-plugin-version>3.0.0-M6</maven-surefire-plugin-version>
     <maven-antrun-plugin-version>3.0.0</maven-antrun-plugin-version>
     <maven-assembly-plugin-version>3.3.0</maven-assembly-plugin-version>
-    <maven-release-plugin-version>2.5.3</maven-release-plugin-version>
+    <maven-release-plugin-version>3.0.0-M5</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
     <maven-enforcer-plugin-version>3.1.0</maven-enforcer-plugin-version>
     <maven-war-plugin-version>3.3.2</maven-war-plugin-version>
     <maven-compiler-plugin-version>3.10.1</maven-compiler-plugin-version>
+    <maven-rar-plugin-version>3.0.0</maven-rar-plugin-version>
     <maven-jar-plugin-version>3.2.2</maven-jar-plugin-version>
-    <maven-archiver-version>2.5</maven-archiver-version>
     <maven-source-plugin-version>3.2.1</maven-source-plugin-version>
     <maven-javadoc-plugin-version>3.3.2</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.5.2</maven-install-plugin-version>
@@ -240,7 +240,7 @@
     <connection>scm:git:http://gitbox.apache.org/repos/asf/activemq.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/activemq.git</developerConnection>
     <url>https://github.com/apache/activemq</url>
-    <tag>activemq-5.16.0</tag>
+    <tag>main</tag>
   </scm>
 
   <dependencyManagement>
@@ -1137,18 +1137,6 @@
             <suppressCommitBeforeTag>false</suppressCommitBeforeTag>
             <tagNameFormat>activemq-@{project.version}</tagNameFormat>
           </configuration>
-          <dependencies>
-            <dependency>
-             <groupId>org.apache.maven.scm</groupId>
-             <artifactId>maven-scm-api</artifactId>
-             <version>1.8.1</version>
-            </dependency>
-          <dependency>
-             <groupId>org.apache.maven.scm</groupId>
-             <artifactId>maven-scm-provider-gitexe</artifactId>
-             <version>1.8.1</version>
-           </dependency>
-         </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1220,13 +1208,13 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>${maven-compiler-plugin-version}</version>
+          <artifactId>maven-rar-plugin</artifactId>
+          <version>${maven-rar-plugin-version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-archiver</artifactId>
-          <version>${maven-archiver-version}</version>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin-version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
