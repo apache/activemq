@@ -187,7 +187,8 @@ public class TopicSubscription extends AbstractSubscription {
                                 messagesToEvict = oldMessages.length;
                                 for (int i = 0; i < messagesToEvict; i++) {
                                     MessageReference oldMessage = oldMessages[i];
-                                    discard(oldMessage);
+                                    //Expired here is false as we are discarding due to the messageEvictingStrategy
+                                    discard(oldMessage, false);
                                 }
                             }
                             // lets avoid an infinite loop if we are given a bad eviction strategy
@@ -233,8 +234,7 @@ public class TopicSubscription extends AbstractSubscription {
                     matched.remove();
                     node.decrementReferenceCount();
                     if (broker.isExpired(node)) {
-                        ((Destination) node.getRegionDestination()).getDestinationStatistics().getExpired().increment();
-                        broker.messageExpired(getContext(), node, this);
+                        ((Destination) node.getRegionDestination()).messageExpired(getContext(), this, node);
                     }
                     break;
                 }
@@ -654,7 +654,7 @@ public class TopicSubscription extends AbstractSubscription {
                         // Message may have been sitting in the matched list a while
                         // waiting for the consumer to ak the message.
                         if (message.isExpired()) {
-                            discard(message);
+                            discard(message, true);
                             continue; // just drop it.
                         }
                         dispatch(message);
@@ -739,19 +739,25 @@ public class TopicSubscription extends AbstractSubscription {
         }
     }
 
-    private void discard(MessageReference message) {
+    private void discard(MessageReference message, boolean expired) {
         discarding = true;
         try {
             message.decrementReferenceCount();
             matched.remove(message);
-            discarded.incrementAndGet();
             if (destination != null) {
                 destination.getDestinationStatistics().getDequeues().increment();
             }
-            LOG.debug("{}, discarding message {}", this, message);
             Destination dest = (Destination) message.getRegionDestination();
             if (dest != null) {
-                dest.messageDiscarded(getContext(), this, message);
+                //If discard is due to expiration then use the messageExpired() callback
+                if (expired) {
+                    LOG.debug("{}, expiring message {}", this, message);
+                    dest.messageExpired(getContext(), this, message);
+                } else {
+                    LOG.debug("{}, discarding message {}", this, message);
+                    discarded.incrementAndGet();
+                    dest.messageDiscarded(getContext(), this, message);
+                }
             }
             broker.getRoot().sendToDeadLetterQueue(getContext(), message, this, new Throwable("TopicSubDiscard. ID:" + info.getConsumerId()));
         } finally {
