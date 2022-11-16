@@ -85,7 +85,7 @@ public class AMQ7118Test {
     }
 
 
-    @Test
+    @Test(timeout = 90000)
     public void testCompaction() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
 
