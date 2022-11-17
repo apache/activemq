@@ -94,6 +94,12 @@ public final class AdvisorySupport {
     public static ActiveMQTopic[] getAllDestinationAdvisoryTopics(ActiveMQDestination destination) throws JMSException {
         ArrayList<ActiveMQTopic> result = new ArrayList<ActiveMQTopic>();
 
+        //Note - Sicne this method is primarily used for removing destinations and clean up
+        //don't add VirtualDestinationConsumerAdvisoryTopic here as we want to keep listening
+        //for demand on composite destinations that may be forwarded for Virtual topics even after dest removal.
+        //This is because virtual destinations or composite destinations can trigger demand so we need to still listen
+        //Cleanup will happen automatically if there are no consumers on the advisory (due to the bridge
+        //no longer including the destination) when the inactive GC task runs
         result.add(getConsumerAdvisoryTopic(destination));
         result.add(getProducerAdvisoryTopic(destination));
         result.add(getExpiredMessageTopic(destination));
@@ -103,6 +109,7 @@ public final class AdvisorySupport {
         result.add(getMessageDiscardedAdvisoryTopic(destination));
         result.add(getMessageDeliveredAdvisoryTopic(destination));
         result.add(getMessageConsumedAdvisoryTopic(destination));
+        result.add(getMessageDispatchedAdvisoryTopic(destination));
         result.add(getMessageDLQdAdvisoryTopic(destination));
         result.add(getFullAdvisoryTopic(destination));
 
