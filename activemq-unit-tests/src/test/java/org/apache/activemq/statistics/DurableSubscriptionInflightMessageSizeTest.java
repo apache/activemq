@@ -24,6 +24,8 @@ import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.SubscriptionKey;
+import org.junit.Assume;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -40,8 +42,8 @@ public class DurableSubscriptionInflightMessageSizeTest extends AbstractInflight
     }
 
     @Override
-    protected MessageConsumer getMessageConsumer() throws JMSException {
-        return session.createDurableSubscriber((javax.jms.Topic)dest, "sub1");
+    protected MessageConsumer getMessageConsumer(String destName) throws JMSException {
+        return session.createDurableSubscriber(getDestination(destName), "sub1");
     }
 
     @Override
@@ -50,13 +52,22 @@ public class DurableSubscriptionInflightMessageSizeTest extends AbstractInflight
     }
 
     @Override
-    protected javax.jms.Topic getDestination() throws JMSException {
+    protected javax.jms.Topic getDestination(String destName) throws JMSException {
         return session.createTopic(destName);
     }
 
     @Override
-    protected ActiveMQDestination getActiveMQDestination() {
+    protected ActiveMQDestination getActiveMQDestination(String destName) {
         return new ActiveMQTopic(destName);
+    }
+
+    @Test(timeout=60000)
+    public void testInflightMessageSizeRemoveDestination() throws Exception {
+        Assume.assumeTrue(useTopicSubscriptionInflightStats);
+        //Close as we will re-create with a wildcard sub
+        consumer.close();
+        session.unsubscribe("sub1");
+        super.testInflightMessageSizeRemoveDestination();
     }
 
 }

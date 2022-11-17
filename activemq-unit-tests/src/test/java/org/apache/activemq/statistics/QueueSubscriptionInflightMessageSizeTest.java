@@ -40,22 +40,22 @@ public class QueueSubscriptionInflightMessageSizeTest extends AbstractInflightMe
     }
 
     @Override
-    protected MessageConsumer getMessageConsumer() throws JMSException {
-        return session.createConsumer(dest);
+    protected MessageConsumer getMessageConsumer(String destName) throws JMSException {
+        return session.createConsumer(getDestination(destName));
     }
 
     @Override
     protected Subscription getSubscription() {
-        return ((Queue)amqDestination).getConsumers().get(0);
+        return amqDestination.getConsumers().get(0);
     }
 
     @Override
-    protected Destination getDestination() throws JMSException {
+    protected Destination getDestination(String destName) throws JMSException {
         return session.createQueue(destName);
     }
 
     @Override
-    protected ActiveMQDestination getActiveMQDestination() {
+    protected ActiveMQDestination getActiveMQDestination(String destName) {
         return new ActiveMQQueue(destName);
     }
 
