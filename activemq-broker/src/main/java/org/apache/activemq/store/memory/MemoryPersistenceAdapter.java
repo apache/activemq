@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -43,13 +45,15 @@ import org.slf4j.LoggerFactory;
 /**
  * @org.apache.xbean.XBean
  */
-public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubscriptionAware {
+public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubscriptionAware,
+    BrokerServiceAware {
     private static final Logger LOG = LoggerFactory.getLogger(MemoryPersistenceAdapter.class);
 
     MemoryTransactionStore transactionStore;
     ConcurrentMap<ActiveMQDestination, TopicMessageStore> topics = new ConcurrentHashMap<ActiveMQDestination, TopicMessageStore>();
     ConcurrentMap<ActiveMQDestination, MessageStore> queues = new ConcurrentHashMap<ActiveMQDestination, MessageStore>();
     private boolean useExternalMessageReferences;
+    protected BrokerService brokerService;
 
     @Override
     public Set<ActiveMQDestination> getDestinations() {
@@ -118,7 +122,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
     @Override
     public TransactionStore createTransactionStore() throws IOException {
         if (transactionStore == null) {
-            transactionStore = new MemoryTransactionStore(this);
+            transactionStore = new MemoryTransactionStore(this, brokerService);
         }
         return transactionStore;
     }
@@ -252,5 +256,10 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
     @Override
     public boolean isPersistNoLocal() {
         return true;
+    }
+
+    @Override
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
     }
 }
