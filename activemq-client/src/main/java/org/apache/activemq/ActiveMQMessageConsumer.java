@@ -139,7 +139,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private PreviouslyDeliveredMap<MessageId, PreviouslyDelivered> previouslyDeliveredMessages;
     private int deliveredCounter;
     private int additionalWindowSize;
-    private long redeliveryDelay;
     private int ackCounter;
     private int dispatchedCount;
     private final AtomicReference<MessageListener> messageListener = new AtomicReference<MessageListener>();
@@ -1224,7 +1223,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             deliveredMessages.clear();
             clearPreviouslyDelivered();
         }
-        redeliveryDelay = 0;
     }
 
     public void rollback() throws JMSException {
@@ -1249,14 +1247,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     return;
                 }
 
-                // use initial delay for first redelivery
                 MessageDispatch lastMd = deliveredMessages.getFirst();
-                final int currentRedeliveryCount = lastMd.getMessage().getRedeliveryCounter();
-                if (currentRedeliveryCount > 0) {
-                    redeliveryDelay = redeliveryPolicy.getNextRedeliveryDelay(redeliveryDelay);
-                } else {
-                    redeliveryDelay = redeliveryPolicy.getInitialRedeliveryDelay();
-                }
                 MessageId firstMsgId = deliveredMessages.getLast().getMessage().getMessageId();
 
                 for (Iterator<MessageDispatch> iter = deliveredMessages.iterator(); iter.hasNext();) {
@@ -1279,12 +1270,21 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     session.sendAck(ack,true);
                     // Adjust the window size.
                     additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());
-                    redeliveryDelay = 0;
 
                     deliveredCounter -= deliveredMessages.size();
                     deliveredMessages.clear();
 
                 } else {
+                    // Find what redelivery delay to use, based on the redelivery count of last message.
+                    // Current redelivery count is already increased at this point
+                    final int currentRedeliveryCount = lastMd.getMessage().getRedeliveryCounter();
+                    long redeliveryDelay = redeliveryPolicy.getInitialRedeliveryDelay();
+                    // Iterating based on redelivery count to find delay to use.
+                    // NOTE: One less than current redelivery count, to use initial delay for first redelivery.
+                    for (int i = 0; i < (currentRedeliveryCount-1); i++) {
+                        redeliveryDelay = redeliveryPolicy.getNextRedeliveryDelay(redeliveryDelay);
+                    }
+                    LOG.debug("Redelivery delay calculated for redelivery count {}: {}, for messageId '{}'.", currentRedeliveryCount, redeliveryDelay, lastMd.getMessage().getMessageId());
 
                     // only redelivery_ack after first delivery
                     if (currentRedeliveryCount > 0) {
