@@ -125,6 +125,11 @@ if [ -z "$ACTIVEMQ_CONF" ] ; then
     fi
 fi
 
+# Jolokia configuration
+if [ -z "$JOLOKIA_CONF" ] ; then
+  JOLOKIA_CONF=file:$ACTIVEMQ_CONF/jolokia-access.xml
+fi
+
 # Configure a user with non root privileges, if no user is specified do not change user
 if [ -z "$ACTIVEMQ_USER" ] ; then
     ACTIVEMQ_USER=""
@@ -267,6 +272,7 @@ if [ "$OSTYPE" = "cygwin" ];then
   ACTIVEMQ_BASE="`cygpath --windows "$ACTIVEMQ_BASE"`"
   ACTIVEMQ_CONF="`cygpath --windows "$ACTIVEMQ_CONF"`"
   ACTIVEMQ_DATA="`cygpath --windows "$ACTIVEMQ_DATA"`"
+  JOLOKIA_CONF="`cygpath --windows "$JOLOKIA_CONF"`"
   ACTIVEMQ_CLASSPATH=`cygpath --path --windows "$ACTIVEMQ_CLASSPATH"`
   [ -n "$JAVA_HOME" ] &&
     JAVA_HOME="`cygpath --windows "$JAVA_HOME"`"
@@ -288,6 +294,7 @@ if [ "$OSTYPE" = "cygwin" ];then
   ACTIVEMQ_BASE="`echo ${ACTIVEMQ_BASE}|sed '~s,[\\]*$,,g'`"
   ACTIVEMQ_CONF="`echo ${ACTIVEMQ_CONF}|sed '~s,[\\]*$,,g'`"
   ACTIVEMQ_DATA="`echo ${ACTIVEMQ_DATA}|sed '~s,[\\]*$,,g'`"
+  JOLOKIA_CONF="`echo ${JOLOKIA_CONF}|sed '~s,[\\]*$,,g'`"
 fi
 
 # Start the ActiveMQ JAR
@@ -361,6 +368,7 @@ invokeJar(){
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+              -Djolokia.conf=\"${JOLOKIA_CONF}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> $ACTIVEMQ_OUT 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
@@ -374,6 +382,7 @@ invokeJar(){
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+              -Djolokia.conf=\"${JOLOKIA_CONF}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> $ACTIVEMQ_OUT 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
@@ -404,6 +413,7 @@ invokeJar(){
                 -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
                 -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
                 -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+                -Djolokia.conf=\"${JOLOKIA_CONF}\" \
                 $ACTIVEMQ_CYGWIN \
                 -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $SPID &
                 RET=\"\$?\"; APID=\"\$!\";
@@ -416,6 +426,7 @@ invokeJar(){
                 -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
                 -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
                 -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+                -Djolokia.conf=\"${JOLOKIA_CONF}\" \
                 $ACTIVEMQ_CYGWIN \
                 -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $SPID &
                 RET=\"\$?\"; APID=\"\$!\";
@@ -444,6 +455,7 @@ invokeJar(){
           -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
           -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
           -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+          -Djolokia.conf=\"${JOLOKIA_CONF}\" \
           $ACTIVEMQ_CYGWIN \
           -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
         RET="$?"
@@ -454,6 +466,7 @@ invokeJar(){
           -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
           -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
           -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+          -Djolokia.conf=\"${JOLOKIA_CONF}\" \
           $ACTIVEMQ_CYGWIN \
           -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
         RET="$?"
