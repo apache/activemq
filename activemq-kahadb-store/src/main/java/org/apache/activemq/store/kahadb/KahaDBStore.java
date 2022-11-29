@@ -207,8 +207,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     public void doStart() throws Exception {
         //configure the metadata before start, right now
         //this is just the open wire version
+        LOG.info("Starting KahaDBStore");
         configureMetadata();
-
         super.doStart();
 
         if (brokerService != null) {
