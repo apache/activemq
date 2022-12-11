@@ -35,6 +35,7 @@ public class InMemoryJob implements Job {
     private int executionCount;
 
     private byte[] payload;
+    private String destinationName;
 
     public InMemoryJob(String jobId) {
         this.jobId = jobId;
@@ -120,6 +121,16 @@ public class InMemoryJob implements Job {
     @Override
     public int getExecutionCount() {
         return executionCount;
+    }
+
+    @Override
+    public String getDestinationName() {
+        return destinationName;
+    }
+
+    @Override
+    public void setDestinationName(String destinationName) {
+        this.destinationName = destinationName;
     }
 
     public void incrementExecutionCount() {
