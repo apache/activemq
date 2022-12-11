@@ -30,6 +30,7 @@ import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.broker.scheduler.JobScheduler;
 import org.apache.activemq.broker.scheduler.JobSupport;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.ByteSequence;
 
@@ -54,12 +55,22 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
 
     @Override
     public TabularData getAllJobs() throws Exception {
+        return getAllJobs(false);
+    }
+
+    public TabularData getAllJobs(boolean includeDestinationName) throws Exception {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(Job.class);
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("Scheduled Jobs", "Scheduled Jobs", ct, new String[] { "jobId" });
         TabularDataSupport rc = new TabularDataSupport(tt);
         List<Job> jobs = this.jobScheduler.getAllJobs();
+        OpenWireFormat wireFormat = new OpenWireFormat();
         for (Job job : jobs) {
+            if (includeDestinationName) {
+                Message msg = (Message) wireFormat.unmarshal(new ByteSequence(job.getPayload()));
+                ActiveMQDestination destination = (ActiveMQDestination) msg.getJMSDestination();
+                job.setDestinationName(destination.getPhysicalName());
+            }
             rc.put(new CompositeDataSupport(ct, factory.getFields(job)));
         }
         return rc;
@@ -67,6 +78,10 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
 
     @Override
     public TabularData getAllJobs(String startTime, String finishTime) throws Exception {
+        return getAllJobs(startTime, finishTime, false);
+    }
+
+    public TabularData getAllJobs(String startTime, String finishTime, boolean includeDestinationName) throws Exception {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(Job.class);
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("Scheduled Jobs", "Scheduled Jobs", ct, new String[] { "jobId" });
@@ -74,7 +89,13 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
         long start = JobSupport.getDataTime(startTime);
         long finish = JobSupport.getDataTime(finishTime);
         List<Job> jobs = this.jobScheduler.getAllJobs(start, finish);
+        OpenWireFormat wireFormat = new OpenWireFormat();
         for (Job job : jobs) {
+            if (includeDestinationName) {
+                Message msg = (Message) wireFormat.unmarshal(new ByteSequence(job.getPayload()));
+                ActiveMQDestination destination = (ActiveMQDestination) msg.getJMSDestination();
+                job.setDestinationName(destination.getPhysicalName());
+            }
             rc.put(new CompositeDataSupport(ct, factory.getFields(job)));
         }
         return rc;
@@ -100,12 +121,22 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
 
     @Override
     public TabularData getNextScheduleJobs() throws Exception {
+        return getNextScheduleJobs(false);
+    }
+
+    public TabularData getNextScheduleJobs(boolean includeDestinationName) throws Exception {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(Job.class);
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("Scheduled Jobs", "Scheduled Jobs", ct, new String[] { "jobId" });
         TabularDataSupport rc = new TabularDataSupport(tt);
         List<Job> jobs = this.jobScheduler.getNextScheduleJobs();
+        OpenWireFormat wireFormat = new OpenWireFormat();
         for (Job job : jobs) {
+            if (includeDestinationName) {
+                Message msg = (Message) wireFormat.unmarshal(new ByteSequence(job.getPayload()));
+                ActiveMQDestination destination = (ActiveMQDestination) msg.getJMSDestination();
+                job.setDestinationName(destination.getPhysicalName());
+            }
             rc.put(new CompositeDataSupport(ct, factory.getFields(job)));
         }
         return rc;

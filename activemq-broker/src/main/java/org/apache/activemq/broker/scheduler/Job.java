@@ -78,4 +78,11 @@ public interface Job {
      */
     public int getExecutionCount();
 
+    /**
+     *
+     * @return name of destination
+     */
+    public String getDestinationName();
+
+    public void setDestinationName(String destinationName);
 }

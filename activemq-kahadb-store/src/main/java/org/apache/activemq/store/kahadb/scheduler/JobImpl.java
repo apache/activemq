@@ -25,6 +25,8 @@ public class JobImpl implements Job {
     private final JobLocation jobLocation;
     private final byte[] payload;
 
+    private String destinationName;
+
     protected JobImpl(JobLocation location, ByteSequence bs) {
         this.jobLocation = location;
         this.payload = new byte[bs.getLength()];
@@ -84,5 +86,15 @@ public class JobImpl implements Job {
     @Override
     public String toString() {
         return "Job: " + getJobId();
+    }
+
+    @Override
+    public String getDestinationName() {
+        return destinationName;
+    }
+
+    @Override
+    public void setDestinationName(String destinationName) {
+        this.destinationName = destinationName;
     }
 }
