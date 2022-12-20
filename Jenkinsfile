@@ -21,11 +21,7 @@
 
 pipeline {
 
-    agent {
-        node {
-            label 'ubuntu'
-        }
-    }
+    agent none
 
     tools {
         // ... tell Jenkins what java version, maven version or other tools are required ...
@@ -43,6 +39,7 @@ pipeline {
 
     stages {
         stage('Initialization') {
+            agent { label 'ubuntu && s390x' }
             steps {
                 echo 'Building branch ' + env.BRANCH_NAME
                 echo 'Using PATH ' + env.PATH
@@ -50,6 +47,7 @@ pipeline {
         }
 
         stage('Cleanup') {
+            agent { label 'ubuntu && s390x' }
             steps {
                 echo 'Cleaning up the workspace'
                 deleteDir()
@@ -57,6 +55,7 @@ pipeline {
         }
 
         stage('Checkout') {
+            agent { label 'ubuntu && s390x' }
             steps {
                 echo 'Checking out branch ' + env.BRANCH_NAME
                 checkout scm
@@ -64,6 +63,7 @@ pipeline {
         }
 
         stage('Build JDK 17') {
+            agent { label 'ubuntu' }
             tools {
                 jdk "jdk_17_latest"
             }
@@ -76,6 +76,7 @@ pipeline {
         }
 
         stage('Build JDK 11') {
+            agent { label 'ubuntu && s390x' }
             tools {
                 jdk "jdk_11_latest"
             }  
@@ -88,6 +89,7 @@ pipeline {
         }
 
         stage('Verify') {
+            agent { label 'ubuntu && s390x' }
             steps {
                 echo 'Running apache-rat:check'
                 sh 'mvn apache-rat:check'
@@ -95,6 +97,7 @@ pipeline {
         }
 
         stage('Tests') {
+            agent { label 'ubuntu && s390x' }
             steps {
                 echo 'Running tests'
                 // all tests is very very long (10 hours on Apache Jenkins)
@@ -110,6 +113,7 @@ pipeline {
         }
 
         stage('Deploy') {
+            agent { label 'ubuntu' }
             when {
                 expression {
                     env.BRANCH_NAME ==~ /(activemq-5.17.x|activemq-5.16.x|activemq-5.15.x|main)/
