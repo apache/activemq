@@ -2426,6 +2426,10 @@ public class BrokerService implements Service {
      * @throws IOException
      */
     protected Broker addInterceptors(Broker broker) throws Exception {
+        if (isAdvisorySupport()) {
+            // AMQ-9187 - the AdvisoryBroker must be after the SchedulerBroker
+            broker = new AdvisoryBroker(broker);
+        }
         if (isSchedulerSupport()) {
             SchedulerBroker sb = new SchedulerBroker(this, broker, getJobSchedulerStore());
             sb.setMaxRepeatAllowed(maxSchedulerRepeatAllowed);
@@ -2451,9 +2455,6 @@ public class BrokerService implements Service {
                 throw IOExceptionSupport.create("Status MBean could not be registered in JMX: "
                         + e.getMessage(), e);
             }
-        }
-        if (isAdvisorySupport()) {
-            broker = new AdvisoryBroker(broker);
         }
         broker = new CompositeDestinationBroker(broker);
         broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
