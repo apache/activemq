@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.replica;
 
+import org.apache.activemq.broker.BrokerStoppedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,13 +44,17 @@ public class ReplicaEventRetrier {
             } catch (Exception e) {
                 logger.info("Caught exception while processing a replication event.", e);
                 try {
-                    int sleepInterval = Math.min((int)(INITIAL_SLEEP_RETRY_INTERVAL_MS * Math.pow(2.0, attemptNumber)),
+                    int sleepInterval = Math.min((int) (INITIAL_SLEEP_RETRY_INTERVAL_MS * Math.pow(2.0, attemptNumber)),
                             MAX_SLEEP_RETRY_INTERVAL_MS);
                     attemptNumber++;
                     logger.info("Retry attempt number {}. Sleeping for {} ms.", attemptNumber, sleepInterval);
                     Thread.sleep(sleepInterval);
-                } catch (InterruptedException ex) {
-                    logger.error("Retry sleep interrupted: {}", ex.toString());
+                } catch (BrokerStoppedException bse) {
+                    logger.error("The broker has been stopped");
+                    return;
+                } catch (InterruptedException ie) {
+                    logger.error("Retry sleep interrupted: {}", ie.toString());
+                    return;
                 }
             }
         }

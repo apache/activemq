@@ -38,7 +38,7 @@ class ReplicationMessageProducer {
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final LongSequenceGenerator eventMessageIdGenerator = new LongSequenceGenerator();
-
+    
     ReplicationMessageProducer(ReplicaInternalMessageProducer replicaInternalMessageProducer,
             ReplicaReplicationQueueSupplier queueProvider) {
         this.replicaInternalMessageProducer = replicaInternalMessageProducer;

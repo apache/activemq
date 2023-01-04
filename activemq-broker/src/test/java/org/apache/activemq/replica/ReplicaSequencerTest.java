@@ -58,20 +58,17 @@ public class ReplicaSequencerTest {
     private final ConnectionContext connectionContext = mock(ConnectionContext.class);
     private final Broker broker = mock(Broker.class);
     private final ReplicaReplicationQueueSupplier queueProvider = mock(ReplicaReplicationQueueSupplier.class);
+    private final ReplicaInternalMessageProducer replicaInternalMessageProducer = mock(ReplicaInternalMessageProducer.class);
     private final ReplicationMessageProducer replicationMessageProducer = mock(ReplicationMessageProducer.class);
 
     private ReplicaSequencer sequencer;
 
     private final ActiveMQQueue intermediateQueueDestination = new ActiveMQQueue(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
     private final ActiveMQQueue mainQueueDestination = new ActiveMQQueue(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+    private final ActiveMQQueue sequenceQueueDestination = new ActiveMQQueue(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
     private final Queue intermediateQueue = mock(Queue.class);
     private final Queue mainQueue = mock(Queue.class);
-
-    private final File brokerDataDirectory = new File(IOHelper.getDefaultDataDirectory());
-    private final File storageDirectory = new File(brokerDataDirectory, ReplicaSupport.REPLICATION_PLUGIN_STORAGE_DIRECTORY);
-
-    private final String storageName = "source_sequence";
-    private final ReplicaStorage replicaStorage = new ReplicaStorage(storageName);
+    private final Queue sequenceQueue = mock(Queue.class);
 
     private final ConsumerId consumerId = new ConsumerId("2:2:2:2");
     private final ConsumerInfo consumerInfo = new ConsumerInfo(consumerId);
@@ -92,39 +89,34 @@ public class ReplicaSequencerTest {
 
         when(queueProvider.getIntermediateQueue()).thenReturn(intermediateQueueDestination);
         when(queueProvider.getMainQueue()).thenReturn(mainQueueDestination);
+        when(queueProvider.getSequenceQueue()).thenReturn(sequenceQueueDestination);
 
         when(broker.getDestinations(intermediateQueueDestination)).thenReturn(Set.of(intermediateQueue));
         when(broker.getDestinations(mainQueueDestination)).thenReturn(Set.of(mainQueue));
+        when(broker.getDestinations(sequenceQueueDestination)).thenReturn(Set.of(sequenceQueue));
 
         ConnectionContext adminConnectionContext = mock(ConnectionContext.class);
         when(adminConnectionContext.copy()).thenReturn(connectionContext);
         when(broker.getAdminConnectionContext()).thenReturn(adminConnectionContext);
-
-        when(brokerService.getBrokerDataDirectory()).thenReturn(brokerDataDirectory);
 
         when(mainSubscription.getConsumerInfo()).thenReturn(consumerInfo);
         when(mainQueue.getConsumers()).thenReturn(List.of(mainSubscription));
 
         when(intermediateSubscription.getConsumerInfo()).thenReturn(consumerInfo);
         when(broker.addConsumer(any(), any()))
-                .thenReturn(intermediateSubscription);
+                .thenAnswer(a -> a.<ConsumerInfo>getArgument(1).getConsumerId().toString().contains("Sequencer")
+                        ? intermediateSubscription : mock(PrefetchSubscription.class));
 
-        sequencer = new ReplicaSequencer(broker, queueProvider, replicationMessageProducer);
+        sequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer, replicationMessageProducer);
         sequencer.initialize();
 
-        replicaStorage.initialize(storageDirectory);
     }
 
     @Test
     public void restoreSequenceWhenStorageDoesNotExist() throws Exception {
         sequencer.sequence = null;
 
-        File storage = new File(storageDirectory, storageName);
-        if (storage.exists()) {
-            assertThat(storage.delete()).isTrue();
-        }
-
-        sequencer.restoreSequence(intermediateQueue);
+        sequencer.restoreSequence(null, intermediateQueue);
 
         assertThat(sequencer.sequence).isNull();
     }
@@ -134,11 +126,10 @@ public class ReplicaSequencerTest {
         sequencer.sequence = null;
 
         MessageId messageId = new MessageId("1:0:0:1");
-        replicaStorage.write("1#" + messageId);
 
         when(intermediateQueue.getAllMessageIds()).thenReturn(List.of());
 
-        sequencer.restoreSequence(intermediateQueue);
+        sequencer.restoreSequence("1#" + messageId, intermediateQueue);
 
         assertThat(sequencer.sequence).isEqualTo(1);
     }
@@ -148,11 +139,10 @@ public class ReplicaSequencerTest {
         sequencer.sequence = null;
 
         MessageId messageId = new MessageId("1:0:0:1");
-        replicaStorage.write("1#" + messageId);
 
         when(intermediateQueue.getAllMessageIds()).thenReturn(List.of(new MessageId("1:0:0:2")));
 
-        sequencer.restoreSequence(intermediateQueue);
+        sequencer.restoreSequence("1#" + messageId, intermediateQueue);
 
         assertThat(sequencer.sequence).isEqualTo(1);
     }
@@ -508,7 +498,7 @@ public class ReplicaSequencerTest {
         assertThat(messageAck.getMessageCount()).isEqualTo(1);
         assertThat(messageAck.getLastMessageId()).isEqualTo(messageId3);
 
-        verify(broker).addConsumer(any(), any());
+        verify(broker, times(2)).addConsumer(any(), any());
         verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any());
 
         ArgumentCaptor<String> selectorArgumentCaptor = ArgumentCaptor.forClass(String.class);

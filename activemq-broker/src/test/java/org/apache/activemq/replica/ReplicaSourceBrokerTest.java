@@ -97,11 +97,12 @@ public class ReplicaSourceBrokerTest {
         source.start();
 
         ArgumentCaptor<ActiveMQDestination> destinationArgumentCaptor = ArgumentCaptor.forClass(ActiveMQDestination.class);
-        verify(broker, times(2)).addDestination(eq(connectionContext), destinationArgumentCaptor.capture(), anyBoolean());
+        verify(broker, times(3)).addDestination(eq(connectionContext), destinationArgumentCaptor.capture(), anyBoolean());
 
         List<ActiveMQDestination> replicationDestinations = destinationArgumentCaptor.getAllValues();
         assertThat(replicationDestinations.get(0).getPhysicalName()).isEqualTo(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
         assertThat(replicationDestinations.get(1).getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
+        assertThat(replicationDestinations.get(2).getPhysicalName()).isEqualTo(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
     }
 
     @Test
@@ -117,7 +118,7 @@ public class ReplicaSourceBrokerTest {
         source.start();
 
         ArgumentCaptor<ActiveMQDestination> destinationArgumentCaptor = ArgumentCaptor.forClass(ActiveMQDestination.class);
-        verify(broker, times(3)).addDestination(eq(connectionContext), destinationArgumentCaptor.capture(), anyBoolean());
+        verify(broker, times(4)).addDestination(eq(connectionContext), destinationArgumentCaptor.capture(), anyBoolean());
 
         List<ActiveMQDestination> destinations = destinationArgumentCaptor.getAllValues();
 
@@ -127,7 +128,10 @@ public class ReplicaSourceBrokerTest {
         ActiveMQDestination intermediateReplicationDestination = destinations.get(1);
         assertThat(intermediateReplicationDestination.getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
 
-        ActiveMQDestination precreatedDestination = destinations.get(2);
+        ActiveMQDestination sequenceReplicationDestination = destinations.get(2);
+        assertThat(sequenceReplicationDestination.getPhysicalName()).isEqualTo(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+
+        ActiveMQDestination precreatedDestination = destinations.get(3);
         assertThat(precreatedDestination).isEqualTo(testDestination);
     }
 
@@ -139,7 +143,7 @@ public class ReplicaSourceBrokerTest {
         source.addDestination(connectionContext, advisoryTopic, true);
 
         ArgumentCaptor<ActiveMQDestination> destinationArgumentCaptor = ArgumentCaptor.forClass(ActiveMQDestination.class);
-        verify(broker, times(3)).addDestination(eq(connectionContext), destinationArgumentCaptor.capture(), anyBoolean());
+        verify(broker, times(4)).addDestination(eq(connectionContext), destinationArgumentCaptor.capture(), anyBoolean());
 
         List<ActiveMQDestination> destinations = destinationArgumentCaptor.getAllValues();
 
@@ -149,7 +153,10 @@ public class ReplicaSourceBrokerTest {
         ActiveMQDestination intermediateReplicationDestination = destinations.get(1);
         assertThat(intermediateReplicationDestination.getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
 
-        ActiveMQDestination advisoryTopicDestination = destinations.get(2);
+        ActiveMQDestination sequenceReplicationDestination = destinations.get(2);
+        assertThat(sequenceReplicationDestination.getPhysicalName()).isEqualTo(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+
+        ActiveMQDestination advisoryTopicDestination = destinations.get(3);
         assertThat(advisoryTopicDestination).isEqualTo(advisoryTopic);
 
         verify(broker, never()).send(any(), any());

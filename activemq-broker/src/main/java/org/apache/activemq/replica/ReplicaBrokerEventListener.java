@@ -24,13 +24,10 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.MessageReferenceFilter;
-import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.Queue;
-import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -38,11 +35,7 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.util.IdGenerator;
-import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,67 +57,36 @@ import static java.util.Objects.requireNonNull;
 public class ReplicaBrokerEventListener implements MessageListener {
 
     private static final String REPLICATION_CONSUMER_CLIENT_ID = "DUMMY_REPLICATION_CONSUMER";
-    private static final String REPLICATION_SEQUENCE_CONSUMER_CLIENT_ID = "DUMMY_REPLICATION_SEQUENCE_CONSUMER";
+    private static final String SEQUENCE_NAME = "replicaSeq";
     private final Logger logger = LoggerFactory.getLogger(ReplicaBrokerEventListener.class);
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final Broker broker;
     private final ConnectionContext connectionContext;
-    private ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
 
-    private final LongSequenceGenerator localTransactionIdGenerator = new LongSequenceGenerator();
-
-    private Queue sequenceQueue;
-    private final ProducerId replicationProducerId = new ProducerId();
-    private final LongSequenceGenerator eventMessageIdGenerator = new LongSequenceGenerator();
-    private PrefetchSubscription subscription;
     private final PeriodAcknowledge acknowledgeCallback;
-
+    final ReplicaSequenceStorage sequenceStorage;
     BigInteger sequence;
+    MessageId sequenceMessageId;
 
     ReplicaBrokerEventListener(Broker broker, ReplicaReplicationQueueSupplier queueProvider, PeriodAcknowledge acknowledgeCallback) {
         this.broker = requireNonNull(broker);
         this.acknowledgeCallback = requireNonNull(acknowledgeCallback);
         connectionContext = broker.getAdminConnectionContext().copy();
-        this.queueProvider = queueProvider;
         connectionContext.setUserName(ReplicaSupport.REPLICATION_PLUGIN_USER_NAME);
+        connectionContext.setClientId(REPLICATION_CONSUMER_CLIENT_ID);
+        connectionContext.setConnection(new DummyConnection());
         replicaInternalMessageProducer = new ReplicaInternalMessageProducer(broker, connectionContext);
 
         createTransactionMapIfNotExist();
 
-        replicationProducerId.setConnectionId(new IdGenerator().generateId());
+        this.sequenceStorage = new ReplicaSequenceStorage(broker, connectionContext,
+                queueProvider, replicaInternalMessageProducer, SEQUENCE_NAME);
     }
 
     public void initialize() throws Exception {
-        sequenceQueue = broker.getDestinations(queueProvider.getSequenceQueue()).stream().findFirst()
-                .map(DestinationExtractor::extractQueue).orElseThrow();
-
-        ConnectionContext connectionContext = broker.getAdminConnectionContext().copy();
-        connectionContext.setClientId(REPLICATION_SEQUENCE_CONSUMER_CLIENT_ID);
-        connectionContext.setConnection(new DummyConnection());
-
-        ConnectionId connectionId = new ConnectionId(new IdGenerator("ReplicationPlugin.ReplicaSequence").generateId());
-        SessionId sessionId = new SessionId(connectionId, new LongSequenceGenerator().getNextSequenceId());
-        ConsumerId consumerId = new ConsumerId(sessionId, new LongSequenceGenerator().getNextSequenceId());
-        ConsumerInfo consumerInfo = new ConsumerInfo();
-        consumerInfo.setConsumerId(consumerId);
-        consumerInfo.setPrefetchSize(10);
-        consumerInfo.setDestination(queueProvider.getSequenceQueue());
-        subscription = (PrefetchSubscription) broker.addConsumer(connectionContext, consumerInfo);
-
-        List<MessageId> allMessageIds = sequenceQueue.getAllMessageIds();
-        if (allMessageIds.size() == 0) {
-            return;
-        }
-
-        if (allMessageIds.size() > 1) {
-            for (int i = 0; i < allMessageIds.size() - 1; i++) {
-                sequenceQueue.removeMessage(allMessageIds.get(i).toString());
-            }
-        }
-        QueueMessageReference message = sequenceQueue.getMessage(allMessageIds.get(0).toString());
-        String text = ((ActiveMQTextMessage) message.getMessage()).getText();
-        sequence = new BigInteger(text);
+        String savedSequence = sequenceStorage.initialize();
+        sequence = savedSequence == null ? null : new BigInteger(savedSequence);
     }
 
     @Override
@@ -149,7 +111,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
             if (tid == null) {
                 tid = new LocalTransactionId(
                         new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
-                        localTransactionIdGenerator.getNextSequenceId());
+                        ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
 
                 broker.beginTransaction(connectionContext, tid);
 
@@ -165,33 +127,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 }
 
                 if (commit) {
-                    List<MessageReference> dispatched = subscription.getDispatched();
-
-                    if (dispatched.size() > 0) {
-                        ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
-                        consumerExchange.setConnectionContext(connectionContext);
-                        consumerExchange.setSubscription(subscription);
-
-                        MessageAck ack = new MessageAck();
-                        ack.setFirstMessageId(dispatched.get(0).getMessageId());
-                        ack.setLastMessageId(dispatched.get(dispatched.size() - 1).getMessageId());
-                        ack.setMessageCount(dispatched.size());
-                        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-                        ack.setDestination(queueProvider.getSequenceQueue());
-
-                        broker.acknowledge(consumerExchange, ack);
-                    }
-
-                    ActiveMQTextMessage seqMessage = new ActiveMQTextMessage();
-                    seqMessage.setText(sequence.toString());
-                    seqMessage.setTransactionId(tid);
-                    seqMessage.setDestination(queueProvider.getSequenceQueue());
-                    seqMessage.setMessageId(new MessageId(replicationProducerId, eventMessageIdGenerator.getNextSequenceId()));
-                    seqMessage.setProducerId(replicationProducerId);
-                    seqMessage.setPersistent(true);
-                    seqMessage.setResponseRequired(false);
-
-                    replicaInternalMessageProducer.sendIgnoringFlowControl(seqMessage);
+                    sequenceStorage.enqueue(tid, sequence.toString());
 
                     broker.commitTransaction(connectionContext, tid, true);
                 }
@@ -210,15 +146,23 @@ public class ReplicaBrokerEventListener implements MessageListener {
         BigInteger newSequence = new BigInteger(message.getStringProperty(ReplicaSupport.SEQUENCE_PROPERTY));
 
         long sequenceDifference = sequence == null ? 0 : newSequence.subtract(sequence).longValue();
+        MessageId messageId = message.getMessageId();
         if (sequence == null || sequenceDifference == 1) {
             processMessage(message, eventType, deserializedData, transactionId);
 
             sequence = newSequence;
+            sequenceMessageId = messageId;
 
         } else if (sequenceDifference > 0) {
             throw new IllegalStateException(String.format(
                     "Replication event is out of order. Current sequence: %s, the sequence of the event: %s",
                     sequence, newSequence));
+        } else if (sequenceDifference < 0) {
+            logger.info("Replication message duplicate.");
+        } else if (!sequenceMessageId.equals(messageId)) {
+            throw new IllegalStateException(String.format(
+                    "Replication event is out of order. Current sequence %s belongs to message with id %s," +
+                            "but the id of the event is %s", sequence, sequenceMessageId, messageId));
         }
     }
 
@@ -446,10 +390,10 @@ public class ReplicaBrokerEventListener implements MessageListener {
             ConnectionContext context = connectionContext.copy();
             context.setClientId(clientId);
             context.setConnection(new DummyConnection());
-            DurableTopicSubscription subscription = (DurableTopicSubscription) broker.addConsumer(context, consumerInfo);
+            DurableTopicSubscription durableTopicSubscription = (DurableTopicSubscription) broker.addConsumer(context, consumerInfo);
             // We don't want to keep it active to be able to connect to it on the other side when needed
             // but we want to have keepDurableSubsActive to be able to acknowledge
-            subscription.deactivate(true, 0);
+            durableTopicSubscription.deactivate(true, 0);
         } catch (Exception e) {
             logger.error("Unable to replicate add durable consumer [{}]", consumerInfo, e);
             throw e;
@@ -483,17 +427,13 @@ public class ReplicaBrokerEventListener implements MessageListener {
         MessageAck messageAck = new MessageAck();
         try {
 
-            ConnectionContext context = connectionContext.copy();
-            context.setClientId(REPLICATION_CONSUMER_CLIENT_ID);
-            context.setConnection(new DummyConnection());
-
             ConsumerInfo consumerInfo = null;
             if (destination.isQueue()) {
                 consumerInfo = new ConsumerInfo();
                 consumerInfo.setConsumerId(ack.getConsumerId());
                 consumerInfo.setPrefetchSize(0);
                 consumerInfo.setDestination(destination);
-                broker.addConsumer(context, consumerInfo);
+                broker.addConsumer(connectionContext, consumerInfo);
             }
 
             for (String messageId : messageIdsToAck) {
@@ -515,7 +455,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
             broker.acknowledge(consumerBrokerExchange, messageAck);
 
             if (consumerInfo != null) {
-                broker.removeConsumer(context, consumerInfo);
+                broker.removeConsumer(connectionContext, consumerInfo);
             }
         } catch (Exception e) {
             logger.error("Unable to ack messages [{} <-> {}] for consumer {}",

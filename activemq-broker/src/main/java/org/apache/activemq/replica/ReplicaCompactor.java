@@ -50,8 +50,6 @@ public class ReplicaCompactor {
     private static final String CONSUMER_SELECTOR = String.format("%s LIKE '%s'", ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK);
     public static final int MAXIMUM_MESSAGES = 1_000;
 
-    private final LongSequenceGenerator localTransactionIdGenerator = new LongSequenceGenerator();
-
     private final Broker broker;
     private final ConnectionContext connectionContext;
     private final ReplicaReplicationQueueSupplier queueProvider;
@@ -139,7 +137,7 @@ public class ReplicaCompactor {
     private void acknowledge(List<DeliveredMessageId> list) throws Exception {
         TransactionId transactionId = new LocalTransactionId(
                 new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
-                localTransactionIdGenerator.getNextSequenceId());
+                ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
 
         synchronized (ReplicaSupport.INTERMEDIATE_QUEUE_MUTEX) {
             broker.beginTransaction(connectionContext, transactionId);

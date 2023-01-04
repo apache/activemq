@@ -17,6 +17,7 @@
 package org.apache.activemq.replica;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.util.LongSequenceGenerator;
 
 import java.util.Set;
 import java.util.UUID;
@@ -28,6 +29,8 @@ public class ReplicaSupport {
     }
 
     public static final String REPLICATION_PLUGIN_CONNECTION_ID = "replicationID" + UUID.randomUUID();
+
+    public static final LongSequenceGenerator LOCAL_TRANSACTION_ID_GENERATOR = new LongSequenceGenerator();
 
     public static final String MAIN_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Queue";
     public static final String INTERMEDIATE_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Intermediate.Queue";
@@ -57,5 +60,9 @@ public class ReplicaSupport {
 
     public static boolean isMainReplicationQueue(ActiveMQDestination destination) {
         return MAIN_REPLICATION_QUEUE_NAME.equals(destination.getPhysicalName());
+    }
+
+    public static boolean isIntermediateReplicationQueue(ActiveMQDestination destination) {
+        return INTERMEDIATE_REPLICATION_QUEUE_NAME.equals(destination.getPhysicalName());
     }
 }

@@ -191,7 +191,7 @@ public class ReplicaBrokerEventListenerTest {
 
         listener.onMessage(replicaEventMessage);
 
-        verify(broker, times(2)).getAdminConnectionContext();
+        verify(broker).getAdminConnectionContext();
         ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
         verify(broker, times(2)).send(any(), messageArgumentCaptor.capture());
 
@@ -539,7 +539,7 @@ public class ReplicaBrokerEventListenerTest {
 
         listener.onMessage(replicaEventMessage);
 
-        verify(broker, times(2)).getAdminConnectionContext();
+        verify(broker).getAdminConnectionContext();
         ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
         verify(broker, times(2)).send(any(), messageArgumentCaptor.capture());
 
@@ -594,7 +594,7 @@ public class ReplicaBrokerEventListenerTest {
 
         listener.onMessage(replicaEventMessage);
 
-        verify(broker, times(2)).getAdminConnectionContext();
+        verify(broker).getAdminConnectionContext();
         ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
         verify(broker, times(2)).send(any(), messageArgumentCaptor.capture());
 
