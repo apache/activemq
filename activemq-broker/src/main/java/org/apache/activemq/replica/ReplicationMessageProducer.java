@@ -35,18 +35,18 @@ class ReplicationMessageProducer {
     private final ProducerId replicationProducerId = new ProducerId();
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
     private final ReplicaReplicationQueueSupplier queueProvider;
-    private final Object sendingMutex = new Object();
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final LongSequenceGenerator eventMessageIdGenerator = new LongSequenceGenerator();
 
-    ReplicationMessageProducer(ReplicaInternalMessageProducer replicaInternalMessageProducer, ReplicaReplicationQueueSupplier queueProvider) {
+    ReplicationMessageProducer(ReplicaInternalMessageProducer replicaInternalMessageProducer,
+            ReplicaReplicationQueueSupplier queueProvider) {
         this.replicaInternalMessageProducer = replicaInternalMessageProducer;
         this.queueProvider = queueProvider;
         replicationProducerId.setConnectionId(idGenerator.generateId());
     }
 
     void enqueueReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event) throws Exception {
-        synchronized (sendingMutex) {
+        synchronized (ReplicaSupport.INTERMEDIATE_QUEUE_MUTEX) {
             logger.debug("Replicating {} event", event.getEventType());
             logger.trace("Replicating {} event: data:\n{}\nproperties:{}", event.getEventType(), new Object() {
                 @Override
@@ -63,15 +63,14 @@ class ReplicationMessageProducer {
             eventMessage.setType("ReplicaEvent");
             eventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
             eventMessage.setMessageId(new MessageId(replicationProducerId, eventMessageIdGenerator.getNextSequenceId()));
-            eventMessage.setDestination(queueProvider.get());
+            eventMessage.setDestination(queueProvider.getIntermediateQueue());
             eventMessage.setProducerId(replicationProducerId);
             eventMessage.setResponseRequired(false);
             eventMessage.setContent(event.getEventData());
             eventMessage.setProperties(event.getReplicationProperties());
             eventMessage.setTransactionId(event.getTransactionId());
-            replicaInternalMessageProducer.produceToReplicaQueue(connectionContext, eventMessage);
+            replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, eventMessage);
         }
     }
-
 }
 

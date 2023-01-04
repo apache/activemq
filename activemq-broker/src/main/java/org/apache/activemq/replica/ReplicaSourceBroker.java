@@ -41,6 +41,7 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.security.SecurityContext;
+import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,13 +62,18 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
     static final String REPLICATION_PLUGIN_CONNECTION_ID = "replicationID" + UUID.randomUUID();
     private static final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
 
+    private final ReplicaSequencer replicaSequencer;
+    private final ReplicaReplicationQueueSupplier queueProvider;
     private final URI transportConnectorUri;
 
     final DestinationMap destinationsToReplicate = new DestinationMap();
     private final LongSequenceGenerator localTransactionIdGenerator = new LongSequenceGenerator();
 
-    public ReplicaSourceBroker(Broker next, URI transportConnectorUri) {
-        super(next);
+    public ReplicaSourceBroker(Broker next, ReplicationMessageProducer replicationMessageProducer,
+            ReplicaSequencer replicaSequencer, ReplicaReplicationQueueSupplier queueProvider, URI transportConnectorUri) {
+        super(next, replicationMessageProducer);
+        this.replicaSequencer = replicaSequencer;
+        this.queueProvider = queueProvider;
         this.transportConnectorUri = Objects.requireNonNull(transportConnectorUri, "Need replication transport connection URI for this broker");
     }
 
@@ -75,7 +81,9 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
     public void start() throws Exception {
         TransportConnector transportConnector = next.getBrokerService().addConnector(transportConnectorUri);
         transportConnector.setName(REPLICATION_CONNECTOR_NAME);
+        queueProvider.initialize();
         super.start();
+        replicaSequencer.initialize();
         ensureDestinationsAreReplicated();
     }
 
@@ -88,7 +96,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
     }
 
     private void replicateDestinationCreation(ConnectionContext context, ActiveMQDestination destination) {
-        if (destinationsToReplicate.get(destination) != null) {
+        if (destinationsToReplicate.chooseValue(destination) != null) {
             return;
         }
 
@@ -99,16 +107,14 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
                             .setEventType(ReplicaEventType.DESTINATION_UPSERT)
                             .setEventData(eventSerializer.serializeReplicationData(destination))
             );
-            if (destinationsToReplicate.chooseValue(destination) == null) {
-                destinationsToReplicate.put(destination, IS_REPLICATED);
-            }
+            destinationsToReplicate.put(destination, IS_REPLICATED);
         } catch (Exception e) {
             logger.error("Failed to replicate creation of destination {}", destination.getPhysicalName(), e);
         }
     }
 
     private boolean shouldReplicateDestination(ActiveMQDestination destination) {
-        boolean isReplicationQueue = isReplicationQueue(destination);
+        boolean isReplicationQueue = ReplicaSupport.isReplicationQueue(destination);
         boolean isAdvisoryDestination = isAdvisoryDestination(destination);
         boolean isTemporaryDestination = destination.isTemporary();
         boolean shouldReplicate = !isReplicationQueue && !isAdvisoryDestination && !isTemporaryDestination;
@@ -122,10 +128,6 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     private boolean isAdvisoryDestination(ActiveMQDestination destination) {
         return destination.getPhysicalName().startsWith(AdvisorySupport.ADVISORY_TOPIC_PREFIX);
-    }
-
-    private boolean isReplicationQueue(ActiveMQDestination destination) {
-        return ReplicaSupport.REPLICATION_QUEUE_NAME.equals(destination.getPhysicalName());
     }
 
     private boolean isReplicatedDestination(ActiveMQDestination destination) {
@@ -154,7 +156,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         if (isReplicaContext(connectionContext)) {
             return false;
         }
-        if (isReplicationQueue(message.getDestination())) {
+        if (ReplicaSupport.isReplicationQueue(message.getDestination())) {
             return false;
         }
         if (message.getDestination().isTemporary()) {
@@ -346,7 +348,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
     }
 
     protected void assertAuthorized(ConnectionContext context, ActiveMQDestination destination) {
-        boolean replicationQueue = isReplicationQueue(destination);
+        boolean replicationQueue = ReplicaSupport.isReplicationQueue(destination);
         boolean replicationTransport = isReplicationTransport(context.getConnector());
 
         if (isSystemBroker(context)) {
@@ -450,7 +452,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         if (isReplicaContext(connectionContext)) {
             return false;
         }
-        if (isReplicationQueue(ack.getDestination())) {
+        if (ReplicaSupport.isReplicationQueue(ack.getDestination())) {
             return false;
         }
         if (ack.getDestination().isTemporary()) {
@@ -484,6 +486,11 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     @Override
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
+        if (ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME.equals(ack.getDestination().getPhysicalName())) {
+            replicaSequencer.acknowledge(consumerExchange, ack);
+            return;
+        }
+
         ConnectionContext connectionContext = consumerExchange.getConnectionContext();
 
         PrefetchSubscription subscription = getDestinations(ack.getDestination()).stream().findFirst()

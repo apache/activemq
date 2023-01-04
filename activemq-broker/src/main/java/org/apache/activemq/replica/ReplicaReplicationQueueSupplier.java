@@ -25,59 +25,76 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
-public class ReplicaReplicationQueueSupplier implements Supplier<ActiveMQQueue> {
+public class ReplicaReplicationQueueSupplier {
 
     private final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
     private final CountDownLatch initializationLatch = new CountDownLatch(1);
-    private ActiveMQQueue replicationQueue = null; // memoized
+    private ActiveMQQueue mainReplicationQueue = null; // memoized
+    private ActiveMQQueue intermediateReplicationQueue = null; // memoized
     private final Broker broker;
 
     public ReplicaReplicationQueueSupplier(final Broker broker) {
         this.broker = requireNonNull(broker);
     }
 
-    @Override
-    public ActiveMQQueue get() {
+    public ActiveMQQueue getMainQueue() {
         try {
             if (initializationLatch.await(1L, TimeUnit.MINUTES)) {
-                return requireNonNull(replicationQueue);
+                return requireNonNull(mainReplicationQueue);
             }
         } catch (InterruptedException e) {
-            throw new ActiveMQReplicaException("Interrupted while waiting for replication queue initialization", e);
+            throw new ActiveMQReplicaException("Interrupted while waiting for main replication queue initialization", e);
         }
-        throw new ActiveMQReplicaException("Timed out waiting for replication queue initialization");
+        throw new ActiveMQReplicaException("Timed out waiting for main replication queue initialization");
+    }
+    public ActiveMQQueue getIntermediateQueue() {
+        try {
+            if (initializationLatch.await(1L, TimeUnit.MINUTES)) {
+                return requireNonNull(intermediateReplicationQueue);
+            }
+        } catch (InterruptedException e) {
+            throw new ActiveMQReplicaException("Interrupted while waiting for intermediate replication queue initialization", e);
+        }
+        throw new ActiveMQReplicaException("Timed out waiting for intermediate replication queue initialization");
     }
 
     public void initialize() {
         try {
-            replicationQueue = getOrCreateReplicationQueue();
+            mainReplicationQueue = getOrCreateMainReplicationQueue();
+            intermediateReplicationQueue = getOrCreateIntermediateReplicationQueue();
         } catch (Exception e) {
-            logger.error("Could not obtain replication queue", e);
-            throw new ActiveMQReplicaException("Failed to get or create replication queue");
+            logger.error("Could not obtain replication queues", e);
+            throw new ActiveMQReplicaException("Failed to get or create replication queues");
         }
         initializationLatch.countDown();
     }
 
-    private ActiveMQQueue getOrCreateReplicationQueue() throws Exception {
+    private ActiveMQQueue getOrCreateMainReplicationQueue() throws Exception {
+        return getOrCreateQueue(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+    }
+
+    private ActiveMQQueue getOrCreateIntermediateReplicationQueue() throws Exception {
+        return getOrCreateQueue(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
+    }
+
+    private ActiveMQQueue getOrCreateQueue(String replicationQueueName) throws Exception {
         Optional<ActiveMQDestination> existingReplicationQueue = broker.getDurableDestinations()
-            .stream()
-            .filter(ActiveMQDestination::isQueue)
-            .filter(d -> ReplicaSupport.REPLICATION_QUEUE_NAME.equals(d.getPhysicalName()))
-            .findFirst();
+                .stream()
+                .filter(ActiveMQDestination::isQueue)
+                .filter(d -> replicationQueueName.equals(d.getPhysicalName()))
+                .findFirst();
         if (existingReplicationQueue.isPresent()) {
             logger.debug("Existing replication queue {}", existingReplicationQueue.get().getPhysicalName());
             return new ActiveMQQueue(existingReplicationQueue.get().getPhysicalName());
         } else {
-            String mirrorQueueName = ReplicaSupport.REPLICATION_QUEUE_NAME;
-            ActiveMQQueue newReplicationQueue = new ActiveMQQueue(mirrorQueueName);
+            ActiveMQQueue newReplicationQueue = new ActiveMQQueue(replicationQueueName);
             broker.getBrokerService().getBroker().addDestination(
-                broker.getAdminConnectionContext(),
-                newReplicationQueue,
-                false
+                    broker.getAdminConnectionContext(),
+                    newReplicationQueue,
+                    false
             );
             logger.debug("Created replication queue {}", newReplicationQueue.getPhysicalName());
             return newReplicationQueue;

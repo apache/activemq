@@ -29,8 +29,8 @@ public class ReplicaSchedulerSourceBroker extends ReplicaSourceBaseBroker {
 
     private static final Logger logger = LoggerFactory.getLogger(ReplicaSchedulerSourceBroker.class);
 
-    public ReplicaSchedulerSourceBroker(Broker next) {
-        super(next);
+    public ReplicaSchedulerSourceBroker(Broker next, ReplicationMessageProducer replicationMessageProducer) {
+        super(next, replicationMessageProducer);
     }
 
     @Override

@@ -42,7 +42,9 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
+import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -55,12 +57,15 @@ import static java.util.Objects.requireNonNull;
 
 public class ReplicaBrokerEventListener implements MessageListener {
 
-    public static final String REPLICATION_CONSUMER_CLIENT_ID = "DUMMY_REPLICATION_CONSUMER";
+    private static final String REPLICATION_CONSUMER_CLIENT_ID = "DUMMY_REPLICATION_CONSUMER";
     private final Logger logger = LoggerFactory.getLogger(ReplicaBrokerEventListener.class);
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final Broker broker;
     private final ConnectionContext connectionContext;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
+    private final ReplicaStorage replicaStorage;
+
+    BigInteger sequence;
 
     private final int INITIAL_SLEEP_RETRY_INTERVAL_MS = 10;
     private final int MAX_SLEEP_RETRY_INTERVAL_MS = 10000;
@@ -70,6 +75,22 @@ public class ReplicaBrokerEventListener implements MessageListener {
         connectionContext = broker.getAdminConnectionContext().copy();
         connectionContext.setUserName(ReplicaSupport.REPLICATION_PLUGIN_USER_NAME);
         replicaInternalMessageProducer = new ReplicaInternalMessageProducer(broker, connectionContext);
+        replicaStorage = new ReplicaStorage("replica_sequence");
+    }
+
+    public void initialize() throws IOException {
+        replicaStorage.initialize(new File(broker.getBrokerService().getBrokerDataDirectory(),
+                ReplicaSupport.REPLICATION_PLUGIN_STORAGE_DIRECTORY));
+
+        restoreSequence();
+    }
+
+    private void restoreSequence() throws IOException {
+        String line = replicaStorage.read();
+        if (line == null) {
+            return;
+        }
+        sequence = new BigInteger(line);
     }
 
     @Override
@@ -79,15 +100,32 @@ public class ReplicaBrokerEventListener implements MessageListener {
         ByteSequence messageContent = message.getContent();
 
         try {
+            BigInteger newSequence = new BigInteger(message.getStringProperty(ReplicaSupport.SEQUENCE_PROPERTY));
             Object deserializedData = eventSerializer.deserializeMessageData(messageContent);
-            getEventType(message).ifPresent(eventType -> {
                 long attemptNumber = 0;
                 boolean isProcessed = false;
                 while (!isProcessed) {
                     try {
-                        isProcessed = processMessage(message, eventType, deserializedData);
+                        if (sequence == null || newSequence.subtract(sequence).longValue() == 1) {
+                            Optional<ReplicaEventType> eventType = getEventType(message);
+                            if (eventType.isPresent()) {
+                                isProcessed = processMessage(message, eventType.get(), deserializedData);
+                            }
+                            sequence = newSequence;
+
+                            try {
+                                replicaStorage.write(sequence.toString());
+                            } catch (IOException e) {
+                                logger.error("Could not write replica sequence to disk", e);
+                            }
+                        } else if (newSequence.compareTo(sequence) > 0
+                                && newSequence.subtract(sequence).longValue() != 1) {
+                            throw new IllegalStateException(String.format(
+                                    "Replication event is out of order. Current sequence: %s, the sequence of the event: %s",
+                                    sequence, newSequence));
+                        }
                     } catch (Exception e) {
-                        logger.info("Caught exception {} while processing message {}.", e.toString(), message.toString());
+                        logger.info("Caught exception {} while processing message {}.", e, message);
                         try {
                             int sleepInterval = Math.min((int)(INITIAL_SLEEP_RETRY_INTERVAL_MS * Math.pow(2.0, attemptNumber)), MAX_SLEEP_RETRY_INTERVAL_MS);
                             attemptNumber++;
@@ -98,7 +136,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                         }
                     }
                 }
-            });
+
             message.acknowledge();
         } catch (IOException | ClassCastException e) {
             logger.error("Failed to deserialize replication message (id={}), {}", message.getMessageId(), new String(messageContent.data), e);
@@ -241,7 +279,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 message.setTransactionId(null); // remove transactionId as it has been already handled on source broker
             }
             removeScheduledMessageProperties(message);
-            replicaInternalMessageProducer.produceToReplicaQueue(message);
+            replicaInternalMessageProducer.sendIgnoringFlowControl(message);
         } catch (Exception e) {
             logger.error("Failed to process message {} with JMS message id: {}", message.getMessageId(), message.getJMSMessageID(), e);
             throw e;
@@ -396,7 +434,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 broker.removeConsumer(context, consumerInfo);
             }
         } catch (Exception e) {
-            logger.error("Unable to ack messages ack messages [{} <-> {}] for consumer {}",
+            logger.error("Unable to ack messages [{} <-> {}] for consumer {}",
                     ack.getFirstMessageId(),
                     ack.getLastMessageId(),
                     ack.getConsumerId(), e);

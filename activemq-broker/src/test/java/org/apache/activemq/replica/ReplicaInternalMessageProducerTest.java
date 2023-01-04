@@ -49,7 +49,7 @@ public class ReplicaInternalMessageProducerTest {
         ActiveMQMessage message = new ActiveMQMessage();
         message.setMessageId(messageId);
 
-        producer.produceToReplicaQueue(message);
+        producer.sendIgnoringFlowControl(message);
 
         ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
         verify(broker).send(any(), messageArgumentCaptor.capture());

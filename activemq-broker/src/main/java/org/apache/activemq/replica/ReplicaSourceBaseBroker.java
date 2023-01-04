@@ -23,24 +23,19 @@ import org.apache.activemq.broker.ConnectionContext;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class ReplicaSourceBaseBroker extends BrokerFilter {
-    final ReplicaReplicationQueueSupplier queueProvider;
-    private ReplicationMessageProducer replicationMessageProducer;
+    private final ReplicationMessageProducer replicationMessageProducer;
     protected final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
 
     private final AtomicBoolean initialized = new AtomicBoolean();
 
-    ReplicaSourceBaseBroker(Broker next) {
+    ReplicaSourceBaseBroker(Broker next, ReplicationMessageProducer replicationMessageProducer) {
         super(next);
-        queueProvider = new ReplicaReplicationQueueSupplier(next);
+        this.replicationMessageProducer = replicationMessageProducer;
     }
 
     @Override
     public void start() throws Exception {
-        queueProvider.initialize();
         initialized.compareAndSet(false, true);
-
-        ReplicaInternalMessageProducer replicaInternalMessageProducer = new ReplicaInternalMessageProducer(next, getAdminConnectionContext());
-        replicationMessageProducer = new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
         super.start();
     }
 

@@ -16,16 +16,33 @@
  */
 package org.apache.activemq.replica;
 
+import org.apache.activemq.command.ActiveMQDestination;
+
+import java.util.Set;
+
 public class ReplicaSupport {
 
     private ReplicaSupport() {
         // Intentionally hidden
     }
 
-    public static final String REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Queue";
+    public static final String MAIN_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Queue";
+    public static final String INTERMEDIATE_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Intermediate.Queue";
     public static final String REPLICATION_PLUGIN_USER_NAME = "replication_plugin";
 
     public static final String TRANSACTION_ONE_PHASE_PROPERTY = "TRANSACTION_ONE_PHASE_PROPERTY";
     public static final String CLIENT_ID_PROPERTY = "CLIENT_ID_PROPERTY";
     public static final String MESSAGE_IDS_PROPERTY = "MESSAGE_IDS_PROPERTY";
+    public static final String SEQUENCE_PROPERTY = "SEQUENCE_PROPERTY";
+
+    public static final Object INTERMEDIATE_QUEUE_MUTEX = new Object();
+
+    public static final String REPLICATION_PLUGIN_STORAGE_DIRECTORY = "replication_plugin";
+
+    private static final Set<String> REPLICATION_QUEUE_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
+            INTERMEDIATE_REPLICATION_QUEUE_NAME);
+
+    public static boolean isReplicationQueue(ActiveMQDestination destination) {
+        return REPLICATION_QUEUE_NAMES.contains(destination.getPhysicalName());
+    }
 }

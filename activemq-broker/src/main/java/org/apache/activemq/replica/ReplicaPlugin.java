@@ -49,28 +49,37 @@ public class ReplicaPlugin extends BrokerPluginSupport {
     @Override
     public Broker installPlugin(final Broker broker) {
         logger.info("{} installed, running as {}", ReplicaPlugin.class.getName(), role);
-        Broker replicaBrokerFilter = createReplicaPluginBrokerFilter(broker);
         if (role == ReplicaRole.replica) {
-            return replicaBrokerFilter;
+            return new ReplicaBroker(broker, otherBrokerConnectionFactory);
         }
-        final MutableBrokerFilter scheduledBroker = (MutableBrokerFilter) broker.getAdaptor(SchedulerBroker.class);
-        if (scheduledBroker != null) {
-            scheduledBroker.setNext(new ReplicaSchedulerSourceBroker(scheduledBroker.getNext()));
-        }
-        return replicaBrokerFilter;
-    }
 
-    private Broker createReplicaPluginBrokerFilter(Broker broker) {
+        ReplicaReplicationQueueSupplier queueProvider = new ReplicaReplicationQueueSupplier(broker);
+        ReplicaInternalMessageProducer replicaInternalMessageProducer =
+                new ReplicaInternalMessageProducer(broker);
+        ReplicationMessageProducer replicationMessageProducer =
+                new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
+        ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer);
+
+        Broker replicaBrokerFilter;
         switch (role) {
-            case replica:
-                return new ReplicaBroker(broker, otherBrokerConnectionFactory);
             case source:
-                return new ReplicaSourceBroker(broker, transportConnectorUri);
+                replicaBrokerFilter = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
+                        queueProvider, transportConnectorUri);
+                break;
             case dual:
-                return new ReplicaBroker(new ReplicaSourceBroker(broker, transportConnectorUri), otherBrokerConnectionFactory);
+                replicaBrokerFilter = new ReplicaBroker(new ReplicaSourceBroker(broker, replicationMessageProducer,
+                        replicaSequencer, queueProvider, transportConnectorUri), otherBrokerConnectionFactory);
+                break;
             default:
-                throw new IllegalArgumentException("Unknown replica role:" + role);
+                throw new IllegalArgumentException();
         }
+
+        MutableBrokerFilter scheduledBroker = (MutableBrokerFilter) broker.getAdaptor(SchedulerBroker.class);
+        if (scheduledBroker != null) {
+            scheduledBroker.setNext(new ReplicaSchedulerSourceBroker(scheduledBroker.getNext(), replicationMessageProducer));
+        }
+
+        return replicaBrokerFilter;
     }
 
     public ReplicaPlugin setRole(ReplicaRole role) {

@@ -571,7 +571,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     public List<MessageReference> getDispatched() {
         synchronized(dispatchLock) {
-            return Collections.unmodifiableList(dispatched);
+            return new ArrayList<>(dispatched);
         }
     }
 

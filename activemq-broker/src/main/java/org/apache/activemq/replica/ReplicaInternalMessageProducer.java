@@ -28,14 +28,18 @@ import static java.util.Objects.requireNonNull;
 public class ReplicaInternalMessageProducer {
 
     private final Broker broker;
-    private final ConnectionContext connectionContext;
+    private ConnectionContext connectionContext;
 
-    ReplicaInternalMessageProducer(final Broker broker, final ConnectionContext connectionContext) {
+    ReplicaInternalMessageProducer(Broker broker) {
+        this.broker = requireNonNull(broker);
+    }
+
+    ReplicaInternalMessageProducer(Broker broker, ConnectionContext connectionContext) {
         this.broker = requireNonNull(broker);
         this.connectionContext = requireNonNull(connectionContext);
     }
 
-    void produceToReplicaQueue(final ConnectionContext connectionContext, final ActiveMQMessage eventMessage) throws Exception {
+    void sendIgnoringFlowControl(ConnectionContext connectionContext, ActiveMQMessage eventMessage) throws Exception {
         if (connectionContext != null) {
             sendIgnoringFlowControl(eventMessage, connectionContext);
             return;
@@ -43,8 +47,8 @@ public class ReplicaInternalMessageProducer {
         sendIgnoringFlowControl(eventMessage, this.connectionContext);
     }
 
-    void produceToReplicaQueue(final ActiveMQMessage eventMessage) throws Exception {
-        produceToReplicaQueue(this.connectionContext, eventMessage);
+    void sendIgnoringFlowControl(ActiveMQMessage eventMessage) throws Exception {
+        sendIgnoringFlowControl(this.connectionContext, eventMessage);
     }
 
     private void sendIgnoringFlowControl(ActiveMQMessage eventMessage, ConnectionContext connectionContext) throws Exception {

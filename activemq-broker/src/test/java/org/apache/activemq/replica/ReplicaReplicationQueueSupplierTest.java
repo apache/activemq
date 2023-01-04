@@ -24,6 +24,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,22 +55,26 @@ public class ReplicaReplicationQueueSupplierTest {
     public void canCreateQueue() throws Exception {
         supplier.initialize();
 
-        ActiveMQQueue activeMQQueue = supplier.get();
-        assertThat(activeMQQueue.getPhysicalName()).isEqualTo(ReplicaSupport.REPLICATION_QUEUE_NAME);
+        ActiveMQQueue activeMQQueue = supplier.getMainQueue();
+        assertThat(activeMQQueue.getPhysicalName()).isEqualTo(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
 
         verify(broker).addDestination(eq(connectionContext), eq(activeMQQueue), eq(false));
     }
 
     @Test
     public void notCreateQueueIfExists() throws Exception {
-        ActiveMQQueue replicationQueue = new ActiveMQQueue(ReplicaSupport.REPLICATION_QUEUE_NAME);
+        ActiveMQQueue mainReplicationQueue = new ActiveMQQueue(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+        ActiveMQQueue intermediateReplicationQueue = new ActiveMQQueue(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
 
-        when(broker.getDurableDestinations()).thenReturn(Collections.singleton(replicationQueue));
+        when(broker.getDurableDestinations()).thenReturn(Set.of(mainReplicationQueue, intermediateReplicationQueue));
 
         supplier.initialize();
 
-        ActiveMQQueue activeMQQueue = supplier.get();
-        assertThat(activeMQQueue).isEqualTo(replicationQueue);
+        ActiveMQQueue activeMQQueue = supplier.getMainQueue();
+        assertThat(activeMQQueue).isEqualTo(mainReplicationQueue);
+
+        activeMQQueue = supplier.getIntermediateQueue();
+        assertThat(activeMQQueue).isEqualTo(intermediateReplicationQueue);
 
         verify(broker, never()).addDestination(any(), any(), anyBoolean());
     }
