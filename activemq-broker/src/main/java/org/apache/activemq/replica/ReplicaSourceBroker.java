@@ -281,6 +281,11 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
         Subscription subscription = super.addConsumer(context, consumerInfo);
         replicateAddConsumer(context, consumerInfo);
+
+        if (ReplicaSupport.isMainReplicationQueue(consumerInfo.getDestination())) {
+            replicaSequencer.updateMainQueueConsumerStatus();
+        }
+
         return subscription;
     }
 
@@ -314,6 +319,9 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
     public void removeConsumer(ConnectionContext context, ConsumerInfo consumerInfo) throws Exception {
         super.removeConsumer(context, consumerInfo);
         replicateRemoveConsumer(context, consumerInfo);
+        if (ReplicaSupport.isMainReplicationQueue(consumerInfo.getDestination())) {
+            replicaSequencer.updateMainQueueConsumerStatus();
+        }
     }
 
     private void replicateRemoveConsumer(ConnectionContext context, ConsumerInfo consumerInfo) {

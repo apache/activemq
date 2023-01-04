@@ -66,6 +66,7 @@ public class ReplicaSequencer implements Task {
 
     private PrefetchSubscription subscription;
     private ConsumerId consumerId;
+    private boolean hasConsumer;
 
     BigInteger sequence = BigInteger.ZERO;
     MessageId recoveryMessageId;
@@ -278,6 +279,10 @@ public class ReplicaSequencer implements Task {
                 return;
             }
         }
+
+        if (!hasConsumer) {
+            return;
+        }
         List<List<MessageReference>> batches = batches(toProcess);
 
         MessageId lastProcessedMessageId = null;
@@ -329,6 +334,15 @@ public class ReplicaSequencer implements Task {
 
         if (recoveryMessage != null) {
             recoveryMessageId = null;
+        }
+    }
+
+    void updateMainQueueConsumerStatus() {
+        if (!hasConsumer && !mainQueue.getConsumers().isEmpty()) {
+            hasConsumer = !mainQueue.getConsumers().isEmpty();
+            asyncWakeup();
+        } else {
+            hasConsumer = !mainQueue.getConsumers().isEmpty();
         }
     }
 

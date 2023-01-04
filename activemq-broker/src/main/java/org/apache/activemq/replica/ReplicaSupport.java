@@ -52,4 +52,8 @@ public class ReplicaSupport {
     public static boolean isReplicationQueue(ActiveMQDestination destination) {
         return REPLICATION_QUEUE_NAMES.contains(destination.getPhysicalName());
     }
+
+    public static boolean isMainReplicationQueue(ActiveMQDestination destination) {
+        return MAIN_REPLICATION_QUEUE_NAME.equals(destination.getPhysicalName());
+    }
 }

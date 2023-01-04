@@ -40,6 +40,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -47,6 +48,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -112,6 +114,7 @@ public class ReplicaSequencerTest {
         sequencer.initialize();
 
         replicaStorage.initialize(storageDirectory);
+        sequencer.updateMainQueueConsumerStatus();
     }
 
     @Test
@@ -548,6 +551,56 @@ public class ReplicaSequencerTest {
 
         verify(broker).commitTransaction(any(), any(), eq(true));
     }
+
+
+    @Test
+    public void donotSendToMainQueueifNoConsumer() throws Exception {
+        when(mainQueue.getConsumers()).thenReturn(Collections.emptyList());
+        sequencer.updateMainQueueConsumerStatus();
+
+        MessageId messageId1 = new MessageId("1:0:0:1");
+        MessageId messageId2 = new MessageId("1:0:0:2");
+        MessageId messageId3 = new MessageId("1:0:0:3");
+
+        String messageIdToAck = "2:1";
+
+        ActiveMQMessage message1 = new ActiveMQMessage();
+        message1.setMessageId(messageId1);
+        message1.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        message1.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, messageIdToAck);
+        ActiveMQMessage message2 = new ActiveMQMessage();
+        message2.setMessageId(messageId2);
+        message2.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage message3 = new ActiveMQMessage();
+        message3.setMessageId(messageId3);
+        message3.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        message3.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(messageIdToAck));
+
+        when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3)));
+
+        sequencer.recoveryMessageId = null;
+
+        sequencer.iterateSend();
+
+        ArgumentCaptor<MessageAck> ackCaptor = ArgumentCaptor.forClass(MessageAck.class);
+        verify(broker, times(2)).acknowledge(any(), ackCaptor.capture());
+
+        List<MessageAck> values = ackCaptor.getAllValues();
+        MessageAck messageAck = values.get(0);
+        assertThat(messageAck.getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(messageAck.getMessageCount()).isEqualTo(1);
+        assertThat(messageAck.getLastMessageId()).isEqualTo(messageId1);
+        messageAck = values.get(1);
+        assertThat(messageAck.getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(messageAck.getMessageCount()).isEqualTo(1);
+        assertThat(messageAck.getLastMessageId()).isEqualTo(messageId3);
+
+        verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any());
+    }
+
 
     private static class DummyMessageReference implements MessageReference {
 
