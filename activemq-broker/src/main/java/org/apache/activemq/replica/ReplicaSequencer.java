@@ -17,7 +17,6 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.IdGenerator;
@@ -25,16 +24,13 @@ import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
 import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -42,20 +38,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ReplicaSequencer implements Task {
+public class ReplicaSequencer {
     private static final Logger logger = LoggerFactory.getLogger(ReplicaSequencer.class);
 
     private static final String SOURCE_CONSUMER_CLIENT_ID = "DUMMY_SOURCE_CONSUMER";
-    public static final int ITERATE_PERIOD = 5_000;
+    public static final int ITERATE_SEND_PERIOD = 5_000;
 
     private final Broker broker;
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicationMessageProducer replicationMessageProducer;
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
 
-    private final Object iteratingMutex = new Object();
-    private final AtomicLong pendingWakeups = new AtomicLong();
-    private final AtomicLong pendingTriggeredWakeups = new AtomicLong();
+    private final Object ackIteratingMutex = new Object();
+    private final Object sendIteratingMutex = new Object();
+    private final AtomicLong pendingAckWakeups = new AtomicLong();
+    private final AtomicLong pendingSendWakeups = new AtomicLong();
+    private final AtomicLong pendingSendTriggeredWakeups = new AtomicLong();
     final Set<String> deliveredMessages = new HashSet<>();
     final LinkedList<String> messageToAck = new LinkedList<>();
     private final ReplicaStorage replicaStorage;
@@ -64,7 +62,8 @@ public class ReplicaSequencer implements Task {
     private final LongSequenceGenerator localTransactionIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator sessionIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator customerIdGenerator = new LongSequenceGenerator();
-    private TaskRunner taskRunner;
+    private TaskRunner ackTaskRunner;
+    private TaskRunner sendTaskRunner;
     private Queue mainQueue;
     private ConnectionContext connectionContext;
 
@@ -86,13 +85,14 @@ public class ReplicaSequencer implements Task {
         this.replicaStorage = new ReplicaStorage("source_sequence");
         this.replicaAckHelper = new ReplicaAckHelper(broker);
 
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::asyncWakeup,
-                ITERATE_PERIOD, ITERATE_PERIOD, TimeUnit.MILLISECONDS);
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::asyncSendWakeup,
+                ITERATE_SEND_PERIOD, ITERATE_SEND_PERIOD, TimeUnit.MILLISECONDS);
     }
 
     void initialize() throws Exception {
         TaskRunnerFactory taskRunnerFactory = broker.getBrokerService().getTaskRunnerFactory();
-        taskRunner = taskRunnerFactory.createTaskRunner(this, "ReplicationPlugin.Sequencer");
+        ackTaskRunner = taskRunnerFactory.createTaskRunner(this::iterateAck, "ReplicationPlugin.Sequencer.Ack");
+        sendTaskRunner = taskRunnerFactory.createTaskRunner(this::iterateSend, "ReplicationPlugin.Sequencer.Send");
 
         Queue intermediateQueue = broker.getDestinations(queueProvider.getIntermediateQueue()).stream().findFirst()
                 .map(DestinationExtractor::extractQueue).orElseThrow();
@@ -104,12 +104,12 @@ public class ReplicaSequencer implements Task {
         connectionContext.setConnection(new DummyConnection() {
             @Override
             public void dispatchAsync(Command command) {
-                asyncWakeup();
+                asyncSendWakeup();
             }
 
             @Override
             public void dispatchSync(Command message) {
-                asyncWakeup();
+                asyncSendWakeup();
             }
         });
         if (connectionContext.getTransactions() == null) {
@@ -133,7 +133,7 @@ public class ReplicaSequencer implements Task {
         restoreSequence(intermediateQueue);
 
         initialized.compareAndSet(false, true);
-        asyncWakeup();
+        asyncSendWakeup();
     }
 
     void restoreSequence(Queue intermediateQueue) throws Exception {
@@ -172,53 +172,55 @@ public class ReplicaSequencer implements Task {
         synchronized (messageToAck) {
             messageIds.forEach(messageToAck::addLast);
         }
-        asyncWakeup();
+        asyncAckWakeup();
     }
 
-    void asyncWakeup() {
+    void asyncAckWakeup() {
         try {
-            long l = pendingWakeups.incrementAndGet();
+            pendingAckWakeups.incrementAndGet();
+            ackTaskRunner.wakeup();
+        } catch (InterruptedException e) {
+            logger.warn("Async task runner failed to wakeup ", e);
+        }
+    }
+
+    void asyncSendWakeup() {
+        try {
+            long l = pendingSendWakeups.incrementAndGet();
             if (l % ReplicaBatcher.MAX_BATCH_LENGTH == 0) {
-                pendingTriggeredWakeups.incrementAndGet();
-                taskRunner.wakeup();
-                pendingWakeups.addAndGet(-ReplicaBatcher.MAX_BATCH_LENGTH);
+                pendingSendTriggeredWakeups.incrementAndGet();
+                sendTaskRunner.wakeup();
+                pendingSendWakeups.addAndGet(-ReplicaBatcher.MAX_BATCH_LENGTH);
                 return;
             }
 
-            if (System.currentTimeMillis() - lastProcessTime.get() > ITERATE_PERIOD) {
-                pendingTriggeredWakeups.incrementAndGet();
-                taskRunner.wakeup();
+            if (System.currentTimeMillis() - lastProcessTime.get() > ITERATE_SEND_PERIOD) {
+                pendingSendTriggeredWakeups.incrementAndGet();
+                sendTaskRunner.wakeup();
             }
 
             if (!hasConsumer) {
-                pendingTriggeredWakeups.incrementAndGet();
-                taskRunner.wakeup();
+                pendingSendTriggeredWakeups.incrementAndGet();
+                sendTaskRunner.wakeup();
             }
         } catch (InterruptedException e) {
             logger.warn("Async task runner failed to wakeup ", e);
         }
     }
 
-    @Override
-    public boolean iterate() {
-        synchronized (iteratingMutex) {
-            lastProcessTime.set(System.currentTimeMillis());
-            if (!initialized.get()) {
-                return false;
-            }
+    boolean iterateAck() {
+        synchronized (ackIteratingMutex) {
+            iterateAck0();
 
-            iterateAck();
-            iterateSend();
-
-            if (pendingTriggeredWakeups.get() > 0) {
-                pendingTriggeredWakeups.decrementAndGet();
+            if (pendingAckWakeups.get() > 0) {
+                pendingAckWakeups.decrementAndGet();
             }
         }
 
-        return pendingTriggeredWakeups.get() > 0;
+        return pendingAckWakeups.get() > 0;
     }
 
-    void iterateAck() {
+    private void iterateAck0() {
         MessageAck ack = new MessageAck();
         List<String> messages;
         synchronized (messageToAck) {
@@ -263,7 +265,24 @@ public class ReplicaSequencer implements Task {
         }
     }
 
-    void iterateSend() {
+    boolean iterateSend() {
+        synchronized (sendIteratingMutex) {
+            lastProcessTime.set(System.currentTimeMillis());
+            if (!initialized.get()) {
+                return false;
+            }
+
+            iterateSend0();
+
+            if (pendingSendTriggeredWakeups.get() > 0) {
+                pendingSendTriggeredWakeups.decrementAndGet();
+            }
+        }
+
+        return pendingSendTriggeredWakeups.get() > 0;
+    }
+
+    private void iterateSend0() {
         List<MessageReference> dispatched = subscription.getDispatched();
         List<MessageReference> toProcess = new ArrayList<>();
 
@@ -301,7 +320,7 @@ public class ReplicaSequencer implements Task {
                 return;
             }
             if (!hasConsumer) {
-                asyncWakeup();
+                asyncSendWakeup();
                 return;
             }
         }
@@ -374,7 +393,7 @@ public class ReplicaSequencer implements Task {
         try {
             if (!hasConsumer && !mainQueue.getConsumers().isEmpty()) {
                 hasConsumer = true;
-                asyncWakeup();
+                asyncSendWakeup();
             } else if (hasConsumer && mainQueue.getConsumers().isEmpty()) {
                 hasConsumer = false;
             }

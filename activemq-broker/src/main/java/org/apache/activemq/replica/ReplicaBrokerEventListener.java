@@ -49,8 +49,6 @@ import org.slf4j.LoggerFactory;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
-
-import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;

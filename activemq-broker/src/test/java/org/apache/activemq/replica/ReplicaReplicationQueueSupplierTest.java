@@ -23,17 +23,6 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
