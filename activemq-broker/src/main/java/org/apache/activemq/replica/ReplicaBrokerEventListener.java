@@ -30,7 +30,6 @@ import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerId;
@@ -81,11 +80,13 @@ public class ReplicaBrokerEventListener implements MessageListener {
     private final ProducerId replicationProducerId = new ProducerId();
     private final LongSequenceGenerator eventMessageIdGenerator = new LongSequenceGenerator();
     private PrefetchSubscription subscription;
+    private final PeriodAcknowledge<Void> acknowledgeCallback;
 
     BigInteger sequence;
 
-    ReplicaBrokerEventListener(Broker broker, ReplicaReplicationQueueSupplier queueProvider) {
+    ReplicaBrokerEventListener(Broker broker, ReplicaReplicationQueueSupplier queueProvider, PeriodAcknowledge<Void> acknowledgeCallback) {
         this.broker = requireNonNull(broker);
+        this.acknowledgeCallback = requireNonNull(acknowledgeCallback);
         connectionContext = broker.getAdminConnectionContext().copy();
         this.queueProvider = queueProvider;
         connectionContext.setUserName(ReplicaSupport.REPLICATION_PLUGIN_USER_NAME);
@@ -138,6 +139,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
 
             message.acknowledge();
         } catch (JMSException e) {
+            acknowledgeCallback.setSafeToAck(false);
             logger.error("Failed to acknowledge replication message (id={})", message.getMessageId());
         }
     }

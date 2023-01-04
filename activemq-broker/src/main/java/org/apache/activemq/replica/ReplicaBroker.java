@@ -19,14 +19,18 @@ package org.apache.activemq.replica;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageConsumer;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.MessageDispatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.JMSException;
+import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -40,16 +44,21 @@ public class ReplicaBroker extends BrokerFilter {
 
     private final Logger logger = LoggerFactory.getLogger(ReplicaBroker.class);
     private final ScheduledExecutorService brokerConnectionPoller = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService periodicAckPoller = Executors.newSingleThreadScheduledExecutor();
     private final AtomicBoolean isConnecting = new AtomicBoolean();
     private final AtomicReference<ActiveMQConnection> connection = new AtomicReference<>();
     private final AtomicReference<ActiveMQSession> connectionSession = new AtomicReference<>();
     private final AtomicReference<ActiveMQMessageConsumer> eventConsumer = new AtomicReference<>();
-    private ReplicaReplicationQueueSupplier queueProvider;
+    private final ReplicaReplicationQueueSupplier queueProvider;
     private final ActiveMQConnectionFactory replicaSourceConnectionFactory;
+    private final long replicaAckPeriod;
+    private final PeriodAcknowledge<Void> periodAcknowledgeCallBack;
 
-    public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ActiveMQConnectionFactory replicaSourceConnectionFactory) {
+    public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ActiveMQConnectionFactory replicaSourceConnectionFactory, final long replicaAckPeriod) {
         super(next);
         this.queueProvider = queueProvider;
+        this.replicaAckPeriod = replicaAckPeriod;
+        this.periodAcknowledgeCallBack = new PeriodAcknowledge<>(replicaAckPeriod);
         this.replicaSourceConnectionFactory = requireNonNull(replicaSourceConnectionFactory, "Need connection details of replica source for this broker");
         requireNonNull(replicaSourceConnectionFactory.getBrokerURL(), "Need connection URI of replica source for this broker");
         validateUser(replicaSourceConnectionFactory);
@@ -69,6 +78,15 @@ public class ReplicaBroker extends BrokerFilter {
         super.start();
         queueProvider.initializeSequenceQueue();
         brokerConnectionPoller.scheduleAtFixedRate(this::beginReplicationIdempotent, 5, 5, TimeUnit.SECONDS);
+        periodicAckPoller.scheduleAtFixedRate(() -> {
+            synchronized (periodAcknowledgeCallBack) {
+                try {
+                    periodAcknowledgeCallBack.call();
+                } catch (Exception e) {
+                    logger.error("Failed to Acknowledge replication Queue message {}", e.getMessage());
+                }
+            }
+        }, replicaAckPeriod, replicaAckPeriod, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -109,9 +127,10 @@ public class ReplicaBroker extends BrokerFilter {
             logger.debug("Trying to connect to replica source");
             try {
                 establishConnection();
-                ActiveMQSession session = (ActiveMQSession) connection.get().createSession(false, ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE);
+                ActiveMQSession session = (ActiveMQSession) connection.get().createSession(false, ActiveMQSession.CLIENT_ACKNOWLEDGE);
                 session.setAsyncDispatch(false); // force the primary broker to block if we are slow
                 connectionSession.set(session);
+                periodAcknowledgeCallBack.setConnectionSession(session);
             } catch (RuntimeException | JMSException e) {
                 logger.warn("Failed to establish connection to replica", e);
             } finally {
@@ -138,6 +157,7 @@ public class ReplicaBroker extends BrokerFilter {
         ActiveMQConnection newConnection = (ActiveMQConnection) replicaSourceConnectionFactory.createConnection();
         newConnection.start();
         connection.set(newConnection);
+        periodAcknowledgeCallBack.setConnection(newConnection);
         logger.debug("Established connection to replica source: {}", replicaSourceConnectionFactory.getBrokerURL());
     }
 
@@ -155,11 +175,25 @@ public class ReplicaBroker extends BrokerFilter {
                         MessageFormat.format("There is no replication queue on the source broker {0}", replicaSourceConnectionFactory.getBrokerURL())
                 ));
         logger.info("Plugin will mirror events from queue {}", replicationSourceQueue.getPhysicalName());
-        ReplicaBrokerEventListener messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider);
+        ReplicaBrokerEventListener messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider, periodAcknowledgeCallBack);
         messageListener.initialize();
-        eventConsumer.set((ActiveMQMessageConsumer)
-                connectionSession.get().createConsumer(replicationSourceQueue, messageListener)
-        );
+        ActiveMQPrefetchPolicy prefetchPolicy = connection.get().getPrefetchPolicy();
+        Method getNextConsumerId = ActiveMQSession.class.getDeclaredMethod("getNextConsumerId");
+        getNextConsumerId.setAccessible(true);
+        eventConsumer.set(new ActiveMQMessageConsumer(connectionSession.get(), (ConsumerId) getNextConsumerId.invoke(connectionSession.get()), replicationSourceQueue, null, null, prefetchPolicy.getQueuePrefetch(),
+                prefetchPolicy.getMaximumPendingMessageLimit(), false, false, connectionSession.get().isAsyncDispatch(), messageListener) {
+            @Override
+            public void dispatch(MessageDispatch md) {
+                synchronized (periodAcknowledgeCallBack) {
+                    super.dispatch(md);
+                    try {
+                        periodAcknowledgeCallBack.call();
+                    } catch (Exception e) {
+                        logger.error("Failed to acknowledge replication message [{}]", e);
+                    }
+                }
+            }
+        });
     }
 
 

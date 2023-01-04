@@ -60,7 +60,7 @@ public class ReplicaSequencer implements Task {
     final LinkedList<String> messageToAck = new LinkedList<>();
     private final ReplicaStorage replicaStorage;
     ReplicaCompactor replicaCompactor;
-
+    private final ReplicaAckHelper replicaAckHelper;
     private final LongSequenceGenerator localTransactionIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator sessionIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator customerIdGenerator = new LongSequenceGenerator();
@@ -84,6 +84,7 @@ public class ReplicaSequencer implements Task {
         this.queueProvider = queueProvider;
         this.replicationMessageProducer = replicationMessageProducer;
         this.replicaStorage = new ReplicaStorage("source_sequence");
+        this.replicaAckHelper = new ReplicaAckHelper(broker);
 
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::asyncWakeup,
                 ITERATE_PERIOD, ITERATE_PERIOD, TimeUnit.MILLISECONDS);
@@ -157,16 +158,15 @@ public class ReplicaSequencer implements Task {
 
     @SuppressWarnings("unchecked")
     void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
-        PrefetchSubscription subscription = mainQueue.getConsumers().stream()
-                .filter(c -> c.getConsumerInfo().getConsumerId().equals(ack.getConsumerId()))
-                .filter(PrefetchSubscription.class::isInstance)
-                .map(PrefetchSubscription.class::cast)
-                .findFirst().orElseThrow();
-        MessageReference reference = subscription.getDispatched().stream()
-                .filter(mr -> mr.getMessageId().equals(ack.getLastMessageId()))
-                .findFirst().orElseThrow();
+        List<MessageReference> messagesToAck = replicaAckHelper.getMessagesToAck(ack, mainQueue);
 
-        List<String> messageIds = (List<String>) reference.getMessage().getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY);
+        if (messagesToAck == null || messagesToAck.isEmpty()) {
+            throw new IllegalStateException("Could not find messages for ack");
+        }
+        List<String> messageIds = new ArrayList<>();
+        for (MessageReference reference : messagesToAck) {
+            messageIds.addAll((List<String>) reference.getMessage().getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY));
+        }
 
         broker.acknowledge(consumerExchange, ack);
         synchronized (messageToAck) {

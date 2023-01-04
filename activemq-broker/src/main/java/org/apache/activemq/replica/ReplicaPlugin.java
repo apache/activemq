@@ -17,6 +17,7 @@
 package org.apache.activemq.replica;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.MutableBrokerFilter;
@@ -41,6 +42,8 @@ public class ReplicaPlugin extends BrokerPluginSupport {
     protected ReplicaRole role = ReplicaRole.source;
     protected ActiveMQConnectionFactory otherBrokerConnectionFactory = new ActiveMQConnectionFactory();
     protected URI transportConnectorUri = null;
+    protected int prefetchLimit = 1000;
+    protected long replicaAckPeriod = 10000;
 
     public ReplicaPlugin() {
         super();
@@ -52,8 +55,11 @@ public class ReplicaPlugin extends BrokerPluginSupport {
 
         ReplicaReplicationQueueSupplier queueProvider = new ReplicaReplicationQueueSupplier(broker);
 
+        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+        prefetchPolicy.setAll(prefetchLimit);
+        otherBrokerConnectionFactory.setPrefetchPolicy(prefetchPolicy);
         if (role == ReplicaRole.replica) {
-            return new ReplicaBroker(broker, queueProvider, otherBrokerConnectionFactory);
+            return new ReplicaBroker(broker, queueProvider, otherBrokerConnectionFactory, replicaAckPeriod);
         }
         ReplicaInternalMessageProducer replicaInternalMessageProducer =
                 new ReplicaInternalMessageProducer(broker);
@@ -69,7 +75,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
                 break;
             case dual:
                 replicaBrokerFilter = new ReplicaBroker(new ReplicaSourceBroker(broker, replicationMessageProducer,
-                        replicaSequencer, queueProvider, transportConnectorUri), queueProvider, otherBrokerConnectionFactory);
+                        replicaSequencer, queueProvider, transportConnectorUri), queueProvider, otherBrokerConnectionFactory, replicaAckPeriod);
                 break;
             default:
                 throw new IllegalArgumentException();
@@ -111,7 +117,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         otherBrokerConnectionFactory.setBrokerURL(
             uri.toLowerCase().startsWith("failover:(")
                 ? uri
-                : "failover:("+uri+")"
+                : "failover:("+ uri +")"
         );
     }
 
@@ -129,6 +135,19 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         otherBrokerConnectionFactory.setUserName(userName);
     }
 
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setPrefetchLimit(int limit) {
+        this.prefetchLimit = limit;
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setReplicaAckPeriod(long ackPeriod) {
+        this.replicaAckPeriod = ackPeriod;
+    }
     /**
      * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
      */
