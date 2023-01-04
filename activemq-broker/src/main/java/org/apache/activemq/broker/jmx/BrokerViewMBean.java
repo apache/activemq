@@ -92,7 +92,7 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("Number of messages that have been sent to the broker.")
     long getTotalEnqueueCount();
 
-    @MBeanInfo("Number of messages that have been acknowledged on the broker.")
+    @MBeanInfo("Number of messages that have been acknowledged or discarded on the broker.")
     long getTotalDequeueCount();
 
     @MBeanInfo("Number of message consumers subscribed to destinations on the broker.")

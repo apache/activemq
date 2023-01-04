@@ -68,6 +68,7 @@ public class AmqpConfiguredMaxConnectionsTest extends AmqpClientTestSupport {
         }
 
         assertEquals(MAX_CONNECTIONS, getProxyToBroker().getCurrentConnectionsCount());
+        assertEquals(Long.valueOf(0l), Long.valueOf(getProxyToConnectionView(getConnectorScheme()).getMaxConnectionExceededCount()));
 
         try {
             AmqpConnection connection = trackConnection(client.createConnection());
@@ -78,12 +79,17 @@ public class AmqpConfiguredMaxConnectionsTest extends AmqpClientTestSupport {
         }
 
         assertEquals(MAX_CONNECTIONS, getProxyToBroker().getCurrentConnectionsCount());
+        assertEquals(Long.valueOf(1l), Long.valueOf(getProxyToConnectionView(getConnectorScheme()).getMaxConnectionExceededCount()));
 
         for (AmqpConnection connection : connections) {
             connection.close();
         }
 
         assertEquals(0, getProxyToBroker().getCurrentConnectionsCount());
+
+        // Confirm reset statistics
+        getProxyToConnectionView(getConnectorScheme()).resetStatistics();
+        assertEquals(Long.valueOf(0l), Long.valueOf(getProxyToConnectionView(getConnectorScheme()).getMaxConnectionExceededCount()));
     }
 
     @Override

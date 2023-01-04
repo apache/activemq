@@ -54,7 +54,7 @@ public class ConnectorView implements ConnectorViewMBean {
      */
     @Override
     public void resetStatistics() {
-        connector.getStatistics().reset();
+        connector.resetStatistics();
     }
 
     /**
@@ -135,5 +135,15 @@ public class ConnectorView implements ConnectorViewMBean {
     @Override
     public boolean isAllowLinkStealingEnabled() {
         return this.connector.isAllowLinkStealing();
+    }
+
+    @Override
+    public long getMaxConnectionExceededCount() {
+        return this.connector.getMaxConnectionExceededCount();
+    }
+
+    @Override
+    public boolean isStarted() {
+        return this.connector.isStarted();
     }
 }

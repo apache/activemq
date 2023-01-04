@@ -526,10 +526,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     @Override
     public void messageConsumed(ConnectionContext context, MessageReference messageReference) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
-            String msg = "Unable to display message.";
-
-            msg = messageReference.getMessage().toString();
-
+            String msg = messageReference.getMessage().toString();
             LOG.info("Message consumed: {}", msg);
         }
         super.messageConsumed(context, messageReference);
@@ -538,22 +535,25 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     @Override
     public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
-            String msg = "Unable to display message.";
-
-            msg = messageReference.getMessage().toString();
-
+            String msg = messageReference.getMessage().toString();
             LOG.info("Message delivered: {}", msg);
         }
         super.messageDelivered(context, messageReference);
     }
 
     @Override
+    public void messageDispatched(ConnectionContext context,  Subscription sub, MessageReference messageReference) {
+        if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
+            String msg = messageReference.getMessage().toString();
+            LOG.info("Message dispatched: {}", msg);
+        }
+        super.messageDispatched(context, sub, messageReference);
+    }
+
+    @Override
     public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         if (isLogAll() || isLogInternalEvents()) {
-            String msg = "Unable to display message.";
-
-            msg = messageReference.getMessage().toString();
-
+            String msg = messageReference.getMessage().toString();
             LOG.info("Message discarded: {}", msg);
         }
         super.messageDiscarded(context, sub, messageReference);

@@ -29,6 +29,7 @@ import org.apache.activemq.transport.util.TextWireFormat;
 public abstract class HttpTransportSupport extends TransportThreadSupport {
     private static final int DEFAULT_PROXY_PORT = 8080;
     private static final String PROPERTY_PROXY_HOST = "proxyHost";
+    private static final String PROPERTY_NON_PROXY_HOST = "nonProxyHosts";
     private static final String PROPERTY_PROXY_PORT = "proxyPort";
     private static final String PROPERTY_PROXY_USER = "proxyUser";
     private static final String PROPERTY_PROXY_PASSWORD = "proxyPassword";
@@ -36,6 +37,7 @@ public abstract class HttpTransportSupport extends TransportThreadSupport {
     private TextWireFormat textWireFormat;
     private URI remoteUrl;
     private String proxyHost;
+    private String nonProxyHosts;
     private Integer proxyPort;
     private String proxyUser;
     private String proxyPassword;
@@ -73,6 +75,14 @@ public abstract class HttpTransportSupport extends TransportThreadSupport {
 
     public void setProxyHost(String proxyHost) {
         this.proxyHost = proxyHost;
+    }
+
+    public String getNonProxyHosts() {
+        return nonProxyHosts != null ? nonProxyHosts : getSystemProperty(PROPERTY_NON_PROXY_HOST);
+    }
+
+    public void setNonProxyHosts(String nonProxyHosts) {
+        this.nonProxyHosts = nonProxyHosts;
     }
 
     public int getProxyPort() {

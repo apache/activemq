@@ -168,7 +168,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
     }
 
     public void initCombosForTestConcurrentRate() {
-        addCombinationValues("prefetchVal", new Object[]{new Integer(1), new Integer(500)});
+        addCombinationValues("prefetchVal", new Object[]{Integer.valueOf(1), Integer.valueOf(500)});
     }
 
     public void testConcurrentRate() throws Exception {

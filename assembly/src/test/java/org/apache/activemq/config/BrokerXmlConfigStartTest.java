@@ -96,6 +96,7 @@ public class BrokerXmlConfigStartTest {
         System.err.println("Broker config: " + configUrl);
         broker = BrokerFactory.createBroker(configUrl);
         broker.start();
+        broker.waitUntilStarted(5000l);
         // alive, now try connect to connect
         try {
             for (TransportConnector transport : broker.getTransportConnectors()) {

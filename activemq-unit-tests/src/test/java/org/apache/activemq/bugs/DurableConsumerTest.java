@@ -311,7 +311,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
 
     public void testPrefetchViaBrokerConfig() throws Exception {
 
-        Integer prefetchVal = new Integer(150);
+        Integer prefetchVal = Integer.valueOf(150);
         PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setDurableTopicPrefetch(prefetchVal.intValue());
         policyEntry.setPrioritizedMessages(true);

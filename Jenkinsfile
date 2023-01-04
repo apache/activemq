@@ -35,7 +35,7 @@ pipeline {
 
     options {
         // Configure an overall timeout for the build of ten hours.
-        timeout(time: 10, unit: 'HOURS')
+        timeout(time: 20, unit: 'HOURS')
         // When we have test-fails e.g. we don't need to run the remaining steps
         buildDiscarder(logRotator(numToKeepStr: '5', artifactNumToKeepStr: '5'))
         disableConcurrentBuilds()
@@ -63,10 +63,34 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build JDK 17') {
+            tools {
+                jdk "jdk_17_latest"
+            }
             steps {
-                echo 'Building'
+                echo 'Building JDK 17'
+                sh 'java -version'
+                sh 'mvn -version'
                 sh 'mvn -U -B -e clean install -DskipTests'
+            }
+        }
+
+        stage('Build JDK 11') {
+            tools {
+                jdk "jdk_11_latest"
+            }  
+            steps {
+                echo 'Building JDK 11'
+                sh 'java -version'
+                sh 'mvn -version'
+                sh 'mvn -U -B -e clean install -DskipTests'
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                echo 'Running apache-rat:check'
+                sh 'mvn apache-rat:check'
             }
         }
 

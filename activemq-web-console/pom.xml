@@ -123,7 +123,7 @@
           </supportedProjectTypes>
           <instructions>
             <Webapp-Context>activemqweb</Webapp-Context>
-            <Web-ContextPath>activemqweb</Web-ContextPath>
+            <Web-ContextPath>/activemqweb</Web-ContextPath>
             <Bundle-ClassPath>.,WEB-INF/classes</Bundle-ClassPath>
             <Embed-Directory>WEB-INF/lib</Embed-Directory>
             <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
@@ -132,7 +132,7 @@
             <Import-Package>
               org.xml.sax,
               org.xml.sax.helpers,
-              javax.xml.bind,
+              javax.xml.bind;version="[2,3)",
               javax.xml.parsers,
               javax.xml.stream,
               javax.xml.transform,

@@ -191,6 +191,15 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     void messageDelivered(ConnectionContext context, MessageReference messageReference);
 
     /**
+     * Called when message is dispatched to a consumer
+     *
+     * @param context
+     * @param sub
+     * @param messageReference
+     */
+    void messageDispatched(ConnectionContext context, Subscription sub, MessageReference messageReference);
+
+    /**
      * Called when a message is discarded - e.g. running low on memory This will
      * happen only if the policy is enabled - e.g. non durable topics
      *

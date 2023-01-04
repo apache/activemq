@@ -17,7 +17,7 @@
 package org.apache.activemq.network;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.transport.Transport;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -48,7 +49,7 @@ public class CustomBridgeFactoryTest extends BaseNetworkTest {
     /**
      * Verification of outgoing communication - from local broker (with customized bridge configured) to remote one.
      */
-    @Test
+    @Test(timeout = 10000)
     public void verifyOutgoingCommunication() throws JMSException {
         CustomNetworkBridgeFactory bridgeFactory = getCustomNetworkBridgeFactory();
         NetworkBridgeListener listener = bridgeFactory.getListener();
@@ -66,7 +67,7 @@ public class CustomBridgeFactoryTest extends BaseNetworkTest {
     /**
      * Additional test which makes sure that custom bridge receives notification about broker shutdown.
      */
-    @Test
+    @Test(timeout = 10000)
     public void verifyBrokerShutdown() {
         shutdownTest(() -> {
             try {
@@ -81,7 +82,7 @@ public class CustomBridgeFactoryTest extends BaseNetworkTest {
     /**
      * Verification of network connector shutdown.
      */
-    @Test
+    @Test(timeout = 10000)
     public void verifyConnectorShutdown() {
         shutdownTest(() -> {
             try {
@@ -143,75 +144,4 @@ public class CustomBridgeFactoryTest extends BaseNetworkTest {
     protected String getLocalBrokerURI() {
         return "org/apache/activemq/network/localBroker-custom-factory.xml";
     }
-
-    // test classes
-    static class CustomNetworkBridgeFactory implements BridgeFactory {
-
-        private final NetworkBridgeListener listener;
-
-        CustomNetworkBridgeFactory() {
-            this(Mockito.mock(NetworkBridgeListener.class));
-        }
-
-        CustomNetworkBridgeFactory(NetworkBridgeListener listener) {
-            this.listener = listener;
-        }
-
-        public NetworkBridgeListener getListener() {
-            return listener;
-        }
-
-        @Override
-        public DemandForwardingBridge createNetworkBridge(NetworkBridgeConfiguration configuration, Transport localTransport, Transport remoteTransport, NetworkBridgeListener listener) {
-            DemandForwardingBridge bridge = new DemandForwardingBridge(configuration, localTransport, remoteTransport);
-            bridge.setNetworkBridgeListener(new CompositeNetworkBridgeListener(this.listener, listener));
-            return bridge;
-        }
-
-    }
-
-    static class CompositeNetworkBridgeListener implements NetworkBridgeListener {
-
-        private final List<NetworkBridgeListener> listeners;
-
-        public CompositeNetworkBridgeListener(NetworkBridgeListener ... wrapped) {
-            this.listeners = Arrays.asList(wrapped);
-        }
-
-        @Override
-        public void bridgeFailed() {
-            for (NetworkBridgeListener listener : listeners) {
-                listener.bridgeFailed();
-            }
-        }
-
-        @Override
-        public void onStart(NetworkBridge bridge) {
-            for (NetworkBridgeListener listener : listeners) {
-                listener.onStart(bridge);
-            }
-        }
-
-        @Override
-        public void onStop(NetworkBridge bridge) {
-            for (NetworkBridgeListener listener : listeners) {
-                listener.onStop(bridge);
-            }
-        }
-
-        @Override
-        public void onOutboundMessage(NetworkBridge bridge, Message message) {
-            for (NetworkBridgeListener listener : listeners) {
-                listener.onOutboundMessage(bridge, message);
-            }
-        }
-
-        @Override
-        public void onInboundMessage(NetworkBridge bridge, Message message) {
-            for (NetworkBridgeListener listener : listeners) {
-                listener.onInboundMessage(bridge, message);
-            }
-        }
-    }
-
 }

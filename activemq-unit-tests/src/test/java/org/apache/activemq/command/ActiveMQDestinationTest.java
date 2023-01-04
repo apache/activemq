@@ -61,7 +61,7 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
     }
 
     public void testDestinationOptions() throws IOException {
-        Map options = destination.getOptions();
+        Map<String,String> options = destination.getOptions();
         assertNotNull(options);
         assertEquals("v1", options.get("k1"));
         assertEquals("v2", options.get("k2"));

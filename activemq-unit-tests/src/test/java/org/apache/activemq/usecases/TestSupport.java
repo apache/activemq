@@ -32,7 +32,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 /**
  * Useful base class for unit test cases
  */
-public class TestSupport extends TestCase {
+public abstract class TestSupport extends TestCase {
 
     protected ActiveMQConnectionFactory connectionFactory;
     protected boolean topic = true;

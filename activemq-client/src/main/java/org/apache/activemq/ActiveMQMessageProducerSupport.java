@@ -16,11 +16,15 @@
  */
 package org.apache.activemq;
 
+import java.util.Set;
+
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
+import javax.jms.IllegalStateRuntimeException;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageFormatRuntimeException;
 import javax.jms.MessageProducer;
 
 /**
@@ -82,13 +86,13 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      * <P>
      * Message IDs are enabled by default.
      *
-     * @param value indicates if message IDs are disabled
+     * @param disableMessageID indicates if message IDs are disabled
      * @throws javax.jms.JMSException if the JMS provider fails to close the producer due to
      *                      some internal error.
      */
-    public void setDisableMessageID(boolean value) throws JMSException {
+    public void setDisableMessageID(boolean disableMessageID) throws JMSException {
         checkClosed();
-        this.disableMessageID = value;
+        this.disableMessageID = disableMessageID;
     }
 
     /**
@@ -118,13 +122,13 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      * <P>
      * Message timestamps are enabled by default.
      *
-     * @param value indicates if message timestamps are disabled
+     * @param disableMessageTimestamp indicates if message timestamps are disabled
      * @throws javax.jms.JMSException if the JMS provider fails to close the producer due to
      *                      some internal error.
      */
-    public void setDisableMessageTimestamp(boolean value) throws JMSException {
+    public void setDisableMessageTimestamp(boolean disableMessageTimestamp) throws JMSException {
         checkClosed();
-        this.disableMessageTimestamp = value;
+        this.disableMessageTimestamp = disableMessageTimestamp;
     }
 
     /**
@@ -345,4 +349,46 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
     public void setSendTimeout(int sendTimeout) {
         this.sendTimeout = sendTimeout;
     }
+
+    // See JMS 2.0 spec sections 3.5.1 and 3.8.1.1
+    public static final Set<String> JMS_PROPERTY_NAMES_DISALLOWED = Set.of("JMSDeliveryMode", "JMSPriority", "JMSMessageID", "JMSTimestamp", "JMSCorrelationID", "JMSType", "NULL", "TRUE", "FALSE", "NOT", "AND", "OR", "BETWEEN", "LIKE", "IN", "IS", "ESCAPE");
+
+    public static void validateValidPropertyName(String propertyName) throws IllegalStateRuntimeException {
+        if(propertyName == null || propertyName.length() == 0) {
+            throw new IllegalArgumentException("Invalid JMS property name must not be null or empty");
+        }
+
+        if(JMS_PROPERTY_NAMES_DISALLOWED.contains(propertyName)) {
+            throw new IllegalArgumentException("Invalid JMS property: " + propertyName + " name is in disallowed list");
+        }
+
+        char first = propertyName.charAt(0);
+        if(!(Character.isJavaIdentifierStart(first))) {
+            throw new IllegalArgumentException("Invalid JMS property: " + propertyName + " name starts with invalid character: " + first);
+        }
+
+        for (int i=1; i < propertyName.length(); i++) {
+            char c = propertyName.charAt(i);
+            if (!(Character.isJavaIdentifierPart(c))) {
+                throw new IllegalArgumentException("Invalid JMS property: " + propertyName + " name contains invalid character: " + c);
+            }
+        }
+    }
+
+    public static void validateValidPropertyValue(String propertyName, Object propertyValue) throws IllegalStateRuntimeException {
+        boolean invalid = true;
+
+        if(propertyValue == null || propertyValue instanceof String ||
+           propertyValue instanceof Integer || propertyValue instanceof Short ||
+           propertyValue instanceof Float || propertyValue instanceof Long ||
+           propertyValue instanceof Boolean || propertyValue instanceof Byte ||
+           propertyValue instanceof Character || propertyValue instanceof Double) {
+           invalid = false;
+        }
+
+        if(invalid) {
+            throw new MessageFormatRuntimeException("Invalid JMS property: " + propertyName + " value class: " + propertyValue.getClass().getName() + " is not permitted by specification");
+        }
+    }
+
 }

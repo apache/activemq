@@ -23,6 +23,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Objects;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -50,15 +51,9 @@ public class ValidateXMLConfigTest {
         // resource:copy-resource brings all config files into target/conf
         File sampleConfDir = new File("target/conf");
 
-        final HashSet<String> skipped = new HashSet<String>(java.util.Arrays.asList(new String[]{
-            "resin-web.xml", "web.xml", "camel.xml"
-        }));
+        final HashSet<String> skipped = new HashSet<>(java.util.Arrays.asList("web.xml", "camel.xml", "jolokia-access.xml"));
 
-        for (File xmlFile : sampleConfDir.listFiles(new FileFilter() {
-            public boolean accept(File pathname) {
-                return pathname.isFile() && pathname.getName().endsWith("xml") && !skipped.contains(pathname.getName());
-            }})) {
-
+        for (File xmlFile : Objects.requireNonNull(sampleConfDir.listFiles(pathname -> pathname.isFile() && pathname.getName().endsWith("xml") && !skipped.contains(pathname.getName())))) {
             validateXML(xmlFile);
         }
     }

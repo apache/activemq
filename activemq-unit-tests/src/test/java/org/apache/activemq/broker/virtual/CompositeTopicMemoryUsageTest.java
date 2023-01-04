@@ -17,7 +17,7 @@
 package org.apache.activemq.broker.virtual;
 
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.TopicViewMBean;

@@ -199,4 +199,15 @@ public class UdpTransportServer extends TransportServerSupport {
     public void setAllowLinkStealing(boolean allowLinkStealing) {
         this.allowLinkStealing = allowLinkStealing;
     }
+
+    @Override
+    public long getMaxConnectionExceededCount() {
+        // UDP transport deprecated
+        return -1l;
+    }
+
+    @Override
+    public void resetStatistics() {
+        // UDP transport deprecated
+    }
 }

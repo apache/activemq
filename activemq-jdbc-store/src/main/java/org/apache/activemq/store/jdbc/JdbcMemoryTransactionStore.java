@@ -51,7 +51,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
 
 
     public JdbcMemoryTransactionStore(JDBCPersistenceAdapter jdbcPersistenceAdapter) {
-        super(jdbcPersistenceAdapter);
+        super(jdbcPersistenceAdapter, jdbcPersistenceAdapter.getBrokerService());
     }
 
     @Override
@@ -163,6 +163,13 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
             if (tx != null) {
                 // undo prepare work
                 ConnectionContext ctx = new ConnectionContext();
+                try {
+                    if (brokerService != null) {
+                        ctx.setBroker(brokerService.getBroker());
+                    }
+                }  catch (Exception e) {
+                    throw new IOException(e.getMessage(), e);
+                }
                 persistenceAdapter.beginTransaction(ctx);
                 try {
 

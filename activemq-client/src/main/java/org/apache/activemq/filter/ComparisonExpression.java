@@ -214,36 +214,66 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
 
     @SuppressWarnings({ "rawtypes" })
     private static BooleanExpression doCreateEqual(Expression left, Expression right) {
-        return new ComparisonExpression(left, right) {
+        return new EqualsExpression(left, right);
+    }
 
-            public Object evaluate(MessageEvaluationContext message) throws JMSException {
-                Object lv = left.evaluate(message);
-                Object rv = right.evaluate(message);
+    private static class EqualsExpression extends ComparisonExpression {
+        EqualsExpression(Expression left, Expression right) {
+            super(left, right);
+        }
 
-                // If one of the values is null
-                if (lv == null ^ rv == null) {
-                    if (lv == null) {
-                        return null;
-                    }
-                    return Boolean.FALSE;
-                }
-                if (lv == rv || lv.equals(rv)) {
-                    return Boolean.TRUE;
-                }
-                if (lv instanceof Comparable && rv instanceof Comparable) {
-                    return compare((Comparable)lv, (Comparable)rv);
+        public Object evaluate(MessageEvaluationContext message) throws JMSException {
+            Object lv = left.evaluate(message);
+            Object rv = right.evaluate(message);
+
+            // If one of the values is null
+            if (lv == null ^ rv == null) {
+                if (lv == null) {
+                    return null;
                 }
                 return Boolean.FALSE;
             }
-
-            protected boolean asBoolean(int answer) {
-                return answer == 0;
+            if (lv == rv || lv.equals(rv)) {
+                return Boolean.TRUE;
             }
-
-            public String getExpressionSymbol() {
-                return "=";
+            if (lv instanceof Comparable && rv instanceof Comparable) {
+                return compare((Comparable) lv, (Comparable) rv);
             }
-        };
+            return Boolean.FALSE;
+        }
+
+        @Override
+        public boolean matches(MessageEvaluationContext message) throws JMSException {
+            Object lv = left.evaluate(message);
+            Object rv = right.evaluate(message);
+
+            // If one of the values is null
+            if (lv == null ^ rv == null) {
+                return false;
+            }
+            if (lv == rv || lv.equals(rv)) {
+                return true;
+            }
+            if (lv.getClass() == rv.getClass()) {
+                // same class, but 'equals' return false, and they are not the same object
+                // there is no point in doing 'compare'
+                // this case happens often while comparing non equals Strings
+                return false;
+            }
+            if (lv instanceof Comparable && rv instanceof Comparable) {
+                Boolean compareResult = compare((Comparable) lv, (Comparable) rv);
+                return compareResult != null && compareResult;
+            }
+            return false;
+        }
+
+        protected boolean asBoolean(int answer) {
+            return answer == 0;
+        }
+
+        public String getExpressionSymbol() {
+            return "=";
+        }
     }
 
     public static BooleanExpression createGreaterThan(final Expression left, final Expression right) {
@@ -286,7 +316,6 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
             public String getExpressionSymbol() {
                 return "<";
             }
-
         };
     }
 
@@ -491,5 +520,4 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
         Object object = evaluate(message);
         return object != null && object == Boolean.TRUE;
     }
-
 }

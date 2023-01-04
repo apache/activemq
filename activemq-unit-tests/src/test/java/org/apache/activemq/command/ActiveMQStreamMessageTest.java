@@ -118,7 +118,7 @@ public class ActiveMQStreamMessageTest {
             msg.reset();
             assertTrue(msg.readLong() == test);
             msg.reset();
-            assertTrue(msg.readString().equals(new Byte(test).toString()));
+            assertTrue(msg.readString().equals(Byte.toString(test)));
             msg.reset();
             try {
                 msg.readBoolean();
@@ -168,7 +168,7 @@ public class ActiveMQStreamMessageTest {
             msg.reset();
             assertTrue(msg.readLong() == test);
             msg.reset();
-            assertTrue(msg.readString().equals(new Short(test).toString()));
+            assertTrue(msg.readString().equals(Short.toString(test)));
             msg.reset();
             try {
                 msg.readBoolean();
@@ -220,7 +220,7 @@ public class ActiveMQStreamMessageTest {
             msg.reset();
             assertTrue(msg.readChar() == test);
             msg.reset();
-            assertTrue(msg.readString().equals(new Character(test).toString()));
+            assertTrue(msg.readString().equals(Character.toString(test)));
             msg.reset();
             try {
                 msg.readBoolean();
@@ -286,7 +286,7 @@ public class ActiveMQStreamMessageTest {
             msg.reset();
             assertTrue(msg.readLong() == test);
             msg.reset();
-            assertTrue(msg.readString().equals(new Integer(test).toString()));
+            assertTrue(msg.readString().equals(Integer.toString(test)));
             msg.reset();
             try {
                 msg.readBoolean();
@@ -344,7 +344,7 @@ public class ActiveMQStreamMessageTest {
             msg.reset();
             assertTrue(msg.readLong() == test);
             msg.reset();
-            assertTrue(msg.readString().equals(Long.valueOf(test).toString()));
+            assertTrue(msg.readString().equals(Long.toString(test)));
             msg.reset();
             try {
                 msg.readBoolean();
@@ -394,10 +394,10 @@ public class ActiveMQStreamMessageTest {
             } catch (MessageFormatException mfe) {
             }
             msg = new ActiveMQStreamMessage();
-            msg.writeObject(new Long("1"));
+            msg.writeObject(Long.valueOf("1"));
             // reset so it's readable now
             msg.reset();
-            assertEquals(new Long("1"), msg.readObject());
+            assertEquals(Long.parseLong("1"), msg.readObject());
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
             assertTrue(false);
@@ -415,7 +415,7 @@ public class ActiveMQStreamMessageTest {
             msg.reset();
             assertTrue(msg.readDouble() == test);
             msg.reset();
-            assertTrue(msg.readString().equals(new Float(test).toString()));
+            assertTrue(msg.readString().equals(Float.toString(test)));
             msg.reset();
             try {
                 msg.readBoolean();
@@ -473,7 +473,7 @@ public class ActiveMQStreamMessageTest {
             msg.reset();
             assertTrue(msg.readDouble() == test);
             msg.reset();
-            assertTrue(msg.readString().equals(new Double(test).toString()));
+            assertTrue(msg.readString().equals(Double.toString(test)));
             msg.reset();
             try {
                 msg.readBoolean();
@@ -533,32 +533,32 @@ public class ActiveMQStreamMessageTest {
         ActiveMQStreamMessage msg = new ActiveMQStreamMessage();
         try {
             byte testByte = (byte)2;
-            msg.writeString(new Byte(testByte).toString());
+            msg.writeString(Byte.toString(testByte));
             msg.reset();
             assertTrue(msg.readByte() == testByte);
             msg.clearBody();
             short testShort = 3;
-            msg.writeString(new Short(testShort).toString());
+            msg.writeString(Short.toString(testShort));
             msg.reset();
             assertTrue(msg.readShort() == testShort);
             msg.clearBody();
             int testInt = 4;
-            msg.writeString(new Integer(testInt).toString());
+            msg.writeString(Integer.toString(testInt));
             msg.reset();
             assertTrue(msg.readInt() == testInt);
             msg.clearBody();
             long testLong = 6L;
-            msg.writeString(new Long(testLong).toString());
+            msg.writeString(Long.toString(testLong));
             msg.reset();
             assertTrue(msg.readLong() == testLong);
             msg.clearBody();
             float testFloat = 6.6f;
-            msg.writeString(new Float(testFloat).toString());
+            msg.writeString(Float.toString(testFloat));
             msg.reset();
             assertTrue(msg.readFloat() == testFloat);
             msg.clearBody();
             double testDouble = 7.7d;
-            msg.writeString(new Double(testDouble).toString());
+            msg.writeString(Double.toString(testDouble));
             msg.reset();
             assertTrue(msg.readDouble() == testDouble);
             msg.clearBody();
@@ -743,10 +743,10 @@ public class ActiveMQStreamMessageTest {
     public void testClearBody() throws JMSException {
         ActiveMQStreamMessage streamMessage = new ActiveMQStreamMessage();
         try {
-            streamMessage.writeObject(new Long(2));
+            streamMessage.writeObject(Long.valueOf(2));
             streamMessage.clearBody();
             assertFalse(streamMessage.isReadOnlyBody());
-            streamMessage.writeObject(new Long(2));
+            streamMessage.writeObject(Long.valueOf(2));
             streamMessage.readObject();
             fail("should throw exception");
         } catch (MessageNotReadableException mnwe) {
@@ -967,14 +967,14 @@ public class ActiveMQStreamMessageTest {
             ActiveMQStreamMessage message = new ActiveMQStreamMessage();
             message.clearBody();
             message.writeObject("test");
-            message.writeObject(new Character('a'));
-            message.writeObject(new Boolean(false));
-            message.writeObject(new Byte((byte) 2));
-            message.writeObject(new Short((short) 2));
-            message.writeObject(new Integer(2));
-            message.writeObject(new Long(2l));
-            message.writeObject(new Float(2.0f));
-            message.writeObject(new Double(2.0d));
+            message.writeObject(Character.valueOf('a'));
+            message.writeObject(Boolean.FALSE);
+            message.writeObject(Byte.valueOf((byte) 2));
+            message.writeObject(Short.valueOf((short) 2));
+            message.writeObject(Integer.valueOf(2));
+            message.writeObject(Long.valueOf(2l));
+            message.writeObject(Float.valueOf(2.0f));
+            message.writeObject(Double.valueOf(2.0d));
         } catch(Exception e) {
             fail(e.getMessage());
         }

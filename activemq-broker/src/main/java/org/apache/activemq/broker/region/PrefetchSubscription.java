@@ -619,10 +619,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         for (MessageReference r : dispatched) {
             if (r.getRegionDestination() == destination) {
                 references.add(r);
+                //Decrement the size as we are removing and redispatching all references
                 getSubscriptionStatistics().getInflightMessageSize().addSize(-r.getSize());
             }
         }
         redispatch.addAll(0, references);
+        //Clean up in flight message stats on the destination after dispatched is cleared
         destination.getDestinationStatistics().getInflight().subtract(references.size());
         dispatched.removeAll(references);
     }
@@ -739,6 +741,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     if (nodeDest != null) {
                         if (node != QueueMessageReference.NULL_MESSAGE) {
                             nodeDest.getDestinationStatistics().getDispatched().increment();
+                            //We still increment here as the dispatched list is still tracking references at this point
+                            //Metrics will get cleaned up in addReferencesAndUpdateRedispatch() when the dispatched
+                            //list is also cleaned up as the failure causes the subscription to close
                             incrementPrefetchCounter(node);
                             LOG.trace("{} failed to dispatch: {} - {}, dispatched: {}, inflight: {}",
                                     info.getConsumerId(), message.getMessageId(), message.getDestination(),
@@ -764,6 +769,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             if (node != QueueMessageReference.NULL_MESSAGE) {
                 nodeDest.getDestinationStatistics().getDispatched().increment();
                 incrementPrefetchCounter(node);
+                nodeDest.messageDispatched(context, this, node);
                 LOG.trace("{} dispatched: {} - {}, dispatched: {}, inflight: {}",
                         info.getConsumerId(), message.getMessageId(), message.getDestination(),
                         getSubscriptionStatistics().getDispatched().getCount(), dispatched.size());

@@ -49,7 +49,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  * @since 2007-08-10
  * @version $Id: ActiveMQTestCase.java 12 2007-08-14 12:02:02Z rke $
  */
-public class ActiveMQTestCase extends TestCase
+public abstract class ActiveMQTestCase extends TestCase
 {
     private Context context;
     private BrokerService broker;

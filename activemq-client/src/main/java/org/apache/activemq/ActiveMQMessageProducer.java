@@ -223,7 +223,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.send(destination, message, deliveryMode, priority, timeToLive, (AsyncCallback)null);
     }
-    
+
     /**
      *
      * @param message the message to send
@@ -240,7 +240,6 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     @Override
     public void send(Message message, CompletionListener completionListener) throws JMSException {
         throw new UnsupportedOperationException("send(Message, CompletionListener) is not supported");
-
     }
 
     @Override
@@ -287,6 +286,11 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     }
 
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete) throws JMSException {
+        this.send(destination, message, deliveryMode, priority, timeToLive, getDisableMessageID(), getDisableMessageTimestamp(), onComplete);
+    }
+
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, boolean disableMessageID, boolean disableMessageTimestamp, AsyncCallback onComplete) throws JMSException {
+
         checkClosed();
         if (destination == null) {
             if (info.getDestination() == null) {
@@ -322,7 +326,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
             }
         }
 
-        this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow, sendTimeout, onComplete);
+        this.session.send(this, dest, message, deliveryMode, priority, timeToLive, disableMessageID, disableMessageTimestamp, producerWindow, sendTimeout, onComplete);
 
         stats.onMessage();
     }

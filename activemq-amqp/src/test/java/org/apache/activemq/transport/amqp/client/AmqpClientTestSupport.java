@@ -29,7 +29,7 @@ import org.junit.After;
  */
 public class AmqpClientTestSupport extends AmqpTestSupport {
 
-    private String connectorScheme = "amqp";
+    protected String connectorScheme = "amqp";
     private boolean useSSL;
 
     private List<AmqpConnection> connections = new ArrayList<AmqpConnection>();

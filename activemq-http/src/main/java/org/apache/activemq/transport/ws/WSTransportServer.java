@@ -172,4 +172,15 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
             servlet.setBrokerService(brokerService);
         }
     }
+
+    @Override
+    public long getMaxConnectionExceededCount() {
+        // Max Connection Count not supported for ws
+        return -1l;
+    }
+
+    @Override
+    public void resetStatistics() {
+        // Statistics not implemented for ws
+    }
 }
