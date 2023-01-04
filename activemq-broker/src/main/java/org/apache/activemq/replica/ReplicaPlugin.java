@@ -49,11 +49,12 @@ public class ReplicaPlugin extends BrokerPluginSupport {
     @Override
     public Broker installPlugin(final Broker broker) {
         logger.info("{} installed, running as {}", ReplicaPlugin.class.getName(), role);
-        if (role == ReplicaRole.replica) {
-            return new ReplicaBroker(broker, otherBrokerConnectionFactory);
-        }
 
         ReplicaReplicationQueueSupplier queueProvider = new ReplicaReplicationQueueSupplier(broker);
+
+        if (role == ReplicaRole.replica) {
+            return new ReplicaBroker(broker, queueProvider, otherBrokerConnectionFactory);
+        }
         ReplicaInternalMessageProducer replicaInternalMessageProducer =
                 new ReplicaInternalMessageProducer(broker);
         ReplicationMessageProducer replicationMessageProducer =
@@ -68,7 +69,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
                 break;
             case dual:
                 replicaBrokerFilter = new ReplicaBroker(new ReplicaSourceBroker(broker, replicationMessageProducer,
-                        replicaSequencer, queueProvider, transportConnectorUri), otherBrokerConnectionFactory);
+                        replicaSequencer, queueProvider, transportConnectorUri), queueProvider, otherBrokerConnectionFactory);
                 break;
             default:
                 throw new IllegalArgumentException();

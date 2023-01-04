@@ -147,6 +147,8 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
                             .setReplicationProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, message.getMessageId().toString())
                             .setReplicationProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY,
                                     message.getDestination().isQueue())
+                            .setReplicationProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY,
+                                    message.getDestination().toString())
                             .setReplicationProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY,
                                     originalTransactionId != null && originalTransactionId.isXATransaction())
             );
@@ -590,6 +592,8 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
                             .setReplicationProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, messageIdsToAck)
                             .setReplicationProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY,
                                     ack.getDestination().isQueue())
+                            .setReplicationProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY,
+                                    ack.getDestination().toString())
                             .setReplicationProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY,
                                     originalTransactionId != null && originalTransactionId.isXATransaction())
             );

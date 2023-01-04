@@ -25,10 +25,12 @@ import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jms.JMSException;
 import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -37,6 +39,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -46,6 +50,7 @@ public class ReplicaSequencer implements Task {
     private static final String SOURCE_CONSUMER_CLIENT_ID = "DUMMY_SOURCE_CONSUMER";
     static final int MAX_BATCH_LENGTH = 500;
     static final int MAX_BATCH_SIZE = 5_000_000; // 5 Mb
+    public static final int ITERATE_PERIOD = 5_000;
 
     private final Broker broker;
     private final ReplicaReplicationQueueSupplier queueProvider;
@@ -54,6 +59,7 @@ public class ReplicaSequencer implements Task {
 
     private final Object iteratingMutex = new Object();
     private final AtomicLong pendingWakeups = new AtomicLong();
+    private final AtomicLong pendingTriggeredWakeups = new AtomicLong();
     final Set<String> deliveredMessages = new HashSet<>();
     final LinkedList<String> messageToAck = new LinkedList<>();
     private final ReplicaStorage replicaStorage;
@@ -71,6 +77,7 @@ public class ReplicaSequencer implements Task {
     BigInteger sequence = BigInteger.ZERO;
     MessageId recoveryMessageId;
 
+    private final AtomicLong lastProcessTime = new AtomicLong();
 
     private final AtomicBoolean initialized = new AtomicBoolean();
 
@@ -80,6 +87,9 @@ public class ReplicaSequencer implements Task {
         this.queueProvider = queueProvider;
         this.replicationMessageProducer = replicationMessageProducer;
         this.replicaStorage = new ReplicaStorage("source_sequence");
+
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::asyncWakeup,
+                ITERATE_PERIOD, ITERATE_PERIOD, TimeUnit.MILLISECONDS);
     }
 
     void initialize() throws Exception {
@@ -168,8 +178,18 @@ public class ReplicaSequencer implements Task {
 
     void asyncWakeup() {
         try {
-            pendingWakeups.incrementAndGet();
-            taskRunner.wakeup();
+            long l = pendingWakeups.incrementAndGet();
+            if (l % 500 == 0) {
+                pendingTriggeredWakeups.incrementAndGet();
+                taskRunner.wakeup();
+                pendingWakeups.addAndGet(-500);
+                return;
+            }
+
+            if (System.currentTimeMillis() - lastProcessTime.get() > ITERATE_PERIOD) {
+                pendingTriggeredWakeups.incrementAndGet();
+                taskRunner.wakeup();
+            }
         } catch (InterruptedException e) {
             logger.warn("Async task runner failed to wakeup ", e);
         }
@@ -178,6 +198,7 @@ public class ReplicaSequencer implements Task {
     @Override
     public boolean iterate() {
         synchronized (iteratingMutex) {
+            lastProcessTime.set(System.currentTimeMillis());
             if (!initialized.get()) {
                 return false;
             }
@@ -185,12 +206,12 @@ public class ReplicaSequencer implements Task {
             iterateAck();
             iterateSend();
 
-            if (pendingWakeups.get() > 0) {
-                pendingWakeups.decrementAndGet();
+            if (pendingTriggeredWakeups.get() > 0) {
+                pendingTriggeredWakeups.decrementAndGet();
             }
         }
 
-        return pendingWakeups.get() > 0;
+        return pendingTriggeredWakeups.get() > 0;
     }
 
     void iterateAck() {
@@ -225,7 +246,6 @@ public class ReplicaSequencer implements Task {
 
                     broker.commitTransaction(connectionContext, transactionId, true);
                 }
-
                 synchronized (messageToAck) {
                     messageToAck.removeAll(messages);
                 }
@@ -283,7 +303,14 @@ public class ReplicaSequencer implements Task {
         if (!hasConsumer) {
             return;
         }
-        List<List<MessageReference>> batches = batches(toProcess);
+
+        List<List<MessageReference>> batches;
+        try {
+            batches = batches(toProcess);
+        } catch (Exception e) {
+            logger.error("Filed to batch messages in the intermediate replication queue", e);
+            return;
+        }
 
         MessageId lastProcessedMessageId = null;
         for (List<MessageReference> batch : batches) {
@@ -346,14 +373,29 @@ public class ReplicaSequencer implements Task {
         }
     }
 
-    List<List<MessageReference>> batches(List<MessageReference> list) {
+    List<List<MessageReference>> batches(List<MessageReference> list) throws JMSException {
         List<List<MessageReference>> result = new ArrayList<>();
 
+        Map<String, ReplicaEventType> destination2eventType = new HashMap<>();
         List<MessageReference> batch = new ArrayList<>();
         int batchSize = 0;
         for (MessageReference reference : list) {
-            if (batch.size() > 0
-                    && (batch.size() + 1 > MAX_BATCH_LENGTH || batchSize + reference.getSize() > MAX_BATCH_SIZE)) {
+            ActiveMQMessage message = (ActiveMQMessage) reference.getMessage();
+            String originalDestination = message.getStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY);
+
+            boolean eventTypeSwitch = false;
+            if (originalDestination != null) {
+                ReplicaEventType currentEventType =
+                        ReplicaEventType.valueOf(message.getStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY));
+                ReplicaEventType lastEventType = destination2eventType.put(originalDestination, currentEventType);
+                if (lastEventType == ReplicaEventType.MESSAGE_SEND && currentEventType == ReplicaEventType.MESSAGE_ACK) {
+                    eventTypeSwitch = true;
+                }
+            }
+
+            boolean exceedsLength = batch.size() + 1 > MAX_BATCH_LENGTH;
+            boolean exceedsSize = batchSize + reference.getSize() > MAX_BATCH_SIZE;
+            if (batch.size() > 0 && (exceedsLength || exceedsSize || eventTypeSwitch)) {
                 result.add(batch);
                 batch = new ArrayList<>();
                 batchSize = 0;

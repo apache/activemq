@@ -32,8 +32,10 @@ public class ReplicaReplicationQueueSupplier {
 
     private final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
     private final CountDownLatch initializationLatch = new CountDownLatch(1);
+    private final CountDownLatch sequenceInitializationLatch = new CountDownLatch(1);
     private ActiveMQQueue mainReplicationQueue = null; // memoized
     private ActiveMQQueue intermediateReplicationQueue = null; // memoized
+    private ActiveMQQueue sequenceQueue = null; // memoized
     private final Broker broker;
 
     public ReplicaReplicationQueueSupplier(final Broker broker) {
@@ -50,6 +52,7 @@ public class ReplicaReplicationQueueSupplier {
         }
         throw new ActiveMQReplicaException("Timed out waiting for main replication queue initialization");
     }
+
     public ActiveMQQueue getIntermediateQueue() {
         try {
             if (initializationLatch.await(1L, TimeUnit.MINUTES)) {
@@ -59,6 +62,17 @@ public class ReplicaReplicationQueueSupplier {
             throw new ActiveMQReplicaException("Interrupted while waiting for intermediate replication queue initialization", e);
         }
         throw new ActiveMQReplicaException("Timed out waiting for intermediate replication queue initialization");
+    }
+
+    public ActiveMQQueue getSequenceQueue() {
+        try {
+            if (sequenceInitializationLatch.await(1L, TimeUnit.MINUTES)) {
+                return requireNonNull(sequenceQueue);
+            }
+        } catch (InterruptedException e) {
+            throw new ActiveMQReplicaException("Interrupted while waiting for replication sequence queue initialization", e);
+        }
+        throw new ActiveMQReplicaException("Timed out waiting for replication sequence queue initialization");
     }
 
     public void initialize() {
@@ -72,12 +86,27 @@ public class ReplicaReplicationQueueSupplier {
         initializationLatch.countDown();
     }
 
+    public void initializeSequenceQueue() {
+        try {
+            sequenceQueue = getOrCreateSequenceQueue();
+        } catch (Exception e) {
+            logger.error("Could not obtain replication sequence queue", e);
+            throw new ActiveMQReplicaException("Failed to get or create replication sequence queue");
+        }
+        sequenceInitializationLatch.countDown();
+
+    }
+
     private ActiveMQQueue getOrCreateMainReplicationQueue() throws Exception {
         return getOrCreateQueue(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
     }
 
     private ActiveMQQueue getOrCreateIntermediateReplicationQueue() throws Exception {
         return getOrCreateQueue(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
+    }
+
+    private ActiveMQQueue getOrCreateSequenceQueue() throws Exception {
+        return getOrCreateQueue(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
     }
 
     private ActiveMQQueue getOrCreateQueue(String replicationQueueName) throws Exception {

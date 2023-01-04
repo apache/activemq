@@ -25,8 +25,8 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import javax.jms.JMSException;
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -44,10 +44,12 @@ public class ReplicaBroker extends BrokerFilter {
     private final AtomicReference<ActiveMQConnection> connection = new AtomicReference<>();
     private final AtomicReference<ActiveMQSession> connectionSession = new AtomicReference<>();
     private final AtomicReference<ActiveMQMessageConsumer> eventConsumer = new AtomicReference<>();
+    private ReplicaReplicationQueueSupplier queueProvider;
     private final ActiveMQConnectionFactory replicaSourceConnectionFactory;
 
-    public ReplicaBroker(final Broker next, final ActiveMQConnectionFactory replicaSourceConnectionFactory) {
+    public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ActiveMQConnectionFactory replicaSourceConnectionFactory) {
         super(next);
+        this.queueProvider = queueProvider;
         this.replicaSourceConnectionFactory = requireNonNull(replicaSourceConnectionFactory, "Need connection details of replica source for this broker");
         requireNonNull(replicaSourceConnectionFactory.getBrokerURL(), "Need connection URI of replica source for this broker");
         validateUser(replicaSourceConnectionFactory);
@@ -65,6 +67,7 @@ public class ReplicaBroker extends BrokerFilter {
     @Override
     public void start() throws Exception {
         super.start();
+        queueProvider.initializeSequenceQueue();
         brokerConnectionPoller.scheduleAtFixedRate(this::beginReplicationIdempotent, 5, 5, TimeUnit.SECONDS);
     }
 
@@ -138,7 +141,7 @@ public class ReplicaBroker extends BrokerFilter {
         logger.debug("Established connection to replica source: {}", replicaSourceConnectionFactory.getBrokerURL());
     }
 
-    private void consumeReplicationEvents() throws JMSException, IOException {
+    private void consumeReplicationEvents() throws Exception {
         if (connectionUnusable() || sessionUnusable()) {
             return;
         }
@@ -152,7 +155,7 @@ public class ReplicaBroker extends BrokerFilter {
                         MessageFormat.format("There is no replication queue on the source broker {0}", replicaSourceConnectionFactory.getBrokerURL())
                 ));
         logger.info("Plugin will mirror events from queue {}", replicationSourceQueue.getPhysicalName());
-        ReplicaBrokerEventListener messageListener = new ReplicaBrokerEventListener(getNext());
+        ReplicaBrokerEventListener messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider);
         messageListener.initialize();
         eventConsumer.set((ActiveMQMessageConsumer)
                 connectionSession.get().createConsumer(replicationSourceQueue, messageListener)

@@ -35,8 +35,8 @@ import java.io.IOException;
 
 public abstract class ReplicaPluginTestSupport extends AutoFailTestSupport {
 
-    protected static final int LONG_TIMEOUT = 10000;
-    protected static final int SHORT_TIMEOUT = 1000;
+    protected static final int LONG_TIMEOUT = 15000;
+    protected static final int SHORT_TIMEOUT = 6000;
 
     private static final String FIRST_KAHADB_DIRECTORY = "target/activemq-data/first/";
     private static final String SECOND_KAHADB_DIRECTORY = "target/activemq-data/second/";

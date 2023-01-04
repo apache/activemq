@@ -31,11 +31,13 @@ public class ReplicaSupport {
 
     public static final String MAIN_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Queue";
     public static final String INTERMEDIATE_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Intermediate.Queue";
+    public static final String SEQUENCE_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Sequence.Queue";
     public static final String REPLICATION_PLUGIN_USER_NAME = "replication_plugin";
 
     public static final String TRANSACTION_ONE_PHASE_PROPERTY = "TRANSACTION_ONE_PHASE_PROPERTY";
     public static final String CLIENT_ID_PROPERTY = "CLIENT_ID_PROPERTY";
     public static final String IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY = "IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY";
+    public static final String ORIGINAL_MESSAGE_DESTINATION_PROPERTY = "ORIGINAL_MESSAGE_DESTINATION_PROPERTY";
     public static final String IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY = "IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY";
     public static final String MESSAGE_ID_PROPERTY = "MESSAGE_ID_PROPERTY";
     public static final String MESSAGE_IDS_PROPERTY = "MESSAGE_IDS_PROPERTY";
@@ -47,7 +49,7 @@ public class ReplicaSupport {
     public static final String REPLICATION_PLUGIN_STORAGE_DIRECTORY = "replication_plugin";
 
     private static final Set<String> REPLICATION_QUEUE_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
-            INTERMEDIATE_REPLICATION_QUEUE_NAME);
+            INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME);
 
     public static boolean isReplicationQueue(ActiveMQDestination destination) {
         return REPLICATION_QUEUE_NAMES.contains(destination.getPhysicalName());

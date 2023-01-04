@@ -60,7 +60,7 @@ public class ReplicaSequencerTest {
     private final ReplicaReplicationQueueSupplier queueProvider = mock(ReplicaReplicationQueueSupplier.class);
     private final ReplicationMessageProducer replicationMessageProducer = mock(ReplicationMessageProducer.class);
 
-    private final ReplicaSequencer sequencer = new ReplicaSequencer(broker, queueProvider, replicationMessageProducer);
+    private ReplicaSequencer sequencer;
 
     private final ActiveMQQueue intermediateQueueDestination = new ActiveMQQueue(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
     private final ActiveMQQueue mainQueueDestination = new ActiveMQQueue(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
@@ -111,6 +111,7 @@ public class ReplicaSequencerTest {
 
         when(intermediateQueue.getMessageStore()).thenReturn(messageStore);
 
+        sequencer = new ReplicaSequencer(broker, queueProvider, replicationMessageProducer);
         sequencer.initialize();
 
         replicaStorage.initialize(storageDirectory);
@@ -420,10 +421,10 @@ public class ReplicaSequencerTest {
     }
 
     @Test
-    public void batchesSmallMessages() {
+    public void batchesSmallMessages() throws Exception {
         List<MessageReference> list = new ArrayList<>();
         for (int i = 0; i < 1347; i++) {
-            list.add(new DummyMessageReference(new MessageId("1:0:0:" + i), 1));
+            list.add(new DummyMessageReference(new MessageId("1:0:0:" + i), new ActiveMQMessage(), 1));
         }
 
         List<List<MessageReference>> batches = sequencer.batches(list);
@@ -443,11 +444,11 @@ public class ReplicaSequencerTest {
     }
 
     @Test
-    public void batchesBigMessages() {
+    public void batchesBigMessages() throws Exception {
         List<MessageReference> list = new ArrayList<>();
-        list.add(new DummyMessageReference(new MessageId("1:0:0:1"), ReplicaSequencer.MAX_BATCH_SIZE + 1));
-        list.add(new DummyMessageReference(new MessageId("1:0:0:2"), ReplicaSequencer.MAX_BATCH_SIZE / 2 + 1));
-        list.add(new DummyMessageReference(new MessageId("1:0:0:3"), ReplicaSequencer.MAX_BATCH_SIZE / 2));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:1"), new ActiveMQMessage(), ReplicaSequencer.MAX_BATCH_SIZE + 1));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:2"), new ActiveMQMessage(), ReplicaSequencer.MAX_BATCH_SIZE / 2 + 1));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:3"), new ActiveMQMessage(), ReplicaSequencer.MAX_BATCH_SIZE / 2));
 
         List<List<MessageReference>> batches = sequencer.batches(list);
         assertThat(batches.size()).isEqualTo(3);
@@ -457,6 +458,28 @@ public class ReplicaSequencerTest {
         assertThat(batches.get(1).get(0).getMessageId().toString()).isEqualTo("1:0:0:2");
         assertThat(batches.get(2).size()).isEqualTo(1);
         assertThat(batches.get(2).get(0).getMessageId().toString()).isEqualTo("1:0:0:3");
+    }
+
+    @Test
+    public void batchesAcksAfterSends() throws Exception {
+        List<MessageReference> list = new ArrayList<>();
+        ActiveMQMessage activeMQMessage = new ActiveMQMessage();
+        activeMQMessage.setStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY, "test");
+        activeMQMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        list.add(new DummyMessageReference(new MessageId("1:0:0:1"), activeMQMessage, 1));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:2"), activeMQMessage, 1));
+        activeMQMessage = new ActiveMQMessage();
+        activeMQMessage.setStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY, "test");
+        activeMQMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        list.add(new DummyMessageReference(new MessageId("1:0:0:3"), activeMQMessage, 1));
+
+        List<List<MessageReference>> batches = sequencer.batches(list);
+        assertThat(batches.size()).isEqualTo(2);
+        assertThat(batches.get(0).size()).isEqualTo(2);
+        assertThat(batches.get(0).get(0).getMessageId().toString()).isEqualTo("1:0:0:1");
+        assertThat(batches.get(0).get(1).getMessageId().toString()).isEqualTo("1:0:0:2");
+        assertThat(batches.get(1).size()).isEqualTo(1);
+        assertThat(batches.get(1).get(0).getMessageId().toString()).isEqualTo("1:0:0:3");
     }
 
     @Test
@@ -605,10 +628,12 @@ public class ReplicaSequencerTest {
     private static class DummyMessageReference implements MessageReference {
 
         private final MessageId messageId;
+        private Message message;
         private final int size;
 
-        DummyMessageReference(MessageId messageId, int size) {
+        DummyMessageReference(MessageId messageId, Message message, int size) {
             this.messageId = messageId;
+            this.message = message;
             this.size = size;
         }
 
@@ -624,7 +649,7 @@ public class ReplicaSequencerTest {
 
         @Override
         public Message getMessage() {
-            return null;
+            return message;
         }
 
         @Override

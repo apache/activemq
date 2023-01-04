@@ -122,7 +122,7 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
 
         receivedMessage.acknowledge();
 
-        Thread.sleep(SHORT_TIMEOUT);
+        Thread.sleep(LONG_TIMEOUT);
 
         secondBrokerSession.close();
         secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -158,7 +158,7 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
         QueueViewMBean proxy = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
         proxy.purge();
 
-        Thread.sleep(SHORT_TIMEOUT);
+        Thread.sleep(LONG_TIMEOUT);
 
         secondBrokerSession.close();
         secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -414,7 +414,7 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
         receivedMessage.acknowledge();
 
         firstBrokerSession.close();
-        Thread.sleep(SHORT_TIMEOUT);
+        Thread.sleep(LONG_TIMEOUT);
 
         Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         MessageConsumer secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
