@@ -62,6 +62,9 @@ public class ReplicaBrokerEventListener implements MessageListener {
     private final ConnectionContext connectionContext;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
 
+    private final int INITIAL_SLEEP_RETRY_INTERVAL_MS = 10;
+    private final int MAX_SLEEP_RETRY_INTERVAL_MS = 10000;
+
     ReplicaBrokerEventListener(Broker broker) {
         this.broker = requireNonNull(broker);
         connectionContext = broker.getAdminConnectionContext().copy();
@@ -78,82 +81,105 @@ public class ReplicaBrokerEventListener implements MessageListener {
         try {
             Object deserializedData = eventSerializer.deserializeMessageData(messageContent);
             getEventType(message).ifPresent(eventType -> {
-                switch (eventType) {
-                    case DESTINATION_UPSERT:
-                        logger.trace("Processing replicated destination");
-                        upsertDestination((ActiveMQDestination) deserializedData);
-                        return;
-                    case DESTINATION_DELETE:
-                        logger.trace("Processing replicated destination deletion");
-                        deleteDestination((ActiveMQDestination) deserializedData);
-                        return;
-                    case MESSAGE_SEND:
-                        logger.trace("Processing replicated message send");
-                        persistMessage((ActiveMQMessage) deserializedData);
-                        return;
-                    case MESSAGE_ACK:
-                        logger.trace("Processing replicated messages dropped");
+                long attemptNumber = 0;
+                boolean isProcessed = false;
+                while (!isProcessed) {
+                    try {
+                        isProcessed = processMessage(message, eventType, deserializedData);
+                    } catch (Exception e) {
+                        logger.info("Caught exception {} while processing message {}.", e.toString(), message.toString());
                         try {
-                            messageAck((MessageAck) deserializedData,
-                                    (List<String>) message.getObjectProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY));
-                        } catch (JMSException e) {
-                            logger.error("Failed to extract property to replicate messages dropped [{}]", deserializedData, e);
+                            int sleepInterval = Math.min((int)(INITIAL_SLEEP_RETRY_INTERVAL_MS * Math.pow(2.0, attemptNumber)), MAX_SLEEP_RETRY_INTERVAL_MS);
+                            attemptNumber++;
+                            logger.info("Retry attempt number {}. Sleeping for {} ms.", attemptNumber, sleepInterval);
+                            Thread.sleep(sleepInterval);
+                        } catch (InterruptedException ex) {
+                            logger.error("Retry sleep interrupted: {}", ex.toString());
                         }
-                        return;
-                    case QUEUE_PURGED:
-                        logger.trace("Processing queue purge");
-                        purgeQueue((ActiveMQDestination) deserializedData);
-                        return;
-                    case TRANSACTION_BEGIN:
-                        logger.trace("Processing replicated transaction begin");
-                        beginTransaction((TransactionId) deserializedData);
-                        return;
-                    case TRANSACTION_PREPARE:
-                        logger.trace("Processing replicated transaction prepare");
-                        prepareTransaction((TransactionId) deserializedData);
-                        return;
-                    case TRANSACTION_FORGET:
-                        logger.trace("Processing replicated transaction forget");
-                        forgetTransaction((TransactionId) deserializedData);
-                        return;
-                    case TRANSACTION_ROLLBACK:
-                        logger.trace("Processing replicated transaction rollback");
-                        rollbackTransaction((TransactionId) deserializedData);
-                        return;
-                    case TRANSACTION_COMMIT:
-                        logger.trace("Processing replicated transaction commit");
-                        try {
-                            commitTransaction(
-                                    (TransactionId) deserializedData,
-                                    message.getBooleanProperty(ReplicaSupport.TRANSACTION_ONE_PHASE_PROPERTY));
-                        } catch (JMSException e) {
-                            logger.error("Failed to extract property to replicate transaction commit with id [{}]", deserializedData, e);
-                        }
-                        return;
-                    case ADD_DURABLE_CONSUMER:
-                        logger.trace("Processing replicated add consumer");
-                        try {
-                            addDurableConsumer((ConsumerInfo) deserializedData,
-                                    message.getStringProperty(ReplicaSupport.CLIENT_ID_PROPERTY));
-                        } catch (JMSException e) {
-                            logger.error("Failed to extract property to replicate add consumer [{}]", deserializedData, e);
-                        }
-                        return;
-                    case REMOVE_DURABLE_CONSUMER:
-                        logger.trace("Processing replicated remove consumer");
-                        removeDurableConsumer((ConsumerInfo) deserializedData);
-                        return;
-                    default:
-                        logger.warn("Unhandled event type \"{}\" for replication message id: {}", eventType, message.getJMSMessageID());
+                    }
                 }
             });
             message.acknowledge();
         } catch (IOException | ClassCastException e) {
             logger.error("Failed to deserialize replication message (id={}), {}", message.getMessageId(), new String(messageContent.data), e);
             logger.debug("Deserialization error for replication message (id={})", message.getMessageId(), e);
-        } catch (
-        JMSException e) {
+        } catch (JMSException e) {
             logger.error("Failed to acknowledge replication message (id={})", message.getMessageId());
+        }
+    }
+
+    private boolean processMessage(ActiveMQMessage message, ReplicaEventType eventType, Object deserializedData) throws Exception {
+        switch (eventType) {
+            case DESTINATION_UPSERT:
+                logger.trace("Processing replicated destination");
+                upsertDestination((ActiveMQDestination) deserializedData);
+                return true;
+            case DESTINATION_DELETE:
+                logger.trace("Processing replicated destination deletion");
+                deleteDestination((ActiveMQDestination) deserializedData);
+                return true;
+            case MESSAGE_SEND:
+                logger.trace("Processing replicated message send");
+                persistMessage((ActiveMQMessage) deserializedData);
+                return true;
+            case MESSAGE_ACK:
+                logger.trace("Processing replicated messages dropped");
+                try {
+                    messageAck((MessageAck) deserializedData,
+                            (List<String>) message.getObjectProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY));
+                } catch (JMSException e) {
+                    logger.error("Failed to extract property to replicate messages dropped [{}]", deserializedData, e);
+                    throw new Exception(e);
+                }
+                return true;
+            case QUEUE_PURGED:
+                logger.trace("Processing queue purge");
+                purgeQueue((ActiveMQDestination) deserializedData);
+                return true;
+            case TRANSACTION_BEGIN:
+                logger.trace("Processing replicated transaction begin");
+                beginTransaction((TransactionId) deserializedData);
+                return true;
+            case TRANSACTION_PREPARE:
+                logger.trace("Processing replicated transaction prepare");
+                prepareTransaction((TransactionId) deserializedData);
+                return true;
+            case TRANSACTION_FORGET:
+                logger.trace("Processing replicated transaction forget");
+                forgetTransaction((TransactionId) deserializedData);
+                return true;
+            case TRANSACTION_ROLLBACK:
+                logger.trace("Processing replicated transaction rollback");
+                rollbackTransaction((TransactionId) deserializedData);
+                return true;
+            case TRANSACTION_COMMIT:
+                logger.trace("Processing replicated transaction commit");
+                try {
+                    commitTransaction(
+                            (TransactionId) deserializedData,
+                            message.getBooleanProperty(ReplicaSupport.TRANSACTION_ONE_PHASE_PROPERTY));
+                } catch (JMSException e) {
+                    logger.error("Failed to extract property to replicate transaction commit with id [{}]", deserializedData, e);
+                    throw new Exception(e);
+                }
+                return true;
+            case ADD_DURABLE_CONSUMER:
+                logger.trace("Processing replicated add consumer");
+                try {
+                    addDurableConsumer((ConsumerInfo) deserializedData,
+                            message.getStringProperty(ReplicaSupport.CLIENT_ID_PROPERTY));
+                } catch (JMSException e) {
+                    logger.error("Failed to extract property to replicate add consumer [{}]", deserializedData, e);
+                    throw new Exception(e);
+                }
+                return true;
+            case REMOVE_DURABLE_CONSUMER:
+                logger.trace("Processing replicated remove consumer");
+                removeDurableConsumer((ConsumerInfo) deserializedData);
+                return true;
+            default:
+                logger.warn("Unhandled event type \"{}\" for replication message id: {}", eventType, message.getJMSMessageID());
+                return false;
         }
     }
 
@@ -169,7 +195,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
         }
     }
 
-    private void upsertDestination(ActiveMQDestination destination) {
+    private void upsertDestination(ActiveMQDestination destination) throws Exception {
         try {
             boolean isExistingDestination = Arrays.stream(broker.getDestinations())
                     .anyMatch(d -> d.getQualifiedName().equals(destination.getQualifiedName()));
@@ -179,15 +205,17 @@ public class ReplicaBrokerEventListener implements MessageListener {
             }
         } catch (Exception e) {
             logger.error("Unable to determine if [{}] is an existing destination", destination, e);
+            throw e;
         }
         try {
             broker.addDestination(connectionContext, destination, true);
         } catch (Exception e) {
             logger.error("Unable to add destination [{}]", destination, e);
+            throw e;
         }
     }
 
-    private void deleteDestination(ActiveMQDestination destination) {
+    private void deleteDestination(ActiveMQDestination destination) throws Exception {
         try {
             boolean isNonExtantDestination = Arrays.stream(broker.getDestinations())
                     .noneMatch(d -> d.getQualifiedName().equals(destination.getQualifiedName()));
@@ -197,15 +225,17 @@ public class ReplicaBrokerEventListener implements MessageListener {
             }
         } catch (Exception e) {
             logger.error("Unable to determine if [{}] is an existing destination", destination, e);
+            throw e;
         }
         try {
             broker.removeDestination(connectionContext, destination, 1000);
         } catch (Exception e) {
             logger.error("Unable to remove destination [{}]", destination, e);
+            throw e;
         }
     }
 
-    private void persistMessage(ActiveMQMessage message) {
+    private void persistMessage(ActiveMQMessage message) throws Exception {
         try {
             if (message.getTransactionId() != null && !message.getTransactionId().isXATransaction()) {
                 message.setTransactionId(null); // remove transactionId as it has been already handled on source broker
@@ -214,6 +244,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
             replicaInternalMessageProducer.produceToReplicaQueue(message);
         } catch (Exception e) {
             logger.error("Failed to process message {} with JMS message id: {}", message.getMessageId(), message.getJMSMessageID(), e);
+            throw e;
         }
     }
 
@@ -232,7 +263,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
         message.removeProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
     }
 
-    private void purgeQueue(ActiveMQDestination destination) {
+    private void purgeQueue(ActiveMQDestination destination) throws Exception {
         try {
             Optional<Queue> queue = broker.getDestinations(destination).stream()
                     .findFirst().map(DestinationExtractor::extractQueue);
@@ -241,54 +272,60 @@ public class ReplicaBrokerEventListener implements MessageListener {
             }
         } catch (Exception e) {
             logger.error("Unable to replicate queue purge {}", destination, e);
+            throw e;
         }
     }
 
-    private void beginTransaction(TransactionId xid) {
+    private void beginTransaction(TransactionId xid) throws Exception {
         try {
             createTransactionMapIfNotExist();
             broker.beginTransaction(connectionContext, xid);
         } catch (Exception e) {
             logger.error("Unable to replicate begin transaction [{}]", xid, e);
+            throw e;
         }
     }
 
-    private void prepareTransaction(TransactionId xid) {
+    private void prepareTransaction(TransactionId xid) throws Exception {
         try {
             createTransactionMapIfNotExist();
             broker.prepareTransaction(connectionContext, xid);
         } catch (Exception e) {
             logger.error("Unable to replicate prepare transaction [{}]", xid, e);
+            throw e;
         }
     }
 
-    private void forgetTransaction(TransactionId xid) {
+    private void forgetTransaction(TransactionId xid) throws Exception {
         try {
             createTransactionMapIfNotExist();
             broker.forgetTransaction(connectionContext, xid);
         } catch (Exception e) {
             logger.error("Unable to replicate forget transaction [{}]", xid, e);
+            throw e;
         }
     }
 
-    private void rollbackTransaction(TransactionId xid) {
+    private void rollbackTransaction(TransactionId xid) throws Exception {
         try {
             createTransactionMapIfNotExist();
             broker.rollbackTransaction(connectionContext, xid);
         } catch (Exception e) {
             logger.error("Unable to replicate rollback transaction [{}]", xid, e);
+            throw e;
         }
     }
 
-    private void commitTransaction(TransactionId xid, boolean onePhase) {
+    private void commitTransaction(TransactionId xid, boolean onePhase) throws Exception {
         try {
             broker.commitTransaction(connectionContext, xid, onePhase);
         } catch (Exception e) {
             logger.error("Unable to replicate commit transaction [{}]", xid, e);
+            throw e;
         }
     }
 
-    private void addDurableConsumer(ConsumerInfo consumerInfo, String clientId) {
+    private void addDurableConsumer(ConsumerInfo consumerInfo, String clientId) throws Exception {
         try {
             consumerInfo.setPrefetchSize(0);
             ConnectionContext context = connectionContext.copy();
@@ -300,10 +337,11 @@ public class ReplicaBrokerEventListener implements MessageListener {
             subscription.deactivate(true, 0);
         } catch (Exception e) {
             logger.error("Unable to replicate add durable consumer [{}]", consumerInfo, e);
+            throw e;
         }
     }
 
-    private void removeDurableConsumer(ConsumerInfo consumerInfo) {
+    private void removeDurableConsumer(ConsumerInfo consumerInfo) throws Exception {
         try {
             ConnectionContext context = broker.getDestinations(consumerInfo.getDestination()).stream()
                     .findFirst()
@@ -321,10 +359,11 @@ public class ReplicaBrokerEventListener implements MessageListener {
             broker.removeConsumer(context, consumerInfo);
         } catch (Exception e) {
             logger.error("Unable to replicate remove durable consumer [{}]", consumerInfo, e);
+            throw e;
         }
     }
 
-    private void messageAck(MessageAck ack, List<String> messageIdsToAck) {
+    private void messageAck(MessageAck ack, List<String> messageIdsToAck) throws Exception {
         ActiveMQDestination destination = ack.getDestination();
         try {
 
@@ -361,6 +400,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                     ack.getFirstMessageId(),
                     ack.getLastMessageId(),
                     ack.getConsumerId(), e);
+            throw e;
         }
     }
 
