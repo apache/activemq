@@ -32,5 +32,5 @@ public enum ReplicaEventType {
     BATCH
     ;
 
-    static final String EVENT_TYPE_PROPERTY = "ActiveMQ.Replication.EventType";
+    public static final String EVENT_TYPE_PROPERTY = "ActiveMQReplicationEventType";
 }

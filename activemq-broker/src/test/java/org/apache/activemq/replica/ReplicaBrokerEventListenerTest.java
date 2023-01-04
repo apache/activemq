@@ -115,7 +115,6 @@ public class ReplicaBrokerEventListenerTest {
         listener.onMessage(replicaEventMessage);
 
         verify(broker).addDestination(connectionContext, testQueue, true);
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
@@ -135,7 +134,6 @@ public class ReplicaBrokerEventListenerTest {
         listener.onMessage(replicaEventMessage);
 
         verify(broker, never()).addDestination(connectionContext, testQueue, true);
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
@@ -155,7 +153,6 @@ public class ReplicaBrokerEventListenerTest {
         listener.onMessage(replicaEventMessage);
 
         verify(broker).removeDestination(connectionContext, testQueue, 1000);
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
@@ -175,7 +172,6 @@ public class ReplicaBrokerEventListenerTest {
         listener.onMessage(replicaEventMessage);
 
         verify(broker, never()).removeDestination(connectionContext, testQueue, 1000);
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
@@ -208,8 +204,6 @@ public class ReplicaBrokerEventListenerTest {
         verify(connectionContext, times(2)).isProducerFlowControl();
         verify(connectionContext, times(2)).setProducerFlowControl(false);
         verify(connectionContext, times(2)).setProducerFlowControl(true);
-
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
@@ -257,8 +251,6 @@ public class ReplicaBrokerEventListenerTest {
         MessageAck value = ackArgumentCaptor.getValue();
         assertThat(value.getDestination()).isEqualTo(testQueue);
         assertThat(value.getConsumerId()).isEqualTo(consumerId);
-
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
@@ -278,8 +270,6 @@ public class ReplicaBrokerEventListenerTest {
         listener.onMessage(replicaEventMessage);
 
         verify((Queue) destinationQueue).purge(any());
-
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
@@ -303,7 +293,6 @@ public class ReplicaBrokerEventListenerTest {
         List<TransactionId> values = messageArgumentCaptor.getAllValues();
         assertThat(values.get(0)).isNotEqualTo(transactionId);
         assertThat(values.get(1)).isEqualTo(transactionId);
-        verify(message).acknowledge();
     }
 
     @Test
@@ -326,7 +315,6 @@ public class ReplicaBrokerEventListenerTest {
         verify(broker).prepareTransaction(any(), messageArgumentCaptor.capture());
         TransactionId value = messageArgumentCaptor.getValue();
         assertThat(value).isEqualTo(transactionId);
-        verify(message).acknowledge();
     }
 
     @Test
@@ -349,7 +337,6 @@ public class ReplicaBrokerEventListenerTest {
         verify(broker).forgetTransaction(any(), messageArgumentCaptor.capture());
         TransactionId value = messageArgumentCaptor.getValue();
         assertThat(value).isEqualTo(transactionId);
-        verify(message).acknowledge();
     }
 
     @Test
@@ -372,7 +359,6 @@ public class ReplicaBrokerEventListenerTest {
         verify(broker).rollbackTransaction(any(), messageArgumentCaptor.capture());
         TransactionId value = messageArgumentCaptor.getValue();
         assertThat(value).isEqualTo(transactionId);
-        verify(message).acknowledge();
     }
 
     @Test
@@ -402,7 +388,6 @@ public class ReplicaBrokerEventListenerTest {
         List<Boolean> onePhaseValues = onePhaseArgumentCaptor.getAllValues();
         assertThat(onePhaseValues.get(0)).isTrue();
         assertThat(onePhaseValues.get(1)).isTrue();
-        verify(message).acknowledge();
     }
 
     @Test
@@ -437,7 +422,6 @@ public class ReplicaBrokerEventListenerTest {
         ConnectionContext connectionContext = connectionContextArgumentCaptor.getValue();
         assertThat(connectionContext.getClientId()).isEqualTo(clientId);
         verify(subscription).deactivate(true, 0);
-        verify(message).acknowledge();
     }
 
     @Test
@@ -469,7 +453,6 @@ public class ReplicaBrokerEventListenerTest {
         verify(broker).removeConsumer(any(), messageArgumentCaptor.capture());
         ConsumerInfo value = messageArgumentCaptor.getValue();
         assertThat(value.getDestination()).isEqualTo(testQueue);
-        verify(message).acknowledge();
     }
 
     @Test
@@ -514,8 +497,6 @@ public class ReplicaBrokerEventListenerTest {
         MessageAck value = ackArgumentCaptor.getValue();
         assertThat(value.getDestination()).isEqualTo(ack.getDestination());
         assertThat(value.getConsumerId()).isEqualTo(ack.getConsumerId());
-
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
@@ -594,8 +575,6 @@ public class ReplicaBrokerEventListenerTest {
         MessageAck ackValue = ackArgumentCaptor.getValue();
         assertThat(ackValue.getDestination()).isEqualTo(testQueue);
         assertThat(ackValue.getConsumerId()).isEqualTo(consumerId);
-
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
@@ -628,8 +607,6 @@ public class ReplicaBrokerEventListenerTest {
         verify(connectionContext, times(2)).isProducerFlowControl();
         verify(connectionContext, times(2)).setProducerFlowControl(false);
         verify(connectionContext, times(2)).setProducerFlowControl(true);
-
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
@@ -655,8 +632,6 @@ public class ReplicaBrokerEventListenerTest {
         verify(broker).send(any(), messageArgumentCaptor.capture());
         ActiveMQMessage value = messageArgumentCaptor.getValue();
         assertThat(value.getDestination()).isEqualTo(sequenceQueue);
-
-        verify(replicaEventMessage).acknowledge();
     }
 
     @Test
