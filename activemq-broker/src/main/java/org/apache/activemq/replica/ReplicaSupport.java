@@ -19,6 +19,7 @@ package org.apache.activemq.replica;
 import org.apache.activemq.command.ActiveMQDestination;
 
 import java.util.Set;
+import java.util.UUID;
 
 public class ReplicaSupport {
 
@@ -26,13 +27,19 @@ public class ReplicaSupport {
         // Intentionally hidden
     }
 
+    public static final String REPLICATION_PLUGIN_CONNECTION_ID = "replicationID" + UUID.randomUUID();
+
     public static final String MAIN_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Queue";
     public static final String INTERMEDIATE_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Intermediate.Queue";
     public static final String REPLICATION_PLUGIN_USER_NAME = "replication_plugin";
 
     public static final String TRANSACTION_ONE_PHASE_PROPERTY = "TRANSACTION_ONE_PHASE_PROPERTY";
     public static final String CLIENT_ID_PROPERTY = "CLIENT_ID_PROPERTY";
+    public static final String IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY = "IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY";
+    public static final String IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY = "IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY";
+    public static final String MESSAGE_ID_PROPERTY = "MESSAGE_ID_PROPERTY";
     public static final String MESSAGE_IDS_PROPERTY = "MESSAGE_IDS_PROPERTY";
+    public static final String ORIGINAL_MESSAGE_IDS_PROPERTY = "ORIGINAL_MESSAGE_IDS_PROPERTY";
     public static final String SEQUENCE_PROPERTY = "SEQUENCE_PROPERTY";
 
     public static final Object INTERMEDIATE_QUEUE_MUTEX = new Object();

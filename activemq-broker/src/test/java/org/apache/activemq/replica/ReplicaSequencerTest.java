@@ -30,6 +30,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.IOHelper;
@@ -44,7 +45,9 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -75,6 +78,8 @@ public class ReplicaSequencerTest {
 
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
 
+    private final MessageStore messageStore = mock(MessageStore.class);
+
     @Before
     public void setUp() throws Exception {
         BrokerService brokerService = mock(BrokerService.class);
@@ -102,6 +107,8 @@ public class ReplicaSequencerTest {
 
         when(broker.addConsumer(any(), any())).thenReturn(intermediateSubscription);
 
+        when(intermediateQueue.getMessageStore()).thenReturn(messageStore);
+
         sequencer.initialize();
 
         replicaStorage.initialize(storageDirectory);
@@ -125,7 +132,7 @@ public class ReplicaSequencerTest {
     public void restoreSequenceWhenStorageExistAndNoMessagesInQueue() throws Exception {
         sequencer.sequence = null;
 
-        MessageId messageId = new MessageId("1:1");
+        MessageId messageId = new MessageId("1:0:0:1");
         replicaStorage.write("1#" + messageId);
 
         when(intermediateQueue.getAllMessageIds()).thenReturn(List.of());
@@ -139,10 +146,10 @@ public class ReplicaSequencerTest {
     public void restoreSequenceWhenStorageExistAndMessageDoesNotExist() throws Exception {
         sequencer.sequence = null;
 
-        MessageId messageId = new MessageId("1:1");
+        MessageId messageId = new MessageId("1:0:0:1");
         replicaStorage.write("1#" + messageId);
 
-        when(intermediateQueue.getAllMessageIds()).thenReturn(List.of(new MessageId("1:2")));
+        when(intermediateQueue.getAllMessageIds()).thenReturn(List.of(new MessageId("1:0:0:2")));
 
         sequencer.restoreSequence();
 
@@ -151,7 +158,7 @@ public class ReplicaSequencerTest {
 
     @Test
     public void acknowledgeTest() throws Exception {
-        MessageId messageId = new MessageId("1:1");
+        MessageId messageId = new MessageId("1:0:0:1");
 
         MessageAck messageAck = new MessageAck();
         messageAck.setMessageID(messageId);
@@ -179,16 +186,16 @@ public class ReplicaSequencerTest {
     public void iterateAckTest() throws Exception {
         sequencer.messageToAck.clear();
 
-        String firstMessageId = "1:1";
+        String firstMessageId = "1:0:0:1";
         sequencer.messageToAck.addLast(firstMessageId);
-        sequencer.messageToAck.addLast("1:2");
-        String lastMessageId = "1:3";
+        sequencer.messageToAck.addLast("1:0:0:2");
+        String lastMessageId = "1:0:0:3";
         sequencer.messageToAck.addLast(lastMessageId);
 
         sequencer.iterateAck();
 
         ArgumentCaptor<MessageAck> ackArgumentCaptor = ArgumentCaptor.forClass(MessageAck.class);
-        verify(intermediateSubscription).acknowledge(any(), ackArgumentCaptor.capture());
+        verify(broker).acknowledge(any(), ackArgumentCaptor.capture());
 
         MessageAck value = ackArgumentCaptor.getValue();
         assertThat(value.getAckType()).isEqualTo(MessageAck.STANDARD_ACK_TYPE);
@@ -200,7 +207,7 @@ public class ReplicaSequencerTest {
 
     @Test
     public void iterateSendTest() throws Exception {
-        MessageId messageId = new MessageId("1:1");
+        MessageId messageId = new MessageId("1:0:0:1");
 
         ActiveMQMessage message = new ActiveMQMessage();
         message.setMessageId(messageId);
@@ -222,9 +229,9 @@ public class ReplicaSequencerTest {
 
     @Test
     public void iterateSendTestWhenSomeMessagesAreadyDelivered() throws Exception {
-        MessageId messageId1 = new MessageId("1:1");
-        MessageId messageId2 = new MessageId("1:2");
-        MessageId messageId3 = new MessageId("1:3");
+        MessageId messageId1 = new MessageId("1:0:0:1");
+        MessageId messageId2 = new MessageId("1:0:0:2");
+        MessageId messageId3 = new MessageId("1:0:0:3");
 
         ActiveMQMessage message1 = new ActiveMQMessage();
         message1.setMessageId(messageId1);
@@ -252,44 +259,294 @@ public class ReplicaSequencerTest {
     }
 
     @Test
+    public void iterateSendTestWhenRecoveryMessageIdIsNotNullAndDispatched() throws Exception {
+        MessageId messageId1 = new MessageId("1:0:0:1");
+        MessageId messageId2 = new MessageId("1:0:0:2");
+        MessageId messageId3 = new MessageId("1:0:0:3");
+
+        ActiveMQMessage message1 = new ActiveMQMessage();
+        message1.setMessageId(messageId1);
+        ActiveMQMessage message2 = new ActiveMQMessage();
+        message2.setMessageId(messageId2);
+        ActiveMQMessage message3 = new ActiveMQMessage();
+        message3.setMessageId(messageId3);
+
+        when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3)));
+
+        sequencer.recoveryMessageId = messageId2;
+
+        sequencer.iterateSend();
+
+        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
+        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
+
+        ReplicaEvent value = argumentCaptor.getValue();
+        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
+        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId1.toString(), messageId2.toString());
+        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
+        assertThat(objects.size()).isEqualTo(2);
+        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId1);
+        assertThat(((Message) objects.get(1)).getMessageId()).isEqualTo(messageId2);
+    }
+
+    @Test
+    public void iterateSendTestWhenRecoveryMessageIdIsNotNullAndNotDispatched() throws Exception {
+        MessageId messageId1 = new MessageId("1:0:0:1");
+        MessageId messageId2 = new MessageId("1:0:0:2");
+        MessageId messageId3 = new MessageId("1:0:0:3");
+
+        ActiveMQMessage message1 = new ActiveMQMessage();
+        message1.setMessageId(messageId1);
+        ActiveMQMessage message2 = new ActiveMQMessage();
+        message2.setMessageId(messageId2);
+        ActiveMQMessage message3 = new ActiveMQMessage();
+        message3.setMessageId(messageId3);
+
+        when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3)));
+
+        sequencer.recoveryMessageId = new MessageId("1:0:0:4");
+
+        sequencer.iterateSend();
+
+        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
+        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
+
+        ReplicaEvent value = argumentCaptor.getValue();
+        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
+        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId1.toString(), messageId2.toString(), messageId3.toString());
+        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
+        assertThat(objects.size()).isEqualTo(3);
+        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId1);
+        assertThat(((Message) objects.get(1)).getMessageId()).isEqualTo(messageId2);
+        assertThat(((Message) objects.get(2)).getMessageId()).isEqualTo(messageId3);
+    }
+
+    @Test
+    public void iterateSendTestWhenCompactionPossible() throws Exception {
+        MessageId messageId1 = new MessageId("1:0:0:1");
+        MessageId messageId2 = new MessageId("1:0:0:2");
+        MessageId messageId3 = new MessageId("1:0:0:3");
+
+        String messageIdToAck = "2:1";
+
+        ActiveMQMessage message1 = new ActiveMQMessage();
+        message1.setMessageId(messageId1);
+        message1.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        message1.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, messageIdToAck);
+        ActiveMQMessage message2 = new ActiveMQMessage();
+        message2.setMessageId(messageId2);
+        message2.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage message3 = new ActiveMQMessage();
+        message3.setMessageId(messageId3);
+        message3.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        message3.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(messageIdToAck));
+
+        when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3)));
+
+        sequencer.recoveryMessageId = null;
+
+        sequencer.iterateSend();
+
+        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
+        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
+
+        ReplicaEvent value = argumentCaptor.getValue();
+        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
+        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId2.toString());
+        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
+        assertThat(objects.size()).isEqualTo(1);
+        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId2);
+
+        ArgumentCaptor<MessageAck> ackCaptor = ArgumentCaptor.forClass(MessageAck.class);
+        verify(broker, times(2)).acknowledge(any(), ackCaptor.capture());
+
+        List<MessageAck> values = ackCaptor.getAllValues();
+        MessageAck messageAck = values.get(0);
+        assertThat(messageAck.getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(messageAck.getMessageCount()).isEqualTo(1);
+        assertThat(messageAck.getLastMessageId()).isEqualTo(messageId1);
+        messageAck = values.get(1);
+        assertThat(messageAck.getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(messageAck.getMessageCount()).isEqualTo(1);
+        assertThat(messageAck.getLastMessageId()).isEqualTo(messageId3);
+    }
+
+    @Test
+    public void iterateSendTestWhenCompactionPossibleAndRecoveryMessageIdIsNotNull() throws Exception {
+        MessageId messageId1 = new MessageId("1:0:0:1");
+        MessageId messageId2 = new MessageId("1:0:0:2");
+        MessageId messageId3 = new MessageId("1:0:0:3");
+
+        String messageIdToAck = "2:1";
+
+        ActiveMQMessage message1 = new ActiveMQMessage();
+        message1.setMessageId(messageId1);
+        message1.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        message1.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, messageIdToAck);
+        ActiveMQMessage message2 = new ActiveMQMessage();
+        message2.setMessageId(messageId2);
+        message2.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage message3 = new ActiveMQMessage();
+        message3.setMessageId(messageId3);
+        message3.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        message3.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(messageIdToAck));
+
+        when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3)));
+
+        sequencer.recoveryMessageId = messageId3;
+
+        sequencer.iterateSend();
+
+        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
+        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
+
+        ReplicaEvent value = argumentCaptor.getValue();
+        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
+        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId1.toString(), messageId2.toString(), messageId3.toString());
+        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
+        assertThat(objects.size()).isEqualTo(3);
+        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId1);
+        assertThat(((Message) objects.get(1)).getMessageId()).isEqualTo(messageId2);
+        assertThat(((Message) objects.get(2)).getMessageId()).isEqualTo(messageId3);
+    }
+
+    @Test
     public void batchesSmallMessages() {
         List<MessageReference> list = new ArrayList<>();
         for (int i = 0; i < 1347; i++) {
-            list.add(new DummyMessageReference(new MessageId("1:" + i), 1));
+            list.add(new DummyMessageReference(new MessageId("1:0:0:" + i), 1));
         }
 
         List<List<MessageReference>> batches = sequencer.batches(list);
         assertThat(batches.size()).isEqualTo(3);
         assertThat(batches.get(0).size()).isEqualTo(ReplicaSequencer.MAX_BATCH_LENGTH);
         for (int i = 0; i < ReplicaSequencer.MAX_BATCH_LENGTH; i++) {
-            assertThat(batches.get(0).get(i).getMessageId().toString()).isEqualTo("1:" + i);
+            assertThat(batches.get(0).get(i).getMessageId().toString()).isEqualTo("1:0:0:" + i);
         }
         assertThat(batches.get(1).size()).isEqualTo(ReplicaSequencer.MAX_BATCH_LENGTH);
         for (int i = 0; i < ReplicaSequencer.MAX_BATCH_LENGTH; i++) {
-            assertThat(batches.get(1).get(i).getMessageId().toString()).isEqualTo("1:" + (i + ReplicaSequencer.MAX_BATCH_LENGTH));
+            assertThat(batches.get(1).get(i).getMessageId().toString()).isEqualTo("1:0:0:" + (i + ReplicaSequencer.MAX_BATCH_LENGTH));
         }
         assertThat(batches.get(2).size()).isEqualTo(347);
         for (int i = 0; i < 347; i++) {
-            assertThat(batches.get(2).get(i).getMessageId().toString()).isEqualTo("1:" + (i + ReplicaSequencer.MAX_BATCH_LENGTH * 2));
+            assertThat(batches.get(2).get(i).getMessageId().toString()).isEqualTo("1:0:0:" + (i + ReplicaSequencer.MAX_BATCH_LENGTH * 2));
         }
     }
 
     @Test
     public void batchesBigMessages() {
         List<MessageReference> list = new ArrayList<>();
-        list.add(new DummyMessageReference(new MessageId("1:1"), ReplicaSequencer.MAX_BATCH_SIZE + 1));
-        list.add(new DummyMessageReference(new MessageId("1:2"), ReplicaSequencer.MAX_BATCH_SIZE / 2 + 1));
-        list.add(new DummyMessageReference(new MessageId("1:3"), ReplicaSequencer.MAX_BATCH_SIZE / 2));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:1"), ReplicaSequencer.MAX_BATCH_SIZE + 1));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:2"), ReplicaSequencer.MAX_BATCH_SIZE / 2 + 1));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:3"), ReplicaSequencer.MAX_BATCH_SIZE / 2));
 
         List<List<MessageReference>> batches = sequencer.batches(list);
-        System.out.println(batches);
         assertThat(batches.size()).isEqualTo(3);
         assertThat(batches.get(0).size()).isEqualTo(1);
-        assertThat(batches.get(0).get(0).getMessageId().toString()).isEqualTo("1:1");
+        assertThat(batches.get(0).get(0).getMessageId().toString()).isEqualTo("1:0:0:1");
         assertThat(batches.get(1).size()).isEqualTo(1);
-        assertThat(batches.get(1).get(0).getMessageId().toString()).isEqualTo("1:2");
+        assertThat(batches.get(1).get(0).getMessageId().toString()).isEqualTo("1:0:0:2");
         assertThat(batches.get(2).size()).isEqualTo(1);
-        assertThat(batches.get(2).get(0).getMessageId().toString()).isEqualTo("1:3");
+        assertThat(batches.get(2).get(0).getMessageId().toString()).isEqualTo("1:0:0:3");
+    }
+
+    @Test
+    public void compactWhenSendAndAck() throws Exception {
+        MessageId messageId1 = new MessageId("1:0:0:1");
+        MessageId messageId2 = new MessageId("1:0:0:2");
+        MessageId messageId3 = new MessageId("1:0:0:3");
+
+        String messageIdToAck = "2:1";
+
+        ActiveMQMessage message1 = new ActiveMQMessage();
+        message1.setMessageId(messageId1);
+        message1.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        message1.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, messageIdToAck);
+        ActiveMQMessage message2 = new ActiveMQMessage();
+        message2.setMessageId(messageId2);
+        message2.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage message3 = new ActiveMQMessage();
+        message3.setMessageId(messageId3);
+        message3.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        message3.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(messageIdToAck));
+
+        List<MessageReference> result = sequencer.compactAndFilter(List.of(message1, message2, message3));
+
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.get(0).getMessageId()).isEqualTo(messageId2);
+
+        verify(broker).beginTransaction(any(), any());
+
+        ArgumentCaptor<MessageAck> ackCaptor = ArgumentCaptor.forClass(MessageAck.class);
+        verify(broker, times(2)).acknowledge(any(), ackCaptor.capture());
+
+        List<MessageAck> values = ackCaptor.getAllValues();
+        MessageAck messageAck = values.get(0);
+        assertThat(messageAck.getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(messageAck.getMessageCount()).isEqualTo(1);
+        assertThat(messageAck.getLastMessageId()).isEqualTo(messageId1);
+        messageAck = values.get(1);
+        assertThat(messageAck.getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(messageAck.getMessageCount()).isEqualTo(1);
+        assertThat(messageAck.getLastMessageId()).isEqualTo(messageId3);
+
+        verify(broker).commitTransaction(any(), any(), eq(true));
+    }
+
+    @Test
+    public void compactWhenSendAndHalfAck() throws Exception {
+        MessageId messageId1 = new MessageId("1:0:0:1");
+        MessageId messageId2 = new MessageId("1:0:0:2");
+        MessageId messageId3 = new MessageId("1:0:0:3");
+
+        String messageIdToAck1 = "2:0:0:1";
+        String messageIdToAck2 = "2:0:0:2";
+
+        ActiveMQMessage message1 = new ActiveMQMessage();
+        message1.setMessageId(messageId1);
+        message1.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        message1.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, messageIdToAck1);
+        ActiveMQMessage message2 = new ActiveMQMessage();
+        message2.setMessageId(messageId2);
+        message2.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage message3 = new ActiveMQMessage();
+        message3.setMessageId(messageId3);
+        message3.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        message3.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(messageIdToAck1, messageIdToAck2));
+
+        List<MessageReference> result = sequencer.compactAndFilter(List.of(message1, message2, message3));
+
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.get(0).getMessageId()).isEqualTo(messageId2);
+        assertThat(result.get(1).getMessageId()).isEqualTo(messageId3);
+        assertThat((List<String>) result.get(1).getMessage().getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageIdToAck2);
+
+        verify(messageStore).updateMessage(result.get(1).getMessage());
+
+        verify(broker).beginTransaction(any(), any());
+
+        ArgumentCaptor<MessageAck> ackCaptor = ArgumentCaptor.forClass(MessageAck.class);
+        verify(broker).acknowledge(any(), ackCaptor.capture());
+
+        List<MessageAck> values = ackCaptor.getAllValues();
+        MessageAck messageAck = values.get(0);
+        assertThat(messageAck.getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(messageAck.getMessageCount()).isEqualTo(1);
+        assertThat(messageAck.getLastMessageId()).isEqualTo(messageId1);
+
+        verify(broker).commitTransaction(any(), any(), eq(true));
     }
 
     private static class DummyMessageReference implements MessageReference {

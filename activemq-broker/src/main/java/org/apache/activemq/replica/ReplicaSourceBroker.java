@@ -41,7 +41,6 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.security.SecurityContext;
-import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,14 +51,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     private static final DestinationMapEntry<Boolean> IS_REPLICATED = new DestinationMapEntry<>() {
     }; // used in destination map to indicate mirrored status
     static final String REPLICATION_CONNECTOR_NAME = "replication";
-    static final String REPLICATION_PLUGIN_CONNECTION_ID = "replicationID" + UUID.randomUUID();
     private static final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
 
     private final ReplicaSequencer replicaSequencer;
@@ -140,12 +137,18 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     private void replicateSend(ConnectionContext context, Message message, TransactionId transactionId) {
         try {
+            TransactionId originalTransactionId = message.getTransactionId();
             enqueueReplicaEvent(
                     context,
                     new ReplicaEvent()
                             .setEventType(ReplicaEventType.MESSAGE_SEND)
                             .setEventData(eventSerializer.serializeMessageData(message))
                             .setTransactionId(transactionId)
+                            .setReplicationProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, message.getMessageId().toString())
+                            .setReplicationProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY,
+                                    message.getDestination().isQueue())
+                            .setReplicationProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY,
+                                    originalTransactionId != null && originalTransactionId.isXATransaction())
             );
         } catch (Exception e) {
             logger.error("Failed to replicate message {} for destination {}", message.getMessageId(), message.getDestination().getPhysicalName(), e);
@@ -412,7 +415,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         if (messageSend.getTransactionId() != null && !messageSend.getTransactionId().isXATransaction()) {
             transactionId = messageSend.getTransactionId();
         } else if (messageSend.getTransactionId() == null) {
-            transactionId = new LocalTransactionId(new ConnectionId(REPLICATION_PLUGIN_CONNECTION_ID),
+            transactionId = new LocalTransactionId(new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
                     localTransactionIdGenerator.getNextSequenceId());
             super.beginTransaction(connectionContext, transactionId);
             messageSend.setTransactionId(transactionId);
@@ -519,7 +522,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         if (ack.getTransactionId() != null && !ack.getTransactionId().isXATransaction()) {
             transactionId = ack.getTransactionId();
         } else if (ack.getTransactionId() == null) {
-            transactionId = new LocalTransactionId(new ConnectionId(REPLICATION_PLUGIN_CONNECTION_ID),
+            transactionId = new LocalTransactionId(new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
                     localTransactionIdGenerator.getNextSequenceId());
             super.beginTransaction(connectionContext, transactionId);
             ack.setTransactionId(transactionId);
@@ -569,6 +572,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
     private void replicateAck(ConnectionContext connectionContext, MessageAck ack, TransactionId transactionId,
             List<String> messageIdsToAck) {
         try {
+            TransactionId originalTransactionId = ack.getTransactionId();
             enqueueReplicaEvent(
                     connectionContext,
                     new ReplicaEvent()
@@ -576,6 +580,10 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
                             .setEventData(eventSerializer.serializeReplicationData(ack))
                             .setTransactionId(transactionId)
                             .setReplicationProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, messageIdsToAck)
+                            .setReplicationProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY,
+                                    ack.getDestination().isQueue())
+                            .setReplicationProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY,
+                                    originalTransactionId != null && originalTransactionId.isXATransaction())
             );
         } catch (Exception e) {
             logger.error("Failed to replicate ack messages [{} <-> {}] for consumer {}",

@@ -12,9 +12,11 @@ import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SessionId;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -28,9 +30,13 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -52,14 +58,18 @@ public class ReplicaSequencer implements Task {
     final LinkedList<String> messageToAck = new LinkedList<>();
     private final ReplicaStorage replicaStorage;
 
+    private final LongSequenceGenerator localTransactionIdGenerator = new LongSequenceGenerator();
     private TaskRunner taskRunner;
     private Queue intermediateQueue;
     private Queue mainQueue;
+    private ConnectionContext connectionContext;
 
     private PrefetchSubscription subscription;
     private ConsumerId consumerId;
 
     BigInteger sequence = BigInteger.ZERO;
+    MessageId recoveryMessageId;
+
 
     private final AtomicBoolean initialized = new AtomicBoolean();
 
@@ -80,9 +90,9 @@ public class ReplicaSequencer implements Task {
         mainQueue = broker.getDestinations(queueProvider.getMainQueue()).stream().findFirst()
                 .map(DestinationExtractor::extractQueue).orElseThrow();
 
-        ConnectionContext context = broker.getAdminConnectionContext().copy();
-        context.setClientId(SOURCE_CONSUMER_CLIENT_ID);
-        context.setConnection(new DummyConnection() {
+        connectionContext = broker.getAdminConnectionContext().copy();
+        connectionContext.setClientId(SOURCE_CONSUMER_CLIENT_ID);
+        connectionContext.setConnection(new DummyConnection() {
             @Override
             public void dispatchAsync(Command command) {
                 asyncWakeup();
@@ -93,6 +103,9 @@ public class ReplicaSequencer implements Task {
                 asyncWakeup();
             }
         });
+        if (connectionContext.getTransactions() == null) {
+            connectionContext.setTransactions(new ConcurrentHashMap<>());
+        }
 
         ConnectionId connectionId = new ConnectionId(new IdGenerator("ReplicationPlugin.Sequencer").generateId());
         SessionId sessionId = new SessionId(connectionId, new LongSequenceGenerator().getNextSequenceId());
@@ -101,7 +114,7 @@ public class ReplicaSequencer implements Task {
         consumerInfo.setConsumerId(consumerId);
         consumerInfo.setPrefetchSize(10000);
         consumerInfo.setDestination(queueProvider.getIntermediateQueue());
-        subscription = (PrefetchSubscription) broker.addConsumer(context, consumerInfo);
+        subscription = (PrefetchSubscription) broker.addConsumer(connectionContext, consumerInfo);
 
         replicaStorage.initialize(new File(broker.getBrokerService().getBrokerDataDirectory(),
                 ReplicaSupport.REPLICATION_PLUGIN_STORAGE_DIRECTORY));
@@ -123,8 +136,8 @@ public class ReplicaSequencer implements Task {
         }
         sequence = new BigInteger(split[0]);
 
-        MessageId messageId = new MessageId(split[1]);
-        int index = intermediateQueue.getAllMessageIds().indexOf(messageId);
+        recoveryMessageId = new MessageId(split[1]);
+        int index = intermediateQueue.getAllMessageIds().indexOf(recoveryMessageId);
         if (index == -1) {
             return;
         }
@@ -132,6 +145,7 @@ public class ReplicaSequencer implements Task {
         sequence = sequence.subtract(BigInteger.valueOf(index + 1));
     }
 
+    @SuppressWarnings("unchecked")
     void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         PrefetchSubscription subscription = mainQueue.getConsumers().stream()
                 .filter(c -> c.getConsumerInfo().getConsumerId().equals(ack.getConsumerId()))
@@ -194,8 +208,21 @@ public class ReplicaSequencer implements Task {
 
         if (!messages.isEmpty()) {
             try {
+                TransactionId transactionId = new LocalTransactionId(
+                        new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
+                        localTransactionIdGenerator.getNextSequenceId());
+                ack.setTransactionId(transactionId);
+
                 synchronized (ReplicaSupport.INTERMEDIATE_QUEUE_MUTEX) {
-                    subscription.acknowledge(broker.getAdminConnectionContext(), ack);
+                    broker.beginTransaction(connectionContext, transactionId);
+
+                    ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
+                    consumerExchange.setConnectionContext(connectionContext);
+                    consumerExchange.setSubscription(subscription);
+
+                    broker.acknowledge(consumerExchange, ack);
+
+                    broker.commitTransaction(connectionContext, transactionId, true);
                 }
 
                 synchronized (messageToAck) {
@@ -217,6 +244,8 @@ public class ReplicaSequencer implements Task {
         List<MessageReference> dispatched = subscription.getDispatched();
         List<MessageReference> toProcess = new ArrayList<>();
 
+        MessageReference recoveryMessage = null;
+
         synchronized (deliveredMessages) {
             Collections.reverse(dispatched);
             for (MessageReference reference : dispatched) {
@@ -225,60 +254,81 @@ public class ReplicaSequencer implements Task {
                     break;
                 }
                 toProcess.add(reference);
+                if (messageId.equals(recoveryMessageId)) {
+                    recoveryMessage = reference;
+                }
             }
         }
 
-        if (!toProcess.isEmpty()) {
-            Collections.reverse(toProcess);
-            List<List<MessageReference>> batches = batches(toProcess);
+        if (toProcess.isEmpty()) {
+            return;
+        }
 
-            MessageId lastProcessedMessageId = null;
-            for (List<MessageReference> batch : batches) {
-                try {
-                    List<String> messageIds = new ArrayList<>();
-                    List<DataStructure> messages = new ArrayList<>();
-                    for (MessageReference reference : batch) {
-                        ActiveMQMessage originalMessage = (ActiveMQMessage) reference.getMessage();
-                        sequence = sequence.add(BigInteger.ONE);
+        Collections.reverse(toProcess);
 
-                        ActiveMQMessage message = (ActiveMQMessage) originalMessage.copy();
+        if (recoveryMessage != null) {
+            toProcess = toProcess.subList(0, toProcess.indexOf(recoveryMessage) + 1);
+        }
 
-                        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, sequence.toString());
-
-                        message.setDestination(null);
-                        message.setTransactionId(null);
-                        message.setPersistent(false);
-
-                        messageIds.add(reference.getMessageId().toString());
-                        messages.add(message);
-                    }
-
-                    ReplicaEvent replicaEvent = new ReplicaEvent()
-                            .setEventType(ReplicaEventType.BATCH)
-                            .setEventData(eventSerializer.serializeListOfObjects(messages))
-                            .setReplicationProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, messageIds);
-
-                    replicationMessageProducer.enqueueMainReplicaEvent(broker.getAdminConnectionContext(),
-                            replicaEvent);
-
-                    synchronized (deliveredMessages) {
-                        deliveredMessages.addAll(messageIds);
-                    }
-                    lastProcessedMessageId = batch.get(batch.size() - 1).getMessageId();
-                } catch (Exception e) {
-                    sequence = sequence.subtract(BigInteger.valueOf(batch.size()));
-                    logger.error("Could not persist message in the main replication queue", e);
-                    break;
-                }
+        if (recoveryMessageId == null) {
+            try {
+                toProcess = compactAndFilter(toProcess);
+            } catch (Exception e) {
+                logger.error("Filed to compact messages in the intermediate replication queue", e);
+                return;
             }
+        }
+        List<List<MessageReference>> batches = batches(toProcess);
 
-            if (lastProcessedMessageId != null) {
-                try {
-                    replicaStorage.write(sequence.toString() + "#" + lastProcessedMessageId);
-                } catch (Exception e) {
-                    logger.error("Could not write source sequence to disk", e);
+        MessageId lastProcessedMessageId = null;
+        for (List<MessageReference> batch : batches) {
+            try {
+                List<String> messageIds = new ArrayList<>();
+                List<DataStructure> messages = new ArrayList<>();
+                for (MessageReference reference : batch) {
+                    ActiveMQMessage originalMessage = (ActiveMQMessage) reference.getMessage();
+                    sequence = sequence.add(BigInteger.ONE);
+
+                    ActiveMQMessage message = (ActiveMQMessage) originalMessage.copy();
+
+                    message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, sequence.toString());
+
+                    message.setDestination(null);
+                    message.setTransactionId(null);
+                    message.setPersistent(false);
+
+                    messageIds.add(reference.getMessageId().toString());
+                    messages.add(message);
                 }
+
+                ReplicaEvent replicaEvent = new ReplicaEvent()
+                        .setEventType(ReplicaEventType.BATCH)
+                        .setEventData(eventSerializer.serializeListOfObjects(messages))
+                        .setReplicationProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, messageIds);
+
+                replicationMessageProducer.enqueueMainReplicaEvent(connectionContext, replicaEvent);
+
+                synchronized (deliveredMessages) {
+                    deliveredMessages.addAll(messageIds);
+                }
+                lastProcessedMessageId = batch.get(batch.size() - 1).getMessageId();
+            } catch (Exception e) {
+                sequence = sequence.subtract(BigInteger.valueOf(batch.size()));
+                logger.error("Filed to persist message in the main replication queue", e);
+                break;
             }
+        }
+
+        if (lastProcessedMessageId != null) {
+            try {
+                replicaStorage.write(sequence.toString() + "#" + lastProcessedMessageId);
+            } catch (Exception e) {
+                logger.error("Filed to write source sequence to disk", e);
+            }
+        }
+
+        if (recoveryMessage != null) {
+            recoveryMessageId = null;
         }
     }
 
@@ -301,6 +351,97 @@ public class ReplicaSequencer implements Task {
         if (batch.size() > 0) {
             result.add(batch);
         }
+
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    List<MessageReference> compactAndFilter(List<MessageReference> list) throws Exception {
+        List<MessageReference> result = new ArrayList<>(list);
+        Map<String, MessageId> sendMap = new LinkedHashMap<>();
+        Map<List<String>, ActiveMQMessage> ackMap = new LinkedHashMap<>();
+        for (MessageReference reference : list) {
+            ActiveMQMessage message = (ActiveMQMessage) reference.getMessage();
+
+            if (!message.getBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY)
+                    || message.getBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY)) {
+                continue;
+            }
+
+            ReplicaEventType eventType =
+                    ReplicaEventType.valueOf(message.getStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY));
+            MessageId messageId = reference.getMessageId();
+            if (eventType == ReplicaEventType.MESSAGE_SEND) {
+                sendMap.put(message.getStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY), messageId);
+            }
+            if (eventType == ReplicaEventType.MESSAGE_ACK) {
+                List<String> messageIds = (List<String>)
+                        Optional.ofNullable(message.getProperty(ReplicaSupport.ORIGINAL_MESSAGE_IDS_PROPERTY))
+                                .orElse(message.getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY));
+
+                ackMap.put(messageIds, message);
+            }
+        }
+
+        List<MessageId> toDelete = new ArrayList<>();
+
+        for (Map.Entry<List<String>, ActiveMQMessage> ack : ackMap.entrySet()) {
+            List<String> sends = new ArrayList<>();
+            List<String> messagesToAck = ack.getKey();
+            for (String id : messagesToAck) {
+                if (sendMap.containsKey(id)) {
+                    sends.add(id);
+                    toDelete.add(sendMap.get(id));
+                }
+            }
+            if (sends.size() == 0) {
+                continue;
+            }
+
+            ActiveMQMessage message = ack.getValue();
+            if (messagesToAck.size() == sends.size() && new HashSet<>(messagesToAck).containsAll(sends)) {
+                toDelete.add(message.getMessageId());
+                continue;
+            }
+
+            message.setProperty(ReplicaSupport.ORIGINAL_MESSAGE_IDS_PROPERTY, messagesToAck);
+            ArrayList<String> newList = new ArrayList<>(messagesToAck);
+            newList.removeAll(sends);
+            message.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, newList);
+
+            synchronized (ReplicaSupport.INTERMEDIATE_QUEUE_MUTEX) {
+                intermediateQueue.getMessageStore().updateMessage(message);
+            }
+        }
+
+        if (toDelete.isEmpty()) {
+            return result;
+        }
+
+        TransactionId transactionId = new LocalTransactionId(
+                new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
+                localTransactionIdGenerator.getNextSequenceId());
+
+        synchronized (ReplicaSupport.INTERMEDIATE_QUEUE_MUTEX) {
+            broker.beginTransaction(connectionContext, transactionId);
+
+            ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
+            consumerExchange.setConnectionContext(connectionContext);
+            consumerExchange.setSubscription(subscription);
+
+            for (MessageId id : toDelete) {
+                MessageAck ack = new MessageAck();
+                ack.setMessageID(id);
+                ack.setMessageCount(1);
+                ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
+                ack.setDestination(queueProvider.getIntermediateQueue());
+                broker.acknowledge(consumerExchange, ack);
+            }
+
+            broker.commitTransaction(connectionContext, transactionId, true);
+        }
+
+        result.removeIf(reference -> toDelete.contains(reference.getMessageId()));
 
         return result;
     }
