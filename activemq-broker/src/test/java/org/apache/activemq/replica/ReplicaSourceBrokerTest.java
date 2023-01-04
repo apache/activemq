@@ -77,7 +77,6 @@ public class ReplicaSourceBrokerTest {
     public void setUp() throws Exception {
         when(broker.getBrokerService()).thenReturn(brokerService);
         when(broker.getAdminConnectionContext()).thenReturn(connectionContext);
-        when(brokerService.getBroker()).thenReturn(source);
         when(brokerService.addConnector(transportConnectorUri)).thenReturn(transportConnector);
         when(connectionContext.isProducerFlowControl()).thenReturn(true);
         when(connectionContext.getConnector()).thenReturn(transportConnector);
@@ -192,12 +191,6 @@ public class ReplicaSourceBrokerTest {
         assertThat(eventSerializer.deserializeMessageData(replicaMessage.getContent())).isEqualTo(message);
 
         verifyConnectionContext(connectionContext);
-    }
-
-    private void verifyConnectionContext(ConnectionContext context) {
-        verify(context).isProducerFlowControl();
-        verify(context).setProducerFlowControl(false);
-        verify(context).setProducerFlowControl(true);
     }
 
     @Test
@@ -583,5 +576,11 @@ public class ReplicaSourceBrokerTest {
 
         verify(connectionContext, never()).isProducerFlowControl();
         verify(connectionContext, never()).setProducerFlowControl(anyBoolean());
+    }
+
+    private void verifyConnectionContext(ConnectionContext context) {
+        verify(context).isProducerFlowControl();
+        verify(context).setProducerFlowControl(false);
+        verify(context).setProducerFlowControl(true);
     }
 }

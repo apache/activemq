@@ -357,5 +357,4 @@ public class EmptyBroker implements Broker {
     @Override
     public void queuePurged(ConnectionContext context, ActiveMQDestination destination) {
     }
-
 }
