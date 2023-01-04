@@ -42,6 +42,8 @@ import static java.util.Objects.requireNonNull;
 
 public class ReplicaBroker extends BrokerFilter {
 
+    private final static long REPLICA_ACK_PERIOD = 5_000;
+
     private final Logger logger = LoggerFactory.getLogger(ReplicaBroker.class);
     private final ScheduledExecutorService brokerConnectionPoller = Executors.newSingleThreadScheduledExecutor();
     private final ScheduledExecutorService periodicAckPoller = Executors.newSingleThreadScheduledExecutor();
@@ -51,14 +53,12 @@ public class ReplicaBroker extends BrokerFilter {
     private final AtomicReference<ActiveMQMessageConsumer> eventConsumer = new AtomicReference<>();
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ActiveMQConnectionFactory replicaSourceConnectionFactory;
-    private final long replicaAckPeriod;
-    private final PeriodAcknowledge<Void> periodAcknowledgeCallBack;
+    private final PeriodAcknowledge periodAcknowledgeCallBack;
 
-    public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ActiveMQConnectionFactory replicaSourceConnectionFactory, final long replicaAckPeriod) {
+    public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ActiveMQConnectionFactory replicaSourceConnectionFactory) {
         super(next);
         this.queueProvider = queueProvider;
-        this.replicaAckPeriod = replicaAckPeriod;
-        this.periodAcknowledgeCallBack = new PeriodAcknowledge<>(replicaAckPeriod);
+        this.periodAcknowledgeCallBack = new PeriodAcknowledge(REPLICA_ACK_PERIOD);
         this.replicaSourceConnectionFactory = requireNonNull(replicaSourceConnectionFactory, "Need connection details of replica source for this broker");
         requireNonNull(replicaSourceConnectionFactory.getBrokerURL(), "Need connection URI of replica source for this broker");
         validateUser(replicaSourceConnectionFactory);
@@ -81,12 +81,12 @@ public class ReplicaBroker extends BrokerFilter {
         periodicAckPoller.scheduleAtFixedRate(() -> {
             synchronized (periodAcknowledgeCallBack) {
                 try {
-                    periodAcknowledgeCallBack.call();
+                    periodAcknowledgeCallBack.acknowledge();
                 } catch (Exception e) {
                     logger.error("Failed to Acknowledge replication Queue message {}", e.getMessage());
                 }
             }
-        }, replicaAckPeriod, replicaAckPeriod, TimeUnit.MILLISECONDS);
+        }, REPLICA_ACK_PERIOD, REPLICA_ACK_PERIOD, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -187,7 +187,7 @@ public class ReplicaBroker extends BrokerFilter {
                 synchronized (periodAcknowledgeCallBack) {
                     super.dispatch(md);
                     try {
-                        periodAcknowledgeCallBack.call();
+                        periodAcknowledgeCallBack.acknowledge();
                     } catch (Exception e) {
                         logger.error("Failed to acknowledge replication message [{}]", e);
                     }

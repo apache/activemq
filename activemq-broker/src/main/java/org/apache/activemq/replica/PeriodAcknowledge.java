@@ -19,13 +19,13 @@ package org.apache.activemq.replica;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQSession;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class PeriodAcknowledge<Void> implements Callable<Void> {
+public class PeriodAcknowledge {
 
+    private static final int MAX_ACK_BATCH_SIZE = 100;
     private boolean safeToAck = true;
     private final AtomicLong lastAckTime = new AtomicLong();
     private final AtomicInteger pendingAckCount = new AtomicInteger();
@@ -55,22 +55,21 @@ public class PeriodAcknowledge<Void> implements Callable<Void> {
         return System.currentTimeMillis() - lastAckTime.get() >= replicaAckPeriod;
     }
 
-    private boolean needToFreePrefetchRoom() {
-        return pendingAckCount.incrementAndGet() >= connection.get().getPrefetchPolicy().getQueuePrefetch() / 2;
+    private boolean reachedMaxAckBatchSize() {
+        return pendingAckCount.incrementAndGet() >= MAX_ACK_BATCH_SIZE;
     }
 
-    public Void call () throws Exception {
+    public void acknowledge() throws Exception {
         if (connection.get() == null || connectionSession.get() == null || !safeToAck) {
-            return null;
+            return;
         }
 
         synchronized (periodicCommitLock) {
-            if (needToFreePrefetchRoom() || shouldPeriodicallyCommit()) {
+            if (reachedMaxAckBatchSize() || shouldPeriodicallyCommit()) {
                 connectionSession.get().acknowledge();
                 lastAckTime.set(System.currentTimeMillis());
                 pendingAckCount.set(0);
             }
         }
-        return null;
     }
 }

@@ -181,26 +181,5 @@ public class ReplicaPluginTest {
 
         assertThat(plugin.otherBrokerConnectionFactory.getUserName()).isEqualTo(user);
         assertThat(plugin.otherBrokerConnectionFactory.getPassword()).isEqualTo(password);
-        assertThat(plugin.otherBrokerConnectionFactory.getPrefetchPolicy().getQueuePrefetch()).isEqualTo(plugin.prefetchLimit);
     }
-
-    @Test
-    public void canSetPrefetchLimit() {
-        final String user = "testUser";
-        final String password = "testPassword";
-        final Broker broker = mock(Broker.class);
-        final String replicationTransport = "tcp://localhost:61616";
-        final int prefetchLimit = 100;
-
-        plugin.setRole(ReplicaRole.replica);
-        plugin.setPassword(password);
-        plugin.setUserName(user);
-        plugin.setTransportConnectorUri(replicationTransport);
-        plugin.setPrefetchLimit(prefetchLimit);
-        plugin.installPlugin(broker);
-
-        assertThat(plugin.otherBrokerConnectionFactory.getPrefetchPolicy().getQueuePrefetch()).isEqualTo(prefetchLimit);
-    }
-
-
 }

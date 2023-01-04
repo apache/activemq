@@ -42,8 +42,6 @@ public class ReplicaPlugin extends BrokerPluginSupport {
     protected ReplicaRole role = ReplicaRole.source;
     protected ActiveMQConnectionFactory otherBrokerConnectionFactory = new ActiveMQConnectionFactory();
     protected URI transportConnectorUri = null;
-    protected int prefetchLimit = 1000;
-    protected long replicaAckPeriod = 10000;
 
     public ReplicaPlugin() {
         super();
@@ -55,11 +53,8 @@ public class ReplicaPlugin extends BrokerPluginSupport {
 
         ReplicaReplicationQueueSupplier queueProvider = new ReplicaReplicationQueueSupplier(broker);
 
-        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
-        prefetchPolicy.setAll(prefetchLimit);
-        otherBrokerConnectionFactory.setPrefetchPolicy(prefetchPolicy);
         if (role == ReplicaRole.replica) {
-            return new ReplicaBroker(broker, queueProvider, otherBrokerConnectionFactory, replicaAckPeriod);
+            return new ReplicaBroker(broker, queueProvider, otherBrokerConnectionFactory);
         }
         ReplicaInternalMessageProducer replicaInternalMessageProducer =
                 new ReplicaInternalMessageProducer(broker);
@@ -75,7 +70,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
                 break;
             case dual:
                 replicaBrokerFilter = new ReplicaBroker(new ReplicaSourceBroker(broker, replicationMessageProducer,
-                        replicaSequencer, queueProvider, transportConnectorUri), queueProvider, otherBrokerConnectionFactory, replicaAckPeriod);
+                        replicaSequencer, queueProvider, transportConnectorUri), queueProvider, otherBrokerConnectionFactory);
                 break;
             default:
                 throw new IllegalArgumentException();
@@ -135,19 +130,6 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         otherBrokerConnectionFactory.setUserName(userName);
     }
 
-    /**
-     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
-     */
-    public void setPrefetchLimit(int limit) {
-        this.prefetchLimit = limit;
-    }
-
-    /**
-     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
-     */
-    public void setReplicaAckPeriod(long ackPeriod) {
-        this.replicaAckPeriod = ackPeriod;
-    }
     /**
      * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
      */
