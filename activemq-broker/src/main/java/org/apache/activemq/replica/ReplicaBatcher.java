@@ -22,31 +22,41 @@ import org.apache.activemq.command.ActiveMQMessage;
 import javax.jms.JMSException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ReplicaBatcher {
 
     static final int MAX_BATCH_LENGTH = 500;
     static final int MAX_BATCH_SIZE = 5_000_000; // 5 Mb
 
-    static List<List<MessageReference>> batches(List<MessageReference> list) throws JMSException {
+    @SuppressWarnings("unchecked")
+    static List<List<MessageReference>> batches(List<MessageReference> list) throws Exception {
         List<List<MessageReference>> result = new ArrayList<>();
 
-        Map<String, ReplicaEventType> destination2eventType = new HashMap<>();
+        Map<String, Set<String>> destination2eventType = new HashMap<>();
         List<MessageReference> batch = new ArrayList<>();
         int batchSize = 0;
         for (MessageReference reference : list) {
             ActiveMQMessage message = (ActiveMQMessage) reference.getMessage();
             String originalDestination = message.getStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY);
+            ReplicaEventType currentEventType =
+                    ReplicaEventType.valueOf(message.getStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY));
 
             boolean eventTypeSwitch = false;
             if (originalDestination != null) {
-                ReplicaEventType currentEventType =
-                        ReplicaEventType.valueOf(message.getStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY));
-                ReplicaEventType lastEventType = destination2eventType.put(originalDestination, currentEventType);
-                if (lastEventType == ReplicaEventType.MESSAGE_SEND && currentEventType == ReplicaEventType.MESSAGE_ACK) {
-                    eventTypeSwitch = true;
+                Set<String> sends = destination2eventType.computeIfAbsent(originalDestination, k -> new HashSet<>());
+                if (currentEventType == ReplicaEventType.MESSAGE_SEND) {
+                    sends.add(message.getStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY));
+                }
+                if (currentEventType == ReplicaEventType.MESSAGE_ACK) {
+                    List<String> stringProperty = (List<String>) message.getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY);
+                    if (sends.stream().anyMatch(stringProperty::contains)) {
+                        destination2eventType.put(originalDestination, new HashSet<>());
+                        eventTypeSwitch = true;
+                    }
                 }
             }
 
