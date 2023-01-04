@@ -47,7 +47,7 @@ public abstract class ReplicaSourceBaseBroker extends BrokerFilter {
         if (!initialized.get()) {
             return;
         }
-        replicationMessageProducer.enqueueReplicaEvent(connectionContext, event);
+        replicationMessageProducer.enqueueIntermediateReplicaEvent(connectionContext, event);
     }
 
     protected boolean isReplicaContext(ConnectionContext initialContext) {

@@ -34,7 +34,6 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.util.ByteSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +51,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static java.util.Objects.requireNonNull;
 
@@ -66,9 +69,6 @@ public class ReplicaBrokerEventListener implements MessageListener {
     private final ReplicaStorage replicaStorage;
 
     BigInteger sequence;
-
-    private final int INITIAL_SLEEP_RETRY_INTERVAL_MS = 10;
-    private final int MAX_SLEEP_RETRY_INTERVAL_MS = 10000;
 
     ReplicaBrokerEventListener(Broker broker) {
         this.broker = requireNonNull(broker);
@@ -97,69 +97,64 @@ public class ReplicaBrokerEventListener implements MessageListener {
     public void onMessage(Message jmsMessage) {
         logger.trace("Received replication message from replica source");
         ActiveMQMessage message = (ActiveMQMessage) jmsMessage;
-        ByteSequence messageContent = message.getContent();
 
         try {
-            BigInteger newSequence = new BigInteger(message.getStringProperty(ReplicaSupport.SEQUENCE_PROPERTY));
-            Object deserializedData = eventSerializer.deserializeMessageData(messageContent);
-                long attemptNumber = 0;
-                boolean isProcessed = false;
-                while (!isProcessed) {
-                    try {
-                        if (sequence == null || newSequence.subtract(sequence).longValue() == 1) {
-                            Optional<ReplicaEventType> eventType = getEventType(message);
-                            if (eventType.isPresent()) {
-                                isProcessed = processMessage(message, eventType.get(), deserializedData);
-                            }
-                            sequence = newSequence;
-
-                            try {
-                                replicaStorage.write(sequence.toString());
-                            } catch (IOException e) {
-                                logger.error("Could not write replica sequence to disk", e);
-                            }
-                        } else if (newSequence.compareTo(sequence) > 0
-                                && newSequence.subtract(sequence).longValue() != 1) {
-                            throw new IllegalStateException(String.format(
-                                    "Replication event is out of order. Current sequence: %s, the sequence of the event: %s",
-                                    sequence, newSequence));
-                        }
-                    } catch (Exception e) {
-                        logger.info("Caught exception {} while processing message {}.", e, message);
-                        try {
-                            int sleepInterval = Math.min((int)(INITIAL_SLEEP_RETRY_INTERVAL_MS * Math.pow(2.0, attemptNumber)), MAX_SLEEP_RETRY_INTERVAL_MS);
-                            attemptNumber++;
-                            logger.info("Retry attempt number {}. Sleeping for {} ms.", attemptNumber, sleepInterval);
-                            Thread.sleep(sleepInterval);
-                        } catch (InterruptedException ex) {
-                            logger.error("Retry sleep interrupted: {}", ex.toString());
-                        }
-                    }
-                }
+            processMessageWithRetries(message);
 
             message.acknowledge();
-        } catch (IOException | ClassCastException e) {
-            logger.error("Failed to deserialize replication message (id={}), {}", message.getMessageId(), new String(messageContent.data), e);
-            logger.debug("Deserialization error for replication message (id={})", message.getMessageId(), e);
         } catch (JMSException e) {
             logger.error("Failed to acknowledge replication message (id={})", message.getMessageId());
         }
     }
 
-    private boolean processMessage(ActiveMQMessage message, ReplicaEventType eventType, Object deserializedData) throws Exception {
+    private synchronized void processMessageWithRetries(ActiveMQMessage message) {
+        new ReplicaEventRetrier(() -> {
+            ReplicaEventType eventType = getEventType(message);
+            if (eventType == ReplicaEventType.BATCH) {
+                processBatch(message);
+            } else {
+                processMessage(message, eventType);
+            }
+            return null;
+        }).process();
+    }
+
+    private void processMessage(ActiveMQMessage message, ReplicaEventType eventType) throws Exception {
+        Object deserializedData = eventSerializer.deserializeMessageData(message.getContent());
+        BigInteger newSequence = new BigInteger(message.getStringProperty(ReplicaSupport.SEQUENCE_PROPERTY));
+
+        long sequenceDifference = sequence == null ? 0 : newSequence.subtract(sequence).longValue();
+        if (sequence == null || sequenceDifference == 1) {
+            processMessage(message, eventType, deserializedData);
+
+            sequence = newSequence;
+
+            try {
+                replicaStorage.write(sequence.toString());
+            } catch (IOException e) {
+                logger.error("Could not write replica sequence to disk", e);
+            }
+        } else if (sequenceDifference > 0) {
+            throw new IllegalStateException(String.format(
+                    "Replication event is out of order. Current sequence: %s, the sequence of the event: %s",
+                    sequence, newSequence));
+        }
+    }
+
+    private void processMessage(ActiveMQMessage message, ReplicaEventType eventType, Object deserializedData) throws Exception {
         switch (eventType) {
             case DESTINATION_UPSERT:
                 logger.trace("Processing replicated destination");
                 upsertDestination((ActiveMQDestination) deserializedData);
-                return true;
+                return;
             case DESTINATION_DELETE:
                 logger.trace("Processing replicated destination deletion");
                 deleteDestination((ActiveMQDestination) deserializedData);
-                return true;
+                return;
             case MESSAGE_SEND:
                 logger.trace("Processing replicated message send");
                 persistMessage((ActiveMQMessage) deserializedData);
-                return true;
+                return;
             case MESSAGE_ACK:
                 logger.trace("Processing replicated messages dropped");
                 try {
@@ -169,27 +164,27 @@ public class ReplicaBrokerEventListener implements MessageListener {
                     logger.error("Failed to extract property to replicate messages dropped [{}]", deserializedData, e);
                     throw new Exception(e);
                 }
-                return true;
+                return;
             case QUEUE_PURGED:
                 logger.trace("Processing queue purge");
                 purgeQueue((ActiveMQDestination) deserializedData);
-                return true;
+                return;
             case TRANSACTION_BEGIN:
                 logger.trace("Processing replicated transaction begin");
                 beginTransaction((TransactionId) deserializedData);
-                return true;
+                return;
             case TRANSACTION_PREPARE:
                 logger.trace("Processing replicated transaction prepare");
                 prepareTransaction((TransactionId) deserializedData);
-                return true;
+                return;
             case TRANSACTION_FORGET:
                 logger.trace("Processing replicated transaction forget");
                 forgetTransaction((TransactionId) deserializedData);
-                return true;
+                return;
             case TRANSACTION_ROLLBACK:
                 logger.trace("Processing replicated transaction rollback");
                 rollbackTransaction((TransactionId) deserializedData);
-                return true;
+                return;
             case TRANSACTION_COMMIT:
                 logger.trace("Processing replicated transaction commit");
                 try {
@@ -200,7 +195,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                     logger.error("Failed to extract property to replicate transaction commit with id [{}]", deserializedData, e);
                     throw new Exception(e);
                 }
-                return true;
+                return;
             case ADD_DURABLE_CONSUMER:
                 logger.trace("Processing replicated add consumer");
                 try {
@@ -210,26 +205,22 @@ public class ReplicaBrokerEventListener implements MessageListener {
                     logger.error("Failed to extract property to replicate add consumer [{}]", deserializedData, e);
                     throw new Exception(e);
                 }
-                return true;
+                return;
             case REMOVE_DURABLE_CONSUMER:
                 logger.trace("Processing replicated remove consumer");
                 removeDurableConsumer((ConsumerInfo) deserializedData);
-                return true;
+                return;
             default:
-                logger.warn("Unhandled event type \"{}\" for replication message id: {}", eventType, message.getJMSMessageID());
-                return false;
+                throw new IllegalStateException(
+                        String.format("Unhandled event type \"%s\" for replication message id: %s",
+                                eventType, message.getJMSMessageID()));
         }
     }
 
-    private Optional<ReplicaEventType> getEventType(ActiveMQMessage message) {
-        try {
-            String eventTypeProperty = message.getStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY);
-            return Arrays.stream(ReplicaEventType.values())
-                    .filter(t -> t.name().equals(eventTypeProperty))
-                    .findFirst();
-        } catch (JMSException e) {
-            logger.error("Failed to get {} property {}", ReplicaEventType.class.getSimpleName(), ReplicaEventType.EVENT_TYPE_PROPERTY, e);
-            return Optional.empty();
+    private void processBatch(ActiveMQMessage message) throws Exception {
+        List<Object> objects = eventSerializer.deserializeListOfObjects(message.getContent().getData());
+        for (Object o : objects) {
+            processMessageWithRetries((ActiveMQMessage) o);
         }
     }
 
@@ -271,6 +262,10 @@ public class ReplicaBrokerEventListener implements MessageListener {
             logger.error("Unable to remove destination [{}]", destination, e);
             throw e;
         }
+    }
+
+    private ReplicaEventType getEventType(ActiveMQMessage message) throws JMSException {
+        return ReplicaEventType.valueOf(message.getStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY));
     }
 
     private void persistMessage(ActiveMQMessage message) throws Exception {

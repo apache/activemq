@@ -18,6 +18,7 @@ package org.apache.activemq.replica;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.util.IdGenerator;
@@ -45,7 +46,7 @@ class ReplicationMessageProducer {
         replicationProducerId.setConnectionId(idGenerator.generateId());
     }
 
-    void enqueueReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event) throws Exception {
+    void enqueueIntermediateReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event) throws Exception {
         synchronized (ReplicaSupport.INTERMEDIATE_QUEUE_MUTEX) {
             logger.debug("Replicating {} event", event.getEventType());
             logger.trace("Replicating {} event: data:\n{}\nproperties:{}", event.getEventType(), new Object() {
@@ -58,19 +59,28 @@ class ReplicationMessageProducer {
                     }
                 }
             }, event.getReplicationProperties()); // FIXME: remove
-            ActiveMQMessage eventMessage = new ActiveMQMessage();
-            eventMessage.setPersistent(true);
-            eventMessage.setType("ReplicaEvent");
-            eventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-            eventMessage.setMessageId(new MessageId(replicationProducerId, eventMessageIdGenerator.getNextSequenceId()));
-            eventMessage.setDestination(queueProvider.getIntermediateQueue());
-            eventMessage.setProducerId(replicationProducerId);
-            eventMessage.setResponseRequired(false);
-            eventMessage.setContent(event.getEventData());
-            eventMessage.setProperties(event.getReplicationProperties());
-            eventMessage.setTransactionId(event.getTransactionId());
-            replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, eventMessage);
+            enqueueReplicaEvent(connectionContext, event, true, queueProvider.getIntermediateQueue());
         }
+    }
+
+    void enqueueMainReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event) throws Exception {
+        enqueueReplicaEvent(connectionContext, event, false, queueProvider.getMainQueue());
+    }
+
+    private void enqueueReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event,
+            boolean persistent, ActiveMQQueue mainQueue) throws Exception {
+        ActiveMQMessage eventMessage = new ActiveMQMessage();
+        eventMessage.setPersistent(persistent);
+        eventMessage.setType("ReplicaEvent");
+        eventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        eventMessage.setMessageId(new MessageId(replicationProducerId, eventMessageIdGenerator.getNextSequenceId()));
+        eventMessage.setDestination(mainQueue);
+        eventMessage.setProducerId(replicationProducerId);
+        eventMessage.setResponseRequired(false);
+        eventMessage.setContent(event.getEventData());
+        eventMessage.setProperties(event.getReplicationProperties());
+        eventMessage.setTransactionId(event.getTransactionId());
+        replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, eventMessage);
     }
 }
 

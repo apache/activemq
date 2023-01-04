@@ -58,7 +58,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
                 new ReplicaInternalMessageProducer(broker);
         ReplicationMessageProducer replicationMessageProducer =
                 new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
-        ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer);
+        ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicationMessageProducer);
 
         Broker replicaBrokerFilter;
         switch (role) {
