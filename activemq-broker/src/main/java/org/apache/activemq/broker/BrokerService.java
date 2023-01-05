@@ -231,6 +231,7 @@ public class BrokerService implements Service {
     private boolean forceStart = false;
     private IOExceptionHandler ioExceptionHandler;
     private boolean schedulerSupport = false;
+    private String schedulerActivityDestination = null;
     private int maxSchedulerRepeatAllowed = MAX_SCHEDULER_REPEAT_ALLOWED;
     private File schedulerDirectoryFile;
     private Scheduler scheduler;
@@ -1693,11 +1694,11 @@ public class BrokerService implements Service {
     }
     
     public boolean isEnableMessageExpirationOnActiveDurableSubs() {
-    	return enableMessageExpirationOnActiveDurableSubs;
+        return enableMessageExpirationOnActiveDurableSubs;
     }
     
     public void setEnableMessageExpirationOnActiveDurableSubs(boolean enableMessageExpirationOnActiveDurableSubs) {
-    	this.enableMessageExpirationOnActiveDurableSubs = enableMessageExpirationOnActiveDurableSubs;
+        this.enableMessageExpirationOnActiveDurableSubs = enableMessageExpirationOnActiveDurableSubs;
     }
 
     public boolean isUseVirtualTopics() {
@@ -2976,6 +2977,20 @@ public class BrokerService implements Service {
      */
     public void setSchedulerSupport(boolean schedulerSupport) {
         this.schedulerSupport = schedulerSupport;
+    }
+
+    /**
+     * @param schedulerActivityDestination the schedulerActivityDestination to set
+     */
+    public void setSchedulerActivityDestination(String schedulerActivityDestination) {
+        this.schedulerActivityDestination = schedulerActivityDestination;
+    }
+
+    /**
+     * @return the schedulerActivityDestination
+     */
+    public String getSchedulerActivityDestination() {
+        return schedulerActivityDestination;
     }
 
     /**

@@ -72,6 +72,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     private final JobSchedulerStore store;
     private JobScheduler scheduler;
     private int maxRepeatAllowed = MAX_REPEAT_ALLOWED;
+    private ActiveMQDestination schedulerActivityDestination = null;
 
     public SchedulerBroker(BrokerService brokerService, Broker next, JobSchedulerStore store) throws Exception {
         super(next);
@@ -193,6 +194,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         this.systemUsage = brokerService.getSystemUsage();
 
         wireFormat.setVersion(brokerService.getStoreOpenWireVersion());
+        setSchedulerActivityDestination(brokerService.getSchedulerActivityDestination());
     }
 
     public synchronized JobScheduler getJobScheduler() throws Exception {
@@ -310,18 +312,18 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 context.getTransaction().addSynchronization(new Synchronization() {
                     @Override
                     public void afterCommit() throws Exception {
-                        doSchedule(messageSend, cronValue, periodValue, delayValue);
+                        doSchedule(context, messageSend, cronValue, periodValue, delayValue);
                     }
                 });
             } else {
-                doSchedule(messageSend, cronValue, periodValue, delayValue);
+                doSchedule(context, messageSend, cronValue, periodValue, delayValue);
             }
         } else {
             super.send(producerExchange, messageSend);
         }
     }
 
-    private void doSchedule(Message messageSend, Object cronValue, Object periodValue, Object delayValue) throws Exception {
+    private void doSchedule(ConnectionContext context, Message messageSend, Object cronValue, Object periodValue, Object delayValue) throws Exception {
         long delay = 0;
         long period = 0;
         int repeat = 0;
@@ -353,6 +355,12 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
         getInternalScheduler().schedule(jobId.toString(),
                 new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay, period, repeat);
+
+        if(schedulerActivityDestination != null) {
+            msg.setProperty(ScheduledMessage.AMQ_SCHEDULED_ID, jobId.toString());
+            msg.setProperty(ScheduledMessage.AMQ_SCHEDULER_ACTIVITY, ScheduledMessage.AMQ_SCHEDULER_ACTIVITY_SCHEDULED);
+            forwardMessage(context, msg, schedulerActivityDestination);
+        }
     }
 
     @Override
@@ -379,7 +387,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             }
 
             // Add the jobId as a property
-            messageSend.setProperty("scheduledJobId", id);
+            messageSend.setProperty(ScheduledMessage.AMQ_SCHEDULED_ID, id);
 
             // if this goes across a network - we don't want it rescheduled
             messageSend.removeProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
@@ -418,6 +426,12 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             producerExchange.setMutable(true);
             producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
             super.send(producerExchange, messageSend);
+
+            if(schedulerActivityDestination != null) {
+                Message msg = messageSend.copy();
+                msg.setProperty(ScheduledMessage.AMQ_SCHEDULER_ACTIVITY, ScheduledMessage.AMQ_SCHEDULER_ACTIVITY_DISPATCHED);
+                forwardMessage(context, msg, schedulerActivityDestination);
+            }
         } catch (Exception e) {
             LOG.error("Failed to send scheduled message {}", id, e);
         }
@@ -440,42 +454,64 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getPayload());
         try {
             Message msg = (Message) this.wireFormat.unmarshal(packet);
-            msg.setOriginalTransactionId(null);
-            msg.setPersistent(false);
-            msg.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
-            msg.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
-
-            // Preserve original destination
-            msg.setOriginalDestination(msg.getDestination());
-
-            msg.setDestination(replyTo);
-            msg.setResponseRequired(false);
-            msg.setProducerId(this.producerId);
 
             // Add the jobId as a property
-            msg.setProperty("scheduledJobId", job.getJobId());
+            msg.setProperty(ScheduledMessage.AMQ_SCHEDULED_ID, job.getJobId());
 
-            final boolean originalFlowControl = context.isProducerFlowControl();
-            final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
-            producerExchange.setConnectionContext(context);
-            producerExchange.setMutable(true);
-            producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
-            try {
-                context.setProducerFlowControl(false);
-                this.next.send(producerExchange, msg);
-            } finally {
-                context.setProducerFlowControl(originalFlowControl);
-            }
-        } catch (Exception e) {
+            forwardMessage(context, msg, replyTo);
+       } catch (Exception e) {
             LOG.error("Failed to send scheduled message {}", job.getJobId(), e);
         }
     }
 
+    protected void forwardMessage(ConnectionContext context, Message msg, ActiveMQDestination destination) throws Exception {
+        msg.setOriginalTransactionId(null);
+        msg.setPersistent(false);
+        msg.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
+        msg.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
+
+        // Preserve original destination
+        msg.setOriginalDestination(msg.getDestination());
+
+        msg.setDestination(destination);
+        msg.setResponseRequired(false);
+        msg.setProducerId(this.producerId);
+
+        final boolean originalFlowControl = context.isProducerFlowControl();
+        final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+        producerExchange.setConnectionContext(context);
+        producerExchange.setMutable(true);
+        producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
+        try {
+            context.setProducerFlowControl(false);
+            this.next.send(producerExchange, msg);
+        } finally {
+            context.setProducerFlowControl(originalFlowControl);
+        }
+    }
+ 
     public int getMaxRepeatAllowed() {
         return maxRepeatAllowed;
     }
 
     public void setMaxRepeatAllowed(int maxRepeatAllowed) {
         this.maxRepeatAllowed = maxRepeatAllowed;
+    }
+
+    public void setSchedulerActivityDestination(ActiveMQDestination schedulerActivityDestination) {
+        if(schedulerActivityDestination == null) {
+            LOG.debug("Scheduler Activity Destination: {}", schedulerActivityDestination);
+            return;
+        }
+        LOG.info("Scheduler Activity Destination: {}", schedulerActivityDestination);
+        this.schedulerActivityDestination = schedulerActivityDestination;
+    }
+
+    public void setSchedulerActivityDestination(String schedulerActivityDestination) {
+        if(schedulerActivityDestination == null) {
+            LOG.warn("Scheduler Activity Destination is invalid: {}", schedulerActivityDestination);
+            return;
+        }
+        setSchedulerActivityDestination(ActiveMQDestination.createDestination(schedulerActivityDestination, ActiveMQDestination.TOPIC_TYPE));
     }
 }

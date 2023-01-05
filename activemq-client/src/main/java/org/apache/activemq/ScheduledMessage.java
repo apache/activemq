@@ -78,4 +78,19 @@ public interface ScheduledMessage {
      */
     public static final String AMQ_SCHEDULER_ACTION_END_TIME = "ACTION_END_TIME";
 
+    /**
+     *  Used to specify which scheduler activity was performed on a Scheduled Message
+     */
+    public static final String AMQ_SCHEDULER_ACTIVITY = "AMQ_SCHEDULER_ACTIVITY";
+
+    /**
+     *  Scheduled Message was scheduled by the scheduler
+     */
+    public static final String AMQ_SCHEDULER_ACTIVITY_SCHEDULED = "SCHEDULED";
+
+    /**
+     *  Scheduled Message was dispatched by the scheduler
+     */
+    public static final String AMQ_SCHEDULER_ACTIVITY_DISPATCHED = "DISPATCHED";
+
 }
