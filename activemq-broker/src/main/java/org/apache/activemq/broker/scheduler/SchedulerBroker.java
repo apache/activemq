@@ -71,8 +71,8 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
     private final JobSchedulerStore store;
     private JobScheduler scheduler;
+    private JobSchedulerActivityListener jobSchedulerActivityListener;
     private int maxRepeatAllowed = MAX_REPEAT_ALLOWED;
-    private ActiveMQDestination schedulerActivityDestination = null;
 
     public SchedulerBroker(BrokerService brokerService, Broker next, JobSchedulerStore store) throws Exception {
         super(next);
@@ -194,7 +194,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         this.systemUsage = brokerService.getSystemUsage();
 
         wireFormat.setVersion(brokerService.getStoreOpenWireVersion());
-        setSchedulerActivityDestination(brokerService.getSchedulerActivityDestination());
+        setJobSchedulerActivityListener(brokerService.getJobSchedulerActivityListener());
     }
 
     public synchronized JobScheduler getJobScheduler() throws Exception {
@@ -312,18 +312,18 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 context.getTransaction().addSynchronization(new Synchronization() {
                     @Override
                     public void afterCommit() throws Exception {
-                        doSchedule(context, messageSend, cronValue, periodValue, delayValue);
+                        doSchedule(producerExchange, messageSend, cronValue, periodValue, delayValue);
                     }
                 });
             } else {
-                doSchedule(context, messageSend, cronValue, periodValue, delayValue);
+                doSchedule(producerExchange, messageSend, cronValue, periodValue, delayValue);
             }
         } else {
             super.send(producerExchange, messageSend);
         }
     }
 
-    private void doSchedule(ConnectionContext context, Message messageSend, Object cronValue, Object periodValue, Object delayValue) throws Exception {
+    private void doSchedule(ProducerBrokerExchange producerExchange, Message messageSend, Object cronValue, Object periodValue, Object delayValue) throws Exception {
         long delay = 0;
         long period = 0;
         int repeat = 0;
@@ -356,10 +356,10 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         getInternalScheduler().schedule(jobId.toString(),
                 new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay, period, repeat);
 
-        if(schedulerActivityDestination != null) {
+        if(jobSchedulerActivityListener != null) {
             msg.setProperty(ScheduledMessage.AMQ_SCHEDULED_ID, jobId.toString());
             msg.setProperty(ScheduledMessage.AMQ_SCHEDULER_ACTIVITY, ScheduledMessage.AMQ_SCHEDULER_ACTIVITY_SCHEDULED);
-            forwardMessage(context, msg, schedulerActivityDestination);
+            jobSchedulerActivityListener.scheduled(this, msg);
         }
     }
 
@@ -427,10 +427,10 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
             super.send(producerExchange, messageSend);
 
-            if(schedulerActivityDestination != null) {
+            if(jobSchedulerActivityListener != null) {
                 Message msg = messageSend.copy();
                 msg.setProperty(ScheduledMessage.AMQ_SCHEDULER_ACTIVITY, ScheduledMessage.AMQ_SCHEDULER_ACTIVITY_DISPATCHED);
-                forwardMessage(context, msg, schedulerActivityDestination);
+                jobSchedulerActivityListener.dispatched(this, msg);
             }
         } catch (Exception e) {
             LOG.error("Failed to send scheduled message {}", id, e);
@@ -498,20 +498,16 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         this.maxRepeatAllowed = maxRepeatAllowed;
     }
 
-    public void setSchedulerActivityDestination(ActiveMQDestination schedulerActivityDestination) {
-        if(schedulerActivityDestination == null) {
-            LOG.debug("Scheduler Activity Destination: {}", schedulerActivityDestination);
-            return;
-        }
-        LOG.info("Scheduler Activity Destination: {}", schedulerActivityDestination);
-        this.schedulerActivityDestination = schedulerActivityDestination;
+    public void setJobSchedulerActivityListener(JobSchedulerActivityListener jobSchedulerActivityListener) {
+		if(jobSchedulerActivityListener == null) {
+        	LOG.debug("Job Scheduler Activity Listener: {}", jobSchedulerActivityListener);
+			return;
+		}
+        LOG.info("Job Scheduler Activity Listener: {}", jobSchedulerActivityListener);
+        this.jobSchedulerActivityListener = jobSchedulerActivityListener;
     }
 
-    public void setSchedulerActivityDestination(String schedulerActivityDestination) {
-        if(schedulerActivityDestination == null) {
-            LOG.warn("Scheduler Activity Destination is invalid: {}", schedulerActivityDestination);
-            return;
-        }
-        setSchedulerActivityDestination(ActiveMQDestination.createDestination(schedulerActivityDestination, ActiveMQDestination.TOPIC_TYPE));
-    }
+    public ConnectionContext getConnectionContext() {
+		return context;
+	}
 }

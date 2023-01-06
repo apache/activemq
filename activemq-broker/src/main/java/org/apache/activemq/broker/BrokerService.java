@@ -79,6 +79,7 @@ import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
+import org.apache.activemq.broker.scheduler.JobSchedulerActivityListener;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
 import org.apache.activemq.broker.scheduler.memory.InMemoryJobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -231,7 +232,6 @@ public class BrokerService implements Service {
     private boolean forceStart = false;
     private IOExceptionHandler ioExceptionHandler;
     private boolean schedulerSupport = false;
-    private String schedulerActivityDestination = null;
     private int maxSchedulerRepeatAllowed = MAX_SCHEDULER_REPEAT_ALLOWED;
     private File schedulerDirectoryFile;
     private Scheduler scheduler;
@@ -245,6 +245,7 @@ public class BrokerService implements Service {
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
     private JobSchedulerStore jobSchedulerStore;
+    private JobSchedulerActivityListener jobSchedulerActivityListener;
     private final AtomicLong totalConnections = new AtomicLong();
     private final AtomicInteger currentConnections = new AtomicInteger();
 
@@ -1975,6 +1976,14 @@ public class BrokerService implements Service {
         configureService(jobSchedulerStore);
     }
 
+    public void setJobSchedulerActivityListener(JobSchedulerActivityListener jobSchedulerActivityListener) {
+        this.jobSchedulerActivityListener = jobSchedulerActivityListener;
+    }
+
+    public JobSchedulerActivityListener getJobSchedulerActivityListener() {
+        return jobSchedulerActivityListener;
+    }
+
     //
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -2977,20 +2986,6 @@ public class BrokerService implements Service {
      */
     public void setSchedulerSupport(boolean schedulerSupport) {
         this.schedulerSupport = schedulerSupport;
-    }
-
-    /**
-     * @param schedulerActivityDestination the schedulerActivityDestination to set
-     */
-    public void setSchedulerActivityDestination(String schedulerActivityDestination) {
-        this.schedulerActivityDestination = schedulerActivityDestination;
-    }
-
-    /**
-     * @return the schedulerActivityDestination
-     */
-    public String getSchedulerActivityDestination() {
-        return schedulerActivityDestination;
     }
 
     /**
