@@ -351,9 +351,18 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         //job id should be unique for every job (Same format as MessageId)
         MessageId jobId = new MessageId(messageSend.getMessageId().getProducerId(), longGenerator.getNextSequenceId());
 
-        getInternalScheduler().schedule(jobId.toString(),
-                new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay, period, repeat);
+		ByteSequence payload = new ByteSequence(packet.data, packet.offset, packet.length);
+        getInternalScheduler().schedule(jobId.toString(), payload, cronEntry, delay, period, repeat);
+		registerJob(jobId.toString(), payload);
     }
+
+    @Override
+    public void registerJob(String id, ByteSequence job) {
+	}
+
+    @Override
+    public void unregisterJob(String id, ByteSequence job) {
+	}
 
     @Override
     public void scheduledJob(String id, ByteSequence job) {
@@ -418,6 +427,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             producerExchange.setMutable(true);
             producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
             super.send(producerExchange, messageSend);
+			unregisterJob(id, job);
         } catch (Exception e) {
             LOG.error("Failed to send scheduled message {}", id, e);
         }

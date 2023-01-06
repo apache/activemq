@@ -35,4 +35,7 @@ public interface JobListener {
      */
     public void scheduledJob(String id, ByteSequence job);
 
+    public void registerJob(String id, ByteSequence job);
+    public void unregisterJob(String id, ByteSequence job);
+
 }
