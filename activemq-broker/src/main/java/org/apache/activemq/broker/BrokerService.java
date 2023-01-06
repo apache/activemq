@@ -79,6 +79,7 @@ import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
+import org.apache.activemq.broker.scheduler.JobListener;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
 import org.apache.activemq.broker.scheduler.memory.InMemoryJobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -244,6 +245,7 @@ public class BrokerService implements Service {
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
     private JobSchedulerStore jobSchedulerStore;
+    private List<JobListener> jobSchedulerJobListeners;
     private final AtomicLong totalConnections = new AtomicLong();
     private final AtomicInteger currentConnections = new AtomicInteger();
 
@@ -1693,11 +1695,11 @@ public class BrokerService implements Service {
     }
     
     public boolean isEnableMessageExpirationOnActiveDurableSubs() {
-    	return enableMessageExpirationOnActiveDurableSubs;
+        return enableMessageExpirationOnActiveDurableSubs;
     }
     
     public void setEnableMessageExpirationOnActiveDurableSubs(boolean enableMessageExpirationOnActiveDurableSubs) {
-    	this.enableMessageExpirationOnActiveDurableSubs = enableMessageExpirationOnActiveDurableSubs;
+        this.enableMessageExpirationOnActiveDurableSubs = enableMessageExpirationOnActiveDurableSubs;
     }
 
     public boolean isUseVirtualTopics() {
@@ -3271,5 +3273,19 @@ public class BrokerService implements Service {
 
     public void setMaxSchedulerRepeatAllowed(int maxSchedulerRepeatAllowed) {
         this.maxSchedulerRepeatAllowed = maxSchedulerRepeatAllowed;
+    }
+
+    public void setJobSchedulerJobListeners(List<JobListener> jobListeners) throws Exception {
+        for (JobListener jobListener : jobListeners) {
+            addJobSchedulerJobListener(jobListener);
+        }
+    }
+
+    public void addJobSchedulerJobListener(JobListener jobListener) throws Exception {
+        jobSchedulerJobListeners.add(jobListener);
+    }
+
+    public List<JobListener> getJobSchedulerJobListeners() throws Exception {
+        return jobSchedulerJobListeners;
     }
 }
