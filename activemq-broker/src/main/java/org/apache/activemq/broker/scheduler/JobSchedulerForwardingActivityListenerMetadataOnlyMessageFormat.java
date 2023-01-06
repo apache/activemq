@@ -37,7 +37,19 @@ public class JobSchedulerForwardingActivityListenerMetadataOnlyMessageFormat imp
     public Message format(final Message messageSend) throws Exception {
         Message msg = messageSend.copy();
         msg.clearBody();
+
+        Set<String> allIncludes = new HashSet<>();
         if(includes != null) {
+            allIncludes.addAll(allIncludes);
+        }
+
+        String activityHeadersString = (String)msg.getProperty(ScheduledMessage.AMQ_SCHEDULER_ACTIVITY_FWD_HEADERS);
+        if(activityHeadersString != null) {
+            List<String> activityHeadersList = Arrays.asList(activityHeadersString.split("[ ,]"));
+            allIncludes.addAll(activityHeadersList);
+        }
+
+        if(allIncludes.size() > 0) {
             for(String key : msg.getProperties().keySet()) {
                 if(includes.contains(key)) {
                     continue;

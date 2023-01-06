@@ -84,6 +84,11 @@ public interface ScheduledMessage {
     public static final String AMQ_SCHEDULER_ACTIVITY_DESTINATION = "ActiveMQ.Scheduler.Activity";
 
     /**
+     *  Used to specify desired activity properties 
+     */
+    public static final String AMQ_SCHEDULER_ACTIVITY_FWD_HEADERS = "AMQ_SCHEDULER_ACTIVITY_FWD_HEADERS";
+
+    /**
      *  Used to specify which scheduler activity was performed on a Scheduled Message
      */
     public static final String AMQ_SCHEDULER_ACTIVITY = "AMQ_SCHEDULER_ACTIVITY";
