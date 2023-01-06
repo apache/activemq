@@ -73,8 +73,11 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     private JobScheduler scheduler;
     private int maxRepeatAllowed = MAX_REPEAT_ALLOWED;
 
+    private BrokerService brokerService;
+
     public SchedulerBroker(BrokerService brokerService, Broker next, JobSchedulerStore store) throws Exception {
         super(next);
+        this.brokerService = brokerService;
 
         this.store = store;
         this.producerId.setConnectionId(ID_GENERATOR.generateId());
@@ -358,14 +361,23 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
     @Override
     public void registerJob(String id, ByteSequence job) {
+		for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+			jobListener.registerJob(id, job);
+		}
 	}
 
     @Override
     public void unregisterJob(String id, ByteSequence job) {
+		for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+			jobListener.unregisterJob(id, job);
+		}
 	}
 
     @Override
     public void scheduledJob(String id, ByteSequence job) {
+		for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+			jobListener.scheduledJob(id, job);
+		}
         org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getData(), job.getOffset(), job.getLength());
         try {
             Message messageSend = (Message) wireFormat.unmarshal(packet);

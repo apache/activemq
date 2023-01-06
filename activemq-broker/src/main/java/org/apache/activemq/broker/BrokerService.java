@@ -3285,7 +3285,7 @@ public class BrokerService implements Service {
         jobSchedulerJobListeners.add(jobListener);
     }
 
-    public List<JobListener> getJobSchedulerJobListeners() throws Exception {
+    public List<JobListener> getJobSchedulerJobListeners() {
         return jobSchedulerJobListeners;
     }
 }
