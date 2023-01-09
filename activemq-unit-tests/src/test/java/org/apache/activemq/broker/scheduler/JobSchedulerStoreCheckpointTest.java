@@ -91,6 +91,12 @@ public class JobSchedulerStoreCheckpointTest {
         final CountDownLatch latch = new CountDownLatch(COUNT);
         scheduler.addListener(new JobListener() {
             @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
+            @Override
             public void scheduledJob(String id, ByteSequence job) {
                 latch.countDown();
             }
@@ -133,6 +139,12 @@ public class JobSchedulerStoreCheckpointTest {
     public void testColocatedAddRemoveCleanup() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
         scheduler.addListener(new JobListener() {
+            @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
             @Override
             public void scheduledJob(String id, ByteSequence job) {
                 latch.countDown();

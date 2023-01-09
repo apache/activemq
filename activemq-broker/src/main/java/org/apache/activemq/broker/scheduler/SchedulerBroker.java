@@ -354,30 +354,30 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         //job id should be unique for every job (Same format as MessageId)
         MessageId jobId = new MessageId(messageSend.getMessageId().getProducerId(), longGenerator.getNextSequenceId());
 
-		ByteSequence payload = new ByteSequence(packet.data, packet.offset, packet.length);
+        ByteSequence payload = new ByteSequence(packet.data, packet.offset, packet.length);
         getInternalScheduler().schedule(jobId.toString(), payload, cronEntry, delay, period, repeat);
-		registerJob(jobId.toString(), payload);
+        registerJob(jobId.toString(), payload);
     }
 
     @Override
     public void registerJob(String id, ByteSequence job) {
-		for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
-			jobListener.registerJob(id, job);
-		}
-	}
+        for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+            jobListener.registerJob(id, job);
+        }
+    }
 
     @Override
     public void unregisterJob(String id, ByteSequence job) {
-		for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
-			jobListener.unregisterJob(id, job);
-		}
-	}
+        for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+            jobListener.unregisterJob(id, job);
+        }
+    }
 
     @Override
     public void scheduledJob(String id, ByteSequence job) {
-		for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
-			jobListener.scheduledJob(id, job);
-		}
+        for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+            jobListener.scheduledJob(id, job);
+        }
         org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getData(), job.getOffset(), job.getLength());
         try {
             Message messageSend = (Message) wireFormat.unmarshal(packet);
@@ -439,7 +439,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             producerExchange.setMutable(true);
             producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
             super.send(producerExchange, messageSend);
-			unregisterJob(id, job);
+            unregisterJob(id, job);
         } catch (Exception e) {
             LOG.error("Failed to send scheduled message {}", id, e);
         }

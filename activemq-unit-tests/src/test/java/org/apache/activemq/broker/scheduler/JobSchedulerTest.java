@@ -47,6 +47,14 @@ public class JobSchedulerTest {
         final CountDownLatch latch = new CountDownLatch(COUNT);
         scheduler.addListener(new JobListener() {
             @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
+
+            @Override
             public void scheduledJob(String id, ByteSequence job) {
                 latch.countDown();
             }
@@ -65,6 +73,12 @@ public class JobSchedulerTest {
 
         final CountDownLatch latch = new CountDownLatch(1);
         scheduler.addListener(new JobListener() {
+            @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
             @Override
             public void scheduledJob(String id, ByteSequence job) {
                 latch.countDown();
@@ -93,6 +107,12 @@ public class JobSchedulerTest {
         final CountDownLatch latch = new CountDownLatch(COUNT);
         scheduler.addListener(new JobListener() {
             @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
+            @Override
             public void scheduledJob(String id, ByteSequence job) {
                 latch.countDown();
             }
@@ -120,6 +140,12 @@ public class JobSchedulerTest {
         tearDown();
         startStore(directory);
         scheduler.addListener(new JobListener() {
+            @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
             @Override
             public void scheduledJob(String id, ByteSequence job) {
                 latch.countDown();
@@ -190,6 +216,12 @@ public class JobSchedulerTest {
         assertEquals(size, 1);
 
         scheduler.addListener(new JobListener() {
+            @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
             @Override
             public void scheduledJob(String id, ByteSequence job) {
                 LOG.info("Job exectued: {}", 11 - done.getCount());

@@ -50,6 +50,12 @@ public class InMemoryJobSchedulerTest {
         final CountDownLatch latch = new CountDownLatch(COUNT);
         scheduler.addListener(new JobListener() {
             @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
+            @Override
             public void scheduledJob(String id, ByteSequence job) {
                 latch.countDown();
             }
@@ -68,6 +74,12 @@ public class InMemoryJobSchedulerTest {
 
         final CountDownLatch latch = new CountDownLatch(1);
         scheduler.addListener(new JobListener() {
+            @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
             @Override
             public void scheduledJob(String id, ByteSequence job) {
                 latch.countDown();
@@ -95,6 +107,12 @@ public class InMemoryJobSchedulerTest {
         final int COUNT = 10;
         final CountDownLatch latch = new CountDownLatch(COUNT);
         scheduler.addListener(new JobListener() {
+            @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
             @Override
             public void scheduledJob(String id, ByteSequence job) {
                 latch.countDown();
@@ -124,6 +142,12 @@ public class InMemoryJobSchedulerTest {
         tearDown();
         setUp();
         scheduler.addListener(new JobListener() {
+            @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
             @Override
             public void scheduledJob(String id, ByteSequence job) {
                 latch.countDown();
@@ -194,6 +218,12 @@ public class InMemoryJobSchedulerTest {
         assertEquals(size, 1);
 
         scheduler.addListener(new JobListener() {
+            @Override
+            public void registerJob(String id, ByteSequence job) {
+            }
+            @Override
+            public void unregisterJob(String id, ByteSequence job) {
+            }
             @Override
             public void scheduledJob(String id, ByteSequence job) {
                 LOG.info("Job exectued: {}", 11 - done.getCount());
