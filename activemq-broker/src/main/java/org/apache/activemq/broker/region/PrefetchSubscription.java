@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -163,6 +164,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     public void processMessageDispatchNotification(MessageDispatchNotification mdn) throws Exception {
         synchronized(pendingLock) {
             try {
+                okForAckAsDispatchDone.countDown();
+
                 pending.reset();
                 while (pending.hasNext()) {
                     MessageReference node = pending.next();
@@ -563,6 +566,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         if (this.pending!=null) {
             this.pending.setSystemUsage(usageManager);
             this.pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
+        }
+    }
+
+    public List<MessageReference> getDispatched() {
+        synchronized(dispatchLock) {
+            return new ArrayList<>(dispatched);
         }
     }
 

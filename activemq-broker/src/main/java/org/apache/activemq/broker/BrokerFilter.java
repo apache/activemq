@@ -413,4 +413,9 @@ public class BrokerFilter implements Broker {
     public void networkBridgeStopped(BrokerInfo brokerInfo) {
         getNext().networkBridgeStopped(brokerInfo);
     }
+
+    @Override
+    public void queuePurged(ConnectionContext context, ActiveMQDestination destination) {
+        getNext().queuePurged(context, destination);
+    }
 }

@@ -45,6 +45,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
@@ -1296,9 +1297,36 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         return null;
     }
 
+    public List<MessageId> getAllMessageIds() throws Exception {
+        Set<MessageReference> set = new LinkedHashSet<>();
+        do {
+            doPageIn(true);
+            pagedInMessagesLock.readLock().lock();
+            try {
+                if (!set.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    return getPagedInMessageIds();
+                }
+            } finally {
+                pagedInMessagesLock.readLock().unlock();
+            }
+        } while (set.size() < this.destinationStatistics.getMessages().getCount());
+        return getPagedInMessageIds();
+    }
+
+    private List<MessageId> getPagedInMessageIds() {
+        return pagedInMessages.values()
+                .stream()
+                .map(MessageReference::getMessageId)
+                .collect(Collectors.toList());
+    }
+
     public void purge() throws Exception {
-        ConnectionContext c = createConnectionContext();
-        List<MessageReference> list = null;
+        purge(createConnectionContext());
+    }
+
+    public void purge(ConnectionContext c) throws Exception {
+        List<MessageReference> list;
         try {
             sendLock.lock();
             long originalMessageCount = this.destinationStatistics.getMessages().getCount();
@@ -1329,6 +1357,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         } finally {
             sendLock.unlock();
         }
+        broker.queuePurged(c, destination);
     }
 
     @Override
@@ -1497,6 +1526,66 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
         } while (count < this.destinationStatistics.getMessages().getCount());
         return movedCounter;
+    }
+
+    /**
+     * Copies the messages matching the given selector up to the maximum number
+     * of matched messages
+     *
+     * @return the list messages matching the selector
+     */
+    public List<QueueMessageReference> getMatchingMessages(ConnectionContext context, String selector, int maximumMessages) throws Exception {
+        return getMatchingMessages(context, createSelectorFilter(selector), maximumMessages);
+    }
+
+    /**
+     * Gets the messages matching the given filter up to the maximum number of
+     * matched messages
+     *
+     * @return the list messages matching the filter
+     */
+    public List<QueueMessageReference> getMatchingMessages(ConnectionContext context, MessageReferenceFilter filter, int maximumMessages) throws Exception {
+        Set<QueueMessageReference> set = new LinkedHashSet<>();
+
+        pagedInMessagesLock.readLock().lock();
+        try {
+            Iterator<MessageReference> iterator = pagedInMessages.iterator();
+
+            while (iterator.hasNext() && set.size() < maximumMessages) {
+                QueueMessageReference qmr = (QueueMessageReference) iterator.next();
+                if (filter.evaluate(context, qmr)) {
+                    set.add(qmr);
+                }
+            }
+        } finally {
+            pagedInMessagesLock.readLock().unlock();
+        }
+
+        if (set.size() == maximumMessages) {
+            return new ArrayList<>(set);
+        }
+        messagesLock.writeLock().lock();
+        try {
+            try {
+                messages.setMaxBatchSize(getMaxPageSize());
+                messages.reset();
+                while (messages.hasNext() && set.size() < maximumMessages) {
+                    MessageReference mr = messages.next();
+                    QueueMessageReference qmr = createMessageReference(mr.getMessage());
+                    qmr.decrementReferenceCount();
+                    messages.rollback(qmr.getMessageId());
+                    if (filter.evaluate(context, qmr)) {
+                        set.add(qmr);
+                    }
+
+                }
+            } finally {
+                messages.release();
+            }
+        } finally {
+            messagesLock.writeLock().unlock();
+        }
+        return new ArrayList<>(set);
     }
 
     /**
@@ -2347,6 +2436,25 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         Subscription sub = getMatchingSubscription(messageDispatchNotification);
         if (sub != null) {
             MessageReference message = getMatchingMessage(messageDispatchNotification);
+
+            pagedInMessagesLock.writeLock().lock();
+            try {
+                if (!pagedInMessages.contains(message)) {
+                    pagedInMessages.addMessageLast(message);
+                }
+            } finally {
+                pagedInMessagesLock.writeLock().unlock();
+            }
+
+            pagedInPendingDispatchLock.writeLock().lock();
+            try {
+                if (dispatchPendingList.contains(message)) {
+                    dispatchPendingList.remove(message);
+                }
+            } finally {
+                pagedInPendingDispatchLock.writeLock().unlock();
+            }
+
             sub.add(message);
             sub.processMessageDispatchNotification(messageDispatchNotification);
         }
@@ -2387,8 +2495,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     messages.reset();
                     while (messages.hasNext()) {
                         MessageReference node = messages.next();
-                        messages.remove();
                         if (messageId.equals(node.getMessageId())) {
+                            messages.remove();
                             message = this.createMessageReference(node.getMessage());
                             break;
                         }

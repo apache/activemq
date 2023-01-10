@@ -24,11 +24,11 @@ import javax.jms.MessageFormatException;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Connector;
+import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -54,7 +54,7 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SchedulerBroker extends BrokerFilter implements JobListener {
+public class SchedulerBroker extends MutableBrokerFilter implements JobListener {
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
     private static final LongSequenceGenerator longGenerator = new LongSequenceGenerator();
@@ -462,7 +462,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
             try {
                 context.setProducerFlowControl(false);
-                this.next.send(producerExchange, msg);
+                this.getNext().send(producerExchange, msg);
             } finally {
                 context.setProducerFlowControl(originalFlowControl);
             }
