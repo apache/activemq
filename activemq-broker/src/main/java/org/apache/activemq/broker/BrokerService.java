@@ -245,7 +245,7 @@ public class BrokerService implements Service {
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
     private JobSchedulerStore jobSchedulerStore;
-    private List<JobListener> jobSchedulerJobListeners;
+    private List<JobListener> jobSchedulerJobListeners = new ArrayList<>();
     private final AtomicLong totalConnections = new AtomicLong();
     private final AtomicInteger currentConnections = new AtomicInteger();
 
