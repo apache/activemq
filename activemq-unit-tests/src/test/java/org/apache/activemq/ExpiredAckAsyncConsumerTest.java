@@ -99,8 +99,12 @@ public class ExpiredAckAsyncConsumerTest {
 
     @After
     public void tearDown() throws Exception {
-        connectionConsumer.close();
-        connection.close();
+        try {
+            connectionConsumer.close();
+            connection.close();
+        } catch (Exception e) {
+            //swallow any error so broker can still be stopped
+        }
         broker.stop();
         broker.waitUntilStopped();
     }
