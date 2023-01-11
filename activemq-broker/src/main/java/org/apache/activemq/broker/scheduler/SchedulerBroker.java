@@ -355,29 +355,41 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         MessageId jobId = new MessageId(messageSend.getMessageId().getProducerId(), longGenerator.getNextSequenceId());
 
         ByteSequence payload = new ByteSequence(packet.data, packet.offset, packet.length);
+        willScheduleJob(jobId.toString(), payload);
         getInternalScheduler().schedule(jobId.toString(), payload, cronEntry, delay, period, repeat);
-        registerJob(jobId.toString(), payload);
+        didScheduleJob(jobId.toString(), payload);
     }
 
     @Override
-    public void registerJob(String id, ByteSequence job) {
+    public void willScheduleJob(String id, ByteSequence job) throws Exception {
         for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
-            jobListener.registerJob(id, job);
+            jobListener.willScheduleJob(id, job);
+        }
+    }
+
+	// NOOP. Handled by doSchedule
+    @Override
+    public void scheduleJob(String id, ByteSequence job) throws Exception {
+	}
+
+
+    @Override
+    public void didScheduleJob(String id, ByteSequence job) throws Exception {
+        for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+            jobListener.didScheduleJob(id, job);
         }
     }
 
     @Override
-    public void unregisterJob(String id, ByteSequence job) {
+    public void willDispatchJob(String id, ByteSequence job) throws Exception {
         for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
-            jobListener.unregisterJob(id, job);
+            jobListener.willDispatchJob(id, job);
         }
     }
 
     @Override
-    public void scheduledJob(String id, ByteSequence job) {
-        for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
-            jobListener.scheduledJob(id, job);
-        }
+    public void dispatchJob(String id, ByteSequence job) throws Exception {
+		willDispatchJob(id, job);
         org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getData(), job.getOffset(), job.getLength());
         try {
             Message messageSend = (Message) wireFormat.unmarshal(packet);
@@ -438,10 +450,19 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             producerExchange.setConnectionContext(context);
             producerExchange.setMutable(true);
             producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
+            willDispatchJob(id, job);
             super.send(producerExchange, messageSend);
-            unregisterJob(id, job);
+            didDispatchJob(id, job);
         } catch (Exception e) {
             LOG.error("Failed to send scheduled message {}", id, e);
+        }
+		didDispatchJob(id, job);
+    }
+
+    @Override
+    public void didDispatchJob(String id, ByteSequence job) throws Exception {
+        for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+            jobListener.didDispatchJob(id, job);
         }
     }
 

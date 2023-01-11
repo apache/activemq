@@ -359,7 +359,11 @@ public class InMemoryJobScheduler implements JobScheduler {
         if (canDispatch()) {
             LOG.debug("Firing: {}", job);
             for (JobListener l : jobListeners) {
-                l.scheduledJob(job.getJobId(), new ByteSequence(job.getPayload()));
+				try {
+                	l.dispatchJob(job.getJobId(), new ByteSequence(job.getPayload()));
+				} catch(Exception e) {
+                	throw new IOException(e);
+				}
             }
         }
     }

@@ -23,6 +23,11 @@ import org.apache.activemq.util.ByteSequence;
  * such as job ready events.
  */
 public interface JobListener {
+    public void willScheduleJob(String id, ByteSequence job) throws Exception;
+    public void scheduleJob(String id, ByteSequence job) throws Exception;
+    public void didScheduleJob(String id, ByteSequence job) throws Exception;
+
+    public void willDispatchJob(String id, ByteSequence job) throws Exception;
 
     /**
      * A Job that has been scheduled is now ready to be fired.  The Job is passed
@@ -33,9 +38,8 @@ public interface JobListener {
      * @param job
      *        The job that is now ready, delivered in byte form.
      */
-    public void scheduledJob(String id, ByteSequence job);
+    public void dispatchJob(String id, ByteSequence job) throws Exception;
 
-    public void registerJob(String id, ByteSequence job);
-    public void unregisterJob(String id, ByteSequence job);
+    public void didDispatchJob(String id, ByteSequence job) throws Exception;
 
 }
