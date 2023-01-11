@@ -285,10 +285,14 @@ public class TopicSubscriptionZeroPrefetchTest {
 
     @After
     public void tearDown() throws Exception {
-        consumer.close();
-        producer.close();
-        session.close();
-        connection.close();
+        try {
+            consumer.close();
+            producer.close();
+            session.close();
+            connection.close();
+        } catch (Exception e) {
+            //swallow any error so broker can still be stopped
+        }
         brokerService.stop();
     }
 

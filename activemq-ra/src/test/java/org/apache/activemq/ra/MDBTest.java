@@ -467,102 +467,114 @@ public class MDBTest {
     public void testErrorOnNoMessageDeliveryBrokerZeroPrefetchConfig() throws Exception {
 
         final BrokerService brokerService = new BrokerService();
-        final String brokerUrl = "vm://zeroPrefetch?create=false";
-        brokerService.setBrokerName("zeroPrefetch");
-        brokerService.setPersistent(false);
-        PolicyMap policyMap = new PolicyMap();
-        PolicyEntry zeroPrefetchPolicy = new PolicyEntry();
-        zeroPrefetchPolicy.setQueuePrefetch(0);
-        policyMap.setDefaultEntry(zeroPrefetchPolicy);
-        brokerService.setDestinationPolicy(policyMap);
-        brokerService.start();
 
-        final AtomicReference<String> errorMessage = new AtomicReference<String>();
-        final var appender = new AbstractAppender("test", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
-            @Override
-            public void append(LogEvent event) {
-                if (event.getLevel().isMoreSpecificThan(Level.ERROR)) {
-                    System.err.println("Event :" + event.getMessage().getFormattedMessage());
-                    errorMessage.set(event.getMessage().getFormattedMessage());
+        try {
+            final String brokerUrl = "vm://zeroPrefetch?create=false";
+            brokerService.setBrokerName("zeroPrefetch");
+            brokerService.setPersistent(false);
+            PolicyMap policyMap = new PolicyMap();
+            PolicyEntry zeroPrefetchPolicy = new PolicyEntry();
+            zeroPrefetchPolicy.setQueuePrefetch(0);
+            policyMap.setDefaultEntry(zeroPrefetchPolicy);
+            brokerService.setDestinationPolicy(policyMap);
+            brokerService.start();
+
+            final AtomicReference<String> errorMessage = new AtomicReference<String>();
+            final var appender = new AbstractAppender("test", new AbstractFilter() {
+            }, new MessageLayout(), false, new Property[0]) {
+                @Override
+                public void append(LogEvent event) {
+                    if (event.getLevel().isMoreSpecificThan(Level.ERROR)) {
+                        System.err.println("Event :" + event.getMessage().getFormattedMessage());
+                        errorMessage.set(event.getMessage().getFormattedMessage());
+                    }
                 }
-            }
-        };
-        appender.start();
-
-        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getRootLogger());
-        logger.addAppender(appender);
-        logger.get().addAppender(appender, Level.INFO, new AbstractFilter() {});
-
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
-        Connection connection = factory.createConnection();
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-        MessageConsumer advisory = session.createConsumer(AdvisorySupport.getConsumerAdvisoryTopic(new ActiveMQQueue("TEST")));
-
-        ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
-        adapter.setServerUrl(brokerUrl);
-        adapter.start(new StubBootstrapContext());
-
-        final CountDownLatch messageDelivered = new CountDownLatch(1);
-
-        final StubMessageEndpoint endpoint = new StubMessageEndpoint() {
-            @Override
-            public void onMessage(Message message) {
-                super.onMessage(message);
-                messageDelivered.countDown();
             };
-        };
+            appender.start();
 
-        ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
-        activationSpec.setDestinationType(Queue.class.getName());
-        activationSpec.setDestination("TEST");
-        activationSpec.setResourceAdapter(adapter);
-        activationSpec.validate();
+            final var logger = org.apache.logging.log4j.core.Logger.class.cast(
+                LogManager.getRootLogger());
+            logger.addAppender(appender);
+            logger.get().addAppender(appender, Level.INFO, new AbstractFilter() {
+            });
 
-        MessageEndpointFactory messageEndpointFactory = new MessageEndpointFactory() {
-            @Override
-            public MessageEndpoint createEndpoint(XAResource resource) throws UnavailableException {
-                endpoint.xaresource = resource;
-                return endpoint;
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
+            Connection connection = factory.createConnection();
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            MessageConsumer advisory = session.createConsumer(
+                AdvisorySupport.getConsumerAdvisoryTopic(new ActiveMQQueue("TEST")));
+
+            ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
+            adapter.setServerUrl(brokerUrl);
+            adapter.start(new StubBootstrapContext());
+
+            final CountDownLatch messageDelivered = new CountDownLatch(1);
+
+            final StubMessageEndpoint endpoint = new StubMessageEndpoint() {
+                @Override
+                public void onMessage(Message message) {
+                    super.onMessage(message);
+                    messageDelivered.countDown();
+                }
+
+                ;
+            };
+
+            ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
+            activationSpec.setDestinationType(Queue.class.getName());
+            activationSpec.setDestination("TEST");
+            activationSpec.setResourceAdapter(adapter);
+            activationSpec.validate();
+
+            MessageEndpointFactory messageEndpointFactory = new MessageEndpointFactory() {
+                @Override
+                public MessageEndpoint createEndpoint(XAResource resource)
+                    throws UnavailableException {
+                    endpoint.xaresource = resource;
+                    return endpoint;
+                }
+
+                @Override
+                public boolean isDeliveryTransacted(Method method) throws NoSuchMethodException {
+                    return true;
+                }
+            };
+
+            // Activate an Endpoint
+            adapter.endpointActivation(messageEndpointFactory, activationSpec);
+
+            ActiveMQMessage msg = (ActiveMQMessage) advisory.receive(4000);
+            if (msg != null) {
+                assertEquals("Prefetch size hasn't been set", 0,
+                    ((ConsumerInfo) msg.getDataStructure()).getPrefetchSize());
+            } else {
+                fail("Consumer hasn't been created");
             }
 
-            @Override
-            public boolean isDeliveryTransacted(Method method) throws NoSuchMethodException {
-                return true;
-            }
-        };
+            // Send the broker a message to that endpoint
+            MessageProducer producer = session.createProducer(new ActiveMQQueue("TEST"));
+            producer.send(session.createTextMessage("Hello!"));
 
-        // Activate an Endpoint
-        adapter.endpointActivation(messageEndpointFactory, activationSpec);
+            connection.close();
 
-        ActiveMQMessage msg = (ActiveMQMessage)advisory.receive(4000);
-        if (msg != null) {
-            assertEquals("Prefetch size hasn't been set", 0, ((ConsumerInfo)msg.getDataStructure()).getPrefetchSize());
-        } else {
-            fail("Consumer hasn't been created");
+            // Wait for the message to be delivered.
+            assertFalse(messageDelivered.await(5000, TimeUnit.MILLISECONDS));
+
+            // Shut the Endpoint down.
+            adapter.endpointDeactivation(messageEndpointFactory, activationSpec);
+            adapter.stop();
+
+            assertNotNull("We got an error message", errorMessage.get());
+            assertTrue("correct message: " + errorMessage.get(),
+                errorMessage.get().contains("zero"));
+
+            logger.removeAppender(appender);
+            logger.get().removeAppender("test");
+        } finally {
+            brokerService.stop();
         }
-
-        // Send the broker a message to that endpoint
-        MessageProducer producer = session.createProducer(new ActiveMQQueue("TEST"));
-        producer.send(session.createTextMessage("Hello!"));
-
-        connection.close();
-
-        // Wait for the message to be delivered.
-        assertFalse(messageDelivered.await(5000, TimeUnit.MILLISECONDS));
-
-        // Shut the Endpoint down.
-        adapter.endpointDeactivation(messageEndpointFactory, activationSpec);
-        adapter.stop();
-
-        assertNotNull("We got an error message", errorMessage.get());
-        assertTrue("correct message: " +  errorMessage.get(), errorMessage.get().contains("zero"));
-
-        logger.removeAppender(appender);
-        logger.get().removeAppender("test");
-
-        brokerService.stop();
     }
 
     @Test

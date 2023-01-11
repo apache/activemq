@@ -71,7 +71,11 @@ public class AMQ3732Test {
 
     @After
     public void stopBroker() throws Exception {
-        connection.close();
+        try {
+            connection.close();
+        } catch (Exception e) {
+            //swallow any error so broker can still be stopped
+        }
 
         broker.stop();
         broker.waitUntilStopped();

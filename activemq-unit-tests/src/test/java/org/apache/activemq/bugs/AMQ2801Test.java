@@ -105,8 +105,12 @@ public class AMQ2801Test
 
     @After
     public void tearDown() throws Exception {
-        conn1.close();
-        conn2.close();
+        try {
+            conn1.close();
+            conn2.close();
+        } catch (Exception e) {
+            //swallow any error so broker can still be stopped
+        }
         if (broker != null) {
             broker.stop();
         }
