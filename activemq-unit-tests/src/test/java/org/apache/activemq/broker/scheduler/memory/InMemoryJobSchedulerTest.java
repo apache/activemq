@@ -46,45 +46,21 @@ public class InMemoryJobSchedulerTest {
 
     @Test(timeout = 60000)
     public void testAddLongStringByteSequence() throws Exception {
-        final int COUNT = 10;
-        final CountDownLatch latch = new CountDownLatch(COUNT);
-        scheduler.addListener(new JobListener() {
-            @Override
-            public void registerJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void unregisterJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void scheduledJob(String id, ByteSequence job) {
-                latch.countDown();
-            }
+		TestJobListener l = new TestJobListener(10);
+		scheduler.addListener(l);
 
-        });
-        for (int i = 0; i < COUNT; i++) {
+        for (int i = 0; i < l.getCount(); i++) {
             String test = new String("test" + i);
             scheduler.schedule("id" + i, new ByteSequence(test.getBytes()), 1000);
         }
-        latch.await(5, TimeUnit.SECONDS);
-        assertEquals(0, latch.getCount());
+        l.getLatch().await(5, TimeUnit.SECONDS);
+        assertEquals(0, l.getLatch().getCount());
     }
 
     @Test(timeout = 60000)
     public void testAddCronAndByteSequence() throws Exception {
-
-        final CountDownLatch latch = new CountDownLatch(1);
-        scheduler.addListener(new JobListener() {
-            @Override
-            public void registerJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void unregisterJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void scheduledJob(String id, ByteSequence job) {
-                latch.countDown();
-            }
-        });
+		TestJobListener l = new TestJobListener(1);
+		scheduler.addListener(l);
 
         Calendar current = Calendar.getInstance();
         current.add(Calendar.MINUTE, 1);
@@ -98,64 +74,44 @@ public class InMemoryJobSchedulerTest {
         scheduler.schedule("id:1", new ByteSequence(str.getBytes()), cronTab, 0, 0, 0);
 
         // need a little slack so go over 60 seconds
-        assertTrue(latch.await(70, TimeUnit.SECONDS));
-        assertEquals(0, latch.getCount());
+        assertTrue(l.getLatch().await(70, TimeUnit.SECONDS));
+        assertEquals(0, l.getLatch().getCount());
     }
 
     @Test(timeout = 60000)
     public void testAddLongLongIntStringByteSequence() throws Exception {
-        final int COUNT = 10;
-        final CountDownLatch latch = new CountDownLatch(COUNT);
-        scheduler.addListener(new JobListener() {
-            @Override
-            public void registerJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void unregisterJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void scheduledJob(String id, ByteSequence job) {
-                latch.countDown();
-            }
-        });
+		TestJobListener l = new TestJobListener(10);
+		scheduler.addListener(l);
+
         long time = 2000;
-        for (int i = 0; i < COUNT; i++) {
+        for (int i = 0; i < l.getCount(); i++) {
             String test = new String("test" + i);
             scheduler.schedule("id" + i, new ByteSequence(test.getBytes()), "", time, 10, -1);
         }
-        assertTrue(latch.getCount() == COUNT);
-        latch.await(3000, TimeUnit.SECONDS);
-        assertTrue(latch.getCount() == 0);
+        assertTrue(l.getLatch().getCount() == l.getCount());
+        l.getLatch().await(3000, TimeUnit.SECONDS);
+        assertTrue(l.getLatch().getCount() == 0);
     }
 
     @Test(timeout = 60000)
     @Ignore
     public void testAddStopThenDeliver() throws Exception {
-        final int COUNT = 10;
-        final CountDownLatch latch = new CountDownLatch(COUNT);
+		TestJobListener l = new TestJobListener(10);
+
         long time = 2000;
-        for (int i = 0; i < COUNT; i++) {
+        for (int i = 0; i < l.getCount(); i++) {
             String test = new String("test" + i);
             scheduler.schedule("id" + i, new ByteSequence(test.getBytes()), "", time, 1000, -1);
         }
         File directory = store.getDirectory();
         tearDown();
         setUp();
-        scheduler.addListener(new JobListener() {
-            @Override
-            public void registerJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void unregisterJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void scheduledJob(String id, ByteSequence job) {
-                latch.countDown();
-            }
-        });
-        assertTrue(latch.getCount() == COUNT);
-        latch.await(3000, TimeUnit.SECONDS);
-        assertTrue(latch.getCount() == 0);
+
+		scheduler.addListener(l);
+
+        assertTrue(l.getLatch().getCount() == l.getCount());
+        l.getLatch().await(3000, TimeUnit.SECONDS);
+        assertTrue(l.getLatch().getCount() == 0);
     }
 
     @Test(timeout = 60000)
@@ -217,19 +173,8 @@ public class InMemoryJobSchedulerTest {
         int size = scheduler.getAllJobs().size();
         assertEquals(size, 1);
 
-        scheduler.addListener(new JobListener() {
-            @Override
-            public void registerJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void unregisterJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void scheduledJob(String id, ByteSequence job) {
-                LOG.info("Job exectued: {}", 11 - done.getCount());
-                done.countDown();
-            }
-        });
+		TestJobListener l = new TestJobListener(10);
+		scheduler.addListener(l);
 
         List<Job> jobs = scheduler.getNextScheduleJobs();
         assertEquals(1, jobs.size());
