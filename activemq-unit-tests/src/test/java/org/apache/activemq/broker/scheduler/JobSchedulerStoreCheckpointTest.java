@@ -87,42 +87,30 @@ public class JobSchedulerStoreCheckpointTest {
 
     @Test
     public void testStoreCleanupLinear() throws Exception {
-        final int COUNT = 10;
-        final CountDownLatch latch = new CountDownLatch(COUNT);
-        scheduler.addListener(new JobListener() {
-            @Override
-            public void registerJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void unregisterJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void scheduledJob(String id, ByteSequence job) {
-                latch.countDown();
-            }
-        });
+		TestJobListener l = new TestJobListener(10);
+		scheduler.addListener(l);
 
         long time = TimeUnit.SECONDS.toMillis(30);
-        for (int i = 0; i < COUNT; i++) {
+        for (int i = 0; i < l.getCount(); i++) {
             scheduler.schedule("id" + i, payload, "", time, 0, 0);
         }
 
         int size = scheduler.getAllJobs().size();
-        assertEquals(size, COUNT);
+        assertEquals(size, l.getCount());
 
         LOG.info("Number of journal log files: {}", getNumJournalFiles());
         // need a little slack so go over 60 seconds
-        assertTrue(latch.await(70, TimeUnit.SECONDS));
-        assertEquals(0, latch.getCount());
+        assertTrue(l.getLatch().await(70, TimeUnit.SECONDS));
+        assertEquals(0, l.getLatch().getCount());
 
-        for (int i = 0; i < COUNT; i++) {
+        for (int i = 0; i < l.getCount(); i++) {
             scheduler.schedule("id" + i, payload, "", time, 0, 0);
         }
 
         LOG.info("Number of journal log files: {}", getNumJournalFiles());
         // need a little slack so go over 60 seconds
-        assertTrue(latch.await(70, TimeUnit.SECONDS));
-        assertEquals(0, latch.getCount());
+        assertTrue(l.getLatch().await(70, TimeUnit.SECONDS));
+        assertEquals(0, l.getLatch().getCount());
 
         assertTrue("Should be only one log left: " + getNumJournalFiles(), Wait.waitFor(new Wait.Condition() {
 
@@ -137,19 +125,8 @@ public class JobSchedulerStoreCheckpointTest {
 
     @Test
     public void testColocatedAddRemoveCleanup() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
-        scheduler.addListener(new JobListener() {
-            @Override
-            public void registerJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void unregisterJob(String id, ByteSequence job) {
-            }
-            @Override
-            public void scheduledJob(String id, ByteSequence job) {
-                latch.countDown();
-            }
-        });
+		TestJobListener l = new TestJobListener(1);
+		scheduler.addListener(l);
 
         byte[] data = new byte[1024];
         for (int i = 0; i < data.length; ++i) {
@@ -159,8 +136,8 @@ public class JobSchedulerStoreCheckpointTest {
         long time = TimeUnit.SECONDS.toMillis(2);
         scheduler.schedule("Message-1", new ByteSequence(data), "", time, 0, 0);
 
-        assertTrue(latch.await(70, TimeUnit.SECONDS));
-        assertEquals(0, latch.getCount());
+        assertTrue(l.getLatch().await(70, TimeUnit.SECONDS));
+        assertEquals(0, l.getLatch().getCount());
 
         scheduler.schedule("Message-2", payload, "", time, 0, 0);
         scheduler.schedule("Message-3", payload, "", time, 0, 0);
