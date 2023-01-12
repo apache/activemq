@@ -219,6 +219,24 @@ public class InMemoryJobScheduler implements JobScheduler {
         return "JobScheduler: " + name;
     }
 
+	public void willScheduleJob(String id, ByteSequence job) throws Exception {
+		for (JobListener l : jobListeners) {
+			l.willScheduleJob(id, job);
+		}
+	}
+ 
+	public void scheduleJob(String id, ByteSequence job) throws Exception {
+		for (JobListener l : jobListeners) {
+			l.scheduleJob(id, job);
+		}
+	}
+ 
+	public void didScheduleJob(String id, ByteSequence job) throws Exception {
+		for (JobListener l : jobListeners) {
+			l.didScheduleJob(id, job);
+		}
+	}
+ 
     private void doSchedule(final String jobId, final ByteSequence payload, final String cronEntry, long delay, long period, int repeat) throws IOException {
         long startTime = System.currentTimeMillis();
         long executionTime = 0;
@@ -257,6 +275,7 @@ public class InMemoryJobScheduler implements JobScheduler {
 
         lock.writeLock().lock();
         try {
+			willScheduleJob(jobId.toString(), payload);
             ScheduledTask task = jobs.get(executionTime);
             if (task == null) {
                 task = new ScheduledTask(executionTime);
@@ -266,6 +285,9 @@ public class InMemoryJobScheduler implements JobScheduler {
             } else {
                 task.add(newJob);
             }
+			didScheduleJob(jobId.toString(), payload);
+		} catch(Exception e) {
+			throw new IOException(e);
         } finally {
             lock.writeLock().unlock();
         }
@@ -360,7 +382,9 @@ public class InMemoryJobScheduler implements JobScheduler {
             LOG.debug("Firing: {}", job);
             for (JobListener l : jobListeners) {
 				try {
+                	l.willDispatchJob(job.getJobId(), new ByteSequence(job.getPayload()));
                 	l.dispatchJob(job.getJobId(), new ByteSequence(job.getPayload()));
+                	l.didDispatchJob(job.getJobId(), new ByteSequence(job.getPayload()));
 				} catch(Exception e) {
                 	throw new IOException(e);
 				}

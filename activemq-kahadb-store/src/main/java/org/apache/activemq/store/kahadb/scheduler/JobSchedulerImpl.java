@@ -213,6 +213,18 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         return result;
     }
 
+    public void willScheduleJob(String id, ByteSequence job) throws Exception {
+        for (JobListener l : jobListeners) {
+            l.willScheduleJob(id, job);
+        }
+    }
+
+    public void didScheduleJob(String id, ByteSequence job) throws Exception {
+        for (JobListener l : jobListeners) {
+            l.didScheduleJob(id, job);
+        }
+    }
+
     private void doSchedule(final String jobId, final ByteSequence payload, final String cronEntry, long delay, long period, int repeat) throws IOException {
         long startTime = System.currentTimeMillis();
         // round startTime - so we can schedule more jobs at the same time
@@ -249,7 +261,13 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         newJob.setNextExecutionTime(time);
         newJob.setPayload(new Buffer(payload.getData(), payload.getOffset(), payload.getLength()));
 
-        this.store.store(newJob);
+		try {
+			willScheduleJob(jobId, payload);
+        	this.store.store(newJob);
+			didScheduleJob(jobId, payload);
+		} catch(Exception e) {
+			throw new IOException(e);
+		}
     }
 
     private void doReschedule(List<Closure> toReschedule) throws IOException {
@@ -820,7 +838,13 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         LOG.debug("Firing: {}", job);
         ByteSequence bs = this.store.getPayload(job.getLocation());
         for (JobListener l : jobListeners) {
-            l.scheduledJob(job.getJobId(), bs);
+			try {
+            	l.willDispatchJob(job.getJobId(), bs);
+            	l.dispatchJob(job.getJobId(), bs);
+            	l.didDispatchJob(job.getJobId(), bs);
+			} catch(Exception e) {
+				throw new IOException(e);
+			}
         }
     }
 

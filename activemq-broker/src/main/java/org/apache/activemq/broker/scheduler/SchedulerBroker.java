@@ -355,9 +355,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         MessageId jobId = new MessageId(messageSend.getMessageId().getProducerId(), longGenerator.getNextSequenceId());
 
         ByteSequence payload = new ByteSequence(packet.data, packet.offset, packet.length);
-        willScheduleJob(jobId.toString(), payload);
         getInternalScheduler().schedule(jobId.toString(), payload, cronEntry, delay, period, repeat);
-        didScheduleJob(jobId.toString(), payload);
     }
 
     @Override
@@ -389,7 +387,6 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
     @Override
     public void dispatchJob(String id, ByteSequence job) throws Exception {
-		willDispatchJob(id, job);
         org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getData(), job.getOffset(), job.getLength());
         try {
             Message messageSend = (Message) wireFormat.unmarshal(packet);
@@ -450,13 +447,10 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             producerExchange.setConnectionContext(context);
             producerExchange.setMutable(true);
             producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
-            willDispatchJob(id, job);
             super.send(producerExchange, messageSend);
-            didDispatchJob(id, job);
         } catch (Exception e) {
             LOG.error("Failed to send scheduled message {}", id, e);
         }
-		didDispatchJob(id, job);
     }
 
     @Override
