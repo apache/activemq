@@ -55,7 +55,7 @@
         -->
         <init-param>
             <param-name>policyLocation</param-name>
-            <param-value>file:${prop:activemq.conf}/jolokia-access.xml</param-value>
+            <param-value>${prop:jolokia.conf}</param-value>
         </init-param>
         <!-- turn off returning exceptions and stacktraces from jolokia -->
         <init-param>

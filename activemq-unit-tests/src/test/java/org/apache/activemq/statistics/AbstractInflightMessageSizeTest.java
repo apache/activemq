@@ -16,33 +16,33 @@
  */
 package org.apache.activemq.statistics;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
-
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.TestSupport;
+import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.region.AbstractSubscription;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Assume;
@@ -66,11 +66,14 @@ public abstract class AbstractInflightMessageSizeTest {
     protected boolean useTopicSubscriptionInflightStats;
     final protected int ackType;
     final protected boolean optimizeAcknowledge;
-    final protected String destName = "testDest";
+    final protected String destNamePrefix = "testDest";
+    final protected String destName = "testDest.1";
+    final protected String destName2 = "testDest.2";
 
     //use 10 second wait for assertions instead of the 30 default
-    final protected long WAIT_DURATION = 10 * 1000;
-    final protected long SLEEP_DURATION =  500;
+    protected final long WAIT_DURATION = 10 * 1000;
+    protected final long SLEEP_DURATION =  500;
+    protected final AtomicBoolean failOnDispatch = new AtomicBoolean();
 
     @Parameters
     public static Collection<Object[]> data() {
@@ -102,6 +105,7 @@ public abstract class AbstractInflightMessageSizeTest {
 
     @Before
     public void setUp() throws Exception {
+        failOnDispatch.set(false);
         brokerService = new BrokerService();
         brokerService.setDeleteAllMessagesOnStartup(true);
         TransportConnector tcp = brokerService
@@ -111,6 +115,15 @@ public abstract class AbstractInflightMessageSizeTest {
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
         brokerService.setDestinationPolicy(pMap);
+        brokerService.setPlugins(new BrokerPlugin[]{broker -> new BrokerFilter(broker) {
+            @Override
+            public void preProcessDispatch(MessageDispatch messageDispatch) {
+                super.preProcessDispatch(messageDispatch);
+                if (failOnDispatch.get()) {
+                    throw new RuntimeException("fail dispatch");
+                }
+            }
+        }});
 
         brokerService.start();
         //used to test optimizeAcknowledge works
@@ -307,8 +320,111 @@ public abstract class AbstractInflightMessageSizeTest {
                 Wait.waitFor(() -> getSubscription().getInFlightMessageSize() == 0, WAIT_DURATION, SLEEP_DURATION));
     }
 
+    @Test(timeout=60000)
+    public void testInflightMessageSizeDispatchFailure() throws Exception {
+        Assume.assumeTrue(useTopicSubscriptionInflightStats);
+
+        //Fail on all dispatches
+        failOnDispatch.set(true);
+
+        //Need to reset each time here on send because dispatch will cause the connection to close
+        try {
+            sendMessages(1);
+        } catch (Exception e) {
+            //expected as session should close
+        }
+
+        //Wait for session to fail
+        assertTrue(Wait.waitFor(() -> ((ActiveMQSession) session).isClosed(), WAIT_DURATION, SLEEP_DURATION));
+
+        //Make sure all the stats are cleaned up on failure of dispatches
+        assertTrue("Destination inflight message count should be 0",
+            Wait.waitFor(() -> amqDestination.getDestinationStatistics().getInflight().getCount() == 0, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Consumers size should be 0 due to failure or Inflight sub dispatched message count should be 0 for durable sub",
+            Wait.waitFor(() -> amqDestination.getConsumers().size() == 0 ||
+                getSubscription().getDispatchedQueueSize() == 0, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Consumers size should be 0 due to failure or Inflight message size should be 0 for durable sub",
+            Wait.waitFor(() -> amqDestination.getConsumers().size() == 0 ||
+                getSubscription().getInFlightMessageSize() == 0, WAIT_DURATION, SLEEP_DURATION));
+    }
+
+    @Test(timeout=60000)
+    public void testInflightMessageSizeConsumerClosed() throws Exception {
+        Assume.assumeTrue(useTopicSubscriptionInflightStats);
+        sendMessages(10);
+
+        //Wait for the 10 messages to get dispatched and then close the consumer to test cleanup
+        assertTrue("Should be 10 in flight messages",
+            Wait.waitFor(() ->  amqDestination.getDestinationStatistics().getInflight().getCount() == 10, WAIT_DURATION, SLEEP_DURATION));
+        consumer.close();
+
+        //Make sure all the stats are cleaned up on failure of dispatches
+        assertTrue("Destination inflight message count should be 0",
+            Wait.waitFor(() -> amqDestination.getDestinationStatistics().getInflight().getCount() == 0, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Consumers size should be 0 due to failure or Inflight sub dispatched message count should be 0 for durable sub",
+            Wait.waitFor(() -> amqDestination.getConsumers().size() == 0 ||
+                getSubscription().getDispatchedQueueSize() == 0, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Consumers size should be 0 due to failure or Inflight message size should be 0 for durable sub",
+            Wait.waitFor(() -> amqDestination.getConsumers().size() == 0 ||
+                getSubscription().getInFlightMessageSize() == 0, WAIT_DURATION, SLEEP_DURATION));
+    }
+
+    @Test(timeout=60000)
+    public void testInflightMessageSizeRemoveDestination() throws Exception {
+        Assume.assumeTrue(useTopicSubscriptionInflightStats);
+        //Close as we will re-create with a wildcard sub to get messages from 2 destinations
+        consumer.close();
+
+        consumer = getMessageConsumer(destNamePrefix + ".>");
+        sendMessages(10);
+        sendMessages(10, getActiveMQDestination(destName2));
+        Destination amqDestination2 = TestSupport.getDestination(brokerService, getActiveMQDestination(destName2));
+        final Subscription subscription = getSubscription();
+
+        //Wait for the 10 messages to get dispatched and then close the consumer to test cleanup
+        assertTrue("Should be 10 in flight messages",
+            Wait.waitFor(() ->  amqDestination.getDestinationStatistics().getInflight().getCount() == 10, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Should be 10 in flight messages",
+            Wait.waitFor(() ->  amqDestination2.getDestinationStatistics().getInflight().getCount() == 10, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Inflight message size should be 20",
+            Wait.waitFor(() -> subscription.getInFlightSize() == 20, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Inflight message size should be greater than 0",
+            Wait.waitFor(() -> subscription.getInFlightMessageSize() > 0, WAIT_DURATION, SLEEP_DURATION));
+
+        //remove 1 destination, leaving 10 in flight
+        brokerService.getBroker().removeDestination(brokerService.getAdminConnectionContext(), getActiveMQDestination(), 1000);
+
+        //Make sure all the stats are updated after 1 destination removal
+        assertTrue("Destination inflight message count should be 0",
+            Wait.waitFor(() -> amqDestination.getDestinationStatistics().getInflight().getCount() == 0, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Destination inflight message count should still be 10",
+            Wait.waitFor(() -> amqDestination2.getDestinationStatistics().getInflight().getCount() == 10, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Inflight message size should be 10",
+            Wait.waitFor(() -> subscription.getInFlightSize() == 10, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Inflight message size should be greater than 0",
+            Wait.waitFor(() -> subscription.getInFlightMessageSize() > 0, WAIT_DURATION, SLEEP_DURATION));
+
+        //remove second dest
+        brokerService.getBroker().removeDestination(brokerService.getAdminConnectionContext(), getActiveMQDestination(destName2), 1000);
+
+        assertTrue("Destination inflight message count should be 0",
+            Wait.waitFor(() -> amqDestination2.getDestinationStatistics().getInflight().getCount() == 0, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Inflight message size should be 0",
+            Wait.waitFor(() -> subscription.getInFlightSize() == 0, WAIT_DURATION, SLEEP_DURATION));
+        assertTrue("Inflight message size should be 0",
+            Wait.waitFor(() -> subscription.getInFlightMessageSize() == 0, WAIT_DURATION, SLEEP_DURATION));
+    }
+
     protected long sendMessages(int count) throws JMSException {
-        return sendMessages(count, null);
+        return sendMessages(count, null, dest);
+    }
+
+    protected long sendMessages(int count, javax.jms.Destination dest) throws JMSException {
+        return sendMessages(count, null, dest);
+    }
+
+    protected long sendMessages(int count, Integer ttl) throws JMSException {
+        return sendMessages(count, ttl, dest);
     }
 
     /**
@@ -317,7 +433,7 @@ public abstract class AbstractInflightMessageSizeTest {
      * @param count
      * @throws JMSException
      */
-    protected long sendMessages(int count, Integer ttl) throws JMSException {
+    protected long sendMessages(int count, Integer ttl, javax.jms.Destination dest) throws JMSException {
         MessageProducer producer = session.createProducer(dest);
         if (ttl != null) {
             producer.setTimeToLive(ttl);
@@ -352,10 +468,22 @@ public abstract class AbstractInflightMessageSizeTest {
 
     protected abstract Subscription getSubscription();
 
-    protected abstract ActiveMQDestination getActiveMQDestination();
+    protected ActiveMQDestination getActiveMQDestination() {
+        return getActiveMQDestination(destName);
+    }
 
-    protected abstract MessageConsumer getMessageConsumer() throws JMSException;
+    protected abstract ActiveMQDestination getActiveMQDestination(String destName);
 
-    protected abstract javax.jms.Destination getDestination() throws JMSException ;
+    protected MessageConsumer getMessageConsumer() throws JMSException {
+        return getMessageConsumer(destName);
+    }
+
+    protected abstract MessageConsumer getMessageConsumer(String destName) throws JMSException;
+
+    protected javax.jms.Destination getDestination() throws JMSException {
+        return getDestination(destName);
+    }
+
+    protected abstract javax.jms.Destination getDestination(String destName) throws JMSException;
 
 }

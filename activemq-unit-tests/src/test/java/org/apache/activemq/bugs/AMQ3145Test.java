@@ -72,12 +72,16 @@ public class AMQ3145Test {
 
     @After
     public void tearDown() throws Exception {
-        if (consumer != null) {
-            consumer.close();
+        try {
+            if (consumer != null) {
+                consumer.close();
+            }
+            session.close();
+            connection.stop();
+            connection.close();
+        } catch (Exception e) {
+            //swallow any error so broker can still be stopped
         }
-        session.close();
-        connection.stop();
-        connection.close();
         broker.stop();
     }
 

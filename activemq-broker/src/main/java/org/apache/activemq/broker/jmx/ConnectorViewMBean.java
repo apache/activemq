@@ -89,4 +89,10 @@ public interface ConnectorViewMBean extends Service {
      */
     @MBeanInfo("Max connection exceeded count")
     long getMaxConnectionExceededCount();
+
+    /**
+     * @return true if transport connector is started
+     */
+    @MBeanInfo("Connector started")
+    boolean isStarted();
 }

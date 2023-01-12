@@ -132,11 +132,6 @@
       <artifactId>commons-collections</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>${commons-lang-version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.servicemix.bundles</groupId>
       <artifactId>org.apache.servicemix.bundles.josql</artifactId>
     </dependency>

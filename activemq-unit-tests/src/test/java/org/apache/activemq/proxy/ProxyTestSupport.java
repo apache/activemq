@@ -83,7 +83,11 @@ public class ProxyTestSupport extends BrokerTestSupport {
     protected void tearDown() throws Exception {
         for (Iterator<StubConnection> iter = connections.iterator(); iter.hasNext();) {
             StubConnection connection = iter.next();
-            connection.stop();
+            try {
+                connection.stop();
+            } catch (Exception e) {
+                //swallow any error so broker can still be stopped
+            }
             iter.remove();
         }
         remoteBroker.stop();

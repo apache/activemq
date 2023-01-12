@@ -53,6 +53,7 @@ public final class AdvisorySupport {
     public static final String FULL_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "FULL.";
     public static final String MESSAGE_DELIVERED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageDelivered.";
     public static final String MESSAGE_CONSUMED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageConsumed.";
+    public static final String MESSAGE_DISPATCHED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageDispatched.";
     public static final String MESSAGE_DLQ_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageDLQd.";
     public static final String MASTER_BROKER_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MasterBroker";
     public static final String NETWORK_BRIDGE_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "NetworkBridge";
@@ -93,6 +94,12 @@ public final class AdvisorySupport {
     public static ActiveMQTopic[] getAllDestinationAdvisoryTopics(ActiveMQDestination destination) throws JMSException {
         ArrayList<ActiveMQTopic> result = new ArrayList<ActiveMQTopic>();
 
+        //Note - Sicne this method is primarily used for removing destinations and clean up
+        //don't add VirtualDestinationConsumerAdvisoryTopic here as we want to keep listening
+        //for demand on composite destinations that may be forwarded for Virtual topics even after dest removal.
+        //This is because virtual destinations or composite destinations can trigger demand so we need to still listen
+        //Cleanup will happen automatically if there are no consumers on the advisory (due to the bridge
+        //no longer including the destination) when the inactive GC task runs
         result.add(getConsumerAdvisoryTopic(destination));
         result.add(getProducerAdvisoryTopic(destination));
         result.add(getExpiredMessageTopic(destination));
@@ -102,6 +109,7 @@ public final class AdvisorySupport {
         result.add(getMessageDiscardedAdvisoryTopic(destination));
         result.add(getMessageDeliveredAdvisoryTopic(destination));
         result.add(getMessageConsumedAdvisoryTopic(destination));
+        result.add(getMessageDispatchedAdvisoryTopic(destination));
         result.add(getMessageDLQdAdvisoryTopic(destination));
         result.add(getFullAdvisoryTopic(destination));
 
@@ -244,6 +252,12 @@ public final class AdvisorySupport {
     public static ActiveMQTopic getMessageDeliveredAdvisoryTopic(ActiveMQDestination destination) {
         String name = MESSAGE_DELIVERED_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
+        return new ActiveMQTopic(name);
+    }
+
+    public static ActiveMQTopic getMessageDispatchedAdvisoryTopic(ActiveMQDestination destination) {
+        String name = MESSAGE_DISPATCHED_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
+            + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
 
@@ -567,6 +581,24 @@ public final class AdvisorySupport {
             return false;
         } else {
             return destination.isTopic() && destination.getPhysicalName().startsWith(NETWORK_BRIDGE_TOPIC_PREFIX);
+        }
+    }
+
+    public static boolean isMessageDispatchedAdvisoryTopic(Destination destination) throws JMSException {
+        return isMessageDispatchedAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
+    public static boolean isMessageDispatchedAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isComposite()) {
+            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+            for (int i = 0; i < compositeDestinations.length; i++) {
+                if (isMessageDispatchedAdvisoryTopic(compositeDestinations[i])) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return destination.isTopic() && destination.getPhysicalName().startsWith(MESSAGE_DISPATCHED_TOPIC_PREFIX);
         }
     }
 

@@ -92,7 +92,11 @@ REM Setup ActiveMQ Classpath.
 REM Add instance conf dir before AMQ install conf dir to pick up instance-specific classpath entries first
 set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_CONF%;%ACTIVEMQ_BASE%/conf;%ACTIVEMQ_HOME%/conf;%ACTIVEMQ_CLASSPATH%
 
-"%_JAVACMD%" %ACTIVEMQ_SUNJMX_START% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %ACTIVEMQ_SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -Dactivemq.conf="%ACTIVEMQ_CONF%" -Dactivemq.data="%ACTIVEMQ_DATA%" -Djava.io.tmpdir="%ACTIVEMQ_TMP%" -jar "%ACTIVEMQ_HOME%/bin/activemq.jar" %*
+REM Setup jolokia-access.xml path by doubling the \\
+if "%JOLOKIA_CONF%" == "" set JOLOKIA_CONF=file:%ACTIVEMQ_CONF%\jolokia-access.xml
+set JOLOKIA_CONF=%JOLOKIA_CONF:\=\\%
+
+"%_JAVACMD%" %ACTIVEMQ_SUNJMX_START% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %ACTIVEMQ_SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -Dactivemq.conf="%ACTIVEMQ_CONF%" -Dactivemq.data="%ACTIVEMQ_DATA%" -Djolokia.conf="%JOLOKIA_CONF%" -Djava.io.tmpdir="%ACTIVEMQ_TMP%" -jar "%ACTIVEMQ_HOME%/bin/activemq.jar" %*
 
 goto end
 

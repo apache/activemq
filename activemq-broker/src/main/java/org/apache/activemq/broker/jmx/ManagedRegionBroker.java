@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.jms.IllegalStateException;
+import javax.jms.JMSException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -41,6 +42,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
+import org.apache.activemq.broker.region.AbstractRegion;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
 import org.apache.activemq.broker.region.DestinationInterceptor;
@@ -60,6 +62,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -79,24 +82,24 @@ public class ManagedRegionBroker extends RegionBroker {
     private static final Logger LOG = LoggerFactory.getLogger(ManagedRegionBroker.class);
     private final ManagementContext managementContext;
     private final ObjectName brokerObjectName;
-    private final Map<ObjectName, DestinationView> topics = new ConcurrentHashMap<ObjectName, DestinationView>();
-    private final Map<ObjectName, DestinationView> queues = new ConcurrentHashMap<ObjectName, DestinationView>();
-    private final Map<ObjectName, DestinationView> temporaryQueues = new ConcurrentHashMap<ObjectName, DestinationView>();
-    private final Map<ObjectName, DestinationView> temporaryTopics = new ConcurrentHashMap<ObjectName, DestinationView>();
-    private final Map<ObjectName, SubscriptionView> queueSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, SubscriptionView> topicSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, SubscriptionView> durableTopicSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, SubscriptionView> inactiveDurableTopicSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, SubscriptionView> temporaryQueueSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, SubscriptionView> temporaryTopicSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
-    private final Map<ObjectName, ProducerView> queueProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
-    private final Map<ObjectName, ProducerView> topicProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
-    private final Map<ObjectName, ProducerView> temporaryQueueProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
-    private final Map<ObjectName, ProducerView> temporaryTopicProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
-    private final Map<ObjectName, ProducerView> dynamicDestinationProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
-    private final Map<SubscriptionKey, ObjectName> subscriptionKeys = new ConcurrentHashMap<SubscriptionKey, ObjectName>();
-    private final Map<Subscription, ObjectName> subscriptionMap = new ConcurrentHashMap<Subscription, ObjectName>();
-    private final Set<ObjectName> registeredMBeans = new ConcurrentHashMap<>().newKeySet();
+    private final Map<ObjectName, DestinationView> topics = new ConcurrentHashMap<>();
+    private final Map<ObjectName, DestinationView> queues = new ConcurrentHashMap<>();
+    private final Map<ObjectName, DestinationView> temporaryQueues = new ConcurrentHashMap<>();
+    private final Map<ObjectName, DestinationView> temporaryTopics = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> queueSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> topicSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> durableTopicSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> inactiveDurableTopicSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> temporaryQueueSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, SubscriptionView> temporaryTopicSubscribers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, ProducerView> queueProducers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, ProducerView> topicProducers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, ProducerView> temporaryQueueProducers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, ProducerView> temporaryTopicProducers = new ConcurrentHashMap<>();
+    private final Map<ObjectName, ProducerView> dynamicDestinationProducers = new ConcurrentHashMap<>();
+    private final Map<SubscriptionKey, ObjectName> subscriptionKeys = new ConcurrentHashMap<>();
+    private final Map<Subscription, ObjectName> subscriptionMap = new ConcurrentHashMap<>();
+    private final Set<ObjectName> registeredMBeans = ConcurrentHashMap.newKeySet();
     /* This is the first broker in the broker interceptor chain. */
     private Broker contextBroker;
 
@@ -249,13 +252,60 @@ public class ManagedRegionBroker extends RegionBroker {
 
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        for (Subscription sub : subscriptionMap.keySet()) {
-            if (sub.getConsumerInfo().equals(info)) {
-               // unregister all consumer subs
-               unregisterSubscription(subscriptionMap.get(sub), true);
+        //Find subscriptions quickly by relying on the maps contained in the different Regions
+        //that map consumer ids and subscriptions
+        final Set<Subscription> subscriptions = findSubscriptions(info);
+
+        if (!subscriptions.isEmpty()) {
+            for (Subscription sub : subscriptions) {
+                // unregister all consumer subs
+                unregisterSubscription(subscriptionMap.get(sub), true);
+                break;
+            }
+        } else {
+            //Fall back to old slow approach where we go through the entire subscription map case something went wrong
+            //and no subscriptions were found - should generally not happen
+            for (Subscription sub : subscriptionMap.keySet()) {
+                if (sub.getConsumerInfo().equals(info)) {
+                    unregisterSubscription(subscriptionMap.get(sub), true);
+                }
             }
         }
+
         super.removeConsumer(context, info);
+    }
+
+    private Set<Subscription> findSubscriptions(final ConsumerInfo info) {
+        final Set<Subscription> subscriptions = new HashSet<>();
+
+        try {
+            if (info.getDestination() != null) {
+                final ActiveMQDestination consumerDest = info.getDestination();
+                //If it's composite then go through and find the subscription for every dest in case different
+                if (consumerDest.isComposite()) {
+                    ActiveMQDestination[] destinations = consumerDest.getCompositeDestinations();
+                    for (ActiveMQDestination destination : destinations) {
+                        addSubscriptionToList(subscriptions, info.getConsumerId(), destination);
+                    }
+                } else {
+                    //This is the case for a non-composite destination which would be most of the time
+                    addSubscriptionToList(subscriptions, info.getConsumerId(), info.getDestination());
+                }
+            }
+        } catch (Exception e) {
+            LOG.warn("Error finding subscription {}: {}", info, e.getMessage());
+        }
+
+        return subscriptions;
+    }
+
+    private void addSubscriptionToList(Set<Subscription> subscriptions,
+        ConsumerId consumerId, ActiveMQDestination dest) throws JMSException {
+        final Subscription matchingSub = ((AbstractRegion) this.getRegion(dest))
+            .getSubscriptions().get(consumerId);
+        if (matchingSub != null) {
+            subscriptions.add(matchingSub);
+        }
     }
 
     @Override
@@ -484,7 +534,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected void buildExistingSubscriptions() throws Exception {
-        Map<SubscriptionKey, SubscriptionInfo> subscriptions = new HashMap<SubscriptionKey, SubscriptionInfo>();
+        Map<SubscriptionKey, SubscriptionInfo> subscriptions = new HashMap<>();
         Set<ActiveMQDestination> destinations = destinationFactory.getDestinations();
         if (destinations != null) {
             for (ActiveMQDestination dest : destinations) {
@@ -609,7 +659,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     private ObjectName[] onlyNonSuppressed (Set<ObjectName> set){
-        List<ObjectName> nonSuppressed = new ArrayList<ObjectName>();
+        List<ObjectName> nonSuppressed = new ArrayList<>();
         for(ObjectName key : set){
             if (managementContext.isAllowedToRegister(key)){
                 nonSuppressed.add(key);

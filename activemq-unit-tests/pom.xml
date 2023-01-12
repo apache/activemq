@@ -422,7 +422,7 @@
         <configuration>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
-          <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
+          <forkedProcessTimeoutInSeconds>3600</forkedProcessTimeoutInSeconds>
           <runOrder>alphabetical</runOrder>
           <excludes>
             <!-- temporarily exclude failing tests so that CI works; fix asap and reenable -->
@@ -455,9 +455,6 @@
             <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
             <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
           </systemPropertyVariables>
-          <includes>
-            <include>**/*Test.*</include>
-          </includes>
         </configuration>
       </plugin>
       <plugin>

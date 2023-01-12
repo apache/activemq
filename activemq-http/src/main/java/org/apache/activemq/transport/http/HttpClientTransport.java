@@ -19,8 +19,11 @@ package org.apache.activemq.transport.http;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.net.URI;
+import java.net.*;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -56,6 +59,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 import org.apache.http.message.AbstractHttpMessage;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
@@ -320,7 +324,7 @@ public class HttpClientTransport extends HttpTransportSupport {
             clientBuilder.addInterceptorLast(new HttpRequestInterceptor() {
                 @Override
                 public void process(HttpRequest request, HttpContext context) {
-                    // We expect to received a compression response that we un-gzip
+                    // We expect to receive a compression response that we un-gzip
                     request.addHeader("Accept-Encoding", "gzip");
                 }
             });
@@ -328,6 +332,23 @@ public class HttpClientTransport extends HttpTransportSupport {
 
         RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
         if (getProxyHost() != null) {
+            if (getNonProxyHosts() != null) {
+                List<String> nonProxyHosts = Arrays.asList(getNonProxyHosts().split("\\|"));
+                ProxySelector proxySelector = new ProxySelector() {
+                    @Override
+                    public List<Proxy> select(URI uri) {
+                        return Collections.singletonList(nonProxyHosts.contains(uri.getHost()) ? Proxy.NO_PROXY : new Proxy(Proxy.Type.HTTP, new InetSocketAddress(getProxyHost(), getProxyPort())));
+                    }
+
+                    @Override
+                    public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                        LOG.warn("Connect to {} failed", uri, ioe);
+                    }
+                };
+                clientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(proxySelector));
+            }
+
+            clientBuilder.useSystemProperties();
             HttpHost proxy = new HttpHost(getProxyHost(), getProxyPort());
             requestConfigBuilder.setProxy(proxy);
 

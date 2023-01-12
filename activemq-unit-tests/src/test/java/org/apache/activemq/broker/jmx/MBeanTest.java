@@ -84,6 +84,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     protected MBeanServer mbeanServer;
     protected String domain = "org.apache.activemq";
     protected String clientID = "foo";
+    protected String offlineClientID = "OFFLINE";
 
     protected Connection connection;
     protected boolean transacted;
@@ -121,6 +122,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertSendTextMessageWithCustomDelimitedPropsViaMBean();
         assertQueueBrowseWorks();
         assertCreateAndDestroyDurableSubscriptions();
+        assertCreateAndDestroyOfflineDurableSubscriptions();
         assertConsumerCounts();
         assertProducerCounts();
     }
@@ -847,6 +849,31 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         // now lets try destroy it
         broker.destroyDurableSubscriber(clientID, "subscriber1");
         assertEquals("Durable subscriber count", 1, broker.getInactiveDurableTopicSubscribers().length);
+    }
+
+    protected void assertCreateAndDestroyOfflineDurableSubscriptions() throws Exception {
+        // lets create a new topic
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
+        echo("Create QueueView MBean...");
+        BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+
+        broker.addTopic(getDestinationString());
+
+        assertEquals("Durable subscriber count", 0, broker.getDurableTopicSubscribers().length);
+
+        String topicName = getDestinationString();
+        String selector = null;
+        ObjectName name1 = broker.createDurableSubscriber(offlineClientID, "subscriber3", topicName, selector);
+        broker.createDurableSubscriber(offlineClientID, "subscriber4", topicName, selector);
+        assertEquals("Durable subscriber count", 3, broker.getInactiveDurableTopicSubscribers().length);
+
+        assertNotNull("Should have created an mbean name for the durable subscriber!", name1);
+
+        LOG.info("Created durable subscriber with name: " + name1);
+
+        // now lets try destroy it
+        broker.destroyDurableSubscriber(offlineClientID, "subscriber3");
+        assertEquals("Durable subscriber count", 2, broker.getInactiveDurableTopicSubscribers().length);
     }
 
     protected void assertConsumerCounts() throws Exception {
