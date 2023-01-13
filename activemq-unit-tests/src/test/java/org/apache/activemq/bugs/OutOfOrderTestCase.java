@@ -68,8 +68,12 @@ public class OutOfOrderTestCase extends TestCase {
     }
 
     protected void tearDown() throws Exception {
-        session.close();
-        connection.close();
+        try {
+            session.close();
+            connection.close();
+        } catch (Exception e) {
+            //swallow any error so broker can still be stopped
+        }
         brokerService.stop();
     }
 

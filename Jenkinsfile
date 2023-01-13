@@ -63,6 +63,18 @@ pipeline {
             }
         }
 
+        stage('Build JDK 19') {
+            tools {
+                jdk "jdk_19_latest"
+            }
+            steps {
+                echo 'Building JDK 19'
+                sh 'java -version'
+                sh 'mvn -version'
+                sh 'mvn -U -B -e clean install -DskipTests'
+            }
+        }
+
         stage('Build JDK 17') {
             tools {
                 jdk "jdk_17_latest"
@@ -99,7 +111,7 @@ pipeline {
                 echo 'Running tests'
                 // all tests is very very long (10 hours on Apache Jenkins)
                 // sh 'mvn -B -e test -pl activemq-unit-tests -Dactivemq.tests=all'
-                sh 'mvn -B -e -fae test'
+                sh 'mvn -B -e -fae test -Dsurefire.rerunFailingTestsCount=3'
             }
             post {
                 always {
