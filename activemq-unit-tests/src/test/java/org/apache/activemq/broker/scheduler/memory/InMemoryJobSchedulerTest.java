@@ -165,7 +165,8 @@ public class InMemoryJobSchedulerTest {
     public void testGetExecutionCount() throws Exception {
         final String jobId = "Job-1";
         long time = 10000;
-        final CountDownLatch done = new CountDownLatch(10);
+
+		TestJobListener l = new TestJobListener(10);
 
         String str = new String("test");
         scheduler.schedule(jobId, new ByteSequence(str.getBytes()), "", time, 1000, 10);
@@ -173,7 +174,6 @@ public class InMemoryJobSchedulerTest {
         int size = scheduler.getAllJobs().size();
         assertEquals(size, 1);
 
-		TestJobListener l = new TestJobListener(10);
 		scheduler.addListener(l);
 
         List<Job> jobs = scheduler.getNextScheduleJobs();
@@ -181,7 +181,7 @@ public class InMemoryJobSchedulerTest {
         Job job = jobs.get(0);
         assertEquals(jobId, job.getJobId());
         assertEquals(0, job.getExecutionCount());
-        assertTrue("Should have fired ten times.", done.await(60, TimeUnit.SECONDS));
+        assertTrue("Should have fired ten times.", l.getLatch().await(60, TimeUnit.SECONDS));
         // The job is not updated on the last firing as it is removed from the store following
         // it's last execution so the count will always be one less than the max firings.
         assertTrue(job.getExecutionCount() >= 9);
