@@ -1297,28 +1297,34 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         return null;
     }
 
-    public List<MessageId> getAllMessageIds() throws Exception {
-        Set<MessageReference> set = new LinkedHashSet<>();
-        do {
-            doPageIn(true);
-            pagedInMessagesLock.readLock().lock();
+    public List<MessageId> getAllMessageIds() {
+        List<MessageId> result = new ArrayList<>();
+        pagedInMessagesLock.readLock().lock();
+        try {
+            pagedInMessages.values()
+                    .stream()
+                    .map(MessageReference::getMessageId)
+                    .forEach(result::add);
+        } finally {
+            pagedInMessagesLock.readLock().unlock();
+        }
+        messagesLock.writeLock().lock();
+        try{
             try {
-                if (!set.addAll(pagedInMessages.values())) {
-                    // nothing new to check - mem constraint on page in
-                    return getPagedInMessageIds();
+                messages.reset();
+                while (messages.hasNext()) {
+                    MessageReference mr = messages.next();
+                    mr.decrementReferenceCount();
+                    messages.rollback(mr.getMessageId());
+                    result.add(mr.getMessageId());
                 }
             } finally {
-                pagedInMessagesLock.readLock().unlock();
+                messages.release();
             }
-        } while (set.size() < this.destinationStatistics.getMessages().getCount());
-        return getPagedInMessageIds();
-    }
-
-    private List<MessageId> getPagedInMessageIds() {
-        return pagedInMessages.values()
-                .stream()
-                .map(MessageReference::getMessageId)
-                .collect(Collectors.toList());
+        } finally {
+            messagesLock.writeLock().unlock();
+        }
+        return result;
     }
 
     public void purge() throws Exception {
