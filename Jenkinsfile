@@ -22,8 +22,8 @@
 pipeline {
 
     agent {
-        node {
-            label 'ubuntu'
+        label {
+            label params.nodeLabel
         }
     }
 
@@ -41,9 +41,14 @@ pipeline {
         disableConcurrentBuilds()
     }
 
+    parameters {
+        choice(name: 'nodeLabel', choices: ['ubuntu', 's390x']) 
+    }
+
     stages {
         stage('Initialization') {
             steps {
+                echo "running on ${env.NODE_NAME}"
                 echo 'Building branch ' + env.BRANCH_NAME
                 echo 'Using PATH ' + env.PATH
             }
