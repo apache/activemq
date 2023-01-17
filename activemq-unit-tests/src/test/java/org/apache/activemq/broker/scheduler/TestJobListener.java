@@ -79,4 +79,34 @@ public class TestJobListener implements JobListener {
 		LOG.info("didDispatchJob({}): {}", count - latch.getCount() + 1, id);
 		latch.countDown();
 	}
+
+	@Override
+	public void willRemoveJob(String id) throws Exception {
+		LOG.info("willRemoveJob({}): {}", count - latch.getCount() + 1, id);
+	}
+
+	@Override
+	public void removeJob(String id) throws Exception {
+		LOG.info("removeJob({}): {}", count - latch.getCount() + 1, id);
+	}
+
+	@Override
+	public void didRemoveJob(String id) throws Exception {
+		LOG.info("didRemoveJob({}): {}", count - latch.getCount() + 1, id);
+	}
+
+	@Override
+	public void willRemoveRange(long start, long end) throws Exception {
+		LOG.info("willRemoveRange({}): {} - {}", count - latch.getCount() + 1, start, end);
+	}
+
+	@Override
+	public void removeRange(long start, long end) throws Exception {
+		LOG.info("removeRange({}): {} - {}", count - latch.getCount() + 1, start, end);
+	}
+
+	@Override
+	public void didRemoveRange(long start, long end) throws Exception {
+		LOG.info("didRemoveRange({}): {} - {}", count - latch.getCount() + 1, start, end);
+	}
 }

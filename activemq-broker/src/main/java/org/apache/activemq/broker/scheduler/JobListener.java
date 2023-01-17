@@ -49,5 +49,4 @@ public interface JobListener {
     public void removeRange(long start, long end) throws Exception;
     public void didRemoveRange(long start, long end) throws Exception;
 
-
 }
