@@ -460,6 +460,46 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         }
     }
 
+    @Override
+    public void willRemoveJob(String id) throws Exception {
+        for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+            jobListener.willRemoveJob(id);
+        }
+    }
+
+	// NOOP. Handled by doRemove
+    @Override
+    public void removeJob(String id) throws Exception {
+	}
+
+
+    @Override
+    public void didRemoveJob(String id) throws Exception {
+        for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+            jobListener.didRemoveJob(id);
+        }
+    }
+
+    @Override
+    public void willRemoveRange(long start, long end) throws Exception {
+        for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+            jobListener.willRemoveRange(start, end);
+        }
+    }
+
+	// NOOP. Handled by doRemoveRange
+    @Override
+    public void removeRange(long start, long end) throws Exception {
+	}
+
+
+    @Override
+    public void didRemoveRange(long start, long end) throws Exception {
+        for(JobListener jobListener : brokerService.getJobSchedulerJobListeners()) {
+            jobListener.didRemoveRange(start, end);
+        }
+    }
+
     protected synchronized JobScheduler getInternalScheduler() throws Exception {
         if (this.started.get()) {
             if (this.scheduler == null && store != null) {

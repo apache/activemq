@@ -39,7 +39,15 @@ public interface JobListener {
      *        The job that is now ready, delivered in byte form.
      */
     public void dispatchJob(String id, ByteSequence job) throws Exception;
-
     public void didDispatchJob(String id, ByteSequence job) throws Exception;
+
+    public void willRemoveJob(String id) throws Exception;
+    public void removeJob(String id) throws Exception;
+    public void didRemoveJob(String id) throws Exception;
+
+    public void willRemoveRange(long start, long end) throws Exception;
+    public void removeRange(long start, long end) throws Exception;
+    public void didRemoveRange(long start, long end) throws Exception;
+
 
 }

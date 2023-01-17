@@ -225,6 +225,30 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         }
     }
 
+    public void willRemoveJob(String id) throws Exception {
+        for (JobListener l : jobListeners) {
+            l.willRemoveJob(id);
+        }
+    }
+
+    public void didRemoveJob(String id) throws Exception {
+        for (JobListener l : jobListeners) {
+            l.didRemoveJob(id);
+        }
+    }
+
+    public void willRemoveRange(long start, long end) throws Exception {
+        for (JobListener l : jobListeners) {
+            l.willRemoveRange(start, end);
+        }
+    }
+
+    public void didRemoveRange(long start, long end) throws Exception {
+        for (JobListener l : jobListeners) {
+            l.didRemoveRange(start, end);
+        }
+    }
+
     private void doSchedule(final String jobId, final ByteSequence payload, final String cronEntry, long delay, long period, int repeat) throws IOException {
         long startTime = System.currentTimeMillis();
         // round startTime - so we can schedule more jobs at the same time
@@ -261,13 +285,13 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         newJob.setNextExecutionTime(time);
         newJob.setPayload(new Buffer(payload.getData(), payload.getOffset(), payload.getLength()));
 
-		try {
-			willScheduleJob(jobId, payload);
-        	this.store.store(newJob);
-			didScheduleJob(jobId, payload);
-		} catch(Exception e) {
-			throw new IOException(e);
-		}
+        try {
+            willScheduleJob(jobId, payload);
+            this.store.store(newJob);
+            didScheduleJob(jobId, payload);
+        } catch(Exception e) {
+            throw new IOException(e);
+        }
     }
 
     private void doReschedule(List<Closure> toReschedule) throws IOException {
@@ -293,19 +317,31 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
     }
 
     private void doRemove(long executionTime, final String jobId) throws IOException {
-        KahaRemoveScheduledJobCommand remove = new KahaRemoveScheduledJobCommand();
-        remove.setScheduler(name);
-        remove.setJobId(jobId);
-        remove.setNextExecutionTime(executionTime);
-        this.store.store(remove);
+        try {
+            willRemoveJob(jobId);
+            KahaRemoveScheduledJobCommand remove = new KahaRemoveScheduledJobCommand();
+            remove.setScheduler(name);
+            remove.setJobId(jobId);
+            remove.setNextExecutionTime(executionTime);
+            this.store.store(remove);
+            didRemoveJob(jobId);
+        } catch(Exception e) {
+            throw new IOException(e);
+        }
     }
 
     private void doRemoveRange(long start, long end) throws IOException {
-        KahaRemoveScheduledJobsCommand destroy = new KahaRemoveScheduledJobsCommand();
-        destroy.setScheduler(name);
-        destroy.setStartTime(start);
-        destroy.setEndTime(end);
-        this.store.store(destroy);
+		try {
+			willRemoveRange(start, end);
+        	KahaRemoveScheduledJobsCommand destroy = new KahaRemoveScheduledJobsCommand();
+        	destroy.setScheduler(name);
+        	destroy.setStartTime(start);
+        	destroy.setEndTime(end);
+        	this.store.store(destroy);
+			didRemoveRange(start, end);
+		} catch(Exception e) {
+			throw new IOException(e);
+		}
     }
 
     /**
@@ -838,13 +874,13 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         LOG.debug("Firing: {}", job);
         ByteSequence bs = this.store.getPayload(job.getLocation());
         for (JobListener l : jobListeners) {
-			try {
-            	l.willDispatchJob(job.getJobId(), bs);
-            	l.dispatchJob(job.getJobId(), bs);
-            	l.didDispatchJob(job.getJobId(), bs);
-			} catch(Exception e) {
-				throw new IOException(e);
-			}
+            try {
+                l.willDispatchJob(job.getJobId(), bs);
+                l.dispatchJob(job.getJobId(), bs);
+                l.didDispatchJob(job.getJobId(), bs);
+            } catch(Exception e) {
+                throw new IOException(e);
+            }
         }
     }
 

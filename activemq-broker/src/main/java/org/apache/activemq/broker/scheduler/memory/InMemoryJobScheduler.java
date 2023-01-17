@@ -237,6 +237,30 @@ public class InMemoryJobScheduler implements JobScheduler {
 		}
 	}
  
+	public void willRemoveJob(String id) throws Exception {
+		for (JobListener l : jobListeners) {
+			l.willRemoveJob(id);
+		}
+	}
+
+	public void didRemoveJob(String id) throws Exception {
+		for (JobListener l : jobListeners) {
+			l.didRemoveJob(id);
+		}
+	}
+
+	public void willRemoveRange(long start, long end) throws Exception {
+		for (JobListener l : jobListeners) {
+			l.willRemoveRange(start, end);
+		}
+	}
+
+	public void didRemoveRange(long start, long end) throws Exception {
+		for (JobListener l : jobListeners) {
+			l.didRemoveRange(start, end);
+		}
+	}
+
     private void doSchedule(final String jobId, final ByteSequence payload, final String cronEntry, long delay, long period, int repeat) throws IOException {
         long startTime = System.currentTimeMillis();
         long executionTime = 0;
@@ -321,6 +345,7 @@ public class InMemoryJobScheduler implements JobScheduler {
     private void doRemoveJob(String jobId) throws IOException {
         this.lock.writeLock().lock();
         try {
+			willRemoveJob(jobId);
             Iterator<Map.Entry<Long, ScheduledTask>> scheduled = jobs.entrySet().iterator();
             while (scheduled.hasNext()) {
                 Map.Entry<Long, ScheduledTask> entry = scheduled.next();
@@ -334,6 +359,9 @@ public class InMemoryJobScheduler implements JobScheduler {
                     return;
                 }
             }
+			didRemoveJob(jobId);
+		} catch(Exception e) {
+			throw new IOException(e);
         } finally {
             this.lock.writeLock().unlock();
         }
@@ -342,6 +370,7 @@ public class InMemoryJobScheduler implements JobScheduler {
     private void doRemoveRange(long start, long end) throws IOException {
         this.lock.writeLock().lock();
         try {
+			willRemoveRange(start, end);
             Iterator<Map.Entry<Long, ScheduledTask>> scheduled = jobs.entrySet().iterator();
             while (scheduled.hasNext()) {
                 Map.Entry<Long, ScheduledTask> entry = scheduled.next();
@@ -357,6 +386,9 @@ public class InMemoryJobScheduler implements JobScheduler {
                     break;
                 }
             }
+			didRemoveRange(start, end);
+		} catch(Exception e){
+			throw new IOException(e);
         } finally {
             this.lock.writeLock().unlock();
         }
