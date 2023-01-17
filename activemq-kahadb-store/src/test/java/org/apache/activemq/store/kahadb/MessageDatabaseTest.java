@@ -17,6 +17,18 @@
 
 package org.apache.activemq.store.kahadb;
 
+import static org.apache.activemq.store.kahadb.disk.journal.Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.activemq.ActiveMQMessageAuditNoSync;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
@@ -24,14 +36,6 @@ import org.apache.activemq.util.ByteSequence;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import static org.apache.activemq.store.kahadb.disk.journal.Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
-import static org.junit.Assert.*;
 
 public class MessageDatabaseTest {
 
@@ -114,4 +118,42 @@ public class MessageDatabaseTest {
             kaha.stop();
         }
     }
+
+    @Test
+    public void testKahaStartAndSizeCreatingStoreDirectoryConcurrently() throws Exception {
+        // given mkdirs() will execute in parallel
+        final CountDownLatch countDownLatch = new CountDownLatch(2);
+
+        class ConcurrentMkdirsFile extends File {
+
+            public ConcurrentMkdirsFile(File parent, String child) {
+                super(parent, child);
+            }
+
+            @Override
+            public boolean mkdirs() {
+                countDownLatch.countDown();
+                try {
+                    countDownLatch.await(3, TimeUnit.SECONDS);
+                    return super.mkdirs();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        // and KahaDBStore is configured
+        KahaDBStore kaha = new KahaDBStore();
+        kaha.setDirectory(new ConcurrentMkdirsFile(temporaryFolder.getRoot(), "kaha3"));
+
+        // when both start() and size() are performed concurrently
+        final Future<Long> size = Executors.newSingleThreadExecutor()
+                .submit(kaha::size);
+        kaha.start();
+
+        // then KahaDB should successfully start
+        assertTrue(kaha.isStarted());
+        assertTrue(size.get() > 0);
+    }
+
 }
