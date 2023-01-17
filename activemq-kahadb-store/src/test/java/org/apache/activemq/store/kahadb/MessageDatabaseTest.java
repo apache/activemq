@@ -17,10 +17,13 @@
 
 package org.apache.activemq.store.kahadb;
 
-import static org.apache.activemq.store.kahadb.disk.journal.Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.apache.activemq.ActiveMQMessageAuditNoSync;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
+import org.apache.activemq.util.ByteSequence;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,13 +32,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.activemq.ActiveMQMessageAuditNoSync;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadb.disk.journal.Journal;
-import org.apache.activemq.util.ByteSequence;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import static org.apache.activemq.store.kahadb.disk.journal.Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
+import static org.junit.Assert.*;
 
 public class MessageDatabaseTest {
 
