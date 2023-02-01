@@ -84,7 +84,7 @@
     <karaf-version>4.3.7</karaf-version>
     <log4j-version>2.19.0</log4j-version>
     <mockito-version>4.8.1</mockito-version>
-    <owasp-dependency-check-version>7.1.1</owasp-dependency-check-version>
+    <owasp-dependency-check-version>8.0.2</owasp-dependency-check-version>
     <mqtt-client-version>1.16</mqtt-client-version>
     <org-apache-derby-version>10.15.2.0</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
@@ -121,18 +121,18 @@
 
     <!-- Maven Plugin Version for this Project -->
     <maven-bundle-plugin-version>5.1.8</maven-bundle-plugin-version>
-    <maven-surefire-plugin-version>3.0.0-M6</maven-surefire-plugin-version>
-    <maven-antrun-plugin-version>3.0.0</maven-antrun-plugin-version>
-    <maven-assembly-plugin-version>3.3.0</maven-assembly-plugin-version>
-    <maven-release-plugin-version>3.0.0-M5</maven-release-plugin-version>
+    <maven-surefire-plugin-version>3.0.0-M8</maven-surefire-plugin-version>
+    <maven-antrun-plugin-version>3.1.0</maven-antrun-plugin-version>
+    <maven-assembly-plugin-version>3.4.2</maven-assembly-plugin-version>
+    <maven-release-plugin-version>3.0.0-M7</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
-    <maven-enforcer-plugin-version>3.1.0</maven-enforcer-plugin-version>
+    <maven-enforcer-plugin-version>3.2.1</maven-enforcer-plugin-version>
     <maven-war-plugin-version>3.3.2</maven-war-plugin-version>
     <maven-compiler-plugin-version>3.10.1</maven-compiler-plugin-version>
     <maven-rar-plugin-version>3.0.0</maven-rar-plugin-version>
-    <maven-jar-plugin-version>3.2.2</maven-jar-plugin-version>
+    <maven-jar-plugin-version>3.3.0</maven-jar-plugin-version>
     <maven-source-plugin-version>3.2.1</maven-source-plugin-version>
-    <maven-javadoc-plugin-version>3.3.2</maven-javadoc-plugin-version>
+    <maven-javadoc-plugin-version>3.4.1</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.5.2</maven-install-plugin-version>
     <maven-shade-plugin-version>3.3.0</maven-shade-plugin-version>
     <findbugs-maven-plugin-version>3.0.5</findbugs-maven-plugin-version>
@@ -140,13 +140,13 @@
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>3.0.0</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>3.3.0</build-helper-maven-plugin-version>
-    <apache-rat-plugin-version>0.13</apache-rat-plugin-version>
+    <apache-rat-plugin-version>0.15</apache-rat-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.4.0</depends-maven-plugin-version>
     <maven-dependency-plugin-version>2.8</maven-dependency-plugin-version>
-    <maven-project-info-reports-plugin-version>3.4.0</maven-project-info-reports-plugin-version>
+    <maven-project-info-reports-plugin-version>3.4.2</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
-    <maven-plugin-plugin-version>3.6.4</maven-plugin-plugin-version>
+    <maven-plugin-plugin-version>3.7.1</maven-plugin-plugin-version>
     <maven-core-version>3.8.6</maven-core-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
