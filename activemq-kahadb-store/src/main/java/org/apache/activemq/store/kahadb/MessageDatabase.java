@@ -2070,28 +2070,25 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             //flag to know whether the ack forwarding completed without an exception
             boolean forwarded = false;
 
+            //acquire the checkpoint lock to prevent other threads from
+            //running a checkpoint while this is running
+            //
+            //Normally this task runs on the same executor as the checkpoint task
+            //so this ack compaction runner wouldn't run at the same time as the checkpoint task.
+            //
+            //However, there are two cases where this isn't always true.
+            //First, the checkpoint() method is public and can be called through the
+            //PersistenceAdapter interface by someone at the same time this is running.
+            //Second, a checkpoint is called during shutdown without using the executor.
+            //
+            //In the future it might be better to just remove the checkpointLock entirely
+            //and only use the executor but this would need to be examined for any unintended
+            //consequences
+            checkpointLock.readLock().lock();
             try {
-                //acquire the checkpoint lock to prevent other threads from
-                //running a checkpoint while this is running
-                //
-                //Normally this task runs on the same executor as the checkpoint task
-                //so this ack compaction runner wouldn't run at the same time as the checkpoint task.
-                //
-                //However, there are two cases where this isn't always true.
-                //First, the checkpoint() method is public and can be called through the
-                //PersistenceAdapter interface by someone at the same time this is running.
-                //Second, a checkpoint is called during shutdown without using the executor.
-                //
-                //In the future it might be better to just remove the checkpointLock entirely
-                //and only use the executor but this would need to be examined for any unintended
-                //consequences
-                checkpointLock.readLock().lock();
-
+                // Lock index to capture the ackMessageFileMap data
+                indexLock.writeLock().lock();
                 try {
-
-                    // Lock index to capture the ackMessageFileMap data
-                    indexLock.writeLock().lock();
-
                     // Map keys might not be sorted, find the earliest log file to forward acks
                     // from and move only those, future cycles can chip away at more as needed.
                     // We won't move files that are themselves rewritten on a previous compaction.
@@ -2210,26 +2207,27 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         // Lock index while we update the ackMessageFileMap.
         indexLock.writeLock().lock();
-
-        // Update the ack map with the new locations of the acks
-        for (Entry<Integer, Set<Integer>> entry : updatedAckLocations.entrySet()) {
-            Set<Integer> referenceFileIds = metadata.ackMessageFileMap.get(entry.getKey());
-            if (referenceFileIds == null) {
-                referenceFileIds = new HashSet<>();
-                referenceFileIds.addAll(entry.getValue());
-                metadata.ackMessageFileMap.put(entry.getKey(), referenceFileIds);
-                metadata.ackMessageFileMapDirtyFlag.lazySet(true);
-            } else {
-                referenceFileIds.addAll(entry.getValue());
+        try {
+            // Update the ack map with the new locations of the acks
+            for (Entry<Integer, Set<Integer>> entry : updatedAckLocations.entrySet()) {
+                Set<Integer> referenceFileIds = metadata.ackMessageFileMap.get(entry.getKey());
+                if (referenceFileIds == null) {
+                    referenceFileIds = new HashSet<>();
+                    referenceFileIds.addAll(entry.getValue());
+                    metadata.ackMessageFileMap.put(entry.getKey(), referenceFileIds);
+                    metadata.ackMessageFileMapDirtyFlag.lazySet(true);
+                } else {
+                    referenceFileIds.addAll(entry.getValue());
+                }
             }
+
+            // remove the old location data from the ack map so that the old journal log file can
+            // be removed on next GC.
+            metadata.ackMessageFileMap.remove(journalToRead);
+            metadata.ackMessageFileMapDirtyFlag.lazySet(true);
+        } finally {
+            indexLock.writeLock().unlock();
         }
-
-        // remove the old location data from the ack map so that the old journal log file can
-        // be removed on next GC.
-        metadata.ackMessageFileMap.remove(journalToRead);
-        metadata.ackMessageFileMapDirtyFlag.lazySet(true);
-
-        indexLock.writeLock().unlock();
 
         LOG.trace("ACK File Map following updates: {}", metadata.ackMessageFileMap);
     }
