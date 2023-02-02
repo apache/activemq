@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -35,6 +36,7 @@ public class SharedDeadLetterStrategy extends AbstractDeadLetterStrategy {
     public static final String DEFAULT_DEAD_LETTER_QUEUE_NAME = "ActiveMQ.DLQ";
 
     private ActiveMQDestination deadLetterQueue = new ActiveMQQueue(DEFAULT_DEAD_LETTER_QUEUE_NAME);
+    private final ActiveMQMessageAudit messageAudit = new ActiveMQMessageAudit();
 
     public ActiveMQDestination getDeadLetterQueueFor(Message message, Subscription subscription) {
         return deadLetterQueue;
@@ -46,6 +48,31 @@ public class SharedDeadLetterStrategy extends AbstractDeadLetterStrategy {
 
     public void setDeadLetterQueue(ActiveMQDestination deadLetterQueue) {
         this.deadLetterQueue = deadLetterQueue;
+    }
+
+    @Override
+    public int getMaxProducersToAudit() {
+        return messageAudit.getMaximumNumberOfProducersToTrack();
+    }
+
+    @Override
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
+        messageAudit.setMaximumNumberOfProducersToTrack(maxProducersToAudit);
+    }
+
+    @Override
+    public void setMaxAuditDepth(int maxAuditDepth) {
+        messageAudit.setAuditDepth(maxAuditDepth);
+    }
+
+    @Override
+    public int getMaxAuditDepth() {
+        return messageAudit.getAuditDepth();
+    }
+
+    @Override
+    protected ActiveMQMessageAudit lookupActiveMQMessageAudit(Message message) {
+        return messageAudit;
     }
 
 }
