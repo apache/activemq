@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Subscription;
@@ -23,6 +24,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.util.LRUCache;
 
 /**
  * A {@link DeadLetterStrategy} where each destination has its own individual
@@ -40,6 +42,10 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
     private boolean useQueueForQueueMessages = true;
     private boolean useQueueForTopicMessages = true;
     private boolean destinationPerDurableSubscriber;
+    private int maxAuditDepth = ActiveMQMessageAudit.DEFAULT_WINDOW_SIZE;
+    private int maxProducersToAudit = ActiveMQMessageAudit.MAXIMUM_PRODUCER_COUNT;
+
+    private final LRUCache<String,ActiveMQMessageAudit> dedicatedMessageAudits = new LRUCache<>(10_000);
 
     public ActiveMQDestination getDeadLetterQueueFor(Message message, Subscription subscription) {
         if (message.getDestination().isQueue()) {
@@ -51,6 +57,13 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
 
     // Properties
     // -------------------------------------------------------------------------
+    public int getMaxDestinationsToAudit() {
+        return dedicatedMessageAudits.getMaxCacheSize();
+    }
+
+    public void maxDestinationsToAudit(int maxDestinationsToAudit) {
+        this.dedicatedMessageAudits.setMaxCacheSize(maxDestinationsToAudit);
+    }
 
     public String getQueuePrefix() {
         return queuePrefix;
@@ -134,6 +147,26 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
         this.destinationPerDurableSubscriber = destinationPerDurableSubscriber;
     }
 
+    @Override
+    public int getMaxProducersToAudit() {
+        return this.maxProducersToAudit;
+    }
+
+    @Override
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
+        this.maxProducersToAudit = maxProducersToAudit;
+    }
+
+    @Override
+    public void setMaxAuditDepth(int maxAuditDepth) {
+        this.maxAuditDepth = maxAuditDepth;
+    }
+
+    @Override
+    public int getMaxAuditDepth() {
+        return this.maxAuditDepth;
+    }
+
     // Implementation methods
     // -------------------------------------------------------------------------
     protected ActiveMQDestination createDestination(Message message,
@@ -168,4 +201,19 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
         }
     }
 
+    @Override
+    protected ActiveMQMessageAudit lookupActiveMQMessageAudit(Message message) {
+        ActiveMQMessageAudit messageAudit;
+
+        synchronized(dedicatedMessageAudits) {
+            messageAudit = dedicatedMessageAudits.get(message.getDestination().getQualifiedName());
+
+            if(messageAudit == null) {
+                messageAudit = new ActiveMQMessageAudit(getMaxAuditDepth(), getMaxProducersToAudit());
+                dedicatedMessageAudits.put(message.getDestination().getQualifiedName(), messageAudit);
+            }
+
+            return messageAudit;
+        }
+    }
 }
