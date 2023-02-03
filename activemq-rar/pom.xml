@@ -110,8 +110,8 @@
           <artifactId>junit</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>regexp</groupId>
-          <artifactId>regexp</artifactId>
+          <groupId>jakarta-regexp</groupId>
+          <artifactId>jakarta-regexp</artifactId>
         </exclusion>
         <exclusion>
           <groupId>javax.jmdns</groupId>

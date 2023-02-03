@@ -240,8 +240,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>regexp</groupId>
-      <artifactId>regexp</artifactId>
+      <groupId>jakarta-regexp</groupId>
+      <artifactId>jakarta-regexp</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
