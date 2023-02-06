@@ -66,7 +66,7 @@
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
-    <jackson-version>2.14.0</jackson-version>
+    <jackson-version>2.14.2</jackson-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty9-version>9.4.50.v20221201</jetty9-version>
