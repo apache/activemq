@@ -68,6 +68,8 @@
     <httpcore-version>4.4.16</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
     <jackson-version>2.14.2</jackson-version>
+    <jakarta-jms-api-version>2.0.3</jakarta-jms-api-version>
+    <jakarta-jms-api-v3-version>3.1.0</jakarta-jms-api-v3-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty9-version>9.4.50.v20221201</jetty9-version>
@@ -141,6 +143,7 @@
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>3.0.0</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>3.3.0</build-helper-maven-plugin-version>
+    <replacer-maven-plugin-version>1.5.3</replacer-maven-plugin-version>
     <apache-rat-plugin-version>0.15</apache-rat-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.4.0</depends-maven-plugin-version>
@@ -159,6 +162,7 @@
     <activemq.osgi.dynamic.import />
     <activemq.osgi.symbolic.name>${project.groupId}.${project.artifactId}</activemq.osgi.symbolic.name>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.source.skip>true</maven.source.skip>
   </properties>
 
   <url>http://activemq.apache.org</url>
@@ -202,6 +206,7 @@
   <modules>
     <module>activemq-openwire-generator</module>
     <module>activemq-client</module>
+    <module>activemq-client-jakarta</module>
     <module>activemq-openwire-legacy</module>
     <module>activemq-broker</module>
     <module>activemq-stomp</module>
@@ -451,7 +456,7 @@
       <dependency>
         <groupId>jakarta.jms</groupId>
         <artifactId>jakarta.jms-api</artifactId>
-        <version>2.0.3</version>
+        <version>${jakarta-jms-api-version}</version>
       </dependency>
 
       <dependency>
@@ -1134,6 +1139,11 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>${maven-source-plugin-version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven-surefire-plugin-version}</version>
           <configuration>
@@ -1214,6 +1224,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-plugin-plugin</artifactId>
           <version>${maven-plugin-plugin-version}</version>
+        </plugin>
+        <plugin>
+          <groupId>com.google.code.maven-replacer-plugin</groupId>
+          <artifactId>replacer</artifactId>
+          <version>${replacer-maven-plugin-version}</version>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only.
             It has no influence on the Maven build itself.-->
@@ -1461,6 +1476,19 @@
             </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>${maven-source-plugin-version}</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
   <reporting>
@@ -1556,22 +1584,12 @@
     </profile>
     <profile>
       <id>deploy</id>
+      <properties>
+          <maven.source.skip>false</maven.source.skip>
+      </properties>
       <build>
         <defaultGoal>deploy</defaultGoal>
         <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <version>${maven-source-plugin-version}</version>
-            <executions>
-              <execution>
-                <id>attach-sources</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>

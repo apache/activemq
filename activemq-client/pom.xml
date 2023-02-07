@@ -31,6 +31,7 @@
   <description>The ActiveMQ Client implementation</description>
 
   <properties>
+    <maven.source.skip>false</maven.source.skip>
     <surefire.argLine>-Xmx512M</surefire.argLine>
   </properties>
 
