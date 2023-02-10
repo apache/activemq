@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.16.6</version>
+    <version>5.16.7-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-jdbc-store</artifactId>
