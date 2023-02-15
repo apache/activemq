@@ -317,7 +317,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     @Override
     public Session createSession() throws JMSException {
-         throw new UnsupportedOperationException("createSession() is unsupported");
+        return createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     /**
@@ -340,8 +340,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @since 2.0
      */
     @Override
-    public Session createSession(int sessionMode) throws JMSException {
-        throw new UnsupportedOperationException("createSession(int sessionMode) is unsupported");
+    public Session createSession(int acknowledgeMode) throws JMSException {
+        return createSession(acknowledgeMode == Session.SESSION_TRANSACTED, acknowledgeMode);
     }
 
     /**
