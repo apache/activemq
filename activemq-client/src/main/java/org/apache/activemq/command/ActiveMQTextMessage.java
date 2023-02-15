@@ -210,4 +210,22 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         }
         return super.toString();
     }
+
+    @SuppressWarnings("unchecked")
+    public boolean isBodyAssignableTo(Class c) throws JMSException {
+        /*
+         *If the message is a TextMessage, ObjectMessage, MapMessage or BytesMessage
+         * and the message has no body, then the above does not apply and this method
+         *  will return true irrespective of the value of this parameter.
+         */
+        if (getText() == null) {
+            return true;
+        }
+        return c.isAssignableFrom(java.lang.String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> T doGetBody(Class<T> asType) throws JMSException {
+        return getText() != null ? (T) getText() : null;
+    }
 }

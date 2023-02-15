@@ -956,4 +956,22 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
             }
         }
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean isBodyAssignableTo(Class c) {
+        return getContent() == null || c.isAssignableFrom(byte[].class);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> T doGetBody(Class<T> asType) {
+        //Make sure the bytes are stored before trying to copy and return
+        if (dataOut != null && getContent() == null) {
+            storeContent();
+        }
+
+        final ByteSequence content = getContent();
+        return content != null ? (T) new ByteSequence(content.getData(), content.getOffset(),
+            content.getLength()).getData() : null;
+    }
 }
