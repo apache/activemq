@@ -1218,4 +1218,9 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     public String toString() {
         return super.toString() + " ActiveMQStreamMessage{ " + "bytesOut = " + bytesOut + ", dataOut = " + dataOut + ", dataIn = " + dataIn + " }";
     }
+
+    @Override
+    public boolean isBodyAssignableTo(Class c) {
+        return false;
+    }
 }

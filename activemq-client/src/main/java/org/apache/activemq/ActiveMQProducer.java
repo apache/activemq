@@ -108,33 +108,7 @@ public class ActiveMQProducer implements JMSProducer {
         if (body != null) {
             try {
                for (Map.Entry<String, Object> mapEntry : body.entrySet()) {
-                  final String key = mapEntry.getKey();
-                  final Object value = mapEntry.getValue();
-                  final Class<?> valueObject = value.getClass();
-                  if (String.class.isAssignableFrom(valueObject)) {
-                      mapMessage.setString(key, String.class.cast(value));
-                  } else if (Integer.class.isAssignableFrom(valueObject)) {
-                      mapMessage.setInt(key, Integer.class.cast(value));
-                  } else if (Long.class.isAssignableFrom(valueObject)) {
-                      mapMessage.setLong(key, Long.class.cast(value));
-                  } else if (Double.class.isAssignableFrom(valueObject)) {
-                      mapMessage.setDouble(key, Double.class.cast(value));
-                  } else if (Boolean.class.isAssignableFrom(valueObject)) {
-                      mapMessage.setBoolean(key, Boolean.class.cast(value));
-                  } else if (Character.class.isAssignableFrom(valueObject)) {
-                      mapMessage.setChar(key, Character.class.cast(value));
-                  } else if (Short.class.isAssignableFrom(valueObject)) {
-                      mapMessage.setShort(key, Short.class.cast(value));
-                  } else if (Float.class.isAssignableFrom(valueObject)) {
-                      mapMessage.setFloat(key, Float.class.cast(value));
-                  } else if (Byte.class.isAssignableFrom(valueObject)) {
-                      mapMessage.setByte(key, Byte.class.cast(value));
-                  } else if (byte[].class.isAssignableFrom(valueObject)) {
-                      byte[] array = byte[].class.cast(value);
-                      mapMessage.setBytes(key, array, 0, array.length);
-                  } else {
-                      mapMessage.setObject(key, value);
-                  }
+                   mapMessage.setObject(mapEntry.getKey(), mapEntry.getValue());
                }
             } catch (JMSException e) {
                throw new MessageFormatRuntimeException(e.getMessage());
