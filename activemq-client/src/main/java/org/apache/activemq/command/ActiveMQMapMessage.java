@@ -856,9 +856,13 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         final ByteSequence content = getContent();
         final Map<String, Object> map = content != null ? deserialize(content) : null;
 
-        if (map != null) {
+        //This implementation treats an empty map as not having a body so if empty
+        //we should return null as well
+        if (map != null && !map.isEmpty()) {
             map.replaceAll((k, v) -> v instanceof UTF8Buffer ? v.toString() : v);
+            return (T) map;
+        } else {
+            return null;
         }
-        return (T) map;
     }
 }

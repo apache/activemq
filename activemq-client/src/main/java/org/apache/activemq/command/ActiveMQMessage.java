@@ -804,10 +804,10 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         throw new MessageFormatException("Message body cannot be read as type: " + asType);
     }
 
-	@Override
-	public boolean isBodyAssignableTo(Class c) throws JMSException {
+    @Override
+    public boolean isBodyAssignableTo(Class c) throws JMSException {
         return true;
-	}
+    }
 
     protected <T> T doGetBody(Class<T> asType) throws JMSException {
         return null;
