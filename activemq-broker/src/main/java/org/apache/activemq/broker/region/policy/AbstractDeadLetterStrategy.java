@@ -36,7 +36,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     @Override
     public void rollback(Message message) {
         if (message != null && this.enableAudit) {
-            lookupActiveMQMessageAudit(message).rollback(message);
+            lookupActiveMQMessageAudit(message, true).rollback(message);
         }
     }
 
@@ -45,7 +45,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
         boolean result = false;
         if (message != null) {
             result = true;
-            if (enableAudit && lookupActiveMQMessageAudit(message).isDuplicate(message)) {
+            if (enableAudit && lookupActiveMQMessageAudit(message, false).isDuplicate(message)) {
                 result = false;
                 LOG.debug("Not adding duplicate to DLQ: {}, dest: {}", message.getMessageId(), message.getDestination());
             }
@@ -115,5 +115,5 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
 
     public abstract int getMaxAuditDepth();
 
-    protected abstract ActiveMQMessageAudit lookupActiveMQMessageAudit(Message message);
+    protected abstract ActiveMQMessageAudit lookupActiveMQMessageAudit(Message message, boolean rollback);
 }
