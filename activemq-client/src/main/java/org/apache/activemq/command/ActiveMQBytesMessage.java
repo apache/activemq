@@ -971,7 +971,6 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         }
 
         final ByteSequence content = getContent();
-        return content != null ? (T) new ByteSequence(content.getData(), content.getOffset(),
-            content.getLength()).getData() : null;
+        return content != null ? (T) Arrays.copyOf(content.getData(), content.getLength()): null;
     }
 }
