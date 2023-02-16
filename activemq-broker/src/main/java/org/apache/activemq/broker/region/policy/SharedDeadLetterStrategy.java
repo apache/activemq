@@ -71,7 +71,7 @@ public class SharedDeadLetterStrategy extends AbstractDeadLetterStrategy {
     }
 
     @Override
-    protected ActiveMQMessageAudit lookupActiveMQMessageAudit(Message message) {
+    protected ActiveMQMessageAudit lookupActiveMQMessageAudit(Message message, boolean rollback) {
         return messageAudit;
     }
 

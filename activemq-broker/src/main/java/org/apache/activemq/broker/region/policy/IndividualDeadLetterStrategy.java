@@ -202,15 +202,23 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
     }
 
     @Override
-    protected ActiveMQMessageAudit lookupActiveMQMessageAudit(Message message) {
+    protected ActiveMQMessageAudit lookupActiveMQMessageAudit(Message message, boolean rollback) {
         ActiveMQMessageAudit messageAudit;
 
         synchronized(dedicatedMessageAudits) {
-            messageAudit = dedicatedMessageAudits.get(message.getDestination().getQualifiedName());
+            // Normally we want to just use the destination property on the message as the key for the map for
+            // caching the messageAudit object for each destination. However, when rolling back, the message
+            // provided here has had its destination changed to the individual DLQ destination and is no longer
+            // the original destination. So to find the correct messageAudit to rollback we need to use
+            // the originalDestination property on the message to get the correct destination that was
+            // used to first cache the messageAudit.
+            final String destinationName = rollback && message.getOriginalDestination() != null ?
+                message.getOriginalDestination().getQualifiedName() : message.getDestination().getQualifiedName();
+            messageAudit = dedicatedMessageAudits.get(destinationName);
 
             if(messageAudit == null) {
                 messageAudit = new ActiveMQMessageAudit(getMaxAuditDepth(), getMaxProducersToAudit());
-                dedicatedMessageAudits.put(message.getDestination().getQualifiedName(), messageAudit);
+                dedicatedMessageAudits.put(destinationName, messageAudit);
             }
 
             return messageAudit;
