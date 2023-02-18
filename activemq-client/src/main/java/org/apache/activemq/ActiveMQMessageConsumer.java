@@ -629,6 +629,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             });
         }
+        if (m.propertyExists(ActiveMQMessage.JMS_DELIVERY_TIME_PROPERTY)) {
+            m.setJMSDeliveryTime(m.getLongProperty(ActiveMQMessage.JMS_DELIVERY_TIME_PROPERTY));
+        }
         return m;
     }
 
