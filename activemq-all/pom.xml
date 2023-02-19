@@ -61,7 +61,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
+      <artifactId>log4j-slf4j2-impl</artifactId>
     </dependency>
   </dependencies>
 
@@ -105,7 +105,7 @@
                   <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-annotation_1.3_spec</include>
                   <include>org.slf4j:slf4j-api</include>
-                  <include>org.apache.logging.log4j:log4j-slf4j-impl</include>
+                  <include>org.apache.logging.log4j:log4j-slf4j2-impl</include>
                   <include>org.slf4j:jcl-over-slf4j</include>
                   <include>org.springframework:spring-core</include>
                   <include>org.springframework:spring-beans</include>
@@ -343,7 +343,7 @@
         </dependency>
         <dependency>
           <groupId>org.apache.logging.log4j</groupId>
-          <artifactId>log4j-slf4j-impl</artifactId>
+          <artifactId>log4j-slf4j2-impl</artifactId>
           <version>${log4j-version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>
