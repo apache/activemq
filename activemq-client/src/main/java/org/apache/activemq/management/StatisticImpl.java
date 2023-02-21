@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.management;
 
-import javax.management.j2ee.statistics.Statistic;
-
 /**
  * Base class for a Statistic implementation
  * 

@@ -59,10 +59,6 @@
       <groupId>jakarta.jms</groupId>
       <artifactId>jakarta.jms-api</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
-    </dependency>
   </dependencies>
   <build>
     <plugins>
