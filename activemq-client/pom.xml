@@ -52,12 +52,6 @@
       <version>${hawtbuf-version}</version>
     </dependency>
 
-    <!-- would be nice if we could make this dependency optional -->
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
-    </dependency>
-
     <!-- for zerconf discovery -->
     <dependency>
       <groupId>javax.jmdns</groupId>
