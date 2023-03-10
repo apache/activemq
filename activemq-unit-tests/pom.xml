@@ -205,7 +205,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>javax.jmdns</groupId>
+      <groupId>org.jmdns</groupId>
       <artifactId>jmdns</artifactId>
       <optional>true</optional>
     </dependency>

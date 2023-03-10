@@ -229,7 +229,7 @@
       <artifactId>jaxp-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.jmdns</groupId>
+      <groupId>org.jmdns</groupId>
       <artifactId>jmdns</artifactId>
     </dependency>
     <dependency>

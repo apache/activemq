@@ -214,7 +214,7 @@
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
         <include>org.jasypt:jasypt-spring4</include>
-        <include>javax.jmdns:jmdns</include>
+        <include>org.jmdns:jmdns</include>
         <include>org.apache.qpid:proton-j</include>
         <include>${pom.groupId}:activemq-runtime-config</include>
         <include>org.jvnet.jaxb2_commons:jaxb2-basics-runtime</include>
