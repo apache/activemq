@@ -2901,19 +2901,11 @@ public class BrokerService implements Service {
         this.sslContext = sslContext;
     }
 
-    public boolean isShutdownOnSlaveFailure() {
-        return shutdownOnSlaveFailure;
-    }
-
     /**
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
      */
     public void setShutdownOnSlaveFailure(boolean shutdownOnSlaveFailure) {
         this.shutdownOnSlaveFailure = shutdownOnSlaveFailure;
-    }
-
-    public boolean isWaitForSlave() {
-        return waitForSlave;
     }
 
     /**
