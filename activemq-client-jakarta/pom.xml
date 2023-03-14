@@ -53,7 +53,7 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.jmdns</groupId>
+            <groupId>org.jmdns</groupId>
             <artifactId>jmdns</artifactId>
             <optional>true</optional>
             <scope>provided</scope>
