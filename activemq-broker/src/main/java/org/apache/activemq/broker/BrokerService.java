@@ -2903,7 +2903,7 @@ public class BrokerService implements Service {
     }
 
     /**
-     * Deprecated: this method will be renamed to not use slave wording
+     * @deprecated this method will be renamed to not use slave wording
      */
     @Deprecated(forRemoval = true)
     public boolean isShutdownOnSlaveFailure() {
