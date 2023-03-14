@@ -2921,7 +2921,7 @@ public class BrokerService implements Service {
     }
 
     /**
-     * Deprecated: it will be removed as it should not be used directly.
+     * @deprecated it will be removed as it should not be used directly.
      */
     @Deprecated(forRemoval = true)
     public boolean isWaitForSlave() {
