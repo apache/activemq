@@ -64,6 +64,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
 
         URI ncUri = new URI("static:(" + connector.getConnectUri().toString() + ")");
         NetworkConnector nc = new DiscoveryNetworkConnector(ncUri);
+        nc.setDecreaseNetworkConsumerPriority(false);
         nc.setDuplex(true);
         remoteBroker.addNetworkConnector(nc);
         nc.start();
