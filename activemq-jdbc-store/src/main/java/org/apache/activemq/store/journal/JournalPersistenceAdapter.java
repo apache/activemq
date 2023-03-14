@@ -85,6 +85,7 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean
  *
  */
+@Deprecated(forRemoval = true)
 public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEventListener, UsageListener, BrokerServiceAware {
 
     private BrokerService brokerService;

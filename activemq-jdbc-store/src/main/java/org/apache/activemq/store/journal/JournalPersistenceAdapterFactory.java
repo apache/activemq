@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean
  * 
  */
+@Deprecated(forRemoval = true)
 public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport implements PersistenceAdapterFactory {
 
     private static final int JOURNAL_LOCKED_WAIT_DELAY = 10 * 1000;
