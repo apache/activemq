@@ -2929,7 +2929,7 @@ public class BrokerService implements Service {
     }
 
     /**
-     * Deprecated: this method will be renamed to not use slave wording
+     * @deprecated this method will be renamed to not use slave wording
      *
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
      */
