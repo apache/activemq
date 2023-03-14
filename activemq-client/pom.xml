@@ -55,7 +55,7 @@
 
     <!-- for zerconf discovery -->
     <dependency>
-      <groupId>javax.jmdns</groupId>
+      <groupId>org.jmdns</groupId>
       <artifactId>jmdns</artifactId>
       <optional>true</optional>
     </dependency>

@@ -114,7 +114,7 @@
           <artifactId>jakarta-regexp</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>javax.jmdns</groupId>
+          <groupId>org.jmdns</groupId>
           <artifactId>jmdns</artifactId>
         </exclusion>
         <exclusion>
