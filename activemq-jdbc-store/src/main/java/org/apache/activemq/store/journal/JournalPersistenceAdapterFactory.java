@@ -36,14 +36,12 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Factory class that can create PersistenceAdapter objects.
- * 
- * @org.apache.xbean.XBean
- * 
- */
-
-/**
- * Deprecated for removal as this PersistenceAdapter is no longer used and
+ *
+ * @deprecated Deprecated for removal as this PersistenceAdapter is no longer used and
  * replaced by the JDBCPersistenceAdapter.
+ *
+ * @org.apache.xbean.XBean
+ *
  */
 @Deprecated(forRemoval = true)
 public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport implements PersistenceAdapterFactory {
