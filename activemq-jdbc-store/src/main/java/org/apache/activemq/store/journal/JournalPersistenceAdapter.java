@@ -82,13 +82,11 @@ import org.slf4j.LoggerFactory;
  * {@link Journal} and then check pointing asynchronously on a timeout with some
  * other long term persistent storage.
  *
+ *  @deprecated - Deprecated for removal as this PersistenceAdapter is no longer used and
+ *  replaced by the JDBCPersistenceAdapter.
+ *
  * @org.apache.xbean.XBean
  *
- */
-
-/**
- * Deprecated for removal as this PersistenceAdapter is no longer used and
- * replaced by the JDBCPersistenceAdapter.
  */
 @Deprecated(forRemoval = true)
 public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEventListener, UsageListener, BrokerServiceAware {
