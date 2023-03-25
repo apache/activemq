@@ -49,10 +49,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-kahadb-store</artifactId>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activeio-core</artifactId>
-    </dependency>
 
     <!-- geronimo -->
     <dependency>
