@@ -19,7 +19,7 @@ package org.apache.activemq.osgi.cf;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
