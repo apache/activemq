@@ -18,8 +18,8 @@ package org.apache.activemq.transport.ws;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.activemq.transport.ws.jetty9.MQTTSocket;
-import org.apache.activemq.transport.ws.jetty9.StompSocket;
+import org.apache.activemq.transport.ws.jetty11.MQTTSocket;
+import org.apache.activemq.transport.ws.jetty11.StompSocket;
 import org.junit.Test;
 
 public class SocketTest {
@@ -31,10 +31,10 @@ public class SocketTest {
 
         assertEquals("ws://localhost:8080", stompSocketJetty8.getRemoteAddress());
 
-        org.apache.activemq.transport.ws.jetty9.StompSocket stompSocketJetty9 =
-                new org.apache.activemq.transport.ws.jetty9.StompSocket("ws://localhost:8080");
+        org.apache.activemq.transport.ws.jetty11.StompSocket stompSocketJetty11 =
+                new org.apache.activemq.transport.ws.jetty11.StompSocket("ws://localhost:8080");
 
-        assertEquals("ws://localhost:8080", stompSocketJetty9.getRemoteAddress());
+        assertEquals("ws://localhost:8080", stompSocketJetty11.getRemoteAddress());
     }
 
     @Test
@@ -44,8 +44,8 @@ public class SocketTest {
 
         assertEquals("ws://localhost:8080", mqttSocketJetty8.getRemoteAddress());
 
-        MQTTSocket mqttSocketJetty9 = new MQTTSocket("ws://localhost:8080");
+        MQTTSocket mqttSocketJetty11 = new MQTTSocket("ws://localhost:8080");
 
-        assertEquals("ws://localhost:8080", mqttSocketJetty9.getRemoteAddress());
+        assertEquals("ws://localhost:8080", mqttSocketJetty11.getRemoteAddress());
     }
 }

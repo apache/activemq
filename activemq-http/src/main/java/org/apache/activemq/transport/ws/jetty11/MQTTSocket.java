@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.ws.jetty9;
+package org.apache.activemq.transport.ws.jetty11;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -55,8 +55,8 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
         ByteSequence bytes = wireFormat.marshal(command);
         try {
             //timeout after a period of time so we don't wait forever and hold the protocol lock
-            session.getRemote().sendBytesByFuture(
-                    ByteBuffer.wrap(bytes.getData(), 0, bytes.getLength())).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
+            // FIXME: convert to async .get(getDefaultSendTimeOut(), TimeUnit.SECONDS)
+            session.getRemote().sendBytes(ByteBuffer.wrap(bytes.getData(), 0, bytes.getLength()));
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }

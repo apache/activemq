@@ -29,8 +29,8 @@ public class SocketConnectorFactory {
 
     public Connector createConnector(Server server) throws Exception {
         ServerConnector connector = new ServerConnector(server);
-        server.setStopTimeout(500);
-        connector.setStopTimeout(500);
+        server.setStopTimeout(60_000l);
+        //connector.setStopTimeout(500);
         if (transportOptions != null) {
             IntrospectionSupport.setProperties(connector, transportOptions, "");
         }

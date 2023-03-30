@@ -71,7 +71,7 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
             server = new Server();
         }
         try {
-            server.getClass().getMethod("setStopTimeout", Long.TYPE).invoke(server, 500l);
+            server.getClass().getMethod("setStopTimeout", Long.TYPE).invoke(server, 60_000l);
         } catch (Throwable t) {
             //ignore, jetty 8.
         }

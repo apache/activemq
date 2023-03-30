@@ -23,11 +23,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
-import javax.jms.JMSException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.jms.JMSException;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
@@ -151,7 +151,7 @@ public class HttpTunnelServlet extends HttpServlet {
             }
 
             if (command instanceof ConnectionInfo) {
-                ((ConnectionInfo) command).setTransportContext(request.getAttribute("javax.servlet.request.X509Certificate"));
+                ((ConnectionInfo) command).setTransportContext(request.getAttribute("jakarta.servlet.request.X509Certificate"));
             }
             transport.doConsume(command);
         }

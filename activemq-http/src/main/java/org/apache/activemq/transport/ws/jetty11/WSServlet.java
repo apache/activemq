@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.transport.ws.jetty9;
+package org.apache.activemq.transport.ws.jetty11;
 
 import java.io.IOException;
 import java.net.URI;
@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -39,16 +39,16 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.util.HttpTransportUtils;
 import org.apache.activemq.transport.ws.WSTransportProxy;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
-import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
-import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
-import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
+import org.eclipse.jetty.websocket.server.JettyWebSocketCreator;
+import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
 /**
  * Handle connection upgrade requests and creates web sockets
  */
-public class WSServlet extends WebSocketServlet implements BrokerServiceAware {
+public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAware {
 
     private static final long serialVersionUID = -4716657876092884139L;
 
@@ -89,10 +89,10 @@ public class WSServlet extends WebSocketServlet implements BrokerServiceAware {
     }
 
     @Override
-    public void configure(WebSocketServletFactory factory) {
-        factory.setCreator(new WebSocketCreator() {
+    public void configure(JettyWebSocketServletFactory factory) {
+        factory.setCreator(new JettyWebSocketCreator() {
             @Override
-            public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
+            public Object createWebSocket(JettyServerUpgradeRequest req, JettyServerUpgradeResponse resp) {
                 WebSocketListener socket;
                 Protocol requestedProtocol = Protocol.UNKNOWN;
 
@@ -141,7 +141,7 @@ public class WSServlet extends WebSocketServlet implements BrokerServiceAware {
         });
     }
 
-    private WebSocketListener findWSTransport(ServletUpgradeRequest request, ServletUpgradeResponse response) {
+    private WebSocketListener findWSTransport(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response) {
         WSTransportProxy proxy = null;
 
         for (String subProtocol : request.getSubProtocols()) {

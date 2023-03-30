@@ -18,13 +18,13 @@ package org.apache.activemq.transport.http;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import javax.jms.BytesMessage;
-import javax.jms.MapMessage;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.StreamMessage;
-import javax.jms.Topic;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.MapMessage;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.StreamMessage;
+import jakarta.jms.Topic;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;

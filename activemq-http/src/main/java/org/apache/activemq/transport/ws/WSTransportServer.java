@@ -21,14 +21,14 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 
-import javax.servlet.Servlet;
+import jakarta.servlet.Servlet;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.WebTransportServerSupport;
-import org.apache.activemq.transport.ws.jetty9.WSServlet;
+import org.apache.activemq.transport.ws.jetty11.WSServlet;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
@@ -38,6 +38,7 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +79,7 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
                 new ServletContextHandler(server, "/", ServletContextHandler.SECURITY);
 
         ServletHolder holder = new ServletHolder();
-
+        JettyWebSocketServletContainerInitializer.configure(contextHandler, null);
         //AMQ-6182 - disabling trace by default
         configureTraceMethod((ConstraintSecurityHandler) contextHandler.getSecurityHandler(),
                 httpOptions.isEnableTrace());

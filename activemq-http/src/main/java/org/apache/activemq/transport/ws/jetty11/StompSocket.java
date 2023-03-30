@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.ws.jetty9;
+package org.apache.activemq.transport.ws.jetty11;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +47,8 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     public void sendToStomp(StompFrame command) throws IOException {
         try {
             //timeout after a period of time so we don't wait forever and hold the protocol lock
-            session.getRemote().sendStringByFuture(getWireFormat().marshalToString(command)).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
+            // FIXME: convert to timeout async get(getDefaultSendTimeOut(), TimeUnit.SECONDS)
+            session.getRemote().sendString(getWireFormat().marshalToString(command));
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }

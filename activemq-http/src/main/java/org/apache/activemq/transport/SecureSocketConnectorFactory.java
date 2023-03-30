@@ -21,6 +21,9 @@ import javax.net.ssl.SSLContext;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -113,15 +116,36 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
             factory = contextFactory;
         }
 
+        String sniRequiredPropValue = System.getProperty("jetty.ssl.sniRequired");
+        if(sniRequiredPropValue != null && !sniRequiredPropValue.isBlank()) {
+            boolean sniRequired = Boolean.valueOf(sniRequiredPropValue);
+            factory.setSniRequired(sniRequired);
+        }
+
+        String sniHostCheckPropValue = System.getProperty("jetty.ssl.sniHostCheck");
+        HttpConnectionFactory httpConnectionFactory = null;
+        if(sniHostCheckPropValue != null && !sniHostCheckPropValue.isBlank()) {
+            HttpConfiguration httpConfig = new HttpConfiguration();
+            SecureRequestCustomizer customizer = new SecureRequestCustomizer();
+            customizer.setSniHostCheck(false);
+            httpConfig.addCustomizer(customizer);
+            httpConnectionFactory =  new HttpConnectionFactory(httpConfig);
+        }
 
         if ("KRB".equals(auth) || "BOTH".equals(auth)
             && Server.getVersion().startsWith("8")) {
             //return new Krb5AndCertsSslSocketConnector(factory, auth);
             return null;
         } else {
-            ServerConnector connector = new ServerConnector(server, factory);
-            server.setStopTimeout(500);
-            connector.setStopTimeout(500);
+            ServerConnector connector = null;
+            if(httpConnectionFactory == null) {
+                connector = new ServerConnector(server, factory);
+            } else {
+                connector = new ServerConnector(server, factory, httpConnectionFactory);
+            }
+
+            server.setStopTimeout(60_000l);
+            //connector.setStopTimeout(500);
             return connector;
         }
     }

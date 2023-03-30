@@ -23,6 +23,8 @@ import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.transport.ws.MQTTWSConnection;
 import org.apache.activemq.transport.ws.StompWSConnection;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
+import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -78,18 +80,27 @@ public class WSSTransportNeedClientAuthTest {
     public void testStompNeedClientAuth() throws Exception {
         StompWSConnection wsStompConnection = new StompWSConnection();
         System.out.println("starting connection");
-        SslContextFactory factory = new SslContextFactory.Client();
-        factory.setKeyStorePath(KEYSTORE);
-        factory.setKeyStorePassword(PASSWORD);
-        factory.setKeyStoreType(KEYSTORE_TYPE);
-        factory.setTrustStorePath(TRUST_KEYSTORE);
-        factory.setTrustStorePassword(PASSWORD);
-        factory.setTrustStoreType(KEYSTORE_TYPE);
-        WebSocketClient wsClient = new WebSocketClient(new HttpClient(factory));
+
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        sslContextFactory.setKeyStorePath(KEYSTORE);
+        sslContextFactory.setKeyStorePassword(PASSWORD);
+        sslContextFactory.setKeyStoreType(KEYSTORE_TYPE);
+        sslContextFactory.setTrustStorePath(TRUST_KEYSTORE);
+        sslContextFactory.setTrustStorePassword(PASSWORD);
+        sslContextFactory.setTrustStoreType(KEYSTORE_TYPE);
+
+        ClientConnector clientConnector = new ClientConnector();
+        clientConnector.setSslContextFactory(sslContextFactory);
+        HttpClient httpClient = new HttpClient(new HttpClientTransportDynamic(clientConnector));
+
+        WebSocketClient wsClient = new WebSocketClient(httpClient);
         wsClient.start();
 
-        Future<Session> connected = wsClient.connect(wsStompConnection, new URI("wss://localhost:61618"));
-        
+        ClientUpgradeRequest request = new ClientUpgradeRequest();
+        request.setSubProtocols("v12.stomp");
+
+        Future<Session> connected = wsClient.connect(wsStompConnection, new URI("wss://localhost:61618"), request);
+
         try(Session sess = connected.get(30, TimeUnit.SECONDS)) {
 
             String connectFrame = "STOMP\n" +
@@ -112,14 +123,20 @@ public class WSSTransportNeedClientAuthTest {
 
     @Test
     public void testMQTTNeedClientAuth() throws Exception {
-        SslContextFactory factory = new SslContextFactory.Client();
-        factory.setKeyStorePath(KEYSTORE);
-        factory.setKeyStorePassword(PASSWORD);
-        factory.setKeyStoreType(KEYSTORE_TYPE);
-        factory.setTrustStorePath(TRUST_KEYSTORE);
-        factory.setTrustStorePassword(PASSWORD);
-        factory.setTrustStoreType(KEYSTORE_TYPE);
-        WebSocketClient wsClient = new WebSocketClient(new HttpClient(factory));
+
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        sslContextFactory.setKeyStorePath(KEYSTORE);
+        sslContextFactory.setKeyStorePassword(PASSWORD);
+        sslContextFactory.setKeyStoreType(KEYSTORE_TYPE);
+        sslContextFactory.setTrustStorePath(TRUST_KEYSTORE);
+        sslContextFactory.setTrustStorePassword(PASSWORD);
+        sslContextFactory.setTrustStoreType(KEYSTORE_TYPE);
+
+        ClientConnector clientConnector = new ClientConnector();
+        clientConnector.setSslContextFactory(sslContextFactory);
+        HttpClient httpClient = new HttpClient(new HttpClientTransportDynamic(clientConnector));
+
+        WebSocketClient wsClient = new WebSocketClient(httpClient);
         wsClient.start();
 
         ClientUpgradeRequest request = new ClientUpgradeRequest();

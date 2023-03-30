@@ -17,8 +17,8 @@
 package org.apache.activemq.transport.http;
 
 import java.util.List;
-import javax.jms.Message;
-import javax.jms.TextMessage;
+import jakarta.jms.Message;
+import jakarta.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -72,7 +72,7 @@ public class HttpJmsSendAndReceiveWithCompressionTest extends JmsTopicSendReceiv
             TextMessage textMessage = TextMessage.class.cast(message);
             try {
                 logger.debug("Received text message with text: {}", textMessage.getText());
-            } catch( javax.jms.JMSException jmsE) {
+            } catch( jakarta.jms.JMSException jmsE) {
                 logger.debug("Received an exception while trying to retrieve the text message", jmsE);
                 throw new RuntimeException(jmsE);
             }

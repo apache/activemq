@@ -26,9 +26,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Result;
+import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
 import org.eclipse.jetty.client.util.BufferingResponseListener;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 public class HttpTraceTestSupport {
@@ -50,10 +52,13 @@ public class HttpTraceTestSupport {
         testHttpTraceEnabled(uri, expectedStatus, new SslContextFactory.Client());
     }
 
-    public static void testHttpTraceEnabled(final String uri, final int expectedStatus, SslContextFactory
+    public static void testHttpTraceEnabled(final String uri, final int expectedStatus, SslContextFactory.Client
             sslContextFactory) throws Exception {
-        HttpClient httpClient = sslContextFactory != null ? new HttpClient(sslContextFactory) :
-            new HttpClient(new SslContextFactory.Client());
+
+        ClientConnector clientConnector = new ClientConnector();
+        clientConnector.setSslContextFactory(sslContextFactory);
+
+        HttpClient httpClient = sslContextFactory != null ? new HttpClient(new HttpClientTransportDynamic(clientConnector)) : new HttpClient();
         httpClient.start();
 
         final CountDownLatch latch = new CountDownLatch(1);
