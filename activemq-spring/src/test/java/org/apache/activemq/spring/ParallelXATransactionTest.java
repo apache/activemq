@@ -35,10 +35,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import javax.annotation.Resource;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.Session;
+import jakarta.annotation.Resource;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.Session;
 import java.util.Arrays;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -112,14 +112,13 @@ public class ParallelXATransactionTest {
                                             }
                                         });
                                         Thread.sleep((long) (Math.random() * SLEEP));
-                                        LOG.info("P1: Send msg to " + queue + "," + AUDIT);
+                                        LOG.info("P1: Send msg to " + queue + "," + AUDIT + " thread:" + Thread.currentThread().getName());
                                     }
 
                                 } catch (Exception e) {
-                                    Assert.fail("Exception occurred " + e);
+                                    e.printStackTrace();
+                                    Assert.fail("Exception occurred in thread: " + Thread.currentThread().getName() + " exception:" + e);
                                 }
-
-
                             }
                         });
                     } catch (TransactionException e) {
@@ -137,8 +136,9 @@ public class ParallelXATransactionTest {
 
 
         ProducerThread t1 = new ProducerThread(jmsTemplate, txManager);
+        t1.setName("XaTX");
         ProducerThread t2 = new ProducerThread(jmsTemplate2, txManager2);
-
+        t2.setName("LocalTX");
         t1.start();
         t2.start();
 

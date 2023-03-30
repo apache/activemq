@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.pool;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.jms.ConnectionFactory;
-import javax.transaction.TransactionManager;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.jms.ConnectionFactory;
+import jakarta.transaction.TransactionManager;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -20,9 +20,9 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:amq="http://activemq.apache.org/schema/core"
        xsi:schemaLocation="
-	   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
-	   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
-	   http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
+	   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+	   http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
 	   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
     <!-- broker -->
@@ -44,7 +44,6 @@
         <property name="connectionFactory" ref="connectionFactory2"/>
     </bean>
 
-
     <bean id="connectionFactory2" class="org.apache.activemq.ActiveMQConnectionFactory">
         <property name="brokerURL" value="tcp://localhost:61616"/>
         <property name="userName" value="smx"/>
@@ -57,21 +56,21 @@
         <property name="connectionFactory" ref="connectionFactory"/>
     </bean>
 
-    <bean id="transactionManager" class="org.jencks.factory.TransactionManagerFactoryBean">
+    <bean id="transactionManager" class="org.apache.activemq.spring.geronimo.TransactionManagerFactoryBean">
         <property name="defaultTransactionTimeoutSeconds" value="300"/>
     </bean>
 
-    <bean id="connectionFactory" class="org.jencks.factory.ConnectionFactoryFactoryBean">
+    <bean id="connectionFactory" class="org.apache.activemq.spring.geronimo.ConnectionFactoryFactoryBean">
         <property name="connectionManager" ref="jmsConnectionManager"/>
         <property name="managedConnectionFactory" ref="jmsManagedConnectionFactory"/>
     </bean>
 
-    <bean id="jmsConnectionManager" class="org.jencks.factory.ConnectionManagerFactoryBean">
+    <bean id="jmsConnectionManager" class="org.apache.activemq.spring.geronimo.ConnectionManagerFactoryBean">
         <property name="transaction" value="xa"/>
         <property name="transactionManager" ref="transactionManager"/>
         <property name="poolMaxSize" value="20"/>
         <property name="connectionTracker">
-            <bean class="org.jencks.factory.ConnectionTrackerFactoryBean">
+            <bean class="org.apache.activemq.spring.geronimo.ConnectionTrackerFactoryBean">
                 <property name="geronimoTransactionManager" ref="transactionManager"/>
             </bean>
         </property>
@@ -87,4 +86,4 @@
         </property>
     </bean>
 
-</beans>    
+</beans>

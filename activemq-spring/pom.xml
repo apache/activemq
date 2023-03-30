@@ -31,7 +31,7 @@
 
   <properties>
     <activemq.osgi.import>
-      javax.transaction*;resolution:=optional,
+      jakarta.transaction*;resolution:=optional,
       org.apache.geronimo.transaction.manager*;resolution:=optional,
       org.springframework*;resolution:=optional
     </activemq.osgi.import>
@@ -39,6 +39,15 @@
 
   <dependencies>
 
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.transaction</groupId>
+      <artifactId>jakarta.transaction-api</artifactId>
+      <optional>true</optional>
+    </dependency>
     <!-- =============================== -->
     <!-- Required Dependencies -->
     <!-- =============================== -->
@@ -105,17 +114,52 @@
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.components</groupId>
+      <artifactId>geronimo-connector</artifactId>
+      <classifier>jakarta</classifier>
+      <version>3.1.5</version>
+      <scope>test</scope>
+      <optional>true</optional>
+      <exclusions>
+        <exclusion>
+                <groupId>org.apache.geronimo.specs</groupId>
+                <artifactId>geronimo-jta_1.1_spec</artifactId>
+        </exclusion>
+        <exclusion>
+                <groupId>org.apache.geronimo.specs</groupId>
+                <artifactId>geronimo-j2ee-connector_1.6_spec</artifactId>
+        </exclusion>
+        <exclusion>
+        	<groupId>org.apache.geronimo.components</groupId>
+        	<artifactId>geronimo-transaction</artifactId>
+        </exclusion>
+        <exclusion>
+        	<groupId>org.apache.geronimo.specs</groupId>
+        	<artifactId>geronimo-validation_1.0_spec</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.components</groupId>
       <artifactId>geronimo-transaction</artifactId>
+      <classifier>jakarta</classifier>
+      <scope>test</scope>
       <optional>true</optional>
+      <exclusions>
+      	<exclusion>
+      		<groupId>org.apache.geronimo.specs</groupId>
+      		<artifactId>geronimo-j2ee-connector_1.6_spec</artifactId>
+      	</exclusion>
+      	<exclusion>
+      		<groupId>org.apache.geronimo.specs</groupId>
+      		<artifactId>geronimo-jta_1.1_spec</artifactId>
+      	</exclusion>
+      </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jta_1.1_spec</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-annotation_1.3_spec</artifactId>
-      <optional>true</optional>
+        <groupId>org.objectweb.howl</groupId>
+        <artifactId>howl</artifactId>
+        <version>1.0.1-1</version>
+        <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -152,12 +196,14 @@
       <artifactId>log4j-core</artifactId>
       <scope>test</scope>
     </dependency>
+    <!--
     <dependency>
       <groupId>org.jencks</groupId>
       <artifactId>jencks</artifactId>
       <version>2.2</version>
       <scope>test</scope>
     </dependency>
+    -->
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j2-impl</artifactId>

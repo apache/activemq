@@ -28,8 +28,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import javax.jms.*;
+import jakarta.annotation.Resource;
+import jakarta.jms.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 

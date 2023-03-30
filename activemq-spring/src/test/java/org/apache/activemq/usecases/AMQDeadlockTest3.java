@@ -26,13 +26,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.BytesMessage;
-import javax.jms.ConnectionFactory;
-import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Session;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
+import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -97,6 +97,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             doneLatch = new CountDownLatch(NUM_MESSAGE_TO_SEND);
             container1 = createDefaultMessageListenerContainer(acf, new TestMessageListener1(500), QUEUE1_NAME);
             container1.afterPropertiesSet();
+            container1.start();
 
             Thread.sleep(2000);
 
@@ -148,6 +149,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             doneLatch = new CountDownLatch(MAX_PRODUCERS * NUM_MESSAGE_TO_SEND);
             container1 = createDefaultMessageListenerContainer(acf2, new TestMessageListener1(500), QUEUE1_NAME);
             container1.afterPropertiesSet();
+            container1.start();
 
             final ExecutorService executor = Executors.newCachedThreadPool();
             for (int i = 0; i < MAX_PRODUCERS; i++) {
@@ -198,8 +200,11 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
 
             container1 = createDefaultMessageListenerContainer(acf2, new TestMessageListener1(500), QUEUE1_NAME);
             container1.afterPropertiesSet();
+            container1.start();
+
             container2 = createDefaultMessageListenerContainer(acf2, new TestMessageListener1(30000), QUEUE2_NAME);
             container2.afterPropertiesSet();
+            container2.start();
 
             final ExecutorService executor = Executors.newCachedThreadPool();
             for (int i = 0; i < MAX_PRODUCERS; i++) {
@@ -244,7 +249,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
         final PolicyEntry entry = new PolicyEntry();
         entry.setQueue(">");
         // entry.setQueue(QUEUE1_NAME);
-        entry.setMemoryLimit(1000);
+        entry.setMemoryLimit(1_000);
         policyEntries.add(entry);
 
         final PolicyMap policyMap = new PolicyMap();
