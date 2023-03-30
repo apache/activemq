@@ -19,15 +19,15 @@ package org.apache.activemq.bugs;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.CountDownLatch;
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.Connection;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicSubscriber;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -145,7 +145,7 @@ public class AMQ4636Test {
         try {
             this.sendMessage(MY_TEST_TOPIC, failoverTransportURL, true, true);
             fail("Expect rollback after failover - inddoubt commit");
-        } catch (javax.jms.TransactionRolledBackException expectedInDoubt) {
+        } catch (jakarta.jms.TransactionRolledBackException expectedInDoubt) {
             LOG.info("Got rollback after failover failed commit", expectedInDoubt);
         }
     }

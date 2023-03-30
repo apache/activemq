@@ -17,11 +17,11 @@
 package org.apache.activemq;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.InvalidClientIDException;
-import javax.jms.JMSException;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.InvalidClientIDException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Session;
 
 import junit.framework.Test;
 import org.apache.logging.log4j.Level;

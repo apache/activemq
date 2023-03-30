@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.perf;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
+import jakarta.jms.MapMessage;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicSubscriber;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
@@ -45,8 +45,8 @@ public class InactiveDurableTopicTest extends TestCase {
     private static final String CLIENTID = "mytestclient";
     private static final String TOPIC_NAME = "testevent";
     private static final String SUBID = "subscription1";
-    private static final int DELIVERY_MODE = javax.jms.DeliveryMode.PERSISTENT;
-    private static final int DELIVERY_PRIORITY = javax.jms.Message.DEFAULT_PRIORITY;
+    private static final int DELIVERY_MODE = jakarta.jms.DeliveryMode.PERSISTENT;
+    private static final int DELIVERY_PRIORITY = jakarta.jms.Message.DEFAULT_PRIORITY;
     private Connection connection;
     private MessageProducer publisher;
     private TopicSubscriber subscriber;
@@ -88,7 +88,7 @@ public class InactiveDurableTopicTest extends TestCase {
             assertNotNull(connection);
             connection.setClientID(CLIENTID);
             connection.start();
-            session = connection.createSession(false, javax.jms.Session.CLIENT_ACKNOWLEDGE);
+            session = connection.createSession(false, jakarta.jms.Session.CLIENT_ACKNOWLEDGE);
             assertNotNull(session);
             topic = session.createTopic(TOPIC_NAME);
             assertNotNull(topic);
@@ -114,7 +114,7 @@ public class InactiveDurableTopicTest extends TestCase {
         try {
             connection = connectionFactory.createConnection(USERNAME, DEFAULT_PASSWORD);
             assertNotNull(connection);
-            session = connection.createSession(false, javax.jms.Session.CLIENT_ACKNOWLEDGE);
+            session = connection.createSession(false, jakarta.jms.Session.CLIENT_ACKNOWLEDGE);
             assertNotNull(session);
             topic = session.createTopic(TOPIC_NAME);
             assertNotNull(topic);
@@ -155,7 +155,7 @@ public class InactiveDurableTopicTest extends TestCase {
             assertNotNull(connection);
             connection.setClientID(CLIENTID);
             connection.start();
-            session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+            session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
             assertNotNull(session);
             topic = session.createTopic(TOPIC_NAME);
             assertNotNull(topic);

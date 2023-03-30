@@ -49,16 +49,16 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.QueueBrowser;
-import javax.jms.Session;
-import javax.jms.XASession;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueBrowser;
+import jakarta.jms.Session;
+import jakarta.jms.XASession;
 import javax.management.ObjectName;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -566,7 +566,7 @@ public class XACompletionTest extends TestSupport {
         int drained = 0;
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=" + expected);
         factory.setWatchTopicAdvisories(false);
-        javax.jms.Connection connection = factory.createConnection();
+        jakarta.jms.Connection connection = factory.createConnection();
         connection.setClientID(clientId);
         try {
             connection.start();
@@ -650,7 +650,7 @@ public class XACompletionTest extends TestSupport {
         // set maxBatchSize=1
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=" + 1);
         factory.setWatchTopicAdvisories(false);
-        javax.jms.Connection connection = factory.createConnection();
+        jakarta.jms.Connection connection = factory.createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         Destination destination = session.createQueue("TEST");
@@ -1062,7 +1062,7 @@ public class XACompletionTest extends TestSupport {
     }
 
     private Message regularReceiveWith(ActiveMQConnectionFactory factory, String qName) throws Exception {
-        javax.jms.Connection connection = factory.createConnection();
+        jakarta.jms.Connection connection = factory.createConnection();
         try {
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -1078,7 +1078,7 @@ public class XACompletionTest extends TestSupport {
         int drained = 0;
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=" + limit);
         factory.setWatchTopicAdvisories(false);
-        javax.jms.Connection connection = factory.createConnection();
+        jakarta.jms.Connection connection = factory.createConnection();
         try {
             connection.start();
             Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -1098,7 +1098,7 @@ public class XACompletionTest extends TestSupport {
     private Message regularBrowseFirst() throws Exception {
         ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(connectionUri);
         activeMQConnectionFactory.setWatchTopicAdvisories(false);
-        javax.jms.Connection connection = activeMQConnectionFactory.createConnection();
+        jakarta.jms.Connection connection = activeMQConnectionFactory.createConnection();
         try {
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -1129,7 +1129,7 @@ public class XACompletionTest extends TestSupport {
     }
 
     protected void sendMessagesWithTo(ConnectionFactory factory, int messagesExpected, Destination destination) throws Exception {
-        javax.jms.Connection connection = factory.createConnection();
+        jakarta.jms.Connection connection = factory.createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 

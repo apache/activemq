@@ -28,8 +28,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.jms.MessageProducer;
-import javax.jms.XASession;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.XASession;
 import javax.sql.DataSource;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;

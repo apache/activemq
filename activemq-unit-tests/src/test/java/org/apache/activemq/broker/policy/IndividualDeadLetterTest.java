@@ -20,12 +20,12 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Set;
 
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerService;

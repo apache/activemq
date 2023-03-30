@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.jms2;
 
-import javax.jms.Destination;
+import jakarta.jms.Destination;
 
 public class MessageData {
 
-    private javax.jms.Message message = null;
+    private jakarta.jms.Message message = null;
     private String messageType = null;
     private String messagePayload = null; 
     private Long deliveryDelay = null;
@@ -40,7 +40,7 @@ public class MessageData {
     MessageData() {}
 
     // builder-style setters
-    public MessageData setMessage(javax.jms.Message message) { this.message = message; return this; }
+    public MessageData setMessage(jakarta.jms.Message message) { this.message = message; return this; }
     public MessageData setMessageType(String messageType) { this.messageType = messageType; return this; }
     public MessageData setMessagePayload(String messagePayload) { this.messagePayload = messagePayload; return this; } 
     public MessageData setDeliveryDelay(Long deliveryDelay) { this.deliveryDelay = deliveryDelay; return this; }
@@ -110,7 +110,7 @@ public class MessageData {
         return messageID;
     }
 
-    public javax.jms.Message getMessage() {
+    public jakarta.jms.Message getMessage() {
         return message;
     }
 

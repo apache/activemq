@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.DeliveryMode;
+import jakarta.jms.DeliveryMode;
 
 import junit.framework.Test;
 

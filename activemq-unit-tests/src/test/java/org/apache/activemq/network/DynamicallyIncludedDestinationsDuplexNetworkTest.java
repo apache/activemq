@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 import java.lang.reflect.Field;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.jms.MessageProducer;
-import javax.jms.TemporaryQueue;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.TemporaryQueue;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;

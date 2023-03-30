@@ -28,7 +28,7 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 public class RetroactiveConsumerBrokerRestartedTest extends TestCase {
 
@@ -124,7 +124,7 @@ public class RetroactiveConsumerBrokerRestartedTest extends TestCase {
         connection.start();
 
         // Create the durable sub.
-        Session session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        Session session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
 
         // Ensure that consumer will receive messages sent before it was created
         Topic topicSub = session.createTopic("TestTopic?consumer.retroactive=true");
@@ -144,7 +144,7 @@ public class RetroactiveConsumerBrokerRestartedTest extends TestCase {
 
         connection = getConnection();
         connection.start();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         producer = session.createProducer(topic);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
         producer.send(session.createTextMessage("Msg:4"));

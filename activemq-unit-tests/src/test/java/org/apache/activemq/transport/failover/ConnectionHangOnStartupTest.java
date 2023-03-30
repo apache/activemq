@@ -19,7 +19,7 @@ package org.apache.activemq.transport.failover;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;

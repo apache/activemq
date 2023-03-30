@@ -16,8 +16,8 @@
  */
 package org.apache.activemq;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.Session;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.Session;
 
 import junit.framework.Test;
 

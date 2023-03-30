@@ -60,7 +60,7 @@ public class SslContextBrokerServiceTest extends TestCase {
     @Override
     protected void tearDown() throws Exception {
 
-        context.destroy();
+        context.close();
     }
 
 }

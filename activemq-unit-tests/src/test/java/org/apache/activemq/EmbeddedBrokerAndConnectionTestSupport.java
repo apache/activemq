@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 /**
  * A base class for a test case which creates an embedded broker and uses a connection and session

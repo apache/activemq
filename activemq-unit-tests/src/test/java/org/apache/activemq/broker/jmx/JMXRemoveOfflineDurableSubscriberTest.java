@@ -59,7 +59,7 @@ public class JMXRemoveOfflineDurableSubscriberTest {
         boolean subscriberAlreadyDeleted = false;
         try {
             broker.getAdminView().destroyDurableSubscriber(OFFLINE_CONNECTION_ID, SUBSCRIBER_NAME);
-        } catch (javax.jms.InvalidDestinationException t) {
+        } catch (jakarta.jms.InvalidDestinationException t) {
             if (t.getMessage().equals("No durable subscription exists for clientID: " +
                     OFFLINE_CONNECTION_ID + " and subscriptionName: " +
                     SUBSCRIBER_NAME)) {

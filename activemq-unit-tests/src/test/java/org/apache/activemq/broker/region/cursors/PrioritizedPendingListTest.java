@@ -252,7 +252,7 @@ public class PrioritizedPendingListTest {
         public TestMessageReference(int sequenceId) {
             messageId = new MessageId(id.generateId() + ":1", sequenceId);
             message = new ActiveMQMessage();
-            message.setPriority((byte) javax.jms.Message.DEFAULT_PRIORITY);
+            message.setPriority((byte) jakarta.jms.Message.DEFAULT_PRIORITY);
         }
 
         public TestMessageReference(int sequenceId, int priority) {

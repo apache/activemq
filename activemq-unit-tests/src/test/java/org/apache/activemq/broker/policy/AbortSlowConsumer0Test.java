@@ -27,11 +27,11 @@ import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.Session;
 import javax.management.InstanceNotFoundException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
@@ -228,7 +228,7 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
                 boolean closed = false;
                 try {
                     messageconsumer.receive(400);
-                } catch (javax.jms.IllegalStateException expected) {
+                } catch (jakarta.jms.IllegalStateException expected) {
                     closed = expected.toString().contains("closed");
                 }
                 return closed;

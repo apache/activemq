@@ -18,7 +18,7 @@ package org.apache.activemq.broker;
 
 import java.util.ArrayList;
 
-import javax.jms.DeliveryMode;
+import jakarta.jms.DeliveryMode;
 
 import junit.framework.Test;
 

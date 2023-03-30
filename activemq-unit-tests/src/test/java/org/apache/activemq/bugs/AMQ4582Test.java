@@ -18,8 +18,8 @@ package org.apache.activemq.bugs;
 
 import java.io.IOException;
 
-import javax.jms.Connection;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Session;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ConsumerThread;

@@ -23,7 +23,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.security.*;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 import static org.apache.activemq.security.SimpleSecurityBrokerSystemTest.*;
 

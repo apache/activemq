@@ -44,7 +44,7 @@ public abstract class SpringTestSupport extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         if (context != null) {
-            context.destroy();
+            context.close();
         }
     }
 

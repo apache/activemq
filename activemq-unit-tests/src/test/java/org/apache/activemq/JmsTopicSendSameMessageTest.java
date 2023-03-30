@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.TextMessage;
+import jakarta.jms.TextMessage;
 
 /**
  * 

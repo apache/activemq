@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.usecases;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.perf;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

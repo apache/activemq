@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.xbean;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
 
 import junit.framework.TestCase;
 

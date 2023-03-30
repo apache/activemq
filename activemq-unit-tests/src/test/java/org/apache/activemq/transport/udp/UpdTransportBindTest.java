@@ -19,8 +19,8 @@ package org.apache.activemq.transport.udp;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
 
 public class UpdTransportBindTest extends EmbeddedBrokerTestSupport{
     final String addr = "udp://localhost:61625";

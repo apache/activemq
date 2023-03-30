@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.network;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import org.junit.Test;
 
 public class UserIDBrokerPopulateFalseTest extends UserIDBrokerTest {

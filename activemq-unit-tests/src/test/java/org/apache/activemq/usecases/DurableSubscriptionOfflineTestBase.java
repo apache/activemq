@@ -36,10 +36,10 @@ import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.MessageListener;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.Destination;
+import jakarta.jms.MessageListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -210,7 +210,7 @@ class DurableSubscriptionOfflineTestListener implements MessageListener {
         this.id = id;
     }
     @Override
-    public void onMessage(javax.jms.Message message) {
+    public void onMessage(jakarta.jms.Message message) {
         synchronized (this) {
             count++;
         }

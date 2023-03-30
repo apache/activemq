@@ -19,8 +19,8 @@ package org.apache.activemq.bugs;
 import java.net.URI;
 import java.util.concurrent.Semaphore;
 
-import javax.jms.Message;
-import javax.jms.MessageListener;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.BrokerService;

@@ -29,7 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.InvalidSelectorException;
+import jakarta.jms.InvalidSelectorException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.BrokerService;

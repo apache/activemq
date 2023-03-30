@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.usecases;
 
-import javax.jms.Destination;
-import javax.jms.Session;
+import jakarta.jms.Destination;
+import jakarta.jms.Session;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;

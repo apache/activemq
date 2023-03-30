@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.TransactionRolledBackException;
+import jakarta.jms.TransactionRolledBackException;
 
 import org.apache.activemq.transaction.Synchronization;
 import org.junit.After;

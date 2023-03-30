@@ -19,9 +19,9 @@ package org.apache.activemq.broker.scheduler;
 
 import java.io.File;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Queue;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.Queue;
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionFactory;

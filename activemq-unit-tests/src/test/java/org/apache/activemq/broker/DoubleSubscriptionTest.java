@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.broker;
 
-import javax.jms.DeliveryMode;
-import javax.jms.InvalidClientIDException;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.InvalidClientIDException;
 
 import junit.framework.Test;
 import org.apache.activemq.command.ActiveMQDestination;

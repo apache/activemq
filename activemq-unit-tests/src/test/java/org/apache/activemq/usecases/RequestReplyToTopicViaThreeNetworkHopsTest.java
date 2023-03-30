@@ -28,14 +28,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQSession;
@@ -804,7 +804,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
 
                 try {
                     jmsConn.stop();
-                } catch (javax.jms.JMSException jms_exc) {
+                } catch (jakarta.jms.JMSException jms_exc) {
                     LOG.warn("error on shutting down JMS connection", jms_exc);
                 }
 

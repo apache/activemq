@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.selector;
 
-import javax.jms.InvalidSelectorException;
+import jakarta.jms.InvalidSelectorException;
 import junit.framework.TestCase;
 
 import org.apache.activemq.filter.BooleanExpression;

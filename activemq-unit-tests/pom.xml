@@ -94,13 +94,13 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jta_1.1_spec</artifactId>
+      <groupId>jakarta.transaction</groupId>
+      <artifactId>jakarta.transaction-api</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-annotation_1.3_spec</artifactId>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -239,6 +239,7 @@
     </dependency>
 
     <!--  Joram JMS conformance tests -->
+    <!-- AMQ-9239 FIXME: port to jakarta -->
     <dependency>
       <groupId>org.apache.activemq.tooling</groupId>
       <artifactId>activemq-joram-jms-tests</artifactId>

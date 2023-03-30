@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.DeliveryMode;
+import jakarta.jms.DeliveryMode;
 
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 

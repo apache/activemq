@@ -19,9 +19,9 @@ package org.apache.activemq.usecases;
 import java.net.URI;
 import java.util.Iterator;
 
-import javax.jms.Connection;
-import javax.jms.Session;
-import javax.jms.TemporaryQueue;
+import jakarta.jms.Connection;
+import jakarta.jms.Session;
+import jakarta.jms.TemporaryQueue;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.network.NetworkConnector;

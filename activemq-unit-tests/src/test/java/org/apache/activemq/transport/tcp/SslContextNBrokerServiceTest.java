@@ -124,7 +124,7 @@ public class SslContextNBrokerServiceTest {
 
     @After
     public void tearDown() throws Exception {
-        context.destroy();
+        context.close();
     }
 
     class CertChainCatcher implements X509TrustManager {

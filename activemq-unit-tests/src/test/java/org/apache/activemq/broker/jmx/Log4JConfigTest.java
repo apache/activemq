@@ -17,7 +17,7 @@
 package org.apache.activemq.broker.jmx;
 
 import java.util.List;
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;

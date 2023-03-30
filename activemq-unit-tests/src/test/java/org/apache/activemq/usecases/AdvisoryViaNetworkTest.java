@@ -19,7 +19,7 @@ package org.apache.activemq.usecases;
 import java.net.URI;
 import java.util.Arrays;
 
-import javax.jms.MessageConsumer;
+import jakarta.jms.MessageConsumer;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.BrokerService;

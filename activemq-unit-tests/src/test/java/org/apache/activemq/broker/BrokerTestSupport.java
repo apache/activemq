@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.DeliveryMode;
-import javax.jms.MessageNotWriteableException;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.MessageNotWriteableException;
 
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.region.RegionBroker;

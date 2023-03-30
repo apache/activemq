@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.network;
 
-import javax.jms.DeliveryMode;
+import jakarta.jms.DeliveryMode;
 
 import junit.framework.Test;
 

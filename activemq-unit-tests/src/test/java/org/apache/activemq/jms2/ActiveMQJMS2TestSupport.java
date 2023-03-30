@@ -28,17 +28,17 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.jms.BytesMessage;
-import javax.jms.Destination;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-import javax.jms.JMSProducer;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.ObjectMessage;
-import javax.jms.QueueBrowser;
-import javax.jms.StreamMessage;
-import javax.jms.TextMessage;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSProducer;
+import jakarta.jms.MapMessage;
+import jakarta.jms.Message;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.QueueBrowser;
+import jakarta.jms.StreamMessage;
+import jakarta.jms.TextMessage;
 
 public class ActiveMQJMS2TestSupport {
 
@@ -101,7 +101,7 @@ public class ActiveMQJMS2TestSupport {
         return tmpMessage;
     }
 
-    protected static void populateJMSHeaders(javax.jms.Message message, String correlationID, Destination replyTo, String jmsType) throws JMSException {
+    protected static void populateJMSHeaders(jakarta.jms.Message message, String correlationID, Destination replyTo, String jmsType) throws JMSException {
         assertNotNull(message);
         message.setJMSCorrelationID(null);
         message.setJMSReplyTo(null);
@@ -163,7 +163,7 @@ public class ActiveMQJMS2TestSupport {
             
             boolean found = false; 
             while(!found && messageEnumeration.hasMoreElements()) {
-                javax.jms.Message message = (Message)messageEnumeration.nextElement();
+                jakarta.jms.Message message = (Message)messageEnumeration.nextElement();
                 assertNotNull(message);
                 assertTrue(TextMessage.class.isAssignableFrom(message.getClass()));
                 assertEquals(expectedTextBody, TextMessage.class.cast(message).getText());
@@ -173,7 +173,7 @@ public class ActiveMQJMS2TestSupport {
         }
     }
 
-    protected static void validateMessageData(javax.jms.Message message, MessageData messageData) throws JMSException {
+    protected static void validateMessageData(jakarta.jms.Message message, MessageData messageData) throws JMSException {
         assertNotNull(message);
         assertNotNull(messageData.getMessageType());
         assertNotNull(messageData.getMessagePayload());
@@ -216,7 +216,7 @@ public class ActiveMQJMS2TestSupport {
         }
     }
 
-    private static void validateJMSHeaders(javax.jms.Message message, MessageData messageData) throws JMSException {
+    private static void validateJMSHeaders(jakarta.jms.Message message, MessageData messageData) throws JMSException {
         assertNotNull(message);
         assertEquals(messageData.getCorrelationID(), message.getJMSCorrelationID());
         if(messageData.getDeliveryMode() != null) {
@@ -286,7 +286,7 @@ public class ActiveMQJMS2TestSupport {
         assertEquals("Hello World", jmsProducer.getStringProperty("JMS2_STRING_VAL"));
     }
 
-    private static void validateJMSProperties(javax.jms.Message message) throws JMSException {
+    private static void validateJMSProperties(jakarta.jms.Message message) throws JMSException {
         assertNotNull(message);
         assertEquals(Boolean.FALSE, Boolean.valueOf(message.getBooleanProperty("JMS2_BOOLEAN_MIN")));
         assertEquals(Boolean.TRUE, Boolean.valueOf(message.getBooleanProperty("JMS2_BOOLEAN_MAX")));

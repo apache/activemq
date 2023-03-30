@@ -18,7 +18,7 @@ package org.apache.activemq.jndi;
 
 import org.apache.activemq.ActiveMQXAConnectionFactory;
 
-import javax.jms.XAConnectionFactory;
+import jakarta.jms.XAConnectionFactory;
 import javax.naming.Context;
 import javax.naming.NamingException;
 

@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.transport.nio;
 
-import javax.jms.DeliveryMode;
+import jakarta.jms.DeliveryMode;
 
 import org.apache.activemq.broker.BrokerService;
 

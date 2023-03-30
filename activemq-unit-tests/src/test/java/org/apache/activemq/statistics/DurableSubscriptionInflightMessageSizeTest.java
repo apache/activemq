@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.statistics;
 
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
 
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
@@ -52,7 +52,7 @@ public class DurableSubscriptionInflightMessageSizeTest extends AbstractInflight
     }
 
     @Override
-    protected javax.jms.Topic getDestination(String destName) throws JMSException {
+    protected jakarta.jms.Topic getDestination(String destName) throws JMSException {
         return session.createTopic(destName);
     }
 

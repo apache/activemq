@@ -37,7 +37,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -148,8 +148,8 @@ public class JDBCConcurrentDLQTest {
 
                     try {
                         connection = amq.createConnection();
-                        connection.setExceptionListener(new javax.jms.ExceptionListener() {
-                            public void onException(javax.jms.JMSException e) {
+                        connection.setExceptionListener(new jakarta.jms.ExceptionListener() {
+                            public void onException(jakarta.jms.JMSException e) {
                                 e.printStackTrace();
                             }
                         });
@@ -204,8 +204,8 @@ public class JDBCConcurrentDLQTest {
     private void produceMessages(ActiveMQConnectionFactory amq, Destination dest, int numMessages) throws JMSException {
         Connection connection = amq.createConnection();
 
-        connection.setExceptionListener(new javax.jms.ExceptionListener() {
-            public void onException(javax.jms.JMSException e) {
+        connection.setExceptionListener(new jakarta.jms.ExceptionListener() {
+            public void onException(jakarta.jms.JMSException e) {
                 e.printStackTrace();
             }
         });

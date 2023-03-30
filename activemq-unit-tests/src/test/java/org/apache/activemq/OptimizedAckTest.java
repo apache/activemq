@@ -18,10 +18,10 @@ package org.apache.activemq;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
 
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -71,13 +71,13 @@ public class OptimizedAckTest extends TestSupport {
         }));
 
         for (int i = 0; i < 6; i++) {
-            javax.jms.Message msg = consumer.receive(4000);
+            jakarta.jms.Message msg = consumer.receive(4000);
             assertNotNull(msg);
             assertEquals("all prefetch is still in flight: " + i, 10, regionBroker.getDestinationStatistics().getInflight().getCount());
         }
 
         for (int i = 6; i < 10; i++) {
-            javax.jms.Message msg = consumer.receive(4000);
+            jakarta.jms.Message msg = consumer.receive(4000);
             assertNotNull(msg);
 
             assertTrue("most are acked but 3 remain", Wait.waitFor(new Wait.Condition() {
@@ -111,14 +111,14 @@ public class OptimizedAckTest extends TestSupport {
 
         for (int i = 0; i < 6; i++) {
             Thread.sleep(400);
-            javax.jms.Message msg = consumer.receive(4000);
+            jakarta.jms.Message msg = consumer.receive(4000);
             assertNotNull(msg);
             assertEquals("all prefetch is still in flight: " + i, 10, regionBroker.getDestinationStatistics().getInflight().getCount());
         }
 
         for (int i = 6; i < 10; i++) {
             Thread.sleep(400);
-            javax.jms.Message msg = consumer.receive(4000);
+            jakarta.jms.Message msg = consumer.receive(4000);
             assertNotNull(msg);
 
             assertTrue("most are acked but 3 remain", Wait.waitFor(new Wait.Condition() {
@@ -153,13 +153,13 @@ public class OptimizedAckTest extends TestSupport {
         }));
 
         for (int i = 0; i < 6; i++) {
-            javax.jms.Message msg = consumer.receive(4000);
+            jakarta.jms.Message msg = consumer.receive(4000);
             assertNotNull(msg);
             assertEquals("all prefetch is still in flight: " + i, 10, regionBroker.getDestinationStatistics().getInflight().getCount());
         }
 
         for (int i = 6; i < 10; i++) {
-            javax.jms.Message msg = consumer.receive(4000);
+            jakarta.jms.Message msg = consumer.receive(4000);
             assertNotNull(msg);
             assertTrue("most are acked but 3 remain", Wait.waitFor(new Wait.Condition() {
                 @Override

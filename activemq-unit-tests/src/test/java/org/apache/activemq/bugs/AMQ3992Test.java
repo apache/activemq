@@ -18,11 +18,11 @@ package org.apache.activemq.bugs;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-import javax.jms.Topic;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionFactory;

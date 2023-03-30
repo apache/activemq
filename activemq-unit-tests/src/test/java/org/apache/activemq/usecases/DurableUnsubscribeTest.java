@@ -18,9 +18,9 @@ package org.apache.activemq.usecases;
 
 import java.lang.management.ManagementFactory;
 
-import javax.jms.Connection;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 

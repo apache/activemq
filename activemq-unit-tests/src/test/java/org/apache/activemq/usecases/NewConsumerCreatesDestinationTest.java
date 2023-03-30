@@ -18,8 +18,8 @@ package org.apache.activemq.usecases;
 
 import java.util.Set;
 
-import javax.jms.Destination;
-import javax.jms.Session;
+import jakarta.jms.Destination;
+import jakarta.jms.Session;
 
 import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;

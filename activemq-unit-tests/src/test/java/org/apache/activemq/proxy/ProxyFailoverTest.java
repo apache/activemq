@@ -24,8 +24,8 @@ import org.apache.activemq.util.ProducerThread;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Session;
 import java.net.URI;
 
 public class ProxyFailoverTest extends TestCase {

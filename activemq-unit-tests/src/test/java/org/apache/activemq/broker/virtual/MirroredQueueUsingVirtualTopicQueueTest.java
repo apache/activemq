@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.broker.virtual;
 
-import javax.jms.Destination;
+import jakarta.jms.Destination;
 
 import org.apache.activemq.command.ActiveMQQueue;
 

@@ -20,7 +20,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 import junit.framework.TestCase;
 

@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.statistics;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
 
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Subscription;

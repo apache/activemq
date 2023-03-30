@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.perf;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.MapMessage;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 
 import junit.framework.TestCase;
 
@@ -40,8 +40,8 @@ public class InactiveQueueTest extends TestCase {
     private static final String DEFAULT_PASSWORD = "";
     private static final String USERNAME = "testuser";
     private static final String QUEUE_NAME = "testevent";
-    private static final int DELIVERY_MODE = javax.jms.DeliveryMode.PERSISTENT;
-    private static final int DELIVERY_PRIORITY = javax.jms.Message.DEFAULT_PRIORITY;
+    private static final int DELIVERY_MODE = jakarta.jms.DeliveryMode.PERSISTENT;
+    private static final int DELIVERY_PRIORITY = jakarta.jms.Message.DEFAULT_PRIORITY;
 
     ActiveMQConnectionFactory connectionFactory;
     BrokerService broker;
@@ -80,7 +80,7 @@ public class InactiveQueueTest extends TestCase {
         connection = connectionFactory.createConnection(USERNAME, DEFAULT_PASSWORD);
         assertNotNull(connection);
         connection.start();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         assertNotNull(session);
         destination = session.createQueue(QUEUE_NAME);
         assertNotNull(destination);

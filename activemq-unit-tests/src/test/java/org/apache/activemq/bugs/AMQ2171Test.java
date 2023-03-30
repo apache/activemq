@@ -18,8 +18,8 @@ package org.apache.activemq.bugs;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import javax.jms.*;
-import javax.jms.Queue;
+import jakarta.jms.*;
+import jakarta.jms.Queue;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;

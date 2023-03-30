@@ -17,15 +17,15 @@
 
 package org.apache.activemq;
 
-import javax.jms.BytesMessage;
-import javax.jms.MapMessage;
-import javax.jms.ObjectMessage;
-import javax.jms.Queue;
-import javax.jms.StreamMessage;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.MapMessage;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.Queue;
+import jakarta.jms.StreamMessage;
+import jakarta.jms.TemporaryQueue;
+import jakarta.jms.TemporaryTopic;
+import jakarta.jms.TextMessage;
+import jakarta.jms.Topic;
 
 import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQBytesMessage;

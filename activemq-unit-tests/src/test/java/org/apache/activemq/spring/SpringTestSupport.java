@@ -19,7 +19,7 @@ package org.apache.activemq.spring;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.jms.Message;
+import jakarta.jms.Message;
 
 import junit.framework.TestCase;
 
@@ -91,7 +91,7 @@ public class SpringTestSupport extends TestCase {
         }
 
         if (context != null) {
-            context.destroy();
+            context.close();
         }
     }
 }

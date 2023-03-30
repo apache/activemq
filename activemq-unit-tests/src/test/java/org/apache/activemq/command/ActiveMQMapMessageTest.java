@@ -28,10 +28,10 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
-import javax.jms.JMSException;
-import javax.jms.MessageFormatException;
-import javax.jms.MessageNotReadableException;
-import javax.jms.MessageNotWriteableException;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageFormatException;
+import jakarta.jms.MessageNotReadableException;
+import jakarta.jms.MessageNotWriteableException;
 
 import org.junit.Test;
 import org.slf4j.Logger;

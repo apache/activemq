@@ -19,7 +19,7 @@ package org.apache.activemq.bugs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnection;

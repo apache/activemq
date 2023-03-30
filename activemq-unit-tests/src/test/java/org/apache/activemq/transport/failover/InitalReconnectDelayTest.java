@@ -19,11 +19,11 @@ package org.apache.activemq.transport.failover;
 import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.jms.Connection;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.transport.TransportListener;
@@ -131,7 +131,7 @@ public class InitalReconnectDelayTest {
         try {
             producer.send(destination, message);
             fail("Expect IOException to bubble up on send");
-        } catch (javax.jms.IllegalStateException producerClosed) {
+        } catch (jakarta.jms.IllegalStateException producerClosed) {
         }
 
         assertEquals("Only an exception is reported to the listener", 0x1, calls.get());

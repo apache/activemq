@@ -18,9 +18,9 @@ package org.apache.activemq.command;
 
 import java.io.IOException;
 
-import javax.jms.JMSException;
-import javax.jms.MessageNotReadableException;
-import javax.jms.MessageNotWriteableException;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageNotReadableException;
+import jakarta.jms.MessageNotWriteableException;
 
 import junit.framework.TestCase;
 

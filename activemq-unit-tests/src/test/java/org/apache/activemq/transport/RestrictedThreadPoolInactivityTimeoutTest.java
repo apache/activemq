@@ -26,7 +26,7 @@ import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 import javax.management.JMException;
 import javax.management.ObjectName;
 import java.net.URI;

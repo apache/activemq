@@ -30,7 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -151,7 +151,7 @@ public class AMQ2149Test {
     HashSet<Connection> connections = new HashSet<Connection>();
     private class Receiver implements MessageListener {
 
-        private final javax.jms.Destination dest;
+        private final jakarta.jms.Destination dest;
 
         private final Connection connection;
 
@@ -165,7 +165,7 @@ public class AMQ2149Test {
 
         private String lastId = null;
 
-        public Receiver(javax.jms.Destination dest, boolean transactional) throws JMSException {
+        public Receiver(jakarta.jms.Destination dest, boolean transactional) throws JMSException {
             this.dest = dest;
             this.transactional = transactional;
             ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);
@@ -261,7 +261,7 @@ public class AMQ2149Test {
 
     private class Sender implements Runnable {
 
-        private final javax.jms.Destination dest;
+        private final jakarta.jms.Destination dest;
 
         private final Connection connection;
 
@@ -271,7 +271,7 @@ public class AMQ2149Test {
 
         private volatile long nextSequenceNumber = 0;
 
-        public Sender(javax.jms.Destination dest) throws JMSException {
+        public Sender(jakarta.jms.Destination dest) throws JMSException {
             this.dest = dest;
             ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(brokerURL);
             activeMQConnectionFactory.setWatchTopicAdvisories(false);
@@ -297,7 +297,7 @@ public class AMQ2149Test {
                         LOG.info(dest + " sent " + nextSequenceNumber);
                     }
 
-                } catch (javax.jms.IllegalStateException e) {
+                } catch (jakarta.jms.IllegalStateException e) {
                     LOG.error(dest + " bailing on send error", e);
                     exceptions.add(e);
                     break;
@@ -327,7 +327,7 @@ public class AMQ2149Test {
             }
         });
 
-        final javax.jms.Destination destination =
+        final jakarta.jms.Destination destination =
                 ActiveMQDestination.createDestination("test.dest.X", ActiveMQDestination.QUEUE_TYPE);
         Thread thread = new Thread(new Sender(destination));
         thread.start();
@@ -546,7 +546,7 @@ public class AMQ2149Test {
         Vector<Receiver> receivers = new Vector<Receiver>();
         
         for (int i = 0; i < concurrentPairs; ++i) {
-            final javax.jms.Destination destination =
+            final jakarta.jms.Destination destination =
                     ActiveMQDestination.createDestination("test.dest." + i, destinationType);
             receivers.add(new Receiver(destination, transactional));
             Thread thread = new Thread(new Sender(destination));

@@ -26,7 +26,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.network.ConditionalNetworkBridgeFilterFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.net.URI;
 
 /**

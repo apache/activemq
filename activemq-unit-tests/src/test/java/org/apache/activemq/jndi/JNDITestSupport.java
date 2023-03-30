@@ -18,9 +18,9 @@ package org.apache.activemq.jndi;
 
 import java.util.Hashtable;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.JMSException;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
 import javax.naming.Binding;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;

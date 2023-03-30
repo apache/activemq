@@ -17,7 +17,7 @@
 
 package org.apache.activemq.broker;
 
-import javax.jms.InvalidClientIDException;
+import jakarta.jms.InvalidClientIDException;
 import java.util.LinkedList;
 import org.apache.activemq.command.ConnectionInfo;
 

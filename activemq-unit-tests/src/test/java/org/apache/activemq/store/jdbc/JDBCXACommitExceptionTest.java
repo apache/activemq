@@ -17,13 +17,13 @@
 
 package org.apache.activemq.store.jdbc;
 
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.XAConnection;
-import javax.jms.XASession;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.XAConnection;
+import jakarta.jms.XASession;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 import javax.transaction.xa.XAException;
@@ -366,7 +366,7 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
         ActiveMQConnectionFactory nonTxFactory = new ActiveMQConnectionFactory(connectionUri);
 
         for (int i = 0; i < 10; i++) {
-            javax.jms.Connection connection = nonTxFactory.createConnection();
+            jakarta.jms.Connection connection = nonTxFactory.createConnection();
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 

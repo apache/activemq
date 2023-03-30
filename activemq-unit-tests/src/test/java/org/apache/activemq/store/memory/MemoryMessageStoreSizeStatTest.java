@@ -19,7 +19,7 @@ package org.apache.activemq.store.memory;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;

@@ -18,8 +18,8 @@ package org.apache.activemq.security;
 
 import java.net.URI;
 
-import javax.jms.Connection;
-import javax.jms.JMSSecurityException;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSSecurityException;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;

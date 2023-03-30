@@ -18,11 +18,11 @@ package org.apache.activemq.usecases;
 
 import java.net.URI;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicSubscriber;
 
 import javax.management.ObjectName;
 

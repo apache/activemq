@@ -38,7 +38,7 @@ import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import java.io.File;
@@ -207,7 +207,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
     }
 
-    private ProducerThreadTester createProducerTester(String brokerName, javax.jms.Destination destination) throws Exception {
+    private ProducerThreadTester createProducerTester(String brokerName, jakarta.jms.Destination destination) throws Exception {
         BrokerItem brokerItem = brokers.get(brokerName);
 
         Connection conn = brokerItem.createConnection();
@@ -711,7 +711,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         private Random rand = new Random(System.currentTimeMillis());
 
 
-        public ProducerThreadTester(Session session, javax.jms.Destination destination) {
+        public ProducerThreadTester(Session session, jakarta.jms.Destination destination) {
             super(session, destination);
         }
 

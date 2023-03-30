@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.annotation.Resource;
-import javax.jms.*;
+import jakarta.annotation.Resource;
+import jakarta.jms.*;
 import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertEquals;

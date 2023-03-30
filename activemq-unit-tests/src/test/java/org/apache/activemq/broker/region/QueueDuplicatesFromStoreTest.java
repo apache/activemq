@@ -24,7 +24,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.InvalidSelectorException;
+import jakarta.jms.InvalidSelectorException;
 import javax.management.ObjectName;
 
 import junit.framework.TestCase;

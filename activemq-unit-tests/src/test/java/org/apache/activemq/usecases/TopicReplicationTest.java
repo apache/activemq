@@ -20,8 +20,8 @@ import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.util.MessageIdList;
 import org.springframework.core.io.ClassPathResource;
 
-import javax.jms.Destination;
-import javax.jms.MessageConsumer;
+import jakarta.jms.Destination;
+import jakarta.jms.MessageConsumer;
 
 public class TopicReplicationTest extends JmsMultipleBrokersTestSupport {
 

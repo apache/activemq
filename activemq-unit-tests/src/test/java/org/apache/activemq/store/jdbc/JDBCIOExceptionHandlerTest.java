@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 import javax.management.*;
 import javax.management.loading.ClassLoaderRepository;
 import javax.management.remote.JMXConnectorServer;

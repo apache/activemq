@@ -19,8 +19,8 @@ package org.apache.activemq.usecases;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;

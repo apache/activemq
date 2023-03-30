@@ -21,7 +21,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.MessageIdList;
 
-import javax.jms.MessageConsumer;
+import jakarta.jms.MessageConsumer;
 import java.net.URI;
 
 public class StaticNetworkTest extends JmsMultipleBrokersTestSupport {
