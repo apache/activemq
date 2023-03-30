@@ -20,7 +20,7 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.jms.Message;
+import jakarta.jms.Message;
 import javax.management.AttributeList;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;

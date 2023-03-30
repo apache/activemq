@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javax.jms.Destination;
+import jakarta.jms.Destination;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -47,7 +47,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
         "    --amqurl <url>                Set the broker URL to connect to. Default tcp://localhost:61616",
         "    --msgsel <msgsel1,msglsel2>   Add to the search list messages matched by the query similar to",
         "                                  the messages selector format.",
-        "    --factory <className>         Load className as the javax.jms.ConnectionFactory to use for creating connections.",
+        "    --factory <className>         Load className as the jakarta.jms.ConnectionFactory to use for creating connections.",
         "    --passwordFactory <className> Load className as the org.apache.activemq.console.command.PasswordFactory",
         "                                  for retrieving the password from a keystore.",
         "    --user <username>             Username to use for JMS connections.",

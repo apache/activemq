@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Arrays;
 
-import javax.jms.Message;
+import jakarta.jms.Message;
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.ObjectInstance;

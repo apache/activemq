@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 

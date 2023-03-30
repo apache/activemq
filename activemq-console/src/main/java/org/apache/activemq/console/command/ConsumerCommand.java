@@ -22,8 +22,8 @@ import org.apache.activemq.util.ConsumerThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Session;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
