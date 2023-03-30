@@ -19,7 +19,7 @@ package org.apache.activemq.tool;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.tool.properties.JmsClientProperties;

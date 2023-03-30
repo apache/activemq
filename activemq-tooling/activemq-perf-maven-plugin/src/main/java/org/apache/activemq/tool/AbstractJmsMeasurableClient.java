@@ -18,7 +18,7 @@ package org.apache.activemq.tool;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 
 import org.apache.activemq.tool.sampler.MeasurableClient;
 

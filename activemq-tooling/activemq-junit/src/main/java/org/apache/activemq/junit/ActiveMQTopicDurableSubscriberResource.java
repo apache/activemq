@@ -17,8 +17,8 @@
 package org.apache.activemq.junit;
 
 import java.net.URI;
-import javax.jms.JMSException;
-import javax.jms.Topic;
+import jakarta.jms.JMSException;
+import jakarta.jms.Topic;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQDestination;

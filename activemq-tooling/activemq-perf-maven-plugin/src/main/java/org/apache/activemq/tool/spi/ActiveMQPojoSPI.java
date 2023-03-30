@@ -18,7 +18,7 @@ package org.apache.activemq.tool.spi;
 
 import java.util.Properties;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 

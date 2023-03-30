@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.tool;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.tool.properties.JmsClientProperties;
 import org.apache.activemq.tool.properties.JmsClientSystemProperties;
