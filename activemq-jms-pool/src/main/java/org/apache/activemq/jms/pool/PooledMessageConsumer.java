@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.jms.pool;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
 
 /**
  * A {@link MessageConsumer} which was created by {@link PooledSession}.

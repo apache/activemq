@@ -17,8 +17,8 @@
 
 package org.apache.activemq.jms.pool;
 
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
+import jakarta.jms.TemporaryQueue;
+import jakarta.jms.TemporaryTopic;
 
 interface PooledSessionEventListener {
 

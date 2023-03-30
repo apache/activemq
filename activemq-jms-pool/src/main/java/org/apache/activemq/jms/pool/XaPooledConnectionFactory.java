@@ -19,16 +19,16 @@ package org.apache.activemq.jms.pool;
 import java.io.Serializable;
 import java.util.Hashtable;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.XAConnectionFactory;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
+import jakarta.jms.XAConnectionFactory;
 import javax.naming.Binding;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.NamingEnumeration;
 import javax.naming.spi.ObjectFactory;
-import javax.transaction.TransactionManager;
+import jakarta.transaction.TransactionManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +81,7 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
                 return ((XAConnectionFactory) connectionFactory).createXAConnection(key.getUserName(), key.getPassword());
             }
         } else {
-            throw new IllegalStateException("connectionFactory should implement javax.jms.XAConnectionFactory");
+            throw new IllegalStateException("connectionFactory should implement jakarta.jms.XAConnectionFactory");
         }
     }
 

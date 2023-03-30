@@ -16,7 +16,7 @@
 package org.apache.activemq.pool;
 
 import java.io.IOException;
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.jms.pool.ConnectionPool;
 import org.apache.activemq.jms.pool.JcaConnectionPool;

@@ -22,8 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -116,7 +116,7 @@ public class ConnectionExpiryEvictsFromPoolTest extends JmsPoolTestSupport {
         try {
             // any operation on session first checks whether session is closed
             s.getTransacted();
-        } catch (javax.jms.IllegalStateException e) {
+        } catch (jakarta.jms.IllegalStateException e) {
             assertTrue("Session should be fine, instead: " + e.getMessage(), false);
         }
 

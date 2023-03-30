@@ -21,14 +21,14 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSException;
+import jakarta.jms.QueueConnection;
+import jakarta.jms.QueueConnectionFactory;
+import jakarta.jms.TopicConnection;
+import jakarta.jms.TopicConnectionFactory;
 
 import org.apache.commons.pool2.KeyedPooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -181,7 +181,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
         if (toUse instanceof ConnectionFactory) {
             this.connectionFactory = toUse;
         } else {
-            throw new IllegalArgumentException("connectionFactory should implement javax.jms.ConnectionFactory");
+            throw new IllegalArgumentException("connectionFactory should implement jakarta.jms.ConnectionFactory");
         }
     }
 
@@ -323,7 +323,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
                 return ((ConnectionFactory) connectionFactory).createConnection(key.getUserName(), key.getPassword());
             }
         } else {
-            throw new IllegalStateException("connectionFactory should implement javax.jms.ConnectionFactory");
+            throw new IllegalStateException("connectionFactory should implement jakarta.jms.ConnectionFactory");
         }
     }
 

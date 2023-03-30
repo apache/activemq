@@ -18,15 +18,15 @@ package org.apache.activemq.jms.pool;
 
 import java.util.concurrent.Executors;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TemporaryQueue;
-import javax.jms.TextMessage;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TemporaryQueue;
+import jakarta.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.junit.Test;
@@ -102,7 +102,7 @@ public class PooledConnectionTempQueueTest extends JmsPoolTestSupport {
         Connection con = connectionFactory.createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(session.createQueue(queueName));
-        final javax.jms.Message inMessage = consumer.receive();
+        final jakarta.jms.Message inMessage = consumer.receive();
 
         String requestMessageId = inMessage.getJMSMessageID();
         LOG.debug("Received message " + requestMessageId);

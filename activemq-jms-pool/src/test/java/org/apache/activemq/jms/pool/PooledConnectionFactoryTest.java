@@ -25,11 +25,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.Session;
-import javax.jms.TopicConnectionFactory;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
+import jakarta.jms.QueueConnectionFactory;
+import jakarta.jms.Session;
+import jakarta.jms.TopicConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;

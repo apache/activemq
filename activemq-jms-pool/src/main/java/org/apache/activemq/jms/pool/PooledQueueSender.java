@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.jms.pool;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.Queue;
-import javax.jms.QueueSender;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueSender;
 
 /**
  * {@link QueueSender} instance that is created and managed by the PooledConnection.
