@@ -21,11 +21,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URI;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Session;
-import javax.resource.ResourceException;
-import javax.resource.spi.ManagedConnection;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.Session;
+import jakarta.resource.ResourceException;
+import jakarta.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
@@ -59,7 +59,7 @@ public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
     @Override
     protected void setUp() throws Exception {
         LOG.info("Starting ----------------------------> {}", this.getName());
-        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.lang,java.util,org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper");
         super.setUp();
     }
 
@@ -103,7 +103,7 @@ public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
     /**
      * Recreates the connection.
      *
-     * @throws javax.jms.JMSException
+     * @throws jakarta.jms.JMSException
      */
     @Override
     protected void reconnect() throws Exception {

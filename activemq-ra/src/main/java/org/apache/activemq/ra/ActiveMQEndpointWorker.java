@@ -19,21 +19,21 @@ package org.apache.activemq.ra;
 import java.lang.reflect.Method;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.jms.Connection;
-import javax.jms.ConnectionConsumer;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Session;
-import javax.jms.Topic;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionConsumer;
+import jakarta.jms.ExceptionListener;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.resource.ResourceException;
-import javax.resource.spi.endpoint.MessageEndpointFactory;
-import javax.resource.spi.work.Work;
-import javax.resource.spi.work.WorkException;
-import javax.resource.spi.work.WorkManager;
+import jakarta.resource.ResourceException;
+import jakarta.resource.spi.endpoint.MessageEndpointFactory;
+import jakarta.resource.spi.work.Work;
+import jakarta.resource.spi.work.WorkException;
+import jakarta.resource.spi.work.WorkManager;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionConsumer;
@@ -212,10 +212,10 @@ public class ActiveMQEndpointWorker {
             }
         }
         else {
-            if ("javax.jms.Queue".equals(activationSpec.getDestinationType())) {
+            if ("jakarta.jms.Queue".equals(activationSpec.getDestinationType())) {
                 dest = new ActiveMQQueue(activationSpec.getDestination());
             }
-            else if ("javax.jms.Topic".equals(activationSpec.getDestinationType())) {
+            else if ("jakarta.jms.Topic".equals(activationSpec.getDestinationType())) {
                 dest = new ActiveMQTopic(activationSpec.getDestination());
             }
             else {

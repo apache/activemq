@@ -21,13 +21,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.resource.spi.ManagedConnection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
@@ -37,6 +38,7 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.JmsQueueTransactionTest;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.ClassLoadingAwareObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +52,7 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
 
     @Override
     protected void setUp() throws Exception {
-        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.lang,java.util,org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper");
         super.setUp();
     }
 
@@ -78,7 +80,7 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
     /**
      * Recreates the connection.
      *
-     * @throws javax.jms.JMSException
+     * @throws jakarta.jms.JMSException
      */
     @Override
     protected void reconnect() throws Exception {

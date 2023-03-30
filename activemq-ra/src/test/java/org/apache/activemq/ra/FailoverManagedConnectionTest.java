@@ -18,7 +18,7 @@ package org.apache.activemq.ra;
 
 import java.util.HashSet;
 
-import javax.resource.spi.ManagedConnection;
+import jakarta.resource.spi.ManagedConnection;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;

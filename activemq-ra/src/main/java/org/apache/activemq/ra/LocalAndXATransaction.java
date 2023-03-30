@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.ra;
 
-import javax.jms.JMSException;
-import javax.resource.ResourceException;
-import javax.resource.spi.LocalTransaction;
+import jakarta.jms.JMSException;
+import jakarta.resource.ResourceException;
+import jakarta.resource.spi.LocalTransaction;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;

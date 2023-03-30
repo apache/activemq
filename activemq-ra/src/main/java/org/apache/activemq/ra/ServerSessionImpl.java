@@ -18,18 +18,18 @@ package org.apache.activemq.ra;
 
 import java.lang.reflect.Method;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.ServerSession;
-import javax.jms.Session;
-import javax.resource.spi.endpoint.MessageEndpoint;
-import javax.resource.spi.work.Work;
-import javax.resource.spi.work.WorkEvent;
-import javax.resource.spi.work.WorkException;
-import javax.resource.spi.work.WorkListener;
-import javax.resource.spi.work.WorkManager;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.ServerSession;
+import jakarta.jms.Session;
+import jakarta.resource.spi.endpoint.MessageEndpoint;
+import jakarta.resource.spi.work.Work;
+import jakarta.resource.spi.work.WorkEvent;
+import jakarta.resource.spi.work.WorkException;
+import jakarta.resource.spi.work.WorkListener;
+import jakarta.resource.spi.work.WorkManager;
 
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.ActiveMQSession.DeliveryListener;
@@ -115,7 +115,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     }
 
     /**
-     * @see javax.jms.ServerSession#start()
+     * @see jakarta.jms.ServerSession#start()
      */
     public void start() throws JMSException {
 

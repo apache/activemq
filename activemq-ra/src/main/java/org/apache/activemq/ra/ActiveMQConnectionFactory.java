@@ -18,18 +18,18 @@ package org.apache.activemq.ra;
 
 import java.io.Serializable;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSException;
+import jakarta.jms.QueueConnection;
+import jakarta.jms.QueueConnectionFactory;
+import jakarta.jms.TopicConnection;
+import jakarta.jms.TopicConnectionFactory;
 import javax.naming.Reference;
-import javax.resource.Referenceable;
-import javax.resource.ResourceException;
-import javax.resource.spi.ConnectionManager;
+import jakarta.resource.Referenceable;
+import jakarta.resource.ResourceException;
+import jakarta.resource.spi.ConnectionManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,14 +62,14 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
     }
 
     /**
-     * @see javax.jms.ConnectionFactory#createConnection()
+     * @see jakarta.jms.ConnectionFactory#createConnection()
      */
     public Connection createConnection() throws JMSException {
         return createConnection(info.copy());
     }
 
     /**
-     * @see javax.jms.ConnectionFactory#createConnection(java.lang.String,
+     * @see jakarta.jms.ConnectionFactory#createConnection(java.lang.String,
      *      java.lang.String)
      */
     public Connection createConnection(String userName, String password) throws JMSException {

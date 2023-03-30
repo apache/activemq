@@ -18,10 +18,10 @@ package org.apache.activemq.ra;
 
 import java.lang.reflect.Method;
 
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.resource.ResourceException;
-import javax.resource.spi.endpoint.MessageEndpoint;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
+import jakarta.resource.ResourceException;
+import jakarta.resource.spi.endpoint.MessageEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

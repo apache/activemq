@@ -19,8 +19,8 @@ package org.apache.activemq.ra;
 
 import org.apache.activemq.RedeliveryPolicy;
 
-import javax.resource.spi.ResourceAdapter;
-import javax.resource.spi.ActivationSpec;
+import jakarta.resource.spi.ResourceAdapter;
+import jakarta.resource.spi.ActivationSpec;
 import java.util.List;
 
 /**

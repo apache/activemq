@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.ra;
 
-import javax.resource.spi.ConnectionEvent;
-import javax.resource.spi.ConnectionEventListener;
+import jakarta.resource.spi.ConnectionEvent;
+import jakarta.resource.spi.ConnectionEventListener;
 
 public class ConnectionEventListenerAdapter implements ConnectionEventListener {
 
