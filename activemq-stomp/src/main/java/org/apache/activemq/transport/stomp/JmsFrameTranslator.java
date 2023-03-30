@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerContext;

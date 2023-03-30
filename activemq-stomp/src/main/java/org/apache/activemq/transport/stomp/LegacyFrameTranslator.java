@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;

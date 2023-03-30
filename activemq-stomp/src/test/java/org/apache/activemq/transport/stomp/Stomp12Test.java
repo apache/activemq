@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.util.Wait;

@@ -18,7 +18,7 @@ package org.apache.activemq.transport.stomp;
 
 import java.io.IOException;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.command.Command;

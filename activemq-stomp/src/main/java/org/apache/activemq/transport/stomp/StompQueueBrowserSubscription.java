@@ -19,7 +19,7 @@ package org.apache.activemq.transport.stomp;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
