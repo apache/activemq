@@ -18,8 +18,8 @@ package org.apache.activemq.broker;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.jms.Connection;
-import javax.jms.InvalidClientIDException;
+import jakarta.jms.Connection;
+import jakarta.jms.InvalidClientIDException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ConnectionInfo;

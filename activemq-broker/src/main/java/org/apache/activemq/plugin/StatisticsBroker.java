@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.advisory.AdvisorySupport;
@@ -285,7 +285,7 @@ public class StatisticsBroker extends BrokerFilter {
             throws Exception {
         msg.setPersistent(false);
         msg.setTimestamp(System.currentTimeMillis());
-        msg.setPriority((byte) javax.jms.Message.DEFAULT_PRIORITY);
+        msg.setPriority((byte) jakarta.jms.Message.DEFAULT_PRIORITY);
         msg.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
         msg.setMessageId(new MessageId(this.advisoryProducerId, this.messageIdGenerator.getNextSequenceId()));
         msg.setDestination(replyTo);

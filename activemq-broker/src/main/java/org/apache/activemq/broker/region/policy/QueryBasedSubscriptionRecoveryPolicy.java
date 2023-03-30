@@ -17,9 +17,9 @@
 package org.apache.activemq.broker.region.policy;
 
 import java.util.concurrent.atomic.AtomicLong;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
 import org.apache.activemq.ActiveMQMessageTransformation;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;

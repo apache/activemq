@@ -16,17 +16,17 @@
  */
 package org.apache.activemq.test;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionConsumer;
-import javax.jms.ConnectionFactory;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.ServerSessionPool;
-import javax.jms.Session;
-import javax.jms.Topic;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionConsumer;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.ServerSessionPool;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
@@ -55,7 +55,7 @@ public class JmsResourceProvider {
     /**
      * Creates a connection.
      * 
-     * @see org.apache.activemq.test.JmsResourceProvider#createConnection(javax.jms.ConnectionFactory)
+     * @see org.apache.activemq.test.JmsResourceProvider#createConnection(jakarta.jms.ConnectionFactory)
      */
     public Connection createConnection(ConnectionFactory cf) throws JMSException {
         Connection connection = cf.createConnection();
@@ -66,15 +66,15 @@ public class JmsResourceProvider {
     }
 
     /**
-     * @see org.apache.activemq.test.JmsResourceProvider#createSession(javax.jms.Connection)
+     * @see org.apache.activemq.test.JmsResourceProvider#createSession(jakarta.jms.Connection)
      */
     public Session createSession(Connection conn) throws JMSException {
         return conn.createSession(transacted, ackMode);
     }
 
     /**
-     * @see org.apache.activemq.test.JmsResourceProvider#createConsumer(javax.jms.Session,
-     *      javax.jms.Destination)
+     * @see org.apache.activemq.test.JmsResourceProvider#createConsumer(jakarta.jms.Session,
+     *      jakarta.jms.Destination)
      */
     public MessageConsumer createConsumer(Session session, Destination destination) throws JMSException {
         if (isDurableSubscriber()) {
@@ -96,8 +96,8 @@ public class JmsResourceProvider {
     /**
      * Creates a producer.
      * 
-     * @see org.apache.activemq.test.JmsResourceProvider#createProducer(javax.jms.Session,
-     *      javax.jms.Destination)
+     * @see org.apache.activemq.test.JmsResourceProvider#createProducer(jakarta.jms.Session,
+     *      jakarta.jms.Destination)
      */
     public MessageProducer createProducer(Session session, Destination destination) throws JMSException {
         MessageProducer producer = session.createProducer(destination);
@@ -108,7 +108,7 @@ public class JmsResourceProvider {
     /**
      * Creates a destination, which can either a topic or a queue.
      * 
-     * @see org.apache.activemq.test.JmsResourceProvider#createDestination(javax.jms.Session,
+     * @see org.apache.activemq.test.JmsResourceProvider#createDestination(jakarta.jms.Session,
      *      java.lang.String)
      */
     public Destination createDestination(Session session, String name) throws JMSException {

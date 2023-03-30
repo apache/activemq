@@ -26,8 +26,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
+import jakarta.jms.InvalidSelectorException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;

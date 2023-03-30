@@ -19,7 +19,7 @@ package org.apache.activemq.broker.jmx;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.jms.InvalidSelectorException;
+import jakarta.jms.InvalidSelectorException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.BrokerService;

@@ -20,7 +20,7 @@ import java.util.Map;
 
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Queue;

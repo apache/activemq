@@ -28,8 +28,8 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
+import jakarta.jms.InvalidDestinationException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;

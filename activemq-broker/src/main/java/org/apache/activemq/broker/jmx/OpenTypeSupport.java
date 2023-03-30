@@ -27,8 +27,8 @@ import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.fusesource.hawtbuf.UTF8Buffer;
 
-import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.JMSException;
 import javax.management.openmbean.ArrayType;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;

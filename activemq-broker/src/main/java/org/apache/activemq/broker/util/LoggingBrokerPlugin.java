@@ -18,7 +18,7 @@ package org.apache.activemq.broker.util;
 
 import java.util.Set;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.Connection;

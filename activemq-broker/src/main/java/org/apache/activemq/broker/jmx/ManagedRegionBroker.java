@@ -24,8 +24,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import javax.jms.IllegalStateException;
-import javax.jms.JMSException;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.JMSException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;

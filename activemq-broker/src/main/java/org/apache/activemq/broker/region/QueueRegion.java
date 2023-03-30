@@ -19,7 +19,7 @@ package org.apache.activemq.broker.region;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;

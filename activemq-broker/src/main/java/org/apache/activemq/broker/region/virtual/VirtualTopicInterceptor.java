@@ -34,7 +34,7 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.LRUCache;
 
-import javax.jms.ResourceAllocationException;
+import jakarta.jms.ResourceAllocationException;
 
 /**
  * A Destination which implements <a href="https://activemq.apache.org/virtual-destinations">Virtual Topic</a>
