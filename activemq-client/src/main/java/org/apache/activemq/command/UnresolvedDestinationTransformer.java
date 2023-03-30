@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.command;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
 
 public interface UnresolvedDestinationTransformer {
 

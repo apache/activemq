@@ -17,7 +17,7 @@
 package org.apache.activemq;
 
 import java.util.List;
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import org.apache.activemq.command.MessageDispatch;
 
 public interface MessageDispatchChannel {

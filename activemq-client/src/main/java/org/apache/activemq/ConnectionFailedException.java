@@ -18,7 +18,7 @@ package org.apache.activemq;
 
 import java.io.IOException;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 /**
  * An exception thrown when the a connection failure is detected (peer might

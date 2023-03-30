@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.jms.MessageFormatException;
+import jakarta.jms.MessageFormatException;
 
 public class CronParser {
 

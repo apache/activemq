@@ -18,8 +18,8 @@ package org.apache.activemq.advisory;
 
 import java.util.ArrayList;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.ActiveMQMessageTransformation;
 import org.apache.activemq.command.ActiveMQDestination;

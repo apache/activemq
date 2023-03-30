@@ -17,13 +17,13 @@
 
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import javax.jms.QueueSession;
-import javax.jms.Session;
-import javax.jms.TopicSession;
-import javax.jms.TransactionInProgressException;
-import javax.jms.XAQueueSession;
-import javax.jms.XATopicSession;
+import jakarta.jms.JMSException;
+import jakarta.jms.QueueSession;
+import jakarta.jms.Session;
+import jakarta.jms.TopicSession;
+import jakarta.jms.TransactionInProgressException;
+import jakarta.jms.XAQueueSession;
+import jakarta.jms.XATopicSession;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.command.SessionId;
@@ -57,10 +57,10 @@ import org.apache.activemq.command.SessionId;
  * than use these XA  interfaces directly.
  *
  * 
- * @see javax.jms.Session
- * @see javax.jms.QueueSession
- * @see javax.jms.TopicSession
- * @see javax.jms.XASession
+ * @see jakarta.jms.Session
+ * @see jakarta.jms.QueueSession
+ * @see jakarta.jms.TopicSession
+ * @see jakarta.jms.XASession
  */
 public class ActiveMQXASession extends ActiveMQSession implements QueueSession, TopicSession, XAQueueSession, XATopicSession {
 

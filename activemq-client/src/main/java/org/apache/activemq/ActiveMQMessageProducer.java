@@ -20,12 +20,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.CompletionListener;
-import javax.jms.Destination;
-import javax.jms.IllegalStateException;
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
-import javax.jms.Message;
+import jakarta.jms.CompletionListener;
+import jakarta.jms.Destination;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.InvalidDestinationException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerAck;
@@ -67,9 +67,9 @@ import org.slf4j.LoggerFactory;
  * JMS API does not define the accuracy provided.
  *
  *
- * @see javax.jms.TopicPublisher
- * @see javax.jms.QueueSender
- * @see javax.jms.Session#createProducer
+ * @see jakarta.jms.TopicPublisher
+ * @see jakarta.jms.QueueSender
+ * @see jakarta.jms.Session#createProducer
  */
 public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport implements StatsCapable, Disposable {
 
@@ -216,7 +216,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      *                 specified.
      * @throws InvalidDestinationException if a client uses this method with an
      *                 invalid destination.
-     * @see javax.jms.Session#createProducer
+     * @see jakarta.jms.Session#createProducer
      * @since 1.1
      */
     @Override
@@ -234,7 +234,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      *                 specified.
      * @throws InvalidDestinationException if a client uses this method with an
      *                 invalid destination.
-     * @see javax.jms.Session#createProducer
+     * @see jakarta.jms.Session#createProducer
      * @since 2.0
      */
     @Override

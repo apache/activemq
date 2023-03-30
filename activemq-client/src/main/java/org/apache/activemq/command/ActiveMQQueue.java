@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.command;
 
-import javax.jms.JMSException;
-import javax.jms.Queue;
+import jakarta.jms.JMSException;
+import jakarta.jms.Queue;
 
 /**
  * 

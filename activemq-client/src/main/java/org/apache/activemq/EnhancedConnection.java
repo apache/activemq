@@ -17,9 +17,9 @@
  */
 package org.apache.activemq;
 
-import javax.jms.TopicConnection;
-import javax.jms.QueueConnection;
-import javax.jms.JMSException;
+import jakarta.jms.TopicConnection;
+import jakarta.jms.QueueConnection;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.advisory.DestinationSource;
 

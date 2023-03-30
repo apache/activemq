@@ -27,12 +27,12 @@ import java.io.OutputStream;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-import javax.jms.JMSException;
-import javax.jms.MessageEOFException;
-import javax.jms.MessageFormatException;
-import javax.jms.MessageNotReadableException;
-import javax.jms.MessageNotWriteableException;
-import javax.jms.StreamMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageEOFException;
+import jakarta.jms.MessageFormatException;
+import jakarta.jms.MessageNotReadableException;
+import jakarta.jms.MessageNotWriteableException;
+import jakarta.jms.StreamMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.util.ByteArrayInputStream;
@@ -102,12 +102,12 @@ import org.apache.activemq.util.MarshallingSupport;
  * as a <code>char</code> must throw a <code>NullPointerException</code>.
  *
  * @openwire:marshaller code="27"
- * @see javax.jms.Session#createStreamMessage()
- * @see javax.jms.BytesMessage
- * @see javax.jms.MapMessage
- * @see javax.jms.Message
- * @see javax.jms.ObjectMessage
- * @see javax.jms.TextMessage
+ * @see jakarta.jms.Session#createStreamMessage()
+ * @see jakarta.jms.BytesMessage
+ * @see jakarta.jms.MapMessage
+ * @see jakarta.jms.Message
+ * @see jakarta.jms.ObjectMessage
+ * @see jakarta.jms.TextMessage
  */
 public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMessage {
 

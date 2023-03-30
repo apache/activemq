@@ -18,7 +18,7 @@ package org.apache.activemq.blob;
 
 import java.io.IOException;
 import java.io.InputStream;
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 
 

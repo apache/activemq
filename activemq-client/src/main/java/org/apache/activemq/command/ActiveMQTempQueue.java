@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.command;
 
-import javax.jms.JMSException;
-import javax.jms.TemporaryQueue;
+import jakarta.jms.JMSException;
+import jakarta.jms.TemporaryQueue;
 
 /**
  * @org.apache.xbean.XBean element="tempQueue" description="An ActiveMQ Temporary Queue Destination"

@@ -190,7 +190,7 @@ public class FunctionCallExpression implements Expression {
      */
 
     public Object evaluate(MessageEvaluationContext message_ctx)
-            throws javax.jms.JMSException {
+            throws jakarta.jms.JMSException {
         return this.filterFunc.evaluate(this, message_ctx);
     }
 

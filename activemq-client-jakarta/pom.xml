@@ -26,6 +26,9 @@
     <packaging>bundle</packaging>
     <name>ActiveMQ :: Client Jakarta</name>
     <description>Jakarta transition module for ActiveMQ Client implementation</description>
+    <properties>
+      <maven.javadoc.skip>true</maven.javadoc.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.activemq</groupId>

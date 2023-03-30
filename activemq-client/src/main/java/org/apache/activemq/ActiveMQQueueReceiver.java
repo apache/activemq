@@ -16,9 +16,9 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import javax.jms.Queue;
-import javax.jms.QueueReceiver;
+import jakarta.jms.JMSException;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueReceiver;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
@@ -45,11 +45,11 @@ import org.apache.activemq.command.ConsumerId;
  * </CODE>
  * is provided to support existing code.
  *
- * @see javax.jms.Session#createConsumer(javax.jms.Destination, String)
- * @see javax.jms.Session#createConsumer(javax.jms.Destination)
- * @see javax.jms.QueueSession#createReceiver(Queue, String)
- * @see javax.jms.QueueSession#createReceiver(Queue)
- * @see javax.jms.MessageConsumer
+ * @see jakarta.jms.Session#createConsumer(jakarta.jms.Destination, String)
+ * @see jakarta.jms.Session#createConsumer(jakarta.jms.Destination)
+ * @see jakarta.jms.QueueSession#createReceiver(Queue, String)
+ * @see jakarta.jms.QueueSession#createReceiver(Queue)
+ * @see jakarta.jms.MessageConsumer
  */
 public class ActiveMQQueueReceiver extends ActiveMQMessageConsumer implements QueueReceiver {
 

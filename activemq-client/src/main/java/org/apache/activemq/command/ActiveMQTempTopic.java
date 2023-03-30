@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.command;
 
-import javax.jms.JMSException;
-import javax.jms.TemporaryTopic;
+import jakarta.jms.JMSException;
+import jakarta.jms.TemporaryTopic;
 
 /**
  * @org.apache.xbean.XBean element="tempTopic" description="An ActiveMQ Temporary Topic Destination"

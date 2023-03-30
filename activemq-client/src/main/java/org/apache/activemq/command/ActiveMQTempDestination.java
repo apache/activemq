@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.command;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import org.apache.activemq.ActiveMQConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

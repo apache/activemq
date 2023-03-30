@@ -21,7 +21,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.jms.ConnectionMetaData;
+import jakarta.jms.ConnectionMetaData;
 
 /**
  * A <CODE>ConnectionMetaData</CODE> object provides information describing

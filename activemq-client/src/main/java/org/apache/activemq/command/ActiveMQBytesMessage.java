@@ -26,12 +26,12 @@ import java.util.Arrays;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
-import javax.jms.BytesMessage;
-import javax.jms.JMSException;
-import javax.jms.MessageEOFException;
-import javax.jms.MessageFormatException;
-import javax.jms.MessageNotReadableException;
-import javax.jms.MessageNotWriteableException;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageEOFException;
+import jakarta.jms.MessageFormatException;
+import jakarta.jms.MessageNotReadableException;
+import jakarta.jms.MessageNotWriteableException;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.util.ByteArrayInputStream;
@@ -84,12 +84,12 @@ import org.apache.activemq.util.JMSExceptionSupport;
  * <CODE>MessageNotWriteableException</CODE> is thrown.
  *
  * @openwire:marshaller code=24
- * @see javax.jms.Session#createBytesMessage()
- * @see javax.jms.MapMessage
- * @see javax.jms.Message
- * @see javax.jms.ObjectMessage
- * @see javax.jms.StreamMessage
- * @see javax.jms.TextMessage
+ * @see jakarta.jms.Session#createBytesMessage()
+ * @see jakarta.jms.MapMessage
+ * @see jakarta.jms.Message
+ * @see jakarta.jms.ObjectMessage
+ * @see jakarta.jms.StreamMessage
+ * @see jakarta.jms.TextMessage
  */
 public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessage {
 

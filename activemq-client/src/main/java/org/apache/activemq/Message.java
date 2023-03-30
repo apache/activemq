@@ -21,7 +21,7 @@ package org.apache.activemq;
  *
  * 
  */
-public interface Message extends javax.jms.Message {
+public interface Message extends jakarta.jms.Message {
 
     /**
      * Returns the MIME type of this mesage. This can be used in selectors to filter on

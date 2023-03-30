@@ -16,14 +16,14 @@
  */
 package org.apache.activemq;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
-import javax.jms.TopicPublisher;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.QueueReceiver;
+import jakarta.jms.QueueSender;
+import jakarta.jms.TopicPublisher;
+import jakarta.jms.TopicSubscriber;
 
 /**
  * Represents a hook to allow the support of custom destinations

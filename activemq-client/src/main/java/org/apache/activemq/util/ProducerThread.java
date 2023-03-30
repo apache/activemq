@@ -19,7 +19,7 @@ package org.apache.activemq.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.io.*;
 import java.net.URL;
 import java.util.concurrent.CountDownLatch;

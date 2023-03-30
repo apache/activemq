@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.MessageConsumer;
+import jakarta.jms.MessageConsumer;
 
 /**
  * A listener which is notified if a message is available for processing via the

@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-import javax.jms.JMSException;
-import javax.jms.ObjectMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.ObjectMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.util.ByteArrayInputStream;
@@ -57,13 +57,13 @@ import org.apache.activemq.wireformat.WireFormat;
  * written to.
  *
  * @openwire:marshaller code="26"
- * @see javax.jms.Session#createObjectMessage()
- * @see javax.jms.Session#createObjectMessage(Serializable)
- * @see javax.jms.BytesMessage
- * @see javax.jms.MapMessage
- * @see javax.jms.Message
- * @see javax.jms.StreamMessage
- * @see javax.jms.TextMessage
+ * @see jakarta.jms.Session#createObjectMessage()
+ * @see jakarta.jms.Session#createObjectMessage(Serializable)
+ * @see jakarta.jms.BytesMessage
+ * @see jakarta.jms.MapMessage
+ * @see jakarta.jms.Message
+ * @see jakarta.jms.StreamMessage
+ * @see jakarta.jms.TextMessage
  */
 public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMessage, TransientInitializer {
 
@@ -169,8 +169,8 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
      * @param newObject the message's data
      * @throws JMSException if the JMS provider fails to set the object due to
      *                 some internal error.
-     * @throws javax.jms.MessageFormatException if object serialization fails.
-     * @throws javax.jms.MessageNotWriteableException if the message is in
+     * @throws jakarta.jms.MessageFormatException if object serialization fails.
+     * @throws jakarta.jms.MessageNotWriteableException if the message is in
      *                 read-only mode.
      */
 

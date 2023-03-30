@@ -21,9 +21,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.jms.JMSException;
-import javax.jms.TransactionInProgressException;
-import javax.jms.TransactionRolledBackException;
+import jakarta.jms.JMSException;
+import jakarta.jms.TransactionInProgressException;
+import jakarta.jms.TransactionRolledBackException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -56,10 +56,10 @@ import org.slf4j.LoggerFactory;
  * JMS provider may choose to implement this functionality from scratch. <p/>
  *
  *
- * @see javax.jms.Session
- * @see javax.jms.QueueSession
- * @see javax.jms.TopicSession
- * @see javax.jms.XASession
+ * @see jakarta.jms.Session
+ * @see jakarta.jms.QueueSession
+ * @see jakarta.jms.TopicSession
+ * @see jakarta.jms.XASession
  */
 public class TransactionContext implements XAResource {
 
@@ -229,7 +229,7 @@ public class TransactionContext implements XAResource {
 
     /**
      * Start a local transaction.
-     * @throws javax.jms.JMSException on internal error
+     * @throws jakarta.jms.JMSException on internal error
      */
     public void begin() throws JMSException {
 
@@ -261,7 +261,7 @@ public class TransactionContext implements XAResource {
      *
      * @throws JMSException if the JMS provider fails to roll back the
      *                 transaction due to some internal error.
-     * @throws javax.jms.IllegalStateException if the method is not called by a
+     * @throws jakarta.jms.IllegalStateException if the method is not called by a
      *                 transacted session.
      */
     public void rollback() throws JMSException {
@@ -297,7 +297,7 @@ public class TransactionContext implements XAResource {
      *
      * @throws JMSException if the JMS provider fails to commit the transaction
      *                 due to some internal error.
-     * @throws javax.jms.IllegalStateException if the method is not called by a
+     * @throws jakarta.jms.IllegalStateException if the method is not called by a
      *                 transacted session.
      */
     public void commit() throws JMSException {

@@ -17,9 +17,9 @@
 
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.JMSException;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicSubscriber;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
@@ -88,12 +88,12 @@ import org.apache.activemq.command.ConsumerId;
  * use of <CODE>Session.CreateDurableSubscriber</CODE> is recommended. The
  * <CODE>TopicSubscriber</CODE> is provided to support existing code.
  *
- * @see javax.jms.Session#createConsumer
- * @see javax.jms.Session#createDurableSubscriber
- * @see javax.jms.TopicSession
- * @see javax.jms.TopicSession#createSubscriber
- * @see javax.jms.TopicSubscriber
- * @see javax.jms.MessageConsumer
+ * @see jakarta.jms.Session#createConsumer
+ * @see jakarta.jms.Session#createDurableSubscriber
+ * @see jakarta.jms.TopicSession
+ * @see jakarta.jms.TopicSession#createSubscriber
+ * @see jakarta.jms.TopicSubscriber
+ * @see jakarta.jms.MessageConsumer
  */
 
 public class ActiveMQTopicSubscriber extends ActiveMQMessageConsumer implements

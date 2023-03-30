@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.management;
 
-import javax.jms.Destination;
+import jakarta.jms.Destination;
 
 import org.apache.activemq.util.IndentPrinter;
 

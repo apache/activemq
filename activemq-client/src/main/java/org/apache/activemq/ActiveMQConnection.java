@@ -37,23 +37,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionConsumer;
-import javax.jms.ConnectionMetaData;
-import javax.jms.Destination;
-import javax.jms.ExceptionListener;
-import javax.jms.IllegalStateException;
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
-import javax.jms.Queue;
-import javax.jms.QueueConnection;
-import javax.jms.QueueSession;
-import javax.jms.ServerSessionPool;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicConnection;
-import javax.jms.TopicSession;
-import javax.jms.XAConnection;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionConsumer;
+import jakarta.jms.ConnectionMetaData;
+import jakarta.jms.Destination;
+import jakarta.jms.ExceptionListener;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.InvalidDestinationException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueConnection;
+import jakarta.jms.QueueSession;
+import jakarta.jms.ServerSessionPool;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicConnection;
+import jakarta.jms.TopicSession;
+import jakarta.jms.XAConnection;
 
 import org.apache.activemq.advisory.DestinationSource;
 import org.apache.activemq.blob.BlobTransferPolicy;
@@ -436,9 +436,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @param newClientID the unique client identifier
      * @throws JMSException if the JMS provider fails to set the client ID for
      *                 this connection due to some internal error.
-     * @throws javax.jms.InvalidClientIDException if the JMS client specifies an
+     * @throws jakarta.jms.InvalidClientIDException if the JMS client specifies an
      *                 invalid or duplicate client ID.
-     * @throws javax.jms.IllegalStateException if the JMS client attempts to set
+     * @throws jakarta.jms.IllegalStateException if the JMS client attempts to set
      *                 a connection's client ID at the wrong time or when it has
      *                 been administratively configured.
      */
@@ -474,7 +474,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @return the connection metadata
      * @throws JMSException if the JMS provider fails to get the connection
      *                 metadata for this connection.
-     * @see javax.jms.ConnectionMetaData
+     * @see jakarta.jms.ConnectionMetaData
      */
     @Override
     public ConnectionMetaData getMetaData() throws JMSException {
@@ -492,7 +492,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *         this connection.
      * @throws JMSException if the JMS provider fails to get the
      *                 <CODE>ExceptionListener</CODE> for this connection.
-     * @see javax.jms.Connection#setExceptionListener(ExceptionListener)
+     * @see jakarta.jms.Connection#setExceptionListener(ExceptionListener)
      */
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
@@ -560,7 +560,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *
      * @throws JMSException if the JMS provider fails to start message delivery
      *                 due to some internal error.
-     * @see javax.jms.Connection#stop()
+     * @see jakarta.jms.Connection#stop()
      */
     @Override
     public void start() throws JMSException {
@@ -603,7 +603,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *
      * @throws JMSException if the JMS provider fails to stop message delivery
      *                 due to some internal error.
-     * @see javax.jms.Connection#start()
+     * @see jakarta.jms.Connection#start()
      */
     @Override
     public void stop() throws JMSException {
@@ -799,11 +799,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *                 create a connection consumer due to some internal error
      *                 or invalid arguments for <CODE>sessionPool</CODE> and
      *                 <CODE>messageSelector</CODE>.
-     * @throws javax.jms.InvalidDestinationException if an invalid destination
+     * @throws jakarta.jms.InvalidDestinationException if an invalid destination
      *                 is specified.
-     * @throws javax.jms.InvalidSelectorException if the message selector is
+     * @throws jakarta.jms.InvalidSelectorException if the message selector is
      *                 invalid.
-     * @see javax.jms.ConnectionConsumer
+     * @see jakarta.jms.ConnectionConsumer
      * @since 1.1
      */
     @Override
@@ -833,11 +833,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *                 create a connection consumer due to some internal error
      *                 or invalid arguments for <CODE>sessionPool</CODE> and
      *                 <CODE>messageSelector</CODE>.
-     * @throws javax.jms.InvalidDestinationException if an invalid destination
+     * @throws jakarta.jms.InvalidDestinationException if an invalid destination
      *                 is specified.
-     * @throws javax.jms.InvalidSelectorException if the message selector is
+     * @throws jakarta.jms.InvalidSelectorException if the message selector is
      *                 invalid.
-     * @see javax.jms.ConnectionConsumer
+     * @see jakarta.jms.ConnectionConsumer
      * @since 1.1
      */
     public ConnectionConsumer createDurableConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool, int maxMessages,
@@ -868,7 +868,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     /**
      * 
-     * @see javax.jms.ConnectionConsumer
+     * @see jakarta.jms.ConnectionConsumer
      * @since 2.0
      */
     @Override
@@ -879,7 +879,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     /**
      * 
-     * @see javax.jms.ConnectionConsumer
+     * @see jakarta.jms.ConnectionConsumer
      * @since 2.0
      */
     @Override
@@ -1214,11 +1214,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *                 to create a connection consumer due to some internal
      *                 error or invalid arguments for <CODE>sessionPool</CODE>
      *                 and <CODE>messageSelector</CODE>.
-     * @throws javax.jms.InvalidDestinationException if an invalid topic is
+     * @throws jakarta.jms.InvalidDestinationException if an invalid topic is
      *                 specified.
-     * @throws javax.jms.InvalidSelectorException if the message selector is
+     * @throws jakarta.jms.InvalidSelectorException if the message selector is
      *                 invalid.
-     * @see javax.jms.ConnectionConsumer
+     * @see jakarta.jms.ConnectionConsumer
      */
     @Override
     public ConnectionConsumer createConnectionConsumer(Topic topic, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
@@ -1243,11 +1243,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *                 to create a connection consumer due to some internal
      *                 error or invalid arguments for <CODE>sessionPool</CODE>
      *                 and <CODE>messageSelector</CODE>.
-     * @throws javax.jms.InvalidDestinationException if an invalid queue is
+     * @throws jakarta.jms.InvalidDestinationException if an invalid queue is
      *                 specified.
-     * @throws javax.jms.InvalidSelectorException if the message selector is
+     * @throws jakarta.jms.InvalidSelectorException if the message selector is
      *                 invalid.
-     * @see javax.jms.ConnectionConsumer
+     * @see jakarta.jms.ConnectionConsumer
      */
     @Override
     public ConnectionConsumer createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
@@ -1272,11 +1272,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *                 create a connection consumer due to some internal error
      *                 or invalid arguments for <CODE>sessionPool</CODE> and
      *                 <CODE>messageSelector</CODE>.
-     * @throws javax.jms.InvalidDestinationException if an invalid destination
+     * @throws jakarta.jms.InvalidDestinationException if an invalid destination
      *                 is specified.
-     * @throws javax.jms.InvalidSelectorException if the message selector is
+     * @throws jakarta.jms.InvalidSelectorException if the message selector is
      *                 invalid.
-     * @see javax.jms.ConnectionConsumer
+     * @see jakarta.jms.ConnectionConsumer
      * @since 1.1
      */
     @Override

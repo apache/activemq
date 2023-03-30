@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 /**
  * Represents a message which has a typically out of band Binary Large Object

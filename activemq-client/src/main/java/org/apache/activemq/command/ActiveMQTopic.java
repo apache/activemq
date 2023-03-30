@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.command;
 
-import javax.jms.JMSException;
-import javax.jms.Topic;
+import jakarta.jms.JMSException;
+import jakarta.jms.Topic;
 
 /**
  * @org.apache.xbean.XBean element="topic" description="An ActiveMQ Topic

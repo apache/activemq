@@ -23,7 +23,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import java.io.IOException;
 import java.util.Arrays;
 

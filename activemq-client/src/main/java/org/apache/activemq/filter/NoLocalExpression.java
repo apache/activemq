@@ -18,7 +18,7 @@ package org.apache.activemq.filter;
 
 import java.io.IOException;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.util.JMSExceptionSupport;
 

@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.BlobMessage;
 import org.apache.activemq.blob.BlobDownloader;

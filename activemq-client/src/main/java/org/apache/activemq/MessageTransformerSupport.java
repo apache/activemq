@@ -16,8 +16,8 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 
 /**
  * A useful base class for message transformers.
