@@ -37,14 +37,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -1045,7 +1045,7 @@ public class MQTTTest extends MQTTTestSupport {
         activeMQConnection.setUseRetroactiveConsumer(true);
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        javax.jms.Topic jmsTopic = s.createTopic(destinationName);
+        jakarta.jms.Topic jmsTopic = s.createTopic(destinationName);
         MessageConsumer consumer = s.createConsumer(jmsTopic);
 
         // check whether we received retained message on JMS subscribe
@@ -1081,7 +1081,7 @@ public class MQTTTest extends MQTTTestSupport {
         activeMQConnection.setUseRetroactiveConsumer(true);
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        javax.jms.Topic jmsTopic = s.createTopic(destinationName);
+        jakarta.jms.Topic jmsTopic = s.createTopic(destinationName);
         MessageProducer producer = s.createProducer(jmsTopic);
 
         // send retained message from JMS
@@ -1352,7 +1352,7 @@ public class MQTTTest extends MQTTTestSupport {
 
         for (int i = 0; i < messagesToSend; i++) {
 
-            javax.jms.Message message = consumer.receive(2 * 1000);
+            jakarta.jms.Message message = consumer.receive(2 * 1000);
             assertNotNull(message);
             assertTrue(message instanceof BytesMessage);
             BytesMessage bytesMessage = (BytesMessage) message;

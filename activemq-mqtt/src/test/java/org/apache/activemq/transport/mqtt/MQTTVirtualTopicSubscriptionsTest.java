@@ -45,9 +45,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.DeliveryMode;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.Session;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -197,7 +197,7 @@ public class MQTTVirtualTopicSubscriptionsTest extends MQTTTest {
         activeMQConnection.setUseRetroactiveConsumer(true);
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        javax.jms.Queue consumerQ = s.createQueue("Consumer.RegularSub.VirtualTopic.foo.bah");
+        jakarta.jms.Queue consumerQ = s.createQueue("Consumer.RegularSub.VirtualTopic.foo.bah");
         MessageConsumer consumer = s.createConsumer(consumerQ);
 
 

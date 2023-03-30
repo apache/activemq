@@ -19,7 +19,7 @@ package org.apache.activemq.transport.mqtt;
 import java.io.IOException;
 import java.util.zip.DataFormatException;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
