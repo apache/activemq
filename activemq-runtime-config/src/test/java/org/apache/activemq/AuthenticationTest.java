@@ -16,8 +16,8 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import javax.jms.Session;
+import jakarta.jms.JMSException;
+import jakarta.jms.Session;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;

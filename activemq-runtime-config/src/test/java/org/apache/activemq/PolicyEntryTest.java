@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.Session;
+import jakarta.jms.Session;
 
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;

@@ -18,8 +18,8 @@ package org.apache.activemq;
 
 import static org.junit.Assert.fail;
 
-import javax.jms.JMSException;
-import javax.jms.Session;
+import jakarta.jms.JMSException;
+import jakarta.jms.Session;
 
 public abstract class AbstractAuthorizationTest extends RuntimeConfigTestSupport {
 
