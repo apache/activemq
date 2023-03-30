@@ -30,14 +30,12 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.junit.Ignore;
 import org.objectweb.jtests.jms.admin.Admin;
 
 /**
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-@Ignore // AMQ-9239 joram does not support jakarta.jms
 public class ActiveMQAdmin implements Admin {
 
     Context context;

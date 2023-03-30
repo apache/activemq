@@ -20,7 +20,6 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.junit.Ignore;
 import org.objectweb.jtests.jms.conform.connection.ConnectionTest;
 import org.objectweb.jtests.jms.conform.connection.TopicConnectionTest;
 import org.objectweb.jtests.jms.conform.message.MessageBodyTest;
@@ -43,7 +42,6 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-@Ignore // AMQ-9239 joram does not support jakarta.jms
 public class JoramJmsTest extends TestCase {
 
     static {
