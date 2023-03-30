@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.InvalidClientIDException;
+import jakarta.jms.InvalidClientIDException;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.AbstractRegion;

@@ -31,16 +31,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.MapMessage;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.qpid.proton.amqp.Binary;

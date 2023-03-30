@@ -22,8 +22,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
 
 import org.junit.Test;
 

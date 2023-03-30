@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.InflaterInputStream;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQMapMessage;

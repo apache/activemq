@@ -26,12 +26,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.net.ServerSocketFactory;
@@ -97,6 +97,11 @@ public class AmqpTestSupport {
 
     protected URI openwireURI;
     protected int openwirePort;
+
+    static {
+        System.setProperty("jetty.ssl.sniRequired", "false");
+        System.setProperty("jetty.ssl.sniHostCheck", "false");
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -352,7 +357,7 @@ public class AmqpTestSupport {
 
     public Connection createJMSConnection() throws JMSException {
         if (!isUseOpenWireConnector()) {
-            throw new javax.jms.IllegalStateException("OpenWire TransportConnector was not configured.");
+            throw new jakarta.jms.IllegalStateException("OpenWire TransportConnector was not configured.");
         }
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireURI);

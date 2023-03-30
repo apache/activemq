@@ -24,9 +24,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.jms.IllegalStateException;
-import javax.jms.JMSException;
-import javax.jms.TransactionRolledBackException;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.JMSException;
+import jakarta.jms.TransactionRolledBackException;
 
 import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.IOExceptionSupport;

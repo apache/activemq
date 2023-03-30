@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.command.ActiveMQBytesMessage;

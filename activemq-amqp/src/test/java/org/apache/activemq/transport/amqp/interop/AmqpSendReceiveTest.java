@@ -33,9 +33,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.jms.DeliveryMode;
-import javax.jms.Queue;
-import javax.jms.Topic;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Queue;
+import jakarta.jms.Topic;
 
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -553,9 +553,9 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         assertEquals(1, queueView.getQueueSize());
 
-        List<javax.jms.Message> messages = (List<javax.jms.Message>) queueView.browseMessages();
+        List<jakarta.jms.Message> messages = (List<jakarta.jms.Message>) queueView.browseMessages();
         assertEquals(1, messages.size());
-        javax.jms.Message queueMessage = messages.get(0);
+        jakarta.jms.Message queueMessage = messages.get(0);
         assertEquals("Queued message should not be persistent", DeliveryMode.NON_PERSISTENT, queueMessage.getJMSDeliveryMode());
 
         receiver1.flow(1);
