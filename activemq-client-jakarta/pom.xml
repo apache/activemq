@@ -88,7 +88,7 @@
                                     <classifier>sources</classifier>
                                     <type>jar</type>
                                     <outputDirectory>${project.build.directory}/copied-sources/activemq-client</outputDirectory>
-                                    <excludes>**/META-INF/**,**/zeroconf/**</excludes>
+                                    <excludes>**/META-INF/*,**/META-INF/maven/**,**/zeroconf/**</excludes>
                                     <includes>**/**</includes>
                                 </artifactItem>
                             </artifactItems>
@@ -122,7 +122,7 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-resources</id>
+                        <id>copy-java-source</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -131,7 +131,22 @@
                             <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.build.directory}/copied-sources/activemq-client</directory>
+                                    <directory>${project.build.directory}/copied-sources/activemq-client/org</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/generated-resources/META-INF</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/copied-sources/activemq-client/META-INF</directory>
                                 </resource>
                             </resources>
                         </configuration>
@@ -152,6 +167,20 @@
                             <sources>
                                 <source>${project.build.directory}/generated-sources</source>
                             </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-resource</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                          <resources>
+                            <resource>
+                              <directory>${project.build.directory}/generated-resources</directory>
+                            </resource>
+                          </resources>
                         </configuration>
                     </execution>
                 </executions>
