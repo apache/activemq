@@ -60,6 +60,40 @@ public class RestTest extends JettyTestSupport {
     }
 
     @Test(timeout = 60 * 1000)
+    public void testConsumeAsync() throws Exception {
+        int port = getPort();
+        HttpClient httpClient = new HttpClient();
+        httpClient.start();
+
+        final StringBuffer buf = new StringBuffer();
+        final CountDownLatch latch =
+            asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=5000&type=queue", buf);
+
+        //Sleep 2 seconds before sending, should still get the response as timeout is 5 seconds
+        Thread.sleep(2000);
+        producer.send(session.createTextMessage("test"));
+        LOG.info("message sent");
+
+        latch.await();
+        assertEquals("test", buf.toString());
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testConsumeAsyncTimeout() throws Exception {
+        int port = getPort();
+        HttpClient httpClient = new HttpClient();
+        httpClient.start();
+
+        final StringBuffer buf = new StringBuffer();
+        final CountDownLatch latch =
+            asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue", buf);
+
+        //Test timeout, no message was sent
+        latch.await();
+        assertTrue(buf.toString().contains("AsyncContext timeout"));
+    }
+
+    @Test(timeout = 60 * 1000)
     public void testSubscribeFirst() throws Exception {
         int port = getPort();
 

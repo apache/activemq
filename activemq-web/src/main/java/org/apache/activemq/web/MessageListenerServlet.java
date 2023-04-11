@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -38,11 +37,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
 import org.apache.activemq.MessageAvailableConsumer;
-import org.eclipse.jetty.continuation.Continuation;
-import org.eclipse.jetty.continuation.ContinuationListener;
-import org.eclipse.jetty.continuation.ContinuationSupport;
+import org.apache.activemq.web.async.AsyncServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -272,7 +268,7 @@ public class MessageListenerServlet extends MessageServletSupport {
             LOG.debug("doMessage timeout=" + timeout);
         }
 
-        // this is non-null if we're resuming the continuation.
+        // this is non-null if we're resuming the asyncRequest.
         // attributes set in AjaxListener
         UndeliveredAjaxMessage undelivered_message = null;
         Message message = null;
@@ -310,28 +306,9 @@ public class MessageListenerServlet extends MessageServletSupport {
             response.setHeader("Cache-Control", "no-cache");
 
             if (message == null && client.getListener().getUndeliveredMessages().size() == 0) {
-                Continuation continuation = ContinuationSupport.getContinuation(request);
+                final AsyncServletRequest asyncRequest = AsyncServletRequest.getAsyncRequest(request);
 
-                // Add a listener to the continuation to make sure it actually
-                // will expire (seems like a bug in Jetty Servlet 3 continuations,
-                // see https://issues.apache.org/jira/browse/AMQ-3447
-                continuation.addContinuationListener(new ContinuationListener() {
-                    @Override
-                    public void onTimeout(Continuation cont) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Continuation " + cont.toString() + " expired.");
-                        }
-                    }
-
-                    @Override
-                    public void onComplete(Continuation cont) {
-                        if (LOG.isDebugEnabled()) {
-                           LOG.debug("Continuation " + cont.toString() + " completed.");
-                        }
-                    }
-                });
-
-                if (continuation.isExpired()) {
+                if (asyncRequest.isExpired()) {
                     response.setStatus(HttpServletResponse.SC_OK);
                     StringWriter swriter = new StringWriter();
                     PrintWriter writer = new PrintWriter(swriter);
@@ -345,16 +322,16 @@ public class MessageListenerServlet extends MessageServletSupport {
                     return;
                 }
 
-                continuation.setTimeout(timeout);
-                continuation.suspend();
-                LOG.debug( "Suspending continuation " + continuation );
+                asyncRequest.setTimeoutMs(timeout);
+                asyncRequest.startAsync();
+                LOG.debug("Suspending asyncRequest " + asyncRequest);
 
                 // Fetch the listeners
                 AjaxListener listener = client.getListener();
                 listener.access();
 
-                // register this continuation with our listener.
-                listener.setContinuation(continuation);
+                // register this asyncRequest with our listener.
+                listener.setAsyncRequest(asyncRequest);
 
                 return;
             }
@@ -377,7 +354,7 @@ public class MessageListenerServlet extends MessageServletSupport {
                 messages++;
             }
 
-            // send messages buffered while continuation was unavailable.
+            // send messages buffered while asyncRequest was unavailable.
             LinkedList<UndeliveredAjaxMessage> undeliveredMessages = ((AjaxListener)consumer.getAvailableListener()).getUndeliveredMessages();
             LOG.debug("Send " + undeliveredMessages.size() + " unconsumed messages");
             synchronized( undeliveredMessages ) {
