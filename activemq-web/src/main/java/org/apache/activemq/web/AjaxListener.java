@@ -17,17 +17,15 @@
 package org.apache.activemq.web;
 
 import java.util.LinkedList;
-
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
-
 import org.apache.activemq.MessageAvailableListener;
-import org.eclipse.jetty.continuation.Continuation;
+import org.apache.activemq.web.async.AsyncServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
- * Listen for available messages and wakeup any continuations.
+ * Listen for available messages and wakeup any asyncRequests.
  */
 public class AjaxListener implements MessageAvailableListener {
     private static final Logger LOG = LoggerFactory.getLogger(AjaxListener.class);
@@ -35,7 +33,7 @@ public class AjaxListener implements MessageAvailableListener {
     private final long maximumReadTimeout;
     private final AjaxWebClient client;
     private long lastAccess;
-    private Continuation continuation;
+    private AsyncServletRequest asyncRequest;
     private final LinkedList<UndeliveredAjaxMessage> undeliveredMessages = new LinkedList<UndeliveredAjaxMessage>();
 
     AjaxListener(AjaxWebClient client, long maximumReadTimeout) {
@@ -48,8 +46,8 @@ public class AjaxListener implements MessageAvailableListener {
         lastAccess = System.currentTimeMillis();
     }
 
-    public synchronized void setContinuation(Continuation continuation) {
-        this.continuation = continuation;
+    public synchronized void setAsyncRequest(AsyncServletRequest asyncRequest) {
+        this.asyncRequest = asyncRequest;
     }
 
     public LinkedList<UndeliveredAjaxMessage> getUndeliveredMessages() {
@@ -58,19 +56,19 @@ public class AjaxListener implements MessageAvailableListener {
 
     @Override
     public synchronized void onMessageAvailable(MessageConsumer consumer) {
-        LOG.debug("Message for consumer: {} continuation: {}", consumer, continuation);
+        LOG.debug("Message for consumer: {} asyncRequest: {}", consumer, asyncRequest);
 
-        if (continuation != null) {
+        if (asyncRequest != null) {
             try {
                 Message message = consumer.receive(10);
                 LOG.debug("message is " + message);
                 if (message != null) {
-                    if (!continuation.isResumed()) {
-                        LOG.debug("Resuming suspended continuation {}", continuation);
-                        continuation.setAttribute("undelivered_message", new UndeliveredAjaxMessage(message, consumer));
-                        continuation.resume();
+                    if (!asyncRequest.isDispatched()) {
+                        LOG.debug("Resuming suspended asyncRequest {}", asyncRequest);
+                        asyncRequest.setAttribute("undelivered_message", new UndeliveredAjaxMessage(message, consumer));
+                        asyncRequest.dispatch();
                     } else {
-                        LOG.debug("Message available, but continuation is already resumed. Buffer for next time.");
+                        LOG.debug("Message available, but asyncRequest is already resumed. Buffer for next time.");
                         bufferMessageForDelivery(message, consumer);
                     }
                 }
