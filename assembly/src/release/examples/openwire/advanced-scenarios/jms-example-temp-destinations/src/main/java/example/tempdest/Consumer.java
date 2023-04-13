@@ -17,7 +17,7 @@ package example.tempdest; /**
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>

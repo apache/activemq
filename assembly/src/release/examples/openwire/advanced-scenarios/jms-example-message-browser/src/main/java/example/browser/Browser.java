@@ -18,7 +18,7 @@ package example.browser;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.Enumeration;
 import java.util.concurrent.TimeUnit;
 

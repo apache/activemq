@@ -17,7 +17,7 @@
 package example;
 
 import org.apache.qpid.jms.*;
-import javax.jms.*;
+import jakarta.jms.*;
 
 class Listener {
 

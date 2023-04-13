@@ -31,7 +31,7 @@
     <dependency>
       <groupId>jakarta.jms</groupId>
       <artifactId>jakarta.jms-api</artifactId>
-      <version>2.0.3</version>
+      <version>3.1.0</version>
     </dependency>
     <dependency>
       <groupId>io.hyte.stompjms</groupId>
@@ -48,8 +48,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.1</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>11</source>
+          <target>11</target>
         </configuration>
       </plugin>
 

@@ -19,7 +19,7 @@ package example;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTopic;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 class Listener {
 
