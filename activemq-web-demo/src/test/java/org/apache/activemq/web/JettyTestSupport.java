@@ -24,9 +24,9 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
 
-import javax.jms.Connection;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 

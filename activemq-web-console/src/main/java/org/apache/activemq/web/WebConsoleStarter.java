@@ -23,10 +23,10 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
-import javax.jms.ConnectionFactory;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
+import jakarta.jms.ConnectionFactory;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
 
 /**
  * Starts the WebConsole.
@@ -68,6 +68,8 @@ public class WebConsoleStarter implements ServletContextListener {
         context.setConfigLocations(new String[] {
             configuration
         });
+        
+        // [AMQ-9239] TODO: Confirm jakarta ServeletContext API usage change
         context.refresh();
         context.start();
 
@@ -86,7 +88,7 @@ public class WebConsoleStarter implements ServletContextListener {
         XmlWebApplicationContext context = (XmlWebApplicationContext)WebApplicationContextUtils.getWebApplicationContext(event.getServletContext());
         if (context != null) {
             context.stop();
-            context.destroy();
+            context.close();
         }
         // do nothing, since the context is destroyed anyway
     }

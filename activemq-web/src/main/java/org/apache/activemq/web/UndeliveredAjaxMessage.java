@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.web;
 
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
 
 class UndeliveredAjaxMessage {
     private Message message;

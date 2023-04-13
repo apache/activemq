@@ -18,10 +18,10 @@ package org.apache.activemq.web.controller;
 
 import java.util.Iterator;
 import java.util.Map;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;

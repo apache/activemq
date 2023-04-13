@@ -143,12 +143,12 @@
               javax.management.remote,
               javax.naming,
               org.w3c.dom,
-              javax.servlet;version="[2.5,4)",
-              javax.servlet.annotation;version="[2.5,4)",
-              javax.servlet.http;version="[2.5,4)",
-              javax.servlet.jsp,
-              javax.servlet.jsp.tagext,
-              javax.servlet.jsp.el,
+              jakarta.servlet;version="[5,6)",
+              jakarta.servlet.annotation;version="[5,6)",
+              jakarta.servlet.http;version="[5,6)",
+              jakarta.servlet.jsp,
+              jakarta.servlet.jsp.tagext,
+              jakarta.servlet.jsp.el,
               javax.management,
               javax.management.openmbean,
               javax.net,
@@ -173,14 +173,14 @@
   </build>
 
   <dependencies>
-    <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-servlet-api</artifactId>
-      <scope>provided</scope>
+     <dependency>
+       <groupId>jakarta.servlet</groupId>
+       <artifactId>jakarta.servlet-api</artifactId>
+       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-websocket-api</artifactId>
+       <groupId>jakarta.websocket</groupId>
+       <artifactId>jakarta.websocket-api</artifactId>
       <scope>provided</scope>
     </dependency>
       
@@ -190,8 +190,8 @@
       <artifactId>jakarta.jms-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jta_1.1_spec</artifactId>
+      <groupId>jakarta.transaction</groupId>
+      <artifactId>jakarta.transaction-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -238,6 +238,16 @@
       <artifactId>xbean-spring</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-webmvc</artifactId>
+    </dependency>
+
     <!-- web container -->
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -268,10 +278,24 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>apache-jstl</artifactId>
+      <version>11.0.0</version>
       <scope>provided</scope>
     </dependency>
     
      <!-- Tag Libs -->
+    <dependency>
+      <groupId>jakarta.servlet.jsp.jstl</groupId>
+      <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+      <version>3.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.web</groupId>
+      <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+      <version>3.0.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <!--
     <dependency>
       <groupId>org.apache.taglibs</groupId>
       <artifactId>taglibs-standard-spec</artifactId>
@@ -282,6 +306,7 @@
       <artifactId>taglibs-standard-impl</artifactId>
       <scope>provided</scope>
     </dependency>
+    -->
     
     <!-- used for testing -->
     <dependency>
@@ -314,17 +339,17 @@
           </exclusion>
       </exclusions>
     </dependency>
-    
-     <dependency>
-       <groupId>org.apache.geronimo.specs</groupId>
-       <artifactId>geronimo-annotation_1.3_spec</artifactId>
+
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
     </dependency>
 
-	<dependency>
-		<groupId>org.ow2.asm</groupId>
-		<artifactId>asm</artifactId>
-    <scope>provided</scope>
-	</dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>osgi.core</artifactId>

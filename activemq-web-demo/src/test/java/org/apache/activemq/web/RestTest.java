@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.TextMessage;
+import jakarta.jms.TextMessage;
 import javax.management.ObjectName;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -268,7 +268,8 @@ public class RestTest extends JettyTestSupport {
         final CountDownLatch latch2 = new CountDownLatch(1);
         final StringBuffer buf2 = new StringBuffer();
         final AtomicInteger status2 = new AtomicInteger();
-        final HttpFields responseFields = new HttpFields();
+
+        final HttpFields.Mutable responseFields = HttpFields.build();
         httpClient.newRequest("http://localhost:" + port + "/message/testPost?readTimeout=1000&type=Queue")
            .method(HttpMethod.GET).send(new BufferingResponseListener() {
             @Override
@@ -285,7 +286,7 @@ public class RestTest extends JettyTestSupport {
 
         HttpFields fields = responseFields;
         assertNotNull("Headers Exist", fields);
-        assertEquals("header value", "value", fields.getStringField("property"));
+        assertEquals("header value", "value", fields.getField("property").getValue());
     }
 
 

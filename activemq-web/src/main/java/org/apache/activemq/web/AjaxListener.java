@@ -17,8 +17,10 @@
 package org.apache.activemq.web;
 
 import java.util.LinkedList;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
+
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+
 import org.apache.activemq.MessageAvailableListener;
 import org.apache.activemq.web.async.AsyncServletRequest;
 import org.slf4j.Logger;
