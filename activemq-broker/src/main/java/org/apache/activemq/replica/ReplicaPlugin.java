@@ -124,15 +124,8 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer,
                 replicationMessageProducer, replicaPolicy);
 
-        ReplicaSourceBroker sourceBroker = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
+        return new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
                         queueProvider, replicaPolicy, replicaFailOverStateStorage, webConsoleAccessController);
-
-        MutableBrokerFilter scheduledBroker = (MutableBrokerFilter) broker.getAdaptor(SchedulerBroker.class);
-        if (scheduledBroker != null) {
-            scheduledBroker.setNext(new ReplicaSchedulerSourceBroker(scheduledBroker.getNext(), replicationMessageProducer));
-        }
-
-        return sourceBroker;
     }
 
     public ReplicaPlugin setRole(ReplicaRole role) {

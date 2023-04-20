@@ -110,36 +110,6 @@ public class ReplicaSourceBrokerTest {
     }
 
     @Test
-    public void createsDestinationEventsOnStartup() throws Exception {
-        doAnswer(invocation -> {
-            source.addDestination(connectionContext, testDestination, true);
-            return null;
-        }).when(broker).start();
-
-        Queue queue = mock(Queue.class);
-        when(broker.addDestination(connectionContext, testDestination, true)).thenReturn(queue);
-
-        source.start();
-
-        ArgumentCaptor<ActiveMQDestination> destinationArgumentCaptor = ArgumentCaptor.forClass(ActiveMQDestination.class);
-        verify(broker, times(4)).addDestination(eq(connectionContext), destinationArgumentCaptor.capture(), anyBoolean());
-
-        List<ActiveMQDestination> destinations = destinationArgumentCaptor.getAllValues();
-
-        ActiveMQDestination mainReplicationDestination = destinations.get(0);
-        assertThat(mainReplicationDestination.getPhysicalName()).isEqualTo(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
-
-        ActiveMQDestination intermediateReplicationDestination = destinations.get(1);
-        assertThat(intermediateReplicationDestination.getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
-
-        ActiveMQDestination sequenceReplicationDestination = destinations.get(2);
-        assertThat(sequenceReplicationDestination.getPhysicalName()).isEqualTo(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
-
-        ActiveMQDestination precreatedDestination = destinations.get(3);
-        assertThat(precreatedDestination).isEqualTo(testDestination);
-    }
-
-    @Test
     public void doesNotCreateDestinationEventsForNonReplicableDestinations() throws Exception {
         source.start();
 

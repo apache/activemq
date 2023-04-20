@@ -19,6 +19,7 @@ package org.apache.activemq.replica;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -51,18 +52,22 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static org.apache.activemq.replica.ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME;
 
-public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements MutativeRoleBroker {
+public class ReplicaSourceBroker extends BrokerFilter implements MutativeRoleBroker {
     private static final String FAIL_OVER_CONSUMER_CLIENT_ID = "DUMMY_FAIL_OVER_CONSUMER";
     private static final DestinationMapEntry<Boolean> IS_REPLICATED = new DestinationMapEntry<>() {
     }; // used in destination map to indicate mirrored status
 
     private static final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
+    private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final AtomicBoolean initialized = new AtomicBoolean();
 
+    private final ReplicationMessageProducer replicationMessageProducer;
     private final ReplicaSequencer replicaSequencer;
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaPolicy replicaPolicy;
@@ -79,7 +84,8 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
             ReplicaSequencer replicaSequencer, ReplicaReplicationQueueSupplier queueProvider,
             ReplicaPolicy replicaPolicy, ReplicaFailOverStateStorage replicaFailOverStateStorage,
             WebConsoleAccessController webConsoleAccessController) {
-        super(next, replicationMessageProducer);
+        super(next);
+        this.replicationMessageProducer = replicationMessageProducer;
         this.replicaSequencer = replicaSequencer;
         this.queueProvider = queueProvider;
         this.replicaPolicy = replicaPolicy;
@@ -93,7 +99,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         logger.info("Starting Source broker");
         installTransportConnector();
         initQueueProvider();
-        super.start();
+        initialized.compareAndSet(false, true);
         replicaSequencer.initialize();
         ensureDestinationsAreReplicated();
         initializeContext();
@@ -103,6 +109,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
     public void stop() throws Exception {
         replicaSequencer.deinitialize();
         super.stop();
+        initialized.compareAndSet(true, false);
     }
 
     @Override
@@ -128,9 +135,9 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         webConsoleAccessController.start();
 
         initQueueProvider();
+        initialized.compareAndSet(false, true);
         replicaSequencer.initialize();
         ensureDestinationsAreReplicated();
-        init();
         replicaSequencer.updateMainQueueConsumerStatus();
         replicaSequencer.scheduleExecutor();
         initializeContext();
@@ -785,5 +792,19 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         } catch (Exception e) {
             logger.error("Failed to replicate queue purge {}", destination, e);
         }
+    }
+
+    private void enqueueReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event) throws Exception {
+        if (isReplicaContext(connectionContext)) {
+            return;
+        }
+        if (!initialized.get()) {
+            return;
+        }
+        replicationMessageProducer.enqueueIntermediateReplicaEvent(connectionContext, event);
+    }
+
+    private boolean isReplicaContext(ConnectionContext initialContext) {
+        return initialContext != null && ReplicaSupport.REPLICATION_PLUGIN_USER_NAME.equals(initialContext.getUserName());
     }
 }
