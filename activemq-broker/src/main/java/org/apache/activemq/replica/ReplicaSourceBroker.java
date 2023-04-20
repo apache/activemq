@@ -193,7 +193,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
                             .setEventType(ReplicaEventType.MESSAGE_SEND)
                             .setEventData(eventSerializer.serializeMessageData(message))
                             .setTransactionId(transactionId)
-                            .setReplicationProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, message.getMessageId().toString())
+                            .setReplicationProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, message.getMessageId().toProducerKey())
                             .setReplicationProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY,
                                     message.getDestination().isQueue())
                             .setReplicationProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY,
@@ -598,7 +598,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         return messagesToAck.stream()
                 .filter(MessageReference::isPersistent)
                 .map(MessageReference::getMessageId)
-                .map(MessageId::toString)
+                .map(MessageId::toProducerKey)
                 .collect(Collectors.toList());
     }
 
