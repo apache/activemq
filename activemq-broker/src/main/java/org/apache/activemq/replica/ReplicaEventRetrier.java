@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ReplicaEventRetrier {
 
@@ -30,6 +31,7 @@ public class ReplicaEventRetrier {
     private final int MAX_SLEEP_RETRY_INTERVAL_MS = 10000;
 
     private final Callable<Void> task;
+    private final AtomicBoolean running = new AtomicBoolean(true);
 
     public ReplicaEventRetrier(Callable<Void> task) {
         this.task = task;
@@ -37,7 +39,7 @@ public class ReplicaEventRetrier {
 
     public void process() {
         long attemptNumber = 0;
-        while (true) {
+        while (running.get()) {
             try {
                 task.call();
                 return;
@@ -58,5 +60,9 @@ public class ReplicaEventRetrier {
                 }
             }
         }
+    }
+
+    public void stop() {
+        running.set(false);
     }
 }

@@ -52,6 +52,7 @@ public class ReplicaBroker extends BrokerFilter {
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaPolicy replicaPolicy;
     private final PeriodAcknowledge periodAcknowledgeCallBack;
+    private ReplicaBrokerEventListener messageListener;
 
     public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy) {
         super(next);
@@ -74,6 +75,7 @@ public class ReplicaBroker extends BrokerFilter {
                 }
             }
         }, replicaPolicy.getReplicaAckPeriod(), replicaPolicy.getReplicaAckPeriod(), TimeUnit.MILLISECONDS);
+        messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider, periodAcknowledgeCallBack);
     }
 
     @Override
@@ -90,6 +92,9 @@ public class ReplicaBroker extends BrokerFilter {
         }
         if (brokerConnection != null) {
             brokerConnection.close();
+        }
+        if (messageListener != null) {
+            messageListener.close();
         }
         super.stop();
     }
@@ -163,7 +168,6 @@ public class ReplicaBroker extends BrokerFilter {
                         MessageFormat.format("There is no replication queue on the source broker {0}", replicaPolicy.getOtherBrokerConnectionFactory().getBrokerURL())
                 ));
         logger.info("Plugin will mirror events from queue {}", replicationSourceQueue.getPhysicalName());
-        ReplicaBrokerEventListener messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider, periodAcknowledgeCallBack);
         messageListener.initialize();
         ActiveMQPrefetchPolicy prefetchPolicy = connection.get().getPrefetchPolicy();
         Method getNextConsumerId = ActiveMQSession.class.getDeclaredMethod("getNextConsumerId");

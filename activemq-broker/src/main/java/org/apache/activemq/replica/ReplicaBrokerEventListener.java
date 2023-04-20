@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Objects.requireNonNull;
 
@@ -68,6 +69,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
     final ReplicaSequenceStorage sequenceStorage;
     BigInteger sequence;
     MessageId sequenceMessageId;
+    private final AtomicReference<ReplicaEventRetrier> replicaEventRetrier = new AtomicReference<>();
 
     ReplicaBrokerEventListener(Broker broker, ReplicaReplicationQueueSupplier queueProvider, PeriodAcknowledge acknowledgeCallback) {
         this.broker = requireNonNull(broker);
@@ -107,8 +109,15 @@ public class ReplicaBrokerEventListener implements MessageListener {
         processMessageWithRetries(message, null);
     }
 
+    public void close() {
+        ReplicaEventRetrier retrier = replicaEventRetrier.get();
+        if (retrier != null) {
+            retrier.stop();
+        }
+    }
+
     private synchronized void processMessageWithRetries(ActiveMQMessage message, TransactionId transactionId) {
-        new ReplicaEventRetrier(() -> {
+        ReplicaEventRetrier retrier = new ReplicaEventRetrier(() -> {
             boolean commit = false;
             TransactionId tid = transactionId;
             if (tid == null) {
@@ -143,7 +152,13 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 throw e;
             }
             return null;
-        }).process();
+        });
+        replicaEventRetrier.set(retrier);
+        try {
+            retrier.process();
+        } finally {
+            replicaEventRetrier.set(null);
+        }
     }
 
     private void processMessage(ActiveMQMessage message, ReplicaEventType eventType, TransactionId transactionId) throws Exception {
