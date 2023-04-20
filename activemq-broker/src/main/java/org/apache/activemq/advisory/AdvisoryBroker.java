@@ -32,7 +32,6 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.BaseDestination;
@@ -75,7 +74,7 @@ import org.slf4j.LoggerFactory;
  * This broker filter handles tracking the state of the broker for purposes of
  * publishing advisory messages to advisory consumers.
  */
-public class AdvisoryBroker extends MutableBrokerFilter {
+public class AdvisoryBroker extends BrokerFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(AdvisoryBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
@@ -267,7 +266,7 @@ public class AdvisoryBroker extends MutableBrokerFilter {
     @Override
     public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
-        getNext().addDestinationInfo(context, info);
+        next.addDestinationInfo(context, info);
 
         if (!AdvisorySupport.isAdvisoryTopic(destination)) {
             DestinationInfo previous = destinations.putIfAbsent(destination, info);
@@ -313,7 +312,7 @@ public class AdvisoryBroker extends MutableBrokerFilter {
             ActiveMQTopic[] advisoryDestinations = AdvisorySupport.getAllDestinationAdvisoryTopics(destination);
             for (ActiveMQTopic advisoryDestination : advisoryDestinations) {
                 try {
-                    getNext().removeDestination(context, advisoryDestination, -1);
+                    next.removeDestination(context, advisoryDestination, -1);
                 } catch (Exception expectedIfDestinationDidNotExistYet) {
                 }
             }
@@ -334,7 +333,7 @@ public class AdvisoryBroker extends MutableBrokerFilter {
             ActiveMQTopic[] advisoryDestinations = AdvisorySupport.getAllDestinationAdvisoryTopics(destInfo.getDestination());
             for (ActiveMQTopic advisoryDestination : advisoryDestinations) {
                 try {
-                    getNext().removeDestination(context, advisoryDestination, -1);
+                    next.removeDestination(context, advisoryDestination, -1);
                 } catch (Exception expectedIfDestinationDidNotExistYet) {
                 }
             }
@@ -380,10 +379,10 @@ public class AdvisoryBroker extends MutableBrokerFilter {
         SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
 
         RegionBroker regionBroker = null;
-        if (getNext() instanceof RegionBroker) {
-            regionBroker = (RegionBroker) getNext();
+        if (next instanceof RegionBroker) {
+            regionBroker = (RegionBroker) next;
         } else {
-            BrokerService service = getNext().getBrokerService();
+            BrokerService service = next.getBrokerService();
             regionBroker = (RegionBroker) service.getRegionBroker();
         }
 
@@ -935,7 +934,7 @@ public class AdvisoryBroker extends MutableBrokerFilter {
         producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
         try {
             context.setProducerFlowControl(false);
-            getNext().send(producerExchange, advisoryMessage);
+            next.send(producerExchange, advisoryMessage);
         } finally {
             context.setProducerFlowControl(originalFlowControl);
         }
