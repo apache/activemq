@@ -83,6 +83,9 @@ public class ReplicaBroker extends BrokerFilter {
         ActiveMQMessageConsumer consumer = eventConsumer.get();
         ActiveMQSession session = connectionSession.get();
         ActiveMQConnection brokerConnection = connection.get();
+        if (messageListener != null) {
+            messageListener.close();
+        }
         if (consumer != null) {
             consumer.stop();
             consumer.close();
@@ -92,9 +95,6 @@ public class ReplicaBroker extends BrokerFilter {
         }
         if (brokerConnection != null) {
             brokerConnection.close();
-        }
-        if (messageListener != null) {
-            messageListener.close();
         }
         super.stop();
     }
