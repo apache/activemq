@@ -22,9 +22,11 @@ import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
+import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
+import org.apache.activemq.broker.region.DestinationInterceptor;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.broker.scheduler.SchedulerBroker;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.replica.jmx.ReplicationJmxHelper;
 import org.apache.activemq.replica.jmx.ReplicationView;
@@ -108,7 +110,18 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         sourceBroker.initializeRoleChangeCallBack(replicaRoleManagementBroker);
         replicaBroker.initializeRoleChangeCallBack(replicaRoleManagementBroker);
 
+        addInterceptor4CompositeQueues(broker, sourceBroker, replicaRoleManagementBroker);
+
         return new ReplicaAuthorizationBroker(replicaRoleManagementBroker);
+    }
+
+    private void addInterceptor4CompositeQueues(final Broker broker, final Broker sourceBroker, final ReplicaRoleManagementBroker roleManagementBroker) {
+        final RegionBroker regionBroker = (RegionBroker) broker.getAdaptor(RegionBroker.class);
+        final CompositeDestinationInterceptor compositeInterceptor = (CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor();
+        DestinationInterceptor[] interceptors = compositeInterceptor.getInterceptors();
+        interceptors = Arrays.copyOf(interceptors, interceptors.length + 1);
+        interceptors[interceptors.length - 1] = new ReplicaDestinationInterceptor((ReplicaSourceBroker)sourceBroker, roleManagementBroker);
+        compositeInterceptor.setInterceptors(interceptors);
     }
 
     private MutativeRoleBroker buildReplicaBroker(Broker broker, ReplicaFailOverStateStorage replicaFailOverStateStorage, WebConsoleAccessController webConsoleAccessController) {

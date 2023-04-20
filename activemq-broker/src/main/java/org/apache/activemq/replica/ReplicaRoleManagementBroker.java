@@ -72,6 +72,10 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         this.role = role;
     }
 
+    public ReplicaRole getRole() {
+        return role;
+    }
+
     @Override
     public void onDeinitializationSuccess() {
         try {

@@ -41,7 +41,7 @@ public class ReplicaAuthorizationBroker extends BrokerFilter {
         final CompositeDestinationInterceptor compositeInterceptor = (CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor();
         DestinationInterceptor[] interceptors = compositeInterceptor.getInterceptors();
         interceptors = Arrays.copyOf(interceptors, interceptors.length + 1);
-        interceptors[interceptors.length - 1] = new ReplicaDestinationInterceptor();
+        interceptors[interceptors.length - 1] = new ReplicaAuthorizationDestinationInterceptor();
         compositeInterceptor.setInterceptors(interceptors);
     }
 
@@ -103,12 +103,12 @@ public class ReplicaAuthorizationBroker extends BrokerFilter {
         return "Not authorized to access destination: " + destination;
     }
 
-    private static class ReplicaDestinationInterceptor implements DestinationInterceptor {
+    private static class ReplicaAuthorizationDestinationInterceptor implements DestinationInterceptor {
 
         @Override
         public Destination intercept(Destination destination) {
             if (ReplicaSupport.isReplicationQueue(destination.getActiveMQDestination())) {
-                return new ReplicaDestinationFilter(destination);
+                return new ReplicaAuthorizationDestinationFilter(destination);
             }
             return destination;
         }
@@ -122,10 +122,10 @@ public class ReplicaAuthorizationBroker extends BrokerFilter {
         }
     }
 
-    private static class ReplicaDestinationFilter extends DestinationFilter {
+    private static class ReplicaAuthorizationDestinationFilter extends DestinationFilter {
 
 
-        public ReplicaDestinationFilter(Destination next) {
+        public ReplicaAuthorizationDestinationFilter(Destination next) {
             super(next);
         }
 
