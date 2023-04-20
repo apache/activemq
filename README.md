@@ -1,7 +1,16 @@
 Welcome to Apache ActiveMQ 
 =======================================================================
 Apache ActiveMQ is a high performance Apache 2.0 licensed
-Message Broker and JMS 1.1 implementation.
+Message Broker.
+ActiveMQ supports several API and protocols:
+- JMS 1.1, 2.0.3, 3.1.0
+- AMQP
+- MQTT
+- HTTP/WS
+ActiveMQ also provides advanced features like:
+- network of brokers
+- scheduling
+- and much more!
 
 Getting Started
 ===============

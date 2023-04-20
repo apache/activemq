@@ -18,8 +18,6 @@ package org.apache.activemq.management;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.management.j2ee.statistics.CountStatistic;
-
 /**
  * A count statistic implementation
  * 

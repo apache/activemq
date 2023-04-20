@@ -61,13 +61,6 @@ public class InactiveDurableTopicTest extends TestCase {
         broker = new BrokerService();
 
         //broker.setPersistenceAdapter(new KahaPersistenceAdapter());
-        /*
-         * JournalPersistenceAdapterFactory factory = new
-         * JournalPersistenceAdapterFactory();
-         * factory.setDataDirectoryFile(broker.getDataDirectory());
-         * factory.setTaskRunnerFactory(broker.getTaskRunnerFactory());
-         * factory.setUseJournal(false); broker.setPersistenceFactory(factory);
-         */
         broker.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
         broker.start();
         connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);

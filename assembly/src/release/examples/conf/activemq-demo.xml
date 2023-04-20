@@ -135,15 +135,6 @@
         </persistenceAdapter>
 
         <!--
-            Configure the following if you wish to use journaled JDBC for message
-            persistence.
-
-        <persistenceFactory>
-            <journalPersistenceAdapterFactory dataDirectory="${activemq.data}" dataSource="#postgres-ds"/>
-        </persistenceFactory>
-        -->
-
-        <!--
             Configure the following if you wish to use non-journaled JDBC for message
             persistence.
 

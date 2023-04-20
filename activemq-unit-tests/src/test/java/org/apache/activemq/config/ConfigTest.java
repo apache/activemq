@@ -50,7 +50,6 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.DefaultDatabaseLocker;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.adapter.TransactDatabaseLocker;
-import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.usage.SystemUsage;
@@ -86,43 +85,6 @@ public class ConfigTest {
      * target/test-data/. The test in unable to change the derby root directory
      * for succeeding creation. It uses the first created directory as the root.
      */
-
-    /*
-     * This tests creating a journal persistence adapter using the persistence
-     * adapter factory bean
-     */
-    @Test
-    public void testJournaledJDBCConfig() throws Exception {
-
-        File journalFile = new File(JOURNAL_ROOT + "testJournaledJDBCConfig/journal");
-        recursiveDelete(journalFile);
-
-        File derbyFile = new File(DERBY_ROOT + "testJournaledJDBCConfig/derbydb"); // Default
-        recursiveDelete(derbyFile);
-
-        BrokerService broker;
-        broker = createBroker(new FileSystemResource(CONF_ROOT + "journaledjdbc-example.xml"));
-        try {
-            assertEquals("Broker Config Error (brokerName)", "brokerJournaledJDBCConfigTest", broker.getBrokerName());
-
-            PersistenceAdapter adapter = broker.getPersistenceAdapter();
-
-            assertTrue("Should have created a journal persistence adapter", adapter instanceof JournalPersistenceAdapter);
-            assertTrue("Should have created a derby directory at " + derbyFile.getAbsolutePath(), derbyFile.exists());
-            assertTrue("Should have created a journal directory at " + journalFile.getAbsolutePath(), journalFile.exists());
-
-            // Check persistence factory configurations
-            broker.getPersistenceAdapter();
-
-            assertTrue(broker.getSystemUsage().getStoreUsage().getStore() instanceof JournalPersistenceAdapter);
-
-            LOG.info("Success");
-        } finally {
-            if (broker != null) {
-                broker.stop();
-            }
-        }
-    }
 
     @Test
     public void testJdbcLockConfigOverride() throws Exception {
@@ -284,32 +246,6 @@ public class ConfigTest {
 
             LOG.info("Success");
 
-        } finally {
-            if (broker != null) {
-                broker.stop();
-            }
-        }
-    }
-
-    /*
-     * This tests creating a journal persistence adapter using xbeans-spring
-     */
-    @Test
-    public void testJournalConfig() throws Exception {
-        File journalFile = new File(JOURNAL_ROOT + "testJournalConfig/journal");
-        recursiveDelete(journalFile);
-
-        BrokerService broker;
-        broker = createBroker(new FileSystemResource(CONF_ROOT + "journal-example.xml"));
-        try {
-            assertEquals("Broker Config Error (brokerName)", "brokerJournalConfigTest", broker.getBrokerName());
-
-            PersistenceAdapter adapter = broker.getPersistenceAdapter();
-
-            assertTrue("Should have created a journal persistence adapter", adapter instanceof JournalPersistenceAdapter);
-            assertTrue("Should have created a journal directory at " + journalFile.getAbsolutePath(), journalFile.exists());
-
-            LOG.info("Success");
         } finally {
             if (broker != null) {
                 broker.stop();

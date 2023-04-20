@@ -328,6 +328,10 @@ public final class IOHelper {
 
         } else {
             if (!dir.mkdirs()) {
+                if ( dir.exists() && dir.isDirectory() ) {
+                    // Directory created in parallel
+                    return;
+                }
                 throw new IOException("Failed to create directory '" + dir + "'");
             }
         }

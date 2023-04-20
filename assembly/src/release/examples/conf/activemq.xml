@@ -27,7 +27,7 @@
   <broker xmlns="http://activemq.apache.org/schema/core" useJmx="false">
 
     <persistenceFactory>
-      <journalPersistenceAdapterFactory journalLogFiles="5" dataDirectory="../data"/>
+      <kahaDB directory="${activemq.data}/kahadb"/>
     </persistenceFactory>
   
     <transportConnectors>

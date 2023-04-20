@@ -121,7 +121,7 @@ public class SelectorParser {
         }
     }
 
-    private BooleanExpression asBooleanExpression(Expression value) throws ParseException  {
+    private static BooleanExpression asBooleanExpression(Expression value) throws ParseException  {
         if (value instanceof BooleanExpression) {
             return (BooleanExpression) value;
         }

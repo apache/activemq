@@ -22,8 +22,8 @@
 pipeline {
 
     agent {
-        node {
-            label 'ubuntu'
+        label {
+            label params.nodeLabel
         }
     }
 
@@ -41,9 +41,14 @@ pipeline {
         disableConcurrentBuilds()
     }
 
+    parameters {
+        choice(name: 'nodeLabel', choices: ['ubuntu', 's390x']) 
+    }
+
     stages {
         stage('Initialization') {
             steps {
+                echo "running on ${env.NODE_NAME}"
                 echo 'Building branch ' + env.BRANCH_NAME
                 echo 'Using PATH ' + env.PATH
             }
@@ -60,6 +65,18 @@ pipeline {
             steps {
                 echo 'Checking out branch ' + env.BRANCH_NAME
                 checkout scm
+            }
+        }
+
+        stage('Build JDK 20') {
+            tools {
+                jdk "jdk_20_latest"
+            }
+            steps {
+                echo 'Building JDK 20'
+                sh 'java -version'
+                sh 'mvn -version'
+                sh 'mvn -U -B -e clean install -DskipTests'
             }
         }
 
@@ -99,7 +116,7 @@ pipeline {
                 echo 'Running tests'
                 // all tests is very very long (10 hours on Apache Jenkins)
                 // sh 'mvn -B -e test -pl activemq-unit-tests -Dactivemq.tests=all'
-                sh 'mvn -B -e -fae test'
+                sh 'mvn -B -e -fae test -Dsurefire.rerunFailingTestsCount=3'
             }
             post {
                 always {
