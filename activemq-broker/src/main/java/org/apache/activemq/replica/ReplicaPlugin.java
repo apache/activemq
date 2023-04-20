@@ -22,14 +22,19 @@ import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.replica.jmx.ReplicationJmxHelper;
 import org.apache.activemq.replica.jmx.ReplicationView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
@@ -71,6 +76,17 @@ public class ReplicaPlugin extends BrokerPluginSupport {
             replicationView = new ReplicationView(this);
             AnnotatedMBean.registerMBean(brokerService.getManagementContext(), replicationView, ReplicationJmxHelper.createJmxName(brokerService));
         }
+        
+        List<PolicyEntry> policyEntries = new ArrayList<>();
+        for (String queue : ReplicaSupport.REPLICATION_QUEUE_NAMES) {
+            PolicyEntry newPolicy = new PolicyEntry();
+            newPolicy.setDestination(new ActiveMQQueue(queue));
+            policyEntries.add(newPolicy);
+        }
+        if(brokerService.getDestinationPolicy() == null) {
+            brokerService.setDestinationPolicy(new PolicyMap());
+        }
+        brokerService.getDestinationPolicy().setPolicyEntries(policyEntries);
 
         MutableBrokerFilter advisoryBroker = (MutableBrokerFilter) broker.getAdaptor(AdvisoryBroker.class);
         if (advisoryBroker != null) {
