@@ -34,6 +34,7 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.filter.DestinationMapEntry;
@@ -352,6 +353,30 @@ public class ReplicaSourceBrokerTest {
 
         final ConsumerInfo ackMessage = (ConsumerInfo) eventSerializer.deserializeMessageData(replicaMessage.getContent());
         assertThat(ackMessage.getDestination()).isEqualTo(destination);
+        verifyConnectionContext(connectionContext);
+    }
+
+    @Test
+    public void replicates_REMOVE_DURABLE_CONSUMER_SUBSCRIPTION() throws Exception {
+        source.start();
+
+        RemoveSubscriptionInfo removeSubscriptionInfo = new RemoveSubscriptionInfo();
+        removeSubscriptionInfo.setClientId("clientId");
+        removeSubscriptionInfo.setSubscriptionName("SUBSCRIPTION_NAME");
+
+        source.removeSubscription(connectionContext, removeSubscriptionInfo);
+
+        ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
+        verify(broker).send(any(), messageArgumentCaptor.capture());
+        ActiveMQMessage replicaMessage = messageArgumentCaptor.getValue();
+
+        assertThat(replicaMessage.getType()).isEqualTo("ReplicaEvent");
+        assertThat(replicaMessage.getDestination().getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
+        assertThat(replicaMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.REMOVE_DURABLE_CONSUMER_SUBSCRIPTION.name());
+
+        final RemoveSubscriptionInfo removeSubscriptionInfoMsg = (RemoveSubscriptionInfo) eventSerializer.deserializeMessageData(replicaMessage.getContent());
+        assertThat(removeSubscriptionInfoMsg.getClientId()).isEqualTo("clientId");
+        assertThat(removeSubscriptionInfoMsg.getSubscriptionName()).isEqualTo("SUBSCRIPTION_NAME");
         verifyConnectionContext(connectionContext);
     }
 

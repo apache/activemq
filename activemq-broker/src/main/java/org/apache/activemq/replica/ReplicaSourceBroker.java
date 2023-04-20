@@ -35,6 +35,7 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
@@ -389,6 +390,28 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
             );
         } catch (Exception e) {
             logger.error("Failed to replicate adding {}", consumerInfo, e);
+        }
+    }
+
+    @Override
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo subscriptionInfo) throws Exception {
+        super.removeSubscription(context, subscriptionInfo);
+        replicateRemoveSubscription(context, subscriptionInfo);
+    }
+
+    private void replicateRemoveSubscription(ConnectionContext context, RemoveSubscriptionInfo subscriptionInfo) {
+        if (ReplicaSupport.isReplicationTransport(context.getConnector())) {
+            return;
+        }
+        try {
+            enqueueReplicaEvent(
+                    context,
+                    new ReplicaEvent()
+                            .setEventType(ReplicaEventType.REMOVE_DURABLE_CONSUMER_SUBSCRIPTION)
+                            .setEventData(eventSerializer.serializeReplicationData(subscriptionInfo))
+            );
+        } catch (Exception e) {
+            logger.error("Failed to replicate removing subscription {}", subscriptionInfo, e);
         }
     }
 

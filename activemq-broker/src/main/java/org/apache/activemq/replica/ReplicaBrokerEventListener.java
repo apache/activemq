@@ -35,6 +35,7 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.replica.storage.ReplicaSequenceStorage;
 import org.slf4j.Logger;
@@ -261,6 +262,10 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 logger.trace("Processing replicated remove consumer");
                 removeDurableConsumer((ConsumerInfo) deserializedData);
                 return;
+            case REMOVE_DURABLE_CONSUMER_SUBSCRIPTION:
+                logger.trace("Processing replicated remove durable consumer subscription");
+                removeDurableConsumerSubscription((RemoveSubscriptionInfo) deserializedData);
+                return;
             default:
                 throw new IllegalStateException(
                         String.format("Unhandled event type \"%s\" for replication message id: %s",
@@ -443,6 +448,17 @@ public class ReplicaBrokerEventListener implements MessageListener {
             broker.removeConsumer(context, consumerInfo);
         } catch (Exception e) {
             logger.error("Unable to replicate remove durable consumer [{}]", consumerInfo, e);
+            throw e;
+        }
+    }
+
+    private void removeDurableConsumerSubscription(RemoveSubscriptionInfo subscriptionInfo) throws Exception {
+        try {
+            ConnectionContext context = connectionContext.copy();
+            context.setClientId(subscriptionInfo.getClientId());
+            broker.removeSubscription(context, subscriptionInfo);
+        } catch (Exception e) {
+            logger.error("Unable to replicate remove durable consumer subscription [{}]", subscriptionInfo, e);
             throw e;
         }
     }
