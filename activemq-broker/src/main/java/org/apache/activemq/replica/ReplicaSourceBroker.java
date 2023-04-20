@@ -17,6 +17,7 @@
 package org.apache.activemq.replica;
 
 import org.apache.activemq.ScheduledMessage;
+import org.apache.activemq.Service;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
@@ -47,6 +48,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static org.apache.activemq.replica.ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME;
@@ -56,6 +59,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
     private static final DestinationMapEntry<Boolean> IS_REPLICATED = new DestinationMapEntry<>() {
     }; // used in destination map to indicate mirrored status
     private static final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private final ReplicaSequencer replicaSequencer;
     private final ReplicaReplicationQueueSupplier queueProvider;
@@ -63,6 +67,8 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
     private final ReplicaAckHelper replicaAckHelper;
 
     final DestinationMap destinationsToReplicate = new DestinationMap();
+
+    private ActionListenerCallback actionListenerCallback;
 
     public ReplicaSourceBroker(Broker next, ReplicationMessageProducer replicationMessageProducer,
             ReplicaSequencer replicaSequencer, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy) {
@@ -90,17 +96,23 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
     }
 
     @Override
-    public void stopBeforeRoleChange() throws Exception {
-        logger.info("Pausing Source broker");
-        getBrokerService().stopAllConnectors(new ServiceStopper());
-        replicaSequencer.deinitialize();
-        replicaSequencer.terminateScheduledExecutor();
-        removeReplicationQueues();
+    public void initializeRoleChangeCallBack(ActionListenerCallback actionListenerCallback) {
+        this.actionListenerCallback = actionListenerCallback;
+    }
+
+    @Override
+    public void stopBeforeRoleChange(boolean force) throws Exception {
+        logger.info("Stopping Source broker. Forced [{}]", force);
+        if (force) {
+            stopBeforeForcedRoleChange();
+        } else {
+            stopBeforeRoleChange();
+        }
     }
 
     @Override
     public void startAfterRoleChange() throws Exception {
-        logger.info("Resuming Source broker");
+        logger.info("Starting Source broker after role change");
         installTransportConnector();
         getBrokerService().startAllConnectors();
 
@@ -110,6 +122,55 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         init();
         replicaSequencer.updateMainQueueConsumerStatus();
         replicaSequencer.scheduleExecutor();
+    }
+
+
+    private void stopBeforeForcedRoleChange() throws Exception {
+        getBrokerService().stopAllConnectors(new ServiceStopper());
+        replicaSequencer.deinitialize();
+        replicaSequencer.terminateScheduledExecutor();
+        removeReplicationQueues();
+    }
+
+    private void stopBeforeRoleChange() {
+        getBrokerService().stopAllConnectors(new ServiceStopper() {
+            @Override
+            public void stop(Service service) {
+                if (service instanceof TransportConnector &&
+                        ((TransportConnector) service).getName().equals(ReplicaSupport.REPLICATION_CONNECTOR_NAME)) {
+                    return;
+                }
+                super.stop(service);
+            }
+        });
+
+        sendFailOverMessage(next.getAdminConnectionContext());
+
+    }
+
+    private void completeDeinitialization() {
+        logger.info("completing source broker deinitialization");
+        try {
+            getBrokerService().getTransportConnectors().stream()
+                    .filter(transportConnector -> transportConnector.getName().equals(ReplicaSupport.REPLICATION_CONNECTOR_NAME))
+                    .forEach(transportConnector -> {
+                        try {
+                            transportConnector.stop();
+                            logger.info("Successfully stopped connector {}", transportConnector.getName());
+                        } catch (Exception e) {
+                            logger.error("Failed to stop connector {}", transportConnector.getName(), e);
+                        }
+                    });
+
+
+            replicaSequencer.deinitialize();
+            replicaSequencer.terminateScheduledExecutor();
+            removeReplicationQueues();
+
+            this.actionListenerCallback.onDeinitializationSuccess();
+        } catch (Exception e) {
+            logger.error("Failed to deinitialize source broker.", e);
+        }
     }
 
     private void initQueueProvider() {
@@ -329,6 +390,21 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         }
     }
 
+    private void sendFailOverMessage(ConnectionContext context) {
+        try {
+            enqueueReplicaEvent(
+                    context,
+                    new ReplicaEvent()
+                            .setEventType(ReplicaEventType.FAIL_OVER)
+                            .setEventData(eventSerializer.serializeReplicationData(context.getXid()))
+                            .setReplicationProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY,
+                                    ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME)
+            );
+        } catch (Exception e) {
+            logger.error("Failed to send fail over message", e);
+        }
+    }
+
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo consumerInfo) throws Exception {
         Subscription subscription = super.addConsumer(context, consumerInfo);
@@ -538,7 +614,13 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         }
 
         if (MAIN_REPLICATION_QUEUE_NAME.equals(ack.getDestination().getPhysicalName())) {
-            replicaSequencer.acknowledge(consumerExchange, ack);
+            List<MessageReference> ackedMessageList = replicaSequencer.acknowledge(consumerExchange, ack);
+
+            MessageReference ackedMessage = ackedMessageList.stream().findFirst().orElseThrow();
+            String eventType = (String) ackedMessage.getMessage().getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY);
+            if (ReplicaEventType.FAIL_OVER.equals(ReplicaEventType.valueOf(eventType))) {
+                executor.execute(this::completeDeinitialization);
+            }
             return;
         }
 

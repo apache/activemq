@@ -29,8 +29,9 @@ public enum ReplicaEventType {
     TRANSACTION_FORGET,
     ADD_DURABLE_CONSUMER,
     REMOVE_DURABLE_CONSUMER,
+    BATCH,
     REMOVE_DURABLE_CONSUMER_SUBSCRIPTION,
-    BATCH
+    FAIL_OVER
     ;
 
     public static final String EVENT_TYPE_PROPERTY = "ActiveMQReplicationEventType";

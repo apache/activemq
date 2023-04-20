@@ -66,16 +66,18 @@ public class ReplicaBrokerEventListener implements MessageListener {
     private final Broker broker;
     private final ConnectionContext connectionContext;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
-
     private final PeriodAcknowledge acknowledgeCallback;
+    private final AtomicReference<ReplicaEventRetrier> replicaEventRetrier = new AtomicReference<>();
     final ReplicaSequenceStorage sequenceStorage;
+    private ActionListenerCallback actionListenerCallback;
+
     BigInteger sequence;
     MessageId sequenceMessageId;
-    private final AtomicReference<ReplicaEventRetrier> replicaEventRetrier = new AtomicReference<>();
 
-    ReplicaBrokerEventListener(Broker broker, ReplicaReplicationQueueSupplier queueProvider, PeriodAcknowledge acknowledgeCallback) {
+    ReplicaBrokerEventListener(Broker broker, ReplicaReplicationQueueSupplier queueProvider, PeriodAcknowledge acknowledgeCallback, ActionListenerCallback actionListenerCallback) {
         this.broker = requireNonNull(broker);
         this.acknowledgeCallback = requireNonNull(acknowledgeCallback);
+        this.actionListenerCallback = requireNonNull(actionListenerCallback);
         connectionContext = broker.getAdminConnectionContext().copy();
         connectionContext.setUserName(ReplicaSupport.REPLICATION_PLUGIN_USER_NAME);
         connectionContext.setClientId(REPLICATION_CONSUMER_CLIENT_ID);
@@ -126,6 +128,13 @@ public class ReplicaBrokerEventListener implements MessageListener {
         ReplicaEventRetrier retrier = new ReplicaEventRetrier(() -> {
             boolean commit = false;
             TransactionId tid = transactionId;
+            ReplicaEventType eventType = getEventType(message);
+
+            if (eventType == ReplicaEventType.FAIL_OVER) {
+                failOver();
+                return null;
+            }
+
             if (tid == null) {
                 tid = new LocalTransactionId(
                         new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
@@ -137,7 +146,6 @@ public class ReplicaBrokerEventListener implements MessageListener {
             }
 
             try {
-                ReplicaEventType eventType = getEventType(message);
                 if (eventType == ReplicaEventType.BATCH) {
                     processBatch(message, tid);
                 } else {
@@ -165,6 +173,11 @@ public class ReplicaBrokerEventListener implements MessageListener {
         } finally {
             replicaEventRetrier.set(null);
         }
+    }
+
+    private void failOver() throws Exception {
+        acknowledgeCallback.acknowledge(true);
+        actionListenerCallback.onFailOverAck();
     }
 
     private void processMessage(ActiveMQMessage message, ReplicaEventType eventType, TransactionId transactionId) throws Exception {

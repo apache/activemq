@@ -59,12 +59,15 @@ public class PeriodAcknowledge {
     }
 
     public void acknowledge() throws Exception {
+        acknowledge(false);
+    }
+    public void acknowledge(boolean forceAcknowledge) throws Exception {
         if (connection.get() == null || connectionSession.get() == null || !safeToAck) {
             return;
         }
 
         synchronized (periodicCommitLock) {
-            if (reachedMaxAckBatchSize() || shouldPeriodicallyCommit()) {
+            if (reachedMaxAckBatchSize() || shouldPeriodicallyCommit() || forceAcknowledge) {
                 connectionSession.get().acknowledge();
                 lastAckTime.set(System.currentTimeMillis());
                 pendingAckCount.set(0);

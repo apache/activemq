@@ -301,9 +301,8 @@ public class ReplicaSequencer {
         }
         return result;
     }
-
     @SuppressWarnings("unchecked")
-    void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
+    List<MessageReference> acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         List<MessageReference> messagesToAck = replicaAckHelper.getMessagesToAck(ack, mainQueue);
 
         if (messagesToAck == null || messagesToAck.isEmpty()) {
@@ -318,11 +317,15 @@ public class ReplicaSequencer {
         }
 
         broker.acknowledge(consumerExchange, ack);
+
         synchronized (messageToAck) {
             messageIds.forEach(messageToAck::addLast);
             sequenceMessageIds.forEach(sequenceMessageToAck::addLast);
         }
+
         asyncAckWakeup();
+
+        return messagesToAck;
     }
 
     void updateMainQueueConsumerStatus() {
@@ -546,6 +549,23 @@ public class ReplicaSequencer {
     }
 
     private BigInteger enqueueReplicaEvent(List<MessageReference> batch, BigInteger sequence, TransactionId transactionId) throws Exception {
+        if (batch.size() == 1) {
+            MessageReference reference = batch.stream().findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Cannot get message reference from batch"));
+
+            ActiveMQMessage originalMessage = (ActiveMQMessage) reference.getMessage();
+            sequence = sequence.add(BigInteger.ONE);
+            ActiveMQMessage message = (ActiveMQMessage) originalMessage.copy();
+
+            message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, sequence.toString());
+            message.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(message.getMessageId().toString()));
+            message.setDestination(queueProvider.getMainQueue());
+            message.setTransactionId(null);
+            message.setPersistent(false);
+            replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, message);
+            return sequence;
+        }
+
         List<String> messageIds = new ArrayList<>();
         List<DataStructure> messages = new ArrayList<>();
         for (MessageReference reference : batch) {

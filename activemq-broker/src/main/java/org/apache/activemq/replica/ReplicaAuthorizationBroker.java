@@ -71,8 +71,8 @@ public class ReplicaAuthorizationBroker extends BrokerFilter implements Mutative
     }
 
     @Override
-    public void stopBeforeRoleChange() throws Exception {
-        ((MutativeRoleBroker) next).stopBeforeRoleChange();
+    public void stopBeforeRoleChange(boolean force) throws Exception {
+        ((MutativeRoleBroker) next).stopBeforeRoleChange(force);
     }
 
     @Override
@@ -80,6 +80,10 @@ public class ReplicaAuthorizationBroker extends BrokerFilter implements Mutative
         ((MutativeRoleBroker) next).startAfterRoleChange();
     }
 
+    @Override
+    public void initializeRoleChangeCallBack(ActionListenerCallback actionListenerCallback) {
+        ((MutativeRoleBroker) next).initializeRoleChangeCallBack(actionListenerCallback);
+    }
 
     private void assertAuthorized(ConnectionContext context, ActiveMQDestination destination) {
         if (isAuthorized(context, destination)) {

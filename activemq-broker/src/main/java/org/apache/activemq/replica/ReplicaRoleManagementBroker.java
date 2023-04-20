@@ -21,7 +21,7 @@ import org.apache.activemq.broker.MutableBrokerFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReplicaRoleManagementBroker extends MutableBrokerFilter {
+public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements ActionListenerCallback {
     private final Logger logger = LoggerFactory.getLogger(ReplicaRoleManagementBroker.class);
     private final Broker sourceBroker;
     private final Broker replicaBroker;
@@ -37,6 +37,27 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter {
         } else if (role == ReplicaRole.replica) {
             setNext(replicaBroker);
         }
+        logger.info("this is a broker initialization role: {}",this.role);
+    }
+
+    @Override
+    public void onDeinitializationSuccess() {
+        try {
+            if (replicaBroker.isStopped()) {
+                replicaBroker.start();
+            } else {
+                ((MutativeRoleBroker) replicaBroker).startAfterRoleChange();
+            }
+            setNext(replicaBroker);
+        } catch (Exception e) {
+            logger.error("Failed to switch role", e);
+            throw new RuntimeException("Failed to switch role", e);
+        }
+    }
+
+    @Override
+    public void onFailOverAck() {
+        switchNext(replicaBroker, sourceBroker);
     }
 
     public void switchRole(ReplicaRole role, boolean force) {
@@ -45,20 +66,22 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter {
         }
 
         if (force) {
-            switchRoleForce(role);
+            forceSwitchRole(role);
         } else {
-            switchRoleSoft(role);
+            switchRole(role);
         }
 
         this.role = role;
     }
 
-    private void switchRoleSoft(ReplicaRole role) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet");
+    private void switchRole(ReplicaRole role) {
+        if (this.role == ReplicaRole.source && role != ReplicaRole.replica) {
+            return;
+        }
+        switchNext(sourceBroker);
     }
 
-    private void switchRoleForce(ReplicaRole role) {
+    private void forceSwitchRole(ReplicaRole role) {
         if (role == ReplicaRole.replica) {
             switchNext(sourceBroker, replicaBroker);
         } else if (role == ReplicaRole.source) {
@@ -68,13 +91,22 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter {
 
     private void switchNext(Broker oldNext, Broker newNext) {
         try {
-            ((MutativeRoleBroker) oldNext).stopBeforeRoleChange();
+            ((MutativeRoleBroker) oldNext).stopBeforeRoleChange(true);
             if (newNext.isStopped()) {
                 newNext.start();
             } else {
                 ((MutativeRoleBroker) newNext).startAfterRoleChange();
             }
             setNext(newNext);
+        } catch (Exception e) {
+            logger.error("Failed to switch role", e);
+            throw new RuntimeException("Failed to switch role", e);
+        }
+    }
+
+    private void switchNext(Broker oldNext) {
+        try {
+            ((MutativeRoleBroker) oldNext).stopBeforeRoleChange(false);
         } catch (Exception e) {
             logger.error("Failed to switch role", e);
             throw new RuntimeException("Failed to switch role", e);

@@ -95,7 +95,12 @@ public class ReplicaPlugin extends BrokerPluginSupport {
             advisoryBroker.setNext(new ReplicaAdvisorySuppressor(advisoryBroker.getNext()));
         }
 
-        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, buildSourceBroker(broker), buildReplicaBroker(broker), role);
+        Broker sourceBroker = buildSourceBroker(broker);
+        Broker replicaBroker = buildReplicaBroker(broker);
+
+        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, sourceBroker, replicaBroker, role);
+        ((MutativeRoleBroker) sourceBroker).initializeRoleChangeCallBack(replicaRoleManagementBroker);
+        ((MutativeRoleBroker) replicaBroker).initializeRoleChangeCallBack(replicaRoleManagementBroker);
 
         return new ReplicaAuthorizationBroker(replicaRoleManagementBroker);
     }

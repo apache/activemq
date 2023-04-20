@@ -53,6 +53,7 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaPolicy replicaPolicy;
     private final PeriodAcknowledge periodAcknowledgeCallBack;
+    private ActionListenerCallback actionListenerCallback;
     private ReplicaBrokerEventListener messageListener;
     private ScheduledFuture<?> replicationScheduledFuture;
     private ScheduledFuture<?> ackPollerScheduledFuture;
@@ -78,8 +79,13 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
     }
 
     @Override
-    public void stopBeforeRoleChange() throws Exception {
-        logger.info("Stopping broker replication");
+    public void initializeRoleChangeCallBack(ActionListenerCallback actionListenerCallback) {
+        this.actionListenerCallback = actionListenerCallback;
+    }
+
+    @Override
+    public void stopBeforeRoleChange(boolean force) throws Exception {
+        logger.info("Stopping broker replication. Forced: [{}]", force);
         messageListener.deinitialize();
         removeReplicationQueues();
         stopAllConnections();
@@ -87,7 +93,7 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
 
     @Override
     public void startAfterRoleChange() throws Exception {
-        logger.info("Resuming Replica broker");
+        logger.info("Starting Replica broker");
         init();
     }
 
@@ -105,7 +111,7 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
                 }
             }
         }, replicaPolicy.getReplicaAckPeriod(), replicaPolicy.getReplicaAckPeriod(), TimeUnit.MILLISECONDS);
-        messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider, periodAcknowledgeCallBack);
+        messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider, periodAcknowledgeCallBack, actionListenerCallback);
     }
 
     private void stopAllConnections() throws JMSException {

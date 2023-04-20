@@ -47,6 +47,18 @@ public class ReplicaBatcher {
             ReplicaEventType currentEventType =
                     ReplicaEventType.valueOf(message.getStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY));
 
+            if (currentEventType == ReplicaEventType.FAIL_OVER) {
+                if (batch.size() > 0) {
+                    result.add(batch);
+                    batch = new ArrayList<>();
+                    batchSize = 0;
+                }
+                batch.add(reference);
+                result.add(batch);
+                batch = new ArrayList<>();
+                continue;
+            }
+
             boolean eventTypeSwitch = false;
             if (originalDestination != null) {
                 Set<String> sends = destination2eventType.computeIfAbsent(originalDestination, k -> new HashSet<>());

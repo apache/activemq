@@ -126,11 +126,11 @@ public class ReplicaSequencerTest {
 
         MessageId messageId = new MessageId("1:0:0:1");
         sequencer.restoreSequence("1#" + messageId, Collections.emptyList());
-        verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any());
+        verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any(ReplicaEvent.class));
 
         assertThat(sequencer.sequence).isEqualTo(1);
 
-        verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any());
+        verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any(ReplicaEvent.class));
     }
 
     @Test
@@ -428,7 +428,7 @@ public class ReplicaSequencerTest {
         assertThat(messageAck.getLastMessageId()).isEqualTo(messageId3);
 
         verify(broker, times(3)).addConsumer(any(), any());
-        verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any());
+        verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any(ReplicaEvent.class));
 
         ArgumentCaptor<MessageReferenceFilter> filterArgumentCaptor = ArgumentCaptor.forClass(MessageReferenceFilter.class);
         ArgumentCaptor<ConnectionContext> contextArgumentCaptor = ArgumentCaptor.forClass(ConnectionContext.class);
