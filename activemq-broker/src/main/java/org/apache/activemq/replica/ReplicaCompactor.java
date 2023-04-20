@@ -43,7 +43,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -163,35 +162,49 @@ public class ReplicaCompactor {
     }
 
     private void acknowledge(List<DeliveredMessageReference> list) throws Exception {
+        List<MessageReference> notDelivered = list.stream()
+                .filter(dmr -> !dmr.delivered)
+                .map(DeliveredMessageReference::getReference)
+                .collect(Collectors.toList());
+        if (!notDelivered.isEmpty()) {
+            intermediateQueue.dispatchNotification(subscription, notDelivered);
+        }
+
         TransactionId transactionId = new LocalTransactionId(
                 new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
                 ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
+        boolean rollbackOnFail = false;
 
-        synchronized (ReplicaSupport.INTERMEDIATE_QUEUE_MUTEX) {
+        try {
             broker.beginTransaction(connectionContext, transactionId);
+            rollbackOnFail = true;
 
             ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
             consumerExchange.setConnectionContext(connectionContext);
-
-            List<MessageReference> notDelivered = list.stream()
-                    .filter(dmr -> !dmr.delivered)
-                    .map(DeliveredMessageReference::getReference)
-                    .collect(Collectors.toList());
-            intermediateQueue.dispatchNotification(subscription, notDelivered);
+            consumerExchange.setSubscription(subscription);
 
             for (DeliveredMessageReference dmr : list) {
                 MessageAck messageAck = new MessageAck();
                 messageAck.setMessageID(dmr.messageReference.getMessageId());
+                messageAck.setTransactionId(transactionId);
                 messageAck.setMessageCount(1);
                 messageAck.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
                 messageAck.setDestination(queueProvider.getIntermediateQueue());
-
-                consumerExchange.setSubscription(subscription);
 
                 broker.acknowledge(consumerExchange, messageAck);
             }
 
             broker.commitTransaction(connectionContext, transactionId, true);
+        } catch (Exception e) {
+            logger.error("Failed to persist messages in the main replication queue", e);
+            if (rollbackOnFail) {
+                try {
+                    broker.rollbackTransaction(connectionContext, transactionId);
+                } catch (Exception ex) {
+                    logger.error("Could not rollback transaction", ex);
+                }
+            }
+            throw e;
         }
     }
 
@@ -232,37 +245,25 @@ public class ReplicaCompactor {
         List<DeliveredMessageReference> result = new ArrayList<>();
         for (SendsAndAcks sendsAndAcks : sendsAndAcksList) {
             for (Ack ack : sendsAndAcks.acks) {
-                List<String> sends = new ArrayList<>();
+                List<DeliveredMessageReference> sends = new ArrayList<>();
+                List<String> sendIds = new ArrayList<>();
                 for (String id : ack.messageIdsToAck) {
                     if (sendsAndAcks.sendMap.containsKey(id)) {
-                        sends.add(id);
-                        result.add(sendsAndAcks.sendMap.get(id));
+                        sendIds.add(id);
+                        sends.add(sendsAndAcks.sendMap.get(id));
                     }
                 }
-                if (sends.size() == 0) {
+                if (sendIds.size() == 0) {
                     continue;
                 }
 
-                if (ack.messageIdsToAck.size() == sends.size() && new HashSet<>(ack.messageIdsToAck).containsAll(sends)) {
+                if (ack.messageIdsToAck.size() == sendIds.size() && new HashSet<>(ack.messageIdsToAck).containsAll(sendIds)) {
+                    result.addAll(sends);
                     result.add(ack);
-                } else {
-                    updateMessage(ack.message, ack.messageIdsToAck, sends);
                 }
             }
         }
-
         return result;
-    }
-
-    private void updateMessage(ActiveMQMessage message, List<String> messageIdsToAck, List<String> sends) throws IOException {
-        message.setProperty(ReplicaSupport.ORIGINAL_MESSAGE_IDS_PROPERTY, messageIdsToAck);
-        ArrayList<String> newList = new ArrayList<>(messageIdsToAck);
-        newList.removeAll(sends);
-        message.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, newList);
-
-        synchronized (ReplicaSupport.INTERMEDIATE_QUEUE_MUTEX) {
-            intermediateQueue.getMessageStore().updateMessage(message);
-        }
     }
 
     private Set<String> getAckedMessageIds(List<QueueMessageReference> ackMessages) throws IOException {
@@ -277,9 +278,7 @@ public class ReplicaCompactor {
 
     @SuppressWarnings("unchecked")
     private static List<String> getAckMessageIds(ActiveMQMessage message) throws IOException {
-        return (List<String>)
-                Optional.ofNullable(message.getProperty(ReplicaSupport.ORIGINAL_MESSAGE_IDS_PROPERTY))
-                        .orElse(message.getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY));
+        return (List<String>) message.getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY);
     }
 
     private static class DeliveredMessageReference {
@@ -353,7 +352,7 @@ public class ReplicaCompactor {
 
             List<String> messageIds;
             try {
-                messageIds = getAckMessageIds(message);
+                messageIds = (List<String>) message.getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY);
             } catch (IOException e) {
                 throw JMSExceptionSupport.create(e);
             }

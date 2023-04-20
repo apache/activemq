@@ -52,7 +52,6 @@ public class ReplicaSupport {
     public static final String IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY = "IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY";
     public static final String MESSAGE_ID_PROPERTY = "MessageIdProperty";
     public static final String MESSAGE_IDS_PROPERTY = "MessageIdsProperty";
-    public static final String ORIGINAL_MESSAGE_IDS_PROPERTY = "OriginalMessageIdsProperty";
     public static final String SEQUENCE_PROPERTY = "SEQUENCE_PROPERTY";
     public static final String ACTIVEMQ_USER = "ActiveMQBroker";
 
