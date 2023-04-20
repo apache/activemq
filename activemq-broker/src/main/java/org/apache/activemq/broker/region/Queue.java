@@ -2436,7 +2436,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         Subscription sub = getMatchingSubscription(messageDispatchNotification);
         if (sub != null) {
             MessageReference message = getMatchingMessage(messageDispatchNotification);
+            sub.add(message);
+            sub.processMessageDispatchNotification(messageDispatchNotification);
+        }
+    }
 
+    public void dispatchNotification(Subscription sub, List<MessageReference> messageList) throws Exception {
+        for (MessageReference message : messageList) {
             pagedInMessagesLock.writeLock().lock();
             try {
                 if (!pagedInMessages.contains(message)) {
@@ -2454,9 +2460,37 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             } finally {
                 pagedInPendingDispatchLock.writeLock().unlock();
             }
+        }
 
+        Set<MessageId> messageIds = messageList.stream().map(MessageReference::getMessageId).collect(Collectors.toSet());
+        messagesLock.writeLock().lock();
+        try {
+            try {
+                int count = 0;
+                messages.setMaxBatchSize(getMaxPageSize());
+                messages.reset();
+                while (messages.hasNext()) {
+                    MessageReference node = messages.next();
+                    if (messageIds.contains(node.getMessageId())) {
+                        messages.remove();
+                        count++;
+                    }
+                    if (count == messageIds.size()) {
+                        break;
+                    }
+                }
+            } finally {
+                messages.release();
+            }
+        } finally {
+            messagesLock.writeLock().unlock();
+        }
+
+        for (MessageReference message : messageList) {
             sub.add(message);
-            sub.processMessageDispatchNotification(messageDispatchNotification);
+            MessageDispatchNotification mdn = new MessageDispatchNotification();
+            mdn.setMessageId(message.getMessageId());
+            sub.processMessageDispatchNotification(mdn);
         }
     }
 
@@ -2465,56 +2499,26 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         QueueMessageReference message = null;
         MessageId messageId = messageDispatchNotification.getMessageId();
 
-        pagedInPendingDispatchLock.writeLock().lock();
-        try {
-            for (MessageReference ref : dispatchPendingList) {
-                if (messageId.equals(ref.getMessageId())) {
-                    message = (QueueMessageReference)ref;
-                    dispatchPendingList.remove(ref);
-                    break;
-                }
-            }
-        } finally {
-            pagedInPendingDispatchLock.writeLock().unlock();
-        }
-
-        if (message == null) {
+        Set<MessageReference> set = new LinkedHashSet<MessageReference>();
+        do {
+            doPageIn(true, false, getMaxPageSize());
             pagedInMessagesLock.readLock().lock();
             try {
-                message = (QueueMessageReference)pagedInMessages.get(messageId);
+                if (!set.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    break;
+                };
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
-        }
-
-        if (message == null) {
-            messagesLock.writeLock().lock();
-            try {
-                try {
-                    messages.setMaxBatchSize(getMaxPageSize());
-                    messages.reset();
-                    while (messages.hasNext()) {
-                        MessageReference node = messages.next();
-                        if (messageId.equals(node.getMessageId())) {
-                            messages.remove();
-                            message = this.createMessageReference(node.getMessage());
-                            break;
-                        }
-                    }
-                } finally {
-                    messages.release();
+            List<MessageReference> list = new ArrayList<MessageReference>(set);
+            for (MessageReference ref : list) {
+                if (ref.getMessageId().equals(messageId)) {
+                    message = (QueueMessageReference) ref;
+                    break;
                 }
-            } finally {
-                messagesLock.writeLock().unlock();
             }
-        }
-
-        if (message == null) {
-            Message msg = loadMessage(messageId);
-            if (msg != null) {
-                message = this.createMessageReference(msg);
-            }
-        }
+        } while (set.size() < this.destinationStatistics.getMessages().getCount());
 
         if (message == null) {
             throw new JMSException("Slave broker out of sync with master - Message: "
