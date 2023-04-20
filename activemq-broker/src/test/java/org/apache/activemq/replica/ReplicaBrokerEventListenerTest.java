@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.replica;
 
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.TransactionBroker;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.PrefetchSubscription;
@@ -36,22 +36,30 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.apache.activemq.util.IOHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
+import javax.jms.JMSException;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.Xid;
 import java.io.File;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -74,7 +82,7 @@ public class ReplicaBrokerEventListenerTest {
     private final ReplicaFailOverStateStorage replicaFailOverStateStorage = mock(ReplicaFailOverStateStorage.class);
     private final ActionListenerCallback actionListenerCallback = mock(ActionListenerCallback.class);
     private final PrefetchSubscription subscription = mock(PrefetchSubscription.class);
-
+    private final TransactionBroker transactionBroker = mock(TransactionBroker.class);
     private ReplicaBrokerEventListener listener;
     private PeriodAcknowledge acknowledgeCallback;
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
@@ -96,6 +104,7 @@ public class ReplicaBrokerEventListenerTest {
         when(queueProvider.getSequenceQueue()).thenReturn(sequenceQueue);
         when(broker.getDestinations(sequenceQueue)).thenReturn(Set.of(sequenceDstinationQueue));
         when(broker.addConsumer(any(), any())).thenReturn(subscription);
+        when(broker.getAdaptor(TransactionBroker.class)).thenReturn(transactionBroker);
         acknowledgeCallback = new PeriodAcknowledge(new ReplicaPolicy());
         listener = new ReplicaBrokerEventListener(broker, queueProvider, acknowledgeCallback, actionListenerCallback, replicaFailOverStateStorage);
         listener.initialize();
@@ -213,6 +222,7 @@ public class ReplicaBrokerEventListenerTest {
     public void canHandleEventOfType_MESSAGE_ACK_forQueue() throws Exception {
         listener.sequence = null;
         MessageId messageId = new MessageId("1:1:1:1");
+        when(broker.getDestinations()).thenReturn(new ActiveMQDestination[]{testQueue});
 
         MessageAck ack = new MessageAck();
         ConsumerId consumerId = new ConsumerId("2:2:2:2");
@@ -394,6 +404,86 @@ public class ReplicaBrokerEventListenerTest {
     }
 
     @Test
+    public void canHandleEventOfType_TRANSACTION_PREPARE_whenXATransactionNotExist() throws Exception {
+        listener.sequence = null;
+        MessageId messageId = new MessageId("1:1");
+        TransactionId transactionId = new XATransactionId(getDummyXid());
+
+        ActiveMQMessage message = spy(new ActiveMQMessage());
+        message.setMessageId(messageId);
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.TRANSACTION_PREPARE)
+                .setEventData(eventSerializer.serializeReplicationData(transactionId));
+        message.setContent(event.getEventData());
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        when(transactionBroker.getTransaction(any(), any(), anyBoolean())).thenThrow(new XAException(""));
+
+        listener.onMessage(message);
+        verify(broker, never()).prepareTransaction(any(), any());
+    }
+
+    @Test
+    public void canHandleEventOfType_TRANSACTION_FORGET_whenXATransactionNotExist() throws Exception {
+        listener.sequence = null;
+        MessageId messageId = new MessageId("1:1");
+        TransactionId transactionId = new XATransactionId(getDummyXid());
+
+        ActiveMQMessage message = spy(new ActiveMQMessage());
+        message.setMessageId(messageId);
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.TRANSACTION_FORGET)
+                .setEventData(eventSerializer.serializeReplicationData(transactionId));
+        message.setContent(event.getEventData());
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        when(transactionBroker.getTransaction(any(), any(), anyBoolean())).thenThrow(new XAException(""));
+
+        listener.onMessage(message);
+        verify(broker, never()).forgetTransaction(any(), any());
+    }
+
+    @Test
+    public void canHandleEventOfType_TRANSACTION_COMMIT_whenXATransactionNotExist() throws Exception {
+        listener.sequence = null;
+        MessageId messageId = new MessageId("1:1");
+        TransactionId transactionId = new XATransactionId(getDummyXid());
+
+        ActiveMQMessage message = spy(new ActiveMQMessage());
+        message.setMessageId(messageId);
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.TRANSACTION_COMMIT)
+                .setEventData(eventSerializer.serializeReplicationData(transactionId));
+        message.setContent(event.getEventData());
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        when(transactionBroker.getTransaction(any(), any(), anyBoolean())).thenThrow(new XAException(""));
+
+        listener.onMessage(message);
+        verify(broker, times(1)).commitTransaction(any(), any(), anyBoolean());
+    }
+
+    @Test
+    public void canHandleEventOfType_TRANSACTION_ROLLBACK_whenXATransactionNotExist() throws Exception {
+        listener.sequence = null;
+        MessageId messageId = new MessageId("1:1");
+        TransactionId transactionId = new XATransactionId(getDummyXid());
+
+        ActiveMQMessage message = spy(new ActiveMQMessage());
+        message.setMessageId(messageId);
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.TRANSACTION_ROLLBACK)
+                .setEventData(eventSerializer.serializeReplicationData(transactionId));
+        message.setContent(event.getEventData());
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        when(transactionBroker.getTransaction(any(), any(), anyBoolean())).thenThrow(new XAException(""));
+
+        listener.onMessage(message);
+        verify(broker, never()).rollbackTransaction(any(), any());
+    }
+
+    @Test
     public void canHandleEventOfType_ADD_DURABLE_CONSUMER() throws Exception {
         listener.sequence = null;
         MessageId messageId = new MessageId("1:1");
@@ -462,6 +552,7 @@ public class ReplicaBrokerEventListenerTest {
     public void canHandleEventOfType_MESSAGE_ACK_forTopic() throws Exception {
         listener.sequence = null;
         MessageId messageId = new MessageId("1:1:1:1");
+        when(broker.getDestinations()).thenReturn(new ActiveMQDestination[]{testTopic});
 
         MessageAck ack = new MessageAck();
         ConsumerId consumerId = new ConsumerId("2:2:2:2");
@@ -503,9 +594,67 @@ public class ReplicaBrokerEventListenerTest {
     }
 
     @Test
+    public void canHandleEventOfType_MESSAGE_ACK_whenMessageNotExist() throws Exception {
+        listener.sequence = null;
+        MessageId messageId = new MessageId("1:1");
+
+        when(broker.getDestinations()).thenReturn(new ActiveMQDestination[]{testQueue});
+
+        MessageAck ack = new MessageAck();
+        ConsumerId consumerId = new ConsumerId("2:2:2:2");
+        ack.setConsumerId(consumerId);
+        ack.setDestination(testQueue);
+
+        Mockito.doThrow(new JMSException("Slave broker out of sync with master - Message: " + " does not exist among pending(")).when(broker).processDispatchNotification(Mockito.any(MessageDispatchNotification.class));
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.MESSAGE_ACK)
+                .setEventData(eventSerializer.serializeReplicationData(ack))
+                .setReplicationProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, Collections.singletonList(messageId.toString()));;
+
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setProperties(event.getReplicationProperties());
+
+        listener.onMessage(replicaEventMessage);
+
+        verify(broker, never()).acknowledge(any(), any());
+    }
+
+    @Test
+    public void canHandleEventOfType_MESSAGE_ACK_whenDestinationNotExist() throws Exception {
+        listener.sequence = null;
+        MessageId messageId = new MessageId("1:1");
+
+        ActiveMQDestination activeMQDestination = new ActiveMQQueue("NOT.EXIST");
+        when(broker.getDestinations()).thenReturn(new ActiveMQDestination[]{activeMQDestination});
+        MessageAck ack = new MessageAck();
+        ConsumerId consumerId = new ConsumerId("2:2:2:2");
+        ack.setConsumerId(consumerId);
+        ack.setDestination(testQueue);
+
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.MESSAGE_ACK)
+                .setEventData(eventSerializer.serializeReplicationData(ack))
+                .setReplicationProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, Collections.singletonList(messageId.toString()));;
+
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setProperties(event.getReplicationProperties());
+
+        listener.onMessage(replicaEventMessage);
+
+        verify(broker, never()).acknowledge(any(), any());
+    }
+
+    @Test
     public void canHandleEventOfType_BATCH() throws Exception {
         listener.sequence = null;
         MessageId messageId = new MessageId("1:1");
+        when(broker.getDestinations()).thenReturn(new ActiveMQDestination[]{testQueue});
 
         ActiveMQMessage message = new ActiveMQMessage();
         message.setMessageId(messageId);
@@ -690,5 +839,24 @@ public class ReplicaBrokerEventListenerTest {
 
         verify(replicaFailOverStateStorage).updateBrokerState(any(), any(), eq(ReplicaRole.source.name()));
         verify(actionListenerCallback).onFailOverAck();
+    }
+
+    private Xid getDummyXid() {
+        return new Xid() {
+            @Override
+            public int getFormatId() {
+                return 1;
+            }
+
+            @Override
+            public byte[] getGlobalTransactionId() {
+                return UUID.randomUUID().toString().getBytes();
+            }
+
+            @Override
+            public byte[] getBranchQualifier() {
+                return "branchQualifier".getBytes(StandardCharsets.UTF_8);
+            }
+        };
     }
 }
