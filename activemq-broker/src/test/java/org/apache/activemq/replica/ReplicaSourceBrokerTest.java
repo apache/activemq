@@ -171,6 +171,7 @@ public class ReplicaSourceBrokerTest {
         ActiveMQMessage message = new ActiveMQMessage();
         message.setMessageId(messageId);
         message.setDestination(testDestination);
+        message.setPersistent(true);
 
         ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
         producerExchange.setConnectionContext(connectionContext);
@@ -360,6 +361,11 @@ public class ReplicaSourceBrokerTest {
 
         MessageId messageId = new MessageId("1:1");
 
+
+        ActiveMQMessage message = new ActiveMQMessage();
+        message.setMessageId(messageId);
+        message.setPersistent(true);
+
         ConsumerId consumerId = new ConsumerId("2:2:2:2");
         MessageAck messageAck = new MessageAck();
         messageAck.setMessageID(messageId);
@@ -373,6 +379,7 @@ public class ReplicaSourceBrokerTest {
         when(queue.getConsumers()).thenReturn(List.of(subscription));
         ConsumerInfo consumerInfo = new ConsumerInfo(consumerId);
         when(subscription.getConsumerInfo()).thenReturn(consumerInfo);
+        when(subscription.getDispatched()).thenReturn(List.of(new IndirectMessageReference(message)));
 
         ConsumerBrokerExchange cbe = new ConsumerBrokerExchange();
         cbe.setConnectionContext(connectionContext);
@@ -390,6 +397,40 @@ public class ReplicaSourceBrokerTest {
     }
 
     @Test
+    public void replicates_MESSAGE_ACK_individual_nonpersistent() throws Exception {
+        source.start();
+
+        MessageId messageId = new MessageId("1:1");
+
+
+        ActiveMQMessage message = new ActiveMQMessage();
+        message.setMessageId(messageId);
+        message.setPersistent(false);
+
+        ConsumerId consumerId = new ConsumerId("2:2:2:2");
+        MessageAck messageAck = new MessageAck();
+        messageAck.setMessageID(messageId);
+        messageAck.setConsumerId(consumerId);
+        messageAck.setDestination(testDestination);
+        messageAck.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
+
+        Queue queue = mock(Queue.class);
+        when(broker.getDestinations(testDestination)).thenReturn(Set.of(queue));
+        PrefetchSubscription subscription = mock(PrefetchSubscription.class);
+        when(queue.getConsumers()).thenReturn(List.of(subscription));
+        ConsumerInfo consumerInfo = new ConsumerInfo(consumerId);
+        when(subscription.getConsumerInfo()).thenReturn(consumerInfo);
+        when(subscription.getDispatched()).thenReturn(List.of(new IndirectMessageReference(message)));
+
+        ConsumerBrokerExchange cbe = new ConsumerBrokerExchange();
+        cbe.setConnectionContext(connectionContext);
+        source.acknowledge(cbe, messageAck);
+
+        ArgumentCaptor<ActiveMQMessage> sendMessageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
+        verify(broker, never()).send(any(), sendMessageArgumentCaptor.capture());
+    }
+
+    @Test
     public void replicates_MESSAGE_ACK_standard() throws Exception {
         source.start();
 
@@ -399,10 +440,13 @@ public class ReplicaSourceBrokerTest {
 
         ActiveMQMessage firstMessage = new ActiveMQMessage();
         firstMessage.setMessageId(firstMessageId);
+        firstMessage.setPersistent(true);
         ActiveMQMessage secondMessage = new ActiveMQMessage();
         secondMessage.setMessageId(secondMessageId);
+        secondMessage.setPersistent(true);
         ActiveMQMessage thirdMessage = new ActiveMQMessage();
         thirdMessage.setMessageId(thirdMessageId);
+        thirdMessage.setPersistent(true);
 
         ConsumerId consumerId = new ConsumerId("2:2:2:2");
         MessageAck messageAck = new MessageAck();

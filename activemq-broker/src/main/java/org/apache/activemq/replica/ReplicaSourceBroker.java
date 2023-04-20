@@ -41,10 +41,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
@@ -54,7 +54,8 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     private final ReplicaSequencer replicaSequencer;
     private final ReplicaReplicationQueueSupplier queueProvider;
-    private ReplicaPolicy replicaPolicy;
+    private final ReplicaPolicy replicaPolicy;
+    private final ReplicaAckHelper replicaAckHelper;
 
     final DestinationMap destinationsToReplicate = new DestinationMap();
 
@@ -64,6 +65,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         this.replicaSequencer = replicaSequencer;
         this.queueProvider = queueProvider;
         this.replicaPolicy = replicaPolicy;
+        this.replicaAckHelper = new ReplicaAckHelper(next);
     }
 
     @Override
@@ -163,6 +165,9 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
             return false;
         }
         if (message.isAdvisory()) {  // TODO: only replicate what we care about
+            return false;
+        }
+        if (!message.isPersistent()) {
             return false;
         }
 
@@ -481,7 +486,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         }
 
         List<String> messageIdsToAck = getMessageIdsToAck(ack, subscription);
-        if (messageIdsToAck == null) {
+        if (messageIdsToAck == null || messageIdsToAck.isEmpty()) {
             super.acknowledge(consumerExchange, ack);
             return;
         }
@@ -512,30 +517,15 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
     }
 
     private List<String> getMessageIdsToAck(MessageAck ack, PrefetchSubscription subscription) {
-        if (ack.isStandardAck() || ack.isExpiredAck() || ack.isPoisonAck()) {
-            boolean inAckRange = false;
-            List<String> removeList = new ArrayList<>();
-            for (final MessageReference node : subscription.getDispatched()) {
-                MessageId messageId = node.getMessageId();
-                if (ack.getFirstMessageId() == null || ack.getFirstMessageId().equals(messageId)) {
-                    inAckRange = true;
-                }
-                if (inAckRange) {
-                    removeList.add(messageId.toString());
-                    if (ack.getLastMessageId().equals(messageId)) {
-                        break;
-                    }
-                }
-            }
-
-            return removeList;
+        List<MessageReference> messagesToAck = replicaAckHelper.getMessagesToAck(ack, subscription);
+        if (messagesToAck == null) {
+            return null;
         }
-
-        if (ack.isIndividualAck()) {
-            return List.of(ack.getLastMessageId().toString());
-        }
-
-        return null;
+        return messagesToAck.stream()
+                .filter(MessageReference::isPersistent)
+                .map(MessageReference::getMessageId)
+                .map(MessageId::toString)
+                .collect(Collectors.toList());
     }
 
     private void replicateAck(ConnectionContext connectionContext, MessageAck ack, TransactionId transactionId,

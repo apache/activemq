@@ -38,8 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static java.util.Objects.requireNonNull;
-
 public class ReplicaBroker extends BrokerFilter {
 
     private final Logger logger = LoggerFactory.getLogger(ReplicaBroker.class);

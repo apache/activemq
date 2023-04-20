@@ -19,7 +19,6 @@ package org.apache.activemq.replica;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.ActiveMQMessage;
 
-import javax.jms.JMSException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

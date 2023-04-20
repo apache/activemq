@@ -45,7 +45,7 @@ public class ReplicaAckHelper {
         return getMessagesToAck(ack, prefetchSubscription);
     }
 
-    private List<MessageReference> getMessagesToAck(MessageAck ack, PrefetchSubscription subscription) {
+    public List<MessageReference> getMessagesToAck(MessageAck ack, PrefetchSubscription subscription) {
         List<MessageReference> dispatched = subscription.getDispatched();
         if (ack.isStandardAck() || ack.isExpiredAck() || ack.isPoisonAck()) {
             boolean inAckRange = false;
