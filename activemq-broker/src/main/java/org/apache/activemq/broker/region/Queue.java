@@ -1303,8 +1303,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     public void purge(ConnectionContext c) throws Exception {
         List<MessageReference> list;
+        sendLock.lock();
         try {
-            sendLock.lock();
             long originalMessageCount = this.destinationStatistics.getMessages().getCount();
             do {
                 doPageIn(true, false, getMaxPageSize());  // signal no expiry processing needed.

@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import javax.management.j2ee.statistics.Statistic;
-import javax.management.j2ee.statistics.Stats;
 /**
  * Base class for a Stats implementation
  * 

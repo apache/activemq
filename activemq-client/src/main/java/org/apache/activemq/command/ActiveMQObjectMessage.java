@@ -194,9 +194,18 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
      */
     @Override
     public Serializable getObject() throws JMSException {
-        if (object == null && getContent() != null) {
+        final ByteSequence content = getContent();
+        if (object == null && content != null) {
+            this.object = deserialize(content);
+        }
+        return this.object;
+    }
+
+    private Serializable deserialize(ByteSequence content) throws JMSException {
+        Serializable object = null;
+
+        if (content != null) {
             try {
-                ByteSequence content = getContent();
                 InputStream is = new ByteArrayInputStream(content);
                 if (isCompressed()) {
                     is = new InflaterInputStream(is);
@@ -216,7 +225,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
                 throw JMSExceptionSupport.create("Failed to build body from bytes. Reason: " + e, e);
             }
         }
-        return this.object;
+        return object;
     }
 
     @Override
@@ -276,5 +285,21 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     public void initTransients() {
         trustedPackages = Arrays.asList(ClassLoadingAwareObjectInputStream.serializablePackages);
         trustAllPackages = false;
+    }
+
+    @Override
+    public boolean isBodyAssignableTo(Class c) throws JMSException {
+        final Serializable object = getObject();
+        if (object == null) {
+            return true;
+        }
+        return Serializable.class == c || Object.class == c || c.isInstance(object);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> T doGetBody(Class<T> asType) throws JMSException {
+        storeContent();
+        final ByteSequence content = getContent();
+        return content != null ? (T) deserialize(content) : null;
     }
 }

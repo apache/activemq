@@ -58,13 +58,7 @@ public class InactiveQueueTest extends TestCase {
 
         // broker.setPersistenceAdapter(new KahaPersistenceAdapter(new File
         // ("TEST_STUFD")));
-        /*
-         * JournalPersistenceAdapterFactory factory = new
-         * JournalPersistenceAdapterFactory();
-         * factory.setDataDirectoryFile(broker.getDataDirectory());
-         * factory.setTaskRunnerFactory(broker.getTaskRunnerFactory());
-         * factory.setUseJournal(false); broker.setPersistenceFactory(factory);
-         */
+
         broker.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
         broker.start();
         connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);

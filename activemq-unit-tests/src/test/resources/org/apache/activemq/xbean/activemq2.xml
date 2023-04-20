@@ -26,7 +26,7 @@
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <!-- for easier integration with the JUnit tests, lets not start the broker when the ApplicationContext starts -->
-  <broker useJmx="true" start="false" xmlns="http://activemq.apache.org/schema/core">
+  <broker useJmx="true" start="false" xmlns="http://activemq.apache.org/schema/core" deleteAllMessagesOnStartup="true">
     <destinationPolicy>
       <policyMap>
         <policyEntries>
@@ -43,10 +43,13 @@
       </policyMap>
     </destinationPolicy>
 
-
-    <persistenceFactory>
-      <journalPersistenceAdapterFactory journalLogFiles="5" dataDirectory="${basedir}/target/data" />
-    </persistenceFactory>
+    <persistenceAdapter>
+        <kahaDB directory="target/activemq-data/xbean-2/kahadb"
+                  cleanupInterval="300000" checkpointInterval="50000"
+                  journalMaxWriteBatchSize="62k"
+                  journalMaxFileLength="1g"
+                  indexCacheSize="100000" indexWriteBatchSize="100000"/>
+    </persistenceAdapter>
 
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61616" />

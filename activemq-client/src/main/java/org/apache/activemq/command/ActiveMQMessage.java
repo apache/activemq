@@ -795,14 +795,22 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         this.deliveryTime = deliveryTime;
 	}
 
-	@Override
-	public <T> T getBody(Class<T> c) throws JMSException {
-        throw new UnsupportedOperationException("getBody(Class<T>) is not supported");
-	}
+    @Override
+    public final <T> T getBody(Class<T> asType) throws JMSException {
+        if (isBodyAssignableTo(asType)) {
+            return doGetBody(asType);
+        }
 
-	@Override
-	public boolean isBodyAssignableTo(Class c) throws JMSException {
-        throw new UnsupportedOperationException("isBodyAssignableTo(Class) is not supported");
-	}
+        throw new MessageFormatException("Message body cannot be read as type: " + asType);
+    }
+
+    @Override
+    public boolean isBodyAssignableTo(Class c) throws JMSException {
+        return true;
+    }
+
+    protected <T> T doGetBody(Class<T> asType) throws JMSException {
+        return null;
+    }
 
 }

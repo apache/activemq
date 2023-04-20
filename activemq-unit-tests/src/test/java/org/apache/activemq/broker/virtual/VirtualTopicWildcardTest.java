@@ -63,7 +63,11 @@ public class VirtualTopicWildcardTest {
 
     @After
     public void afer() throws Exception {
-        connection.close();
+        try {
+            connection.close();
+        } catch (Exception e) {
+            //swallow any error so broker can still be stopped
+        }
         brokerService.stop();
     }
 

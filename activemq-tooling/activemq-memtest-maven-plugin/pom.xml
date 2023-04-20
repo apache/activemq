@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq.tooling</groupId>
     <artifactId>activemq-tooling</artifactId>
-    <version>5.18.0-SNAPSHOT</version>
+    <version>5.19.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-memtest-maven-plugin</artifactId>
@@ -44,10 +44,6 @@
       <artifactId>activemq-console</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activeio-core</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
     </dependency>
@@ -58,10 +54,6 @@
     <dependency>
       <groupId>jakarta.jms</groupId>
       <artifactId>jakarta.jms-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
     </dependency>
   </dependencies>
   <build>

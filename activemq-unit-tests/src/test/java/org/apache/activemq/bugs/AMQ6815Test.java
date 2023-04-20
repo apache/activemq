@@ -65,8 +65,10 @@ public class AMQ6815Test {
 
       @After
       public void tearDown() throws Exception {
-         if (connection != null) {
+         try {
             connection.close();
+         } catch (Exception e) {
+            //swallow any error so broker can still be stopped
          }
          brokerService.stop();
       }

@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.18.0-SNAPSHOT</version>
+    <version>5.19.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-client</artifactId>
@@ -31,6 +31,7 @@
   <description>The ActiveMQ Client implementation</description>
 
   <properties>
+    <maven.source.skip>false</maven.source.skip>
     <surefire.argLine>-Xmx512M</surefire.argLine>
   </properties>
 
@@ -52,15 +53,9 @@
       <version>${hawtbuf-version}</version>
     </dependency>
 
-    <!-- would be nice if we could make this dependency optional -->
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
-    </dependency>
-
     <!-- for zerconf discovery -->
     <dependency>
-      <groupId>javax.jmdns</groupId>
+      <groupId>org.jmdns</groupId>
       <artifactId>jmdns</artifactId>
       <optional>true</optional>
     </dependency>
@@ -81,7 +76,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
+      <artifactId>log4j-slf4j2-impl</artifactId>
       <scope>test</scope>
     </dependency>
 
