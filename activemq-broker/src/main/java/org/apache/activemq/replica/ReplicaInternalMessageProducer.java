@@ -39,7 +39,7 @@ public class ReplicaInternalMessageProducer {
         this.connectionContext = requireNonNull(connectionContext);
     }
 
-    void sendIgnoringFlowControl(ConnectionContext connectionContext, ActiveMQMessage eventMessage) throws Exception {
+    public void sendIgnoringFlowControl(ConnectionContext connectionContext, ActiveMQMessage eventMessage) throws Exception {
         if (connectionContext != null) {
             sendIgnoringFlowControl(eventMessage, connectionContext);
             return;

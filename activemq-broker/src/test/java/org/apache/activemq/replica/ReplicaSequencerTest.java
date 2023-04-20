@@ -39,6 +39,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -52,8 +53,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ReplicaSequencerTest {
-    private static final String ACK_SELECTOR = String.format("%s LIKE '%s'", ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK);
-    private static final String SEND_SELECTOR = String.format("%s IN ('0:0:0:1','0:0:0:2','0:0:0:3')", ReplicaSupport.MESSAGE_ID_PROPERTY);
     private static final Integer MAXIMUM_MESSAGES = new ReplicaPolicy().getCompactorAdditionalMessagesLimit();
     private final ConnectionContext connectionContext = mock(ConnectionContext.class);
     private final Broker broker = mock(Broker.class);
@@ -113,38 +112,72 @@ public class ReplicaSequencerTest {
     }
 
     @Test
-    public void restoreSequenceWhenStorageDoesNotExist() throws Exception {
+    public void restoreSequenceWhenNoSequence() throws Exception {
         sequencer.sequence = null;
 
-        sequencer.restoreSequence(null, intermediateQueue);
+        sequencer.restoreSequence(null, Collections.emptyList());
 
         assertThat(sequencer.sequence).isNull();
     }
 
     @Test
-    public void restoreSequenceWhenStorageExistAndNoMessagesInQueue() throws Exception {
+    public void restoreSequenceWhenSequenceExistsButNoRecoverySequences() throws Exception {
         sequencer.sequence = null;
 
         MessageId messageId = new MessageId("1:0:0:1");
-
-        when(intermediateQueue.getAllMessageIds()).thenReturn(List.of());
-
-        sequencer.restoreSequence("1#" + messageId, intermediateQueue);
+        sequencer.restoreSequence("1#" + messageId, Collections.emptyList());
+        verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any());
 
         assertThat(sequencer.sequence).isEqualTo(1);
+
+        verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any());
     }
 
     @Test
     public void restoreSequenceWhenStorageExistAndMessageDoesNotExist() throws Exception {
         sequencer.sequence = null;
 
-        MessageId messageId = new MessageId("1:0:0:1");
+        MessageId messageId1 = new MessageId("1:0:0:1");
+        MessageId messageId2 = new MessageId("1:0:0:2");
+        MessageId messageId3 = new MessageId("1:0:0:3");
+        MessageId messageId4 = new MessageId("1:0:0:4");
 
-        when(intermediateQueue.getAllMessageIds()).thenReturn(List.of(new MessageId("1:0:0:2")));
+        ActiveMQMessage message1 = new ActiveMQMessage();
+        message1.setMessageId(messageId1);
+        message1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage message2 = new ActiveMQMessage();
+        message2.setMessageId(messageId2);
+        message2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage message3 = new ActiveMQMessage();
+        message3.setMessageId(messageId3);
+        message3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage message4 = new ActiveMQMessage();
+        message4.setMessageId(messageId4);
+        message4.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
 
-        sequencer.restoreSequence("1#" + messageId, intermediateQueue);
+        when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3, message4)));
 
-        assertThat(sequencer.sequence).isEqualTo(1);
+        sequencer.restoreSequence("4#" + messageId4, List.of("1#" + messageId1 + "#" + messageId2, "3#" + messageId3 + "#" + messageId4));
+
+        assertThat(sequencer.sequence).isEqualTo(4);
+
+        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
+        verify(replicationMessageProducer, times(2)).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
+
+        List<ReplicaEvent> values = argumentCaptor.getAllValues();
+        assertThat(values.get(0).getEventType()).isEqualTo(ReplicaEventType.BATCH);
+        assertThat((List<String>) values.get(0).getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId1.toString(), messageId2.toString());
+        List<Object> objects = eventSerializer.deserializeListOfObjects(values.get(0).getEventData().getData());
+        assertThat(objects.size()).isEqualTo(2);
+        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId1);
+        assertThat(((Message) objects.get(1)).getMessageId()).isEqualTo(messageId2);
+
+        assertThat(values.get(1).getEventType()).isEqualTo(ReplicaEventType.BATCH);
+        assertThat((List<String>) values.get(1).getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId3.toString(), messageId4.toString());
+        objects = eventSerializer.deserializeListOfObjects(values.get(1).getEventData().getData());
+        assertThat(objects.size()).isEqualTo(2);
+        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId3);
+        assertThat(((Message) objects.get(1)).getMessageId()).isEqualTo(messageId4);
     }
 
     @Test
@@ -258,79 +291,6 @@ public class ReplicaSequencerTest {
     }
 
     @Test
-    public void iterateSendTestWhenRecoveryMessageIdIsNotNullAndDispatched() throws Exception {
-        sequencer.hasConsumer = true;
-
-        MessageId messageId1 = new MessageId("1:0:0:1");
-        MessageId messageId2 = new MessageId("1:0:0:2");
-        MessageId messageId3 = new MessageId("1:0:0:3");
-
-        ActiveMQMessage message1 = new ActiveMQMessage();
-        message1.setMessageId(messageId1);
-        message1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
-        ActiveMQMessage message2 = new ActiveMQMessage();
-        message2.setMessageId(messageId2);
-        message2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
-        ActiveMQMessage message3 = new ActiveMQMessage();
-        message3.setMessageId(messageId3);
-        message3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
-
-        when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3)));
-
-        sequencer.recoveryMessageId = messageId2;
-
-        sequencer.iterateSend();
-
-        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
-        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
-
-        ReplicaEvent value = argumentCaptor.getValue();
-        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
-        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId1.toString(), messageId2.toString());
-        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
-        assertThat(objects.size()).isEqualTo(2);
-        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId1);
-        assertThat(((Message) objects.get(1)).getMessageId()).isEqualTo(messageId2);
-    }
-
-    @Test
-    public void iterateSendTestWhenRecoveryMessageIdIsNotNullAndNotDispatched() throws Exception {
-        sequencer.hasConsumer = true;
-
-        MessageId messageId1 = new MessageId("1:0:0:1");
-        MessageId messageId2 = new MessageId("1:0:0:2");
-        MessageId messageId3 = new MessageId("1:0:0:3");
-
-        ActiveMQMessage message1 = new ActiveMQMessage();
-        message1.setMessageId(messageId1);
-        message1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
-        ActiveMQMessage message2 = new ActiveMQMessage();
-        message2.setMessageId(messageId2);
-        message2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
-        ActiveMQMessage message3 = new ActiveMQMessage();
-        message3.setMessageId(messageId3);
-        message3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
-
-        when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3)));
-
-        sequencer.recoveryMessageId = new MessageId("1:0:0:4");
-
-        sequencer.iterateSend();
-
-        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
-        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
-
-        ReplicaEvent value = argumentCaptor.getValue();
-        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
-        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId1.toString(), messageId2.toString(), messageId3.toString());
-        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
-        assertThat(objects.size()).isEqualTo(3);
-        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId1);
-        assertThat(((Message) objects.get(1)).getMessageId()).isEqualTo(messageId2);
-        assertThat(((Message) objects.get(2)).getMessageId()).isEqualTo(messageId3);
-    }
-
-    @Test
     public void iterateSendTestWhenCompactionPossible() throws Exception {
         sequencer.hasConsumer = true;
 
@@ -357,8 +317,6 @@ public class ReplicaSequencerTest {
 
         when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3)));
 
-        sequencer.recoveryMessageId = null;
-
         sequencer.iterateSend();
 
         ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
@@ -383,50 +341,6 @@ public class ReplicaSequencerTest {
         assertThat(messageAck.getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
         assertThat(messageAck.getMessageCount()).isEqualTo(1);
         assertThat(messageAck.getLastMessageId()).isEqualTo(messageId3);
-    }
-
-    @Test
-    public void iterateSendTestWhenCompactionPossibleAndRecoveryMessageIdIsNotNull() throws Exception {
-        sequencer.hasConsumer = true;
-
-        MessageId messageId1 = new MessageId("1:0:0:1");
-        MessageId messageId2 = new MessageId("1:0:0:2");
-        MessageId messageId3 = new MessageId("1:0:0:3");
-
-        String messageIdToAck = "2:1";
-
-        ActiveMQMessage message1 = new ActiveMQMessage();
-        message1.setMessageId(messageId1);
-        message1.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
-        message1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
-        message1.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, messageIdToAck);
-        ActiveMQMessage message2 = new ActiveMQMessage();
-        message2.setMessageId(messageId2);
-        message2.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
-        message2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
-        ActiveMQMessage message3 = new ActiveMQMessage();
-        message3.setMessageId(messageId3);
-        message3.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
-        message3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
-        message3.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(messageIdToAck));
-
-        when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3)));
-
-        sequencer.recoveryMessageId = messageId3;
-
-        sequencer.iterateSend();
-
-        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
-        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
-
-        ReplicaEvent value = argumentCaptor.getValue();
-        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
-        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId1.toString(), messageId2.toString(), messageId3.toString());
-        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
-        assertThat(objects.size()).isEqualTo(3);
-        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId1);
-        assertThat(((Message) objects.get(1)).getMessageId()).isEqualTo(messageId2);
-        assertThat(((Message) objects.get(2)).getMessageId()).isEqualTo(messageId3);
     }
 
     @Test
@@ -498,8 +412,6 @@ public class ReplicaSequencerTest {
 
         when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3)));
 
-        sequencer.recoveryMessageId = null;
-
         sequencer.iterateSend();
 
         ArgumentCaptor<MessageAck> ackCaptor = ArgumentCaptor.forClass(MessageAck.class);
@@ -515,7 +427,7 @@ public class ReplicaSequencerTest {
         assertThat(messageAck.getMessageCount()).isEqualTo(1);
         assertThat(messageAck.getLastMessageId()).isEqualTo(messageId3);
 
-        verify(broker, times(2)).addConsumer(any(), any());
+        verify(broker, times(3)).addConsumer(any(), any());
         verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any());
 
         ArgumentCaptor<MessageReferenceFilter> filterArgumentCaptor = ArgumentCaptor.forClass(MessageReferenceFilter.class);

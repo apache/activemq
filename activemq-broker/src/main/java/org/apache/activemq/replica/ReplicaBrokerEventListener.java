@@ -36,6 +36,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.replica.storage.ReplicaSequenceStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +95,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
 
         String[] split = savedSequence.split("#");
         if (split.length != 2) {
-            return;
+            throw new IllegalStateException("Unknown sequence message format: " + savedSequence);
         }
         sequence = new BigInteger(split[0]);
 

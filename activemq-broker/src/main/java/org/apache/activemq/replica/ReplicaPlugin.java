@@ -80,6 +80,8 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         List<PolicyEntry> policyEntries = new ArrayList<>();
         for (String queue : ReplicaSupport.REPLICATION_QUEUE_NAMES) {
             PolicyEntry newPolicy = new PolicyEntry();
+            newPolicy.setMaxPageSize(ReplicaSupport.INTERMEDIATE_QUEUE_PREFETCH_SIZE);
+            newPolicy.setGcInactiveDestinations(false);
             newPolicy.setDestination(new ActiveMQQueue(queue));
             policyEntries.add(newPolicy);
         }

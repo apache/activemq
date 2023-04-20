@@ -24,7 +24,7 @@ import org.apache.activemq.broker.region.Topic;
 
 public class DestinationExtractor {
 
-    static Queue extractQueue(Destination destination) {
+    public static Queue extractQueue(Destination destination) {
         return extract(destination, Queue.class);
     }
 

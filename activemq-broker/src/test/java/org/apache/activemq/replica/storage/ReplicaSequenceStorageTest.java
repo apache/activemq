@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.replica;
+package org.apache.activemq.replica.storage;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.IndirectMessageReference;
 import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.QueueMessageReference;
@@ -29,6 +30,9 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.replica.ReplicaInternalMessageProducer;
+import org.apache.activemq.replica.ReplicaReplicationQueueSupplier;
+import org.apache.activemq.replica.ReplicaSupport;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -41,6 +45,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.ArgumentMatchers.startsWith;
@@ -72,17 +77,18 @@ public class ReplicaSequenceStorageTest {
         ConnectionContext adminConnectionContext = mock(ConnectionContext.class);
         when(adminConnectionContext.copy()).thenReturn(connectionContext);
         when(broker.getAdminConnectionContext()).thenReturn(adminConnectionContext);
+        when(broker.addConsumer(any(), any())).thenReturn(subscription);
         when(queueProvider.getSequenceQueue()).thenReturn(sequenceQueueDestination);
-        when(sequenceQueue.getAllMessageIds()).thenReturn(new ArrayList<>());
 
         this.replicaSequenceStorage = new ReplicaSequenceStorage(broker, connectionContext, queueProvider, replicaProducer, SEQUENCE_NAME);
     }
 
     @Test
     public void shouldInitializeWhenNoMessagesExist() throws Exception {
-        when(sequenceQueue.getAllMessageIds()).thenReturn(new ArrayList<>());
+        when(subscription.getDispatched()).thenReturn(new ArrayList<>()).thenReturn(new ArrayList<>());
 
-        replicaSequenceStorage.initialize();
+        String initialize = replicaSequenceStorage.initialize();
+        assertThat(initialize).isNull();
         verify(sequenceQueue, never()).removeMessage(any());
     }
 
@@ -91,50 +97,18 @@ public class ReplicaSequenceStorageTest {
         ActiveMQTextMessage message1 = new ActiveMQTextMessage();
         message1.setMessageId(new MessageId("1:0:0:1"));
         message1.setText("1");
-        message1.setStringProperty(ReplicaSequenceStorage.SEQUENCE_NAME_PROPERTY, SEQUENCE_NAME);
+        message1.setStringProperty(ReplicaBaseSequenceStorage.SEQUENCE_NAME_PROPERTY, SEQUENCE_NAME);
         ActiveMQTextMessage message2 = new ActiveMQTextMessage();
         message2.setMessageId(new MessageId("1:0:0:2"));
         message2.setText("2");
-        message2.setStringProperty(ReplicaSequenceStorage.SEQUENCE_NAME_PROPERTY, SEQUENCE_NAME);
+        message2.setStringProperty(ReplicaBaseSequenceStorage.SEQUENCE_NAME_PROPERTY, SEQUENCE_NAME);
 
-        MessageId messageId1 = new MessageId("1:0:0:1");
-        MessageId messageId2 = new MessageId("1:0:0:2");
-        QueueMessageReference messageReference1 = mock(QueueMessageReference.class);
-        when(messageReference1.getMessage()).thenReturn(message1);
-        QueueMessageReference messageReference2 = mock(QueueMessageReference.class);
-        when(messageReference2.getMessage()).thenReturn(message2);
+        when(subscription.getDispatched())
+                .thenReturn(List.of(new IndirectMessageReference(message1), new IndirectMessageReference(message2)));
 
-        when(sequenceQueue.getMessage(messageId1.toString())).thenReturn(messageReference1);
-        when(sequenceQueue.getMessage(messageId2.toString())).thenReturn(messageReference2);
-
-        when(sequenceQueue.getAllMessageIds()).thenReturn(List.of(messageId1, messageId2));
-
-        replicaSequenceStorage.initialize();
+        String initialize = replicaSequenceStorage.initialize();
+        assertThat(initialize).isEqualTo(message1.getText());
         verify(sequenceQueue, times(1)).removeMessage(eq(message1.getMessageId().toString()));
-    }
-
-    @Test
-    public void initializeWhenMoreThanOneExist() throws Exception {
-        MessageId messageId1 = new MessageId("1:0:0:1");
-        ActiveMQTextMessage message1 = new ActiveMQTextMessage();
-        message1.setMessageId(messageId1);
-        message1.setText("1");
-        message1.setStringProperty(ReplicaSequenceStorage.SEQUENCE_NAME_PROPERTY, SEQUENCE_NAME);
-        MessageId messageId2 = new MessageId("1:0:0:2");
-        ActiveMQTextMessage message2 = new ActiveMQTextMessage();
-        message2.setMessageId(messageId2);
-        message2.setText("2");
-        message2.setStringProperty(ReplicaSequenceStorage.SEQUENCE_NAME_PROPERTY, SEQUENCE_NAME);
-        QueueMessageReference messageReference1 = mock(QueueMessageReference.class);
-        when(messageReference1.getMessage()).thenReturn(message1);
-        QueueMessageReference messageReference2 = mock(QueueMessageReference.class);
-        when(messageReference2.getMessage()).thenReturn(message2);
-        when(sequenceQueue.getMessage(messageId1.toString())).thenReturn(messageReference1);
-        when(sequenceQueue.getMessage(messageId2.toString())).thenReturn(messageReference2);
-        when(sequenceQueue.getAllMessageIds()).thenReturn(List.of(messageId1, messageId2));
-        String savedSequence = replicaSequenceStorage.initialize();
-
-        assertThat(savedSequence).isEqualTo(message1.getText());
     }
 
     @Test
@@ -143,7 +117,6 @@ public class ReplicaSequenceStorageTest {
         TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
         ArgumentCaptor<ActiveMQTextMessage> activeMQTextMessageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQTextMessage.class);
         when(subscription.getDispatched()).thenReturn(new ArrayList<>());
-        when(broker.addConsumer(any(ConnectionContext.class), any(ConsumerInfo.class))).thenReturn(subscription);
         replicaSequenceStorage.initialize();
 
         replicaSequenceStorage.enqueue(transactionId, messageToEnqueue);
@@ -175,7 +148,6 @@ public class ReplicaSequenceStorageTest {
         when(messageReference2.getMessage()).thenReturn(message2);
 
         when(subscription.getDispatched()).thenReturn(List.of(messageReference1, messageReference2));
-        when(broker.addConsumer(any(ConnectionContext.class), any(ConsumerInfo.class))).thenReturn(subscription);
         replicaSequenceStorage.initialize();
 
         ArgumentCaptor<MessageAck> ackArgumentCaptor = ArgumentCaptor.forClass(MessageAck.class);

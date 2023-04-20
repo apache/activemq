@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.replica;
+package org.apache.activemq.replica.storage;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerStoppedException;
@@ -23,7 +23,6 @@ import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.Queue;
-import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerId;
@@ -33,34 +32,37 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.replica.DestinationExtractor;
+import org.apache.activemq.replica.ReplicaInternalMessageProducer;
+import org.apache.activemq.replica.ReplicaReplicationQueueSupplier;
+import org.apache.activemq.replica.ReplicaSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
-public class ReplicaSequenceStorage {
+public abstract class ReplicaBaseSequenceStorage {
 
-    private final Logger logger = LoggerFactory.getLogger(ReplicaSequenceStorage.class);
+    private final Logger logger = LoggerFactory.getLogger(ReplicaBaseSequenceStorage.class);
 
     static final String SEQUENCE_NAME_PROPERTY = "SequenceName";
-    private final LongSequenceGenerator eventMessageIdGenerator = new LongSequenceGenerator();
-    private final ProducerId replicationProducerId = new ProducerId();
+    protected final ProducerId replicationProducerId = new ProducerId();
     private final Broker broker;
     private final ConnectionContext connectionContext;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
     private final String sequenceName;
-    private final ReplicaReplicationQueueSupplier queueProvider;
+    protected final ReplicaReplicationQueueSupplier queueProvider;
 
-    private Queue sequenceQueue;
-    private PrefetchSubscription subscription;
+    protected Queue sequenceQueue;
+    protected PrefetchSubscription subscription;
 
-    public ReplicaSequenceStorage(Broker broker, ConnectionContext connectionContext, ReplicaReplicationQueueSupplier queueProvider,
-                                  ReplicaInternalMessageProducer replicaInternalMessageProducer, String sequenceName) {
+    public ReplicaBaseSequenceStorage(Broker broker, ConnectionContext connectionContext, ReplicaReplicationQueueSupplier queueProvider,
+            ReplicaInternalMessageProducer replicaInternalMessageProducer, String sequenceName) {
         this.broker = requireNonNull(broker);
         this.connectionContext = connectionContext;
         this.replicaInternalMessageProducer = replicaInternalMessageProducer;
@@ -70,9 +72,9 @@ public class ReplicaSequenceStorage {
         replicationProducerId.setConnectionId(new IdGenerator().generateId());
     }
 
-    public String initialize() throws Exception {
+    protected final List<ActiveMQTextMessage> initializeBase() throws Exception {
         sequenceQueue = broker.getDestinations(queueProvider.getSequenceQueue()).stream().findFirst()
-            .map(DestinationExtractor::extractQueue).orElseThrow();
+                .map(DestinationExtractor::extractQueue).orElseThrow();
 
         String selector = String.format("%s LIKE '%s'", SEQUENCE_NAME_PROPERTY, sequenceName);
 
@@ -81,30 +83,14 @@ public class ReplicaSequenceStorage {
         ConsumerId consumerId = new ConsumerId(sessionId, new LongSequenceGenerator().getNextSequenceId());
         ConsumerInfo consumerInfo = new ConsumerInfo();
         consumerInfo.setConsumerId(consumerId);
-        consumerInfo.setPrefetchSize(10);
+        consumerInfo.setPrefetchSize(ReplicaSupport.INTERMEDIATE_QUEUE_PREFETCH_SIZE);
         consumerInfo.setDestination(queueProvider.getSequenceQueue());
         consumerInfo.setSelector(selector);
         subscription = (PrefetchSubscription) broker.addConsumer(connectionContext, consumerInfo);
+        sequenceQueue.iterate();
 
-        List<ActiveMQTextMessage> allMessages = new ArrayList<>();
-        for (MessageId messageId : sequenceQueue.getAllMessageIds()) {
-            ActiveMQTextMessage message = getMessageByMessageId(messageId);
-            if (message.getStringProperty(SEQUENCE_NAME_PROPERTY).equals(sequenceName)) {
-                allMessages.add(message);
-            }
-        }
-
-        if (allMessages.size() == 0) {
-            return null;
-        }
-
-        if (allMessages.size() > 1) {
-            for (int i = 0; i < allMessages.size() - 1; i++) {
-                sequenceQueue.removeMessage(allMessages.get(i).getMessageId().toString());
-            }
-        }
-
-        return allMessages.get(0).getText();
+        return subscription.getDispatched().stream().map(MessageReference::getMessage)
+                .map(ActiveMQTextMessage.class::cast).collect(Collectors.toList());
     }
 
     public void deinitialize() throws Exception {
@@ -118,34 +104,12 @@ public class ReplicaSequenceStorage {
         }
     }
 
-    public void enqueue(TransactionId tid, String message) throws Exception {
-        // before enqueue message, we acknowledge all messages currently in queue.
-        acknowledgeAll(tid);
-
-        send(tid, message);
-    }
-
-    private void acknowledgeAll(TransactionId tid) throws Exception {
-        List<MessageReference> dispatched = subscription.getDispatched();
-        ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
-        consumerExchange.setConnectionContext(connectionContext);
-        consumerExchange.setSubscription(subscription);
-
-        if (!dispatched.isEmpty()) {
-            MessageAck ack = new MessageAck(dispatched.get(dispatched.size() - 1).getMessage(), MessageAck.STANDARD_ACK_TYPE, dispatched.size());
-            ack.setFirstMessageId(dispatched.get(0).getMessageId());
-            ack.setDestination(queueProvider.getSequenceQueue());
-            ack.setTransactionId(tid);
-            broker.acknowledge(consumerExchange, ack);
-        }
-    }
-
-    private void send(TransactionId tid, String message) throws Exception {
+    public void send(TransactionId tid, String message, MessageId messageId) throws Exception {
         ActiveMQTextMessage seqMessage = new ActiveMQTextMessage();
         seqMessage.setText(message);
         seqMessage.setTransactionId(tid);
         seqMessage.setDestination(queueProvider.getSequenceQueue());
-        seqMessage.setMessageId(new MessageId(replicationProducerId, eventMessageIdGenerator.getNextSequenceId()));
+        seqMessage.setMessageId(messageId);
         seqMessage.setProducerId(replicationProducerId);
         seqMessage.setPersistent(true);
         seqMessage.setResponseRequired(false);
@@ -154,8 +118,15 @@ public class ReplicaSequenceStorage {
         replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, seqMessage);
     }
 
-    private ActiveMQTextMessage getMessageByMessageId(MessageId messageId) {
-        QueueMessageReference messageReference = sequenceQueue.getMessage(messageId.toString());
-        return ((ActiveMQTextMessage) messageReference.getMessage());
+    protected void acknowledge(MessageAck ack) throws Exception {
+        acknowledge(connectionContext, ack);
+    }
+
+    protected void acknowledge(ConnectionContext connectionContext, MessageAck ack) throws Exception {
+        ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
+        consumerExchange.setConnectionContext(connectionContext);
+        consumerExchange.setSubscription(subscription);
+
+        broker.acknowledge(consumerExchange, ack);
     }
 }
