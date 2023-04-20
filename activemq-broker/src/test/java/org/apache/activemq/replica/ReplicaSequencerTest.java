@@ -21,6 +21,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.region.IndirectMessageReference;
+import org.apache.activemq.broker.region.MessageReferenceFilter;
 import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.QueueMessageReference;
@@ -43,6 +44,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -52,7 +54,7 @@ import static org.mockito.Mockito.when;
 public class ReplicaSequencerTest {
     private static final String ACK_SELECTOR = String.format("%s LIKE '%s'", ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK);
     private static final String SEND_SELECTOR = String.format("%s IN ('0:0:0:1','0:0:0:2','0:0:0:3')", ReplicaSupport.MESSAGE_ID_PROPERTY);
-    private static final Integer MAXIMUM_MESSAGES = 1000;
+    private static final Integer MAXIMUM_MESSAGES = new ReplicaPolicy().getCompactorAdditionalMessagesLimit();
     private final ConnectionContext connectionContext = mock(ConnectionContext.class);
     private final Broker broker = mock(Broker.class);
     private final ReplicaReplicationQueueSupplier queueProvider = mock(ReplicaReplicationQueueSupplier.class);
@@ -432,29 +434,46 @@ public class ReplicaSequencerTest {
         sequencer.hasConsumer = false;
         when(intermediateSubscription.isFull()).thenReturn(true);
 
-        ActiveMQMessage activeMQMessage1 = new ActiveMQMessage();
-        activeMQMessage1.setMessageId(new MessageId("2:0:0:1"));
-        activeMQMessage1.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of("0:0:0:1"));
-        activeMQMessage1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
-        ActiveMQMessage activeMQMessage2 = new ActiveMQMessage();
-        activeMQMessage2.setMessageId(new MessageId("2:0:0:2"));
-        activeMQMessage2.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of("0:0:0:2"));
-        activeMQMessage2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
-        ActiveMQMessage activeMQMessage3 = new ActiveMQMessage();
-        activeMQMessage3.setMessageId(new MessageId("2:0:0:3"));
-        activeMQMessage3.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of("0:0:0:3"));
-        activeMQMessage3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        ActiveMQMessage ackMessage1 = new ActiveMQMessage();
+        ackMessage1.setMessageId(new MessageId("2:0:0:1"));
+        ackMessage1.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of("0:0:0:1"));
+        ackMessage1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        ActiveMQMessage ackMessage2 = new ActiveMQMessage();
+        ackMessage2.setMessageId(new MessageId("2:0:0:2"));
+        ackMessage2.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of("0:0:0:2"));
+        ackMessage2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        ActiveMQMessage ackMessage3 = new ActiveMQMessage();
+        ackMessage3.setMessageId(new MessageId("2:0:0:3"));
+        ackMessage3.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of("0:0:0:3"));
+        ackMessage3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
 
         List<QueueMessageReference> ackMessageReferences = new ArrayList<>();
-        ackMessageReferences.add(new IndirectMessageReference(activeMQMessage1));
-        ackMessageReferences.add(new IndirectMessageReference(activeMQMessage2));
-        ackMessageReferences.add(new IndirectMessageReference(activeMQMessage3));
+        ackMessageReferences.add(new IndirectMessageReference(ackMessage1));
+        ackMessageReferences.add(new IndirectMessageReference(ackMessage2));
+        ackMessageReferences.add(new IndirectMessageReference(ackMessage3));
 
-        when(intermediateQueue.getMatchingMessages(connectionContext, ACK_SELECTOR, MAXIMUM_MESSAGES))
+        when(intermediateQueue.getMatchingMessages(eq(connectionContext), any(ReplicaCompactor.AckMessageReferenceFilter.class), eq(MAXIMUM_MESSAGES)))
                 .thenReturn(ackMessageReferences);
 
-         when(intermediateQueue.getMatchingMessages(connectionContext, SEND_SELECTOR, 1000))
-                .thenReturn(new ArrayList<>());
+        ActiveMQMessage sendMessage1 = new ActiveMQMessage();
+        sendMessage1.setMessageId(new MessageId("2:0:0:1"));
+        sendMessage1.setProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, "0:0:0:1");
+        sendMessage1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage sendMessage2 = new ActiveMQMessage();
+        sendMessage2.setMessageId(new MessageId("2:0:0:2"));
+        sendMessage2.setProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, "0:0:0:2");
+        sendMessage2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage sendMessage3 = new ActiveMQMessage();
+        sendMessage3.setMessageId(new MessageId("2:0:0:3"));
+        sendMessage3.setProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, "0:0:0:3");
+        sendMessage3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+
+        List<QueueMessageReference> sendMessageReferences = new ArrayList<>();
+        sendMessageReferences.add(new IndirectMessageReference(sendMessage1));
+        sendMessageReferences.add(new IndirectMessageReference(sendMessage2));
+        sendMessageReferences.add(new IndirectMessageReference(sendMessage3));
+         when(intermediateQueue.getMatchingMessages(eq(connectionContext), any(ReplicaCompactor.SendMessageReferenceFilter.class), eq(3)))
+                .thenReturn(sendMessageReferences);
 
         String messageIdToAck = "2:1";
 
@@ -499,15 +518,15 @@ public class ReplicaSequencerTest {
         verify(broker, times(2)).addConsumer(any(), any());
         verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any());
 
-        ArgumentCaptor<String> selectorArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<MessageReferenceFilter> filterArgumentCaptor = ArgumentCaptor.forClass(MessageReferenceFilter.class);
         ArgumentCaptor<ConnectionContext> contextArgumentCaptor = ArgumentCaptor.forClass(ConnectionContext.class);
         ArgumentCaptor<Integer> maxMessagesArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
-        verify(intermediateQueue, times(2)).getMatchingMessages(contextArgumentCaptor.capture(), selectorArgumentCaptor.capture(), maxMessagesArgumentCaptor.capture());
+        verify(intermediateQueue, times(2)).getMatchingMessages(contextArgumentCaptor.capture(), filterArgumentCaptor.capture(), maxMessagesArgumentCaptor.capture());
 
-        maxMessagesArgumentCaptor.getAllValues().forEach(
-                maximumMessages -> assertThat(maximumMessages).isEqualTo(MAXIMUM_MESSAGES)
-        );
-        assertThat(selectorArgumentCaptor.getAllValues()).containsAll(List.of(ACK_SELECTOR, SEND_SELECTOR));
+        assertThat(maxMessagesArgumentCaptor.getAllValues().get(0)).isEqualTo(MAXIMUM_MESSAGES);
+        assertThat(maxMessagesArgumentCaptor.getAllValues().get(1)).isEqualTo(3);
+        assertThat(filterArgumentCaptor.getAllValues().get(0)).isInstanceOf(ReplicaCompactor.AckMessageReferenceFilter.class);
+        assertThat(filterArgumentCaptor.getAllValues().get(1)).isInstanceOf(ReplicaCompactor.SendMessageReferenceFilter.class);
         contextArgumentCaptor.getAllValues().forEach(
                 conContext -> assertThat(conContext).isEqualTo(connectionContext)
         );

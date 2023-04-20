@@ -28,7 +28,7 @@ public class ReplicaPolicy {
     private URI transportConnectorUri = null;
 
     private int sourceSendPeriod = 5_000;
-    private int compactorAdditionalMessagesLimit = 1_000;
+    private int compactorAdditionalMessagesLimit = 10_000;
     private int maxBatchLength = 500;
     private int maxBatchSize = 5_000_000;
     private int replicaAckPeriod = 5_000;

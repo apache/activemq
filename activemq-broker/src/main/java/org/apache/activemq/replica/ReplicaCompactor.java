@@ -19,7 +19,9 @@ package org.apache.activemq.replica;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
+import org.apache.activemq.broker.region.IndirectMessageReference;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.MessageReferenceFilter;
 import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.QueueMessageReference;
@@ -27,12 +29,13 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.util.JMSExceptionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jms.JMSException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,11 +45,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ReplicaCompactor {
     private static final Logger logger = LoggerFactory.getLogger(ReplicaCompactor.class);
-    private static final String CONSUMER_SELECTOR = String.format("%s LIKE '%s'", ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK);
 
     private final Broker broker;
     private final ConnectionContext connectionContext;
@@ -75,10 +79,14 @@ public class ReplicaCompactor {
                 .collect(Collectors.toList());
 
         int prefetchSize = subscription.getPrefetchSize();
+        int maxPageSize = intermediateQueue.getMaxPageSize();
+        int maxExpirePageSize = intermediateQueue.getMaxExpirePageSize();
         try {
             if (withAdditionalMessages) {
                 subscription.setPrefetchSize(0);
-                toProcess.addAll(getAdditionalMessages());
+                intermediateQueue.setMaxPageSize(0);
+                intermediateQueue.setMaxExpirePageSize(0);
+                toProcess.addAll(getAdditionalMessages(list));
             }
 
             List<DeliveredMessageReference> processed = compactAndFilter0(toProcess);
@@ -91,31 +99,48 @@ public class ReplicaCompactor {
                     .collect(Collectors.toList());
         } finally {
             subscription.setPrefetchSize(prefetchSize);
+            intermediateQueue.setMaxPageSize(maxPageSize);
+            intermediateQueue.setMaxExpirePageSize(maxExpirePageSize);
         }
     }
 
-    private List<DeliveredMessageReference> getAdditionalMessages() throws Exception {
-        List<DeliveredMessageReference> result = new ArrayList<>();
-        List<QueueMessageReference> additionalMessages =
-                intermediateQueue.getMatchingMessages(connectionContext, CONSUMER_SELECTOR, additionalMessagesLimit);
-        if (additionalMessages.isEmpty()) {
-            return result;
-        }
+    private List<DeliveredMessageReference> getAdditionalMessages(List<MessageReference> toProcess) throws Exception {
 
-        String selector = String.format("%s IN %s", ReplicaSupport.MESSAGE_ID_PROPERTY, getAckedMessageIds(additionalMessages));
-        additionalMessages.addAll(intermediateQueue.getMatchingMessages(connectionContext, selector, additionalMessagesLimit));
-
-        Set<MessageId> dispatchedMessageIds = subscription.getDispatched().stream()
+        List<MessageReference> dispatched = subscription.getDispatched();
+        Set<String> dispatchedMessageIds = dispatched.stream()
                 .map(MessageReference::getMessageId)
+                .map(MessageId::toString)
                 .collect(Collectors.toSet());
 
-        for (MessageReference messageReference : additionalMessages) {
-            if (!dispatchedMessageIds.contains(messageReference.getMessageId())) {
-                result.add(new DeliveredMessageReference(messageReference, false));
-            }
-        }
+        Set<String> toProcessIds = toProcess.stream()
+                .map(MessageReference::getMessageId)
+                .map(MessageId::toString)
+                .collect(Collectors.toSet());
 
-        return result;
+        Set<String> ignore = new HashSet<>();
+        for (int i = 0; i < ReplicaSupport.INTERMEDIATE_QUEUE_PREFETCH_SIZE / additionalMessagesLimit + 1; i++) {
+            List<QueueMessageReference> acks =
+                    intermediateQueue.getMatchingMessages(connectionContext,
+                            new AckMessageReferenceFilter(toProcessIds, dispatchedMessageIds, ignore, dispatched),
+                            additionalMessagesLimit);
+            if (acks.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            Set<String> ackedMessageIds = getAckedMessageIds(acks);
+            List<QueueMessageReference> sends = intermediateQueue.getMatchingMessages(connectionContext,
+                    new SendMessageReferenceFilter(toProcessIds, dispatchedMessageIds, ackedMessageIds), ackedMessageIds.size());
+            if (sends.isEmpty()) {
+                acks.stream().map(MessageReference::getMessageId).map(MessageId::toString)
+                        .forEach(ignore::add);
+                continue;
+            }
+
+            return Stream.concat(acks.stream(), sends.stream().filter(mr -> !toProcessIds.contains(mr.getMessageId().toString())))
+                    .map(mr -> new DeliveredMessageReference(mr, false))
+                    .collect(Collectors.toList());
+        }
+        return new ArrayList<>();
     }
 
     private List<DeliveredMessageReference> compactAndFilter0(List<DeliveredMessageReference> list) throws Exception {
@@ -123,7 +148,7 @@ public class ReplicaCompactor {
 
         List<SendsAndAcks> sendsAndAcksList = combineByDestination(list);
 
-        List<DeliveredMessageId> toDelete = compact(sendsAndAcksList);
+        List<DeliveredMessageReference> toDelete = compact(sendsAndAcksList);
 
         if (toDelete.isEmpty()) {
             return result;
@@ -131,13 +156,13 @@ public class ReplicaCompactor {
 
         acknowledge(toDelete);
 
-        Set<MessageId> messageIds = toDelete.stream().map(dmid -> dmid.messageId).collect(Collectors.toSet());
+        Set<MessageId> messageIds = toDelete.stream().map(dmid -> dmid.messageReference.getMessageId()).collect(Collectors.toSet());
         result.removeIf(reference -> messageIds.contains(reference.messageReference.getMessageId()));
 
         return result;
     }
 
-    private void acknowledge(List<DeliveredMessageId> list) throws Exception {
+    private void acknowledge(List<DeliveredMessageReference> list) throws Exception {
         TransactionId transactionId = new LocalTransactionId(
                 new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
                 ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
@@ -148,13 +173,15 @@ public class ReplicaCompactor {
             ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
             consumerExchange.setConnectionContext(connectionContext);
 
-            for (DeliveredMessageId deliveredMessageId : list) {
-                if (!deliveredMessageId.delivered) {
-                    messageDispatch(deliveredMessageId.messageId);
-                }
+            List<MessageReference> notDelivered = list.stream()
+                    .filter(dmr -> !dmr.delivered)
+                    .map(DeliveredMessageReference::getReference)
+                    .collect(Collectors.toList());
+            intermediateQueue.dispatchNotification(subscription, notDelivered);
 
+            for (DeliveredMessageReference dmr : list) {
                 MessageAck messageAck = new MessageAck();
-                messageAck.setMessageID(deliveredMessageId.messageId);
+                messageAck.setMessageID(dmr.messageReference.getMessageId());
                 messageAck.setMessageCount(1);
                 messageAck.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
                 messageAck.setDestination(queueProvider.getIntermediateQueue());
@@ -168,7 +195,7 @@ public class ReplicaCompactor {
         }
     }
 
-    private List<SendsAndAcks> combineByDestination(List<DeliveredMessageReference> list) throws Exception {
+    private static List<SendsAndAcks> combineByDestination(List<DeliveredMessageReference> list) throws Exception {
         Map<String, SendsAndAcks> result = new HashMap<>();
         for (DeliveredMessageReference reference : list) {
             ActiveMQMessage message = (ActiveMQMessage) reference.messageReference.getMessage();
@@ -186,11 +213,11 @@ public class ReplicaCompactor {
 
             SendsAndAcks sendsAndAcks =
                     result.computeIfAbsent(message.getStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY),
-                            k -> new SendsAndAcks());
+                            SendsAndAcks::new);
 
             if (eventType == ReplicaEventType.MESSAGE_SEND) {
                 sendsAndAcks.sendMap.put(message.getStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY),
-                        new DeliveredMessageId(message.getMessageId(), reference.delivered));
+                        new DeliveredMessageReference(message, reference.delivered));
             }
             if (eventType == ReplicaEventType.MESSAGE_ACK) {
                 List<String> messageIds = getAckMessageIds(message);
@@ -201,8 +228,8 @@ public class ReplicaCompactor {
         return new ArrayList<>(result.values());
     }
 
-    private List<DeliveredMessageId> compact(List<SendsAndAcks> sendsAndAcksList) throws IOException {
-        List<DeliveredMessageId> result = new ArrayList<>();
+    private List<DeliveredMessageReference> compact(List<SendsAndAcks> sendsAndAcksList) throws IOException {
+        List<DeliveredMessageReference> result = new ArrayList<>();
         for (SendsAndAcks sendsAndAcks : sendsAndAcksList) {
             for (Ack ack : sendsAndAcks.acks) {
                 List<String> sends = new ArrayList<>();
@@ -238,23 +265,14 @@ public class ReplicaCompactor {
         }
     }
 
-    private String getAckedMessageIds(List<QueueMessageReference> ackMessages) throws IOException {
-        List<String> messageIds = new ArrayList<>();
+    private Set<String> getAckedMessageIds(List<QueueMessageReference> ackMessages) throws IOException {
+        Set<String> messageIds = new HashSet<>();
         for (QueueMessageReference messageReference : ackMessages) {
             ActiveMQMessage message = (ActiveMQMessage) messageReference.getMessage();
 
             messageIds.addAll(getAckMessageIds(message));
         }
-
-        return messageIds.stream().collect(Collectors.joining("','", "('", "')"));
-    }
-
-    private void messageDispatch(MessageId messageId) throws Exception {
-        MessageDispatchNotification mdn = new MessageDispatchNotification();
-        mdn.setConsumerId(subscription.getConsumerInfo().getConsumerId());
-        mdn.setDestination(queueProvider.getIntermediateQueue());
-        mdn.setMessageId(messageId);
-        broker.processDispatchNotification(mdn);
+        return messageIds;
     }
 
     @SuppressWarnings("unchecked")
@@ -276,31 +294,132 @@ public class ReplicaCompactor {
             this.messageReference = messageReference;
             this.delivered = delivered;
         }
+
+        public QueueMessageReference getReference() {
+            if (messageReference instanceof QueueMessageReference) {
+                return (QueueMessageReference) messageReference;
+            }
+            return new IndirectMessageReference(messageReference.getMessage());
+        }
     }
 
     private static class SendsAndAcks {
-        final Map<String, DeliveredMessageId> sendMap = new LinkedHashMap<>();
+        final String destination;
+        final Map<String, DeliveredMessageReference> sendMap = new LinkedHashMap<>();
         final List<Ack> acks = new ArrayList<>();
+
+        private SendsAndAcks(String destination) {
+            this.destination = destination;
+        }
     }
 
-    private static class Ack extends DeliveredMessageId {
+    private static class Ack extends DeliveredMessageReference {
         final List<String> messageIdsToAck;
         final ActiveMQMessage message;
 
         public Ack(List<String> messageIdsToAck, ActiveMQMessage message, boolean needsDelivery) {
-            super(message.getMessageId(), needsDelivery);
+            super(message, needsDelivery);
             this.messageIdsToAck = messageIdsToAck;
             this.message = message;
         }
     }
 
-    private static class DeliveredMessageId {
-        final MessageId messageId;
-        final boolean delivered;
+    static class AckMessageReferenceFilter extends InternalMessageReferenceFilter {
 
-        public DeliveredMessageId(MessageId messageId, boolean delivered) {
-            this.messageId = messageId;
-            this.delivered = delivered;
+        private final Map<String, SendsAndAcks> existingSendsAndAcks;
+
+        public AckMessageReferenceFilter(Set<String> toProcess, Set<String> dispatchedMessageIds,
+                Set<String> ignore, List<MessageReference> dispatched) throws Exception {
+            super(toProcess, dispatchedMessageIds, ignore, ReplicaEventType.MESSAGE_ACK);
+            List<DeliveredMessageReference> list = dispatched.stream()
+                    .filter(mr -> !toProcess.contains(mr.getMessageId().toString()))
+                    .map(DeliveredMessageReference::new)
+                    .collect(Collectors.toList());
+            existingSendsAndAcks = combineByDestination(list).stream().collect(Collectors.toMap(o -> o.destination, Function.identity()));
         }
+
+        @Override
+        public boolean evaluate(ActiveMQMessage message) throws JMSException {
+            if (!message.getBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY)
+                    || message.getBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY)) {
+                return false;
+            }
+
+            String destination = message.getStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY);
+            SendsAndAcks sendsAndAcks = existingSendsAndAcks.get(destination);
+            if (sendsAndAcks == null) {
+                return true;
+            }
+
+            List<String> messageIds;
+            try {
+                messageIds = getAckMessageIds(message);
+            } catch (IOException e) {
+                throw JMSExceptionSupport.create(e);
+            }
+
+            return !sendsAndAcks.sendMap.keySet().containsAll(messageIds);
+        }
+    }
+
+    static class SendMessageReferenceFilter extends InternalMessageReferenceFilter {
+
+        private final Set<String> ackedMessageIds;
+
+        public SendMessageReferenceFilter(Set<String> toProcess, Set<String> dispatchedMessageIds,
+                Set<String> ackedMessageIds) {
+            super(toProcess, dispatchedMessageIds, new HashSet<>(), ReplicaEventType.MESSAGE_SEND);
+            this.ackedMessageIds = ackedMessageIds;
+        }
+
+        @Override
+        public boolean evaluate(ActiveMQMessage message) throws JMSException {
+            if (!message.getBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY)
+                    || message.getBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_IN_XA_TRANSACTION_PROPERTY)) {
+                return false;
+            }
+
+            String messageId = message.getStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY);
+            return ackedMessageIds.contains(messageId);
+        }
+    }
+
+    private static abstract class InternalMessageReferenceFilter implements MessageReferenceFilter {
+
+        private final Set<String> toProcess;
+        private final Set<String> dispatchedMessageIds;
+        private final Set<String> ignore;
+        private final ReplicaEventType eventType;
+
+        public InternalMessageReferenceFilter(Set<String> toProcess, Set<String> dispatchedMessageIds,
+                Set<String> ignore, ReplicaEventType eventType) {
+            this.toProcess = toProcess;
+            this.dispatchedMessageIds = dispatchedMessageIds;
+            this.ignore = ignore;
+            this.eventType = eventType;
+        }
+
+        @Override
+        public boolean evaluate(ConnectionContext context, MessageReference messageReference) throws JMSException {
+            String messageId = messageReference.getMessageId().toString();
+            if (ignore.contains(messageId)) {
+                return false;
+            }
+
+            if (dispatchedMessageIds.contains(messageId) && !toProcess.contains(messageId)) {
+                return false;
+            }
+            ActiveMQMessage message = (ActiveMQMessage) messageReference.getMessage();
+
+            ReplicaEventType eventType =
+                    ReplicaEventType.valueOf(message.getStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY));
+
+            if (eventType != this.eventType) {
+                return false;
+            }
+            return evaluate(message);
+        }
+
+        public abstract boolean evaluate(ActiveMQMessage message) throws JMSException;
     }
 }

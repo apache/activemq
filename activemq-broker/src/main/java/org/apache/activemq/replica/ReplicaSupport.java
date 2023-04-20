@@ -31,6 +31,8 @@ public class ReplicaSupport {
         // Intentionally hidden
     }
 
+    public static final int INTERMEDIATE_QUEUE_PREFETCH_SIZE = 10000;
+
     public static final String REPLICATION_CONNECTOR_NAME = "replication";
 
     public static final String REPLICATION_PLUGIN_CONNECTION_ID = "replicationID" + UUID.randomUUID();
