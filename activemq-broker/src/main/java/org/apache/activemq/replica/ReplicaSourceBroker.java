@@ -17,10 +17,8 @@
 package org.apache.activemq.replica;
 
 import org.apache.activemq.ScheduledMessage;
-import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.TransportConnector;
@@ -36,11 +34,9 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.security.SecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +50,6 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     private static final DestinationMapEntry<Boolean> IS_REPLICATED = new DestinationMapEntry<>() {
     }; // used in destination map to indicate mirrored status
-    static final String REPLICATION_CONNECTOR_NAME = "replication";
     private static final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
 
     private final ReplicaSequencer replicaSequencer;
@@ -74,7 +69,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
     @Override
     public void start() throws Exception {
         TransportConnector transportConnector = next.getBrokerService().addConnector(replicaPolicy.getTransportConnectorUri());
-        transportConnector.setName(REPLICATION_CONNECTOR_NAME);
+        transportConnector.setName(ReplicaSupport.REPLICATION_CONNECTOR_NAME);
         queueProvider.initialize();
         queueProvider.initializeSequenceQueue();
         super.start();
@@ -110,7 +105,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     private boolean shouldReplicateDestination(ActiveMQDestination destination) {
         boolean isReplicationQueue = ReplicaSupport.isReplicationQueue(destination);
-        boolean isAdvisoryDestination = isAdvisoryDestination(destination);
+        boolean isAdvisoryDestination = ReplicaSupport.isAdvisoryDestination(destination);
         boolean isTemporaryDestination = destination.isTemporary();
         boolean shouldReplicate = !isReplicationQueue && !isAdvisoryDestination && !isTemporaryDestination;
         String reason = shouldReplicate ? "" : " because ";
@@ -119,10 +114,6 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         if (isTemporaryDestination) reason += "it is a temporary destination";
         logger.debug("Will {}replicate destination {}{}", shouldReplicate ? "" : "not ", destination, reason);
         return shouldReplicate;
-    }
-
-    private boolean isAdvisoryDestination(ActiveMQDestination destination) {
-        return destination.getPhysicalName().startsWith(AdvisorySupport.ADVISORY_TOPIC_PREFIX);
     }
 
     private boolean isReplicatedDestination(ActiveMQDestination destination) {
@@ -277,8 +268,6 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo consumerInfo) throws Exception {
-        assertAuthorized(context, consumerInfo.getDestination());
-
         Subscription subscription = super.addConsumer(context, consumerInfo);
         replicateAddConsumer(context, consumerInfo);
 
@@ -293,7 +282,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         if (!needToReplicateConsumer(consumerInfo)) {
             return;
         }
-        if (isReplicationTransport(context.getConnector())) {
+        if (ReplicaSupport.isReplicationTransport(context.getConnector())) {
             return;
         }
         try {
@@ -328,7 +317,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         if (!needToReplicateConsumer(consumerInfo)) {
             return;
         }
-        if (isReplicationTransport(context.getConnector())) {
+        if (ReplicaSupport.isReplicationTransport(context.getConnector())) {
             return;
         }
         try {
@@ -341,48 +330,6 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         } catch (Exception e) {
             logger.error("Failed to replicate adding {}", consumerInfo, e);
         }
-    }
-
-    @Override
-    public void addProducer(ConnectionContext context, ProducerInfo producerInfo) throws Exception {
-        // JMS allows producers to be created without first specifying a destination.  In these cases, every send
-        // operation must specify a destination.  Because of this, we only authorize 'addProducer' if a destination is
-        // specified. If not specified, the authz check in the 'send' method below will ensure authorization.
-        if (producerInfo.getDestination() != null) {
-            assertAuthorized(context, producerInfo.getDestination());
-        }
-        super.addProducer(context, producerInfo);
-    }
-
-    private boolean isReplicationTransport(Connector connector) {
-        return connector instanceof TransportConnector && ((TransportConnector) connector).getName().equals(REPLICATION_CONNECTOR_NAME);
-    }
-
-    protected void assertAuthorized(ConnectionContext context, ActiveMQDestination destination) {
-        boolean replicationQueue = ReplicaSupport.isReplicationQueue(destination);
-        boolean replicationTransport = isReplicationTransport(context.getConnector());
-
-        if (isSystemBroker(context)) {
-            return;
-        }
-        if (replicationTransport && (replicationQueue || isAdvisoryDestination(destination))) {
-            return;
-        }
-        if (!replicationTransport && !replicationQueue) {
-            return;
-        }
-
-        String msg = createUnauthorizedMessage(destination);
-        throw new ActiveMQReplicaException(msg);
-    }
-
-    private boolean isSystemBroker(ConnectionContext context) {
-        SecurityContext securityContext = context.getSecurityContext();
-        return securityContext != null && securityContext.isBrokerContext();
-    }
-
-    private String createUnauthorizedMessage(ActiveMQDestination destination) {
-        return "Not authorized to access destination: " + destination;
     }
 
     @Override

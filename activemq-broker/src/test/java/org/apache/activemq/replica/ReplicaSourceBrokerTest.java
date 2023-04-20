@@ -34,7 +34,6 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.filter.DestinationMapEntry;
@@ -303,116 +302,6 @@ public class ReplicaSourceBrokerTest {
         assertThat(replicatedTransactionId).isEqualTo(transactionId);
         assertThat(replicationMessage.getProperty(ReplicaSupport.TRANSACTION_ONE_PHASE_PROPERTY)).isEqualTo(true);
         verifyConnectionContext(connectionContext);
-    }
-
-    @Test
-    public void letsCreateConsumerForReplicaQueueFromReplicaConnection() throws Exception {
-        source.start();
-
-        when(transportConnector.getName()).thenReturn(ReplicaSourceBroker.REPLICATION_CONNECTOR_NAME);
-
-        ConsumerInfo consumerInfo = new ConsumerInfo();
-        consumerInfo.setDestination(queueProvider.getMainQueue());
-        source.addConsumer(connectionContext, consumerInfo);
-
-        verify(broker).addConsumer(eq(connectionContext), eq(consumerInfo));
-    }
-
-    @Test(expected = ActiveMQReplicaException.class)
-    public void doesNotLetCreateConsumerForReplicaQueueFromNonReplicaConnection() throws Exception {
-        source.start();
-
-        when(transportConnector.getName()).thenReturn("test");
-
-        ConsumerInfo consumerInfo = new ConsumerInfo();
-        consumerInfo.setDestination(queueProvider.getMainQueue());
-        source.addConsumer(connectionContext, consumerInfo);
-    }
-
-    @Test
-    public void letsCreateConsumerForNonReplicaAdvisoryTopicFromReplicaConnection() throws Exception {
-        source.start();
-
-        when(transportConnector.getName()).thenReturn(ReplicaSourceBroker.REPLICATION_CONNECTOR_NAME);
-
-        ActiveMQTopic advisoryTopic = new ActiveMQTopic(AdvisorySupport.ADVISORY_TOPIC_PREFIX + "TEST");
-        ConsumerInfo consumerInfo = new ConsumerInfo();
-        consumerInfo.setDestination(advisoryTopic);
-        source.addConsumer(connectionContext, consumerInfo);
-
-        verify(broker).addConsumer(eq(connectionContext), eq(consumerInfo));
-    }
-
-    @Test
-    public void letsCreateConsumerForNonReplicaQueueFromNonReplicaConnection() throws Exception {
-        source.start();
-
-        when(transportConnector.getName()).thenReturn("test");
-
-        ConsumerInfo consumerInfo = new ConsumerInfo();
-        consumerInfo.setDestination(testDestination);
-        source.addConsumer(connectionContext, consumerInfo);
-
-        verify(broker).addConsumer(eq(connectionContext), eq(consumerInfo));
-    }
-
-    @Test(expected = ActiveMQReplicaException.class)
-    public void doesNoLetCreateConsumerForNonReplicaQueueFromReplicaConnection() throws Exception {
-        source.start();
-
-        when(transportConnector.getName()).thenReturn(ReplicaSourceBroker.REPLICATION_CONNECTOR_NAME);
-
-        ConsumerInfo consumerInfo = new ConsumerInfo();
-        consumerInfo.setDestination(testDestination);
-        source.addConsumer(connectionContext, consumerInfo);
-    }
-
-    @Test(expected = ActiveMQReplicaException.class)
-    public void doesNotLetCreateProducerForReplicaQueueFromNonReplicaConnection() throws Exception {
-        source.start();
-
-        when(transportConnector.getName()).thenReturn("test");
-
-        ProducerInfo producerInfo = new ProducerInfo();
-        producerInfo.setDestination(queueProvider.getMainQueue());
-        source.addProducer(connectionContext, producerInfo);
-    }
-
-    @Test
-    public void letsCreateProducerForReplicaQueueFromReplicaConnection() throws Exception {
-        source.start();
-
-        when(transportConnector.getName()).thenReturn(ReplicaSourceBroker.REPLICATION_CONNECTOR_NAME);
-
-        ProducerInfo producerInfo = new ProducerInfo();
-        producerInfo.setDestination(queueProvider.getMainQueue());
-        source.addProducer(connectionContext, producerInfo);
-
-        verify(broker).addProducer(eq(connectionContext), eq(producerInfo));
-    }
-
-    @Test
-    public void letsCreateProducerForNonReplicaQueueFromNonReplicaConnection() throws Exception {
-        source.start();
-
-        when(transportConnector.getName()).thenReturn("test");
-
-        ProducerInfo producerInfo = new ProducerInfo();
-        producerInfo.setDestination(testDestination);
-        source.addProducer(connectionContext, producerInfo);
-
-        verify(broker).addProducer(eq(connectionContext), eq(producerInfo));
-    }
-
-    @Test(expected = ActiveMQReplicaException.class)
-    public void doesNotLetCreateProducerForNonReplicaQueueFromReplicaConnection() throws Exception {
-        source.start();
-
-        when(transportConnector.getName()).thenReturn(ReplicaSourceBroker.REPLICATION_CONNECTOR_NAME);
-
-        ProducerInfo producerInfo = new ProducerInfo();
-        producerInfo.setDestination(testDestination);
-        source.addProducer(connectionContext, producerInfo);
     }
 
     @Test

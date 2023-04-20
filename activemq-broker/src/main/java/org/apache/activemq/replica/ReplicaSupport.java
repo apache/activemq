@@ -17,6 +17,8 @@
 package org.apache.activemq.replica;
 
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.Connector;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.LongSequenceGenerator;
 
@@ -28,6 +30,8 @@ public class ReplicaSupport {
     private ReplicaSupport() {
         // Intentionally hidden
     }
+
+    public static final String REPLICATION_CONNECTOR_NAME = "replication";
 
     public static final String REPLICATION_PLUGIN_CONNECTION_ID = "replicationID" + UUID.randomUUID();
 
@@ -66,5 +70,13 @@ public class ReplicaSupport {
 
     public static boolean isIntermediateReplicationQueue(ActiveMQDestination destination) {
         return INTERMEDIATE_REPLICATION_QUEUE_NAME.equals(destination.getPhysicalName());
+    }
+
+    public static boolean isReplicationTransport(Connector connector) {
+        return connector instanceof TransportConnector && ((TransportConnector) connector).getName().equals(REPLICATION_CONNECTOR_NAME);
+    }
+
+    public static boolean isAdvisoryDestination(ActiveMQDestination destination) {
+        return destination.getPhysicalName().startsWith(AdvisorySupport.ADVISORY_TOPIC_PREFIX);
     }
 }

@@ -76,15 +76,18 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer,
                 replicationMessageProducer, replicaPolicy);
 
+        ReplicaSourceBroker replicaSourceBroker = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
+                queueProvider, replicaPolicy);
+        ReplicaSourceAuthorizationBroker replicaSourceAuthorizationBroker = new ReplicaSourceAuthorizationBroker(
+                replicaSourceBroker);
+
         Broker replicaBrokerFilter;
         switch (role) {
             case source:
-                replicaBrokerFilter = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
-                        queueProvider, replicaPolicy);
+                replicaBrokerFilter = replicaSourceAuthorizationBroker;
                 break;
             case dual:
-                replicaBrokerFilter = new ReplicaBroker(new ReplicaSourceBroker(broker, replicationMessageProducer,
-                        replicaSequencer, queueProvider, replicaPolicy), queueProvider, replicaPolicy);
+                replicaBrokerFilter = new ReplicaBroker(replicaSourceAuthorizationBroker, queueProvider, replicaPolicy);
                 break;
             default:
                 throw new IllegalArgumentException();
