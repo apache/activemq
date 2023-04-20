@@ -559,7 +559,7 @@ public class ReplicaSequencer {
             message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, sequence.toString());
             message.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(message.getMessageId().toString()));
             message.setDestination(queueProvider.getMainQueue());
-            message.setTransactionId(null);
+            message.setTransactionId(transactionId);
             message.setPersistent(false);
             replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, message);
             sequence = sequence.add(BigInteger.ONE);

@@ -71,7 +71,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
     private final ReplicaFailOverStateStorage replicaFailOverStateStorage;
     private final AtomicReference<ReplicaEventRetrier> replicaEventRetrier = new AtomicReference<>();
     final ReplicaSequenceStorage sequenceStorage;
-    private ActionListenerCallback actionListenerCallback;
+    private final ActionListenerCallback actionListenerCallback;
 
     BigInteger sequence;
     MessageId sequenceMessageId;
@@ -135,12 +135,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
             TransactionId tid = transactionId;
             ReplicaEventType eventType = getEventType(message);
 
-            if (eventType == ReplicaEventType.FAIL_OVER) {
-                failOver();
-                return null;
-            }
-
-            if (tid == null) {
+            if (tid == null && eventType != ReplicaEventType.FAIL_OVER) {
                 tid = new LocalTransactionId(
                         new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
                         ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
@@ -178,25 +173,6 @@ public class ReplicaBrokerEventListener implements MessageListener {
         } finally {
             replicaEventRetrier.set(null);
         }
-    }
-
-    private void failOver() throws Exception {
-        LocalTransactionId tid = new LocalTransactionId(
-                new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
-                ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
-
-        broker.beginTransaction(connectionContext, tid);
-        try {
-            acknowledgeCallback.acknowledge(true);
-            replicaFailOverStateStorage.updateBrokerState(connectionContext, tid, ReplicaRole.source.name());
-            broker.commitTransaction(connectionContext, tid, true);
-
-        } catch (Exception e) {
-            broker.rollbackTransaction(connectionContext, tid);
-            logger.error("Failed to ack fail over message", e);
-            throw e;
-        }
-        actionListenerCallback.onFailOverAck();
     }
 
     private void processMessage(ActiveMQMessage message, ReplicaEventType eventType, TransactionId transactionId) throws Exception {
@@ -297,6 +273,9 @@ public class ReplicaBrokerEventListener implements MessageListener {
             case REMOVE_DURABLE_CONSUMER_SUBSCRIPTION:
                 logger.trace("Processing replicated remove durable consumer subscription");
                 removeDurableConsumerSubscription((RemoveSubscriptionInfo) deserializedData);
+                return;
+            case FAIL_OVER:
+                failOver();
                 return;
             default:
                 throw new IllegalStateException(
@@ -537,6 +516,25 @@ public class ReplicaBrokerEventListener implements MessageListener {
                     ack.getConsumerId(), e);
             throw e;
         }
+    }
+
+    private void failOver() throws Exception {
+        LocalTransactionId tid = new LocalTransactionId(
+                new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
+                ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
+
+        broker.beginTransaction(connectionContext, tid);
+        try {
+            acknowledgeCallback.acknowledge(true);
+            replicaFailOverStateStorage.updateBrokerState(connectionContext, tid, ReplicaRole.source.name());
+            broker.commitTransaction(connectionContext, tid, true);
+
+        } catch (Exception e) {
+            broker.rollbackTransaction(connectionContext, tid);
+            logger.error("Failed to ack fail over message", e);
+            throw e;
+        }
+        actionListenerCallback.onFailOverAck();
     }
 
     private void createTransactionMapIfNotExist() {
