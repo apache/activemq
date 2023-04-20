@@ -30,7 +30,6 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,9 +121,9 @@ public class ReplicaCompactor {
     private List<DeliveredMessageReference> compactAndFilter0(List<DeliveredMessageReference> list) throws Exception {
         List<DeliveredMessageReference> result = new ArrayList<>(list);
 
-        List<Destination> destinations = combineByDestination(list);
+        List<SendsAndAcks> sendsAndAcksList = combineByDestination(list);
 
-        List<DeliveredMessageId> toDelete = compact(destinations);
+        List<DeliveredMessageId> toDelete = compact(sendsAndAcksList);
 
         if (toDelete.isEmpty()) {
             return result;
@@ -132,7 +131,7 @@ public class ReplicaCompactor {
 
         acknowledge(toDelete);
 
-        List<MessageId> messageIds = toDelete.stream().map(dmid -> dmid.messageId).collect(Collectors.toList());
+        Set<MessageId> messageIds = toDelete.stream().map(dmid -> dmid.messageId).collect(Collectors.toSet());
         result.removeIf(reference -> messageIds.contains(reference.messageReference.getMessageId()));
 
         return result;
@@ -169,8 +168,8 @@ public class ReplicaCompactor {
         }
     }
 
-    private List<Destination> combineByDestination(List<DeliveredMessageReference> list) throws Exception {
-        Map<String, Destination> result = new HashMap<>();
+    private List<SendsAndAcks> combineByDestination(List<DeliveredMessageReference> list) throws Exception {
+        Map<String, SendsAndAcks> result = new HashMap<>();
         for (DeliveredMessageReference reference : list) {
             ActiveMQMessage message = (ActiveMQMessage) reference.messageReference.getMessage();
 
@@ -185,32 +184,32 @@ public class ReplicaCompactor {
                 continue;
             }
 
-            Destination destination =
+            SendsAndAcks sendsAndAcks =
                     result.computeIfAbsent(message.getStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY),
-                            k -> new Destination());
+                            k -> new SendsAndAcks());
 
             if (eventType == ReplicaEventType.MESSAGE_SEND) {
-                destination.sendMap.put(message.getStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY),
+                sendsAndAcks.sendMap.put(message.getStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY),
                         new DeliveredMessageId(message.getMessageId(), reference.delivered));
             }
             if (eventType == ReplicaEventType.MESSAGE_ACK) {
                 List<String> messageIds = getAckMessageIds(message);
-                destination.acks.add(new Ack(messageIds, message, reference.delivered));
+                sendsAndAcks.acks.add(new Ack(messageIds, message, reference.delivered));
             }
         }
 
         return new ArrayList<>(result.values());
     }
 
-    private List<DeliveredMessageId> compact(List<Destination> destinations) throws IOException {
+    private List<DeliveredMessageId> compact(List<SendsAndAcks> sendsAndAcksList) throws IOException {
         List<DeliveredMessageId> result = new ArrayList<>();
-        for (Destination destination : destinations) {
-            for (Ack ack : destination.acks) {
+        for (SendsAndAcks sendsAndAcks : sendsAndAcksList) {
+            for (Ack ack : sendsAndAcks.acks) {
                 List<String> sends = new ArrayList<>();
                 for (String id : ack.messageIdsToAck) {
-                    if (destination.sendMap.containsKey(id)) {
+                    if (sendsAndAcks.sendMap.containsKey(id)) {
                         sends.add(id);
-                        result.add(destination.sendMap.get(id));
+                        result.add(sendsAndAcks.sendMap.get(id));
                     }
                 }
                 if (sends.size() == 0) {
@@ -279,7 +278,7 @@ public class ReplicaCompactor {
         }
     }
 
-    private static class Destination {
+    private static class SendsAndAcks {
         final Map<String, DeliveredMessageId> sendMap = new LinkedHashMap<>();
         final List<Ack> acks = new ArrayList<>();
     }

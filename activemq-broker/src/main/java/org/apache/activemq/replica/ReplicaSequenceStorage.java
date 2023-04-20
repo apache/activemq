@@ -27,7 +27,6 @@ import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
@@ -120,8 +119,9 @@ public class ReplicaSequenceStorage {
         consumerExchange.setConnectionContext(connectionContext);
         consumerExchange.setSubscription(subscription);
 
-        for(MessageReference messageReference: dispatched) {
-            MessageAck ack = new MessageAck(messageReference.getMessage(), MessageAck.INDIVIDUAL_ACK_TYPE, 1);
+        if (!dispatched.isEmpty()) {
+            MessageAck ack = new MessageAck(dispatched.get(dispatched.size() - 1).getMessage(), MessageAck.STANDARD_ACK_TYPE, dispatched.size());
+            ack.setFirstMessageId(dispatched.get(0).getMessageId());
             ack.setDestination(queueProvider.getSequenceQueue());
             ack.setTransactionId(tid);
             broker.acknowledge(consumerExchange, ack);
