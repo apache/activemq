@@ -26,6 +26,7 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,11 +35,13 @@ import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ReplicaBroker extends BrokerFilter {
+
+public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
 
     private final Logger logger = LoggerFactory.getLogger(ReplicaBroker.class);
     private final ScheduledExecutorService brokerConnectionPoller = Executors.newSingleThreadScheduledExecutor();
@@ -51,6 +54,8 @@ public class ReplicaBroker extends BrokerFilter {
     private final ReplicaPolicy replicaPolicy;
     private final PeriodAcknowledge periodAcknowledgeCallBack;
     private ReplicaBrokerEventListener messageListener;
+    private ScheduledFuture<?> replicationScheduledFuture;
+    private ScheduledFuture<?> ackPollerScheduledFuture;
 
     public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy) {
         super(next);
@@ -62,9 +67,36 @@ public class ReplicaBroker extends BrokerFilter {
     @Override
     public void start() throws Exception {
         super.start();
+        init();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        logger.info("Stopping Source broker");
+        stopAllConnections();
+        super.stop();
+    }
+
+    @Override
+    public void stopBeforeRoleChange() throws Exception {
+        logger.info("Stopping broker replication");
+        messageListener.deinitialize();
+        removeReplicationQueues();
+        stopAllConnections();
+    }
+
+    @Override
+    public void startAfterRoleChange() throws Exception {
+        logger.info("Resuming Replica broker");
+        init();
+    }
+
+    private void init() {
+        logger.info("Initializing Replica broker");
+        getBrokerService().stopAllConnectors(new ServiceStopper());
         queueProvider.initializeSequenceQueue();
-        brokerConnectionPoller.scheduleAtFixedRate(this::beginReplicationIdempotent, 5, 5, TimeUnit.SECONDS);
-        periodicAckPoller.scheduleAtFixedRate(() -> {
+        replicationScheduledFuture = brokerConnectionPoller.scheduleAtFixedRate(this::beginReplicationIdempotent, 5, 5, TimeUnit.SECONDS);
+        ackPollerScheduledFuture = periodicAckPoller.scheduleAtFixedRate(() -> {
             synchronized (periodAcknowledgeCallBack) {
                 try {
                     periodAcknowledgeCallBack.acknowledge();
@@ -76,8 +108,10 @@ public class ReplicaBroker extends BrokerFilter {
         messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider, periodAcknowledgeCallBack);
     }
 
-    @Override
-    public void stop() throws Exception {
+    private void stopAllConnections() throws JMSException {
+        replicationScheduledFuture.cancel(true);
+        ackPollerScheduledFuture.cancel(true);
+
         ActiveMQMessageConsumer consumer = eventConsumer.get();
         ActiveMQSession session = connectionSession.get();
         ActiveMQConnection brokerConnection = connection.get();
@@ -91,10 +125,28 @@ public class ReplicaBroker extends BrokerFilter {
         if (session != null) {
             session.close();
         }
-        if (brokerConnection != null) {
+        if (brokerConnection != null && brokerConnection.isStarted()) {
+            brokerConnection.stop();
             brokerConnection.close();
         }
-        super.stop();
+
+        getBrokerService().stopAllConnectors(new ServiceStopper());
+
+        eventConsumer.set(null);
+        connectionSession.set(null);
+        connection.set(null);
+        replicationScheduledFuture = null;
+        ackPollerScheduledFuture = null;
+    }
+
+    private void removeReplicationQueues() {
+        ReplicaSupport.REPLICATION_QUEUE_NAMES.forEach(queueName -> {
+            try {
+                getBrokerService().removeDestination(new ActiveMQQueue(queueName));
+            } catch (Exception e) {
+                logger.error("Failed to delete replication queue [{}]", queueName, e);
+            }
+        });
     }
 
     private void beginReplicationIdempotent() {

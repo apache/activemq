@@ -35,10 +35,13 @@ public abstract class ReplicaSourceBaseBroker extends BrokerFilter {
 
     @Override
     public void start() throws Exception {
-        initialized.compareAndSet(false, true);
+        init();
         super.start();
     }
 
+    protected void init() {
+        initialized.compareAndSet(false, true);
+    }
 
     protected void enqueueReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event) throws Exception {
         if (isReplicaContext(connectionContext)) {

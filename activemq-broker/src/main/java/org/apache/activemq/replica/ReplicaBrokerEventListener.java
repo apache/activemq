@@ -101,6 +101,10 @@ public class ReplicaBrokerEventListener implements MessageListener {
         sequenceMessageId = new MessageId(split[1]);
     }
 
+    public void deinitialize() throws Exception {
+        sequenceStorage.deinitialize();
+    }
+
     @Override
     public void onMessage(Message jmsMessage) {
         logger.trace("Received replication message from replica source");

@@ -28,7 +28,7 @@ public class ReplicationView implements ReplicationViewMBean {
     }
 
     @Override
-    public void setReplicationRole(String role, boolean force) {
+    public void setReplicationRole(String role, boolean force) throws Exception {
         plugin.setReplicaRole(ReplicaRole.valueOf(role), force);
     }
 

@@ -28,6 +28,7 @@ import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.QueueBrowserSubscription;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.LocalTransactionId;
@@ -37,6 +38,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +48,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
+public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements MutativeRoleBroker {
 
     private static final DestinationMapEntry<Boolean> IS_REPLICATED = new DestinationMapEntry<>() {
     }; // used in destination map to indicate mirrored status
@@ -70,10 +72,9 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     @Override
     public void start() throws Exception {
-        TransportConnector transportConnector = next.getBrokerService().addConnector(replicaPolicy.getTransportConnectorUri());
-        transportConnector.setName(ReplicaSupport.REPLICATION_CONNECTOR_NAME);
-        queueProvider.initialize();
-        queueProvider.initializeSequenceQueue();
+        logger.info("Starting Source broker");
+        installTransportConnector();
+        initQueueProvider();
         super.start();
         replicaSequencer.initialize();
         ensureDestinationsAreReplicated();
@@ -83,6 +84,54 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
     public void stop() throws Exception {
         replicaSequencer.deinitialize();
         super.stop();
+    }
+
+    @Override
+    public void stopBeforeRoleChange() throws Exception {
+        logger.info("Pausing Source broker");
+        getBrokerService().stopAllConnectors(new ServiceStopper());
+        replicaSequencer.deinitialize();
+        replicaSequencer.terminateScheduledExecutor();
+        removeReplicationQueues();
+    }
+
+    @Override
+    public void startAfterRoleChange() throws Exception {
+        logger.info("Resuming Source broker");
+        installTransportConnector();
+        getBrokerService().startAllConnectors();
+
+        initQueueProvider();
+        replicaSequencer.initialize();
+        ensureDestinationsAreReplicated();
+        init();
+        replicaSequencer.updateMainQueueConsumerStatus();
+        replicaSequencer.scheduleExecutor();
+    }
+
+    private void initQueueProvider() {
+        queueProvider.initialize();
+        queueProvider.initializeSequenceQueue();
+    }
+
+    private void installTransportConnector() throws Exception {
+        logger.info("Installing Transport Connector for Source broker");
+        TransportConnector replicationConnector = getBrokerService().getConnectorByName(ReplicaSupport.REPLICATION_CONNECTOR_NAME);
+        if (replicationConnector == null) {
+            TransportConnector transportConnector = getBrokerService().addConnector(replicaPolicy.getTransportConnectorUri());
+            transportConnector.setUri(replicaPolicy.getTransportConnectorUri());
+            transportConnector.setName(ReplicaSupport.REPLICATION_CONNECTOR_NAME);
+        }
+    }
+
+    private void removeReplicationQueues() {
+        ReplicaSupport.REPLICATION_QUEUE_NAMES.forEach(queueName -> {
+            try {
+                getBrokerService().removeDestination(new ActiveMQQueue(queueName));
+            } catch (Exception e) {
+                logger.error("Failed to delete replication queue [{}]", queueName, e);
+            }
+        });
     }
 
     private void ensureDestinationsAreReplicated() {

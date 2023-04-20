@@ -21,7 +21,7 @@ import org.apache.activemq.broker.jmx.MBeanInfo;
 public interface ReplicationViewMBean {
 
     @MBeanInfo("Set replication role for broker")
-    void setReplicationRole(String role, boolean force);
+    void setReplicationRole(String role, boolean force) throws Exception;
 
     @MBeanInfo("Get current replication role for broker")
     String getReplicationRole();

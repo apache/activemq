@@ -23,12 +23,11 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
+import org.apache.activemq.replica.jmx.ReplicationJmxHelper;
 import org.apache.activemq.replica.jmx.ReplicationView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 import java.net.URI;
 import java.util.Arrays;
 
@@ -49,25 +48,39 @@ public class ReplicaPlugin extends BrokerPluginSupport {
 
     private ReplicationView replicationView;
 
+    private ReplicaReplicationQueueSupplier queueProvider;
+
+    private ReplicaRoleManagementBroker replicaRoleManagementBroker;
+
     public ReplicaPlugin() {
         super();
     }
 
     @Override
     public Broker installPlugin(final Broker broker) throws Exception {
+        if (role != ReplicaRole.source && role != ReplicaRole.replica) {
+            throw new IllegalArgumentException(String.format("Unsupported role [%s]", role.name()));
+        }
+
         logger.info("{} installed, running as {}", ReplicaPlugin.class.getName(), role);
 
-        ReplicaReplicationQueueSupplier queueProvider = new ReplicaReplicationQueueSupplier(broker);
+        queueProvider = new ReplicaReplicationQueueSupplier(broker);
 
         final BrokerService brokerService = broker.getBrokerService();
         if (brokerService.isUseJmx()) {
             replicationView = new ReplicationView(this);
+            AnnotatedMBean.registerMBean(brokerService.getManagementContext(), replicationView, ReplicationJmxHelper.createJmxName(brokerService));
         }
 
-        if (role == ReplicaRole.replica) {
-            registerMBean(brokerService);
-            return new ReplicaBroker(broker, queueProvider, replicaPolicy);
-        }
+        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, buildSourceBroker(broker), buildReplicaBroker(broker), role);
+        return replicaRoleManagementBroker;
+    }
+
+    private ReplicaBroker buildReplicaBroker(Broker broker) {
+        return new ReplicaBroker(broker, queueProvider, replicaPolicy);
+    }
+
+    private ReplicaSourceAuthorizationBroker buildSourceBroker(Broker broker) {
         ReplicaInternalMessageProducer replicaInternalMessageProducer =
                 new ReplicaInternalMessageProducer(broker);
         ReplicationMessageProducer replicationMessageProducer =
@@ -76,22 +89,8 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer,
                 replicationMessageProducer, replicaPolicy);
 
-        ReplicaSourceBroker replicaSourceBroker = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
-                queueProvider, replicaPolicy);
-        ReplicaSourceAuthorizationBroker replicaSourceAuthorizationBroker = new ReplicaSourceAuthorizationBroker(
-                replicaSourceBroker);
-
-        Broker replicaBrokerFilter;
-        switch (role) {
-            case source:
-                replicaBrokerFilter = replicaSourceAuthorizationBroker;
-                break;
-            case dual:
-                replicaBrokerFilter = new ReplicaBroker(replicaSourceAuthorizationBroker, queueProvider, replicaPolicy);
-                break;
-            default:
-                throw new IllegalArgumentException();
-        }
+        Broker sourceBroker = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
+                        queueProvider, replicaPolicy);
 
         MutableBrokerFilter scheduledBroker = (MutableBrokerFilter) broker.getAdaptor(SchedulerBroker.class);
         if (scheduledBroker != null) {
@@ -103,15 +102,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
             advisoryBroker.setNext(new ReplicaAdvisorySuppressor(advisoryBroker.getNext()));
         }
 
-        registerMBean(brokerService);
-
-        return replicaBrokerFilter;
-    }
-
-    private void registerMBean(BrokerService brokerService) throws Exception {
-        if (brokerService.isUseJmx()) {
-            AnnotatedMBean.registerMBean(brokerService.getManagementContext(), replicationView, createJmxName(brokerService));
-        }
+        return new ReplicaSourceAuthorizationBroker(sourceBroker);
     }
 
     public ReplicaPlugin setRole(ReplicaRole role) {
@@ -208,21 +199,17 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         return role;
     }
 
-    public void setReplicaRole(ReplicaRole role, boolean force) {
+    public void setReplicaRole(ReplicaRole role, boolean force) throws Exception {
         logger.info("Called switch role for broker. Params: [{}], [{}]", role.name(), force);
-    }
-
-    private ObjectName createJmxName(BrokerService brokerService) {
-        try {
-            String objectNameStr = brokerService.getBrokerObjectName().toString();
-
-            objectNameStr += "," + "service=Plugins";
-            objectNameStr += "," + "instanceName=ReplicationPlugin";
-
-            return new ObjectName(objectNameStr);
-        } catch (MalformedObjectNameException e) {
-            throw new RuntimeException("Failed to create JMX view for ReplicationPlugin", e);
+        if (role == this.role) {
+            return;
         }
-    }
 
+        if ( role != ReplicaRole.replica && role != ReplicaRole.source ) {
+            throw new RuntimeException(String.format("Can't switch role from [source] to [%s]", role.name()));
+        }
+
+        this.replicaRoleManagementBroker.switchRole(role, force);
+        this.role = role;
+    }
 }

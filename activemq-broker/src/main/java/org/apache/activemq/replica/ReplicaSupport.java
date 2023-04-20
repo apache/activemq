@@ -52,13 +52,18 @@ public class ReplicaSupport {
     public static final String MESSAGE_IDS_PROPERTY = "MessageIdsProperty";
     public static final String ORIGINAL_MESSAGE_IDS_PROPERTY = "OriginalMessageIdsProperty";
     public static final String SEQUENCE_PROPERTY = "SEQUENCE_PROPERTY";
+    public static final String ACTIVEMQ_USER = "ActiveMQBroker";
 
     public static final Object INTERMEDIATE_QUEUE_MUTEX = new Object();
 
     public static final String REPLICATION_PLUGIN_STORAGE_DIRECTORY = "replication_plugin";
 
-    private static final Set<String> REPLICATION_QUEUE_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
+    public static final Set<String> REPLICATION_QUEUE_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
             INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME);
+
+    public static boolean isInternalUser(String userName) {
+        return ACTIVEMQ_USER.equals(userName);
+    }
 
     public static boolean isReplicationQueue(ActiveMQDestination destination) {
         return REPLICATION_QUEUE_NAMES.contains(destination.getPhysicalName());

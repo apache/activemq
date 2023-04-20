@@ -32,7 +32,7 @@ import org.apache.activemq.security.SecurityContext;
 
 import java.util.Arrays;
 
-public class ReplicaSourceAuthorizationBroker extends BrokerFilter {
+public class ReplicaSourceAuthorizationBroker extends BrokerFilter implements MutativeRoleBroker {
 
     public ReplicaSourceAuthorizationBroker(Broker next) {
         super(next);
@@ -64,11 +64,22 @@ public class ReplicaSourceAuthorizationBroker extends BrokerFilter {
 
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-        if (ReplicaSupport.isReplicationQueue(destination)) {
+        if (ReplicaSupport.isReplicationQueue(destination) && !ReplicaSupport.isInternalUser(context.getUserName()) ) {
             throw new ActiveMQReplicaException(createUnauthorizedMessage(destination));
         }
         super.removeDestination(context, destination, timeout);
     }
+
+    @Override
+    public void stopBeforeRoleChange() throws Exception {
+        ((MutativeRoleBroker) next).stopBeforeRoleChange();
+    }
+
+    @Override
+    public void startAfterRoleChange() throws Exception {
+        ((MutativeRoleBroker) next).startAfterRoleChange();
+    }
+
 
     private void assertAuthorized(ConnectionContext context, ActiveMQDestination destination) {
         if (isAuthorized(context, destination)) {
