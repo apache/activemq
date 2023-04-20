@@ -53,22 +53,27 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaPolicy replicaPolicy;
     private final PeriodAcknowledge periodAcknowledgeCallBack;
+    private final WebConsoleAccessController webConsoleAccessController;
     private ActionListenerCallback actionListenerCallback;
     private ReplicaBrokerEventListener messageListener;
     private ScheduledFuture<?> replicationScheduledFuture;
     private ScheduledFuture<?> ackPollerScheduledFuture;
 
-    public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy) {
+    public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy,
+            WebConsoleAccessController webConsoleAccessController) {
         super(next);
         this.queueProvider = queueProvider;
         this.replicaPolicy = replicaPolicy;
         this.periodAcknowledgeCallBack = new PeriodAcknowledge(replicaPolicy);
+        this.webConsoleAccessController = webConsoleAccessController;
     }
 
     @Override
     public void start() throws Exception {
         super.start();
         init();
+
+        webConsoleAccessController.stop();
     }
 
     @Override

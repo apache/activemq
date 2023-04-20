@@ -60,7 +60,7 @@ import static org.mockito.Mockito.when;
 
 public class ReplicaBrokerEventListenerTest {
 
-    private final Broker broker = mock(Broker.class);
+    private final MutativeRoleBroker broker = mock(MutativeRoleBroker.class);
     private final ActiveMQQueue sequenceQueue = new ActiveMQQueue(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
     private final ActiveMQQueue testQueue = new ActiveMQQueue("TEST.QUEUE");
     private final ActiveMQTopic testTopic = new ActiveMQTopic("TEST.TOPIC");

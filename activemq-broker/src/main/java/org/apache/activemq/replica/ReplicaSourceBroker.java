@@ -65,18 +65,21 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaPolicy replicaPolicy;
     private final ReplicaAckHelper replicaAckHelper;
+    private final WebConsoleAccessController webConsoleAccessController;
 
     final DestinationMap destinationsToReplicate = new DestinationMap();
 
     private ActionListenerCallback actionListenerCallback;
 
     public ReplicaSourceBroker(Broker next, ReplicationMessageProducer replicationMessageProducer,
-            ReplicaSequencer replicaSequencer, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy) {
+            ReplicaSequencer replicaSequencer, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy,
+            WebConsoleAccessController webConsoleAccessController) {
         super(next, replicationMessageProducer);
         this.replicaSequencer = replicaSequencer;
         this.queueProvider = queueProvider;
         this.replicaPolicy = replicaPolicy;
         this.replicaAckHelper = new ReplicaAckHelper(next);
+        this.webConsoleAccessController = webConsoleAccessController;
     }
 
     @Override
@@ -115,6 +118,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         logger.info("Starting Source broker after role change");
         installTransportConnector();
         getBrokerService().startAllConnectors();
+        webConsoleAccessController.start();
 
         initQueueProvider();
         replicaSequencer.initialize();
@@ -143,6 +147,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
                 super.stop(service);
             }
         });
+        webConsoleAccessController.stop();
 
         sendFailOverMessage(next.getAdminConnectionContext());
 

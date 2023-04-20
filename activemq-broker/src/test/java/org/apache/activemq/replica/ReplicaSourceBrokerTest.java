@@ -70,6 +70,7 @@ public class ReplicaSourceBrokerTest {
     private ReplicaSourceBroker source;
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final TransportConnector transportConnector = mock(TransportConnector.class);
+    private final WebConsoleAccessController webConsoleAccessController = mock(WebConsoleAccessController.class);
 
     private final ActiveMQQueue testDestination = new ActiveMQQueue("TEST.QUEUE");
 
@@ -87,7 +88,7 @@ public class ReplicaSourceBrokerTest {
         ReplicationMessageProducer replicationMessageProducer = new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
         ReplicaPolicy replicaPolicy = new ReplicaPolicy();
         replicaPolicy.setTransportConnectorUri(transportConnectorUri);
-        source = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer, queueProvider, replicaPolicy);
+        source = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer, queueProvider, replicaPolicy, webConsoleAccessController);
         when(brokerService.getBroker()).thenReturn(source);
 
         source.destinationsToReplicate.put(testDestination, IS_REPLICATED);

@@ -23,11 +23,12 @@ import org.slf4j.LoggerFactory;
 
 public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements ActionListenerCallback {
     private final Logger logger = LoggerFactory.getLogger(ReplicaRoleManagementBroker.class);
-    private final Broker sourceBroker;
-    private final Broker replicaBroker;
+    private final MutativeRoleBroker sourceBroker;
+    private final MutativeRoleBroker replicaBroker;
     private ReplicaRole role;
 
-    public ReplicaRoleManagementBroker(Broker broker, Broker sourceBroker, Broker replicaBroker, ReplicaRole role) {
+    public ReplicaRoleManagementBroker(Broker broker, MutativeRoleBroker sourceBroker, MutativeRoleBroker replicaBroker,
+            ReplicaRole role) {
         super(broker);
         this.sourceBroker = sourceBroker;
         this.replicaBroker = replicaBroker;
@@ -46,7 +47,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
             if (replicaBroker.isStopped()) {
                 replicaBroker.start();
             } else {
-                ((MutativeRoleBroker) replicaBroker).startAfterRoleChange();
+                replicaBroker.startAfterRoleChange();
             }
             setNext(replicaBroker);
         } catch (Exception e) {
@@ -89,13 +90,13 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         }
     }
 
-    private void switchNext(Broker oldNext, Broker newNext) {
+    private void switchNext(MutativeRoleBroker oldNext, MutativeRoleBroker newNext) {
         try {
-            ((MutativeRoleBroker) oldNext).stopBeforeRoleChange(true);
+            oldNext.stopBeforeRoleChange(true);
             if (newNext.isStopped()) {
                 newNext.start();
             } else {
-                ((MutativeRoleBroker) newNext).startAfterRoleChange();
+                newNext.startAfterRoleChange();
             }
             setNext(newNext);
         } catch (Exception e) {
@@ -104,9 +105,9 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         }
     }
 
-    private void switchNext(Broker oldNext) {
+    private void switchNext(MutativeRoleBroker oldNext) {
         try {
-            ((MutativeRoleBroker) oldNext).stopBeforeRoleChange(false);
+            oldNext.stopBeforeRoleChange(false);
         } catch (Exception e) {
             logger.error("Failed to switch role", e);
             throw new RuntimeException("Failed to switch role", e);

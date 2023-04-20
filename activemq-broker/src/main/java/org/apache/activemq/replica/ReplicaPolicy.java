@@ -33,7 +33,7 @@ public class ReplicaPolicy {
     private int maxBatchSize = 5_000_000;
     private int replicaAckPeriod = 5_000;
     private int replicaMaxAckBatchSize = 100;
-
+    private boolean controlWebConsoleAccess = true;
 
     public URI getTransportConnectorUri() {
         return Objects.requireNonNull(transportConnectorUri, "Need replication transport connection URI for this broker");
@@ -113,6 +113,14 @@ public class ReplicaPolicy {
 
     public void setReplicaMaxAckBatchSize(int replicaMaxAckBatchSize) {
         this.replicaMaxAckBatchSize = replicaMaxAckBatchSize;
+    }
+
+    public boolean isControlWebConsoleAccess() {
+        return controlWebConsoleAccess;
+    }
+
+    public void setControlWebConsoleAccess(boolean controlWebConsoleAccess) {
+        this.controlWebConsoleAccess = controlWebConsoleAccess;
     }
 
     private void validateUser(ActiveMQConnectionFactory replicaSourceConnectionFactory) {
