@@ -53,7 +53,6 @@ public abstract class ReplicaBaseSequenceStorage {
     static final String SEQUENCE_NAME_PROPERTY = "SequenceName";
     protected final ProducerId replicationProducerId = new ProducerId();
     private final Broker broker;
-    private final ConnectionContext connectionContext;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
     private final String sequenceName;
     protected final ReplicaReplicationQueueSupplier queueProvider;
@@ -61,10 +60,9 @@ public abstract class ReplicaBaseSequenceStorage {
     protected Queue sequenceQueue;
     protected PrefetchSubscription subscription;
 
-    public ReplicaBaseSequenceStorage(Broker broker, ConnectionContext connectionContext, ReplicaReplicationQueueSupplier queueProvider,
+    public ReplicaBaseSequenceStorage(Broker broker, ReplicaReplicationQueueSupplier queueProvider,
             ReplicaInternalMessageProducer replicaInternalMessageProducer, String sequenceName) {
         this.broker = requireNonNull(broker);
-        this.connectionContext = connectionContext;
         this.replicaInternalMessageProducer = replicaInternalMessageProducer;
         this.sequenceName = requireNonNull(sequenceName);
         this.queueProvider = queueProvider;
@@ -72,7 +70,7 @@ public abstract class ReplicaBaseSequenceStorage {
         replicationProducerId.setConnectionId(new IdGenerator().generateId());
     }
 
-    protected final List<ActiveMQTextMessage> initializeBase() throws Exception {
+    protected final List<ActiveMQTextMessage> initializeBase(ConnectionContext connectionContext) throws Exception {
         sequenceQueue = broker.getDestinations(queueProvider.getSequenceQueue()).stream().findFirst()
                 .map(DestinationExtractor::extractQueue).orElseThrow();
 
@@ -93,7 +91,7 @@ public abstract class ReplicaBaseSequenceStorage {
                 .map(ActiveMQTextMessage.class::cast).collect(Collectors.toList());
     }
 
-    public void deinitialize() throws Exception {
+    public void deinitialize(ConnectionContext connectionContext) throws Exception {
         sequenceQueue = null;
 
         if (subscription != null) {
@@ -104,7 +102,7 @@ public abstract class ReplicaBaseSequenceStorage {
         }
     }
 
-    public void send(TransactionId tid, String message, MessageId messageId) throws Exception {
+    public void send(ConnectionContext connectionContext, TransactionId tid, String message, MessageId messageId) throws Exception {
         ActiveMQTextMessage seqMessage = new ActiveMQTextMessage();
         seqMessage.setText(message);
         seqMessage.setTransactionId(tid);
@@ -116,10 +114,6 @@ public abstract class ReplicaBaseSequenceStorage {
         seqMessage.setStringProperty(SEQUENCE_NAME_PROPERTY, sequenceName);
 
         replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, seqMessage);
-    }
-
-    protected void acknowledge(MessageAck ack) throws Exception {
-        acknowledge(connectionContext, ack);
     }
 
     protected void acknowledge(ConnectionContext connectionContext, MessageAck ack) throws Exception {

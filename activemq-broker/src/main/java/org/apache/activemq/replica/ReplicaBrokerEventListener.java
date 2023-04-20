@@ -86,12 +86,12 @@ public class ReplicaBrokerEventListener implements MessageListener {
 
         createTransactionMapIfNotExist();
 
-        this.sequenceStorage = new ReplicaSequenceStorage(broker, connectionContext,
+        this.sequenceStorage = new ReplicaSequenceStorage(broker,
                 queueProvider, replicaInternalMessageProducer, SEQUENCE_NAME);
     }
 
     public void initialize() throws Exception {
-        String savedSequence = sequenceStorage.initialize();
+        String savedSequence = sequenceStorage.initialize(connectionContext);
         if (savedSequence == null) {
             return;
         }
@@ -106,7 +106,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
     }
 
     public void deinitialize() throws Exception {
-        sequenceStorage.deinitialize();
+        sequenceStorage.deinitialize(connectionContext);
     }
 
     @Override
@@ -153,7 +153,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 }
 
                 if (commit) {
-                    sequenceStorage.enqueue(tid, sequence.toString() + "#" + sequenceMessageId);
+                    sequenceStorage.enqueue(connectionContext, tid, sequence.toString() + "#" + sequenceMessageId);
 
                     broker.commitTransaction(connectionContext, tid, true);
                     acknowledgeCallback.setSafeToAck(true);

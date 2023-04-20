@@ -30,15 +30,14 @@ import java.util.List;
 
 public class ReplicaRecoverySequenceStorage extends ReplicaBaseSequenceStorage {
 
-    public ReplicaRecoverySequenceStorage(Broker broker, ConnectionContext connectionContext,
-            ReplicaReplicationQueueSupplier queueProvider, ReplicaInternalMessageProducer replicaInternalMessageProducer,
-            String sequenceName) {
-        super(broker, connectionContext, queueProvider, replicaInternalMessageProducer, sequenceName);
+    public ReplicaRecoverySequenceStorage(Broker broker, ReplicaReplicationQueueSupplier queueProvider,
+            ReplicaInternalMessageProducer replicaInternalMessageProducer, String sequenceName) {
+        super(broker, queueProvider, replicaInternalMessageProducer, sequenceName);
     }
 
-    public List<String> initialize() throws Exception {
+    public List<String> initialize(ConnectionContext connectionContext) throws Exception {
         List<String> result = new ArrayList<>();
-        for (ActiveMQTextMessage message : super.initializeBase()) {
+        for (ActiveMQTextMessage message : super.initializeBase(connectionContext)) {
             result.add(message.getText());
         }
         return result;

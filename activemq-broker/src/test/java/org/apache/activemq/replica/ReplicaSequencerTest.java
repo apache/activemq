@@ -210,23 +210,31 @@ public class ReplicaSequencerTest {
     public void iterateAckTest() throws Exception {
         sequencer.messageToAck.clear();
 
-        String firstMessageId = "1:0:0:1";
-        sequencer.messageToAck.addLast(firstMessageId);
-        sequencer.messageToAck.addLast("1:0:0:2");
-        String lastMessageId = "1:0:0:3";
-        sequencer.messageToAck.addLast(lastMessageId);
+        String messageId1 = "1:0:0:1";
+        sequencer.messageToAck.addLast(messageId1);
+        String messageId2 = "1:0:0:2";
+        sequencer.messageToAck.addLast(messageId2);
+        String messageId3 = "1:0:0:3";
+        sequencer.messageToAck.addLast(messageId3);
 
         sequencer.iterateAck();
 
         ArgumentCaptor<MessageAck> ackArgumentCaptor = ArgumentCaptor.forClass(MessageAck.class);
-        verify(broker).acknowledge(any(), ackArgumentCaptor.capture());
+        verify(broker, times(3)).acknowledge(any(), ackArgumentCaptor.capture());
 
-        MessageAck value = ackArgumentCaptor.getValue();
-        assertThat(value.getAckType()).isEqualTo(MessageAck.STANDARD_ACK_TYPE);
-        assertThat(value.getDestination()).isEqualTo(intermediateQueueDestination);
-        assertThat(value.getFirstMessageId().toString()).isEqualTo(firstMessageId);
-        assertThat(value.getLastMessageId().toString()).isEqualTo(lastMessageId);
-        assertThat(value.getMessageCount()).isEqualTo(3);
+        List<MessageAck> values = ackArgumentCaptor.getAllValues();
+        assertThat(values.get(0).getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(values.get(0).getDestination()).isEqualTo(intermediateQueueDestination);
+        assertThat(values.get(0).getFirstMessageId().toString()).isEqualTo(messageId1);
+        assertThat(values.get(0).getLastMessageId().toString()).isEqualTo(messageId1);
+        assertThat(values.get(1).getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(values.get(1).getDestination()).isEqualTo(intermediateQueueDestination);
+        assertThat(values.get(1).getFirstMessageId().toString()).isEqualTo(messageId2);
+        assertThat(values.get(1).getLastMessageId().toString()).isEqualTo(messageId2);
+        assertThat(values.get(2).getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(values.get(2).getDestination()).isEqualTo(intermediateQueueDestination);
+        assertThat(values.get(2).getFirstMessageId().toString()).isEqualTo(messageId3);
+        assertThat(values.get(2).getLastMessageId().toString()).isEqualTo(messageId3);
     }
 
     @Test

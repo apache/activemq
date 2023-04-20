@@ -47,14 +47,14 @@ public class ReplicaRecoverySequenceStorageTest {
         when(broker.addConsumer(any(), any())).thenReturn(subscription);
         when(queueProvider.getSequenceQueue()).thenReturn(sequenceQueueDestination);
 
-        this.replicaSequenceStorage = new ReplicaRecoverySequenceStorage(broker, connectionContext, queueProvider, replicaProducer, SEQUENCE_NAME);
+        this.replicaSequenceStorage = new ReplicaRecoverySequenceStorage(broker, queueProvider, replicaProducer, SEQUENCE_NAME);
     }
 
     @Test
     public void shouldInitializeWhenNoMessagesExist() throws Exception {
         when(subscription.getDispatched()).thenReturn(new ArrayList<>());
 
-        List<String> initialize = replicaSequenceStorage.initialize();
+        List<String> initialize = replicaSequenceStorage.initialize(connectionContext);
         assertThat(initialize).isEmpty();
         verify(sequenceQueue, never()).removeMessage(any());
     }
@@ -73,7 +73,7 @@ public class ReplicaRecoverySequenceStorageTest {
         when(subscription.getDispatched())
                 .thenReturn(List.of(new IndirectMessageReference(message1), new IndirectMessageReference(message2)));
 
-        List<String> initialize = replicaSequenceStorage.initialize();
+        List<String> initialize = replicaSequenceStorage.initialize(connectionContext);
         assertThat(initialize).containsExactly(message1.getText(), message2.getText());
     }
 }

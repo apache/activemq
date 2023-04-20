@@ -90,7 +90,7 @@ public class ReplicaSequencer {
     private TaskRunner ackTaskRunner;
     private TaskRunner sendTaskRunner;
     private Queue mainQueue;
-    private ConnectionContext connectionContext;
+    private ConnectionContext subscriptionConnectionContext;
     private ScheduledExecutorService scheduler;
 
     private PrefetchSubscription subscription;
@@ -128,16 +128,16 @@ public class ReplicaSequencer {
         mainQueue = broker.getDestinations(queueProvider.getMainQueue()).stream().findFirst()
                 .map(DestinationExtractor::extractQueue).orElseThrow();
 
-        if (connectionContext == null) {
-            connectionContext = createConnectionContext();
+        if (subscriptionConnectionContext == null) {
+            subscriptionConnectionContext = createSubscriptionConnectionContext();
         }
         if (sequenceStorage == null) {
-            sequenceStorage = new ReplicaSequenceStorage(broker, connectionContext,
-                    queueProvider, replicaInternalMessageProducer, SEQUENCE_NAME);
+            sequenceStorage = new ReplicaSequenceStorage(broker, queueProvider, replicaInternalMessageProducer,
+                    SEQUENCE_NAME);
         }
         if (restoreSequenceStorage == null) {
-            restoreSequenceStorage = new ReplicaRecoverySequenceStorage(broker, connectionContext,
-                    queueProvider, replicaInternalMessageProducer, RESTORE_SEQUENCE_NAME);
+            restoreSequenceStorage = new ReplicaRecoverySequenceStorage(broker, queueProvider,
+                    replicaInternalMessageProducer, RESTORE_SEQUENCE_NAME);
         }
 
         ConnectionId connectionId = new ConnectionId(new IdGenerator("ReplicationPlugin.Sequencer").generateId());
@@ -147,14 +147,14 @@ public class ReplicaSequencer {
         consumerInfo.setConsumerId(consumerId);
         consumerInfo.setPrefetchSize(ReplicaSupport.INTERMEDIATE_QUEUE_PREFETCH_SIZE);
         consumerInfo.setDestination(queueProvider.getIntermediateQueue());
-        subscription = (PrefetchSubscription) broker.addConsumer(connectionContext, consumerInfo);
+        subscription = (PrefetchSubscription) broker.addConsumer(subscriptionConnectionContext, consumerInfo);
 
-        replicaCompactor = new ReplicaCompactor(broker, connectionContext, queueProvider, subscription,
+        replicaCompactor = new ReplicaCompactor(broker, queueProvider, subscription,
                 replicaPolicy.getCompactorAdditionalMessagesLimit());
 
         intermediateQueue.iterate();
-        String savedSequences = sequenceStorage.initialize();
-        List<String> savedSequencesToRestore = restoreSequenceStorage.initialize();
+        String savedSequences = sequenceStorage.initialize(subscriptionConnectionContext);
+        List<String> savedSequencesToRestore = restoreSequenceStorage.initialize(subscriptionConnectionContext);
         restoreSequence(savedSequences, savedSequencesToRestore);
 
         initialized.compareAndSet(false, true);
@@ -180,7 +180,7 @@ public class ReplicaSequencer {
 
         if (subscription != null) {
             try {
-                broker.removeConsumer(connectionContext, subscription.getConsumerInfo());
+                broker.removeConsumer(subscriptionConnectionContext, subscription.getConsumerInfo());
             } catch (BrokerStoppedException ignored) {}
             subscription = null;
         }
@@ -188,10 +188,10 @@ public class ReplicaSequencer {
         replicaCompactor = null;
 
         if (sequenceStorage != null) {
-            sequenceStorage.deinitialize();
+            sequenceStorage.deinitialize(subscriptionConnectionContext);
         }
         if (restoreSequenceStorage != null) {
-            restoreSequenceStorage.deinitialize();
+            restoreSequenceStorage.deinitialize(subscriptionConnectionContext);
         }
 
         initialized.compareAndSet(true, false);
@@ -246,6 +246,7 @@ public class ReplicaSequencer {
                 ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
         boolean rollbackOnFail = false;
 
+        ConnectionContext connectionContext = createConnectionContext();
         BigInteger sequence = null;
         try {
             broker.beginTransaction(connectionContext, transactionId);
@@ -263,7 +264,7 @@ public class ReplicaSequencer {
 
                 List<MessageReference> batch = getBatch(matchingMessages, new MessageId(split[1]), new MessageId(split[2]));
 
-                sequence = enqueueReplicaEvent(batch, new BigInteger(split[0]), transactionId);
+                sequence = enqueueReplicaEvent(connectionContext, batch, new BigInteger(split[0]), transactionId);
             }
 
             broker.commitTransaction(connectionContext, transactionId, true);
@@ -395,6 +396,7 @@ public class ReplicaSequencer {
         }
 
         if (!messages.isEmpty()) {
+            ConnectionContext connectionContext = createConnectionContext();
             TransactionId transactionId = new LocalTransactionId(
                     new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
                     ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
@@ -416,7 +418,7 @@ public class ReplicaSequencer {
                     broker.acknowledge(consumerExchange, ack);
                 }
 
-                restoreSequenceStorage.acknowledge(consumerExchange.getConnectionContext(), transactionId, sequenceMessages);
+                restoreSequenceStorage.acknowledge(connectionContext, transactionId, sequenceMessages);
 
                 broker.commitTransaction(connectionContext, transactionId, true);
 
@@ -462,7 +464,6 @@ public class ReplicaSequencer {
         List<MessageReference> dispatched = subscription.getDispatched();
         List<MessageReference> toProcess = new ArrayList<>();
 
-
         synchronized (deliveredMessages) {
             Collections.reverse(dispatched);
             for (MessageReference reference : dispatched) {
@@ -478,10 +479,12 @@ public class ReplicaSequencer {
             return;
         }
 
+        ConnectionContext connectionContext = createConnectionContext();
+
         Collections.reverse(toProcess);
 
         try {
-            toProcess = replicaCompactor.compactAndFilter(toProcess, !hasConsumer && subscription.isFull());
+            toProcess = replicaCompactor.compactAndFilter(connectionContext, toProcess, !hasConsumer && subscription.isFull());
         } catch (Exception e) {
             logger.error("Failed to compact messages in the intermediate replication queue", e);
             return;
@@ -514,15 +517,15 @@ public class ReplicaSequencer {
 
             BigInteger newSequence = sequence;
             for (List<MessageReference> batch : batches) {
-                BigInteger newSequence1 = enqueueReplicaEvent(batch, newSequence, transactionId);
+                BigInteger newSequence1 = enqueueReplicaEvent(connectionContext, batch, newSequence, transactionId);
 
-                restoreSequenceStorage.send(transactionId, newSequence + "#" +
+                restoreSequenceStorage.send(connectionContext, transactionId, newSequence + "#" +
                         batch.get(0).getMessageId() + "#" +
                         batch.get(batch.size() - 1).getMessageId(), batch.get(0).getMessageId());
 
                 newSequence = newSequence1;
             }
-            sequenceStorage.enqueue(transactionId, newSequence + "#" + toProcess.get(toProcess.size() - 1).getMessageId());
+            sequenceStorage.enqueue(connectionContext, transactionId, newSequence + "#" + toProcess.get(toProcess.size() - 1).getMessageId());
 
             broker.commitTransaction(connectionContext, transactionId, true);
 
@@ -544,7 +547,8 @@ public class ReplicaSequencer {
         }
     }
 
-    private BigInteger enqueueReplicaEvent(List<MessageReference> batch, BigInteger sequence, TransactionId transactionId) throws Exception {
+    private BigInteger enqueueReplicaEvent(ConnectionContext connectionContext, List<MessageReference> batch,
+            BigInteger sequence, TransactionId transactionId) throws Exception {
         if (batch.size() == 1) {
             MessageReference reference = batch.stream().findFirst()
                     .orElseThrow(() -> new IllegalStateException("Cannot get message reference from batch"));
@@ -591,7 +595,7 @@ public class ReplicaSequencer {
         return sequence;
     }
 
-    private ConnectionContext createConnectionContext() {
+    private ConnectionContext createSubscriptionConnectionContext() {
         ConnectionContext connectionContext = broker.getAdminConnectionContext().copy();
         connectionContext.setClientId(SOURCE_CONSUMER_CLIENT_ID);
         connectionContext.setConnection(new DummyConnection() {
@@ -608,6 +612,15 @@ public class ReplicaSequencer {
                 }
             }
         });
+        if (connectionContext.getTransactions() == null) {
+            connectionContext.setTransactions(new ConcurrentHashMap<>());
+        }
+
+        return connectionContext;
+    }
+
+    private ConnectionContext createConnectionContext() {
+        ConnectionContext connectionContext = broker.getAdminConnectionContext().copy();
         if (connectionContext.getTransactions() == null) {
             connectionContext.setTransactions(new ConcurrentHashMap<>());
         }

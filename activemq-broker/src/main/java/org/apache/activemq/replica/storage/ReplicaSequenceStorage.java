@@ -36,13 +36,13 @@ public class ReplicaSequenceStorage extends ReplicaBaseSequenceStorage {
     private final Logger logger = LoggerFactory.getLogger(ReplicaSequenceStorage.class);
     private final LongSequenceGenerator eventMessageIdGenerator = new LongSequenceGenerator();
 
-    public ReplicaSequenceStorage(Broker broker, ConnectionContext connectionContext, ReplicaReplicationQueueSupplier queueProvider,
+    public ReplicaSequenceStorage(Broker broker, ReplicaReplicationQueueSupplier queueProvider,
             ReplicaInternalMessageProducer replicaInternalMessageProducer, String sequenceName) {
-        super(broker, connectionContext, queueProvider, replicaInternalMessageProducer, sequenceName);
+        super(broker, queueProvider, replicaInternalMessageProducer, sequenceName);
     }
 
-    public String initialize() throws Exception {
-        List<ActiveMQTextMessage> allMessages = super.initializeBase();
+    public String initialize(ConnectionContext connectionContext) throws Exception {
+        List<ActiveMQTextMessage> allMessages = super.initializeBase(connectionContext);
 
         if (allMessages.size() == 0) {
             return null;
@@ -57,14 +57,15 @@ public class ReplicaSequenceStorage extends ReplicaBaseSequenceStorage {
         return allMessages.get(0).getText();
     }
 
-    public void enqueue(TransactionId tid, String message) throws Exception {
+    public void enqueue(ConnectionContext connectionContext, TransactionId tid, String message) throws Exception {
         // before enqueue message, we acknowledge all messages currently in queue.
-        acknowledgeAll(tid);
+        acknowledgeAll(connectionContext, tid);
 
-        send(tid, message, new MessageId(replicationProducerId, eventMessageIdGenerator.getNextSequenceId()));
+        send(connectionContext, tid, message,
+                new MessageId(replicationProducerId, eventMessageIdGenerator.getNextSequenceId()));
     }
 
-    private void acknowledgeAll(TransactionId tid) throws Exception {
+    private void acknowledgeAll(ConnectionContext connectionContext, TransactionId tid) throws Exception {
         List<MessageReference> dispatched = subscription.getDispatched();
 
         if (!dispatched.isEmpty()) {
@@ -72,7 +73,7 @@ public class ReplicaSequenceStorage extends ReplicaBaseSequenceStorage {
             ack.setFirstMessageId(dispatched.get(0).getMessageId());
             ack.setDestination(queueProvider.getSequenceQueue());
             ack.setTransactionId(tid);
-            acknowledge(ack);
+            acknowledge(connectionContext, ack);
         }
     }
 }
