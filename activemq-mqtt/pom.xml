@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.18.0-SNAPSHOT</version>
+    <version>5.19.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-mqtt</artifactId>
@@ -40,11 +40,6 @@
       <artifactId>activemq-broker</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activeio-core</artifactId>
-      <optional>true</optional>
-    </dependency>
     <dependency>
       <groupId>org.apache.activemq.protobuf</groupId>
       <artifactId>activemq-protobuf</artifactId>
@@ -79,10 +74,6 @@
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jta_1.1_spec</artifactId>
       <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -149,7 +140,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
+      <artifactId>log4j-slf4j2-impl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

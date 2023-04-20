@@ -22,8 +22,35 @@
     <strict-checking/>
   </cors>
 
-  <!-- deny calling operations or getting attributes from these mbeans -->
+  <!-- By default don't allow write or exec operations -->
+  <commands>
+    <command>read</command>
+    <command>list</command>
+    <command>version</command>
+    <command>search</command>
+  </commands>
+
+  <allow>
+    <!-- Allow all operations for the broker itself -->
+    <mbean>
+      <name>org.apache.activemq:*</name>
+      <attribute>*</attribute>
+      <operation>*</operation>
+    </mbean>
+    <!-- Allow all operations for Jolokia Config -->
+    <mbean>
+      <name>jolokia:type=Config</name>
+      <operation>*</operation>
+    </mbean>
+  </allow>
+
+  <!-- deny all operations or getting attributes from these mbeans -->
   <deny>
+    <mbean>
+      <name>org.apache.logging.log4j2:*</name>
+      <attribute>*</attribute>
+      <operation>*</operation>
+    </mbean>
     <mbean>
       <name>com.sun.management:type=DiagnosticCommand</name>
       <attribute>*</attribute>
@@ -31,6 +58,11 @@
     </mbean>
     <mbean>
       <name>com.sun.management:type=HotSpotDiagnostic</name>
+      <attribute>*</attribute>
+      <operation>*</operation>
+    </mbean>
+    <mbean>
+      <name>jdk.management.jfr:type=FlightRecorder</name>
       <attribute>*</attribute>
       <operation>*</operation>
     </mbean>

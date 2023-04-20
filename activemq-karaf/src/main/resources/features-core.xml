@@ -27,7 +27,6 @@
         <feature>activemq-combined-jms-spec</feature>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.3_spec/1.0</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
-        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
         <bundle dependency="true">mvn:org.jvnet.jaxb2_commons/jaxb2-basics-runtime/${jaxb-basics-version}</bundle>
         <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jaxb-runtime/${jaxb-bundle-version}</bundle>
         <bundle>mvn:org.apache.commons/commons-pool2/${commons-pool2-version}</bundle>
@@ -48,6 +47,7 @@
       <feature version="${project.version}">activemq-client</feature>
       <bundle dependency="true">mvn:commons-io/commons-io/${commons-io-version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
+      <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang-version}</bundle>
       <bundle dependency="true">mvn:commons-codec/commons-codec/1.15</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_6</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.2_1</bundle>
@@ -56,7 +56,6 @@
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/${xpp3-bundle-version}</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/${xstream-bundle-version}</bundle>
       <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/${aries-version}</bundle>
-      <bundle dependency="true">mvn:org.apache.activemq/activeio-core/${activeio-version}</bundle>
       <bundle dependency="true">mvn:org.codehaus.jettison/jettison/${jettison-version}</bundle>
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${jackson-version}</bundle>
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${jackson-version}</bundle>

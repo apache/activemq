@@ -1672,6 +1672,7 @@ public class BrokerService implements Service {
     /**
      * @return Returns the shutdownOnMasterFailure.
      */
+    @Deprecated(forRemoval = true)
     public boolean isShutdownOnMasterFailure() {
         return shutdownOnMasterFailure;
     }
@@ -2901,49 +2902,73 @@ public class BrokerService implements Service {
         this.sslContext = sslContext;
     }
 
+    /**
+     * @deprecated this method will be renamed to not use slave wording
+     */
+    @Deprecated(forRemoval = true)
     public boolean isShutdownOnSlaveFailure() {
         return shutdownOnSlaveFailure;
     }
 
     /**
+     * @deprecated this method will be renamed to not use slave wording
+     *
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
      */
+    @Deprecated(forRemoval = true)
     public void setShutdownOnSlaveFailure(boolean shutdownOnSlaveFailure) {
         this.shutdownOnSlaveFailure = shutdownOnSlaveFailure;
     }
 
+    /**
+     * @deprecated it will be removed as it should not be used directly.
+     */
+    @Deprecated(forRemoval = true)
     public boolean isWaitForSlave() {
         return waitForSlave;
     }
 
     /**
+     * @deprecated this method will be renamed to not use slave wording
+     *
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
      */
+    @Deprecated(forRemoval = true)
     public void setWaitForSlave(boolean waitForSlave) {
         this.waitForSlave = waitForSlave;
     }
 
+    /**
+     * @deprecated this method will be renamed to not use slave wording
+     */
+    @Deprecated(forRemoval = true)
     public long getWaitForSlaveTimeout() {
         return this.waitForSlaveTimeout;
     }
 
+    /**
+     * @deprecated this method will be renamed to not use slave wording
+     */
+    @Deprecated(forRemoval = true)
     public void setWaitForSlaveTimeout(long waitForSlaveTimeout) {
         this.waitForSlaveTimeout = waitForSlaveTimeout;
     }
 
     /**
-     * Get the passiveSlave
-     * @return the passiveSlave
+     * @deprecated this method will be renamed to not use slave wording
      */
+    @Deprecated(forRemoval = true)
     public boolean isPassiveSlave() {
         return this.passiveSlave;
     }
 
     /**
-     * Set the passiveSlave
+     * @deprecated this method will be renamed to not use slave wording
+     *
      * @param passiveSlave the passiveSlave to set
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
      */
+    @Deprecated(forRemoval = true)
     public void setPassiveSlave(boolean passiveSlave) {
         this.passiveSlave = passiveSlave;
     }

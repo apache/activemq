@@ -22,8 +22,8 @@
 pipeline {
 
     agent {
-        node {
-            label 'ubuntu'
+        label {
+            label params.nodeLabel
         }
     }
 
@@ -41,9 +41,14 @@ pipeline {
         disableConcurrentBuilds()
     }
 
+    parameters {
+        choice(name: 'nodeLabel', choices: ['ubuntu', 's390x']) 
+    }
+
     stages {
         stage('Initialization') {
             steps {
+                echo "running on ${env.NODE_NAME}"
                 echo 'Building branch ' + env.BRANCH_NAME
                 echo 'Using PATH ' + env.PATH
             }
@@ -63,12 +68,12 @@ pipeline {
             }
         }
 
-        stage('Build JDK 19') {
+        stage('Build JDK 20') {
             tools {
-                jdk "jdk_19_latest"
+                jdk "jdk_20_latest"
             }
             steps {
-                echo 'Building JDK 19'
+                echo 'Building JDK 20'
                 sh 'java -version'
                 sh 'mvn -version'
                 sh 'mvn -U -B -e clean install -DskipTests'

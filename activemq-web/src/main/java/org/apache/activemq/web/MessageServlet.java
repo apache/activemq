@@ -17,24 +17,27 @@
 
 package org.apache.activemq.web;
 
-import org.apache.activemq.MessageAvailableConsumer;
-import org.apache.activemq.MessageAvailableListener;
-import org.eclipse.jetty.continuation.Continuation;
-import org.eclipse.jetty.continuation.ContinuationSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.ObjectMessage;
+import javax.jms.TextMessage;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.activemq.MessageAvailableConsumer;
+import org.apache.activemq.MessageAvailableListener;
+import org.apache.activemq.web.async.AsyncServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A servlet for sending and receiving messages to/from JMS destinations using
@@ -53,7 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MessageServlet extends MessageServletSupport {
 
-    // its a bit pita that this servlet got intermixed with jetty continuation/rest
+    // its a bit pita that this servlet got intermixed with asyncRequest/rest
     // instead of creating a special for that. We should have kept a simple servlet
     // for good old fashioned request/response blocked communication.
 
@@ -185,11 +188,11 @@ public class MessageServlet extends MessageServletSupport {
                 throw new NoDestinationSuppliedException();
             }
             consumer = (MessageAvailableConsumer) client.getConsumer(destination, request.getHeader(WebClient.selectorName));
-            Continuation continuation = ContinuationSupport.getContinuation(request);
+            final AsyncServletRequest asyncRequest = AsyncServletRequest.getAsyncRequest(request);
 
             // Don't allow concurrent use of the consumer. Do make sure to allow
-            // subsequent calls on continuation to use the consumer.
-            if (continuation.isInitial() && !activeConsumers.add(consumer)) {
+            // subsequent calls on asyncRequest to use the consumer.
+            if (asyncRequest.isInitial() && !activeConsumers.add(consumer)) {
                 throw new ServletException("Concurrent access to consumer is not supported");
             }
 
@@ -224,7 +227,7 @@ public class MessageServlet extends MessageServletSupport {
             }
 
             if (message == null) {
-                handleContinuation(request, response, client, destination, consumer, deadline);
+                handleAsyncRequest(request, response, client, destination, consumer, deadline);
             } else {
                 writeResponse(request, response, message);
                 closeConsumerOnOneShot(request, client, destination);
@@ -236,19 +239,19 @@ public class MessageServlet extends MessageServletSupport {
         }
     }
 
-    protected void handleContinuation(HttpServletRequest request, HttpServletResponse response, WebClient client, Destination destination,
+    protected void handleAsyncRequest(HttpServletRequest request, HttpServletResponse response, WebClient client, Destination destination,
                                       MessageAvailableConsumer consumer, long deadline) {
-        // Get an existing Continuation or create a new one if there are no events.
-        Continuation continuation = ContinuationSupport.getContinuation(request);
+        // Get an existing ActiveMQAsyncRequest or create a new one if there are no events.
+        final AsyncServletRequest asyncRequest = AsyncServletRequest.getAsyncRequest(request);
 
         long timeout = deadline - System.currentTimeMillis();
-        if ((continuation.isExpired()) || (timeout <= 0)) {
-            // Reset the continuation on the available listener for the consumer to prevent the
-            // next message receipt from being consumed without a valid, active continuation.
+        if ((asyncRequest.isExpired()) || (timeout <= 0)) {
+            // Reset the asyncRequest on the available listener for the consumer to prevent the
+            // next message receipt from being consumed without a valid, active asyncRequest.
             synchronized (consumer) {
                 Object obj = consumer.getAvailableListener();
                 if (obj instanceof Listener) {
-                    ((Listener) obj).setContinuation(null);
+                    ((Listener) obj).setAsyncRequest(null);
                 }
             }
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -257,14 +260,14 @@ public class MessageServlet extends MessageServletSupport {
             return;
         }
 
-        continuation.setTimeout(timeout);
-        continuation.suspend();
+        asyncRequest.setTimeoutMs(timeout);
+        asyncRequest.startAsync();
 
         synchronized (consumer) {
             Listener listener = (Listener) consumer.getAvailableListener();
 
-            // register this continuation with our listener.
-            listener.setContinuation(continuation);
+            // register this asyncRequest with our listener.
+            listener.setAsyncRequest(asyncRequest);
         }
     }
 
@@ -421,19 +424,19 @@ public class MessageServlet extends MessageServletSupport {
     }
 
     /*
-     * Listen for available messages and wakeup any continuations.
+     * Listen for available messages and wakeup any asyncRequests.
      */
     private static class Listener implements MessageAvailableListener {
         MessageConsumer consumer;
-        Continuation continuation;
+        AsyncServletRequest asyncRequest;
 
         Listener(MessageConsumer consumer) {
             this.consumer = consumer;
         }
 
-        public void setContinuation(Continuation continuation) {
+        public void setAsyncRequest(AsyncServletRequest asyncRequest) {
             synchronized (consumer) {
-                this.continuation = continuation;
+                this.asyncRequest = asyncRequest;
             }
         }
 
@@ -444,8 +447,8 @@ public class MessageServlet extends MessageServletSupport {
             ((MessageAvailableConsumer) consumer).setAvailableListener(null);
 
             synchronized (this.consumer) {
-                if (continuation != null) {
-                    continuation.resume();
+                if (asyncRequest != null) {
+                    asyncRequest.dispatch();
                 }
             }
         }

@@ -77,8 +77,8 @@ public class AbstractRuntimeConfigurationBroker extends BrokerFilter {
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean createIfTemporary) throws Exception {
         Runnable work = addDestinationWork.poll();
         if (work != null) {
+            addDestinationBarrier.writeLock().lockInterruptibly();
             try {
-                addDestinationBarrier.writeLock().lockInterruptibly();
                 do {
                     work.run();
                     work = addDestinationWork.poll();
@@ -88,8 +88,8 @@ public class AbstractRuntimeConfigurationBroker extends BrokerFilter {
                 addDestinationBarrier.writeLock().unlock();
             }
         } else {
+            addDestinationBarrier.readLock().lockInterruptibly();
             try {
-                addDestinationBarrier.readLock().lockInterruptibly();
                 return super.addDestination(context, destination, createIfTemporary);
             } finally {
                 addDestinationBarrier.readLock().unlock();
@@ -102,8 +102,8 @@ public class AbstractRuntimeConfigurationBroker extends BrokerFilter {
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         Runnable work = addConnectionWork.poll();
         if (work != null) {
+            addConnectionBarrier.writeLock().lockInterruptibly();
             try {
-                addConnectionBarrier.writeLock().lockInterruptibly();
                 do {
                     work.run();
                     work = addConnectionWork.poll();
@@ -113,8 +113,8 @@ public class AbstractRuntimeConfigurationBroker extends BrokerFilter {
                 addConnectionBarrier.writeLock().unlock();
             }
         } else {
+            addConnectionBarrier.readLock().lockInterruptibly();
             try {
-                addConnectionBarrier.readLock().lockInterruptibly();
                 super.addConnection(context, info);
             } finally {
                 addConnectionBarrier.readLock().unlock();
@@ -131,8 +131,8 @@ public class AbstractRuntimeConfigurationBroker extends BrokerFilter {
     protected void applyDestinationWork() throws Exception {
         Runnable work = addDestinationWork.poll();
         if (work != null) {
+            addDestinationBarrier.writeLock().lockInterruptibly();
             try {
-                addDestinationBarrier.writeLock().lockInterruptibly();
                 do {
                     work.run();
                     work = addDestinationWork.poll();

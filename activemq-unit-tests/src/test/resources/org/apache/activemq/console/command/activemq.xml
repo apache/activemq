@@ -26,13 +26,17 @@
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <!-- Default configuration -->
-  <broker id="default" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
+  <broker id="default" useJmx="false" xmlns="http://activemq.apache.org/schema/core" deleteAllMessagesOnStartup="true">
 
-	<persistenceFactory>
-	  <journalPersistenceAdapterFactory journalLogFiles="2" dataDirectory="target/foo"/>
-	</persistenceFactory>
+    <persistenceAdapter>
+      <kahaDB directory="target/activemq-data/command/kahadb"
+              cleanupInterval="300000" checkpointInterval="50000"
+              journalMaxWriteBatchSize="62k"
+              journalMaxFileLength="1g"
+              indexCacheSize="100000" indexWriteBatchSize="100000"/>
+    </persistenceAdapter>
 
-	<transportConnectors>
+    <transportConnectors>
       <transportConnector uri="tcp://localhost:61616" />
     </transportConnectors>
 

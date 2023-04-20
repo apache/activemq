@@ -141,7 +141,6 @@
         <include>${pom.groupId}:activemq-console</include>
         <include>${pom.groupId}:activemq-jaas</include>
         <include>org.apache.activemq.protobuf:activemq-protobuf</include>
-        <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
         <include>jakarta.jms:jakarta.jms-api</include>
         <include>org.apache.geronimo.specs:geronimo-jta_1.1_spec</include>
         <include>${pom.groupId}:activemq-web</include>
@@ -185,14 +184,14 @@
         <include>${pom.groupId}:activemq-pool</include>
         <include>${pom.groupId}:activemq-partition</include>
         <include>${pom.groupId}:activemq-shiro</include>
-        <include>${pom.groupId}:activeio-core</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
         <include>commons-io:commons-io</include>
         <include>org.apache.commons:commons-dbcp2</include>
         <include>org.apache.commons:commons-pool2</include>
         <include>commons-codec:commons-codec</include>
-        <include>org.apache.logging.log4j:log4j-slf4j-impl</include>
+        <include>org.apache.commons:commons-lang3</include>
+        <include>org.apache.logging.log4j:log4j-slf4j2-impl</include>
         <include>org.apache.logging.log4j:log4j-api</include>
         <include>org.apache.logging.log4j:log4j-core</include>
         <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
@@ -214,7 +213,7 @@
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
         <include>org.jasypt:jasypt-spring4</include>
-        <include>javax.jmdns:jmdns</include>
+        <include>org.jmdns:jmdns</include>
         <include>org.apache.qpid:proton-j</include>
         <include>${pom.groupId}:activemq-runtime-config</include>
         <include>org.jvnet.jaxb2_commons:jaxb2-basics-runtime</include>

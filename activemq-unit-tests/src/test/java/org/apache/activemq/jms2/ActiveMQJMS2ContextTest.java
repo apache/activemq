@@ -219,11 +219,6 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
         connection.createSharedDurableConnectionConsumer(null, null, null, null, 10);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testSessionAckMode() throws JMSException {
-        connection.createSession(Session.AUTO_ACKNOWLEDGE);
-    }
-
     @Test
     public void testSessionDurableConsumer() throws JMSException {
         try(JMSContext jmsContext = activemqConnectionFactory.createContext()) {

@@ -31,13 +31,12 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     private boolean processNonPersistent = false;
     private boolean processExpired = true;
     private boolean enableAudit = true;
-    private final ActiveMQMessageAudit messageAudit = new ActiveMQMessageAudit();
     private long expiration;
 
     @Override
     public void rollback(Message message) {
         if (message != null && this.enableAudit) {
-            messageAudit.rollback(message);
+            lookupActiveMQMessageAudit(message, true).rollback(message);
         }
     }
 
@@ -46,7 +45,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
         boolean result = false;
         if (message != null) {
             result = true;
-            if (enableAudit && messageAudit.isDuplicate(message)) {
+            if (enableAudit && lookupActiveMQMessageAudit(message, false).isDuplicate(message)) {
                 result = false;
                 LOG.debug("Not adding duplicate to DLQ: {}, dest: {}", message.getMessageId(), message.getDestination());
             }
@@ -108,20 +107,13 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
         this.expiration = expiration;
     }
 
-    public int getMaxProducersToAudit() {
-        return messageAudit.getMaximumNumberOfProducersToTrack();
-    }
+    public abstract int getMaxProducersToAudit();
 
-    public void setMaxProducersToAudit(int maxProducersToAudit) {
-        messageAudit.setMaximumNumberOfProducersToTrack(maxProducersToAudit);
-    }
+    public abstract void setMaxProducersToAudit(int maxProducersToAudit);
 
-    public void setMaxAuditDepth(int maxAuditDepth) {
-        messageAudit.setAuditDepth(maxAuditDepth);
-    }
+    public abstract void setMaxAuditDepth(int maxAuditDepth);
 
-    public int getMaxAuditDepth() {
-        return messageAudit.getAuditDepth();
-    }
+    public abstract int getMaxAuditDepth();
 
+    protected abstract ActiveMQMessageAudit lookupActiveMQMessageAudit(Message message, boolean rollback);
 }

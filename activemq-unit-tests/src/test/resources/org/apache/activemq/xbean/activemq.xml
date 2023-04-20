@@ -27,7 +27,7 @@
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker useJmx="true" xmlns="http://activemq.apache.org/schema/core">
+  <broker useJmx="true" xmlns="http://activemq.apache.org/schema/core" deleteAllMessagesOnStartup="true">
 
     <networkConnectors>
       <!-- 
@@ -36,14 +36,13 @@
        -->
     </networkConnectors>
 
-    <persistenceFactory>
-      <journalPersistenceAdapterFactory journalLogFiles="5" dataDirectory="${basedir}/target" />
-      
-      <!-- To use a different dataSource, use the following syntax : -->
-      <!-- 
-      <journalPersistenceAdapterFactory journalLogFiles="5" dataDirectory="${basedir}/activemq-data" dataSource="#mysql-ds"/>
-       -->
-    </persistenceFactory>
+    <persistenceAdapter>
+      <kahaDB directory="target/activemq-data/xbean/kahadb"
+              cleanupInterval="300000" checkpointInterval="50000"
+              journalMaxWriteBatchSize="62k"
+              journalMaxFileLength="1g"
+              indexCacheSize="100000" indexWriteBatchSize="100000"/>
+    </persistenceAdapter>
 
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61636" />
@@ -51,15 +50,5 @@
 
   </broker>
 
-  <!-- MySql DataSource Sample Setup -->
-  <!-- 
-  <bean id="mysql-ds" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
-    <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
-    <property name="url" value="jdbc:mysql://localhost/activemq?relaxAutoCommit=true"/>
-    <property name="username" value="activemq"/>
-    <property name="password" value="activemq"/>
-    <property name="poolPreparedStatements" value="true"/>
-  </bean>
-  -->  
 </beans>
 <!-- END SNIPPET: example -->

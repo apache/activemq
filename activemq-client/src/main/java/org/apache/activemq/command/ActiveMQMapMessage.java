@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -174,9 +175,16 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
      * @throws IOException
      */
     private void loadContent() throws JMSException {
+        if (getContent() != null && map.isEmpty()) {
+            map = deserialize(getContent());
+        }
+    }
+
+    private Map<String, Object> deserialize(ByteSequence content) throws JMSException {
+        final Map<String, Object> map;
+
         try {
-            if (getContent() != null && map.isEmpty()) {
-                ByteSequence content = getContent();
+            if (content != null) {
                 InputStream is = new ByteArrayInputStream(content);
                 if (isCompressed()) {
                     is = new InflaterInputStream(is);
@@ -184,10 +192,14 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
                 DataInputStream dataIn = new DataInputStream(is);
                 map = MarshallingSupport.unmarshalPrimitiveMap(dataIn);
                 dataIn.close();
+            } else {
+                map = new HashMap<>();
             }
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
         }
+
+        return map;
     }
 
     @Override
@@ -826,5 +838,31 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     public Map<String, Object> getContentMap() throws JMSException {
         initializeReading();
         return map;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean isBodyAssignableTo(Class c) throws JMSException {
+        final Map<String, Object> map = getContentMap();
+        if (map == null || map.isEmpty()) {
+            return true;
+        }
+        return c.isAssignableFrom(java.util.Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> T doGetBody(Class<T> asType) throws JMSException {
+        storeContent();
+        final ByteSequence content = getContent();
+        final Map<String, Object> map = content != null ? deserialize(content) : null;
+
+        //This implementation treats an empty map as not having a body so if empty
+        //we should return null as well
+        if (map != null && !map.isEmpty()) {
+            map.replaceAll((k, v) -> v instanceof UTF8Buffer ? v.toString() : v);
+            return (T) map;
+        } else {
+            return null;
+        }
     }
 }

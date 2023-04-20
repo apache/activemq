@@ -39,7 +39,7 @@ public class NetworkBridgeConfiguration {
     private boolean dynamicOnly;
     private boolean syncDurableSubs;
     private boolean dispatchAsync = true;
-    private boolean decreaseNetworkConsumerPriority;
+    private boolean decreaseNetworkConsumerPriority = true;
     private int consumerPriorityBase = ConsumerInfo.NETWORK_CONSUMER_PRIORITY;
     private boolean duplex;
     private boolean bridgeTempDestinations = true;
@@ -584,14 +584,6 @@ public class NetworkBridgeConfiguration {
 
     public void setBridgeFactory(BridgeFactory bridgeFactory) {
         this.bridgeFactory = bridgeFactory;
-    }
-
-    /**
-     * This was a typo, so this is deprecated as of 5.13.1
-     */
-    @Deprecated
-    public boolean isUseVirtualDestSus() {
-        return useVirtualDestSubs;
     }
 
     public void setUseVirtualDestSubs(
