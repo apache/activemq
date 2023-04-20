@@ -85,7 +85,9 @@ public class ReplicaSourceBrokerTest {
 
         ReplicaInternalMessageProducer replicaInternalMessageProducer = new ReplicaInternalMessageProducer(broker);
         ReplicationMessageProducer replicationMessageProducer = new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
-        source = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer, queueProvider, transportConnectorUri);
+        ReplicaPolicy replicaPolicy = new ReplicaPolicy();
+        replicaPolicy.setTransportConnectorUri(transportConnectorUri);
+        source = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer, queueProvider, replicaPolicy);
         when(brokerService.getBroker()).thenReturn(source);
 
         source.destinationsToReplicate.put(testDestination, IS_REPLICATED);

@@ -30,6 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ReplicaBatcherTest {
 
+    ReplicaPolicy replicaPolicy = new ReplicaPolicy();
+
     @Test
     public void batchesSmallMessages() throws Exception {
         List<MessageReference> list = new ArrayList<>();
@@ -39,19 +41,19 @@ public class ReplicaBatcherTest {
             list.add(new DummyMessageReference(new MessageId("1:0:0:" + i), message, 1));
         }
 
-        List<List<MessageReference>> batches = ReplicaBatcher.batches(list);
+        List<List<MessageReference>> batches = new ReplicaBatcher(replicaPolicy).batches(list);
         assertThat(batches.size()).isEqualTo(3);
-        assertThat(batches.get(0).size()).isEqualTo(ReplicaBatcher.MAX_BATCH_LENGTH);
-        for (int i = 0; i < ReplicaBatcher.MAX_BATCH_LENGTH; i++) {
+        assertThat(batches.get(0).size()).isEqualTo(replicaPolicy.getMaxBatchLength());
+        for (int i = 0; i < replicaPolicy.getMaxBatchLength(); i++) {
             assertThat(batches.get(0).get(i).getMessageId().toString()).isEqualTo("1:0:0:" + i);
         }
-        assertThat(batches.get(1).size()).isEqualTo(ReplicaBatcher.MAX_BATCH_LENGTH);
-        for (int i = 0; i < ReplicaBatcher.MAX_BATCH_LENGTH; i++) {
-            assertThat(batches.get(1).get(i).getMessageId().toString()).isEqualTo("1:0:0:" + (i + ReplicaBatcher.MAX_BATCH_LENGTH));
+        assertThat(batches.get(1).size()).isEqualTo(replicaPolicy.getMaxBatchLength());
+        for (int i = 0; i < replicaPolicy.getMaxBatchLength(); i++) {
+            assertThat(batches.get(1).get(i).getMessageId().toString()).isEqualTo("1:0:0:" + (i + replicaPolicy.getMaxBatchLength()));
         }
         assertThat(batches.get(2).size()).isEqualTo(347);
         for (int i = 0; i < 347; i++) {
-            assertThat(batches.get(2).get(i).getMessageId().toString()).isEqualTo("1:0:0:" + (i + ReplicaBatcher.MAX_BATCH_LENGTH * 2));
+            assertThat(batches.get(2).get(i).getMessageId().toString()).isEqualTo("1:0:0:" + (i + replicaPolicy.getMaxBatchLength() * 2));
         }
     }
 
@@ -60,11 +62,11 @@ public class ReplicaBatcherTest {
         ActiveMQMessage message = new ActiveMQMessage();
         message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
         List<MessageReference> list = new ArrayList<>();
-        list.add(new DummyMessageReference(new MessageId("1:0:0:1"), message, ReplicaBatcher.MAX_BATCH_SIZE + 1));
-        list.add(new DummyMessageReference(new MessageId("1:0:0:2"), message, ReplicaBatcher.MAX_BATCH_SIZE / 2 + 1));
-        list.add(new DummyMessageReference(new MessageId("1:0:0:3"), message, ReplicaBatcher.MAX_BATCH_SIZE / 2));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:1"), message, replicaPolicy.getMaxBatchSize() + 1));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:2"), message, replicaPolicy.getMaxBatchSize() / 2 + 1));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:3"), message, replicaPolicy.getMaxBatchSize() / 2));
 
-        List<List<MessageReference>> batches = ReplicaBatcher.batches(list);
+        List<List<MessageReference>> batches = new ReplicaBatcher(replicaPolicy).batches(list);
         assertThat(batches.size()).isEqualTo(3);
         assertThat(batches.get(0).size()).isEqualTo(1);
         assertThat(batches.get(0).get(0).getMessageId().toString()).isEqualTo("1:0:0:1");
@@ -93,7 +95,7 @@ public class ReplicaBatcherTest {
         activeMQMessage.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of("1:0:0:1"));
         list.add(new DummyMessageReference(new MessageId("1:0:0:3"), activeMQMessage, 1));
 
-        List<List<MessageReference>> batches = ReplicaBatcher.batches(list);
+        List<List<MessageReference>> batches = new ReplicaBatcher(replicaPolicy).batches(list);
         assertThat(batches.size()).isEqualTo(2);
         assertThat(batches.get(0).size()).isEqualTo(2);
         assertThat(batches.get(0).get(0).getMessageId().toString()).isEqualTo("1:0:0:1");
@@ -121,7 +123,7 @@ public class ReplicaBatcherTest {
         activeMQMessage.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of("1:0:0:4"));
         list.add(new DummyMessageReference(new MessageId("1:0:0:3"), activeMQMessage, 1));
 
-        List<List<MessageReference>> batches = ReplicaBatcher.batches(list);
+        List<List<MessageReference>> batches = new ReplicaBatcher(replicaPolicy).batches(list);
         assertThat(batches.size()).isEqualTo(1);
         assertThat(batches.get(0).size()).isEqualTo(3);
         assertThat(batches.get(0).get(0).getMessageId().toString()).isEqualTo("1:0:0:1");

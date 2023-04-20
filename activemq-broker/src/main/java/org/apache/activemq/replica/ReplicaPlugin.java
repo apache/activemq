@@ -41,8 +41,8 @@ public class ReplicaPlugin extends BrokerPluginSupport {
     private final Logger logger = LoggerFactory.getLogger(ReplicaPlugin.class);
 
     protected ReplicaRole role = ReplicaRole.source;
-    protected ActiveMQConnectionFactory otherBrokerConnectionFactory = new ActiveMQConnectionFactory();
-    protected URI transportConnectorUri = null;
+
+    protected ReplicaPolicy replicaPolicy = new ReplicaPolicy();
 
     public ReplicaPlugin() {
         super();
@@ -55,24 +55,24 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         ReplicaReplicationQueueSupplier queueProvider = new ReplicaReplicationQueueSupplier(broker);
 
         if (role == ReplicaRole.replica) {
-            return new ReplicaBroker(broker, queueProvider, otherBrokerConnectionFactory);
+            return new ReplicaBroker(broker, queueProvider, replicaPolicy);
         }
         ReplicaInternalMessageProducer replicaInternalMessageProducer =
                 new ReplicaInternalMessageProducer(broker);
         ReplicationMessageProducer replicationMessageProducer =
                 new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
         ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer,
-                replicationMessageProducer);
+                replicationMessageProducer, replicaPolicy);
 
         Broker replicaBrokerFilter;
         switch (role) {
             case source:
                 replicaBrokerFilter = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
-                        queueProvider, transportConnectorUri);
+                        queueProvider, replicaPolicy);
                 break;
             case dual:
                 replicaBrokerFilter = new ReplicaBroker(new ReplicaSourceBroker(broker, replicationMessageProducer,
-                        replicaSequencer, queueProvider, transportConnectorUri), queueProvider, otherBrokerConnectionFactory);
+                        replicaSequencer, queueProvider, replicaPolicy), queueProvider, replicaPolicy);
                 break;
             default:
                 throw new IllegalArgumentException();
@@ -115,33 +115,70 @@ public class ReplicaPlugin extends BrokerPluginSupport {
      * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
      */
     public void setOtherBrokerUri(String uri) {
-        otherBrokerConnectionFactory.setBrokerURL(uri); // once to validate
-        otherBrokerConnectionFactory.setBrokerURL(
-            uri.toLowerCase().startsWith("failover:(")
-                ? uri
-                : "failover:("+ uri +")"
-        );
+        replicaPolicy.setOtherBrokerUri(uri);
     }
 
     /**
      * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
      */
     public void setTransportConnectorUri(String uri) {
-        transportConnectorUri = URI.create(uri);
+        replicaPolicy.setTransportConnectorUri(URI.create(uri));
     }
 
     /**
      * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
      */
     public void setUserName(String userName) {
-        otherBrokerConnectionFactory.setUserName(userName);
+        replicaPolicy.setUserName(userName);
     }
 
     /**
      * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
      */
     public void setPassword(String password) {
-        otherBrokerConnectionFactory.setPassword(password);
+        replicaPolicy.setPassword(password);
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setSourceSendPeriod(int period) {
+        replicaPolicy.setSourceSendPeriod(period);
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setCompactorAdditionalMessagesLimit(int limit) {
+        replicaPolicy.setCompactorAdditionalMessagesLimit(limit);
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setMaxBatchLength(int length) {
+        replicaPolicy.setMaxBatchLength(length);
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setMaxBatchSize(int size) {
+        replicaPolicy.setMaxBatchSize(size);
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setReplicaAckPeriod(int period) {
+        replicaPolicy.setReplicaAckPeriod(period);
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setReplicaMaxAckBatchSize(int size) {
+        replicaPolicy.setReplicaMaxAckBatchSize(size);
     }
 
     public ReplicaRole getRole() {

@@ -25,18 +25,17 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class PeriodAcknowledge {
 
-    private static final int MAX_ACK_BATCH_SIZE = 100;
     private boolean safeToAck = true;
     private final AtomicLong lastAckTime = new AtomicLong();
     private final AtomicInteger pendingAckCount = new AtomicInteger();
     private final AtomicReference<ActiveMQConnection> connection = new AtomicReference<>();
     private final AtomicReference<ActiveMQSession> connectionSession = new AtomicReference<>();
-    private final long replicaAckPeriod;
+    private final ReplicaPolicy replicaPolicy;
     private final Object periodicCommitLock = new Object();
 
 
-    public PeriodAcknowledge(long replicaAckPeriod) {
-        this.replicaAckPeriod = replicaAckPeriod;
+    public PeriodAcknowledge(ReplicaPolicy replicaPolicy) {
+        this.replicaPolicy = replicaPolicy;
     }
 
     public void setConnection(ActiveMQConnection activeMQConnection) {
@@ -52,11 +51,11 @@ public class PeriodAcknowledge {
     }
 
     private boolean shouldPeriodicallyCommit() {
-        return System.currentTimeMillis() - lastAckTime.get() >= replicaAckPeriod;
+        return System.currentTimeMillis() - lastAckTime.get() >= replicaPolicy.getReplicaAckPeriod();
     }
 
     private boolean reachedMaxAckBatchSize() {
-        return pendingAckCount.incrementAndGet() >= MAX_ACK_BATCH_SIZE;
+        return pendingAckCount.incrementAndGet() >= replicaPolicy.getReplicaMaxAckBatchSize();
     }
 
     public void acknowledge() throws Exception {

@@ -68,7 +68,7 @@ public class ReplicaCompactorTest {
         PrefetchSubscription originalSubscription = mock(PrefetchSubscription.class);
         when(originalSubscription.getConsumerInfo()).thenReturn(consumerInfo);
 
-        replicaCompactor = new ReplicaCompactor(broker, connectionContext, queueProvider, originalSubscription);
+        replicaCompactor = new ReplicaCompactor(broker, connectionContext, queueProvider, originalSubscription, 1000);
     }
 
     @Test

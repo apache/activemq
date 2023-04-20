@@ -58,7 +58,7 @@ public class ReplicaPluginTest {
     public void canSetOtherBrokerUri() {
         plugin.setOtherBrokerUri("failover:(tcp://localhost:61616)");
 
-        assertThat(plugin.otherBrokerConnectionFactory).isNotNull()
+        assertThat(plugin.replicaPolicy.getOtherBrokerConnectionFactory()).isNotNull()
                 .extracting(ActiveMQConnectionFactory::getBrokerURL)
                 .isEqualTo("failover:(tcp://localhost:61616)");
     }
@@ -68,7 +68,7 @@ public class ReplicaPluginTest {
         ReplicaPlugin result = plugin.connectedTo(URI.create("failover:(tcp://localhost:61616)"));
 
         assertThat(result).isSameAs(plugin);
-        assertThat(result.otherBrokerConnectionFactory).isNotNull()
+        assertThat(plugin.replicaPolicy.getOtherBrokerConnectionFactory()).isNotNull()
                 .extracting(ActiveMQConnectionFactory::getBrokerURL)
                 .isEqualTo("failover:(tcp://localhost:61616)");
     }
@@ -86,7 +86,7 @@ public class ReplicaPluginTest {
     public void canSetOtherBrokerUriWithAutomaticAdditionOfFailoverTransport() {
         plugin.setOtherBrokerUri("tcp://localhost:61616");
 
-        assertThat(plugin.otherBrokerConnectionFactory).isNotNull()
+        assertThat(plugin.replicaPolicy.getOtherBrokerConnectionFactory()).isNotNull()
                 .extracting(ActiveMQConnectionFactory::getBrokerURL)
                 .isEqualTo("failover:(tcp://localhost:61616)");
     }
@@ -95,7 +95,7 @@ public class ReplicaPluginTest {
     public void canSetTransportConnectorUri() {
         plugin.setTransportConnectorUri("tcp://0.0.0.0:61618?maximumConnections=1&amp;wireFormat.maxFrameSize=104857600");
 
-        assertThat(plugin.transportConnectorUri).isNotNull()
+        assertThat(plugin.replicaPolicy.getTransportConnectorUri()).isNotNull()
                 .isEqualTo(URI.create("tcp://0.0.0.0:61618?maximumConnections=1&amp;wireFormat.maxFrameSize=104857600"));
     }
 
@@ -109,24 +109,6 @@ public class ReplicaPluginTest {
     }
 
     @Test
-    public void canSetUserName() {
-        final String userName = "testUser";
-
-        plugin.setUserName(userName);
-
-        assertThat(plugin.otherBrokerConnectionFactory.getUserName()).isEqualTo(userName);
-    }
-
-    @Test
-    public void canSetPassword() {
-        final String password = "testPassword";
-
-        plugin.setPassword(password);
-
-        assertThat(plugin.otherBrokerConnectionFactory.getPassword()).isEqualTo(password);
-    }
-
-    @Test
     public void canSetUserNameAndPassword() {
         final String userUsername = "testUser";
         final String password = "testPassword";
@@ -134,8 +116,8 @@ public class ReplicaPluginTest {
         plugin.setUserName(userUsername);
         plugin.setPassword(password);
 
-        assertThat(plugin.otherBrokerConnectionFactory.getUserName()).isEqualTo(userUsername);
-        assertThat(plugin.otherBrokerConnectionFactory.getPassword()).isEqualTo(password);
+        assertThat(plugin.replicaPolicy.getOtherBrokerConnectionFactory().getUserName()).isEqualTo(userUsername);
+        assertThat(plugin.replicaPolicy.getOtherBrokerConnectionFactory().getPassword()).isEqualTo(password);
     }
 
     @Test(expected = NullPointerException.class)
@@ -149,7 +131,7 @@ public class ReplicaPluginTest {
         plugin.setTransportConnectorUri(replicationTransport);
         plugin.installPlugin(broker);
 
-        assertThat(plugin.otherBrokerConnectionFactory.getUserName()).isEqualTo(userName);
+        assertThat(plugin.replicaPolicy.getOtherBrokerConnectionFactory().getUserName()).isEqualTo(userName);
     }
 
     @Test(expected = NullPointerException.class)
@@ -163,7 +145,7 @@ public class ReplicaPluginTest {
         plugin.setTransportConnectorUri(replicationTransport);
         plugin.installPlugin(broker);
 
-        assertThat(plugin.otherBrokerConnectionFactory.getPassword()).isEqualTo(password);
+        assertThat(plugin.replicaPolicy.getOtherBrokerConnectionFactory().getPassword()).isEqualTo(password);
     }
 
     @Test
@@ -179,7 +161,7 @@ public class ReplicaPluginTest {
         plugin.setTransportConnectorUri(replicationTransport);
         plugin.installPlugin(broker);
 
-        assertThat(plugin.otherBrokerConnectionFactory.getUserName()).isEqualTo(user);
-        assertThat(plugin.otherBrokerConnectionFactory.getPassword()).isEqualTo(password);
+        assertThat(plugin.replicaPolicy.getOtherBrokerConnectionFactory().getUserName()).isEqualTo(user);
+        assertThat(plugin.replicaPolicy.getOtherBrokerConnectionFactory().getPassword()).isEqualTo(password);
     }
 }

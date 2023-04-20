@@ -61,21 +61,21 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
     private final ReplicaSequencer replicaSequencer;
     private final ReplicaReplicationQueueSupplier queueProvider;
-    private final URI transportConnectorUri;
+    private ReplicaPolicy replicaPolicy;
 
     final DestinationMap destinationsToReplicate = new DestinationMap();
 
     public ReplicaSourceBroker(Broker next, ReplicationMessageProducer replicationMessageProducer,
-            ReplicaSequencer replicaSequencer, ReplicaReplicationQueueSupplier queueProvider, URI transportConnectorUri) {
+            ReplicaSequencer replicaSequencer, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy) {
         super(next, replicationMessageProducer);
         this.replicaSequencer = replicaSequencer;
         this.queueProvider = queueProvider;
-        this.transportConnectorUri = Objects.requireNonNull(transportConnectorUri, "Need replication transport connection URI for this broker");
+        this.replicaPolicy = replicaPolicy;
     }
 
     @Override
     public void start() throws Exception {
-        TransportConnector transportConnector = next.getBrokerService().addConnector(transportConnectorUri);
+        TransportConnector transportConnector = next.getBrokerService().addConnector(replicaPolicy.getTransportConnectorUri());
         transportConnector.setName(REPLICATION_CONNECTOR_NAME);
         queueProvider.initialize();
         queueProvider.initializeSequenceQueue();

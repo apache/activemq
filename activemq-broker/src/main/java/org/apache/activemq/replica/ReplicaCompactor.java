@@ -48,20 +48,23 @@ import java.util.stream.Collectors;
 public class ReplicaCompactor {
     private static final Logger logger = LoggerFactory.getLogger(ReplicaCompactor.class);
     private static final String CONSUMER_SELECTOR = String.format("%s LIKE '%s'", ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK);
-    public static final int MAXIMUM_MESSAGES = 1_000;
 
     private final Broker broker;
     private final ConnectionContext connectionContext;
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final PrefetchSubscription subscription;
+    private final int additionalMessagesLimit;
 
     private final Queue intermediateQueue;
 
-    public ReplicaCompactor(Broker broker, ConnectionContext connectionContext, ReplicaReplicationQueueSupplier queueProvider, PrefetchSubscription subscription) {
+    public ReplicaCompactor(Broker broker, ConnectionContext connectionContext,
+            ReplicaReplicationQueueSupplier queueProvider, PrefetchSubscription subscription,
+            int additionalMessagesLimit) {
         this.broker = broker;
         this.connectionContext = connectionContext;
         this.queueProvider = queueProvider;
         this.subscription = subscription;
+        this.additionalMessagesLimit = additionalMessagesLimit;
 
         intermediateQueue = broker.getDestinations(queueProvider.getIntermediateQueue()).stream().findFirst()
                 .map(DestinationExtractor::extractQueue).orElseThrow();
@@ -94,13 +97,14 @@ public class ReplicaCompactor {
 
     private List<DeliveredMessageReference> getAdditionalMessages() throws Exception {
         List<DeliveredMessageReference> result = new ArrayList<>();
-        List<QueueMessageReference> additionalMessages = intermediateQueue.getMatchingMessages(connectionContext, CONSUMER_SELECTOR, MAXIMUM_MESSAGES);
+        List<QueueMessageReference> additionalMessages =
+                intermediateQueue.getMatchingMessages(connectionContext, CONSUMER_SELECTOR, additionalMessagesLimit);
         if (additionalMessages.isEmpty()) {
             return result;
         }
 
         String selector = String.format("%s IN %s", ReplicaSupport.MESSAGE_ID_PROPERTY, getAckedMessageIds(additionalMessages));
-        additionalMessages.addAll(intermediateQueue.getMatchingMessages(connectionContext, selector, MAXIMUM_MESSAGES));
+        additionalMessages.addAll(intermediateQueue.getMatchingMessages(connectionContext, selector, additionalMessagesLimit));
 
         Set<MessageId> dispatchedMessageIds = subscription.getDispatched().stream()
                 .map(MessageReference::getMessageId)

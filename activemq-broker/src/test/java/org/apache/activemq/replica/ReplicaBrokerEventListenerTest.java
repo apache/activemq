@@ -92,7 +92,7 @@ public class ReplicaBrokerEventListenerTest {
         when(broker.getDestinations(sequenceQueue)).thenReturn(Set.of(sequenceDstinationQueue));
         when(broker.addConsumer(any(), any())).thenReturn(subscription);
 
-        listener = new ReplicaBrokerEventListener(broker, queueProvider, new PeriodAcknowledge(30));
+        listener = new ReplicaBrokerEventListener(broker, queueProvider, new PeriodAcknowledge(new ReplicaPolicy()));
         listener.initialize();
     }
 

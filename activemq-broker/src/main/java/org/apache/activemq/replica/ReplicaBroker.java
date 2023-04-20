@@ -42,8 +42,6 @@ import static java.util.Objects.requireNonNull;
 
 public class ReplicaBroker extends BrokerFilter {
 
-    private final static long REPLICA_ACK_PERIOD = 5_000;
-
     private final Logger logger = LoggerFactory.getLogger(ReplicaBroker.class);
     private final ScheduledExecutorService brokerConnectionPoller = Executors.newSingleThreadScheduledExecutor();
     private final ScheduledExecutorService periodicAckPoller = Executors.newSingleThreadScheduledExecutor();
@@ -52,25 +50,14 @@ public class ReplicaBroker extends BrokerFilter {
     private final AtomicReference<ActiveMQSession> connectionSession = new AtomicReference<>();
     private final AtomicReference<ActiveMQMessageConsumer> eventConsumer = new AtomicReference<>();
     private final ReplicaReplicationQueueSupplier queueProvider;
-    private final ActiveMQConnectionFactory replicaSourceConnectionFactory;
+    private final ReplicaPolicy replicaPolicy;
     private final PeriodAcknowledge periodAcknowledgeCallBack;
 
-    public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ActiveMQConnectionFactory replicaSourceConnectionFactory) {
+    public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy) {
         super(next);
         this.queueProvider = queueProvider;
-        this.periodAcknowledgeCallBack = new PeriodAcknowledge(REPLICA_ACK_PERIOD);
-        this.replicaSourceConnectionFactory = requireNonNull(replicaSourceConnectionFactory, "Need connection details of replica source for this broker");
-        requireNonNull(replicaSourceConnectionFactory.getBrokerURL(), "Need connection URI of replica source for this broker");
-        validateUser(replicaSourceConnectionFactory);
-    }
-
-    private void validateUser(ActiveMQConnectionFactory replicaSourceConnectionFactory) {
-        if (replicaSourceConnectionFactory.getUserName() != null) {
-            requireNonNull(replicaSourceConnectionFactory.getPassword(), "Both userName and password or none of them should be configured for replica broker");
-        }
-        if (replicaSourceConnectionFactory.getPassword() != null) {
-            requireNonNull(replicaSourceConnectionFactory.getUserName(), "Both userName and password or none of them should be configured for replica broker");
-        }
+        this.replicaPolicy = replicaPolicy;
+        this.periodAcknowledgeCallBack = new PeriodAcknowledge(replicaPolicy);
     }
 
     @Override
@@ -86,7 +73,7 @@ public class ReplicaBroker extends BrokerFilter {
                     logger.error("Failed to Acknowledge replication Queue message {}", e.getMessage());
                 }
             }
-        }, REPLICA_ACK_PERIOD, REPLICA_ACK_PERIOD, TimeUnit.MILLISECONDS);
+        }, replicaPolicy.getReplicaAckPeriod(), replicaPolicy.getReplicaAckPeriod(), TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -153,6 +140,7 @@ public class ReplicaBroker extends BrokerFilter {
     }
 
     private void establishConnection() throws JMSException {
+        ActiveMQConnectionFactory replicaSourceConnectionFactory = replicaPolicy.getOtherBrokerConnectionFactory();
         logger.trace("Replica connection URL {}", replicaSourceConnectionFactory.getBrokerURL());
         ActiveMQConnection newConnection = (ActiveMQConnection) replicaSourceConnectionFactory.createConnection();
         newConnection.start();
@@ -172,7 +160,7 @@ public class ReplicaBroker extends BrokerFilter {
                 .filter(d -> ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME.equals(d.getPhysicalName()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(
-                        MessageFormat.format("There is no replication queue on the source broker {0}", replicaSourceConnectionFactory.getBrokerURL())
+                        MessageFormat.format("There is no replication queue on the source broker {0}", replicaPolicy.getOtherBrokerConnectionFactory().getBrokerURL())
                 ));
         logger.info("Plugin will mirror events from queue {}", replicationSourceQueue.getPhysicalName());
         ReplicaBrokerEventListener messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider, periodAcknowledgeCallBack);

@@ -29,11 +29,14 @@ import java.util.Set;
 
 public class ReplicaBatcher {
 
-    static final int MAX_BATCH_LENGTH = 500;
-    static final int MAX_BATCH_SIZE = 5_000_000; // 5 Mb
+    private ReplicaPolicy replicaPolicy;
+
+    public ReplicaBatcher(ReplicaPolicy replicaPolicy) {
+        this.replicaPolicy = replicaPolicy;
+    }
 
     @SuppressWarnings("unchecked")
-    static List<List<MessageReference>> batches(List<MessageReference> list) throws Exception {
+    List<List<MessageReference>> batches(List<MessageReference> list) throws Exception {
         List<List<MessageReference>> result = new ArrayList<>();
 
         Map<String, Set<String>> destination2eventType = new HashMap<>();
@@ -60,8 +63,8 @@ public class ReplicaBatcher {
                 }
             }
 
-            boolean exceedsLength = batch.size() + 1 > MAX_BATCH_LENGTH;
-            boolean exceedsSize = batchSize + reference.getSize() > MAX_BATCH_SIZE;
+            boolean exceedsLength = batch.size() + 1 > replicaPolicy.getMaxBatchLength();
+            boolean exceedsSize = batchSize + reference.getSize() > replicaPolicy.getMaxBatchSize();
             if (batch.size() > 0 && (exceedsLength || exceedsSize || eventTypeSwitch)) {
                 result.add(batch);
                 batch = new ArrayList<>();
