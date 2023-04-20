@@ -116,4 +116,70 @@ public class ReplicaCompactorTest {
 
         verify(broker).commitTransaction(any(), any(), eq(true));
     }
+
+    @Test
+    public void compactWhenMultipleSendsAndAcksWithSameId() throws Exception {
+        MessageId messageId1 = new MessageId("1:0:0:1");
+        MessageId messageId2 = new MessageId("1:0:0:2");
+        MessageId messageId3 = new MessageId("1:0:0:3");
+        MessageId messageId4 = new MessageId("1:0:0:4");
+        MessageId messageId5 = new MessageId("1:0:0:5");
+        MessageId messageId6 = new MessageId("1:0:0:6");
+
+        String messageIdToAck1 = "2:1";
+
+        ActiveMQMessage message1 = new ActiveMQMessage();
+        message1.setMessageId(messageId1);
+        message1.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message1.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        message1.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, messageIdToAck1);
+        ActiveMQMessage message2 = new ActiveMQMessage();
+        message2.setMessageId(messageId2);
+        message2.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message2.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        ActiveMQMessage message3 = new ActiveMQMessage();
+        message3.setMessageId(messageId3);
+        message3.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message3.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        message3.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(messageIdToAck1));
+        ActiveMQMessage message4 = new ActiveMQMessage();
+        message4.setMessageId(messageId4);
+        message4.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message4.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        message4.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, messageIdToAck1);
+        ActiveMQMessage message5 = new ActiveMQMessage();
+        message5.setMessageId(messageId5);
+        message5.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message5.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        message5.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(messageIdToAck1));
+        ActiveMQMessage message6 = new ActiveMQMessage();
+        message6.setMessageId(messageId6);
+        message6.setBooleanProperty(ReplicaSupport.IS_ORIGINAL_MESSAGE_SENT_TO_QUEUE_PROPERTY, true);
+        message6.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        message6.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, messageIdToAck1);
+
+        List<MessageReference> result = replicaCompactor.compactAndFilter(connectionContext,
+                List.of(message1, message2, message3, message4, message5, message6), false);
+
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.get(0).getMessageId()).isEqualTo(messageId2);
+        assertThat(result.get(1).getMessageId()).isEqualTo(messageId6);
+
+        verify(broker).beginTransaction(any(), any());
+
+        ArgumentCaptor<MessageAck> ackCaptor = ArgumentCaptor.forClass(MessageAck.class);
+        verify(broker, times(4)).acknowledge(any(), ackCaptor.capture());
+
+        List<MessageAck> values = ackCaptor.getAllValues();
+        MessageAck messageAck = values.get(0);
+        assertThat(messageAck.getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(messageAck.getMessageCount()).isEqualTo(1);
+        assertThat(messageAck.getLastMessageId()).isEqualTo(messageId1);
+        messageAck = values.get(1);
+        assertThat(messageAck.getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        assertThat(messageAck.getMessageCount()).isEqualTo(1);
+        assertThat(messageAck.getLastMessageId()).isEqualTo(messageId3);
+
+        verify(broker).commitTransaction(any(), any(), eq(true));
+    }
 }

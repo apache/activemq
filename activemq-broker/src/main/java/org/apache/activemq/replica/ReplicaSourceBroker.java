@@ -314,15 +314,6 @@ public class ReplicaSourceBroker extends BrokerFilter implements MutativeRoleBro
             return false;
         }
 
-        try {
-            String jobId = (String) message.getProperty(ScheduledMessage.AMQ_SCHEDULED_ID);
-            if (isScheduled(message) || jobId != null) {
-                return false;
-            }
-        } catch (Exception e) {
-            logger.error("Failed to get jobId", e);
-        }
-
         return true;
     }
 
@@ -626,9 +617,6 @@ public class ReplicaSourceBroker extends BrokerFilter implements MutativeRoleBro
         if (ack.getDestination().isTemporary()) {
             return false;
         }
-        if (!ack.isStandardAck() && !ack.isIndividualAck()) {
-            return false;
-        }
         if (subscription instanceof QueueBrowserSubscription && !connectionContext.isNetworkConnection()) {
             return false;
         }
@@ -654,7 +642,7 @@ public class ReplicaSourceBroker extends BrokerFilter implements MutativeRoleBro
 
     @Override
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
-        if (ack.isDeliveredAck() || ack.isUnmatchedAck()) {
+        if (ack.isDeliveredAck() || ack.isUnmatchedAck() || ack.isExpiredAck()) {
             super.acknowledge(consumerExchange, ack);
             return;
         }
@@ -709,15 +697,19 @@ public class ReplicaSourceBroker extends BrokerFilter implements MutativeRoleBro
 
         boolean isInternalTransaction = false;
         TransactionId transactionId = null;
-        if (ack.getTransactionId() != null && !ack.getTransactionId().isXATransaction()) {
-            transactionId = ack.getTransactionId();
-        } else if (ack.getTransactionId() == null) {
-            transactionId = new LocalTransactionId(new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
-                    ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
-            super.beginTransaction(connectionContext, transactionId);
-            ack.setTransactionId(transactionId);
-            isInternalTransaction = true;
+
+        if (!ack.isPoisonAck()) {
+            if (ack.getTransactionId() != null && !ack.getTransactionId().isXATransaction()) {
+                transactionId = ack.getTransactionId();
+            } else if (ack.getTransactionId() == null) {
+                transactionId = new LocalTransactionId(new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
+                        ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
+                super.beginTransaction(connectionContext, transactionId);
+                ack.setTransactionId(transactionId);
+                isInternalTransaction = true;
+            }
         }
+
         try {
             super.acknowledge(consumerExchange, ack);
             replicateAck(connectionContext, ack, transactionId, messageIdsToAck);
@@ -790,6 +782,29 @@ public class ReplicaSourceBroker extends BrokerFilter implements MutativeRoleBro
             );
         } catch (Exception e) {
             logger.error("Failed to replicate queue purge {}", destination, e);
+        }
+    }
+
+    @Override
+    public void messageExpired(ConnectionContext context, MessageReference message, Subscription subscription) {
+        super.messageExpired(context, message, subscription);
+        replicateMessageExpired(context, message);
+    }
+
+    private void replicateMessageExpired(ConnectionContext context, MessageReference reference) {
+        Message message = reference.getMessage();
+        if (!isReplicatedDestination(message.getDestination())) {
+            return;
+        }
+        try {
+            enqueueReplicaEvent(
+                    context,
+                    new ReplicaEvent()
+                            .setEventType(ReplicaEventType.MESSAGE_EXPIRED)
+                            .setEventData(eventSerializer.serializeReplicationData(message))
+            );
+        } catch (Exception e) {
+            logger.error("Failed to replicate discard of {}", reference.getMessageId(), e);
         }
     }
 

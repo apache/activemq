@@ -105,6 +105,47 @@ public class ReplicaBatcherTest {
     }
 
     @Test
+    public void batchesAcksAfterSendsSameId2() throws Exception {
+        List<MessageReference> list = new ArrayList<>();
+        ActiveMQMessage activeMQMessage = new ActiveMQMessage();
+        activeMQMessage.setStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY, "test");
+        activeMQMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        activeMQMessage.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, "1:0:0:1");
+        list.add(new DummyMessageReference(new MessageId("1:0:0:1"), activeMQMessage, 1));
+        activeMQMessage = new ActiveMQMessage();
+        activeMQMessage.setStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY, "test");
+        activeMQMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        activeMQMessage.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of("1:0:0:1"));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:2"), activeMQMessage, 1));
+        activeMQMessage = new ActiveMQMessage();
+        activeMQMessage.setStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY, "test");
+        activeMQMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        activeMQMessage.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, "1:0:0:1");
+        list.add(new DummyMessageReference(new MessageId("1:0:0:3"), activeMQMessage, 1));
+        activeMQMessage = new ActiveMQMessage();
+        activeMQMessage.setStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY, "test");
+        activeMQMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_ACK.toString());
+        activeMQMessage.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of("1:0:0:1"));
+        list.add(new DummyMessageReference(new MessageId("1:0:0:4"), activeMQMessage, 1));
+        activeMQMessage = new ActiveMQMessage();
+        activeMQMessage.setStringProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY, "test");
+        activeMQMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        activeMQMessage.setStringProperty(ReplicaSupport.MESSAGE_ID_PROPERTY, "1:0:0:2");
+        list.add(new DummyMessageReference(new MessageId("1:0:0:5"), activeMQMessage, 1));
+
+        List<List<MessageReference>> batches = new ReplicaBatcher(replicaPolicy).batches(list);
+        assertThat(batches.size()).isEqualTo(3);
+        assertThat(batches.get(0).size()).isEqualTo(1);
+        assertThat(batches.get(0).get(0).getMessageId().toString()).isEqualTo("1:0:0:1");
+        assertThat(batches.get(1).size()).isEqualTo(2);
+        assertThat(batches.get(1).get(0).getMessageId().toString()).isEqualTo("1:0:0:2");
+        assertThat(batches.get(1).get(1).getMessageId().toString()).isEqualTo("1:0:0:3");
+        assertThat(batches.get(2).size()).isEqualTo(2);
+        assertThat(batches.get(2).get(0).getMessageId().toString()).isEqualTo("1:0:0:4");
+        assertThat(batches.get(2).get(1).getMessageId().toString()).isEqualTo("1:0:0:5");
+    }
+
+    @Test
     public void batchesAcksAfterSendsDifferentIds() throws Exception {
         List<MessageReference> list = new ArrayList<>();
         ActiveMQMessage activeMQMessage = new ActiveMQMessage();

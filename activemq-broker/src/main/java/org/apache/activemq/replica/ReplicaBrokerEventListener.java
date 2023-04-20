@@ -23,6 +23,7 @@ import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.TransactionBroker;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
+import org.apache.activemq.broker.region.IndirectMessageReference;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.MessageReferenceFilter;
 import org.apache.activemq.broker.region.Queue;
@@ -219,7 +220,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 return;
             case MESSAGE_SEND:
                 logger.trace("Processing replicated message send");
-                persistMessage((ActiveMQMessage) deserializedData, transactionId);
+                sendMessage((ActiveMQMessage) deserializedData, transactionId);
                 return;
             case MESSAGE_ACK:
                 logger.trace("Processing replicated messages dropped");
@@ -275,6 +276,10 @@ public class ReplicaBrokerEventListener implements MessageListener {
             case REMOVE_DURABLE_CONSUMER:
                 logger.trace("Processing replicated remove consumer");
                 removeDurableConsumer((ConsumerInfo) deserializedData);
+                return;
+            case MESSAGE_EXPIRED:
+                logger.trace("Processing replicated message expired");
+                messageExpired((ActiveMQMessage) deserializedData);
                 return;
             case REMOVE_DURABLE_CONSUMER_SUBSCRIPTION:
                 logger.trace("Processing replicated remove durable consumer subscription");
@@ -357,12 +362,17 @@ public class ReplicaBrokerEventListener implements MessageListener {
         return ReplicaEventType.valueOf(message.getStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY));
     }
 
-    private void persistMessage(ActiveMQMessage message, TransactionId transactionId) throws Exception {
+    private void sendMessage(ActiveMQMessage message, TransactionId transactionId) throws Exception {
         try {
             if (message.getTransactionId() == null || !message.getTransactionId().isXATransaction()) {
                 message.setTransactionId(transactionId);
             }
             removeScheduledMessageProperties(message);
+
+            if(message.getExpiration() > 0 && System.currentTimeMillis() + 1000 > message.getExpiration()) {
+                message.setExpiration(System.currentTimeMillis() + 1000);
+            }
+
             replicaInternalMessageProducer.sendIgnoringFlowControl(message);
         } catch (Exception e) {
             logger.error("Failed to process message {} with JMS message id: {}", message.getMessageId(), message.getJMSMessageID(), e);
@@ -557,6 +567,10 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 messageAck.setTransactionId(transactionId);
             }
 
+            if (messageAck.isPoisonAck()) {
+                messageAck.setAckType(MessageAck.STANDARD_ACK_TYPE);
+            }
+
             ConsumerBrokerExchange consumerBrokerExchange = new ConsumerBrokerExchange();
             consumerBrokerExchange.setConnectionContext(connectionContext);
             broker.acknowledge(consumerBrokerExchange, messageAck);
@@ -569,6 +583,18 @@ public class ReplicaBrokerEventListener implements MessageListener {
                     ack.getFirstMessageId(),
                     ack.getLastMessageId(),
                     ack.getConsumerId(), e);
+            throw e;
+        }
+    }
+
+    private void messageExpired(ActiveMQMessage message) {
+        try {
+            Destination destination = broker.getDestinations(message.getDestination()).stream()
+                    .findFirst().map(DestinationExtractor::extractBaseDestination).orElseThrow();
+            message.setRegionDestination(destination);
+            destination.messageExpired(connectionContext, null, new IndirectMessageReference(message));
+        } catch (Exception e) {
+            logger.error("Unable to replicate message expired [{}]", message.getMessageId(), e);
             throw e;
         }
     }

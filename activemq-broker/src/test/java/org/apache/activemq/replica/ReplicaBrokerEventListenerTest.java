@@ -42,7 +42,6 @@ import org.apache.activemq.util.IOHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 import javax.jms.JMSException;
 import javax.transaction.xa.XAException;
@@ -61,6 +60,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -549,6 +549,30 @@ public class ReplicaBrokerEventListenerTest {
     }
 
     @Test
+    public void canHandleEventOfType_MESSAGE_EXPIRED() throws Exception {
+        listener.sequence = null;
+
+        MessageId messageId = new MessageId("1:0:0:1");
+        ActiveMQMessage message = new ActiveMQMessage();
+        message.setDestination(testQueue);
+        message.setMessageId(messageId);
+
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.MESSAGE_EXPIRED)
+                .setEventData(eventSerializer.serializeReplicationData(message));
+
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setType("ReplicaEvent");
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+
+        listener.onMessage(replicaEventMessage);
+
+        verify((Queue) destinationQueue).messageExpired(any(), any(), any());
+    }
+
+    @Test
     public void canHandleEventOfType_MESSAGE_ACK_forTopic() throws Exception {
         listener.sequence = null;
         MessageId messageId = new MessageId("1:1:1:1");
@@ -605,7 +629,7 @@ public class ReplicaBrokerEventListenerTest {
         ack.setConsumerId(consumerId);
         ack.setDestination(testQueue);
 
-        Mockito.doThrow(new JMSException("Slave broker out of sync with master - Message: " + " does not exist among pending(")).when(broker).processDispatchNotification(Mockito.any(MessageDispatchNotification.class));
+        doThrow(new JMSException("Slave broker out of sync with master - Message: " + " does not exist among pending(")).when(broker).processDispatchNotification(any(MessageDispatchNotification.class));
         ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.MESSAGE_ACK)

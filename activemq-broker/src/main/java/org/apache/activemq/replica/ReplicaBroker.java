@@ -23,6 +23,9 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageDispatch;
@@ -164,6 +167,18 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
                         logger.error("Failed to delete replication queue [{}]", queueName, e);
                     }
                 });
+    }
+
+    @Override
+    public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription, Throwable poisonCause) {
+        // suppressing actions on the replica side. Expecting them to be replicated
+        return false;
+    }
+
+    @Override
+    public boolean isExpired(MessageReference messageReference) {
+        // suppressing actions on the replica side. Expecting them to be replicated
+        return false;
     }
 
     private void beginReplicationIdempotent() {

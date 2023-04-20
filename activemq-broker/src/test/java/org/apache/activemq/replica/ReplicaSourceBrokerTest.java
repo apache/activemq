@@ -24,8 +24,10 @@ import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.IndirectMessageReference;
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -51,7 +53,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -64,7 +65,8 @@ public class ReplicaSourceBrokerTest {
     private final Broker broker = mock(Broker.class);
     private final BrokerService brokerService = mock(BrokerService.class);
     private final ConnectionContext connectionContext = mock(ConnectionContext.class);
-
+    private final MessageReference messageReference = mock(MessageReference.class);
+    private final Subscription subscription = mock(Subscription.class);
     private final URI transportConnectorUri = URI.create("tcp://0.0.0.0:61618?maximumConnections=1&amp;wireFormat.maxFrameSize=104857600");
     private final ReplicaSequencer replicaSequencer = mock(ReplicaSequencer.class);
     private ReplicaFailOverStateStorage replicaFailOverStateStorage = mock(ReplicaFailOverStateStorage.class);
@@ -185,6 +187,31 @@ public class ReplicaSourceBrokerTest {
 
         ActiveMQDestination sentMessage = (ActiveMQDestination) eventSerializer.deserializeMessageData(replicaMessage.getContent());
         assertThat(sentMessage).isEqualTo(testDestination);
+        verifyConnectionContext(connectionContext);
+    }
+
+    @Test
+    public void replicates_MESSAGE_EXPIRED() throws Exception {
+        ActiveMQMessage message = new ActiveMQMessage();
+        MessageId messageId = new MessageId("1:1");
+        message.setMessageId(messageId);
+        message.setDestination(testDestination);
+        message.setPersistent(true);
+        when(messageReference.getMessage()).thenReturn(message);
+
+        source.start();
+        source.messageExpired(connectionContext, messageReference, subscription);
+
+        ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
+        verify(broker).send(any(), messageArgumentCaptor.capture());
+        ActiveMQMessage replicaMessage = messageArgumentCaptor.getValue();
+
+        assertThat(replicaMessage.getType()).isEqualTo("ReplicaEvent");
+        assertThat(replicaMessage.getDestination().getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
+        assertThat(replicaMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.MESSAGE_EXPIRED.name());
+
+        ActiveMQMessage sentMessage = (ActiveMQMessage) eventSerializer.deserializeMessageData(replicaMessage.getContent());
+        assertThat(sentMessage.getDestination().getPhysicalName()).isEqualTo(testDestination.getPhysicalName());
         verifyConnectionContext(connectionContext);
     }
 
