@@ -17,6 +17,7 @@
 package org.apache.activemq.replica;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerStoppedException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.region.MessageReference;
@@ -104,6 +105,17 @@ public class ReplicaSequenceStorage {
         }
 
         return allMessages.get(0).getText();
+    }
+
+    public void deinitialize() throws Exception {
+        sequenceQueue = null;
+
+        if (subscription != null) {
+            try {
+                broker.removeConsumer(connectionContext, subscription.getConsumerInfo());
+            } catch (BrokerStoppedException ignored) {}
+            subscription = null;
+        }
     }
 
     public void enqueue(TransactionId tid, String message) throws Exception {

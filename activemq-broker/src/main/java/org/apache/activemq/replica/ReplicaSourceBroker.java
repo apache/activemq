@@ -77,6 +77,12 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         ensureDestinationsAreReplicated();
     }
 
+    @Override
+    public void stop() throws Exception {
+        replicaSequencer.deinitialize();
+        super.stop();
+    }
+
     private void ensureDestinationsAreReplicated() {
         for (ActiveMQDestination d : getDurableDestinations()) { // TODO: support non-durable?
             if (shouldReplicateDestination(d)) { // TODO: specific queues?

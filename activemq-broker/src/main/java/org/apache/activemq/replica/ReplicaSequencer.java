@@ -17,6 +17,7 @@
 package org.apache.activemq.replica;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerStoppedException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.region.MessageReference;
@@ -122,9 +123,13 @@ public class ReplicaSequencer {
         mainQueue = broker.getDestinations(queueProvider.getMainQueue()).stream().findFirst()
                 .map(DestinationExtractor::extractQueue).orElseThrow();
 
-        this.connectionContext = createConnectionContext();
-        this.sequenceStorage = new ReplicaSequenceStorage(broker, connectionContext,
-                queueProvider, replicaInternalMessageProducer, SEQUENCE_NAME);
+        if (connectionContext == null) {
+            connectionContext = createConnectionContext();
+        }
+        if (sequenceStorage == null) {
+            sequenceStorage = new ReplicaSequenceStorage(broker, connectionContext,
+                    queueProvider, replicaInternalMessageProducer, SEQUENCE_NAME);
+        }
 
         ConnectionId connectionId = new ConnectionId(new IdGenerator("ReplicationPlugin.Sequencer").generateId());
         SessionId sessionId = new SessionId(connectionId, sessionIdGenerator.getNextSequenceId());
@@ -143,6 +148,40 @@ public class ReplicaSequencer {
 
         initialized.compareAndSet(false, true);
         asyncSendWakeup();
+    }
+
+    void deinitialize() throws Exception {
+        if (!initialized.get()) {
+            return;
+        }
+
+        if (ackTaskRunner != null) {
+            ackTaskRunner.shutdown();
+            ackTaskRunner = null;
+        }
+
+        if (sendTaskRunner != null) {
+            sendTaskRunner.shutdown();
+            sendTaskRunner = null;
+        }
+
+        mainQueue = null;
+
+        if (subscription != null) {
+            try {
+                broker.removeConsumer(connectionContext, subscription.getConsumerInfo());
+            } catch (BrokerStoppedException ignored) {}
+            subscription = null;
+        }
+
+        replicaCompactor = null;
+
+        if (sequenceStorage != null) {
+            sequenceStorage.deinitialize();
+        }
+
+        initialized.compareAndSet(true, false);
+
     }
 
     void restoreSequence(String savedSequence, Queue intermediateQueue) throws Exception {
