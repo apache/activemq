@@ -41,6 +41,9 @@ public class ReplicaEventRetrier {
             try {
                 task.call();
                 return;
+            } catch (BrokerStoppedException bse) {
+                logger.error("The broker has been stopped");
+                return;
             } catch (Exception e) {
                 logger.info("Caught exception while processing a replication event.", e);
                 try {
@@ -49,9 +52,6 @@ public class ReplicaEventRetrier {
                     attemptNumber++;
                     logger.info("Retry attempt number {}. Sleeping for {} ms.", attemptNumber, sleepInterval);
                     Thread.sleep(sleepInterval);
-                } catch (BrokerStoppedException bse) {
-                    logger.error("The broker has been stopped");
-                    return;
                 } catch (InterruptedException ie) {
                     logger.error("Retry sleep interrupted: {}", ie.toString());
                     return;

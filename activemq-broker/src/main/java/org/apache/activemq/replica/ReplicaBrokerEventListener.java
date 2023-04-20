@@ -86,7 +86,17 @@ public class ReplicaBrokerEventListener implements MessageListener {
 
     public void initialize() throws Exception {
         String savedSequence = sequenceStorage.initialize();
-        sequence = savedSequence == null ? null : new BigInteger(savedSequence);
+        if (savedSequence == null) {
+            return;
+        }
+
+        String[] split = savedSequence.split("#");
+        if (split.length != 2) {
+            return;
+        }
+        sequence = new BigInteger(split[0]);
+
+        sequenceMessageId = new MessageId(split[1]);
     }
 
     @Override
@@ -120,7 +130,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 }
 
                 if (commit) {
-                    sequenceStorage.enqueue(tid, sequence.toString());
+                    sequenceStorage.enqueue(tid, sequence.toString() + "#" + sequenceMessageId);
 
                     broker.commitTransaction(connectionContext, tid, true);
                     acknowledgeCallback.setSafeToAck(true);
