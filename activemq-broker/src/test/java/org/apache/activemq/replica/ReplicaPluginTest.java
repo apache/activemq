@@ -121,7 +121,7 @@ public class ReplicaPluginTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void shouldThrowExceptionIfUserIsSetAndPasswordIsNotForReplica() {
+    public void shouldThrowExceptionIfUserIsSetAndPasswordIsNotForReplica() throws Exception {
         final String userName = "testUser";
         final Broker broker = mock(Broker.class);
         final String replicationTransport = "tcp://localhost:61616";
@@ -135,7 +135,7 @@ public class ReplicaPluginTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void shouldThrowExceptionIfPasswordIsSetAndUserNameIsNotForReplica() {
+    public void shouldThrowExceptionIfPasswordIsSetAndUserNameIsNotForReplica() throws Exception {
         final String password = "testPassword";
         final Broker broker = mock(Broker.class);
         final String replicationTransport = "tcp://localhost:61616";
@@ -149,7 +149,7 @@ public class ReplicaPluginTest {
     }
 
     @Test
-    public void shouldNotThrowExceptionIfBothUserAndPasswordIsSetForReplica() {
+    public void shouldNotThrowExceptionIfBothUserAndPasswordIsSetForReplica() throws Exception {
         final String user = "testUser";
         final String password = "testPassword";
         final Broker broker = mock(Broker.class);

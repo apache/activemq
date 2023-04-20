@@ -16,16 +16,19 @@
  */
 package org.apache.activemq.replica;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPluginSupport;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.MutableBrokerFilter;
+import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
+import org.apache.activemq.replica.jmx.ReplicationView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import java.net.URI;
 import java.util.Arrays;
 
@@ -44,23 +47,32 @@ public class ReplicaPlugin extends BrokerPluginSupport {
 
     protected ReplicaPolicy replicaPolicy = new ReplicaPolicy();
 
+    private ReplicationView replicationView;
+
     public ReplicaPlugin() {
         super();
     }
 
     @Override
-    public Broker installPlugin(final Broker broker) {
+    public Broker installPlugin(final Broker broker) throws Exception {
         logger.info("{} installed, running as {}", ReplicaPlugin.class.getName(), role);
 
         ReplicaReplicationQueueSupplier queueProvider = new ReplicaReplicationQueueSupplier(broker);
 
+        final BrokerService brokerService = broker.getBrokerService();
+        if (brokerService.isUseJmx()) {
+            replicationView = new ReplicationView(this);
+        }
+
         if (role == ReplicaRole.replica) {
+            registerMBean(brokerService);
             return new ReplicaBroker(broker, queueProvider, replicaPolicy);
         }
         ReplicaInternalMessageProducer replicaInternalMessageProducer =
                 new ReplicaInternalMessageProducer(broker);
         ReplicationMessageProducer replicationMessageProducer =
                 new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
+
         ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer,
                 replicationMessageProducer, replicaPolicy);
 
@@ -88,7 +100,15 @@ public class ReplicaPlugin extends BrokerPluginSupport {
             advisoryBroker.setNext(new ReplicaAdvisorySuppressor(advisoryBroker.getNext()));
         }
 
+        registerMBean(brokerService);
+
         return replicaBrokerFilter;
+    }
+
+    private void registerMBean(BrokerService brokerService) throws Exception {
+        if (brokerService.isUseJmx()) {
+            AnnotatedMBean.registerMBean(brokerService.getManagementContext(), replicationView, createJmxName(brokerService));
+        }
     }
 
     public ReplicaPlugin setRole(ReplicaRole role) {
@@ -184,4 +204,22 @@ public class ReplicaPlugin extends BrokerPluginSupport {
     public ReplicaRole getRole() {
         return role;
     }
+
+    public void setReplicaRole(ReplicaRole role, boolean force) {
+        logger.info("Called switch role for broker. Params: [{}], [{}]", role.name(), force);
+    }
+
+    private ObjectName createJmxName(BrokerService brokerService) {
+        try {
+            String objectNameStr = brokerService.getBrokerObjectName().toString();
+
+            objectNameStr += "," + "service=Plugins";
+            objectNameStr += "," + "instanceName=ReplicationPlugin";
+
+            return new ObjectName(objectNameStr);
+        } catch (MalformedObjectNameException e) {
+            throw new RuntimeException("Failed to create JMX view for ReplicationPlugin", e);
+        }
+    }
+
 }
