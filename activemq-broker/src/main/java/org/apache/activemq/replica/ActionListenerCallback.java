@@ -4,5 +4,5 @@ public interface ActionListenerCallback {
 
     void onDeinitializationSuccess();
 
-    void onFailOverAck();
+    void onFailOverAck() throws Exception;
   }

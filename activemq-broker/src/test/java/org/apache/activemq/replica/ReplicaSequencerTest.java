@@ -238,7 +238,38 @@ public class ReplicaSequencerTest {
     }
 
     @Test
-    public void iterateSendTest() throws Exception {
+    public void iterateSendMultipleMessagesTest() throws Exception {
+        sequencer.hasConsumer = true;
+        List messages =  new ArrayList<ActiveMQMessage>();
+        MessageId messageId = new MessageId("1:0:0:1");
+        ActiveMQMessage message = new ActiveMQMessage();
+        message.setMessageId(messageId);
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        messages.add(message);
+
+
+        messageId = new MessageId("1:0:0:2");
+        message.setMessageId(messageId);
+        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.MESSAGE_SEND.toString());
+        messages.add(message);
+
+        when(intermediateSubscription.getDispatched()).thenReturn(messages);
+
+        sequencer.iterateSend();
+
+        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
+        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
+
+        ReplicaEvent value = argumentCaptor.getValue();
+        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
+        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId.toString());
+        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
+        assertThat(objects.size()).isEqualTo(2);
+        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId);
+    }
+
+    @Test
+    public void iterateSendSingleMessageTest() throws Exception {
         sequencer.hasConsumer = true;
 
         MessageId messageId = new MessageId("1:0:0:1");
@@ -251,16 +282,15 @@ public class ReplicaSequencerTest {
 
         sequencer.iterateSend();
 
-        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
-        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
+        ArgumentCaptor<ActiveMQMessage> argumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
+        verify(replicaInternalMessageProducer, times(3)).sendIgnoringFlowControl(any(), argumentCaptor.capture());
 
-        ReplicaEvent value = argumentCaptor.getValue();
-        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
-        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId.toString());
-        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
-        assertThat(objects.size()).isEqualTo(1);
-        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId);
+        ActiveMQMessage activeMQMessage = argumentCaptor.getAllValues().get(0);
+        assertThat(activeMQMessage.getMessageId()).isEqualTo(messageId);
+        assertThat(activeMQMessage.getTransactionId()).isNull();
+        assertThat(activeMQMessage.isPersistent()).isFalse();
     }
+
 
     @Test
     public void iterateSendTestWhenSomeMessagesAreadyDelivered() throws Exception {
@@ -287,15 +317,13 @@ public class ReplicaSequencerTest {
 
         sequencer.iterateSend();
 
-        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
-        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
+        ArgumentCaptor<ActiveMQMessage> argumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
+        verify(replicaInternalMessageProducer, times(3)).sendIgnoringFlowControl(any(), argumentCaptor.capture());
 
-        ReplicaEvent value = argumentCaptor.getValue();
-        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
-        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId3.toString());
-        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
-        assertThat(objects.size()).isEqualTo(1);
-        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId3);
+        ActiveMQMessage activeMQMessage = argumentCaptor.getAllValues().get(0);
+        assertThat(activeMQMessage.getMessageId()).isEqualTo(messageId3);
+        assertThat(activeMQMessage.getTransactionId()).isNull();
+        assertThat(activeMQMessage.isPersistent()).isFalse();
     }
 
     @Test
@@ -327,15 +355,13 @@ public class ReplicaSequencerTest {
 
         sequencer.iterateSend();
 
-        ArgumentCaptor<ReplicaEvent> argumentCaptor = ArgumentCaptor.forClass(ReplicaEvent.class);
-        verify(replicationMessageProducer).enqueueMainReplicaEvent(any(), argumentCaptor.capture());
+        ArgumentCaptor<ActiveMQMessage> argumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
+        verify(replicaInternalMessageProducer, times(3)).sendIgnoringFlowControl(any(), argumentCaptor.capture());
 
-        ReplicaEvent value = argumentCaptor.getValue();
-        assertThat(value.getEventType()).isEqualTo(ReplicaEventType.BATCH);
-        assertThat((List<String>) value.getReplicationProperties().get(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId2.toString());
-        List<Object> objects = eventSerializer.deserializeListOfObjects(value.getEventData().getData());
-        assertThat(objects.size()).isEqualTo(1);
-        assertThat(((Message) objects.get(0)).getMessageId()).isEqualTo(messageId2);
+        ActiveMQMessage activeMQMessage = argumentCaptor.getAllValues().get(0);
+        assertThat(activeMQMessage.getMessageId()).isEqualTo(messageId2);
+        assertThat(activeMQMessage.getTransactionId()).isNull();
+        assertThat(activeMQMessage.isPersistent()).isFalse();
 
         ArgumentCaptor<MessageAck> ackCaptor = ArgumentCaptor.forClass(MessageAck.class);
         verify(broker, times(2)).acknowledge(any(), ackCaptor.capture());

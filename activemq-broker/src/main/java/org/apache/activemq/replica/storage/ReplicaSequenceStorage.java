@@ -50,7 +50,7 @@ public class ReplicaSequenceStorage extends ReplicaBaseSequenceStorage {
 
         if (allMessages.size() > 1) {
             for (int i = 0; i < allMessages.size() - 1; i++) {
-                sequenceQueue.removeMessage(allMessages.get(i).getMessageId().toString());
+                queue.removeMessage(allMessages.get(i).getMessageId().toString());
             }
         }
 
@@ -63,17 +63,5 @@ public class ReplicaSequenceStorage extends ReplicaBaseSequenceStorage {
 
         send(connectionContext, tid, message,
                 new MessageId(replicationProducerId, eventMessageIdGenerator.getNextSequenceId()));
-    }
-
-    private void acknowledgeAll(ConnectionContext connectionContext, TransactionId tid) throws Exception {
-        List<MessageReference> dispatched = subscription.getDispatched();
-
-        if (!dispatched.isEmpty()) {
-            MessageAck ack = new MessageAck(dispatched.get(dispatched.size() - 1).getMessage(), MessageAck.STANDARD_ACK_TYPE, dispatched.size());
-            ack.setFirstMessageId(dispatched.get(0).getMessageId());
-            ack.setDestination(queueProvider.getSequenceQueue());
-            ack.setTransactionId(tid);
-            acknowledge(connectionContext, ack);
-        }
     }
 }

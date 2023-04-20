@@ -36,6 +36,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.apache.activemq.util.IOHelper;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -69,9 +71,12 @@ public class ReplicaBrokerEventListenerTest {
     private final Destination destinationTopic = mock(Topic.class);
     private final ConnectionContext connectionContext = mock(ConnectionContext.class);
     private final ReplicaReplicationQueueSupplier queueProvider = mock(ReplicaReplicationQueueSupplier.class);
+    private final ReplicaFailOverStateStorage replicaFailOverStateStorage = mock(ReplicaFailOverStateStorage.class);
+    private final ActionListenerCallback actionListenerCallback = mock(ActionListenerCallback.class);
     private final PrefetchSubscription subscription = mock(PrefetchSubscription.class);
 
     private ReplicaBrokerEventListener listener;
+    private PeriodAcknowledge acknowledgeCallback;
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
 
     @Before
@@ -91,8 +96,8 @@ public class ReplicaBrokerEventListenerTest {
         when(queueProvider.getSequenceQueue()).thenReturn(sequenceQueue);
         when(broker.getDestinations(sequenceQueue)).thenReturn(Set.of(sequenceDstinationQueue));
         when(broker.addConsumer(any(), any())).thenReturn(subscription);
-
-        listener = new ReplicaBrokerEventListener(broker, queueProvider, new PeriodAcknowledge(new ReplicaPolicy()), new ReplicaRoleManagementBroker(broker.getRoot(), broker, broker, ReplicaRole.replica ));
+        acknowledgeCallback = new PeriodAcknowledge(new ReplicaPolicy());
+        listener = new ReplicaBrokerEventListener(broker, queueProvider, acknowledgeCallback, actionListenerCallback, replicaFailOverStateStorage);
         listener.initialize();
     }
 
@@ -663,5 +668,27 @@ public class ReplicaBrokerEventListenerTest {
         verify(broker, never()).send(any(), any());
 
         verify(replicaEventMessage, never()).acknowledge();
+    }
+
+
+    @Test
+    public void canHandleEventOfType_FAIL_OVER() throws Exception {
+        listener.sequence = null;
+        MessageId messageId = new MessageId("1:1:1:1");
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.FAIL_OVER)
+                .setEventData(eventSerializer.serializeReplicationData(testQueue));
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
+        replicaEventMessage.setType("ReplicaEvent");
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setProperties(event.getReplicationProperties());
+
+        listener.onMessage(replicaEventMessage);
+
+        verify(replicaFailOverStateStorage).updateBrokerState(any(), any(), eq(ReplicaRole.source.name()));
+        verify(actionListenerCallback).onFailOverAck();
     }
 }

@@ -40,6 +40,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,9 +56,10 @@ import java.util.stream.Collectors;
 import static org.apache.activemq.replica.ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME;
 
 public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements MutativeRoleBroker {
-
+    private static final String FAIL_OVER_CONSUMER_CLIENT_ID = "DUMMY_FAIL_OVER_CONSUMER";
     private static final DestinationMapEntry<Boolean> IS_REPLICATED = new DestinationMapEntry<>() {
     }; // used in destination map to indicate mirrored status
+
     private static final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -65,20 +67,24 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaPolicy replicaPolicy;
     private final ReplicaAckHelper replicaAckHelper;
+    private final ReplicaFailOverStateStorage replicaFailOverStateStorage;
     private final WebConsoleAccessController webConsoleAccessController;
 
     final DestinationMap destinationsToReplicate = new DestinationMap();
 
     private ActionListenerCallback actionListenerCallback;
+    private ConnectionContext connectionContext;
 
     public ReplicaSourceBroker(Broker next, ReplicationMessageProducer replicationMessageProducer,
-            ReplicaSequencer replicaSequencer, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy,
+            ReplicaSequencer replicaSequencer, ReplicaReplicationQueueSupplier queueProvider,
+            ReplicaPolicy replicaPolicy, ReplicaFailOverStateStorage replicaFailOverStateStorage,
             WebConsoleAccessController webConsoleAccessController) {
         super(next, replicationMessageProducer);
         this.replicaSequencer = replicaSequencer;
         this.queueProvider = queueProvider;
         this.replicaPolicy = replicaPolicy;
         this.replicaAckHelper = new ReplicaAckHelper(next);
+        this.replicaFailOverStateStorage = replicaFailOverStateStorage;
         this.webConsoleAccessController = webConsoleAccessController;
     }
 
@@ -90,6 +96,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         super.start();
         replicaSequencer.initialize();
         ensureDestinationsAreReplicated();
+        initializeContext();
     }
 
     @Override
@@ -126,6 +133,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         init();
         replicaSequencer.updateMainQueueConsumerStatus();
         replicaSequencer.scheduleExecutor();
+        initializeContext();
     }
 
 
@@ -136,7 +144,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         removeReplicationQueues();
     }
 
-    private void stopBeforeRoleChange() {
+    private void stopBeforeRoleChange() throws Exception {
         getBrokerService().stopAllConnectors(new ServiceStopper() {
             @Override
             public void stop(Service service) {
@@ -149,8 +157,16 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         });
         webConsoleAccessController.stop();
 
-        sendFailOverMessage(next.getAdminConnectionContext());
+        sendFailOverMessage();
+    }
 
+    private void initializeContext() {
+        connectionContext = next.getAdminConnectionContext().copy();
+        connectionContext.setClientId(FAIL_OVER_CONSUMER_CLIENT_ID);
+        connectionContext.setConnection(new DummyConnection());
+        if (connectionContext.getTransactions() == null) {
+            connectionContext.setTransactions(new ConcurrentHashMap<>());
+        }
     }
 
     private void completeDeinitialization() {
@@ -194,13 +210,15 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
     }
 
     private void removeReplicationQueues() {
-        ReplicaSupport.REPLICATION_QUEUE_NAMES.forEach(queueName -> {
-            try {
-                getBrokerService().removeDestination(new ActiveMQQueue(queueName));
-            } catch (Exception e) {
-                logger.error("Failed to delete replication queue [{}]", queueName, e);
-            }
-        });
+        ReplicaSupport.REPLICATION_QUEUE_NAMES.stream()
+                .filter(queueName -> !queueName.equals(ReplicaSupport.FAIL_OVER_SATE_QUEUE_NAME))
+                .forEach(queueName -> {
+                    try {
+                        getBrokerService().removeDestination(new ActiveMQQueue(queueName));
+                    } catch (Exception e) {
+                        logger.error("Failed to delete replication queue [{}]", queueName, e);
+                    }
+                });
     }
 
     private void ensureDestinationsAreReplicated() {
@@ -395,18 +413,35 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
         }
     }
 
-    private void sendFailOverMessage(ConnectionContext context) {
+    private void sendFailOverMessage() throws Exception {
+
+        ReplicaRole currentBrokerState = replicaFailOverStateStorage.getBrokerState();
+        if (currentBrokerState != null && ReplicaRole.await_ack == currentBrokerState) {
+            return;
+        }
+
+        LocalTransactionId tid = new LocalTransactionId(
+                new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
+                ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
+
+        next.beginTransaction(connectionContext, tid);
         try {
             enqueueReplicaEvent(
-                    context,
+                    connectionContext,
                     new ReplicaEvent()
                             .setEventType(ReplicaEventType.FAIL_OVER)
-                            .setEventData(eventSerializer.serializeReplicationData(context.getXid()))
+                            .setTransactionId(tid)
+                            .setEventData(eventSerializer.serializeReplicationData(connectionContext.getXid()))
                             .setReplicationProperty(ReplicaSupport.ORIGINAL_MESSAGE_DESTINATION_PROPERTY,
                                     ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME)
             );
+
+            replicaFailOverStateStorage.updateBrokerState(connectionContext, tid, ReplicaRole.await_ack.name());
+            next.commitTransaction(connectionContext, tid, true);
         } catch (Exception e) {
+            next.rollbackTransaction(connectionContext, tid);
             logger.error("Failed to send fail over message", e);
+            throw e;
         }
     }
 
@@ -623,7 +658,21 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
 
             MessageReference ackedMessage = ackedMessageList.stream().findFirst().orElseThrow();
             String eventType = (String) ackedMessage.getMessage().getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY);
+
             if (ReplicaEventType.FAIL_OVER.equals(ReplicaEventType.valueOf(eventType))) {
+                LocalTransactionId tid = new LocalTransactionId(
+                        new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
+                        ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
+
+                getNext().beginTransaction(connectionContext, tid);
+                try {
+                    replicaFailOverStateStorage.updateBrokerState(connectionContext, tid, ReplicaRole.replica.name());
+                    getNext().commitTransaction(connectionContext, tid, true);
+                } catch (Exception e) {
+                    getNext().rollbackTransaction(connectionContext, tid);
+                    logger.error("Failed to send broker fail over state", e);
+                    throw e;
+                }
                 executor.execute(this::completeDeinitialization);
             }
             return;

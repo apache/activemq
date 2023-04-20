@@ -17,5 +17,6 @@
 package org.apache.activemq.replica;
 
 public enum ReplicaRole {
-    source, replica
+    source, replica, await_ack
 }
+

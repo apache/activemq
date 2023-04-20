@@ -24,20 +24,13 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.replica.DestinationExtractor;
 import org.apache.activemq.replica.ReplicaInternalMessageProducer;
 import org.apache.activemq.replica.ReplicaReplicationQueueSupplier;
-import org.apache.activemq.replica.ReplicaSupport;
 import org.apache.activemq.util.IdGenerator;
-import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,53 +39,30 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
-public abstract class ReplicaBaseSequenceStorage {
+public abstract class ReplicaBaseSequenceStorage extends ReplicaBaseStorage {
 
     private final Logger logger = LoggerFactory.getLogger(ReplicaBaseSequenceStorage.class);
 
     static final String SEQUENCE_NAME_PROPERTY = "SequenceName";
-    protected final ProducerId replicationProducerId = new ProducerId();
-    private final Broker broker;
-    private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
     private final String sequenceName;
-    protected final ReplicaReplicationQueueSupplier queueProvider;
-
-    protected Queue sequenceQueue;
-    protected PrefetchSubscription subscription;
 
     public ReplicaBaseSequenceStorage(Broker broker, ReplicaReplicationQueueSupplier queueProvider,
             ReplicaInternalMessageProducer replicaInternalMessageProducer, String sequenceName) {
-        this.broker = requireNonNull(broker);
-        this.replicaInternalMessageProducer = replicaInternalMessageProducer;
+        super(broker, queueProvider, replicaInternalMessageProducer);
         this.sequenceName = requireNonNull(sequenceName);
-        this.queueProvider = queueProvider;
-
-        replicationProducerId.setConnectionId(new IdGenerator().generateId());
     }
 
     protected final List<ActiveMQTextMessage> initializeBase(ConnectionContext connectionContext) throws Exception {
-        sequenceQueue = broker.getDestinations(queueProvider.getSequenceQueue()).stream().findFirst()
-                .map(DestinationExtractor::extractQueue).orElseThrow();
-
         String selector = String.format("%s LIKE '%s'", SEQUENCE_NAME_PROPERTY, sequenceName);
 
-        ConnectionId connectionId = new ConnectionId(new IdGenerator("ReplicationPlugin.ReplicaSequenceStorage").generateId());
-        SessionId sessionId = new SessionId(connectionId, new LongSequenceGenerator().getNextSequenceId());
-        ConsumerId consumerId = new ConsumerId(sessionId, new LongSequenceGenerator().getNextSequenceId());
-        ConsumerInfo consumerInfo = new ConsumerInfo();
-        consumerInfo.setConsumerId(consumerId);
-        consumerInfo.setPrefetchSize(ReplicaSupport.INTERMEDIATE_QUEUE_PREFETCH_SIZE);
-        consumerInfo.setDestination(queueProvider.getSequenceQueue());
-        consumerInfo.setSelector(selector);
-        subscription = (PrefetchSubscription) broker.addConsumer(connectionContext, consumerInfo);
-        sequenceQueue.iterate();
+        initializeBase(queueProvider.getSequenceQueue(), "ReplicationPlugin.ReplicaSequenceStorage", selector, connectionContext);
 
         return subscription.getDispatched().stream().map(MessageReference::getMessage)
                 .map(ActiveMQTextMessage.class::cast).collect(Collectors.toList());
     }
 
     public void deinitialize(ConnectionContext connectionContext) throws Exception {
-        sequenceQueue = null;
+        queue = null;
 
         if (subscription != null) {
             try {
@@ -114,13 +84,5 @@ public abstract class ReplicaBaseSequenceStorage {
         seqMessage.setStringProperty(SEQUENCE_NAME_PROPERTY, sequenceName);
 
         replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, seqMessage);
-    }
-
-    protected void acknowledge(ConnectionContext connectionContext, MessageAck ack) throws Exception {
-        ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
-        consumerExchange.setConnectionContext(connectionContext);
-        consumerExchange.setSubscription(subscription);
-
-        broker.acknowledge(consumerExchange, ack);
     }
 }

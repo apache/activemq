@@ -28,6 +28,7 @@ import org.apache.activemq.broker.scheduler.SchedulerBroker;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.replica.jmx.ReplicationJmxHelper;
 import org.apache.activemq.replica.jmx.ReplicationView;
+import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,24 +96,26 @@ public class ReplicaPlugin extends BrokerPluginSupport {
             advisoryBroker.setNext(new ReplicaAdvisorySuppressor(advisoryBroker.getNext()));
         }
 
+
+        ReplicaFailOverStateStorage replicaFailOverStateStorage = new ReplicaFailOverStateStorage(queueProvider);
         WebConsoleAccessController webConsoleAccessController = new WebConsoleAccessController(brokerService,
                 replicaPolicy.isControlWebConsoleAccess());
 
-        MutativeRoleBroker sourceBroker = buildSourceBroker(broker, webConsoleAccessController);
-        MutativeRoleBroker replicaBroker = buildReplicaBroker(broker, webConsoleAccessController);
+        MutativeRoleBroker sourceBroker = buildSourceBroker(broker, replicaFailOverStateStorage, webConsoleAccessController);
+        MutativeRoleBroker replicaBroker = buildReplicaBroker(broker, replicaFailOverStateStorage, webConsoleAccessController);
 
-        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, sourceBroker, replicaBroker, role);
+        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, sourceBroker, replicaBroker, replicaFailOverStateStorage, role);
         sourceBroker.initializeRoleChangeCallBack(replicaRoleManagementBroker);
         replicaBroker.initializeRoleChangeCallBack(replicaRoleManagementBroker);
 
         return new ReplicaAuthorizationBroker(replicaRoleManagementBroker);
     }
 
-    private MutativeRoleBroker buildReplicaBroker(Broker broker, WebConsoleAccessController webConsoleAccessController) {
-        return new ReplicaBroker(broker, queueProvider, replicaPolicy, webConsoleAccessController);
+    private MutativeRoleBroker buildReplicaBroker(Broker broker, ReplicaFailOverStateStorage replicaFailOverStateStorage, WebConsoleAccessController webConsoleAccessController) {
+        return new ReplicaBroker(broker, queueProvider, replicaPolicy, replicaFailOverStateStorage, webConsoleAccessController);
     }
 
-    private MutativeRoleBroker buildSourceBroker(Broker broker, WebConsoleAccessController webConsoleAccessController) {
+    private MutativeRoleBroker buildSourceBroker(Broker broker, ReplicaFailOverStateStorage replicaFailOverStateStorage, WebConsoleAccessController webConsoleAccessController) {
         ReplicaInternalMessageProducer replicaInternalMessageProducer =
                 new ReplicaInternalMessageProducer(broker);
         ReplicationMessageProducer replicationMessageProducer =
@@ -122,7 +125,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
                 replicationMessageProducer, replicaPolicy);
 
         ReplicaSourceBroker sourceBroker = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
-                        queueProvider, replicaPolicy, webConsoleAccessController);
+                        queueProvider, replicaPolicy, replicaFailOverStateStorage, webConsoleAccessController);
 
         MutableBrokerFilter scheduledBroker = (MutableBrokerFilter) broker.getAdaptor(SchedulerBroker.class);
         if (scheduledBroker != null) {
@@ -235,12 +238,9 @@ public class ReplicaPlugin extends BrokerPluginSupport {
 
     public void setReplicaRole(ReplicaRole role, boolean force) throws Exception {
         logger.info("Called switch role for broker. Params: [{}], [{}]", role.name(), force);
-        if (role == this.role) {
-            return;
-        }
 
-        if (role != ReplicaRole.replica && role != ReplicaRole.source) {
-            throw new RuntimeException(String.format("Can't switch role from [source] to [%s]", role.name()));
+        if ( role != ReplicaRole.replica && role != ReplicaRole.source ) {
+            throw new RuntimeException(String.format("Can't switch role from [%s] to [%s]", this.role.name(), role.name()));
         }
 
         this.replicaRoleManagementBroker.switchRole(role, force);

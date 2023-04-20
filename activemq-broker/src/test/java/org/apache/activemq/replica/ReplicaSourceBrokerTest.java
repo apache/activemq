@@ -38,6 +38,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -66,6 +67,7 @@ public class ReplicaSourceBrokerTest {
 
     private final URI transportConnectorUri = URI.create("tcp://0.0.0.0:61618?maximumConnections=1&amp;wireFormat.maxFrameSize=104857600");
     private final ReplicaSequencer replicaSequencer = mock(ReplicaSequencer.class);
+    private ReplicaFailOverStateStorage replicaFailOverStateStorage = mock(ReplicaFailOverStateStorage.class);
     private final ReplicaReplicationQueueSupplier queueProvider = new ReplicaReplicationQueueSupplier(broker);
     private ReplicaSourceBroker source;
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
@@ -88,7 +90,7 @@ public class ReplicaSourceBrokerTest {
         ReplicationMessageProducer replicationMessageProducer = new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
         ReplicaPolicy replicaPolicy = new ReplicaPolicy();
         replicaPolicy.setTransportConnectorUri(transportConnectorUri);
-        source = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer, queueProvider, replicaPolicy, webConsoleAccessController);
+        source = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer, queueProvider, replicaPolicy, replicaFailOverStateStorage, webConsoleAccessController);
         when(brokerService.getBroker()).thenReturn(source);
 
         source.destinationsToReplicate.put(testDestination, IS_REPLICATED);

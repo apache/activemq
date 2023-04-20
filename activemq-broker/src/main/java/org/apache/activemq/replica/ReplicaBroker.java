@@ -26,6 +26,7 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,7 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaPolicy replicaPolicy;
     private final PeriodAcknowledge periodAcknowledgeCallBack;
+    private final ReplicaFailOverStateStorage replicaFailOverStateStorage;
     private final WebConsoleAccessController webConsoleAccessController;
     private ActionListenerCallback actionListenerCallback;
     private ReplicaBrokerEventListener messageListener;
@@ -60,11 +62,12 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
     private ScheduledFuture<?> ackPollerScheduledFuture;
 
     public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy,
-            WebConsoleAccessController webConsoleAccessController) {
+            ReplicaFailOverStateStorage replicaFailOverStateStorage, WebConsoleAccessController webConsoleAccessController) {
         super(next);
         this.queueProvider = queueProvider;
         this.replicaPolicy = replicaPolicy;
         this.periodAcknowledgeCallBack = new PeriodAcknowledge(replicaPolicy);
+        this.replicaFailOverStateStorage = replicaFailOverStateStorage;
         this.webConsoleAccessController = webConsoleAccessController;
     }
 
@@ -74,6 +77,7 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
         init();
 
         webConsoleAccessController.stop();
+        logger.info("Starting replica broker");
     }
 
     @Override
@@ -116,7 +120,7 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
                 }
             }
         }, replicaPolicy.getReplicaAckPeriod(), replicaPolicy.getReplicaAckPeriod(), TimeUnit.MILLISECONDS);
-        messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider, periodAcknowledgeCallBack, actionListenerCallback);
+        messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider, periodAcknowledgeCallBack, actionListenerCallback, replicaFailOverStateStorage);
     }
 
     private void stopAllConnections() throws JMSException {
@@ -151,13 +155,15 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
     }
 
     private void removeReplicationQueues() {
-        ReplicaSupport.REPLICATION_QUEUE_NAMES.forEach(queueName -> {
-            try {
-                getBrokerService().removeDestination(new ActiveMQQueue(queueName));
-            } catch (Exception e) {
-                logger.error("Failed to delete replication queue [{}]", queueName, e);
-            }
-        });
+        ReplicaSupport.REPLICATION_QUEUE_NAMES.stream()
+                .filter(queueName -> !queueName.equals(ReplicaSupport.FAIL_OVER_SATE_QUEUE_NAME))
+                .forEach(queueName -> {
+                    try {
+                        getBrokerService().removeDestination(new ActiveMQQueue(queueName));
+                    } catch (Exception e) {
+                        logger.error("Failed to delete replication queue [{}]", queueName, e);
+                    }
+                });
     }
 
     private void beginReplicationIdempotent() {

@@ -33,9 +33,11 @@ public class ReplicaReplicationQueueSupplier {
     private final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
     private final CountDownLatch initializationLatch = new CountDownLatch(1);
     private final CountDownLatch sequenceInitializationLatch = new CountDownLatch(1);
+    private final CountDownLatch failOverInitializationLatch = new CountDownLatch(1);
     private ActiveMQQueue mainReplicationQueue = null; // memoized
     private ActiveMQQueue intermediateReplicationQueue = null; // memoized
     private ActiveMQQueue sequenceQueue = null; // memoized
+    private ActiveMQQueue failoverQueue = null; // memoized
     private final Broker broker;
 
     public ReplicaReplicationQueueSupplier(final Broker broker) {
@@ -75,6 +77,17 @@ public class ReplicaReplicationQueueSupplier {
         throw new ActiveMQReplicaException("Timed out waiting for replication sequence queue initialization");
     }
 
+    public ActiveMQQueue getFailOverQueue() {
+        try {
+            if (failOverInitializationLatch.await(1L, TimeUnit.MINUTES)) {
+                return requireNonNull(failoverQueue);
+            }
+        } catch (InterruptedException e) {
+            throw new ActiveMQReplicaException("Interrupted while waiting for fail over queue initialization", e);
+        }
+        throw new ActiveMQReplicaException("Timed out waiting for fail over queue initialization");
+    }
+
     public void initialize() {
         try {
             mainReplicationQueue = getOrCreateMainReplicationQueue();
@@ -97,6 +110,17 @@ public class ReplicaReplicationQueueSupplier {
 
     }
 
+    public void initializeFailOverQueue() {
+        try {
+            failoverQueue = getOrCreateFailOverQueue();
+        } catch (Exception e) {
+            logger.error("Could not obtain fail over queue", e);
+            throw new ActiveMQReplicaException("Failed to get or create fail over queue");
+        }
+        failOverInitializationLatch.countDown();
+
+    }
+
     private ActiveMQQueue getOrCreateMainReplicationQueue() throws Exception {
         return getOrCreateQueue(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
     }
@@ -107,6 +131,10 @@ public class ReplicaReplicationQueueSupplier {
 
     private ActiveMQQueue getOrCreateSequenceQueue() throws Exception {
         return getOrCreateQueue(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+    }
+
+    private ActiveMQQueue getOrCreateFailOverQueue() throws Exception {
+        return getOrCreateQueue(ReplicaSupport.FAIL_OVER_SATE_QUEUE_NAME);
     }
 
     private ActiveMQQueue getOrCreateQueue(String replicationQueueName) throws Exception {
