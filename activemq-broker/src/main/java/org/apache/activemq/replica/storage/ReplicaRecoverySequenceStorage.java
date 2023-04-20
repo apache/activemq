@@ -45,13 +45,13 @@ public class ReplicaRecoverySequenceStorage extends ReplicaBaseSequenceStorage {
     }
 
     public void acknowledge(ConnectionContext connectionContext, TransactionId tid, List<String> messageIds) throws Exception {
-        MessageAck ack = new MessageAck();
-        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-        ack.setFirstMessageId(new MessageId(messageIds.get(0)));
-        ack.setLastMessageId(new MessageId(messageIds.get(messageIds.size() - 1)));
-        ack.setMessageCount(messageIds.size());
-        ack.setDestination(queueProvider.getSequenceQueue());
-        ack.setTransactionId(tid);
-        acknowledge(connectionContext, ack);
+        for (String messageId : messageIds) {
+            MessageAck ack = new MessageAck();
+            ack.setMessageID(new MessageId(messageId));
+            ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
+            ack.setDestination(queueProvider.getSequenceQueue());
+            ack.setTransactionId(tid);
+            acknowledge(connectionContext, ack);
+        }
     }
 }

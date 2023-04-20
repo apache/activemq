@@ -387,17 +387,9 @@ public class ReplicaSequencer {
     }
 
     private void iterateAck0() {
-        MessageAck ack = new MessageAck();
         List<String> messages;
         List<String> sequenceMessages;
         synchronized (messageToAck) {
-            if (!messageToAck.isEmpty()) {
-                ack.setFirstMessageId(new MessageId(messageToAck.getFirst()));
-                ack.setLastMessageId(new MessageId(messageToAck.getLast()));
-                ack.setMessageCount(messageToAck.size());
-                ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-                ack.setDestination(queueProvider.getIntermediateQueue());
-            }
             messages = new ArrayList<>(messageToAck);
             sequenceMessages = new ArrayList<>(sequenceMessageToAck);
         }
@@ -408,22 +400,26 @@ public class ReplicaSequencer {
                     ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
             boolean rollbackOnFail = false;
             try {
-                ack.setTransactionId(transactionId);
+                broker.beginTransaction(connectionContext, transactionId);
+                rollbackOnFail = true;
 
-                synchronized (ReplicaSupport.INTERMEDIATE_QUEUE_MUTEX) {
-                    broker.beginTransaction(connectionContext, transactionId);
-                    rollbackOnFail = true;
+                ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
+                consumerExchange.setConnectionContext(connectionContext);
+                consumerExchange.setSubscription(subscription);
 
-                    ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
-                    consumerExchange.setConnectionContext(connectionContext);
-                    consumerExchange.setSubscription(subscription);
-
+                for (String messageId : messages) {
+                    MessageAck ack = new MessageAck();
+                    ack.setTransactionId(transactionId);
+                    ack.setMessageID(new MessageId(messageId));
+                    ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
+                    ack.setDestination(queueProvider.getIntermediateQueue());
                     broker.acknowledge(consumerExchange, ack);
-
-                    restoreSequenceStorage.acknowledge(consumerExchange.getConnectionContext(), transactionId, sequenceMessages);
-
-                    broker.commitTransaction(connectionContext, transactionId, true);
                 }
+
+                restoreSequenceStorage.acknowledge(consumerExchange.getConnectionContext(), transactionId, sequenceMessages);
+
+                broker.commitTransaction(connectionContext, transactionId, true);
+
                 synchronized (messageToAck) {
                     messageToAck.removeAll(messages);
                     sequenceMessageToAck.removeAll(sequenceMessages);
