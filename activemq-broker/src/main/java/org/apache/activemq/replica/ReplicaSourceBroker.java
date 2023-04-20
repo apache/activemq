@@ -49,6 +49,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static org.apache.activemq.replica.ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME;
+
 public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements MutativeRoleBroker {
 
     private static final DestinationMapEntry<Boolean> IS_REPLICATED = new DestinationMapEntry<>() {
@@ -535,7 +537,7 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
             return;
         }
 
-        if (ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME.equals(ack.getDestination().getPhysicalName())) {
+        if (MAIN_REPLICATION_QUEUE_NAME.equals(ack.getDestination().getPhysicalName())) {
             replicaSequencer.acknowledge(consumerExchange, ack);
             return;
         }
@@ -629,8 +631,11 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker implements Muta
     @Override
     public void queuePurged(ConnectionContext context, ActiveMQDestination destination) {
         super.queuePurged(context, destination);
-        replicateQueuePurged(context, destination);
-
+        if(!ReplicaSupport.isReplicationQueue(destination)) {
+            replicateQueuePurged(context, destination);
+        } else {
+            logger.error("Replication queue was purged {}", destination.getPhysicalName());
+        }
     }
 
     private void replicateQueuePurged(ConnectionContext connectionContext, ActiveMQDestination destination) {

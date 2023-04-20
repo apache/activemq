@@ -216,6 +216,23 @@ public class ReplicaSourceBrokerTest {
     }
 
     @Test
+    public void do_not_replicate_REPLICA_QUEUES_PURGED() throws Exception {
+        source.start();
+
+        ActiveMQQueue mainQueue = new ActiveMQQueue(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+        source.queuePurged(connectionContext, mainQueue);
+        verify(broker, times(0)).send(any(), any());
+
+        ActiveMQQueue intermediateQueue = new ActiveMQQueue(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
+        source.queuePurged(connectionContext, intermediateQueue);
+        verify(broker, times(0)).send(any(), any());
+
+        ActiveMQQueue sequenceQueue = new ActiveMQQueue(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+        source.queuePurged(connectionContext, sequenceQueue);
+        verify(broker, times(0)).send(any(), any());
+    }
+
+    @Test
     public void replicates_BEGIN_TRANSACTION() throws Exception {
         source.start();
 
