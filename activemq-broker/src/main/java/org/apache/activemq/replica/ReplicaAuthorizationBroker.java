@@ -32,9 +32,9 @@ import org.apache.activemq.security.SecurityContext;
 
 import java.util.Arrays;
 
-public class ReplicaSourceAuthorizationBroker extends BrokerFilter implements MutativeRoleBroker {
+public class ReplicaAuthorizationBroker extends BrokerFilter implements MutativeRoleBroker {
 
-    public ReplicaSourceAuthorizationBroker(Broker next) {
+    public ReplicaAuthorizationBroker(Broker next) {
         super(next);
         // add DestinationInterceptor
         final RegionBroker regionBroker = (RegionBroker) next.getAdaptor(RegionBroker.class);

@@ -72,15 +72,21 @@ public class ReplicaPlugin extends BrokerPluginSupport {
             AnnotatedMBean.registerMBean(brokerService.getManagementContext(), replicationView, ReplicationJmxHelper.createJmxName(brokerService));
         }
 
+        MutableBrokerFilter advisoryBroker = (MutableBrokerFilter) broker.getAdaptor(AdvisoryBroker.class);
+        if (advisoryBroker != null) {
+            advisoryBroker.setNext(new ReplicaAdvisorySuppressor(advisoryBroker.getNext()));
+        }
+
         replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, buildSourceBroker(broker), buildReplicaBroker(broker), role);
-        return replicaRoleManagementBroker;
+
+        return new ReplicaAuthorizationBroker(replicaRoleManagementBroker);
     }
 
-    private ReplicaBroker buildReplicaBroker(Broker broker) {
+    private Broker buildReplicaBroker(Broker broker) {
         return new ReplicaBroker(broker, queueProvider, replicaPolicy);
     }
 
-    private ReplicaSourceAuthorizationBroker buildSourceBroker(Broker broker) {
+    private Broker buildSourceBroker(Broker broker) {
         ReplicaInternalMessageProducer replicaInternalMessageProducer =
                 new ReplicaInternalMessageProducer(broker);
         ReplicationMessageProducer replicationMessageProducer =
@@ -97,12 +103,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
             scheduledBroker.setNext(new ReplicaSchedulerSourceBroker(scheduledBroker.getNext(), replicationMessageProducer));
         }
 
-        MutableBrokerFilter advisoryBroker = (MutableBrokerFilter) broker.getAdaptor(AdvisoryBroker.class);
-        if (advisoryBroker != null) {
-            advisoryBroker.setNext(new ReplicaAdvisorySuppressor(advisoryBroker.getNext()));
-        }
-
-        return new ReplicaSourceAuthorizationBroker(sourceBroker);
+        return sourceBroker;
     }
 
     public ReplicaPlugin setRole(ReplicaRole role) {

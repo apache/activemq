@@ -40,7 +40,7 @@ public class ReplicaSourceAuthorizationBrokerTest {
     private final Broker broker = mock(Broker.class);
     private final ConnectionContext connectionContext = mock(ConnectionContext.class);
 
-    ReplicaSourceAuthorizationBroker source;
+    ReplicaAuthorizationBroker source;
     private final TransportConnector transportConnector = mock(TransportConnector.class);
 
     private final ActiveMQQueue testDestination = new ActiveMQQueue("TEST.QUEUE");
@@ -55,7 +55,7 @@ public class ReplicaSourceAuthorizationBrokerTest {
         when(cdi.getInterceptors()).thenReturn(new DestinationInterceptor[]{});
         when(connectionContext.getConnector()).thenReturn(transportConnector);
 
-        source = new ReplicaSourceAuthorizationBroker(broker);
+        source = new ReplicaAuthorizationBroker(broker);
     }
 
     @Test
