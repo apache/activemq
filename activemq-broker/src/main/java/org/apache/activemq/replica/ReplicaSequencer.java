@@ -30,6 +30,7 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.LocalTransactionId;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
@@ -312,7 +313,13 @@ public class ReplicaSequencer {
         List<String> messageIds = new ArrayList<>();
         List<String> sequenceMessageIds = new ArrayList<>();
         for (MessageReference reference : messagesToAck) {
-            List<String> messageIdsProperty = (List<String>) reference.getMessage().getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY);
+            ActiveMQMessage message = (ActiveMQMessage) reference.getMessage();
+            List<String> messageIdsProperty;
+            if (ReplicaEventType.valueOf(message.getStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)) == ReplicaEventType.BATCH) {
+                messageIdsProperty = (List<String>) message.getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY);
+            } else {
+                messageIdsProperty = List.of(message.getMessageId().toString());
+            }
             messageIds.addAll(messageIdsProperty);
             sequenceMessageIds.add(messageIdsProperty.get(0));
         }
@@ -557,7 +564,6 @@ public class ReplicaSequencer {
             ActiveMQMessage message = (ActiveMQMessage) originalMessage.copy();
 
             message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, sequence.toString());
-            message.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(message.getMessageId().toString()));
             message.setDestination(queueProvider.getMainQueue());
             message.setTransactionId(transactionId);
             message.setPersistent(false);
