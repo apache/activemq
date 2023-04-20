@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.replica;
 
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.LongSequenceGenerator;
 
@@ -32,9 +33,10 @@ public class ReplicaSupport {
 
     public static final LongSequenceGenerator LOCAL_TRANSACTION_ID_GENERATOR = new LongSequenceGenerator();
 
-    public static final String MAIN_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Queue";
-    public static final String INTERMEDIATE_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Intermediate.Queue";
-    public static final String SEQUENCE_REPLICATION_QUEUE_NAME = "ActiveMQ.Plugin.Replication.Sequence.Queue";
+    public static final String REPLICATION_QUEUE_PREFIX = "ActiveMQ.Plugin.Replication.";
+    public static final String MAIN_REPLICATION_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Queue";
+    public static final String INTERMEDIATE_REPLICATION_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Intermediate.Queue";
+    public static final String SEQUENCE_REPLICATION_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Sequence.Queue";
     public static final String REPLICATION_PLUGIN_USER_NAME = "replication_plugin";
 
     public static final String TRANSACTION_ONE_PHASE_PROPERTY = "TRANSACTION_ONE_PHASE_PROPERTY";

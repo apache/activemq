@@ -18,6 +18,7 @@ package org.apache.activemq.replica;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.MutableBrokerFilter;
@@ -80,6 +81,11 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         MutableBrokerFilter scheduledBroker = (MutableBrokerFilter) broker.getAdaptor(SchedulerBroker.class);
         if (scheduledBroker != null) {
             scheduledBroker.setNext(new ReplicaSchedulerSourceBroker(scheduledBroker.getNext(), replicationMessageProducer));
+        }
+
+        MutableBrokerFilter advisoryBroker = (MutableBrokerFilter) broker.getAdaptor(AdvisoryBroker.class);
+        if (advisoryBroker != null) {
+            advisoryBroker.setNext(new ReplicaAdvisorySuppressor(advisoryBroker.getNext()));
         }
 
         return replicaBrokerFilter;
