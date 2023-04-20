@@ -1297,36 +1297,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         return null;
     }
 
-    public List<MessageId> getAllMessageIds() {
-        List<MessageId> result = new ArrayList<>();
-        pagedInMessagesLock.readLock().lock();
-        try {
-            pagedInMessages.values()
-                    .stream()
-                    .map(MessageReference::getMessageId)
-                    .forEach(result::add);
-        } finally {
-            pagedInMessagesLock.readLock().unlock();
-        }
-        messagesLock.writeLock().lock();
-        try{
-            try {
-                messages.reset();
-                while (messages.hasNext()) {
-                    MessageReference mr = messages.next();
-                    mr.decrementReferenceCount();
-                    messages.rollback(mr.getMessageId());
-                    result.add(mr.getMessageId());
-                }
-            } finally {
-                messages.release();
-            }
-        } finally {
-            messagesLock.writeLock().unlock();
-        }
-        return result;
-    }
-
     public void purge() throws Exception {
         purge(createConnectionContext());
     }
