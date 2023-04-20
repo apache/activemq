@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
 
@@ -427,6 +428,9 @@ public class ReplicaSourceBroker extends ReplicaSourceBaseBroker {
         } else if (messageSend.getTransactionId() == null) {
             transactionId = new LocalTransactionId(new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
                     ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
+            if (connectionContext.getTransactions() == null) {
+                connectionContext.setTransactions(new ConcurrentHashMap<>());
+            }
             super.beginTransaction(connectionContext, transactionId);
             messageSend.setTransactionId(transactionId);
             isInternalTransaction = true;
