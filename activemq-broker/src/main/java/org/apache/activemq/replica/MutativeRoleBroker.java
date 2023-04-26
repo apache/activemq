@@ -39,7 +39,7 @@ public abstract class MutativeRoleBroker extends BrokerFilter {
         this.management = management;
     }
 
-    public abstract void start() throws Exception;
+    public abstract void start(ReplicaRole role) throws Exception;
 
     abstract void stopBeforeRoleChange(boolean force) throws Exception;
 
@@ -77,10 +77,8 @@ public abstract class MutativeRoleBroker extends BrokerFilter {
     }
 
     void removeReplicationQueues() throws Exception {
-        for (String queueName : ReplicaSupport.REPLICATION_QUEUE_NAMES) {
-            if (!queueName.equals(ReplicaSupport.REPLICATION_ROLE_QUEUE_NAME)) {
-                super.removeDestination(createConnectionContext(), new ActiveMQQueue(queueName), 1000);
-            }
+        for (String queueName : ReplicaSupport.DELETABLE_REPLICATION_DESTINATION_NAMES) {
+            super.removeDestination(createConnectionContext(), new ActiveMQQueue(queueName), 1000);
         }
     }
 

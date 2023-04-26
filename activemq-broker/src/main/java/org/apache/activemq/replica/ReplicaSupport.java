@@ -44,6 +44,7 @@ public class ReplicaSupport {
     public static final String INTERMEDIATE_REPLICATION_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Intermediate.Queue";
     public static final String SEQUENCE_REPLICATION_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Sequence.Queue";
     public static final String REPLICATION_ROLE_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Role.Queue";
+    public static final String REPLICATION_ROLE_ADVISORY_TOPIC_NAME = REPLICATION_QUEUE_PREFIX + "Role.Advisory.Topic";
     public static final String REPLICATION_PLUGIN_USER_NAME = "replication_plugin";
 
     public static final String TRANSACTION_ONE_PHASE_PROPERTY = "TRANSACTION_ONE_PHASE_PROPERTY";
@@ -57,11 +58,15 @@ public class ReplicaSupport {
 
     public static final Object INTERMEDIATE_QUEUE_MUTEX = new Object();
 
-    public static final Set<String> REPLICATION_QUEUE_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
-            INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME, REPLICATION_ROLE_QUEUE_NAME);
+    public static final Set<String> DELETABLE_REPLICATION_DESTINATION_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
+            INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME);
+    public static final Set<String> REPLICATION_DESTINATION_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
+            INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME, REPLICATION_ROLE_QUEUE_NAME,
+            REPLICATION_ROLE_ADVISORY_TOPIC_NAME);
 
-    public static boolean isReplicationQueue(ActiveMQDestination destination) {
-        return REPLICATION_QUEUE_NAMES.contains(destination.getPhysicalName());
+
+    public static boolean isReplicationDestination(ActiveMQDestination destination) {
+        return REPLICATION_DESTINATION_NAMES.contains(destination.getPhysicalName());
     }
 
     public static boolean isMainReplicationQueue(ActiveMQDestination destination) {
@@ -70,6 +75,10 @@ public class ReplicaSupport {
 
     public static boolean isIntermediateReplicationQueue(ActiveMQDestination destination) {
         return INTERMEDIATE_REPLICATION_QUEUE_NAME.equals(destination.getPhysicalName());
+    }
+
+    public static boolean isReplicationRoleAdvisoryTopic(ActiveMQDestination destination) {
+        return REPLICATION_ROLE_ADVISORY_TOPIC_NAME.equals(destination.getPhysicalName());
     }
 
     public static boolean isReplicationTransport(Connector connector) {

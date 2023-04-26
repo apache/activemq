@@ -20,6 +20,7 @@ public enum ReplicaRole {
     source,
     replica,
     await_ack(source),
+    ack_processed(replica),
     ;
 
     private final ReplicaRole externalRole;

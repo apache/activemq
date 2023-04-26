@@ -97,7 +97,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void createsQueueOnInitialization() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         ArgumentCaptor<ActiveMQDestination> destinationArgumentCaptor = ArgumentCaptor.forClass(ActiveMQDestination.class);
         verify(broker, times(3)).addDestination(eq(connectionContext), destinationArgumentCaptor.capture(), anyBoolean());
@@ -110,7 +110,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void doesNotCreateDestinationEventsForNonReplicableDestinations() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         ActiveMQTopic advisoryTopic = new ActiveMQTopic(AdvisorySupport.ADVISORY_TOPIC_PREFIX + "TEST");
         source.addDestination(connectionContext, advisoryTopic, true);
@@ -137,7 +137,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_MESSAGE_SEND() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         MessageId messageId = new MessageId("1:1");
 
@@ -162,7 +162,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_QUEUE_PURGED() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         source.queuePurged(connectionContext, testDestination);
 
@@ -188,7 +188,7 @@ public class ReplicaSourceBrokerTest {
         message.setPersistent(true);
         when(messageReference.getMessage()).thenReturn(message);
 
-        source.start();
+        source.start(ReplicaRole.source);
         source.messageExpired(connectionContext, messageReference, subscription);
 
         ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
@@ -206,7 +206,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void do_not_replicate_REPLICA_QUEUES_PURGED() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         ActiveMQQueue mainQueue = new ActiveMQQueue(ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
         source.queuePurged(connectionContext, mainQueue);
@@ -223,7 +223,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_BEGIN_TRANSACTION() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         TransactionId transactionId =  new XATransactionId();
 
@@ -241,7 +241,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_PREPARE_TRANSACTION() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         TransactionId transactionId = new XATransactionId();
 
@@ -259,7 +259,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_ROLLBACK_TRANSACTION() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         TransactionId transactionId = new XATransactionId();
 
@@ -277,7 +277,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_FORGET_TRANSACTION() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         TransactionId transactionId =  new XATransactionId();
 
@@ -295,7 +295,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_COMMIT_TRANSACTION() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         TransactionId transactionId = new XATransactionId();
 
@@ -314,7 +314,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_ADD_DURABLE_CONSUMER() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         ActiveMQTopic destination = new ActiveMQTopic("TEST.TOPIC");
 
@@ -339,7 +339,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_REMOVE_DURABLE_CONSUMER() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         ActiveMQTopic destination = new ActiveMQTopic("TEST.TOPIC");
 
@@ -364,7 +364,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_REMOVE_DURABLE_CONSUMER_SUBSCRIPTION() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         RemoveSubscriptionInfo removeSubscriptionInfo = new RemoveSubscriptionInfo();
         removeSubscriptionInfo.setClientId("clientId");
@@ -388,7 +388,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_MESSAGE_ACK_individual() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         MessageId messageId = new MessageId("1:1");
 
@@ -429,7 +429,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_MESSAGE_ACK_individual_nonpersistent() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         MessageId messageId = new MessageId("1:1");
 
@@ -463,7 +463,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void replicates_MESSAGE_ACK_standard() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         MessageId firstMessageId = new MessageId("1:1");
         MessageId secondMessageId = new MessageId("1:2");
@@ -518,7 +518,7 @@ public class ReplicaSourceBrokerTest {
 
     @Test
     public void doesNotReplicateAdvisoryTopics() throws Exception {
-        source.start();
+        source.start(ReplicaRole.source);
 
         MessageId messageId = new MessageId("1:1");
 

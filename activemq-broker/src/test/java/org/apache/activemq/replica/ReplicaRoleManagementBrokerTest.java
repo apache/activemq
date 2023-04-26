@@ -70,19 +70,19 @@ public class ReplicaRoleManagementBrokerTest {
 
         replicaRoleManagementBroker.start();
 
-        verify(sourceBroker).start();
+        verify(sourceBroker).start(any());
         verify(replicaBroker, never()).start();
     }
 
     @Test
-    public void startAsReplicaWhenBrokerFailOverStateIsSource() throws Exception {
+    public void startAsReplicaWhenBrokerFailOverStateIsReplica() throws Exception {
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setText(ReplicaRole.replica.name());
         when(subscription.getDispatched()).thenReturn(List.of(message));
 
         replicaRoleManagementBroker.start();
 
-        verify(replicaBroker).start();
+        verify(replicaBroker).start(any());
         verify(sourceBroker, never()).start();
     }
 
@@ -102,8 +102,20 @@ public class ReplicaRoleManagementBrokerTest {
         when(replicaFailOverStateStorage.getBrokerState()).thenReturn(ReplicaRole.source);
         replicaRoleManagementBroker.start();
 
-        verify(sourceBroker).start();
+        verify(sourceBroker).start(any());
         verify(replicaBroker, never()).start();
+    }
+
+    @Test
+    public void startAsReplicaWhenBrokerFailOverStateIsAckProcessed() throws Exception {
+        ActiveMQTextMessage message = new ActiveMQTextMessage();
+        message.setText(ReplicaRole.ack_processed.name());
+        when(subscription.getDispatched()).thenReturn(List.of(message));
+
+        replicaRoleManagementBroker.start();
+
+        verify(replicaBroker).start(any());
+        verify(sourceBroker, never()).start();
     }
 
     @Test

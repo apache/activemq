@@ -19,6 +19,7 @@ package org.apache.activemq.replica;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ public class ReplicaReplicationQueueSupplier {
     private ActiveMQQueue intermediateReplicationQueue = null; // memoized
     private ActiveMQQueue sequenceQueue = null; // memoized
     private ActiveMQQueue roleQueue = null; // memoized
+    private ActiveMQTopic roleAdvisoryTopic = null; // memoized
     private final Broker broker;
 
     public ReplicaReplicationQueueSupplier(final Broker broker) {
@@ -88,6 +90,17 @@ public class ReplicaReplicationQueueSupplier {
         throw new ActiveMQReplicaException("Timed out waiting for role queue initialization");
     }
 
+    public ActiveMQTopic getRoleAdvisoryTopic() {
+        try {
+            if (roleInitializationLatch.await(1L, TimeUnit.MINUTES)) {
+                return requireNonNull(roleAdvisoryTopic);
+            }
+        } catch (InterruptedException e) {
+            throw new ActiveMQReplicaException("Interrupted while waiting for role queue initialization", e);
+        }
+        throw new ActiveMQReplicaException("Timed out waiting for role queue initialization");
+    }
+
     public void initialize() {
         try {
             mainReplicationQueue = getOrCreateMainReplicationQueue();
@@ -110,9 +123,10 @@ public class ReplicaReplicationQueueSupplier {
 
     }
 
-    public void initializeRoleQueue() {
+    public void initializeRoleQueueAndTopic() {
         try {
             roleQueue = getOrCreateRoleQueue();
+            roleAdvisoryTopic = getOrCreateRoleAdvisoryTopic();
         } catch (Exception e) {
             logger.error("Could not obtain role queue", e);
             throw new ActiveMQReplicaException("Failed to get or create role queue");
@@ -137,6 +151,10 @@ public class ReplicaReplicationQueueSupplier {
         return getOrCreateQueue(ReplicaSupport.REPLICATION_ROLE_QUEUE_NAME);
     }
 
+    private ActiveMQTopic getOrCreateRoleAdvisoryTopic() throws Exception {
+        return getOrCreateTopic(ReplicaSupport.REPLICATION_ROLE_ADVISORY_TOPIC_NAME);
+    }
+
     private ActiveMQQueue getOrCreateQueue(String replicationQueueName) throws Exception {
         Optional<ActiveMQDestination> existingReplicationQueue = broker.getDurableDestinations()
                 .stream()
@@ -154,6 +172,27 @@ public class ReplicaReplicationQueueSupplier {
                     false
             );
             logger.debug("Created replication queue {}", newReplicationQueue.getPhysicalName());
+            return newReplicationQueue;
+        }
+    }
+
+    private ActiveMQTopic getOrCreateTopic(String replicationQueueName) throws Exception {
+        Optional<ActiveMQDestination> existingReplicationQueue = broker.getDurableDestinations()
+                .stream()
+                .filter(ActiveMQDestination::isTopic)
+                .filter(d -> replicationQueueName.equals(d.getPhysicalName()))
+                .findFirst();
+        if (existingReplicationQueue.isPresent()) {
+            logger.debug("Existing replication topic {}", existingReplicationQueue.get().getPhysicalName());
+            return new ActiveMQTopic(existingReplicationQueue.get().getPhysicalName());
+        } else {
+            ActiveMQTopic newReplicationQueue = new ActiveMQTopic(replicationQueueName);
+            broker.getBrokerService().getBroker().addDestination(
+                    broker.getAdminConnectionContext(),
+                    newReplicationQueue,
+                    false
+            );
+            logger.debug("Created replication topic {}", newReplicationQueue.getPhysicalName());
             return newReplicationQueue;
         }
     }

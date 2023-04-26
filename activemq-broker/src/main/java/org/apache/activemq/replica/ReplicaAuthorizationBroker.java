@@ -64,7 +64,7 @@ public class ReplicaAuthorizationBroker extends BrokerFilter {
 
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-        if (ReplicaSupport.isReplicationQueue(destination)) {
+        if (ReplicaSupport.isReplicationDestination(destination)) {
             throw new ActiveMQReplicaException(createUnauthorizedMessage(destination));
         }
         super.removeDestination(context, destination, timeout);
@@ -79,7 +79,7 @@ public class ReplicaAuthorizationBroker extends BrokerFilter {
     }
 
     private static boolean isAuthorized(ConnectionContext context, ActiveMQDestination destination) {
-        boolean replicationQueue = ReplicaSupport.isReplicationQueue(destination);
+        boolean replicationQueue = ReplicaSupport.isReplicationDestination(destination);
         boolean replicationTransport = ReplicaSupport.isReplicationTransport(context.getConnector());
 
         if (isSystemBroker(context)) {
@@ -107,7 +107,7 @@ public class ReplicaAuthorizationBroker extends BrokerFilter {
 
         @Override
         public Destination intercept(Destination destination) {
-            if (ReplicaSupport.isReplicationQueue(destination.getActiveMQDestination())) {
+            if (ReplicaSupport.isReplicationDestination(destination.getActiveMQDestination())) {
                 return new ReplicaAuthorizationDestinationFilter(destination);
             }
             return destination;

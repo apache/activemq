@@ -24,8 +24,15 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.replica.storage.ReplicaRoleStorage;
+import org.apache.activemq.util.IdGenerator;
+import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +51,9 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
     private final WebConsoleAccessController webConsoleAccessController;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
 
+    protected final ProducerId replicationProducerId = new ProducerId();
+    private final LongSequenceGenerator eventMessageIdGenerator = new LongSequenceGenerator();
+
     ReplicaSourceBroker sourceBroker;
     ReplicaBroker replicaBroker;
     private ReplicaRoleStorage replicaRoleStorage;
@@ -53,6 +63,8 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         this.broker = broker;
         this.replicaPolicy = replicaPolicy;
         this.role = role;
+
+        replicationProducerId.setConnectionId(new IdGenerator().generateId());
 
         queueProvider = new ReplicaReplicationQueueSupplier(broker);
         webConsoleAccessController = new WebConsoleAccessController(broker.getBrokerService(),
@@ -77,8 +89,19 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         initializeRoleStorage();
 
         MutativeRoleBroker nextByRole = getNextByRole();
-        nextByRole.start();
+        nextByRole.start(role);
         setNext(nextByRole);
+    }
+
+    @Override
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        Subscription answer = super.addConsumer(context, info);
+
+        if (ReplicaSupport.isReplicationRoleAdvisoryTopic(info.getDestination())) {
+            sendAdvisory(role);
+        }
+
+        return answer;
     }
 
     public ReplicaRole getRole() {
@@ -139,7 +162,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         ConnectionContext connectionContext = createConnectionContext();
         connectionContext.setClientId(FAIL_OVER_CONSUMER_CLIENT_ID);
         connectionContext.setConnection(new DummyConnection());
-        queueProvider.initializeRoleQueue();
+        queueProvider.initializeRoleQueueAndTopic();
         replicaRoleStorage = new ReplicaRoleStorage(broker, queueProvider, replicaInternalMessageProducer);
         ReplicaRole savedRole = replicaRoleStorage.initialize(connectionContext);
         if (savedRole != null) {
@@ -172,6 +195,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
             case await_ack:
                 return sourceBroker;
             case replica:
+            case ack_processed:
                 return replicaBroker;
             default:
                 throw new IllegalStateException("Unknown replication role: " + role);
@@ -185,7 +209,20 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         transportConnector.setName(ReplicaSupport.REPLICATION_CONNECTOR_NAME);
     }
 
-    ConnectionContext createConnectionContext() {
+    private void sendAdvisory(ReplicaRole role) throws Exception {
+        ActiveMQTextMessage message = new ActiveMQTextMessage();
+        message.setText(role.name());
+        message.setTransactionId(null);
+        message.setDestination(queueProvider.getRoleAdvisoryTopic());
+        message.setMessageId(new MessageId(replicationProducerId, eventMessageIdGenerator.getNextSequenceId()));
+        message.setProducerId(replicationProducerId);
+        message.setPersistent(false);
+        message.setResponseRequired(false);
+
+        replicaInternalMessageProducer.sendIgnoringFlowControl(createConnectionContext(), message);
+    }
+
+    private ConnectionContext createConnectionContext() {
         ConnectionContext connectionContext = getAdminConnectionContext().copy();
         if (connectionContext.getTransactions() == null) {
             connectionContext.setTransactions(new ConcurrentHashMap<>());

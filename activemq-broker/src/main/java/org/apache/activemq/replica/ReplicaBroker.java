@@ -26,12 +26,15 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageDispatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.concurrent.Executors;
@@ -67,8 +70,8 @@ public class ReplicaBroker extends MutativeRoleBroker {
     }
 
     @Override
-    public void start() throws Exception {
-        init();
+    public void start(ReplicaRole role) throws Exception {
+        init(role);
 
         logger.info("Starting replica broker");
     }
@@ -99,7 +102,7 @@ public class ReplicaBroker extends MutativeRoleBroker {
     @Override
     public void startAfterRoleChange() throws Exception {
         logger.info("Starting Replica broker");
-        init();
+        init(ReplicaRole.replica);
     }
 
     void completeBeforeRoleChange() throws Exception {
@@ -109,10 +112,10 @@ public class ReplicaBroker extends MutativeRoleBroker {
         onStopSuccess();
     }
 
-    private void init() {
+    private void init(ReplicaRole role) {
         logger.info("Initializing Replica broker");
         queueProvider.initializeSequenceQueue();
-        replicationScheduledFuture = brokerConnectionPoller.scheduleAtFixedRate(this::beginReplicationIdempotent, 5, 5, TimeUnit.SECONDS);
+        replicationScheduledFuture = brokerConnectionPoller.scheduleAtFixedRate(() -> beginReplicationIdempotent(role), 5, 5, TimeUnit.SECONDS);
         ackPollerScheduledFuture = periodicAckPoller.scheduleAtFixedRate(() -> {
             synchronized (periodAcknowledgeCallBack) {
                 try {
@@ -166,7 +169,7 @@ public class ReplicaBroker extends MutativeRoleBroker {
         return false;
     }
 
-    private void beginReplicationIdempotent() {
+    private void beginReplicationIdempotent(ReplicaRole initialRole) {
         if (connectionSession.get() == null) {
             logger.debug("Establishing inter-broker replication connection");
             establishConnectionSession();
@@ -174,7 +177,7 @@ public class ReplicaBroker extends MutativeRoleBroker {
         if (eventConsumer.get() == null) {
             try {
                 logger.debug("Creating replica event consumer");
-                consumeReplicationEvents();
+                consumeReplicationEvents(initialRole);
             } catch (Exception e) {
                 logger.error("Could not establish replication consumer", e);
             }
@@ -215,16 +218,25 @@ public class ReplicaBroker extends MutativeRoleBroker {
         ActiveMQConnectionFactory replicaSourceConnectionFactory = replicaPolicy.getOtherBrokerConnectionFactory();
         logger.trace("Replica connection URL {}", replicaSourceConnectionFactory.getBrokerURL());
         ActiveMQConnection newConnection = (ActiveMQConnection) replicaSourceConnectionFactory.createConnection();
+        newConnection.setSendAcksAsync(false);
         newConnection.start();
         connection.set(newConnection);
         periodAcknowledgeCallBack.setConnection(newConnection);
         logger.debug("Established connection to replica source: {}", replicaSourceConnectionFactory.getBrokerURL());
     }
 
-    private void consumeReplicationEvents() throws Exception {
+    private void consumeReplicationEvents(ReplicaRole initialRole) throws Exception {
         if (connectionUnusable() || sessionUnusable()) {
             return;
         }
+        if (initialRole == ReplicaRole.ack_processed) {
+            if (isReadyToFailover()) {
+                updateBrokerState(ReplicaRole.source);
+                completeBeforeRoleChange();
+                return;
+            }
+        }
+
         ActiveMQQueue replicationSourceQueue = connection.get()
                 .getDestinationSource()
                 .getQueues()
@@ -253,6 +265,27 @@ public class ReplicaBroker extends MutativeRoleBroker {
                 }
             }
         });
+    }
+
+    private boolean isReadyToFailover() throws JMSException {
+        ActiveMQTopic replicationRoleAdvisoryTopic = connection.get()
+                .getDestinationSource()
+                .getTopics()
+                .stream()
+                .filter(d -> ReplicaSupport.REPLICATION_ROLE_ADVISORY_TOPIC_NAME.equals(d.getPhysicalName()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        MessageFormat.format("There is no replication role advisory topic on the source broker {0}",
+                                replicaPolicy.getOtherBrokerConnectionFactory().getBrokerURL())
+                ));
+        MessageConsumer advisoryConsumer = connectionSession.get().createConsumer(replicationRoleAdvisoryTopic);
+        ActiveMQTextMessage message = (ActiveMQTextMessage) advisoryConsumer.receive(5000);
+        if (message == null) {
+            throw new IllegalStateException("There is no replication role in the role advisory topic on the source broker {0}" +
+                    replicaPolicy.getOtherBrokerConnectionFactory().getBrokerURL());
+        }
+        advisoryConsumer.close();
+        return ReplicaRole.valueOf(message.getText()) == ReplicaRole.replica;
     }
 
 

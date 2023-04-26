@@ -24,8 +24,6 @@ import org.apache.activemq.broker.TransactionBroker;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.IndirectMessageReference;
-import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.MessageReferenceFilter;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -53,10 +51,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -596,6 +592,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
     }
 
     private void failOver() throws Exception {
+        replicaBroker.updateBrokerState(ReplicaRole.ack_processed);
         acknowledgeCallback.acknowledge(true);
         replicaBroker.updateBrokerState(ReplicaRole.source);
         replicaBroker.completeBeforeRoleChange();
@@ -604,19 +601,6 @@ public class ReplicaBrokerEventListener implements MessageListener {
     private void createTransactionMapIfNotExist() {
         if (connectionContext.getTransactions() == null) {
             connectionContext.setTransactions(new ConcurrentHashMap<>());
-        }
-    }
-
-    static class ListMessageReferenceFilter implements MessageReferenceFilter {
-        final Set<String> messageIds;
-
-        public ListMessageReferenceFilter(List<String> messageIds) {
-            this.messageIds = new HashSet<>(messageIds);
-        }
-
-        @Override
-        public boolean evaluate(ConnectionContext context, MessageReference messageReference) throws JMSException {
-            return messageIds.contains(messageReference.getMessageId().toString());
         }
     }
 }

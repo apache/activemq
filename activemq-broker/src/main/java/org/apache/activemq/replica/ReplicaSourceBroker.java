@@ -78,7 +78,7 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
     }
 
     @Override
-    public void start() throws Exception {
+    public void start(ReplicaRole role) throws Exception {
         logger.info("Starting Source broker");
 
         initQueueProvider();
@@ -168,7 +168,7 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
     }
 
     private boolean shouldReplicateDestination(ActiveMQDestination destination) {
-        boolean isReplicationQueue = ReplicaSupport.isReplicationQueue(destination);
+        boolean isReplicationQueue = ReplicaSupport.isReplicationDestination(destination);
         boolean isAdvisoryDestination = ReplicaSupport.isAdvisoryDestination(destination);
         boolean isTemporaryDestination = destination.isTemporary();
         boolean shouldReplicate = !isReplicationQueue && !isAdvisoryDestination && !isTemporaryDestination;
@@ -214,7 +214,7 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
         if (isReplicaContext(connectionContext)) {
             return false;
         }
-        if (ReplicaSupport.isReplicationQueue(message.getDestination())) {
+        if (ReplicaSupport.isReplicationDestination(message.getDestination())) {
             return false;
         }
         if (message.getDestination().isTemporary()) {
@@ -518,7 +518,7 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
         if (isReplicaContext(connectionContext)) {
             return false;
         }
-        if (ReplicaSupport.isReplicationQueue(ack.getDestination())) {
+        if (ReplicaSupport.isReplicationDestination(ack.getDestination())) {
             return false;
         }
         if (ack.getDestination().isTemporary()) {
@@ -686,7 +686,7 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
     @Override
     public void queuePurged(ConnectionContext context, ActiveMQDestination destination) {
         super.queuePurged(context, destination);
-        if(!ReplicaSupport.isReplicationQueue(destination)) {
+        if(!ReplicaSupport.isReplicationDestination(destination)) {
             replicateQueuePurged(context, destination);
         } else {
             logger.error("Replication queue was purged {}", destination.getPhysicalName());
