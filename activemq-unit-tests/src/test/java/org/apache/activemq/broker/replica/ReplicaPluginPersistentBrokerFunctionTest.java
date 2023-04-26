@@ -198,6 +198,9 @@ public class ReplicaPluginPersistentBrokerFunctionTest extends ReplicaPluginTest
     }
 
     private void cleanKahaDB(String filePath) throws IOException {
-        FileUtils.cleanDirectory(new File(filePath));
+        File kahaDBFile = new File(filePath);
+        if (kahaDBFile.exists()) {
+            FileUtils.cleanDirectory(kahaDBFile);
+        }
     }
 }
