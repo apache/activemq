@@ -22,6 +22,9 @@ import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
+import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
+import org.apache.activemq.broker.region.DestinationInterceptor;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -88,10 +91,12 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         }
         brokerService.getDestinationPolicy().setPolicyEntries(policyEntries);
 
-        MutableBrokerFilter advisoryBroker = (MutableBrokerFilter) broker.getAdaptor(AdvisoryBroker.class);
-        if (advisoryBroker != null) {
-            advisoryBroker.setNext(new ReplicaAdvisorySuppressor(advisoryBroker.getNext()));
-        }
+        RegionBroker regionBroker = (RegionBroker) broker.getAdaptor(RegionBroker.class);
+        CompositeDestinationInterceptor compositeInterceptor = (CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor();
+        DestinationInterceptor[] interceptors = compositeInterceptor.getInterceptors();
+        interceptors = Arrays.copyOf(interceptors, interceptors.length + 1);
+        interceptors[interceptors.length - 1] = new ReplicaAdvisorySuppressor();
+        compositeInterceptor.setInterceptors(interceptors);
 
         replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, replicaPolicy, role);
 
