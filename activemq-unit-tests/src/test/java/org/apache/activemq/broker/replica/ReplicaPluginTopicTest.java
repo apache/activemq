@@ -511,8 +511,7 @@ public class ReplicaPluginTopicTest extends ReplicaPluginTestSupport {
         firstBrokerProducer.send(message);
         Thread.sleep(LONG_TIMEOUT);
         assertEquals(firstBrokerDestinationTopicView.getConsumerCount(), 1);
-//        TODO: remove durable subscription is not replicated
-//        assertEquals(secondBrokerDestinationTopicView.getConsumerCount(), 1);
+        assertEquals(secondBrokerDestinationTopicView.getConsumerCount(), 1);
         firstBrokerSession.close();
     }
 
