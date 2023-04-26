@@ -22,15 +22,11 @@ import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
-import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
-import org.apache.activemq.broker.region.DestinationInterceptor;
-import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.replica.jmx.ReplicationJmxHelper;
 import org.apache.activemq.replica.jmx.ReplicationView;
-import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,8 +52,6 @@ public class ReplicaPlugin extends BrokerPluginSupport {
 
     private ReplicationView replicationView;
 
-    private ReplicaReplicationQueueSupplier queueProvider;
-
     private ReplicaRoleManagementBroker replicaRoleManagementBroker;
 
     public ReplicaPlugin() {
@@ -71,8 +65,6 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         }
 
         logger.info("{} installed, running as {}", ReplicaPlugin.class.getName(), role);
-
-        queueProvider = new ReplicaReplicationQueueSupplier(broker);
 
         final BrokerService brokerService = broker.getBrokerService();
         if (brokerService.isUseJmx()) {
@@ -98,19 +90,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
             advisoryBroker.setNext(new ReplicaAdvisorySuppressor(advisoryBroker.getNext()));
         }
 
-
-        ReplicaFailOverStateStorage replicaFailOverStateStorage = new ReplicaFailOverStateStorage(queueProvider);
-        WebConsoleAccessController webConsoleAccessController = new WebConsoleAccessController(brokerService,
-                replicaPolicy.isControlWebConsoleAccess());
-
-        MutativeRoleBroker sourceBroker = buildSourceBroker(broker, replicaFailOverStateStorage, webConsoleAccessController);
-        MutativeRoleBroker replicaBroker = buildReplicaBroker(broker, replicaFailOverStateStorage, webConsoleAccessController);
-
-        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, sourceBroker, replicaBroker, replicaFailOverStateStorage, role);
-        sourceBroker.initializeRoleChangeCallBack(replicaRoleManagementBroker);
-        replicaBroker.initializeRoleChangeCallBack(replicaRoleManagementBroker);
-
-        addInterceptor4CompositeQueues(broker, sourceBroker, replicaRoleManagementBroker);
+        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, replicaPolicy, role);
 
         return new ReplicaAuthorizationBroker(replicaRoleManagementBroker);
     }
@@ -239,17 +219,16 @@ public class ReplicaPlugin extends BrokerPluginSupport {
     }
 
     public ReplicaRole getRole() {
-        return role;
+        return replicaRoleManagementBroker.getRole().getExternalRole();
     }
 
     public void setReplicaRole(ReplicaRole role, boolean force) throws Exception {
         logger.info("Called switch role for broker. Params: [{}], [{}]", role.name(), force);
 
-        if ( role != ReplicaRole.replica && role != ReplicaRole.source ) {
+        if (role != ReplicaRole.replica && role != ReplicaRole.source) {
             throw new RuntimeException(String.format("Can't switch role from [%s] to [%s]", this.role.name(), role.name()));
         }
 
-        this.replicaRoleManagementBroker.switchRole(role, force);
-        this.role = role;
+        replicaRoleManagementBroker.switchRole(role, force);
     }
 }

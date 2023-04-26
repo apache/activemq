@@ -22,15 +22,12 @@ import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
-import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 
-public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
+public class ReplicaBroker extends MutativeRoleBroker {
 
     private final Logger logger = LoggerFactory.getLogger(ReplicaBroker.class);
     private final ScheduledExecutorService brokerConnectionPoller = Executors.newSingleThreadScheduledExecutor();
@@ -57,50 +54,46 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaPolicy replicaPolicy;
     private final PeriodAcknowledge periodAcknowledgeCallBack;
-    private final ReplicaFailOverStateStorage replicaFailOverStateStorage;
-    private final WebConsoleAccessController webConsoleAccessController;
-    private ActionListenerCallback actionListenerCallback;
     private ReplicaBrokerEventListener messageListener;
     private ScheduledFuture<?> replicationScheduledFuture;
     private ScheduledFuture<?> ackPollerScheduledFuture;
 
-    public ReplicaBroker(Broker next, ReplicaReplicationQueueSupplier queueProvider, ReplicaPolicy replicaPolicy,
-            ReplicaFailOverStateStorage replicaFailOverStateStorage, WebConsoleAccessController webConsoleAccessController) {
-        super(next);
+    public ReplicaBroker(Broker broker, ReplicaRoleManagement management, ReplicaReplicationQueueSupplier queueProvider,
+            ReplicaPolicy replicaPolicy) {
+        super(broker, management);
         this.queueProvider = queueProvider;
         this.replicaPolicy = replicaPolicy;
         this.periodAcknowledgeCallBack = new PeriodAcknowledge(replicaPolicy);
-        this.replicaFailOverStateStorage = replicaFailOverStateStorage;
-        this.webConsoleAccessController = webConsoleAccessController;
     }
 
     @Override
     public void start() throws Exception {
-        super.start();
         init();
 
-        webConsoleAccessController.stop();
         logger.info("Starting replica broker");
+    }
+
+    @Override
+    public void brokerServiceStarted(ReplicaRole role) {
+        stopAllConnections();
     }
 
     @Override
     public void stop() throws Exception {
         logger.info("Stopping Source broker");
-        stopAllConnections();
+        deinitialize();
         super.stop();
-    }
-
-    @Override
-    public void initializeRoleChangeCallBack(ActionListenerCallback actionListenerCallback) {
-        this.actionListenerCallback = actionListenerCallback;
     }
 
     @Override
     public void stopBeforeRoleChange(boolean force) throws Exception {
         logger.info("Stopping broker replication. Forced: [{}]", force);
-        messageListener.deinitialize();
-        removeReplicationQueues();
-        stopAllConnections();
+        if (!force) {
+            return;
+        }
+
+        updateBrokerState(ReplicaRole.source);
+        completeBeforeRoleChange();
     }
 
     @Override
@@ -109,9 +102,15 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
         init();
     }
 
+    void completeBeforeRoleChange() throws Exception {
+        messageListener.deinitialize();
+        removeReplicationQueues();
+        deinitialize();
+        onStopSuccess();
+    }
+
     private void init() {
         logger.info("Initializing Replica broker");
-        getBrokerService().stopAllConnectors(new ServiceStopper());
         queueProvider.initializeSequenceQueue();
         replicationScheduledFuture = brokerConnectionPoller.scheduleAtFixedRate(this::beginReplicationIdempotent, 5, 5, TimeUnit.SECONDS);
         ackPollerScheduledFuture = periodicAckPoller.scheduleAtFixedRate(() -> {
@@ -123,10 +122,10 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
                 }
             }
         }, replicaPolicy.getReplicaAckPeriod(), replicaPolicy.getReplicaAckPeriod(), TimeUnit.MILLISECONDS);
-        messageListener = new ReplicaBrokerEventListener(getNext(), queueProvider, periodAcknowledgeCallBack, actionListenerCallback, replicaFailOverStateStorage);
+        messageListener = new ReplicaBrokerEventListener(this, queueProvider, periodAcknowledgeCallBack);
     }
 
-    private void stopAllConnections() throws JMSException {
+    private void deinitialize() throws JMSException {
         replicationScheduledFuture.cancel(true);
         ackPollerScheduledFuture.cancel(true);
 
@@ -148,25 +147,11 @@ public class ReplicaBroker extends BrokerFilter implements MutativeRoleBroker {
             brokerConnection.close();
         }
 
-        getBrokerService().stopAllConnectors(new ServiceStopper());
-
         eventConsumer.set(null);
         connectionSession.set(null);
         connection.set(null);
         replicationScheduledFuture = null;
         ackPollerScheduledFuture = null;
-    }
-
-    private void removeReplicationQueues() {
-        ReplicaSupport.REPLICATION_QUEUE_NAMES.stream()
-                .filter(queueName -> !queueName.equals(ReplicaSupport.FAIL_OVER_SATE_QUEUE_NAME))
-                .forEach(queueName -> {
-                    try {
-                        getBrokerService().removeDestination(new ActiveMQQueue(queueName));
-                    } catch (Exception e) {
-                        logger.error("Failed to delete replication queue [{}]", queueName, e);
-                    }
-                });
     }
 
     @Override

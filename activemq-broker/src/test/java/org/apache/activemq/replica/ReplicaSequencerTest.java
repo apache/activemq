@@ -192,6 +192,7 @@ public class ReplicaSequencerTest {
 
         ActiveMQMessage message = new ActiveMQMessage();
         message.setMessageId(messageId);
+        message.setProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ReplicaEventType.BATCH.name());
         message.setProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, List.of(messageId.toString()));
 
         when(mainSubscription.getDispatched()).thenReturn(List.of(message));

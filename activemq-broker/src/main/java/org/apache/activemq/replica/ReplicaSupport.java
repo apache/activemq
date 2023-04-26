@@ -43,7 +43,7 @@ public class ReplicaSupport {
     public static final String MAIN_REPLICATION_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Queue";
     public static final String INTERMEDIATE_REPLICATION_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Intermediate.Queue";
     public static final String SEQUENCE_REPLICATION_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Sequence.Queue";
-    public static final String FAIL_OVER_SATE_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Failover.Queue";
+    public static final String REPLICATION_ROLE_QUEUE_NAME = REPLICATION_QUEUE_PREFIX + "Role.Queue";
     public static final String REPLICATION_PLUGIN_USER_NAME = "replication_plugin";
 
     public static final String TRANSACTION_ONE_PHASE_PROPERTY = "TRANSACTION_ONE_PHASE_PROPERTY";
@@ -54,18 +54,11 @@ public class ReplicaSupport {
     public static final String MESSAGE_ID_PROPERTY = "MessageIdProperty";
     public static final String MESSAGE_IDS_PROPERTY = "MessageIdsProperty";
     public static final String SEQUENCE_PROPERTY = "SEQUENCE_PROPERTY";
-    public static final String ACTIVEMQ_USER = "ActiveMQBroker";
 
     public static final Object INTERMEDIATE_QUEUE_MUTEX = new Object();
 
-    public static final String REPLICATION_PLUGIN_STORAGE_DIRECTORY = "replication_plugin";
-
     public static final Set<String> REPLICATION_QUEUE_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
-            INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME, FAIL_OVER_SATE_QUEUE_NAME);
-
-    public static boolean isInternalUser(String userName) {
-        return ACTIVEMQ_USER.equals(userName);
-    }
+            INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME, REPLICATION_ROLE_QUEUE_NAME);
 
     public static boolean isReplicationQueue(ActiveMQDestination destination) {
         return REPLICATION_QUEUE_NAMES.contains(destination.getPhysicalName());

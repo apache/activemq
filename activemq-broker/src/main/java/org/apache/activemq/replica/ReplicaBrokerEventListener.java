@@ -39,7 +39,6 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.apache.activemq.replica.storage.ReplicaSequenceStorage;
 import org.apache.activemq.transaction.Transaction;
 import org.slf4j.Logger;
@@ -69,26 +68,23 @@ public class ReplicaBrokerEventListener implements MessageListener {
     private static final String SEQUENCE_NAME = "replicaSeq";
     private final Logger logger = LoggerFactory.getLogger(ReplicaBrokerEventListener.class);
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
+    private final ReplicaBroker replicaBroker;
     private final Broker broker;
     private final ConnectionContext connectionContext;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
     private final PeriodAcknowledge acknowledgeCallback;
-    private final ReplicaFailOverStateStorage replicaFailOverStateStorage;
     private final AtomicReference<ReplicaEventRetrier> replicaEventRetrier = new AtomicReference<>();
     final ReplicaSequenceStorage sequenceStorage;
-    private final ActionListenerCallback actionListenerCallback;
     private final TransactionBroker transactionBroker;
 
     BigInteger sequence;
     MessageId sequenceMessageId;
 
-    ReplicaBrokerEventListener(Broker broker, ReplicaReplicationQueueSupplier queueProvider,
-            PeriodAcknowledge acknowledgeCallback, ActionListenerCallback actionListenerCallback,
-            ReplicaFailOverStateStorage replicaFailOverStateStorage) {
-        this.broker = requireNonNull(broker);
+    ReplicaBrokerEventListener(ReplicaBroker replicaBroker, ReplicaReplicationQueueSupplier queueProvider,
+            PeriodAcknowledge acknowledgeCallback) {
+        this.replicaBroker = requireNonNull(replicaBroker);
+        this.broker = requireNonNull(replicaBroker.getNext());
         this.acknowledgeCallback = requireNonNull(acknowledgeCallback);
-        this.actionListenerCallback = requireNonNull(actionListenerCallback);
-        this.replicaFailOverStateStorage = requireNonNull(replicaFailOverStateStorage);
         connectionContext = broker.getAdminConnectionContext().copy();
         connectionContext.setUserName(ReplicaSupport.REPLICATION_PLUGIN_USER_NAME);
         connectionContext.setClientId(REPLICATION_CONSUMER_CLIENT_ID);
@@ -600,22 +596,9 @@ public class ReplicaBrokerEventListener implements MessageListener {
     }
 
     private void failOver() throws Exception {
-        LocalTransactionId tid = new LocalTransactionId(
-                new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
-                ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
-
-        broker.beginTransaction(connectionContext, tid);
-        try {
-            acknowledgeCallback.acknowledge(true);
-            replicaFailOverStateStorage.updateBrokerState(connectionContext, tid, ReplicaRole.source.name());
-            broker.commitTransaction(connectionContext, tid, true);
-
-        } catch (Exception e) {
-            broker.rollbackTransaction(connectionContext, tid);
-            logger.error("Failed to ack fail over message", e);
-            throw e;
-        }
-        actionListenerCallback.onFailOverAck();
+        acknowledgeCallback.acknowledge(true);
+        replicaBroker.updateBrokerState(ReplicaRole.source);
+        replicaBroker.completeBeforeRoleChange();
     }
 
     private void createTransactionMapIfNotExist() {

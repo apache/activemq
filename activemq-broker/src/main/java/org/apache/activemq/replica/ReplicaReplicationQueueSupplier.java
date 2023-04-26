@@ -33,11 +33,11 @@ public class ReplicaReplicationQueueSupplier {
     private final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
     private final CountDownLatch initializationLatch = new CountDownLatch(1);
     private final CountDownLatch sequenceInitializationLatch = new CountDownLatch(1);
-    private final CountDownLatch failOverInitializationLatch = new CountDownLatch(1);
+    private final CountDownLatch roleInitializationLatch = new CountDownLatch(1);
     private ActiveMQQueue mainReplicationQueue = null; // memoized
     private ActiveMQQueue intermediateReplicationQueue = null; // memoized
     private ActiveMQQueue sequenceQueue = null; // memoized
-    private ActiveMQQueue failoverQueue = null; // memoized
+    private ActiveMQQueue roleQueue = null; // memoized
     private final Broker broker;
 
     public ReplicaReplicationQueueSupplier(final Broker broker) {
@@ -77,15 +77,15 @@ public class ReplicaReplicationQueueSupplier {
         throw new ActiveMQReplicaException("Timed out waiting for replication sequence queue initialization");
     }
 
-    public ActiveMQQueue getFailOverQueue() {
+    public ActiveMQQueue getRoleQueue() {
         try {
-            if (failOverInitializationLatch.await(1L, TimeUnit.MINUTES)) {
-                return requireNonNull(failoverQueue);
+            if (roleInitializationLatch.await(1L, TimeUnit.MINUTES)) {
+                return requireNonNull(roleQueue);
             }
         } catch (InterruptedException e) {
-            throw new ActiveMQReplicaException("Interrupted while waiting for fail over queue initialization", e);
+            throw new ActiveMQReplicaException("Interrupted while waiting for role queue initialization", e);
         }
-        throw new ActiveMQReplicaException("Timed out waiting for fail over queue initialization");
+        throw new ActiveMQReplicaException("Timed out waiting for role queue initialization");
     }
 
     public void initialize() {
@@ -110,14 +110,14 @@ public class ReplicaReplicationQueueSupplier {
 
     }
 
-    public void initializeFailOverQueue() {
+    public void initializeRoleQueue() {
         try {
-            failoverQueue = getOrCreateFailOverQueue();
+            roleQueue = getOrCreateRoleQueue();
         } catch (Exception e) {
-            logger.error("Could not obtain fail over queue", e);
-            throw new ActiveMQReplicaException("Failed to get or create fail over queue");
+            logger.error("Could not obtain role queue", e);
+            throw new ActiveMQReplicaException("Failed to get or create role queue");
         }
-        failOverInitializationLatch.countDown();
+        roleInitializationLatch.countDown();
 
     }
 
@@ -133,8 +133,8 @@ public class ReplicaReplicationQueueSupplier {
         return getOrCreateQueue(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
     }
 
-    private ActiveMQQueue getOrCreateFailOverQueue() throws Exception {
-        return getOrCreateQueue(ReplicaSupport.FAIL_OVER_SATE_QUEUE_NAME);
+    private ActiveMQQueue getOrCreateRoleQueue() throws Exception {
+        return getOrCreateQueue(ReplicaSupport.REPLICATION_ROLE_QUEUE_NAME);
     }
 
     private ActiveMQQueue getOrCreateQueue(String replicationQueueName) throws Exception {

@@ -17,13 +17,83 @@
 package org.apache.activemq.replica;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.LocalTransactionId;
+import org.apache.activemq.command.TransactionId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public interface MutativeRoleBroker extends Broker {
+import java.util.concurrent.ConcurrentHashMap;
 
-    void initializeRoleChangeCallBack(ActionListenerCallback actionListenerCallback);
+public abstract class MutativeRoleBroker extends BrokerFilter {
 
-    void stopBeforeRoleChange(boolean force) throws Exception;
+    private final Logger logger = LoggerFactory.getLogger(MutativeRoleBroker.class);
 
-    void startAfterRoleChange() throws Exception;
+    private final ReplicaRoleManagement management;
 
+    public MutativeRoleBroker(Broker broker, ReplicaRoleManagement management) {
+        super(broker);
+        this.management = management;
+    }
+
+    public abstract void start() throws Exception;
+
+    abstract void stopBeforeRoleChange(boolean force) throws Exception;
+
+    abstract void startAfterRoleChange() throws Exception;
+
+    abstract void brokerServiceStarted(ReplicaRole role);
+
+    void updateBrokerState(ReplicaRole role) throws Exception {
+        ConnectionContext connectionContext = createConnectionContext();
+        LocalTransactionId tid = new LocalTransactionId(
+                new ConnectionId(ReplicaSupport.REPLICATION_PLUGIN_CONNECTION_ID),
+                ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
+
+        super.beginTransaction(connectionContext, tid);
+        try {
+            updateBrokerState(connectionContext, tid, role);
+            super.commitTransaction(connectionContext, tid, true);
+        } catch (Exception e) {
+            super.rollbackTransaction(connectionContext, tid);
+            logger.error("Failed to ack fail over message", e);
+            throw e;
+        }
+    }
+
+    void updateBrokerState(ConnectionContext connectionContext, TransactionId tid, ReplicaRole role) throws Exception {
+        management.updateBrokerState(connectionContext, tid, role);
+    }
+
+    void stopAllConnections() {
+        management.stopAllConnections();
+    }
+
+    void startAllConnections() throws Exception {
+        management.startAllConnections();
+    }
+
+    void removeReplicationQueues() throws Exception {
+        for (String queueName : ReplicaSupport.REPLICATION_QUEUE_NAMES) {
+            if (!queueName.equals(ReplicaSupport.REPLICATION_ROLE_QUEUE_NAME)) {
+                super.removeDestination(createConnectionContext(), new ActiveMQQueue(queueName), 1000);
+            }
+        }
+    }
+
+    void onStopSuccess() throws Exception {
+        management.onStopSuccess();
+    }
+
+    ConnectionContext createConnectionContext() {
+        ConnectionContext connectionContext = getAdminConnectionContext().copy();
+        if (connectionContext.getTransactions() == null) {
+            connectionContext.setTransactions(new ConcurrentHashMap<>());
+        }
+
+        return connectionContext;
+    }
 }

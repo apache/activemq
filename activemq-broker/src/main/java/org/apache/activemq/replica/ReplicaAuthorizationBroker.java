@@ -64,7 +64,7 @@ public class ReplicaAuthorizationBroker extends BrokerFilter {
 
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-        if (ReplicaSupport.isReplicationQueue(destination) && !ReplicaSupport.isInternalUser(context.getUserName()) ) {
+        if (ReplicaSupport.isReplicationQueue(destination)) {
             throw new ActiveMQReplicaException(createUnauthorizedMessage(destination));
         }
         super.removeDestination(context, destination, timeout);

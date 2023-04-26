@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.replica;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.TransactionBroker;
@@ -37,7 +38,6 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.apache.activemq.util.IOHelper;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,7 +70,8 @@ import static org.mockito.Mockito.when;
 
 public class ReplicaBrokerEventListenerTest {
 
-    private final MutativeRoleBroker broker = mock(MutativeRoleBroker.class);
+    private final ReplicaBroker replicaBroker = mock(ReplicaBroker.class);
+    private final Broker broker = mock(Broker.class);
     private final ActiveMQQueue sequenceQueue = new ActiveMQQueue(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
     private final ActiveMQQueue testQueue = new ActiveMQQueue("TEST.QUEUE");
     private final ActiveMQTopic testTopic = new ActiveMQTopic("TEST.TOPIC");
@@ -79,8 +80,6 @@ public class ReplicaBrokerEventListenerTest {
     private final Destination destinationTopic = mock(Topic.class);
     private final ConnectionContext connectionContext = mock(ConnectionContext.class);
     private final ReplicaReplicationQueueSupplier queueProvider = mock(ReplicaReplicationQueueSupplier.class);
-    private final ReplicaFailOverStateStorage replicaFailOverStateStorage = mock(ReplicaFailOverStateStorage.class);
-    private final ActionListenerCallback actionListenerCallback = mock(ActionListenerCallback.class);
     private final PrefetchSubscription subscription = mock(PrefetchSubscription.class);
     private final TransactionBroker transactionBroker = mock(TransactionBroker.class);
     private ReplicaBrokerEventListener listener;
@@ -89,6 +88,7 @@ public class ReplicaBrokerEventListenerTest {
 
     @Before
     public void setUp() throws Exception {
+        when(replicaBroker.getNext()).thenReturn(broker);
         ConnectionContext adminConnectionContext = mock(ConnectionContext.class);
         when(adminConnectionContext.copy()).thenReturn(connectionContext);
         when(broker.getAdminConnectionContext()).thenReturn(adminConnectionContext);
@@ -106,7 +106,7 @@ public class ReplicaBrokerEventListenerTest {
         when(broker.addConsumer(any(), any())).thenReturn(subscription);
         when(broker.getAdaptor(TransactionBroker.class)).thenReturn(transactionBroker);
         acknowledgeCallback = new PeriodAcknowledge(new ReplicaPolicy());
-        listener = new ReplicaBrokerEventListener(broker, queueProvider, acknowledgeCallback, actionListenerCallback, replicaFailOverStateStorage);
+        listener = new ReplicaBrokerEventListener(replicaBroker, queueProvider, acknowledgeCallback);
         listener.initialize();
     }
 
@@ -861,8 +861,8 @@ public class ReplicaBrokerEventListenerTest {
 
         listener.onMessage(replicaEventMessage);
 
-        verify(replicaFailOverStateStorage).updateBrokerState(any(), any(), eq(ReplicaRole.source.name()));
-        verify(actionListenerCallback).onFailOverAck();
+        verify(replicaBroker).updateBrokerState(eq(ReplicaRole.source));
+        verify(replicaBroker).completeBeforeRoleChange();
     }
 
     private Xid getDummyXid() {

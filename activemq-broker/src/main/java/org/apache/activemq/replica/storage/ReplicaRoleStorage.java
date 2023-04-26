@@ -21,21 +21,24 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.replica.ReplicaInternalMessageProducer;
 import org.apache.activemq.replica.ReplicaReplicationQueueSupplier;
+import org.apache.activemq.replica.ReplicaRole;
+import org.apache.activemq.util.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class ReplicaSequenceStorage extends ReplicaBaseSequenceStorage {
+public class ReplicaRoleStorage extends ReplicaBaseStorage {
 
-    private final Logger logger = LoggerFactory.getLogger(ReplicaSequenceStorage.class);
+    private final Logger logger = LoggerFactory.getLogger(ReplicaRoleStorage.class);
 
-    public ReplicaSequenceStorage(Broker broker, ReplicaReplicationQueueSupplier queueProvider,
-            ReplicaInternalMessageProducer replicaInternalMessageProducer, String sequenceName) {
-        super(broker, queueProvider, replicaInternalMessageProducer, sequenceName);
+    public ReplicaRoleStorage(Broker broker, ReplicaReplicationQueueSupplier queueProvider,
+            ReplicaInternalMessageProducer replicaInternalMessageProducer) {
+        super(broker, replicaInternalMessageProducer, queueProvider.getRoleQueue(),  "ReplicationPlugin.ReplicaFailOverStorage", null);
+        this.replicationProducerId.setConnectionId(new IdGenerator().generateId());
     }
 
-    public String initialize(ConnectionContext connectionContext) throws Exception {
+    public ReplicaRole initialize(ConnectionContext connectionContext) throws Exception {
         List<ActiveMQTextMessage> allMessages = super.initializeBase(connectionContext);
 
         if (allMessages.size() == 0) {
@@ -43,12 +46,12 @@ public class ReplicaSequenceStorage extends ReplicaBaseSequenceStorage {
         }
 
         if (allMessages.size() > 1) {
-            logger.error("Found more than one message during sequence storage initialization");
+            logger.error("Found more than one message during role storage initialization");
             for (int i = 0; i < allMessages.size() - 1; i++) {
                 queue.removeMessage(allMessages.get(i).getMessageId().toString());
             }
         }
 
-        return allMessages.get(0).getText();
+        return ReplicaRole.valueOf(allMessages.get(0).getText());
     }
 }

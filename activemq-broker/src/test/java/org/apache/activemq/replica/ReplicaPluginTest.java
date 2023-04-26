@@ -38,10 +38,10 @@ public class ReplicaPluginTest {
         Arrays.stream(ReplicaRole.values()).forEach(role -> {
 
             softly.assertThat(plugin.setRole(role)).isSameAs(plugin);
-            softly.assertThat(plugin.getRole()).isEqualTo(role);
+            softly.assertThat(plugin.role).isEqualTo(role);
 
             plugin.setRole(role.name());
-            softly.assertThat(plugin.getRole()).isEqualTo(role);
+            softly.assertThat(plugin.role).isEqualTo(role);
         });
         softly.assertAll();
     }

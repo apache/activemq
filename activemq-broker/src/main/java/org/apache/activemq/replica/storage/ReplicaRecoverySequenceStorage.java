@@ -48,7 +48,7 @@ public class ReplicaRecoverySequenceStorage extends ReplicaBaseSequenceStorage {
             MessageAck ack = new MessageAck();
             ack.setMessageID(new MessageId(messageId));
             ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
-            ack.setDestination(queueProvider.getSequenceQueue());
+            ack.setDestination(destination);
             ack.setTransactionId(tid);
             acknowledge(connectionContext, ack);
         }

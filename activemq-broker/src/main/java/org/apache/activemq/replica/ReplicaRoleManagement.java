@@ -16,24 +16,16 @@
  */
 package org.apache.activemq.replica;
 
-public enum ReplicaRole {
-    source,
-    replica,
-    await_ack(source),
-    ;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.TransactionId;
 
-    private final ReplicaRole externalRole;
+public interface ReplicaRoleManagement {
 
-    ReplicaRole() {
-        externalRole = this;
-    }
+    void updateBrokerState(ConnectionContext connectionContext, TransactionId tid, ReplicaRole role) throws Exception;
 
-    ReplicaRole(ReplicaRole role) {
-        externalRole = role;
-    }
+    void stopAllConnections();
 
-    public ReplicaRole getExternalRole() {
-        return externalRole;
-    }
+    void startAllConnections() throws Exception;
+
+    void onStopSuccess() throws Exception;
 }
-

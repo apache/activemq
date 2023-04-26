@@ -30,7 +30,6 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.LocalTransactionId;
-import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
@@ -115,11 +114,13 @@ public class ReplicaSequencer {
         this.replicaAckHelper = new ReplicaAckHelper(broker);
         this.replicaPolicy = replicaPolicy;
         this.replicaBatcher = new ReplicaBatcher(replicaPolicy);
-
-        scheduleExecutor();
     }
 
     void initialize() throws Exception {
+        if (initialized.get()) {
+            return;
+        }
+
         TaskRunnerFactory taskRunnerFactory = broker.getBrokerService().getTaskRunnerFactory();
         ackTaskRunner = taskRunnerFactory.createTaskRunner(this::iterateAck, "ReplicationPlugin.Sequencer.Ack");
         sendTaskRunner = taskRunnerFactory.createTaskRunner(this::iterateSend, "ReplicationPlugin.Sequencer.Send");
@@ -158,6 +159,10 @@ public class ReplicaSequencer {
         List<String> savedSequencesToRestore = restoreSequenceStorage.initialize(subscriptionConnectionContext);
         restoreSequence(savedSequences, savedSequencesToRestore);
 
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(this::asyncSendWakeup,
+                replicaPolicy.getSourceSendPeriod(), replicaPolicy.getSourceSendPeriod(), TimeUnit.MILLISECONDS);
+
         initialized.compareAndSet(false, true);
         asyncSendWakeup();
     }
@@ -195,18 +200,12 @@ public class ReplicaSequencer {
             restoreSequenceStorage.deinitialize(subscriptionConnectionContext);
         }
 
+        if (scheduler != null) {
+            scheduler.shutdownNow();
+        }
+
         initialized.compareAndSet(true, false);
 
-    }
-
-    void scheduleExecutor() {
-        scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(this::asyncSendWakeup,
-                replicaPolicy.getSourceSendPeriod(), replicaPolicy.getSourceSendPeriod(), TimeUnit.MILLISECONDS);
-    }
-
-    void terminateScheduledExecutor() {
-        scheduler.shutdownNow();
     }
 
     void restoreSequence(String savedSequence, List<String> savedSequencesToRestore) throws Exception {

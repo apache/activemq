@@ -40,7 +40,6 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -69,12 +68,10 @@ public class ReplicaSourceBrokerTest {
     private final Subscription subscription = mock(Subscription.class);
     private final URI transportConnectorUri = URI.create("tcp://0.0.0.0:61618?maximumConnections=1&amp;wireFormat.maxFrameSize=104857600");
     private final ReplicaSequencer replicaSequencer = mock(ReplicaSequencer.class);
-    private ReplicaFailOverStateStorage replicaFailOverStateStorage = mock(ReplicaFailOverStateStorage.class);
     private final ReplicaReplicationQueueSupplier queueProvider = new ReplicaReplicationQueueSupplier(broker);
     private ReplicaSourceBroker source;
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final TransportConnector transportConnector = mock(TransportConnector.class);
-    private final WebConsoleAccessController webConsoleAccessController = mock(WebConsoleAccessController.class);
 
     private final ActiveMQQueue testDestination = new ActiveMQQueue("TEST.QUEUE");
 
@@ -92,7 +89,7 @@ public class ReplicaSourceBrokerTest {
         ReplicationMessageProducer replicationMessageProducer = new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
         ReplicaPolicy replicaPolicy = new ReplicaPolicy();
         replicaPolicy.setTransportConnectorUri(transportConnectorUri);
-        source = new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer, queueProvider, replicaPolicy, replicaFailOverStateStorage, webConsoleAccessController);
+        source = new ReplicaSourceBroker(broker, null, replicationMessageProducer, replicaSequencer, queueProvider, replicaPolicy);
         when(brokerService.getBroker()).thenReturn(source);
 
         source.destinationsToReplicate.put(testDestination, IS_REPLICATED);
@@ -155,20 +152,12 @@ public class ReplicaSourceBrokerTest {
         source.send(producerExchange, message);
 
         ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
-        verify(broker, times(2)).send(any(), messageArgumentCaptor.capture());
+        verify(broker).send(any(), messageArgumentCaptor.capture());
 
         final List<ActiveMQMessage> values = messageArgumentCaptor.getAllValues();
 
         ActiveMQMessage originalMessage = values.get(0);
         assertThat(originalMessage).isEqualTo(message);
-
-        ActiveMQMessage replicaMessage = values.get(1);
-        assertThat(replicaMessage.getType()).isEqualTo("ReplicaEvent");
-        assertThat(replicaMessage.getDestination().getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
-        assertThat(replicaMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.MESSAGE_SEND.name());
-        assertThat(eventSerializer.deserializeMessageData(replicaMessage.getContent())).isEqualTo(message);
-
-        verifyConnectionContext(connectionContext);
     }
 
     @Test
