@@ -24,6 +24,8 @@ import org.apache.activemq.util.LongSequenceGenerator;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ReplicaSupport {
 
@@ -60,9 +62,14 @@ public class ReplicaSupport {
 
     public static final Set<String> DELETABLE_REPLICATION_DESTINATION_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
             INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME);
-    public static final Set<String> REPLICATION_DESTINATION_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
-            INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME, REPLICATION_ROLE_QUEUE_NAME,
-            REPLICATION_ROLE_ADVISORY_TOPIC_NAME);
+
+    public static final Set<String> REPLICATION_QUEUE_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
+            INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME, REPLICATION_ROLE_QUEUE_NAME);
+    public static final Set<String> REPLICATION_TOPIC_NAMES = Set.of(MAIN_REPLICATION_QUEUE_NAME,
+            INTERMEDIATE_REPLICATION_QUEUE_NAME, SEQUENCE_REPLICATION_QUEUE_NAME, REPLICATION_ROLE_QUEUE_NAME);
+
+    public static final Set<String> REPLICATION_DESTINATION_NAMES = Stream.concat(REPLICATION_QUEUE_NAMES.stream(),
+            REPLICATION_TOPIC_NAMES.stream()).collect(Collectors.toSet());
 
 
     public static boolean isReplicationDestination(ActiveMQDestination destination) {

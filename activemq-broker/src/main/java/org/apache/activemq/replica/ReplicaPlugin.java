@@ -24,7 +24,9 @@ import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.replica.jmx.ReplicationJmxHelper;
 import org.apache.activemq.replica.jmx.ReplicationView;
 import org.slf4j.Logger;
@@ -73,12 +75,13 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         }
         
         List<PolicyEntry> policyEntries = new ArrayList<>();
-        for (String queue : ReplicaSupport.REPLICATION_DESTINATION_NAMES) {
-            PolicyEntry newPolicy = new PolicyEntry();
+        for (String queue : ReplicaSupport.REPLICATION_QUEUE_NAMES) {
+            PolicyEntry newPolicy = getPolicyEntry(new ActiveMQQueue(queue));
             newPolicy.setMaxPageSize(ReplicaSupport.INTERMEDIATE_QUEUE_PREFETCH_SIZE);
-            newPolicy.setGcInactiveDestinations(false);
-            newPolicy.setDestination(new ActiveMQQueue(queue));
             policyEntries.add(newPolicy);
+        }
+        for (String topic : ReplicaSupport.REPLICATION_TOPIC_NAMES) {
+            policyEntries.add(getPolicyEntry(new ActiveMQTopic(topic)));
         }
         if (brokerService.getDestinationPolicy() == null) {
             brokerService.setDestinationPolicy(new PolicyMap());
@@ -119,6 +122,13 @@ public class ReplicaPlugin extends BrokerPluginSupport {
 
         return new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
                         queueProvider, replicaPolicy, replicaFailOverStateStorage, webConsoleAccessController);
+    }
+
+    private PolicyEntry getPolicyEntry(ActiveMQDestination destination) {
+        PolicyEntry newPolicy = new PolicyEntry();
+        newPolicy.setGcInactiveDestinations(false);
+        newPolicy.setDestination(destination);
+        return newPolicy;
     }
 
     public ReplicaPlugin setRole(ReplicaRole role) {
