@@ -21,6 +21,7 @@ import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -28,6 +29,10 @@ import org.apache.activemq.replica.ReplicaPlugin;
 import org.apache.activemq.replica.ReplicaRole;
 
 import javax.jms.ConnectionFactory;
+import javax.management.MBeanServer;
+import javax.management.MBeanServerInvocationHandler;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import javax.transaction.xa.Xid;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -38,8 +43,8 @@ public abstract class ReplicaPluginTestSupport extends AutoFailTestSupport {
     protected static final int LONG_TIMEOUT = 15000;
     protected static final int SHORT_TIMEOUT = 6000;
 
-    private static final String FIRST_KAHADB_DIRECTORY = "target/activemq-data/first/";
-    private static final String SECOND_KAHADB_DIRECTORY = "target/activemq-data/second/";
+    protected static final String FIRST_KAHADB_DIRECTORY = "target/activemq-data/first/";
+    protected static final String SECOND_KAHADB_DIRECTORY = "target/activemq-data/second/";
 
     protected String firstBindAddress = "vm://firstBroker";
     protected String firstReplicaBindAddress = "tcp://localhost:61610";
@@ -184,5 +189,23 @@ public abstract class ReplicaPluginTestSupport extends AutoFailTestSupport {
                 return bs;
             }
         };
+    }
+
+    protected QueueViewMBean getQueueView(BrokerService broker, String queueName) throws MalformedObjectNameException {
+        MBeanServer mbeanServer = broker.getManagementContext().getMBeanServer();
+        String objectNameStr = broker.getBrokerObjectName().toString();
+        objectNameStr += ",destinationType=Queue,destinationName="+queueName;
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(mbeanServer, objectNameStr);
+        return MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+    }
+
+    private ObjectName assertRegisteredObjectName(MBeanServer mbeanServer, String name) throws MalformedObjectNameException, NullPointerException {
+        ObjectName objectName = new ObjectName(name);
+        if (mbeanServer.isRegistered(objectName)) {
+            System.out.println("Bean Registered: " + objectName);
+        } else {
+            fail("Could not find MBean!: " + objectName);
+        }
+        return objectName;
     }
 }
