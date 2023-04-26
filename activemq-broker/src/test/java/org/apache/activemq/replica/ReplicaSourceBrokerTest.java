@@ -84,6 +84,7 @@ public class ReplicaSourceBrokerTest {
         when(connectionContext.getConnector()).thenReturn(transportConnector);
         when(transportConnector.getName()).thenReturn("test");
         when(connectionContext.getClientId()).thenReturn("clientId");
+        when(connectionContext.copy()).thenReturn(mock(ConnectionContext.class));
 
         ReplicaInternalMessageProducer replicaInternalMessageProducer = new ReplicaInternalMessageProducer(broker);
         ReplicationMessageProducer replicationMessageProducer = new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);

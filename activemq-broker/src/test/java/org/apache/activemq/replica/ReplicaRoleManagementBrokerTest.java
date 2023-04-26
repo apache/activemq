@@ -3,8 +3,6 @@ package org.apache.activemq.replica;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
-import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationInterceptor;
@@ -15,9 +13,6 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.net.URI;
 import java.util.List;
@@ -93,14 +88,6 @@ public class ReplicaRoleManagementBrokerTest {
         message.setText(ReplicaRole.await_ack.name());
         when(subscription.getDispatched()).thenReturn(List.of(message));
 
-        verify(((MutativeRoleBroker) sourceBroker)).stopBeforeRoleChange(false);
-        verify(sourceBroker).start();
-        verify(replicaBroker, never()).start();
-    }
-
-    @Test
-    public void startAsSourceWhenBrokerFailOverStateIsAckReceived() throws Exception {
-        when(replicaFailOverStateStorage.getBrokerState()).thenReturn(ReplicaRole.source);
         replicaRoleManagementBroker.start();
 
         verify(sourceBroker).start(any());
@@ -121,10 +108,11 @@ public class ReplicaRoleManagementBrokerTest {
 
     @Test
     public void switchToSourceWhenHardFailOverInvoked() throws Exception {
-        when(sourceBroker.isStopped()).thenReturn(true);
+        replicaRoleManagementBroker.start();
+
         replicaRoleManagementBroker.switchRole(ReplicaRole.source, true);
 
-        verify((MutativeRoleBroker) replicaBroker).stopBeforeRoleChange(true);
+        verify(replicaBroker).stopBeforeRoleChange(true);
     }
 
     @Test
@@ -137,7 +125,7 @@ public class ReplicaRoleManagementBrokerTest {
 
         replicaRoleManagementBroker.switchRole(ReplicaRole.replica, true);
 
-        verify((MutativeRoleBroker) sourceBroker).stopBeforeRoleChange(true);
+        verify(sourceBroker).stopBeforeRoleChange(true);
     }
 
     @Test
@@ -150,7 +138,7 @@ public class ReplicaRoleManagementBrokerTest {
 
         replicaRoleManagementBroker.switchRole(ReplicaRole.replica, false);
 
-        verify((MutativeRoleBroker) sourceBroker).stopBeforeRoleChange(false);
+        verify(sourceBroker).stopBeforeRoleChange(false);
     }
 
     @Test
@@ -211,15 +199,6 @@ public class ReplicaRoleManagementBrokerTest {
 
         replicaRoleManagementBroker.onStopSuccess();
 
-        verify((MutativeRoleBroker) replicaBroker).startAfterRoleChange();
-    }
-
-    @Test
-    public void switchToSourceWhenSoftFailOverInvoked() throws Exception {
-        when(sourceBroker.isStopped()).thenReturn(false);
-        replicaRoleManagementBroker.onFailOverAck();
-
-        verify((MutativeRoleBroker) replicaBroker).stopBeforeRoleChange(true);
-        verify((MutativeRoleBroker) sourceBroker).startAfterRoleChange();
+        verify(replicaBroker).startAfterRoleChange();
     }
 }

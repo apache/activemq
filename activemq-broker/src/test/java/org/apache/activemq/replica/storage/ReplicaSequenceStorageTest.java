@@ -45,14 +45,12 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.matches;
-import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.reset;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ReplicaSequenceStorageTest {
@@ -142,8 +140,10 @@ public class ReplicaSequenceStorageTest {
 
         QueueMessageReference messageReference1 = mock(QueueMessageReference.class);
         when(messageReference1.getMessage()).thenReturn(message1);
+        when(messageReference1.getMessageId()).thenReturn(message1.getMessageId());
         QueueMessageReference messageReference2 = mock(QueueMessageReference.class);
         when(messageReference2.getMessage()).thenReturn(message2);
+        when(messageReference2.getMessageId()).thenReturn(message2.getMessageId());
 
         when(subscription.getDispatched()).thenReturn(List.of(messageReference1, messageReference2));
         replicaSequenceStorage.initialize(connectionContext);
@@ -154,15 +154,13 @@ public class ReplicaSequenceStorageTest {
         TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
 
         replicaSequenceStorage.enqueue(connectionContext, transactionId, messageToEnqueue);
-        verify(broker, times(2)).acknowledge(any(), ackArgumentCaptor.capture());
-        assertThat(ackArgumentCaptor.getAllValues().get(0).getLastMessageId()).isEqualTo(message1.getMessageId());
-        assertThat(ackArgumentCaptor.getAllValues().get(1).getLastMessageId()).isEqualTo(message2.getMessageId());
-        assertThat(ackArgumentCaptor.getAllValues().get(0).getDestination()).isEqualTo(sequenceQueueDestination);
-        assertThat(ackArgumentCaptor.getAllValues().get(1).getDestination()).isEqualTo(sequenceQueueDestination);
-        assertThat(ackArgumentCaptor.getAllValues().get(0).getMessageCount()).isEqualTo(1);
-        assertThat(ackArgumentCaptor.getAllValues().get(1).getMessageCount()).isEqualTo(1);
-        assertThat(ackArgumentCaptor.getAllValues().get(0).getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
-        assertThat(ackArgumentCaptor.getAllValues().get(1).getAckType()).isEqualTo(MessageAck.INDIVIDUAL_ACK_TYPE);
+        verify(broker).acknowledge(any(), ackArgumentCaptor.capture());
+        MessageAck value = ackArgumentCaptor.getValue();
+        assertThat(value.getFirstMessageId()).isEqualTo(message1.getMessageId());
+        assertThat(value.getLastMessageId()).isEqualTo(message2.getMessageId());
+        assertThat(value.getDestination()).isEqualTo(sequenceQueueDestination);
+        assertThat(value.getMessageCount()).isEqualTo(2);
+        assertThat(value.getAckType()).isEqualTo(MessageAck.STANDARD_ACK_TYPE);
 
     }
 }
