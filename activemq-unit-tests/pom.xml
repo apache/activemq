@@ -296,6 +296,12 @@
       <artifactId>mockito-inline</artifactId>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>org.eclipse.paho</groupId>
+          <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+          <version>1.2.1</version>
+          <scope>test</scope>
+      </dependency>
   </dependencies>
 
   <reporting>
