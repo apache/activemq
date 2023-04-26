@@ -34,7 +34,7 @@ public class ReplicaEventSerializer {
 
     private final WireFormat wireFormat = new OpenWireFormatFactory().createWireFormat();
 
-    byte[] serializeReplicationData(DataStructure object) throws IOException {
+    public byte[] serializeReplicationData(DataStructure object) throws IOException {
         try {
             ByteSequence packet = wireFormat.marshal(object);
             return ByteSequenceData.toByteArray(packet);
@@ -43,7 +43,7 @@ public class ReplicaEventSerializer {
         }
     }
 
-    byte[] serializeMessageData(Message message) throws IOException {
+    public byte[] serializeMessageData(Message message) throws IOException {
         try {
             ByteSequence packet = wireFormat.marshal(message);
             return ByteSequenceData.toByteArray(packet);

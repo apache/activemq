@@ -17,6 +17,7 @@
 package org.apache.activemq.replica;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerStoppedException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
@@ -121,7 +122,8 @@ public class ReplicaSequencer {
             return;
         }
 
-        TaskRunnerFactory taskRunnerFactory = broker.getBrokerService().getTaskRunnerFactory();
+        BrokerService brokerService = broker.getBrokerService();
+        TaskRunnerFactory taskRunnerFactory = brokerService.getTaskRunnerFactory();
         ackTaskRunner = taskRunnerFactory.createTaskRunner(this::iterateAck, "ReplicationPlugin.Sequencer.Ack");
         sendTaskRunner = taskRunnerFactory.createTaskRunner(this::iterateSend, "ReplicationPlugin.Sequencer.Send");
 

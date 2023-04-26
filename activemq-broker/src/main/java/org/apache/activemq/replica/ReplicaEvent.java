@@ -37,12 +37,12 @@ public class ReplicaEvent {
         return this;
     }
 
-    ReplicaEvent setEventType(final ReplicaEventType eventType) {
+    public ReplicaEvent setEventType(final ReplicaEventType eventType) {
         this.eventType = requireNonNull(eventType);
         return this;
     }
 
-    ReplicaEvent setEventData(final byte[] eventData) {
+    public ReplicaEvent setEventData(final byte[] eventData) {
         this.eventData = requireNonNull(eventData);
         return this;
     }
@@ -61,11 +61,11 @@ public class ReplicaEvent {
         return transactionId;
     }
 
-    ByteSequence getEventData() {
+    public ByteSequence getEventData() {
         return new ByteSequence(eventData);
     }
 
-    ReplicaEventType getEventType() {
+    public ReplicaEventType getEventType() {
         return eventType;
     }
 

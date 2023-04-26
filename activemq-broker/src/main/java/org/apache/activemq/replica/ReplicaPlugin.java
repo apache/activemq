@@ -103,32 +103,6 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         return new ReplicaAuthorizationBroker(replicaRoleManagementBroker);
     }
 
-    private void addInterceptor4CompositeQueues(final Broker broker, final Broker sourceBroker, final ReplicaRoleManagementBroker roleManagementBroker) {
-        final RegionBroker regionBroker = (RegionBroker) broker.getAdaptor(RegionBroker.class);
-        final CompositeDestinationInterceptor compositeInterceptor = (CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor();
-        DestinationInterceptor[] interceptors = compositeInterceptor.getInterceptors();
-        interceptors = Arrays.copyOf(interceptors, interceptors.length + 1);
-        interceptors[interceptors.length - 1] = new ReplicaDestinationInterceptor((ReplicaSourceBroker)sourceBroker, roleManagementBroker);
-        compositeInterceptor.setInterceptors(interceptors);
-    }
-
-    private MutativeRoleBroker buildReplicaBroker(Broker broker, ReplicaFailOverStateStorage replicaFailOverStateStorage, WebConsoleAccessController webConsoleAccessController) {
-        return new ReplicaBroker(broker, queueProvider, replicaPolicy, replicaFailOverStateStorage, webConsoleAccessController);
-    }
-
-    private MutativeRoleBroker buildSourceBroker(Broker broker, ReplicaFailOverStateStorage replicaFailOverStateStorage, WebConsoleAccessController webConsoleAccessController) {
-        ReplicaInternalMessageProducer replicaInternalMessageProducer =
-                new ReplicaInternalMessageProducer(broker);
-        ReplicationMessageProducer replicationMessageProducer =
-                new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
-
-        ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer,
-                replicationMessageProducer, replicaPolicy);
-
-        return new ReplicaSourceBroker(broker, replicationMessageProducer, replicaSequencer,
-                        queueProvider, replicaPolicy, replicaFailOverStateStorage, webConsoleAccessController);
-    }
-
     private PolicyEntry getPolicyEntry(ActiveMQDestination destination) {
         PolicyEntry newPolicy = new PolicyEntry();
         newPolicy.setGcInactiveDestinations(false);
