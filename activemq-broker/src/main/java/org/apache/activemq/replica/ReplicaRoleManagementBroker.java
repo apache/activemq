@@ -114,11 +114,14 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         getNextByRole().brokerServiceStarted(role);
     }
 
-    public void switchRole(ReplicaRole role, boolean force) throws Exception {
+    public synchronized void switchRole(ReplicaRole role, boolean force) throws Exception {
         if (role != ReplicaRole.source && role != ReplicaRole.replica) {
             return;
         }
-        if (this.role.getExternalRole() == role) {
+        if (!force && this.role != ReplicaRole.source && this.role != ReplicaRole.replica) {
+            return;
+        }
+        if (this.role == role) {
             return;
         }
         getNextByRole().stopBeforeRoleChange(force);
@@ -134,7 +137,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         return broker;
     }
 
-    public void updateBrokerState(ConnectionContext connectionContext, TransactionId tid, ReplicaRole role) throws Exception {
+    public synchronized void updateBrokerState(ConnectionContext connectionContext, TransactionId tid, ReplicaRole role) throws Exception {
         replicaRoleStorage.enqueue(connectionContext, tid, role.name());
         this.role = role;
     }
