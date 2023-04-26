@@ -41,6 +41,7 @@ public class ReplicaPluginFunctionsTest extends ReplicaPluginTestSupport {
     protected ReplicaReplicationQueueSupplier replicationQueueSupplier;
     static final int MAX_BATCH_LENGTH = 500;
     static final int MAX_BATCH_SIZE = 5_000_000; // 5 Mb
+    static final int CONSUMER_PREFETCH_LIMIT = 10_000;
 
     @Override
     protected void setUp() throws Exception {
@@ -138,6 +139,50 @@ public class ReplicaPluginFunctionsTest extends ReplicaPluginTestSupport {
 
         firstBrokerSession.close();
         secondBrokerSession.close();
+    }
+
+    @Test
+    public void testSendMessageOverPrefetchLimit() throws Exception {
+        Session firstBrokerSession = firstBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
+
+        ActiveMQTextMessage message  = new ActiveMQTextMessage();
+        message.setText(getName() + " No. 0");
+        firstBrokerProducer.send(message);
+
+        Thread.sleep(LONG_TIMEOUT);
+
+        QueueViewMBean firstBrokerMainQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+        assertEquals(firstBrokerMainQueueView.getDequeueCount(), 1);
+
+        secondBrokerConnection.close();
+        secondBrokerXAConnection.close();
+        secondBroker.stop();
+        secondBroker.waitUntilStopped();
+
+        for (int i = 1; i < CONSUMER_PREFETCH_LIMIT + 50; i++) {
+            message  = new ActiveMQTextMessage();
+            message.setText(getName() + " No. " + i);
+            firstBrokerProducer.send(message);
+        }
+
+        Thread.sleep(LONG_TIMEOUT);
+
+        secondBroker = createSecondBroker();
+        secondBroker.setPersistent(false);
+        startSecondBroker();
+        secondBroker.waitUntilStarted();
+        secondBrokerConnection = secondBrokerConnectionFactory.createConnection();
+        secondBrokerConnection.start();
+        secondBrokerXAConnection = secondBrokerXAConnectionFactory.createXAConnection();
+        secondBrokerXAConnection.start();
+
+        Thread.sleep(LONG_TIMEOUT);
+        QueueViewMBean secondBrokerSequenceQueueView = getQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+        assertEquals(secondBrokerSequenceQueueView.browseMessages().size(), 1);
+        TextMessage sequenceQueueMessage = (TextMessage) secondBrokerSequenceQueueView.browseMessages().get(0);
+        String[] textMessageSequence = sequenceQueueMessage.getText().split("#");
+        assertEquals(Integer.parseInt(textMessageSequence[0]), CONSUMER_PREFETCH_LIMIT + 51);
     }
 
 }
