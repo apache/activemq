@@ -50,6 +50,7 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
     protected Connection secondBrokerConnection;
 
     protected XAConnection firstBrokerXAConnection;
+    protected XAConnection secondBrokerXAConnection;
 
     @Override
     protected void setUp() throws Exception {
@@ -62,6 +63,9 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
 
         firstBrokerXAConnection = firstBrokerXAConnectionFactory.createXAConnection();
         firstBrokerXAConnection.start();
+
+        secondBrokerXAConnection = secondBrokerXAConnectionFactory.createXAConnection();
+        secondBrokerXAConnection.start();
     }
 
     @Override
@@ -78,6 +82,10 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
         if (firstBrokerXAConnection != null) {
             firstBrokerXAConnection.close();
             firstBrokerXAConnection = null;
+        }
+        if (secondBrokerXAConnection != null) {
+            secondBrokerXAConnection.close();
+            secondBrokerXAConnection = null;
         }
 
         super.tearDown();
@@ -126,42 +134,6 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
         assertEquals(getName(), ((TextMessage) receivedMessage).getText());
 
         receivedMessage.acknowledge();
-
-        Thread.sleep(LONG_TIMEOUT);
-
-        secondBrokerSession.close();
-        secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
-
-        receivedMessage = secondBrokerConsumer.receive(SHORT_TIMEOUT);
-        assertNull(receivedMessage);
-
-        firstBrokerSession.close();
-        secondBrokerSession.close();
-    }
-
-    public void testPurge() throws Exception {
-        Session firstBrokerSession = firstBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
-
-        Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        MessageConsumer secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
-
-        ActiveMQTextMessage message  = new ActiveMQTextMessage();
-        message.setText(getName());
-        firstBrokerProducer.send(message);
-
-        Message receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
-        assertNotNull(receivedMessage);
-        assertTrue(receivedMessage instanceof TextMessage);
-        assertEquals(getName(), ((TextMessage) receivedMessage).getText());
-
-        MBeanServer mbeanServer = firstBroker.getManagementContext().getMBeanServer();
-        String objectNameStr = firstBroker.getBrokerObjectName().toString();
-        objectNameStr += ",destinationType=Queue,destinationName="+getDestinationString();
-        ObjectName queueViewMBeanName = assertRegisteredObjectName(mbeanServer, objectNameStr);
-        QueueViewMBean proxy = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
-        proxy.purge();
 
         Thread.sleep(LONG_TIMEOUT);
 
@@ -259,6 +231,44 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
         secondBrokerSession.close();
     }
 
+    public void testSendMessageXATransactionCommitOnReplica() throws Exception {
+        XASession firstBrokerSession = firstBrokerXAConnection.createXASession();
+        MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
+
+        XASession secondBrokerXaSession = secondBrokerXAConnection.createXASession();
+        Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
+
+        XAResource xaRes = firstBrokerSession.getXAResource();
+        Xid xid = createXid();
+        xaRes.start(xid, XAResource.TMNOFLAGS);
+
+        TextMessage message  = firstBrokerSession.createTextMessage(getName());
+        firstBrokerProducer.send(message);
+
+        xaRes.end(xid, XAResource.TMSUCCESS);
+
+        Message receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNull(receivedMessage);
+
+        xaRes.prepare(xid);
+
+        receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNull(receivedMessage);
+
+        xaRes = secondBrokerXaSession.getXAResource();
+        xaRes.commit(xid, false);
+
+        receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNotNull(receivedMessage);
+        assertTrue(receivedMessage instanceof TextMessage);
+        assertEquals(getName(), ((TextMessage) receivedMessage).getText());
+
+        firstBrokerSession.close();
+        secondBrokerXaSession.close();
+        secondBrokerSession.close();
+    }
+
     public void testSendMessageXATransactionRollback() throws Exception {
         XASession firstBrokerSession = firstBrokerXAConnection.createXASession();
         MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
@@ -292,31 +302,37 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
         secondBrokerSession.close();
     }
 
-    public void testSendMessageVirtualTopic() throws Exception {
+    public void testPurge() throws Exception {
         Session firstBrokerSession = firstBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        Topic virtualTopic = new ActiveMQTopic("VirtualTopic." + getDestinationString());
-        MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(virtualTopic);
-
-        Queue queueOne = new ActiveMQQueue("Consumer.One." + virtualTopic.getTopicName());
-        Queue queueTwo = new ActiveMQQueue("Consumer.Two." + virtualTopic.getTopicName());
+        MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
 
         Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        MessageConsumer secondBrokerConsumerOne = secondBrokerSession.createConsumer(queueOne);
-        MessageConsumer secondBrokerConsumerTwo = secondBrokerSession.createConsumer(queueTwo);
+        MessageConsumer secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
 
         ActiveMQTextMessage message  = new ActiveMQTextMessage();
         message.setText(getName());
         firstBrokerProducer.send(message);
 
-        Message receivedMessage = secondBrokerConsumerOne.receive(LONG_TIMEOUT);
+        Message receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
         assertNotNull(receivedMessage);
         assertTrue(receivedMessage instanceof TextMessage);
         assertEquals(getName(), ((TextMessage) receivedMessage).getText());
 
-        receivedMessage = secondBrokerConsumerTwo.receive(LONG_TIMEOUT);
-        assertNotNull(receivedMessage);
-        assertTrue(receivedMessage instanceof TextMessage);
-        assertEquals(getName(), ((TextMessage) receivedMessage).getText());
+        MBeanServer mbeanServer = firstBroker.getManagementContext().getMBeanServer();
+        String objectNameStr = firstBroker.getBrokerObjectName().toString();
+        objectNameStr += ",destinationType=Queue,destinationName="+getDestinationString();
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(mbeanServer, objectNameStr);
+        QueueViewMBean proxy = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        proxy.purge();
+
+        Thread.sleep(LONG_TIMEOUT);
+
+        secondBrokerSession.close();
+        secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        secondBrokerConsumer = secondBrokerSession.createConsumer(destination);
+
+        receivedMessage = secondBrokerConsumer.receive(SHORT_TIMEOUT);
+        assertNull(receivedMessage);
 
         firstBrokerSession.close();
         secondBrokerSession.close();
@@ -347,6 +363,36 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
 
         receivedMessage = secondBrokerConsumer.receive(SHORT_TIMEOUT);
         assertNull(receivedMessage);
+
+        firstBrokerSession.close();
+        secondBrokerSession.close();
+    }
+
+    public void testSendMessageVirtualTopic() throws Exception {
+        Session firstBrokerSession = firstBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        Topic virtualTopic = new ActiveMQTopic("VirtualTopic." + getDestinationString());
+        MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(virtualTopic);
+
+        Queue queueOne = new ActiveMQQueue("Consumer.One." + virtualTopic.getTopicName());
+        Queue queueTwo = new ActiveMQQueue("Consumer.Two." + virtualTopic.getTopicName());
+
+        Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer secondBrokerConsumerOne = secondBrokerSession.createConsumer(queueOne);
+        MessageConsumer secondBrokerConsumerTwo = secondBrokerSession.createConsumer(queueTwo);
+
+        ActiveMQTextMessage message  = new ActiveMQTextMessage();
+        message.setText(getName());
+        firstBrokerProducer.send(message);
+
+        Message receivedMessage = secondBrokerConsumerOne.receive(LONG_TIMEOUT);
+        assertNotNull(receivedMessage);
+        assertTrue(receivedMessage instanceof TextMessage);
+        assertEquals(getName(), ((TextMessage) receivedMessage).getText());
+
+        receivedMessage = secondBrokerConsumerTwo.receive(LONG_TIMEOUT);
+        assertNotNull(receivedMessage);
+        assertTrue(receivedMessage instanceof TextMessage);
+        assertEquals(getName(), ((TextMessage) receivedMessage).getText());
 
         firstBrokerSession.close();
         secondBrokerSession.close();
@@ -440,9 +486,9 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
 
         assertEquals(secondBrokerMBean.getQueues().length, 2);
         assertEquals(Arrays.stream(secondBrokerMBean.getQueues())
-                .map(ObjectName::toString)
-                .filter(name -> name.contains(destination.getPhysicalName()))
-                .count(), 0);
+            .map(ObjectName::toString)
+            .filter(name -> name.contains(destination.getPhysicalName()))
+            .count(), 0);
 
         firstBrokerSession.close();
     }
@@ -490,13 +536,4 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
         firstBrokerSession.close();
     }
 
-    private ObjectName assertRegisteredObjectName(MBeanServer mbeanServer, String name) throws MalformedObjectNameException, NullPointerException {
-        ObjectName objectName = new ObjectName(name);
-        if (mbeanServer.isRegistered(objectName)) {
-            System.out.println("Bean Registered: " + objectName);
-        } else {
-            fail("Could not find MBean!: " + objectName);
-        }
-        return objectName;
-    }
 }
