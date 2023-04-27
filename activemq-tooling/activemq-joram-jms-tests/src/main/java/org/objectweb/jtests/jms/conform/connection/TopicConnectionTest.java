@@ -1,21 +1,24 @@
-/*
- * Copyright 2009 Red Hat, Inc.
- * Red Hat licenses this file to you under the Apache License, version
- * 2.0 (the "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *    http://www.apache.org/licenses/LICENSE-2.0
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied.  See the License for the specific language governing
- * permissions and limitations under the License.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.objectweb.jtests.jms.conform.connection;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -56,18 +59,18 @@ public class TopicConnectionTest extends PubSubTestCase
 
          // a attempt to set a client ID should now throw an IllegalStateException
          subscriberConnection.setClientID("another client ID");
-         Assert.fail("Should raise a javax.jms.IllegalStateException");
+         Assert.fail("Should raise a jakarta.jms.IllegalStateException");
       }
-      catch (javax.jms.IllegalStateException e)
+      catch (jakarta.jms.IllegalStateException e)
       {
       }
       catch (JMSException e)
       {
-         Assert.fail("Should raise a javax.jms.IllegalStateException, not a " + e);
+         Assert.fail("Should raise a jakarta.jms.IllegalStateException, not a " + e);
       }
       catch (java.lang.IllegalStateException e)
       {
-         Assert.fail("Should raise a javax.jms.IllegalStateException, not a java.lang.IllegalStateException");
+         Assert.fail("Should raise a jakarta.jms.IllegalStateException, not a java.lang.IllegalStateException");
       }
    }
 
@@ -98,18 +101,18 @@ public class TopicConnectionTest extends PubSubTestCase
 
          // an attempt to set the client ID now should throw a IllegalStateException
          subscriberConnection.setClientID("testSetClientID_2");
-         Assert.fail("Should throw a javax.jms.IllegalStateException");
+         Assert.fail("Should throw a jakarta.jms.IllegalStateException");
       }
-      catch (javax.jms.IllegalStateException e)
+      catch (jakarta.jms.IllegalStateException e)
       {
       }
       catch (JMSException e)
       {
-         Assert.fail("Should raise a javax.jms.IllegalStateException, not a " + e);
+         Assert.fail("Should raise a jakarta.jms.IllegalStateException, not a " + e);
       }
       catch (java.lang.IllegalStateException e)
       {
-         Assert.fail("Should raise a javax.jms.IllegalStateException, not a java.lang.IllegalStateException");
+         Assert.fail("Should raise a jakarta.jms.IllegalStateException, not a java.lang.IllegalStateException");
       }
    }
 
@@ -145,7 +148,7 @@ public class TopicConnectionTest extends PubSubTestCase
          TopicConnection connection_2 = subscriberTCF.createTopicConnection();
          assertTrue(connection_2.getClientID() == null);
          connection_2.setClientID("testSetClientID_3");
-         fail("Should throw a javax.jms.InvalidClientIDException");
+         fail("Should throw a jakarta.jms.InvalidClientIDException");
       }
       catch (InvalidClientIDException e)
       {

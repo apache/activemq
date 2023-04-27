@@ -1,34 +1,37 @@
-/*
- * Copyright 2009 Red Hat, Inc.
- * Red Hat licenses this file to you under the Apache License, version
- * 2.0 (the "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *    http://www.apache.org/licenses/LICENSE-2.0
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied.  See the License for the specific language governing
- * permissions and limitations under the License.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.objectweb.jtests.jms.conform.message.properties;
 
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageFormatException;
-import javax.jms.TextMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageFormatException;
+import jakarta.jms.TextMessage;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.objectweb.jtests.jms.framework.PTPTestCase;
 
 /**
- * Test the <code>javax.jms.Message</code> properties.
+ * Test the <code>jakarta.jms.Message</code> properties.
  * <br />
  *  See JMS Specification, sec. 3.5 Message Properties (p.32-37)
  *
@@ -41,7 +44,7 @@ public class MessagePropertyTest extends PTPTestCase
    /**
     * Test that any other class than <code>Boolean, Byte, Short, Integer, Long,
     * Float, Double</code> and <code>String</code> used in the <code>Message.setObjectProperty()</code>
-    * method throws a <code>javax.jms.MessageFormatException</code>.
+    * method throws a <code>jakarta.jms.MessageFormatException</code>.
     */
    public void testSetObjectProperty_2()
    {
@@ -56,7 +59,7 @@ public class MessagePropertyTest extends PTPTestCase
       }
       catch (JMSException e)
       {
-         Assert.fail("Should throw a javax.jms.MessageFormatException, not a " + e);
+         Assert.fail("Should throw a jakarta.jms.MessageFormatException, not a " + e);
       }
    }
 
@@ -69,7 +72,7 @@ public class MessagePropertyTest extends PTPTestCase
       try
       {
          Message message = senderSession.createMessage();
-         message.setObjectProperty("pi", new Float(3.14159f));
+         message.setObjectProperty("pi", Float.valueOf(3.14159f));
          Assert.assertEquals(3.14159f, message.getFloatProperty("pi"), 0);
       }
       catch (JMSException e)
