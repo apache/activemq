@@ -59,7 +59,6 @@ public class ReplicaNetworkConnectorTest extends ReplicaPluginTestSupport {
     protected static final String SECONDBROKER2_KAHADB_DIRECTORY = "target/activemq-data/secondBroker2/";
     protected String firstBroker2URI = "vm://firstBroker2";
     protected String secondBroker2URI = "vm://secondBroker2";
-    protected String secondReplicaBindAddress = "tcp://localhost:61611";
 
 
     @Override

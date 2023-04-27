@@ -40,7 +40,6 @@ public class ReplicaHardFailoverTest extends ReplicaPluginTestSupport {
     protected Connection secondBrokerConnection;
     private ReplicationViewMBean firstBrokerReplicationView;
     private ReplicationViewMBean secondBrokerReplicationView;
-    protected static String SECOND_REPLICA_BINDING_ADDRESS = "tcp://localhost:61611";
 
     @Override
     protected void setUp() throws Exception {
@@ -50,13 +49,13 @@ public class ReplicaHardFailoverTest extends ReplicaPluginTestSupport {
         ReplicaPlugin firstBrokerPlugin = new ReplicaPlugin();
         firstBrokerPlugin.setRole(ReplicaRole.source);
         firstBrokerPlugin.setTransportConnectorUri(firstReplicaBindAddress);
-        firstBrokerPlugin.setOtherBrokerUri(SECOND_REPLICA_BINDING_ADDRESS);
+        firstBrokerPlugin.setOtherBrokerUri(secondReplicaBindAddress);
         firstBrokerPlugin.setControlWebConsoleAccess(false);
         firstBroker.setPlugins(new BrokerPlugin[]{firstBrokerPlugin});
 
         ReplicaPlugin secondBrokerPlugin = new ReplicaPlugin();
         secondBrokerPlugin.setRole(ReplicaRole.replica);
-        secondBrokerPlugin.setTransportConnectorUri(SECOND_REPLICA_BINDING_ADDRESS);
+        secondBrokerPlugin.setTransportConnectorUri(secondReplicaBindAddress);
         secondBrokerPlugin.setOtherBrokerUri(firstReplicaBindAddress);
         secondBrokerPlugin.setControlWebConsoleAccess(false);
         secondBroker.setPlugins(new BrokerPlugin[]{secondBrokerPlugin});

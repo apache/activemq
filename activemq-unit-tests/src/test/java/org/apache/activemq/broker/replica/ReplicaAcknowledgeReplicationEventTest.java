@@ -30,14 +30,11 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.replica.ReplicaBroker;
 import org.apache.activemq.replica.ReplicaPlugin;
 import org.apache.activemq.replica.ReplicaPolicy;
-import org.apache.activemq.replica.ReplicaReplicationQueueSupplier;
 import org.apache.activemq.replica.ReplicaRole;
+import org.apache.activemq.replica.ReplicaRoleManagementBroker;
 import org.apache.activemq.replica.ReplicaSupport;
-import org.apache.activemq.replica.WebConsoleAccessController;
-import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,8 +58,6 @@ import static org.mockito.Mockito.spy;
 public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSupport {
     static final int MAX_BATCH_LENGTH = 500;
 
-    private ReplicaFailOverStateStorage replicaFailOverStateStorage = mock(ReplicaFailOverStateStorage.class);
-    private ReplicaReplicationQueueSupplier testQueueProvider;
     protected Connection firstBrokerConnection;
 
     ActiveMQConnectionFactory mockConnectionFactorySpy;
@@ -250,11 +245,11 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
         ReplicaPlugin replicaPlugin = new ReplicaPlugin() {
             @Override
             public Broker installPlugin(final Broker broker) {
-                testQueueProvider = new ReplicaReplicationQueueSupplier(broker);
-                return new ReplicaBroker(broker, testQueueProvider, mockReplicaPolicy, replicaFailOverStateStorage, new WebConsoleAccessController(broker.getBrokerService(), false));
+                return new ReplicaRoleManagementBroker(broker, replicaPolicy, ReplicaRole.replica);
             }
         };
         replicaPlugin.setRole(ReplicaRole.replica);
+        replicaPlugin.setTransportConnectorUri(secondReplicaBindAddress);
         replicaPlugin.setOtherBrokerUri(firstReplicaBindAddress);
         replicaPlugin.setControlWebConsoleAccess(false);
 

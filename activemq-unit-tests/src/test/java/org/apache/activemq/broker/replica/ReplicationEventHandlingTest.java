@@ -29,17 +29,14 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.replica.ReplicaBroker;
 import org.apache.activemq.replica.ReplicaEvent;
 import org.apache.activemq.replica.ReplicaEventSerializer;
 import org.apache.activemq.replica.ReplicaEventType;
 import org.apache.activemq.replica.ReplicaPlugin;
 import org.apache.activemq.replica.ReplicaPolicy;
-import org.apache.activemq.replica.ReplicaReplicationQueueSupplier;
 import org.apache.activemq.replica.ReplicaRole;
+import org.apache.activemq.replica.ReplicaRoleManagementBroker;
 import org.apache.activemq.replica.ReplicaSupport;
-import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
-import org.apache.activemq.replica.WebConsoleAccessController;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,9 +59,7 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
 
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final ActiveMQQueue sequenceQueue = new ActiveMQQueue(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
-    private ReplicaFailOverStateStorage replicaFailOverStateStorage = mock(ReplicaFailOverStateStorage.class);
     private Broker nextBrokerSpy;
-    private ReplicaReplicationQueueSupplier testQueueProvider;
     private ActiveMQQueue mockMainQueue;
     private TransportConnector replicationConnector;
     protected Connection firstBrokerConnection;
@@ -257,12 +252,11 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
             @Override
             public Broker installPlugin(final Broker broker) {
                 nextBrokerSpy = spy(broker);
-                testQueueProvider = new ReplicaReplicationQueueSupplier(broker);
-                return new ReplicaBroker(nextBrokerSpy, testQueueProvider, mockReplicaPolicy, replicaFailOverStateStorage,
-                        new WebConsoleAccessController(broker.getBrokerService(), false));
+                return new ReplicaRoleManagementBroker(nextBrokerSpy, replicaPolicy, ReplicaRole.replica);
             }
         };
         replicaPlugin.setRole(ReplicaRole.replica);
+        replicaPlugin.setTransportConnectorUri(secondReplicaBindAddress);
         replicaPlugin.setOtherBrokerUri(firstReplicaBindAddress);
         replicaPlugin.setControlWebConsoleAccess(false);
 
