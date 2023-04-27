@@ -38,7 +38,6 @@ import javax.jms.XAConnection;
 import javax.jms.XASession;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -427,7 +426,7 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
         MBeanServer secondBrokerMbeanServer = secondBroker.getManagementContext().getMBeanServer();
         ObjectName secondBrokerViewMBeanName = assertRegisteredObjectName(secondBrokerMbeanServer, secondBroker.getBrokerObjectName().toString());
         BrokerViewMBean secondBrokerMBean = MBeanServerInvocationHandler.newProxyInstance(secondBrokerMbeanServer, secondBrokerViewMBeanName, BrokerViewMBean.class, true);
-        assertEquals(secondBrokerMBean.getQueues().length, 2);
+        assertEquals(secondBrokerMBean.getQueues().length, 3);
         assertEquals(Arrays.stream(secondBrokerMBean.getQueues())
                 .map(ObjectName::toString)
                 .filter(name -> name.contains(destination.getPhysicalName()))
@@ -439,7 +438,7 @@ public class ReplicaPluginQueueTest extends ReplicaPluginTestSupport {
         firstBrokerMBean.removeQueue(destination.getPhysicalName());
         Thread.sleep(LONG_TIMEOUT);
 
-        assertEquals(secondBrokerMBean.getQueues().length, 1);
+        assertEquals(secondBrokerMBean.getQueues().length, 2);
         assertEquals(Arrays.stream(secondBrokerMBean.getQueues())
                 .map(ObjectName::toString)
                 .filter(name -> name.contains(destination.getPhysicalName()))

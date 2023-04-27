@@ -25,14 +25,13 @@
         xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-    <broker useJmx="false" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true">
+    <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true" brokerName="secondBrokerLocalhost">
 
         <destinations>
             <queue physicalName="TEST.Q" />
         </destinations>
 
         <transportConnectors>
-            <transportConnector name="vm" uri="vm://secondbroker" />
             <transportConnector name="mqtt" uri="mqtt://0.0.0.0:0"/>
             <transportConnector name="auto" uri="auto://0.0.0.0:0"/>
             <transportConnector name="stomp" uri="stomp://0.0.0.0:0"/>
@@ -52,7 +51,7 @@
         </transportConnectors>
 
         <plugins>
-            <replicaPlugin role="replica" transportConnectorUri="tcp://0.0.0.0:61619" otherBrokerUri="tcp://localhost:61618" userName="replicaUser" password="replica"/>
+            <replicaPlugin role="replica" transportConnectorUri="tcp://0.0.0.0:61619" otherBrokerUri="tcp://localhost:61618" userName="replicaUser" password="replica" controlWebConsoleAccess="false"/>
         </plugins>
     </broker>
 

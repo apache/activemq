@@ -17,10 +17,12 @@
 
 package org.apache.activemq.broker.replica;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.transport.stomp.StompFrame;
@@ -32,6 +34,12 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 import java.net.Socket;
@@ -56,12 +64,14 @@ public class ReplicaProtocolStompConnectionTest extends TestSupport {
     public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
     public static final String PRIMARY_BROKER_CONFIG = "org/apache/activemq/broker/replica/transport-protocol-test-primary.xml";
     public static final String REPLICA_BROKER_CONFIG = "org/apache/activemq/broker/replica/transport-protocol-test-replica.xml";
+    protected static final String SECOND_BROKER_BINDING_ADDRESS = "vm://secondBrokerLocalhost";
     private static final DateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.S");
     private final String protocol;
     protected BrokerService firstBroker;
     protected BrokerService secondBroker;
     private StompConnection firstBrokerConnection;
-    private StompConnection secondBrokerConnection;
+    private ConnectionFactory secondBrokerConnectionFactory;
+    private Connection secondBrokerConnection;
 
     @Before
     public void setUp() throws Exception {
@@ -74,13 +84,15 @@ public class ReplicaProtocolStompConnectionTest extends TestSupport {
         secondBroker.waitUntilStarted();
 
         firstBrokerConnection = new StompConnection();
-        secondBrokerConnection = new StompConnection();
+        secondBrokerConnectionFactory = new ActiveMQConnectionFactory(SECOND_BROKER_BINDING_ADDRESS);
+        secondBrokerConnection = secondBrokerConnectionFactory.createConnection();
+        secondBrokerConnection.start();
     }
 
     @After
     public void tearDown() throws Exception {
         firstBrokerConnection.disconnect();
-        secondBrokerConnection.disconnect();
+        secondBrokerConnection.stop();
         if (firstBroker != null) {
             try {
                 firstBroker.stop();
@@ -116,7 +128,7 @@ public class ReplicaProtocolStompConnectionTest extends TestSupport {
     @Test
     public void testMessageSendAndReceive() throws Exception {
         startConnection(firstBroker.getTransportConnectorByScheme(protocol), firstBrokerConnection);
-        startConnection(secondBroker.getTransportConnectorByScheme(protocol), secondBrokerConnection);
+        Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
 
         String type = "queue";
         String body = "testMessageSendAndReceiveOnPrimarySide body";
@@ -130,28 +142,21 @@ public class ReplicaProtocolStompConnectionTest extends TestSupport {
         firstBrokerConnection.commit("tx1");
         Thread.sleep(LONG_TIMEOUT);
 
-        secondBrokerConnection.subscribe(String.format("/%s/%s", type, destination), Stomp.Headers.Subscribe.AckModeValues.CLIENT);
-        secondBrokerConnection.begin("tx2");
-        StompFrame receivedMessage = secondBrokerConnection.receive(LONG_TIMEOUT);
-        LOG.info("received message [{}] ", receivedMessage.getBody());
-        secondBrokerConnection.commit("tx2");
+        MessageConsumer secondBrokerConsumer = secondBrokerSession.createConsumer(new ActiveMQQueue(destination));
+        Message receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
         assertNotNull(receivedMessage);
-        assertEquals(message, receivedMessage.getBody());
+        assertTrue(receivedMessage instanceof TextMessage);
+        assertEquals(message, ((TextMessage) receivedMessage).getText());
 
         firstBrokerConnection.subscribe(String.format("/%s/%s", type, destination), Stomp.Headers.Subscribe.AckModeValues.AUTO);
-        receivedMessage = firstBrokerConnection.receive(LONG_TIMEOUT);
-        assertNotNull(receivedMessage);
-        assertEquals(message, receivedMessage.getBody());
+        StompFrame receivedStompMessage = firstBrokerConnection.receive(LONG_TIMEOUT);
+        assertNotNull(receivedStompMessage);
+        assertEquals(message, receivedStompMessage.getBody());
 
-        try {
-            secondBrokerConnection.begin("tx2");
-            receivedMessage = secondBrokerConnection.receive(LONG_TIMEOUT);
-            LOG.info("received message [{}] ", receivedMessage.getBody());
-            secondBrokerConnection.commit("tx2");
-            fail("acknowledge replication failed! This second broker shouldn't receive message.");
-        } catch (SocketTimeoutException e) {
-            LOG.info("received SocketTimeoutException as expected.");
-        }
+        receivedMessage = secondBrokerConsumer.receive(LONG_TIMEOUT);
+        assertNull(receivedMessage);
+
+        secondBrokerSession.close();
     }
 
     private void startConnection(TransportConnector connector, StompConnection brokerConnection) throws Exception {
@@ -172,8 +177,6 @@ public class ReplicaProtocolStompConnectionTest extends TestSupport {
 
     protected BrokerService setUpBrokerService(String configurationUri) throws Exception {
         BrokerService broker = createBroker(configurationUri);
-        broker.setPersistent(false);
-        broker.setUseJmx(false);
         broker.setAdvisorySupport(false);
         broker.setSchedulerSupport(false);
         return broker;

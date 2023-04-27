@@ -33,6 +33,8 @@ import java.net.URI;
 import java.util.Arrays;
 
 public class ReplicaNetworkConnectorsOnTwoPairsOfReplicationBrokersTest extends ReplicaNetworkConnectorTest {
+    protected String pair2FirstReplicaBindAddress = "tcp://localhost:61620";
+    protected String pair2SecondReplicaBindAddress = "tcp://localhost:61621";
     @Override
     protected void setUp() throws Exception {
         if (firstBroker == null) {
@@ -49,13 +51,15 @@ public class ReplicaNetworkConnectorsOnTwoPairsOfReplicationBrokersTest extends 
         secondBroker2 = createBrokerFromBrokerFactory(new URI("broker:(" + secondBroker2URI + ")/secondBroker2?persistent=false"), SECONDBROKER2_KAHADB_DIRECTORY);
         ReplicaPlugin firstBroker2ReplicaPlugin = new ReplicaPlugin();
         firstBroker2ReplicaPlugin.setRole(ReplicaRole.source);
-        firstBroker2ReplicaPlugin.setTransportConnectorUri(secondReplicaBindAddress);
+        firstBroker2ReplicaPlugin.setTransportConnectorUri(pair2FirstReplicaBindAddress);
+        firstBroker2ReplicaPlugin.setOtherBrokerUri(pair2SecondReplicaBindAddress);
         firstBroker2ReplicaPlugin.setControlWebConsoleAccess(false);
         firstBroker2.setPlugins(new BrokerPlugin[]{firstBroker2ReplicaPlugin});
 
         ReplicaPlugin secondBroker2ReplicaPlugin = new ReplicaPlugin();
         secondBroker2ReplicaPlugin.setRole(ReplicaRole.replica);
-        secondBroker2ReplicaPlugin.setOtherBrokerUri(secondReplicaBindAddress);
+        secondBroker2ReplicaPlugin.setTransportConnectorUri(pair2SecondReplicaBindAddress);
+        secondBroker2ReplicaPlugin.setOtherBrokerUri(pair2FirstReplicaBindAddress);
         secondBroker2ReplicaPlugin.setControlWebConsoleAccess(false);
         secondBroker2.setPlugins(new BrokerPlugin[]{secondBroker2ReplicaPlugin});
 

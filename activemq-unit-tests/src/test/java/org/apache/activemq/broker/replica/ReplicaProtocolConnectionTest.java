@@ -60,6 +60,7 @@ public class ReplicaProtocolConnectionTest extends TestSupport {
     public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
     public static final String PRIMARY_BROKER_CONFIG = "org/apache/activemq/broker/replica/transport-protocol-test-primary.xml";
     public static final String REPLICA_BROKER_CONFIG = "org/apache/activemq/broker/replica/transport-protocol-test-replica.xml";
+    protected static final String SECOND_BROKER_BINDING_ADDRESS = "vm://secondBrokerLocalhost";
     private static final DateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.S");
     private final String protocol;
     protected BrokerService firstBroker;
@@ -117,7 +118,7 @@ public class ReplicaProtocolConnectionTest extends TestSupport {
     @Test
     public void testBrokerConnection() throws Exception {
         Connection firstBrokerConnection = getClientConnectionFactory(firstBroker.getTransportConnectorByScheme(protocol)).createConnection();
-        Connection secondBrokerConnection = getClientConnectionFactory(secondBroker.getTransportConnectorByScheme(protocol)).createConnection();
+        Connection secondBrokerConnection = new ActiveMQConnectionFactory(SECOND_BROKER_BINDING_ADDRESS).createConnection();
         firstBrokerConnection.start();
         secondBrokerConnection.start();
         Session firstBrokerSession = firstBrokerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
