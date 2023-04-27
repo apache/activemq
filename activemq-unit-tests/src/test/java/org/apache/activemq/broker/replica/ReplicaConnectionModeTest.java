@@ -18,10 +18,7 @@ package org.apache.activemq.broker.replica;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.Message;
@@ -29,12 +26,9 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.io.File;
-import java.io.IOException;
 
 public class ReplicaConnectionModeTest extends ReplicaPluginTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReplicaConnectionModeTest.class);
     protected Connection firstBrokerConnection;
     protected Connection secondBrokerConnection;
 
@@ -169,13 +163,6 @@ public class ReplicaConnectionModeTest extends ReplicaPluginTestSupport {
 
         firstBrokerSession.close();
         secondBrokerSession.close();
-    }
-
-    private void cleanKahaDB(String filePath) throws IOException {
-        File kahaDBFile = new File(filePath);
-        if (kahaDBFile.exists()) {
-            FileUtils.cleanDirectory(kahaDBFile);
-        }
     }
 
 }

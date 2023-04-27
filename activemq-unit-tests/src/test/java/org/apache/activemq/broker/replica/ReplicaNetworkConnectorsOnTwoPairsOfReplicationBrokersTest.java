@@ -50,11 +50,13 @@ public class ReplicaNetworkConnectorsOnTwoPairsOfReplicationBrokersTest extends 
         ReplicaPlugin firstBroker2ReplicaPlugin = new ReplicaPlugin();
         firstBroker2ReplicaPlugin.setRole(ReplicaRole.source);
         firstBroker2ReplicaPlugin.setTransportConnectorUri(secondReplicaBindAddress);
+        firstBroker2ReplicaPlugin.setControlWebConsoleAccess(false);
         firstBroker2.setPlugins(new BrokerPlugin[]{firstBroker2ReplicaPlugin});
 
         ReplicaPlugin secondBroker2ReplicaPlugin = new ReplicaPlugin();
         secondBroker2ReplicaPlugin.setRole(ReplicaRole.replica);
         secondBroker2ReplicaPlugin.setOtherBrokerUri(secondReplicaBindAddress);
+        secondBroker2ReplicaPlugin.setControlWebConsoleAccess(false);
         secondBroker2.setPlugins(new BrokerPlugin[]{secondBroker2ReplicaPlugin});
 
         firstBroker2.start();

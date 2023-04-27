@@ -21,7 +21,6 @@ import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.replica.ReplicaSupport;
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import javax.jms.Connection;
@@ -29,8 +28,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.XAConnection;
-import java.io.File;
-import java.io.IOException;
 
 public class ReplicaPluginPersistentBrokerFunctionTest extends ReplicaPluginTestSupport {
 
@@ -197,10 +194,4 @@ public class ReplicaPluginPersistentBrokerFunctionTest extends ReplicaPluginTest
         secondBrokerXAConnection.start();
     }
 
-    private void cleanKahaDB(String filePath) throws IOException {
-        File kahaDBFile = new File(filePath);
-        if (kahaDBFile.exists()) {
-            FileUtils.cleanDirectory(kahaDBFile);
-        }
-    }
 }

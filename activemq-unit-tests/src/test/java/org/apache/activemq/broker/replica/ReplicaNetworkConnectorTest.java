@@ -27,16 +27,16 @@ import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
-import javax.jms.*;
+import javax.jms.Connection;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -335,20 +335,4 @@ public class ReplicaNetworkConnectorTest extends ReplicaPluginTestSupport {
         }
     }
 
-    private ObjectName assertRegisteredObjectName(MBeanServer mbeanServer, String name) throws MalformedObjectNameException, NullPointerException {
-        ObjectName objectName = new ObjectName(name);
-        if (mbeanServer.isRegistered(objectName)) {
-            System.out.println("Bean Registered: " + objectName);
-        } else {
-            fail("Could not find MBean!: " + objectName);
-        }
-        return objectName;
-    }
-
-    private void cleanKahaDB(String filePath) throws IOException {
-        File kahaDBFile = new File(filePath);
-        if (kahaDBFile.exists()) {
-            FileUtils.cleanDirectory(kahaDBFile);
-        }
-    }
 }

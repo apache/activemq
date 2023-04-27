@@ -38,6 +38,8 @@ import org.apache.activemq.replica.ReplicaPolicy;
 import org.apache.activemq.replica.ReplicaReplicationQueueSupplier;
 import org.apache.activemq.replica.ReplicaRole;
 import org.apache.activemq.replica.ReplicaSupport;
+import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
+import org.apache.activemq.replica.WebConsoleAccessController;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +52,7 @@ import javax.jms.TextMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -59,6 +62,7 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
 
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final ActiveMQQueue sequenceQueue = new ActiveMQQueue(ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+    private ReplicaFailOverStateStorage replicaFailOverStateStorage = mock(ReplicaFailOverStateStorage.class);
     private Broker nextBrokerSpy;
     private ReplicaReplicationQueueSupplier testQueueProvider;
     private ActiveMQQueue mockMainQueue;
@@ -254,11 +258,13 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
             public Broker installPlugin(final Broker broker) {
                 nextBrokerSpy = spy(broker);
                 testQueueProvider = new ReplicaReplicationQueueSupplier(broker);
-                return new ReplicaBroker(nextBrokerSpy, testQueueProvider, mockReplicaPolicy);
+                return new ReplicaBroker(nextBrokerSpy, testQueueProvider, mockReplicaPolicy, replicaFailOverStateStorage,
+                        new WebConsoleAccessController(broker.getBrokerService(), false));
             }
         };
         replicaPlugin.setRole(ReplicaRole.replica);
         replicaPlugin.setOtherBrokerUri(firstReplicaBindAddress);
+        replicaPlugin.setControlWebConsoleAccess(false);
 
         answer.setPlugins(new BrokerPlugin[]{replicaPlugin});
         answer.setSchedulerSupport(true);

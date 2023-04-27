@@ -161,7 +161,7 @@ public class ReplicaPluginVirtualDestinationTest extends ReplicaPluginTestSuppor
         QueueViewMBean secondBrokerPhysicalQueueViewMBean = getQueueView(secondBroker, physicalQueue.getPhysicalName());
         assertEquals(secondBrokerPhysicalQueueViewMBean.getEnqueueCount(), 1);
 
-        TopicViewMBean secondBrokerPhysicalTopicViewMBean = getTopicsView(secondBroker, physicalTopic.getPhysicalName());
+        TopicViewMBean secondBrokerPhysicalTopicViewMBean = getTopicView(secondBroker, physicalTopic.getPhysicalName());
         assertEquals(secondBrokerPhysicalTopicViewMBean.getEnqueueCount(), 1);
 
         firstBrokerSession.close();

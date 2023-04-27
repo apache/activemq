@@ -36,6 +36,8 @@ import org.apache.activemq.replica.ReplicaPolicy;
 import org.apache.activemq.replica.ReplicaReplicationQueueSupplier;
 import org.apache.activemq.replica.ReplicaRole;
 import org.apache.activemq.replica.ReplicaSupport;
+import org.apache.activemq.replica.WebConsoleAccessController;
+import org.apache.activemq.replica.storage.ReplicaFailOverStateStorage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,11 +55,13 @@ import java.util.LinkedList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSupport {
     static final int MAX_BATCH_LENGTH = 500;
 
+    private ReplicaFailOverStateStorage replicaFailOverStateStorage = mock(ReplicaFailOverStateStorage.class);
     private ReplicaReplicationQueueSupplier testQueueProvider;
     protected Connection firstBrokerConnection;
 
@@ -247,11 +251,12 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
             @Override
             public Broker installPlugin(final Broker broker) {
                 testQueueProvider = new ReplicaReplicationQueueSupplier(broker);
-                return new ReplicaBroker(broker, testQueueProvider, mockReplicaPolicy);
+                return new ReplicaBroker(broker, testQueueProvider, mockReplicaPolicy, replicaFailOverStateStorage, new WebConsoleAccessController(broker.getBrokerService(), false));
             }
         };
         replicaPlugin.setRole(ReplicaRole.replica);
         replicaPlugin.setOtherBrokerUri(firstReplicaBindAddress);
+        replicaPlugin.setControlWebConsoleAccess(false);
 
         answer.setPlugins(new BrokerPlugin[]{replicaPlugin});
         answer.setSchedulerSupport(true);

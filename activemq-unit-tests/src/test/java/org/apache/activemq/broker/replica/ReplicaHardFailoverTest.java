@@ -17,10 +17,6 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.management.MBeanServer;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 
 public class ReplicaHardFailoverTest extends ReplicaPluginTestSupport {
 
@@ -39,12 +35,14 @@ public class ReplicaHardFailoverTest extends ReplicaPluginTestSupport {
         firstBrokerPlugin.setRole(ReplicaRole.source);
         firstBrokerPlugin.setTransportConnectorUri(firstReplicaBindAddress);
         firstBrokerPlugin.setOtherBrokerUri(SECOND_REPLICA_BINDING_ADDRESS);
+        firstBrokerPlugin.setControlWebConsoleAccess(false);
         firstBroker.setPlugins(new BrokerPlugin[]{firstBrokerPlugin});
 
         ReplicaPlugin secondBrokerPlugin = new ReplicaPlugin();
         secondBrokerPlugin.setRole(ReplicaRole.replica);
         secondBrokerPlugin.setTransportConnectorUri(SECOND_REPLICA_BINDING_ADDRESS);
         secondBrokerPlugin.setOtherBrokerUri(firstReplicaBindAddress);
+        secondBrokerPlugin.setControlWebConsoleAccess(false);
         secondBroker.setPlugins(new BrokerPlugin[]{secondBrokerPlugin});
 
         firstBroker.start();
@@ -52,8 +50,8 @@ public class ReplicaHardFailoverTest extends ReplicaPluginTestSupport {
         firstBroker.waitUntilStarted();
         secondBroker.waitUntilStarted();
 
-        firstBrokerReplicationView = getReplicationViewMBean(firstBroker);
-        secondBrokerReplicationView = getReplicationViewMBean(secondBroker);
+        firstBrokerReplicationView = getReplicationView(firstBroker);
+        secondBrokerReplicationView = getReplicationView(secondBroker);
         firstBrokerConnectionFactory = new ActiveMQConnectionFactory(firstBindAddress);
         secondBrokerConnectionFactory = new ActiveMQConnectionFactory(secondBindAddress);
 
@@ -77,8 +75,8 @@ public class ReplicaHardFailoverTest extends ReplicaPluginTestSupport {
 
     @Test
     public void testGetReplicationRoleViaJMX() throws Exception {
-        firstBrokerReplicationView = getReplicationViewMBean(firstBroker);
-        secondBrokerReplicationView = getReplicationViewMBean(secondBroker);
+        firstBrokerReplicationView = getReplicationView(firstBroker);
+        secondBrokerReplicationView = getReplicationView(secondBroker);
 
         assertEquals(ReplicaRole.source, ReplicaRole.valueOf(firstBrokerReplicationView.getReplicationRole()));
         assertEquals(ReplicaRole.replica, ReplicaRole.valueOf(secondBrokerReplicationView.getReplicationRole()));
@@ -221,25 +219,5 @@ public class ReplicaHardFailoverTest extends ReplicaPluginTestSupport {
         answer.setBrokerName("firstBroker");
         return answer;
     }
-
-    private ReplicationViewMBean getReplicationViewMBean(BrokerService broker) throws Exception {
-        MBeanServer mbeanServer = broker.getManagementContext().getMBeanServer();
-        String objectNameStr = broker.getBrokerObjectName().toString();
-        objectNameStr += ",service=Plugins,instanceName=ReplicationPlugin";
-        ObjectName replicaViewMBeanName = assertRegisteredObjectName(mbeanServer, objectNameStr);
-        return MBeanServerInvocationHandler.newProxyInstance(mbeanServer, replicaViewMBeanName, ReplicationViewMBean.class, true);
-    }
-
-    private ObjectName assertRegisteredObjectName(MBeanServer mbeanServer, String name) throws MalformedObjectNameException, NullPointerException {
-        ObjectName objectName = new ObjectName(name);
-        if (mbeanServer.isRegistered(objectName)) {
-            System.out.println("Bean Registered: " + objectName);
-        } else {
-            fail("Could not find MBean!: " + objectName);
-        }
-        return objectName;
-    }
-
-
 
 }
