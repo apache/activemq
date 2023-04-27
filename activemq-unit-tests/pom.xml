@@ -244,9 +244,9 @@
 
     <!--  Joram JMS conformance tests -->
     <dependency>
-      <groupId>org.fusesource.joram-jms-tests</groupId>
-      <artifactId>joram-jms-tests</artifactId>
-      <version>1.0</version>
+      <groupId>org.apache.activemq.tooling</groupId>
+      <artifactId>activemq-joram-jms-tests</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
