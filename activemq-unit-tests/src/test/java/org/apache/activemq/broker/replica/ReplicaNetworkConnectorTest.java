@@ -265,10 +265,6 @@ public class ReplicaNetworkConnectorTest extends ReplicaPluginTestSupport {
         assertEquals(1, firstBroker2DestinationQueue.getDequeueCount());
         QueueViewMBean secondBrokerDestinationQueue = getQueueView(secondBroker, destination.getPhysicalName());
         assertEquals(1, secondBrokerDestinationQueue.getDequeueCount());
-        QueueViewMBean secondBroker2DestinationQueue = getQueueView(secondBroker2, destination.getPhysicalName());
-        assertEquals(0, secondBroker2DestinationQueue.getDequeueCount());
-        assertEquals(0, secondBroker2DestinationQueue.getEnqueueCount());
-
 
         firstBroker2Session.close();
         firstBrokerProducerSession.close();

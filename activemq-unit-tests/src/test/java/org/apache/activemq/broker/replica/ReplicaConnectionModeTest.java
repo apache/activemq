@@ -32,9 +32,9 @@ import javax.jms.TextMessage;
 import java.io.File;
 import java.io.IOException;
 
-public class ReplicaConnectionModeTests extends ReplicaPluginTestSupport {
+public class ReplicaConnectionModeTest extends ReplicaPluginTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReplicaConnectionModeTests.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReplicaConnectionModeTest.class);
     protected Connection firstBrokerConnection;
     protected Connection secondBrokerConnection;
 
