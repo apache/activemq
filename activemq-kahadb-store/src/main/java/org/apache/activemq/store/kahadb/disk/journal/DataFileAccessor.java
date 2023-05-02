@@ -19,6 +19,7 @@ package org.apache.activemq.store.kahadb.disk.journal;
 import java.io.IOException;
 import java.util.Map;
 
+import java.util.Objects;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.slf4j.Logger;
@@ -75,7 +76,6 @@ final class DataFileAccessor {
         }
 
         try {
-
             if (location.getSize() == Location.NOT_SET) {
                 file.seek(location.getOffset());
                 location.setSize(file.readInt());
@@ -83,19 +83,7 @@ final class DataFileAccessor {
             } else {
                 file.seek(location.getOffset() + Journal.RECORD_HEAD_SPACE);
             }
-            if ((long)location.getOffset() + location.getSize() > dataFile.length) {
-                /**
-                 * AMQ-9254 if the read request is outside expected dataFile length, 
-                 *          perform expensive OS file length lookup operation 
-                 *          to allow read operation if it will succeed
-                 */
-                long osFileLength = dataFile.getFile().length();
-                if((long)location.getOffset() + location.getSize() > osFileLength) {
-                    throw new IOException("Invalid location size: " + location + ", size: " + location.getSize());
-                } else {
-                    LOG.warn("DataFile:{} actual length:{} larger than expected:{} for readRecord location:{} size:{}", dataFile.file.getName(), osFileLength, dataFile.length, location, location.getSize());
-                }
-            }
+            validateFileLength(location);
             byte[] data = new byte[location.getSize() - Journal.RECORD_HEAD_SPACE];
             file.readFully(data);
             return new ByteSequence(data, 0, data.length);
@@ -127,7 +115,6 @@ final class DataFileAccessor {
         }
     }
 
-
     public void updateRecord(Location location, ByteSequence data, boolean sync) throws IOException {
 
         file.seek(location.getOffset() + Journal.RECORD_HEAD_SPACE);
@@ -140,5 +127,25 @@ final class DataFileAccessor {
 
     public RecoverableRandomAccessFile getRaf() {
         return file;
+    }
+
+    void validateFileLength(final Location location) throws IOException {
+        final long recordEnd = location.getOffset() + location.getSize();
+
+        //Check if the end of the record will go past the file length
+        if (recordEnd > dataFile.length) {
+            /*
+             * AMQ-9254 if the read request is outside expected dataFile length,
+             * perform expensive OS file length lookup operation to allow read
+             * operation if it will succeed
+             */
+            final long osFileLength = dataFile.getFile().length();
+            if(recordEnd > osFileLength) {
+                throw new IOException("Invalid location size: " + location + ", size: " + location.getSize());
+            } else {
+                LOG.warn("DataFile:{} actual length:{} larger than expected:{} for readRecord location:{} size:{}",
+                    dataFile.file.getName(), osFileLength, dataFile.length, location, location.getSize());
+            }
+        }
     }
 }
