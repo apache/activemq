@@ -17,7 +17,6 @@
 package org.apache.activemq.store.kahadb.disk.journal;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.Map;
 
 import org.apache.activemq.util.ByteSequence;
@@ -85,7 +84,17 @@ final class DataFileAccessor {
                 file.seek(location.getOffset() + Journal.RECORD_HEAD_SPACE);
             }
             if ((long)location.getOffset() + location.getSize() > dataFile.length) {
-                throw new IOException("Invalid location size: " + location + ", size: " + location.getSize());
+                /**
+                 * AMQ-9254 if the read request is outside expected dataFile length, 
+                 *          perform expensive OS file length lookup operation 
+                 *          to allow read operation if it will succeed
+                 */
+                long osFileLength = dataFile.getFile().length();
+                if((long)location.getOffset() + location.getSize() > osFileLength) {
+                    throw new IOException("Invalid location size: " + location + ", size: " + location.getSize());
+                } else {
+                    LOG.warn("DataFile:{} actual length:{} larger than expected:{} for readRecord location:{} size:{}", dataFile.file.getName(), osFileLength, dataFile.length, location, location.getSize());
+                }
             }
             byte[] data = new byte[location.getSize() - Journal.RECORD_HEAD_SPACE];
             file.readFully(data);
