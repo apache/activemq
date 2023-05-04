@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.broker.replica;
 
-import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;

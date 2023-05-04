@@ -43,7 +43,6 @@ import javax.jms.TextMessage;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

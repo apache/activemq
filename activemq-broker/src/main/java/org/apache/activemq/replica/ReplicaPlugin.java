@@ -16,11 +16,9 @@
  */
 package org.apache.activemq.replica;
 
-import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationInterceptor;
