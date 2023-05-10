@@ -957,6 +957,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     private void expireMessages() {
+        if(isDispatchPaused()) {
+            LOG.debug("{} dispatchPaused, skipping expire messages check", getActiveMQDestination().getQualifiedName());
+            return;
+        }
+
         LOG.debug("{} expiring messages ..", getActiveMQDestination().getQualifiedName());
 
         // just track the insertion count
