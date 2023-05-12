@@ -79,7 +79,7 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
 
     @Override
     public void start(ReplicaRole role) throws Exception {
-        logger.info("Starting Source broker");
+        logger.info("Starting Source broker. " + (role == ReplicaRole.await_ack ? " Awaiting ack." : ""));
 
         initQueueProvider();
         initialized.compareAndSet(false, true);

@@ -46,6 +46,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
     private final Logger logger = LoggerFactory.getLogger(ReplicaRoleManagementBroker.class);
     private final Broker broker;
     private final ReplicaPolicy replicaPolicy;
+    private final ClassLoader contextClassLoader;
     private ReplicaRole role;
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final WebConsoleAccessController webConsoleAccessController;
@@ -63,6 +64,8 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         this.broker = broker;
         this.replicaPolicy = replicaPolicy;
         this.role = role;
+
+        contextClassLoader = Thread.currentThread().getContextClassLoader();
 
         replicationProducerId.setConnectionId(new IdGenerator().generateId());
 
@@ -157,7 +160,13 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
     }
 
     public void startAllConnections() throws Exception {
-        getBrokerService().startAllConnectors();
+        ClassLoader originalContextClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(contextClassLoader);
+            getBrokerService().startAllConnectors();
+        } finally {
+            Thread.currentThread().setContextClassLoader(originalContextClassLoader);
+        }
         webConsoleAccessController.start();
     }
 

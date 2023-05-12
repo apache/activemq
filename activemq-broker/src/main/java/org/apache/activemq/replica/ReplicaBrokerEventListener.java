@@ -191,7 +191,9 @@ public class ReplicaBrokerEventListener implements MessageListener {
                     "Replication event is out of order. Current sequence: %s, the sequence of the event: %s",
                     sequence, newSequence));
         } else if (sequenceDifference < 0) {
-            logger.info("Replication message duplicate.");
+            logger.info(String.format(
+                    "Replication message duplicate. Current sequence: %s, the sequence of the event: %s",
+                    sequence, newSequence));
         } else if (!sequenceMessageId.equals(messageId)) {
             throw new IllegalStateException(String.format(
                     "Replication event is out of order. Current sequence %s belongs to message with id %s," +

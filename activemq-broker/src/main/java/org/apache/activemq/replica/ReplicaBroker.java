@@ -73,7 +73,8 @@ public class ReplicaBroker extends MutativeRoleBroker {
     public void start(ReplicaRole role) throws Exception {
         init(role);
 
-        logger.info("Starting replica broker");
+        logger.info("Starting replica broker." +
+                (role == ReplicaRole.ack_processed ? " Ack has been processed. Checking the role of the other broker." : ""));
     }
 
     @Override
@@ -90,10 +91,10 @@ public class ReplicaBroker extends MutativeRoleBroker {
 
     @Override
     public void stopBeforeRoleChange(boolean force) throws Exception {
-        logger.info("Stopping broker replication. Forced: [{}]", force);
         if (!force) {
             return;
         }
+        logger.info("Stopping broker replication. Forced: [{}]", force);
 
         updateBrokerState(ReplicaRole.source);
         completeBeforeRoleChange();
@@ -129,8 +130,12 @@ public class ReplicaBroker extends MutativeRoleBroker {
     }
 
     private void deinitialize() throws JMSException {
-        replicationScheduledFuture.cancel(true);
-        ackPollerScheduledFuture.cancel(true);
+        if (replicationScheduledFuture != null) {
+            replicationScheduledFuture.cancel(true);
+        }
+        if (ackPollerScheduledFuture != null) {
+            ackPollerScheduledFuture.cancel(true);
+        }
 
         ActiveMQMessageConsumer consumer = eventConsumer.get();
         ActiveMQSession session = connectionSession.get();

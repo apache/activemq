@@ -210,7 +210,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
     }
 
     public void setReplicaRole(ReplicaRole role, boolean force) throws Exception {
-        logger.info("Called switch role for broker. Params: [{}], [{}]", role.name(), force);
+        logger.debug("Called switch role for broker. Params: [{}], [{}]", role.name(), force);
 
         if (role != ReplicaRole.replica && role != ReplicaRole.source) {
             throw new RuntimeException(String.format("Can't switch role from [%s] to [%s]", this.role.name(), role.name()));
