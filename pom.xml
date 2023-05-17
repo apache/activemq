@@ -66,8 +66,8 @@
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
-    <geronimo-jsonb.version>1.1</geronimo-jsonb.version>
-    <geronimo-jsonp.version>1.1</geronimo-jsonp.version>
+    <geronimo-jsonb.version>1.4</geronimo-jsonb.version>
+    <geronimo-jsonp.version>1.5</geronimo-jsonp.version>
     <johnzon.version>1.2.20</johnzon.version>
     <jakarta-jms-api-version>2.0.3</jakarta-jms-api-version>
     <jakarta-jms-api-v3-version>3.1.0</jakarta-jms-api-v3-version>
