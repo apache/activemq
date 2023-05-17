@@ -239,8 +239,13 @@ public class JournalCorruptionEofIndexRecoveryTest {
         final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
             public void append(LogEvent event) {
-                if (event.getLevel() == Level.WARN
+                if (event != null 
+                        && event.getLevel() == Level.WARN
+                        && event.getMessage() != null
+                        && event.getMessage().getFormattedMessage() != null
                         && event.getMessage().getFormattedMessage().contains("Cannot recover message audit")
+                        && event.getThrown() != null
+                        && event.getThrown().getLocalizedMessage() != null
                         && event.getThrown().getLocalizedMessage().contains("Invalid location size")) {
                     trappedExpectedLogMessage.set(true);
                 }
