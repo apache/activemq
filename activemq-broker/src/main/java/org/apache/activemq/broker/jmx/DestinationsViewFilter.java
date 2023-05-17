@@ -20,7 +20,6 @@ import static org.apache.activemq.util.IntrospectionSupport.findGetterMethod;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,6 +31,7 @@ import java.util.stream.Collectors;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbConfig;
 import javax.management.ObjectName;
 
 import org.apache.activemq.advisory.AdvisorySupport;
@@ -39,7 +39,6 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Defines a query API for destinations MBeans
@@ -136,7 +135,11 @@ public class DestinationsViewFilter implements Serializable {
      * @throws IOException
      */
     String filter(int page, int pageSize) throws IOException {
-        destinations = Maps.filterValues(destinations, getPredicate());
+        final Predicate<DestinationView> predicate = getPredicate();
+        final Map<ObjectName, DestinationView> filteredDestinations = new HashMap<>(destinations);
+        destinations = filteredDestinations.entrySet().stream().filter(d -> predicate.test(d.getValue())).collect(
+            Collectors.toMap(d -> d.getKey(), d -> d.getValue()));
+
         Map<ObjectName, DestinationView> pagedDestinations = getPagedDestinations(page, pageSize);
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("data", pagedDestinations);

@@ -19,6 +19,7 @@ package org.apache.activemq.broker.view;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.IOException;
 import java.util.Map;
 
 import javax.jms.Connection;
@@ -27,6 +28,9 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbConfig;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -38,8 +42,6 @@ import org.apache.activemq.broker.jmx.DestinationsViewFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BrokerDestinationViewTest {
 
@@ -94,16 +96,22 @@ public class BrokerDestinationViewTest {
          final DestinationsViewFilter filter = new DestinationsViewFilter();
          filter.setName(queueName);
          filter.setFilter("nonEmpty");
-         final ObjectMapper mapper = new ObjectMapper();
 
          final BrokerViewMBean brokerView = getBrokerView();
-         String output = brokerView.queryQueues(mapper.writeValueAsString(filter), 1, 10);
-         Map<?,?> queryResults = mapper.readValue(output, Map.class);
+        try (final Jsonb jsonb = JsonbBuilder.create()) {
+             String output = brokerView.queryQueues(jsonb.toJson(filter), 1, 10);
+             Map<?,?> queryResults = jsonb.fromJson(output, Map.class);
 
-         final Integer count = (Integer) queryResults.get("count");
-         final Map<?,?> data = (Map<?, ?>) queryResults.get("data");
-         assertEquals((Integer)1, count);
-         assertEquals(1, data.size());
+             final Integer count = (Integer) queryResults.get("count");
+             final Map<?,?> data = (Map<?, ?>) queryResults.get("data");
+             assertEquals((Integer)1, count);
+             assertEquals(1, data.size());
+
+        } catch (final IOException e) {
+            throw e;
+        } catch (final Exception e) {
+            throw new IOException(e);
+        }
     }
 
     private BrokerViewMBean getBrokerView() throws MalformedObjectNameException {
