@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class QueueDispatchSelector extends SimpleDispatchSelector {
     private static final Logger LOG = LoggerFactory.getLogger(QueueDispatchSelector.class);
     private Subscription exclusiveConsumer;
-    private boolean paused;
+    private volatile boolean paused;
 
     /**
      * @param destination
