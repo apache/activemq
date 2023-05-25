@@ -54,6 +54,7 @@ public class ReplicaNetworkConnectorsOnTwoPairsOfReplicationBrokersTest extends 
         firstBroker2ReplicaPlugin.setTransportConnectorUri(pair2FirstReplicaBindAddress);
         firstBroker2ReplicaPlugin.setOtherBrokerUri(pair2SecondReplicaBindAddress);
         firstBroker2ReplicaPlugin.setControlWebConsoleAccess(false);
+        firstBroker2ReplicaPlugin.setHeartBeatPeriod(0);
         firstBroker2.setPlugins(new BrokerPlugin[]{firstBroker2ReplicaPlugin});
 
         ReplicaPlugin secondBroker2ReplicaPlugin = new ReplicaPlugin();
@@ -61,6 +62,7 @@ public class ReplicaNetworkConnectorsOnTwoPairsOfReplicationBrokersTest extends 
         secondBroker2ReplicaPlugin.setTransportConnectorUri(pair2SecondReplicaBindAddress);
         secondBroker2ReplicaPlugin.setOtherBrokerUri(pair2FirstReplicaBindAddress);
         secondBroker2ReplicaPlugin.setControlWebConsoleAccess(false);
+        secondBroker2ReplicaPlugin.setHeartBeatPeriod(0);
         secondBroker2.setPlugins(new BrokerPlugin[]{secondBroker2ReplicaPlugin});
 
         firstBroker2.start();

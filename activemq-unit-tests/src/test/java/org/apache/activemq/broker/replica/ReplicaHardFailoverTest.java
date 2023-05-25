@@ -51,6 +51,7 @@ public class ReplicaHardFailoverTest extends ReplicaPluginTestSupport {
         firstBrokerPlugin.setTransportConnectorUri(firstReplicaBindAddress);
         firstBrokerPlugin.setOtherBrokerUri(secondReplicaBindAddress);
         firstBrokerPlugin.setControlWebConsoleAccess(false);
+        firstBrokerPlugin.setHeartBeatPeriod(0);
         firstBroker.setPlugins(new BrokerPlugin[]{firstBrokerPlugin});
 
         ReplicaPlugin secondBrokerPlugin = new ReplicaPlugin();
@@ -58,6 +59,7 @@ public class ReplicaHardFailoverTest extends ReplicaPluginTestSupport {
         secondBrokerPlugin.setTransportConnectorUri(secondReplicaBindAddress);
         secondBrokerPlugin.setOtherBrokerUri(firstReplicaBindAddress);
         secondBrokerPlugin.setControlWebConsoleAccess(false);
+        secondBrokerPlugin.setHeartBeatPeriod(0);
         secondBroker.setPlugins(new BrokerPlugin[]{secondBrokerPlugin});
 
         firstBroker.start();

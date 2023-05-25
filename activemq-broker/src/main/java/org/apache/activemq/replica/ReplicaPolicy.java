@@ -35,6 +35,8 @@ public class ReplicaPolicy {
     private int replicaMaxAckBatchSize = 100;
     private boolean controlWebConsoleAccess = true;
 
+    private int heartBeatPeriod = 60_000;
+
     public URI getTransportConnectorUri() {
         return Objects.requireNonNull(transportConnectorUri, "Need replication transport connection URI for this broker");
     }
@@ -121,6 +123,14 @@ public class ReplicaPolicy {
 
     public void setControlWebConsoleAccess(boolean controlWebConsoleAccess) {
         this.controlWebConsoleAccess = controlWebConsoleAccess;
+    }
+
+    public int getHeartBeatPeriod() {
+        return heartBeatPeriod;
+    }
+
+    public void setHeartBeatPeriod(int heartBeatPeriod) {
+        this.heartBeatPeriod = heartBeatPeriod;
     }
 
     private void validateUser(ActiveMQConnectionFactory replicaSourceConnectionFactory) {

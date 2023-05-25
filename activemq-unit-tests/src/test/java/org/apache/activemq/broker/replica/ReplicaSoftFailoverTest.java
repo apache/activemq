@@ -59,12 +59,16 @@ public class ReplicaSoftFailoverTest extends ReplicaPluginTestSupport {
         firstBrokerPlugin.setRole(ReplicaRole.source);
         firstBrokerPlugin.setTransportConnectorUri(firstReplicaBindAddress);
         firstBrokerPlugin.setOtherBrokerUri(SECOND_REPLICA_BINDING_ADDRESS);
+        firstBrokerPlugin.setControlWebConsoleAccess(false);
+        firstBrokerPlugin.setHeartBeatPeriod(0);
         firstBroker.setPlugins(new BrokerPlugin[]{firstBrokerPlugin});
 
         ReplicaPlugin secondBrokerPlugin = new ReplicaPlugin();
         secondBrokerPlugin.setRole(ReplicaRole.replica);
         secondBrokerPlugin.setTransportConnectorUri(SECOND_REPLICA_BINDING_ADDRESS);
         secondBrokerPlugin.setOtherBrokerUri(firstReplicaBindAddress);
+        secondBrokerPlugin.setControlWebConsoleAccess(false);
+        secondBrokerPlugin.setHeartBeatPeriod(0);
         secondBroker.setPlugins(new BrokerPlugin[]{secondBrokerPlugin});
 
         firstBroker.start();

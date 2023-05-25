@@ -282,6 +282,9 @@ public class ReplicaBrokerEventListener implements MessageListener {
             case FAIL_OVER:
                 failOver();
                 return;
+            case HEART_BEAT:
+                logger.trace("Heart beat message received");
+                return;
             default:
                 throw new IllegalStateException(
                         String.format("Unhandled event type \"%s\" for replication message id: %s",

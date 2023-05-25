@@ -32,7 +32,8 @@ public enum ReplicaEventType {
     MESSAGE_EXPIRED,
     BATCH,
     REMOVE_DURABLE_CONSUMER_SUBSCRIPTION,
-    FAIL_OVER
+    FAIL_OVER,
+    HEART_BEAT,
     ;
 
     public static final String EVENT_TYPE_PROPERTY = "ActiveMQReplicationEventType";

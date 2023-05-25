@@ -205,6 +205,13 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         replicaPolicy.setControlWebConsoleAccess(controlWebConsoleAccess);
     }
 
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setHeartBeatPeriod(int heartBeatPeriod) {
+        replicaPolicy.setHeartBeatPeriod(heartBeatPeriod);
+    }
+
     public ReplicaRole getRole() {
         return replicaRoleManagementBroker.getRole().getExternalRole();
     }

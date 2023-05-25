@@ -45,6 +45,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -55,6 +59,7 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
     }; // used in destination map to indicate mirrored status
 
     private static final Logger logger = LoggerFactory.getLogger(ReplicaSourceBroker.class);
+    private final ScheduledExecutorService heartBeatPoller = Executors.newSingleThreadScheduledExecutor();
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
     private final AtomicBoolean initialized = new AtomicBoolean();
 
@@ -63,6 +68,7 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaPolicy replicaPolicy;
     private final ReplicaAckHelper replicaAckHelper;
+    private ScheduledFuture<?> heartBeatScheduledFuture;
 
     final DestinationMap destinationsToReplicate = new DestinationMap();
 
@@ -84,6 +90,7 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
         initQueueProvider();
         initialized.compareAndSet(false, true);
         replicaSequencer.initialize();
+        initializeHeartBeatSender();
         ensureDestinationsAreReplicated();
     }
 
@@ -120,7 +127,25 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
         initQueueProvider();
         initialized.compareAndSet(false, true);
         replicaSequencer.initialize();
+        initializeHeartBeatSender();
         replicaSequencer.updateMainQueueConsumerStatus();
+    }
+
+    private void initializeHeartBeatSender() {
+        if (replicaPolicy.getHeartBeatPeriod() > 0) {
+            heartBeatScheduledFuture = heartBeatPoller.scheduleAtFixedRate(() -> {
+                try {
+                    enqueueReplicaEvent(
+                            getAdminConnectionContext(),
+                            new ReplicaEvent()
+                                    .setEventType(ReplicaEventType.HEART_BEAT)
+                                    .setEventData(eventSerializer.serializeReplicationData(null))
+                    );
+                } catch (Exception e) {
+                    logger.error("Failed to send heart beat message", e);
+                }
+            }, replicaPolicy.getHeartBeatPeriod(), replicaPolicy.getHeartBeatPeriod(), TimeUnit.MILLISECONDS);
+        }
     }
 
 
@@ -131,6 +156,9 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
 
     private void completeBeforeRoleChange() throws Exception {
         replicaSequencer.deinitialize();
+        if (heartBeatScheduledFuture != null) {
+            heartBeatScheduledFuture.cancel(true);
+        }
         removeReplicationQueues();
 
         onStopSuccess();

@@ -850,7 +850,7 @@ public class ReplicaBrokerEventListenerTest {
         MessageId messageId = new MessageId("1:1:1:1");
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.FAIL_OVER)
-                .setEventData(eventSerializer.serializeReplicationData(testQueue));
+                .setEventData(eventSerializer.serializeReplicationData(null));
         ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
         replicaEventMessage.setMessageId(messageId);
         replicaEventMessage.setType("ReplicaEvent");
@@ -863,6 +863,24 @@ public class ReplicaBrokerEventListenerTest {
 
         verify(replicaBroker).updateBrokerState(eq(ReplicaRole.source));
         verify(replicaBroker).completeBeforeRoleChange();
+    }
+
+    @Test
+    public void canHandleEventOfType_HEART_BEAT() throws Exception {
+        listener.sequence = null;
+        MessageId messageId = new MessageId("1:1:1:1");
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.HEART_BEAT)
+                .setEventData(eventSerializer.serializeReplicationData(null));
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
+        replicaEventMessage.setType("ReplicaEvent");
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setProperties(event.getReplicationProperties());
+
+        listener.onMessage(replicaEventMessage);
     }
 
     private Xid getDummyXid() {
