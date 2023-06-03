@@ -123,6 +123,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         listener.onMessage(replicaEventMessage);
 
@@ -142,6 +143,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         listener.onMessage(replicaEventMessage);
 
@@ -161,6 +163,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         listener.onMessage(replicaEventMessage);
 
@@ -180,6 +183,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         listener.onMessage(replicaEventMessage);
 
@@ -202,6 +206,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         listener.onMessage(replicaEventMessage);
 
@@ -237,6 +242,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setType("ReplicaEvent");
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setProperties(event.getReplicationProperties());
 
@@ -277,6 +283,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setType("ReplicaEvent");
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setProperties(event.getReplicationProperties());
 
@@ -290,16 +297,17 @@ public class ReplicaBrokerEventListenerTest {
         listener.sequence = null;
         MessageId messageId = new MessageId("1:1");
         TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.TRANSACTION_BEGIN)
                 .setEventData(eventSerializer.serializeReplicationData(transactionId));
-        message.setContent(event.getEventData());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
 
         ArgumentCaptor<TransactionId> messageArgumentCaptor = ArgumentCaptor.forClass(TransactionId.class);
         verify(broker, times(2)).beginTransaction(any(), messageArgumentCaptor.capture());
@@ -313,16 +321,17 @@ public class ReplicaBrokerEventListenerTest {
         listener.sequence = null;
         MessageId messageId = new MessageId("1:1");
         TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.TRANSACTION_PREPARE)
                 .setEventData(eventSerializer.serializeReplicationData(transactionId));
-        message.setContent(event.getEventData());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
 
         ArgumentCaptor<TransactionId> messageArgumentCaptor = ArgumentCaptor.forClass(TransactionId.class);
         verify(broker).prepareTransaction(any(), messageArgumentCaptor.capture());
@@ -335,16 +344,17 @@ public class ReplicaBrokerEventListenerTest {
         listener.sequence = null;
         MessageId messageId = new MessageId("1:1");
         TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.TRANSACTION_FORGET)
                 .setEventData(eventSerializer.serializeReplicationData(transactionId));
-        message.setContent(event.getEventData());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
 
         ArgumentCaptor<TransactionId> messageArgumentCaptor = ArgumentCaptor.forClass(TransactionId.class);
         verify(broker).forgetTransaction(any(), messageArgumentCaptor.capture());
@@ -357,16 +367,17 @@ public class ReplicaBrokerEventListenerTest {
         listener.sequence = null;
         MessageId messageId = new MessageId("1:1");
         TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.TRANSACTION_ROLLBACK)
                 .setEventData(eventSerializer.serializeReplicationData(transactionId));
-        message.setContent(event.getEventData());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
 
         ArgumentCaptor<TransactionId> messageArgumentCaptor = ArgumentCaptor.forClass(TransactionId.class);
         verify(broker).rollbackTransaction(any(), messageArgumentCaptor.capture());
@@ -379,18 +390,19 @@ public class ReplicaBrokerEventListenerTest {
         listener.sequence = null;
         MessageId messageId = new MessageId("1:1");
         TransactionId transactionId = new LocalTransactionId(new ConnectionId("10101010"), 101010);
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.TRANSACTION_COMMIT)
                 .setEventData(eventSerializer.serializeReplicationData(transactionId))
                 .setReplicationProperty(ReplicaSupport.TRANSACTION_ONE_PHASE_PROPERTY, true);
-        message.setContent(event.getEventData());
-        message.setProperties(event.getReplicationProperties());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setProperties(event.getReplicationProperties());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
 
         ArgumentCaptor<TransactionId> messageArgumentCaptor = ArgumentCaptor.forClass(TransactionId.class);
         ArgumentCaptor<Boolean> onePhaseArgumentCaptor = ArgumentCaptor.forClass(Boolean.class);
@@ -409,17 +421,18 @@ public class ReplicaBrokerEventListenerTest {
         MessageId messageId = new MessageId("1:1");
         TransactionId transactionId = new XATransactionId(getDummyXid());
 
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.TRANSACTION_PREPARE)
                 .setEventData(eventSerializer.serializeReplicationData(transactionId));
-        message.setContent(event.getEventData());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         when(transactionBroker.getTransaction(any(), any(), anyBoolean())).thenThrow(new XAException(""));
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
         verify(broker, never()).prepareTransaction(any(), any());
     }
 
@@ -429,17 +442,18 @@ public class ReplicaBrokerEventListenerTest {
         MessageId messageId = new MessageId("1:1");
         TransactionId transactionId = new XATransactionId(getDummyXid());
 
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.TRANSACTION_FORGET)
                 .setEventData(eventSerializer.serializeReplicationData(transactionId));
-        message.setContent(event.getEventData());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         when(transactionBroker.getTransaction(any(), any(), anyBoolean())).thenThrow(new XAException(""));
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
         verify(broker, never()).forgetTransaction(any(), any());
     }
 
@@ -449,17 +463,18 @@ public class ReplicaBrokerEventListenerTest {
         MessageId messageId = new MessageId("1:1");
         TransactionId transactionId = new XATransactionId(getDummyXid());
 
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.TRANSACTION_COMMIT)
                 .setEventData(eventSerializer.serializeReplicationData(transactionId));
-        message.setContent(event.getEventData());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         when(transactionBroker.getTransaction(any(), any(), anyBoolean())).thenThrow(new XAException(""));
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
         verify(broker, times(1)).commitTransaction(any(), any(), anyBoolean());
     }
 
@@ -469,17 +484,18 @@ public class ReplicaBrokerEventListenerTest {
         MessageId messageId = new MessageId("1:1");
         TransactionId transactionId = new XATransactionId(getDummyXid());
 
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.TRANSACTION_ROLLBACK)
                 .setEventData(eventSerializer.serializeReplicationData(transactionId));
-        message.setContent(event.getEventData());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         when(transactionBroker.getTransaction(any(), any(), anyBoolean())).thenThrow(new XAException(""));
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
         verify(broker, never()).rollbackTransaction(any(), any());
     }
 
@@ -489,22 +505,23 @@ public class ReplicaBrokerEventListenerTest {
         MessageId messageId = new MessageId("1:1");
         ConsumerInfo consumerInfo = new ConsumerInfo();
         consumerInfo.setDestination(testQueue);
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         String clientId = "clientId";
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.ADD_DURABLE_CONSUMER)
                 .setEventData(eventSerializer.serializeReplicationData(consumerInfo))
                 .setReplicationProperty(ReplicaSupport.CLIENT_ID_PROPERTY, clientId);
-        message.setContent(event.getEventData());
-        message.setProperties(event.getReplicationProperties());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setProperties(event.getReplicationProperties());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         DurableTopicSubscription subscription = mock(DurableTopicSubscription.class);
         when(broker.addConsumer(any(), any())).thenReturn(subscription);
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
 
         ArgumentCaptor<ConsumerInfo> messageArgumentCaptor = ArgumentCaptor.forClass(ConsumerInfo.class);
         ArgumentCaptor<ConnectionContext> connectionContextArgumentCaptor = ArgumentCaptor.forClass(ConnectionContext.class);
@@ -523,24 +540,25 @@ public class ReplicaBrokerEventListenerTest {
         MessageId messageId = new MessageId("1:1");
         ConsumerInfo consumerInfo = new ConsumerInfo();
         consumerInfo.setDestination(testQueue);
-        ActiveMQMessage message = spy(new ActiveMQMessage());
-        message.setMessageId(messageId);
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+        replicaEventMessage.setMessageId(messageId);
         String clientId = "clientId";
         consumerInfo.setClientId(clientId);
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.REMOVE_DURABLE_CONSUMER)
                 .setEventData(eventSerializer.serializeReplicationData(consumerInfo));
-        message.setContent(event.getEventData());
-        message.setProperties(event.getReplicationProperties());
-        message.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
-        message.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setProperties(event.getReplicationProperties());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         DurableTopicSubscription subscription = mock(DurableTopicSubscription.class);
         when(destinationQueue.getConsumers()).thenReturn(Collections.singletonList(subscription));
         when(subscription.getConsumerInfo()).thenReturn(consumerInfo);
         when(subscription.getContext()).thenReturn(connectionContext);
 
-        listener.onMessage(message);
+        listener.onMessage(replicaEventMessage);
 
         ArgumentCaptor<ConsumerInfo> messageArgumentCaptor = ArgumentCaptor.forClass(ConsumerInfo.class);
         verify(broker).removeConsumer(any(), messageArgumentCaptor.capture());
@@ -565,6 +583,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setType("ReplicaEvent");
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         replicaEventMessage.setContent(event.getEventData());
 
         listener.onMessage(replicaEventMessage);
@@ -591,6 +610,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setType("ReplicaEvent");
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setProperties(event.getReplicationProperties());
 
@@ -639,6 +659,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         replicaEventMessage.setProperties(event.getReplicationProperties());
 
         listener.onMessage(replicaEventMessage);
@@ -667,6 +688,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         replicaEventMessage.setProperties(event.getReplicationProperties());
 
         listener.onMessage(replicaEventMessage);
@@ -690,6 +712,7 @@ public class ReplicaBrokerEventListenerTest {
         sendEventMessage.setContent(sendEvent.getEventData());
         sendEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, sendEvent.getEventType().name());
         sendEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        sendEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         MessageAck ack = new MessageAck();
         ConsumerId consumerId = new ConsumerId("2:2:2:2");
@@ -704,6 +727,7 @@ public class ReplicaBrokerEventListenerTest {
         ackEventMessage.setType("ReplicaEvent");
         ackEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, ackEvent.getEventType().name());
         ackEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "1");
+        ackEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         ackEventMessage.setContent(ackEvent.getEventData());
         ackEventMessage.setProperties(ackEvent.getReplicationProperties());
 
@@ -769,6 +793,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "1");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         listener.onMessage(replicaEventMessage);
 
@@ -801,6 +826,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         listener.onMessage(replicaEventMessage);
 
@@ -826,6 +852,74 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "2");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
+
+        CountDownLatch cdl = new CountDownLatch(1);
+        Thread thread = new Thread(() -> {
+            listener.onMessage(replicaEventMessage);
+            cdl.countDown();
+        });
+        thread.start();
+
+        assertThat(cdl.await(2, TimeUnit.SECONDS)).isFalse();
+
+        thread.interrupt();
+
+        verify(broker, never()).send(any(), any());
+
+        verify(replicaEventMessage, never()).acknowledge();
+    }
+
+    @Test
+    public void canHandleEventOfType_MESSAGE_SEND_olderVersion() throws Exception {
+        listener.sequence = null;
+        MessageId messageId = new MessageId("1:1");
+
+        ActiveMQMessage message = new ActiveMQMessage();
+        message.setMessageId(messageId);
+
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.MESSAGE_SEND)
+                .setEventData(eventSerializer.serializeMessageData(message));
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION - 1);
+
+        listener.onMessage(replicaEventMessage);
+
+        verify(broker).getAdminConnectionContext();
+        ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
+        verify(broker, times(2)).send(any(), messageArgumentCaptor.capture());
+
+        List<ActiveMQMessage> values = messageArgumentCaptor.getAllValues();
+        assertThat(values.get(0).getMessageId()).isEqualTo(message.getMessageId());
+        assertThat(values.get(1).getDestination()).isEqualTo(sequenceQueue);
+
+        verify(connectionContext, times(2)).isProducerFlowControl();
+        verify(connectionContext, times(2)).setProducerFlowControl(false);
+        verify(connectionContext, times(2)).setProducerFlowControl(true);
+    }
+
+    @Test
+    public void canHandleEventOfType_MESSAGE_SEND_newerVersion() throws Exception {
+        listener.sequence = null;
+        MessageId messageId = new MessageId("1:1");
+
+        ActiveMQMessage message = new ActiveMQMessage();
+        message.setMessageId(messageId);
+
+        ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
+
+        ReplicaEvent event = new ReplicaEvent()
+                .setEventType(ReplicaEventType.MESSAGE_SEND)
+                .setEventData(eventSerializer.serializeMessageData(message));
+        replicaEventMessage.setContent(event.getEventData());
+        replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
+        replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION + 1);
 
         CountDownLatch cdl = new CountDownLatch(1);
         Thread thread = new Thread(() -> {
@@ -856,6 +950,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setType("ReplicaEvent");
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setProperties(event.getReplicationProperties());
 
@@ -877,6 +972,7 @@ public class ReplicaBrokerEventListenerTest {
         replicaEventMessage.setType("ReplicaEvent");
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setProperties(event.getReplicationProperties());
 

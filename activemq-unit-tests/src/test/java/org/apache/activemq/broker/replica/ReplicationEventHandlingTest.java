@@ -141,6 +141,7 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "0");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         firstBrokerProducer.send(mockMainQueue, replicaEventMessage);
         Thread.sleep(LONG_TIMEOUT);
@@ -161,6 +162,7 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "100");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         firstBrokerProducer.send(mockMainQueue, replicaEventMessage);
         Thread.sleep(LONG_TIMEOUT);
@@ -191,6 +193,7 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "20");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         firstBrokerProducer.send(mockMainQueue, replicaEventMessage);
         Thread.sleep(LONG_TIMEOUT);
@@ -215,6 +218,7 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
         replicaEventMessage.setContent(event.getEventData());
         replicaEventMessage.setStringProperty(ReplicaEventType.EVENT_TYPE_PROPERTY, event.getEventType().name());
         replicaEventMessage.setStringProperty(ReplicaSupport.SEQUENCE_PROPERTY, "10");
+        replicaEventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, ReplicaSupport.CURRENT_VERSION);
 
         System.out.println("sending first MESSAGE_SEND...");
         firstBrokerProducer.send(mockMainQueue, replicaEventMessage);

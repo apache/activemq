@@ -80,6 +80,7 @@ class ReplicationMessageProducer {
         eventMessage.setContent(event.getEventData());
         eventMessage.setProperties(event.getReplicationProperties());
         eventMessage.setTransactionId(event.getTransactionId());
+        eventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, event.getVersion() == null ? ReplicaSupport.CURRENT_VERSION : event.getVersion());
         replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, eventMessage);
     }
 }

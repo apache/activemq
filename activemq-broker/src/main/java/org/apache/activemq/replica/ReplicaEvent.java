@@ -32,6 +32,8 @@ public class ReplicaEvent {
     private byte[] eventData;
     private Map<String, Object> replicationProperties = new HashMap<>();
 
+    private Integer version;
+
     ReplicaEvent setTransactionId(TransactionId transactionId) {
         this.transactionId = transactionId;
         return this;
@@ -57,6 +59,11 @@ public class ReplicaEvent {
         return this;
     }
 
+    ReplicaEvent setVersion(int version) {
+        this.version = version;
+        return this;
+    }
+
     TransactionId getTransactionId() {
         return transactionId;
     }
@@ -71,5 +78,9 @@ public class ReplicaEvent {
 
     public Map<String, Object> getReplicationProperties() {
         return replicationProperties;
+    }
+
+    public Integer getVersion() {
+        return version;
     }
 }

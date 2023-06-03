@@ -175,6 +175,10 @@ public class ReplicaBrokerEventListener implements MessageListener {
     }
 
     private void processMessage(ActiveMQMessage message, ReplicaEventType eventType, TransactionId transactionId) throws Exception {
+        int messageVersion = message.getIntProperty(ReplicaSupport.VERSION_PROPERTY);
+        if (messageVersion > ReplicaSupport.CURRENT_VERSION) {
+            throw new IllegalStateException("Unsupported version of replication event: " + messageVersion + ".  Maximum supported version: " + ReplicaSupport.CURRENT_VERSION);
+        }
         Object deserializedData = eventSerializer.deserializeMessageData(message.getContent());
         BigInteger newSequence = new BigInteger(message.getStringProperty(ReplicaSupport.SEQUENCE_PROPERTY));
 
