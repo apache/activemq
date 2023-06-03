@@ -170,8 +170,8 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
     }
 
     private void ensureDestinationsAreReplicated() throws Exception {
-        for (ActiveMQDestination d : getDurableDestinations()) { // TODO: support non-durable?
-            if (shouldReplicateDestination(d)) { // TODO: specific queues?
+        for (ActiveMQDestination d : getDurableDestinations()) {
+            if (shouldReplicateDestination(d)) {
                 replicateDestinationCreation(getAdminConnectionContext(), d);
             }
         }
@@ -250,7 +250,7 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
         if (message.getDestination().isTemporary()) {
             return false;
         }
-        if (message.isAdvisory()) {  // TODO: only replicate what we care about
+        if (message.isAdvisory()) {
             return false;
         }
         if (!message.isPersistent()) {
@@ -258,16 +258,6 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
         }
 
         return true;
-    }
-
-    private boolean isScheduled(Message message) throws IOException {
-        return hasProperty(message, ScheduledMessage.AMQ_SCHEDULED_DELAY)
-                || hasProperty(message, ScheduledMessage.AMQ_SCHEDULED_CRON)
-                || hasProperty(message, ScheduledMessage.AMQ_SCHEDULED_PERIOD);
-    }
-
-    private boolean hasProperty(Message message, String property) throws IOException {
-        return message.getProperty(property) != null;
     }
 
     private void replicateBeginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
