@@ -85,6 +85,7 @@ public class ReplicaBrokerEventListenerTest {
     private ReplicaBrokerEventListener listener;
     private PeriodAcknowledge acknowledgeCallback;
     private final ReplicaEventSerializer eventSerializer = new ReplicaEventSerializer();
+    private final ReplicaStatistics replicaStatistics = new ReplicaStatistics();
 
     @Before
     public void setUp() throws Exception {
@@ -106,7 +107,7 @@ public class ReplicaBrokerEventListenerTest {
         when(broker.addConsumer(any(), any())).thenReturn(subscription);
         when(broker.getAdaptor(TransactionBroker.class)).thenReturn(transactionBroker);
         acknowledgeCallback = new PeriodAcknowledge(new ReplicaPolicy());
-        listener = new ReplicaBrokerEventListener(replicaBroker, queueProvider, acknowledgeCallback);
+        listener = new ReplicaBrokerEventListener(replicaBroker, queueProvider, acknowledgeCallback, replicaStatistics);
         listener.initialize();
     }
 

@@ -34,6 +34,7 @@ import org.apache.activemq.replica.ReplicaPlugin;
 import org.apache.activemq.replica.ReplicaPolicy;
 import org.apache.activemq.replica.ReplicaRole;
 import org.apache.activemq.replica.ReplicaRoleManagementBroker;
+import org.apache.activemq.replica.ReplicaStatistics;
 import org.apache.activemq.replica.ReplicaSupport;
 import org.junit.After;
 import org.junit.Before;
@@ -246,7 +247,7 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
         ReplicaPlugin replicaPlugin = new ReplicaPlugin() {
             @Override
             public Broker installPlugin(final Broker broker) {
-                return new ReplicaRoleManagementBroker(broker, mockReplicaPolicy, ReplicaRole.replica);
+                return new ReplicaRoleManagementBroker(broker, mockReplicaPolicy, ReplicaRole.replica, new ReplicaStatistics());
             }
         };
         replicaPlugin.setRole(ReplicaRole.replica);

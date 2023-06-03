@@ -106,7 +106,7 @@ public class ReplicaSequencerTest {
                 .thenAnswer(a -> a.<ConsumerInfo>getArgument(1).getConsumerId().toString().contains("Sequencer")
                         ? intermediateSubscription : mock(PrefetchSubscription.class));
 
-        sequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer, replicationMessageProducer, new ReplicaPolicy());
+        sequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer, replicationMessageProducer, new ReplicaPolicy(), new ReplicaStatistics());
         sequencer.initialize();
 
     }

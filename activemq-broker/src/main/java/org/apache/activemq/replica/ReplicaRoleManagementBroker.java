@@ -48,6 +48,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
     private final ReplicaPolicy replicaPolicy;
     private final ClassLoader contextClassLoader;
     private ReplicaRole role;
+    private final ReplicaStatistics replicaStatistics;
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final WebConsoleAccessController webConsoleAccessController;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
@@ -59,11 +60,12 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
     ReplicaBroker replicaBroker;
     private ReplicaRoleStorage replicaRoleStorage;
 
-    public ReplicaRoleManagementBroker(Broker broker, ReplicaPolicy replicaPolicy, ReplicaRole role) {
+    public ReplicaRoleManagementBroker(Broker broker, ReplicaPolicy replicaPolicy, ReplicaRole role, ReplicaStatistics replicaStatistics) {
         super(broker);
         this.broker = broker;
         this.replicaPolicy = replicaPolicy;
         this.role = role;
+        this.replicaStatistics = replicaStatistics;
 
         contextClassLoader = Thread.currentThread().getContextClassLoader();
 
@@ -77,7 +79,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         ReplicationMessageProducer replicationMessageProducer =
                 new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
         ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer,
-                replicationMessageProducer, replicaPolicy);
+                replicationMessageProducer, replicaPolicy, replicaStatistics);
 
         sourceBroker = buildSourceBroker(replicationMessageProducer, replicaSequencer, queueProvider);
         replicaBroker = buildReplicaBroker(queueProvider);
@@ -131,6 +133,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
     }
 
     public void onStopSuccess() throws Exception {
+        replicaStatistics.reset();
         MutativeRoleBroker nextByRole = getNextByRole();
         nextByRole.startAfterRoleChange();
         setNext(nextByRole);
@@ -189,7 +192,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
     }
 
     private ReplicaBroker buildReplicaBroker(ReplicaReplicationQueueSupplier queueProvider) {
-        return new ReplicaBroker(broker, this, queueProvider, replicaPolicy);
+        return new ReplicaBroker(broker, this, queueProvider, replicaPolicy, replicaStatistics);
     }
 
     private void addInterceptor4CompositeQueues() {

@@ -18,13 +18,24 @@ package org.apache.activemq.replica.jmx;
 
 import org.apache.activemq.replica.ReplicaPlugin;
 import org.apache.activemq.replica.ReplicaRole;
+import org.apache.activemq.replica.ReplicaStatistics;
+
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class ReplicationView implements ReplicationViewMBean {
 
     private final ReplicaPlugin plugin;
+    private final ReplicaStatistics replicaStatistics;
 
-    public ReplicationView(ReplicaPlugin plugin) {
+    public ReplicationView(ReplicaPlugin plugin, ReplicaStatistics replicaStatistics) {
         this.plugin = plugin;
+        this.replicaStatistics = replicaStatistics;
+    }
+
+    @Override
+    public Long getReplicationTps() {
+        return Optional.ofNullable(replicaStatistics.getReplicationTps()).map(AtomicLong::get).orElse(null);
     }
 
     @Override
@@ -35,5 +46,27 @@ public class ReplicationView implements ReplicationViewMBean {
     @Override
     public String getReplicationRole() {
         return plugin.getRole().name();
+    }
+
+    @Override
+    public Long getTotalReplicationLag() {
+        return Optional.ofNullable(replicaStatistics.getTotalReplicationLag()).map(AtomicLong::get).orElse(null);
+    }
+
+    @Override
+    public Long getSourceWaitTime() {
+        return Optional.ofNullable(replicaStatistics.getSourceLastProcessedTime()).map(AtomicLong::get)
+                .map(v -> System.currentTimeMillis() - v).orElse(null);
+    }
+
+    @Override
+    public Long getReplicationLag() {
+        return Optional.ofNullable(replicaStatistics.getReplicationLag()).map(AtomicLong::get).orElse(null);
+    }
+
+    @Override
+    public Long getReplicaWaitTime() {
+        return Optional.ofNullable(replicaStatistics.getReplicaLastProcessedTime()).map(AtomicLong::get)
+                .map(v -> System.currentTimeMillis() - v).orElse(null);
     }
 }

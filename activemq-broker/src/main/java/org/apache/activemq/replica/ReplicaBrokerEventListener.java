@@ -69,6 +69,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
     private final ConnectionContext connectionContext;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
     private final PeriodAcknowledge acknowledgeCallback;
+    private final ReplicaStatistics replicaStatistics;
     private final AtomicReference<ReplicaEventRetrier> replicaEventRetrier = new AtomicReference<>();
     final ReplicaSequenceStorage sequenceStorage;
     private final TransactionBroker transactionBroker;
@@ -77,10 +78,11 @@ public class ReplicaBrokerEventListener implements MessageListener {
     MessageId sequenceMessageId;
 
     ReplicaBrokerEventListener(ReplicaBroker replicaBroker, ReplicaReplicationQueueSupplier queueProvider,
-            PeriodAcknowledge acknowledgeCallback) {
+            PeriodAcknowledge acknowledgeCallback, ReplicaStatistics replicaStatistics) {
         this.replicaBroker = requireNonNull(replicaBroker);
         this.broker = requireNonNull(replicaBroker.getNext());
         this.acknowledgeCallback = requireNonNull(acknowledgeCallback);
+        this.replicaStatistics = replicaStatistics;
         connectionContext = broker.getAdminConnectionContext().copy();
         connectionContext.setUserName(ReplicaSupport.REPLICATION_PLUGIN_USER_NAME);
         connectionContext.setClientId(REPLICATION_CONSUMER_CLIENT_ID);
@@ -203,6 +205,10 @@ public class ReplicaBrokerEventListener implements MessageListener {
                     "Replication event is out of order. Current sequence %s belongs to message with id %s," +
                             "but the id of the event is %s", sequence, sequenceMessageId, messageId));
         }
+
+        long currentTime = System.currentTimeMillis();
+        replicaStatistics.setReplicationLag(currentTime - message.getTimestamp());
+        replicaStatistics.setReplicaLastProcessedTime(currentTime);
     }
 
     private void processMessage(ActiveMQMessage message, ReplicaEventType eventType, Object deserializedData,

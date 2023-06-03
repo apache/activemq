@@ -84,6 +84,7 @@ public class ReplicaSequencer {
     private final ReplicaAckHelper replicaAckHelper;
     private final ReplicaPolicy replicaPolicy;
     private final ReplicaBatcher replicaBatcher;
+    private final ReplicaStatistics replicaStatistics;
 
     ReplicaCompactor replicaCompactor;
     private final LongSequenceGenerator sessionIdGenerator = new LongSequenceGenerator();
@@ -107,7 +108,8 @@ public class ReplicaSequencer {
 
     public ReplicaSequencer(Broker broker, ReplicaReplicationQueueSupplier queueProvider,
             ReplicaInternalMessageProducer replicaInternalMessageProducer,
-            ReplicationMessageProducer replicationMessageProducer, ReplicaPolicy replicaPolicy) {
+            ReplicationMessageProducer replicationMessageProducer, ReplicaPolicy replicaPolicy, 
+            ReplicaStatistics replicaStatistics) {
         this.broker = broker;
         this.queueProvider = queueProvider;
         this.replicaInternalMessageProducer = replicaInternalMessageProducer;
@@ -115,6 +117,7 @@ public class ReplicaSequencer {
         this.replicaAckHelper = new ReplicaAckHelper(broker);
         this.replicaPolicy = replicaPolicy;
         this.replicaBatcher = new ReplicaBatcher(replicaPolicy);
+        this.replicaStatistics = replicaStatistics;
     }
 
     void initialize() throws Exception {
@@ -154,7 +157,7 @@ public class ReplicaSequencer {
         subscription = (PrefetchSubscription) broker.addConsumer(subscriptionConnectionContext, consumerInfo);
 
         replicaCompactor = new ReplicaCompactor(broker, queueProvider, subscription,
-                replicaPolicy.getCompactorAdditionalMessagesLimit());
+                replicaPolicy.getCompactorAdditionalMessagesLimit(), replicaStatistics);
 
         intermediateQueue.iterate();
         String savedSequences = sequenceStorage.initialize(subscriptionConnectionContext);
@@ -313,6 +316,7 @@ public class ReplicaSequencer {
         }
         List<String> messageIds = new ArrayList<>();
         List<String> sequenceMessageIds = new ArrayList<>();
+        long timestamp = messagesToAck.get(0).getMessage().getTimestamp();
         for (MessageReference reference : messagesToAck) {
             ActiveMQMessage message = (ActiveMQMessage) reference.getMessage();
             List<String> messageIdsProperty;
@@ -323,6 +327,8 @@ public class ReplicaSequencer {
             }
             messageIds.addAll(messageIdsProperty);
             sequenceMessageIds.add(messageIdsProperty.get(0));
+
+            timestamp = Math.max(timestamp, message.getTimestamp());
         }
 
         broker.acknowledge(consumerExchange, ack);
@@ -331,6 +337,10 @@ public class ReplicaSequencer {
             messageIds.forEach(messageToAck::addLast);
             sequenceMessageIds.forEach(sequenceMessageToAck::addLast);
         }
+
+        long currentTime = System.currentTimeMillis();
+        replicaStatistics.setTotalReplicationLag(currentTime - timestamp);
+        replicaStatistics.setSourceLastProcessedTime(currentTime);
 
         asyncAckWakeup();
 
@@ -429,6 +439,8 @@ public class ReplicaSequencer {
                 restoreSequenceStorage.acknowledge(connectionContext, transactionId, sequenceMessages);
 
                 broker.commitTransaction(connectionContext, transactionId, true);
+
+                replicaStatistics.increaseTpsCounter(messages.size());
 
                 synchronized (messageToAck) {
                     messageToAck.removeAll(messages);
@@ -575,6 +587,7 @@ public class ReplicaSequencer {
 
         List<String> messageIds = new ArrayList<>();
         List<DataStructure> messages = new ArrayList<>();
+        long timestamp = batch.get(0).getMessage().getTimestamp();
         for (MessageReference reference : batch) {
             ActiveMQMessage originalMessage = (ActiveMQMessage) reference.getMessage();
             ActiveMQMessage message = (ActiveMQMessage) originalMessage.copy();
@@ -589,12 +602,16 @@ public class ReplicaSequencer {
             messages.add(message);
 
             sequence = sequence.add(BigInteger.ONE);
+
+            // take timestamp from the newest message for statistics
+            timestamp = Math.max(timestamp, message.getTimestamp());
         }
 
         ReplicaEvent replicaEvent = new ReplicaEvent()
                 .setEventType(ReplicaEventType.BATCH)
                 .setEventData(eventSerializer.serializeListOfObjects(messages))
                 .setTransactionId(transactionId)
+                .setTimestamp(timestamp)
                 .setReplicationProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY, messageIds);
 
         replicationMessageProducer.enqueueMainReplicaEvent(connectionContext, replicaEvent);

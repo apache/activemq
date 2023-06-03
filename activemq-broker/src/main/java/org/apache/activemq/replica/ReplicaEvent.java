@@ -33,6 +33,7 @@ public class ReplicaEvent {
     private Map<String, Object> replicationProperties = new HashMap<>();
 
     private Integer version;
+    private Long timestamp;
 
     ReplicaEvent setTransactionId(TransactionId transactionId) {
         this.transactionId = transactionId;
@@ -64,6 +65,12 @@ public class ReplicaEvent {
         return this;
     }
 
+    ReplicaEvent setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+        return this;
+    }
+
+
     TransactionId getTransactionId() {
         return transactionId;
     }
@@ -82,5 +89,9 @@ public class ReplicaEvent {
 
     public Integer getVersion() {
         return version;
+    }
+
+    public Long getTimestamp() {
+        return timestamp;
     }
 }

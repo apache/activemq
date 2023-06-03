@@ -70,6 +70,7 @@ class ReplicationMessageProducer {
         eventMessage.setProperties(event.getReplicationProperties());
         eventMessage.setTransactionId(event.getTransactionId());
         eventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, event.getVersion() == null ? ReplicaSupport.CURRENT_VERSION : event.getVersion());
+        eventMessage.setTimestamp(event.getTimestamp() == null ? System.currentTimeMillis() : event.getTimestamp());
         replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, eventMessage);
     }
 }

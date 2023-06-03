@@ -69,7 +69,7 @@ public class ReplicaRoleManagementBrokerTest {
         when(regionBroker.getDestinationInterceptor()).thenReturn(cdi);
         when(cdi.getInterceptors()).thenReturn(new DestinationInterceptor[]{});
 
-        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, replicaPolicy, ReplicaRole.replica);
+        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, replicaPolicy, ReplicaRole.replica, new ReplicaStatistics());
         replicaRoleManagementBroker.replicaBroker = replicaBroker;
         replicaRoleManagementBroker.sourceBroker = sourceBroker;
     }

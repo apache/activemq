@@ -69,9 +69,11 @@ public class ReplicaPlugin extends BrokerPluginSupport {
 
         logger.info("{} installed, running as {}", ReplicaPlugin.class.getName(), role);
 
-        final BrokerService brokerService = broker.getBrokerService();
+        ReplicaStatistics replicaStatistics = new ReplicaStatistics();
+
+        BrokerService brokerService = broker.getBrokerService();
         if (brokerService.isUseJmx()) {
-            replicationView = new ReplicationView(this);
+            replicationView = new ReplicationView(this, replicaStatistics);
             AnnotatedMBean.registerMBean(brokerService.getManagementContext(), replicationView, ReplicationJmxHelper.createJmxName(brokerService));
         }
         
@@ -96,7 +98,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         interceptors[interceptors.length - 1] = new ReplicaAdvisorySuppressor();
         compositeInterceptor.setInterceptors(interceptors);
 
-        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, replicaPolicy, role);
+        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, replicaPolicy, role, replicaStatistics);
 
         return new ReplicaAuthorizationBroker(replicaRoleManagementBroker);
     }

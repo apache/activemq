@@ -55,15 +55,17 @@ public class ReplicaCompactor {
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final PrefetchSubscription subscription;
     private final int additionalMessagesLimit;
+    private final ReplicaStatistics replicaStatistics;
 
     private final Queue intermediateQueue;
 
     public ReplicaCompactor(Broker broker, ReplicaReplicationQueueSupplier queueProvider, PrefetchSubscription subscription,
-            int additionalMessagesLimit) {
+            int additionalMessagesLimit, ReplicaStatistics replicaStatistics) {
         this.broker = broker;
         this.queueProvider = queueProvider;
         this.subscription = subscription;
         this.additionalMessagesLimit = additionalMessagesLimit;
+        this.replicaStatistics = replicaStatistics;
 
         intermediateQueue = broker.getDestinations(queueProvider.getIntermediateQueue()).stream().findFirst()
                 .map(DestinationExtractor::extractQueue).orElseThrow();
@@ -156,6 +158,8 @@ public class ReplicaCompactor {
 
         Set<MessageId> messageIds = toDelete.stream().map(dmid -> dmid.messageReference.getMessageId()).collect(Collectors.toSet());
         result.removeIf(reference -> messageIds.contains(reference.messageReference.getMessageId()));
+
+        replicaStatistics.increaseTpsCounter(toDelete.size());
 
         return result;
     }

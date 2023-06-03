@@ -57,16 +57,18 @@ public class ReplicaBroker extends MutativeRoleBroker {
     private final ReplicaReplicationQueueSupplier queueProvider;
     private final ReplicaPolicy replicaPolicy;
     private final PeriodAcknowledge periodAcknowledgeCallBack;
+    private final ReplicaStatistics replicaStatistics;
     private ReplicaBrokerEventListener messageListener;
     private ScheduledFuture<?> replicationScheduledFuture;
     private ScheduledFuture<?> ackPollerScheduledFuture;
 
     public ReplicaBroker(Broker broker, ReplicaRoleManagement management, ReplicaReplicationQueueSupplier queueProvider,
-            ReplicaPolicy replicaPolicy) {
+            ReplicaPolicy replicaPolicy, ReplicaStatistics replicaStatistics) {
         super(broker, management);
         this.queueProvider = queueProvider;
         this.replicaPolicy = replicaPolicy;
         this.periodAcknowledgeCallBack = new PeriodAcknowledge(replicaPolicy);
+        this.replicaStatistics = replicaStatistics;
     }
 
     @Override
@@ -126,7 +128,7 @@ public class ReplicaBroker extends MutativeRoleBroker {
                 }
             }
         }, replicaPolicy.getReplicaAckPeriod(), replicaPolicy.getReplicaAckPeriod(), TimeUnit.MILLISECONDS);
-        messageListener = new ReplicaBrokerEventListener(this, queueProvider, periodAcknowledgeCallBack);
+        messageListener = new ReplicaBrokerEventListener(this, queueProvider, periodAcknowledgeCallBack, replicaStatistics);
     }
 
     private void deinitialize() throws JMSException {
