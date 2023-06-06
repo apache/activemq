@@ -315,22 +315,6 @@ public class ReplicaSoftFailoverTest extends ReplicaPluginTestSupport {
         }
     }
 
-    private void waitUntilReplicationQueueHasConsumer(BrokerService broker) throws Exception {
-        assertTrue("Replication Main Queue has Consumer",
-            Wait.waitFor(new Wait.Condition() {
-                @Override
-                public boolean isSatisified() throws Exception {
-                    try {
-                        QueueViewMBean brokerMainQueueView = getQueueView(broker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
-                        return brokerMainQueueView.getConsumerCount() > 0;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return false;
-                    }
-                }
-            }, Wait.MAX_WAIT_MILLIS*2));
-    }
-
     private BrokerService setUpSecondBroker() throws Exception {
         BrokerService answer = new BrokerService();
         answer.setUseJmx(true);

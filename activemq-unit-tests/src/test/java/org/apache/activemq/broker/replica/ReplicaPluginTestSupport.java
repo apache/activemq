@@ -28,7 +28,9 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.replica.ReplicaPlugin;
 import org.apache.activemq.replica.ReplicaRole;
+import org.apache.activemq.replica.ReplicaSupport;
 import org.apache.activemq.replica.jmx.ReplicationViewMBean;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.io.FileUtils;
 
 import javax.jms.ConnectionFactory;
@@ -239,4 +241,30 @@ public abstract class ReplicaPluginTestSupport extends AutoFailTestSupport {
             FileUtils.cleanDirectory(kahaDBFile);
         }
     }
+
+    protected void waitForCondition(Runnable condition) throws Exception {
+        assertTrue(Wait.waitFor(() -> {
+            try {
+                condition.run();
+                return true;
+            } catch (Exception|Error e) {
+                e.printStackTrace();
+                return false;
+            }
+        }, Wait.MAX_WAIT_MILLIS * 5));
+    }
+
+    protected void waitUntilReplicationQueueHasConsumer(BrokerService broker) throws Exception {
+        assertTrue("Replication Main Queue has Consumer",
+                Wait.waitFor(() -> {
+                    try {
+                        QueueViewMBean brokerMainQueueView = getQueueView(broker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+                        return brokerMainQueueView.getConsumerCount() > 0;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return false;
+                    }
+                }, Wait.MAX_WAIT_MILLIS*2));
+    }
+
 }

@@ -26,6 +26,7 @@ import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.replica.ReplicaSupport;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
 
@@ -91,6 +92,8 @@ public class ReplicaNetworkConnectorTest extends ReplicaPluginTestSupport {
         firstBroker2MBean = setBrokerMBean(firstBroker2);
         secondBrokerMBean = setBrokerMBean(secondBroker);
         secondBroker2MBean = setBrokerMBean(secondBroker2);
+
+        waitUntilReplicationQueueHasConsumer(firstBroker);
     }
 
     @Override
@@ -186,10 +189,18 @@ public class ReplicaNetworkConnectorTest extends ReplicaPluginTestSupport {
             .count(), 0);
 
         assertEquals(getName(), receivedMessage.getText());
-        QueueViewMBean firstBrokerDestinationQueue = getQueueView(firstBroker, destination.getPhysicalName());
-        assertEquals(1, firstBrokerDestinationQueue.getDequeueCount());
-        QueueViewMBean firstBroker2DestinationQueue = getQueueView(firstBroker2, destination.getPhysicalName());
-        assertEquals(1, firstBroker2DestinationQueue.getDequeueCount());
+
+        waitForCondition(() -> {
+            try {
+                QueueViewMBean firstBrokerDestinationQueue = getQueueView(firstBroker, destination.getPhysicalName());
+                assertEquals(1, firstBrokerDestinationQueue.getDequeueCount());
+                QueueViewMBean firstBroker2DestinationQueue = getQueueView(firstBroker2, destination.getPhysicalName());
+                assertEquals(1, firstBroker2DestinationQueue.getDequeueCount());
+            } catch (Exception urlException) {
+                urlException.printStackTrace();
+                throw new RuntimeException(urlException);
+            }
+        });
 
 
         Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -258,12 +269,18 @@ public class ReplicaNetworkConnectorTest extends ReplicaPluginTestSupport {
             .filter(name -> name.contains("destinationName=" + destination.getPhysicalName()))
             .count(), 1);
 
-        QueueViewMBean firstBrokerDestinationQueue = getQueueView(firstBroker, destination.getPhysicalName());
-        assertEquals(1, firstBrokerDestinationQueue.getDequeueCount());
-        QueueViewMBean firstBroker2DestinationQueue = getQueueView(firstBroker2, destination.getPhysicalName());
-        assertEquals(1, firstBroker2DestinationQueue.getDequeueCount());
-        QueueViewMBean secondBrokerDestinationQueue = getQueueView(secondBroker, destination.getPhysicalName());
-        assertEquals(1, secondBrokerDestinationQueue.getDequeueCount());
+        waitForCondition(() -> {
+            try {
+                QueueViewMBean firstBrokerDestinationQueue = getQueueView(firstBroker, destination.getPhysicalName());
+                assertEquals(1, firstBrokerDestinationQueue.getDequeueCount());
+                QueueViewMBean firstBroker2DestinationQueue = getQueueView(firstBroker2, destination.getPhysicalName());
+                assertEquals(1, firstBroker2DestinationQueue.getDequeueCount());
+                QueueViewMBean secondBrokerDestinationQueue = getQueueView(secondBroker, destination.getPhysicalName());
+                assertEquals(1, secondBrokerDestinationQueue.getDequeueCount());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         firstBroker2Session.close();
         firstBrokerProducerSession.close();
@@ -333,5 +350,4 @@ public class ReplicaNetworkConnectorTest extends ReplicaPluginTestSupport {
             System.out.println("broker: " + broker.getBrokerName() + " doesn't have nc");
         }
     }
-
 }

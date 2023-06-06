@@ -20,15 +20,11 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.broker.BrokerPlugin;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.util.RedeliveryPlugin;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.replica.ReplicaSupport;
-import org.apache.activemq.util.Wait;
 import org.junit.Test;
 
 import javax.jms.Message;
@@ -196,21 +192,5 @@ public class ReplicaRedeliveryPluginTest extends ReplicaPluginTestSupport {
         secondBrokerSession.close();
         consumerSession.close();
         firstBrokerConsumerConnection.close();
-    }
-
-    private void waitUntilReplicationQueueHasConsumer(BrokerService broker) throws Exception {
-        assertTrue("Replication Main Queue has Consumer",
-            Wait.waitFor(new Wait.Condition() {
-                @Override
-                public boolean isSatisified() throws Exception {
-                    try {
-                        QueueViewMBean brokerMainQueueView = getQueueView(broker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
-                        return brokerMainQueueView.getConsumerCount() > 0;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return false;
-                    }
-                }
-            }, Wait.MAX_WAIT_MILLIS*2));
     }
 }
