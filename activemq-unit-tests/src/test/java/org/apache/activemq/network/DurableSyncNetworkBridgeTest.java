@@ -75,7 +75,6 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
     private boolean forceDurable = false;
     private boolean useVirtualDestSubs = false;
     private byte remoteBrokerWireFormatVersion = CommandTypes.PROTOCOL_VERSION;
-    public static enum FLOW {FORWARD, REVERSE}
 
     private BrokerService broker1;
     private BrokerService broker2;
@@ -139,7 +138,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertSubscriptionsCount(broker1, topic, 1);
         assertNCDurableSubsCount(broker2, topic, 1);
 
-        removeSubscription(broker1, topic, subName);
+        removeSubscription(broker1, subName);
 
         assertSubscriptionsCount(broker1, topic, 0);
         assertNCDurableSubsCount(broker2, topic, 0);
@@ -161,7 +160,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertSubscriptionsCount(broker1, topic, 1);
         assertNCDurableSubsCount(broker2, topic, 1);
 
-        removeSubscription(broker1, topic, subName);
+        removeSubscription(broker1, subName);
 
         assertSubscriptionsCount(broker1, topic, 0);
         assertNCDurableSubsCount(broker2, topic, 0);
@@ -188,7 +187,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         }
 
         assertSubscriptionsCount(broker1, topic, 1);
-        removeSubscription(broker1, topic, subName);
+        removeSubscription(broker1, subName);
         assertSubscriptionsCount(broker1, topic, 0);
         doTearDown();
 
@@ -217,7 +216,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         includedTopics = "different.topic";
         restartBroker(broker1, false);
         assertSubscriptionsCount(broker1, topic, 1);
-        removeSubscription(broker1, topic, subName);
+        removeSubscription(broker1, subName);
         assertSubscriptionsCount(broker1, topic, 0);
 
         //Test that on successful reconnection of the bridge that
@@ -310,7 +309,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         assertSubscriptionsCount(broker1, topic, 1);
         session1.createDurableSubscriber(topic2, "sub2");
-        removeSubscription(broker1, topic, subName);
+        removeSubscription(broker1, subName);
         assertSubscriptionsCount(broker1, topic, 0);
         assertSubscriptionsCount(broker1, topic2, 1);
 
@@ -376,7 +375,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //with bridge off, remove 100 subs
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                removeSubscription(broker1, new ActiveMQTopic("include.test." + i), subName + i + j);
+                removeSubscription(broker1, subName + i + j);
             }
         }
 
@@ -481,7 +480,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         restartBroker(broker1, false);
 
         assertSubscriptionsCount(broker1, topic, 1);
-        removeSubscription(broker1, topic, subName);
+        removeSubscription(broker1, subName);
         session1.createDurableSubscriber(topic, "sub2").close();
         assertSubscriptionsCount(broker1, topic, 1);
 
