@@ -51,7 +51,6 @@ public class ForceDurableNetworkBridgeTest extends DynamicNetworkTestSupport {
     protected String testTopicName2 = "include.nonforced.bar";
     protected String staticTopic = "include.static.bar";
     protected String staticTopic2 = "include.static.nonforced.bar";
-    public static enum FLOW {FORWARD, REVERSE};
     private BrokerService broker1;
     private BrokerService broker2;
     private Session session1;
@@ -126,7 +125,7 @@ public class ForceDurableNetworkBridgeTest extends DynamicNetworkTestSupport {
         //Remove the sub
         durSub.close();
         Thread.sleep(1000);
-        removeSubscription(broker1, topic, subName);
+        removeSubscription(broker1, subName);
 
         //The durable should be gone even though there is a consumer left
         //since we are not forcing durable subs
@@ -186,7 +185,7 @@ public class ForceDurableNetworkBridgeTest extends DynamicNetworkTestSupport {
         Thread.sleep(1000);
         assertNCDurableSubsCount(broker2, topic, 1);
 
-        removeSubscription(broker1, topic, subName);
+        removeSubscription(broker1, subName);
         assertNCDurableSubsCount(broker2, topic, 0);
     }
 
@@ -201,7 +200,7 @@ public class ForceDurableNetworkBridgeTest extends DynamicNetworkTestSupport {
         Thread.sleep(1000);
         assertNCDurableSubsCount(broker2, topic, 1);
 
-        removeSubscription(broker1, topic, subName);
+        removeSubscription(broker1, subName);
         Thread.sleep(1000);
         assertConsumersCount(broker2, topic, 1);
         assertNCDurableSubsCount(broker2, topic, 1);
@@ -225,7 +224,7 @@ public class ForceDurableNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertConsumersCount(broker2, topic, 1);
         assertNCDurableSubsCount(broker2, topic, 1);
 
-        removeSubscription(broker1, topic, subName);
+        removeSubscription(broker1, subName);
         assertConsumersCount(broker2, topic, 0);
         assertNCDurableSubsCount(broker2, topic, 0);
     }
