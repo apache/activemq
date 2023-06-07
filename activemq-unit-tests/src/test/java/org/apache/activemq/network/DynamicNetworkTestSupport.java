@@ -40,6 +40,7 @@ import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.util.SubscriptionKey;
@@ -50,6 +51,7 @@ import org.junit.rules.TemporaryFolder;
 
 
 public abstract class DynamicNetworkTestSupport {
+    public enum FLOW {FORWARD, REVERSE};
 
     protected Connection localConnection;
     protected Connection remoteConnection;
@@ -92,14 +94,10 @@ public abstract class DynamicNetworkTestSupport {
         }
     }
 
-
     protected void assertBridgeStarted() throws Exception {
-        assertTrue(Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1;
-            }
-        }, 10000, 500));
+        assertTrue(Wait.waitFor(
+            () -> localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1,
+            10000, 500));
     }
 
     protected RemoveSubscriptionInfo getRemoveSubscriptionInfo(final ConnectionContext context,
@@ -113,24 +111,16 @@ public abstract class DynamicNetworkTestSupport {
     }
 
     protected void waitForConsumerCount(final DestinationStatistics destinationStatistics, final int count) throws Exception {
-        assertTrue(Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                //should only be 1 for the composite destination creation
-                return count == destinationStatistics.getConsumers().getCount();
-            }
+        assertTrue(Wait.waitFor(() -> {
+            //should only be 1 for the composite destination creation
+            return count == destinationStatistics.getConsumers().getCount();
         }));
     }
 
     protected void waitForDispatchFromLocalBroker(final DestinationStatistics destinationStatistics, final int count) throws Exception {
-        assertTrue(Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return count == destinationStatistics.getDequeues().getCount() &&
-                       count == destinationStatistics.getDispatched().getCount() &&
-                       count == destinationStatistics.getForwards().getCount();
-            }
-        }));
+        assertTrue(Wait.waitFor(() -> count == destinationStatistics.getDequeues().getCount() &&
+               count == destinationStatistics.getDispatched().getCount() &&
+               count == destinationStatistics.getForwards().getCount()));
     }
 
     protected void assertLocalBrokerStatistics(final DestinationStatistics localStatistics, final int count) {
@@ -145,27 +135,22 @@ public abstract class DynamicNetworkTestSupport {
 
     protected void assertNCDurableSubsCount(final BrokerService brokerService,
             final ActiveMQTopic dest, final int count) throws Exception {
-        assertTrue(Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return count == getNCDurableSubs(brokerService, dest).size();
-            }
-        }, 10000, 500));
+        assertTrue(Wait.waitFor(() -> count == getNCDurableSubs(brokerService, dest).size(),
+            10000, 500));
     }
 
     protected void assertConsumersCount(final BrokerService brokerService,
-            final ActiveMQTopic dest, final int count) throws Exception {
-        assertTrue(Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return count == getConsumers(brokerService, dest).size();
-            }
-        }, 10000, 500));
+            final ActiveMQDestination dest, final int count) throws Exception {
+        assertTrue(Wait.waitFor(() -> count == getConsumers(brokerService, dest).size(),
+            10000, 500));
+        Thread.sleep(1000);
+        // Check one more time after a short pause to make sure the count didn't increase past what we wanted
+        assertEquals(count, getConsumers(brokerService, dest).size());
     }
 
     protected List<Subscription> getConsumers(final BrokerService brokerService,
-            final ActiveMQTopic dest) throws Exception {
-        Topic destination = (Topic) brokerService.getDestination(dest);
+            final ActiveMQDestination dest) throws Exception {
+        Destination destination = brokerService.getDestination(dest);
         return destination.getConsumers();
     }
 
@@ -208,8 +193,8 @@ public abstract class DynamicNetworkTestSupport {
         return subs;
     }
 
-    protected void removeSubscription(final BrokerService brokerService, final ActiveMQTopic topic,
-            final String subName) throws Exception {
+    protected void removeSubscription(final BrokerService brokerService,
+        final String subName) throws Exception {
         final RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
         info.setClientId(clientId);
         info.setSubscriptionName(subName);
