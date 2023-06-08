@@ -86,7 +86,7 @@
     <karaf-version>4.3.7</karaf-version>
     <log4j-version>2.20.0</log4j-version>
     <mockito-version>4.8.1</mockito-version>
-    <owasp-dependency-check-version>8.0.2</owasp-dependency-check-version>
+    <owasp-dependency-check-version>8.2.1</owasp-dependency-check-version>
     <mqtt-client-version>1.16</mqtt-client-version>
     <org-apache-derby-version>10.15.2.0</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
