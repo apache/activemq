@@ -41,13 +41,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.jms.*;
-import javax.management.MalformedObjectNameException;
 import java.lang.IllegalStateException;
-import java.net.MalformedURLException;
 import java.net.URI;
 
 import java.text.MessageFormat;
 import java.util.LinkedList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -56,6 +56,8 @@ import static org.mockito.Mockito.spy;
 
 public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSupport {
     static final int MAX_BATCH_LENGTH = 500;
+
+    private static final Logger LOG = LoggerFactory.getLogger(ReplicaAcknowledgeReplicationEventTest.class);
 
     protected Connection firstBrokerConnection;
 
@@ -131,6 +133,8 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
         secondBroker.start();
         Thread.sleep(LONG_TIMEOUT * 2);
 
+        waitUntilReplicationQueueHasConsumer(firstBroker);
+
         waitForCondition(() -> {
             try {
                 QueueViewMBean firstBrokerQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
@@ -139,8 +143,8 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
 
                 QueueViewMBean secondBrokerSequenceQueueView = getQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
                 assertEquals(secondBrokerSequenceQueueView.browseMessages().size(), 1);
-            } catch (Exception urlException) {
-                urlException.printStackTrace();
+            } catch (Exception|Error urlException) {
+                LOG.error("Caught error during wait: " + urlException.getMessage());
                 throw new RuntimeException(urlException);
             }
         });
@@ -190,8 +194,8 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
                 QueueViewMBean firstBrokerMainQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
                 assertEquals(firstBrokerMainQueueView.getDequeueCount(), messagesToAck.size());
                 assertEquals(firstBrokerMainQueueView.getEnqueueCount(), messagesToAck.size());
-            } catch (Exception urlException) {
-                urlException.printStackTrace();
+            } catch (Exception|Error urlException) {
+                LOG.error("Caught error during wait: " + urlException.getMessage());
                 throw new RuntimeException(urlException);
             }
         });
@@ -246,8 +250,8 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
                 QueueViewMBean firstBrokerMainQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
                 assertEquals(firstBrokerMainQueueView.getDequeueCount(), 0);
                 assertTrue(firstBrokerMainQueueView.getEnqueueCount() >= 1);
-            } catch (Exception urlException) {
-                urlException.printStackTrace();
+            } catch (Exception|Error urlException) {
+                LOG.error("Caught error during wait: " + urlException.getMessage());
                 throw new RuntimeException(urlException);
             }
         });
