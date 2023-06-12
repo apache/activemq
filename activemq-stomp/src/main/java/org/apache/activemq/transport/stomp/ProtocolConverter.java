@@ -718,6 +718,7 @@ public class ProtocolConverter {
         if (subscriptionId != null) {
             StompSubscription sub = this.subscriptions.remove(subscriptionId);
             if (sub != null) {
+                subscriptionsByConsumerId.remove(sub.getConsumerInfo().getConsumerId());
                 sendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
                 return;
             }
