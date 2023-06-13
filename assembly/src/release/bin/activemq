@@ -89,7 +89,7 @@ getActiveMQHome(){
   local REAL_DIR="`dirname $REAL_BIN`/../"
   REAL_DIR="`cd $REAL_DIR && pwd -P`"
   if [ -z "$REAL_DIR" ];then
-      echo 'ERROR: unable to find real installtion path fo activemq, you have to define ACTIVEMQ_HOME manually in the config' >&2
+      echo 'ERROR: unable to find real installation path for activemq, you have to define ACTIVEMQ_HOME manually in the config' >&2
       exit 1
   fi
   echo "$REAL_DIR/"
