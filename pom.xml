@@ -50,9 +50,9 @@
     <camel-version-range>[2.20,4)</camel-version-range>
     <commons-beanutils-version>1.9.4</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
-    <commons-daemon-version>1.3.3</commons-daemon-version>
+    <commons-daemon-version>1.3.4</commons-daemon-version>
     <commons-dbcp2-version>2.9.0</commons-dbcp2-version>
-    <commons-io-version>2.11.0</commons-io-version>
+    <commons-io-version>2.12.0</commons-io-version>
     <commons-lang-version>3.12.0</commons-lang-version>
     <commons-logging-version>1.2</commons-logging-version>
     <commons-pool2-version>2.11.1</commons-pool2-version>
@@ -66,7 +66,7 @@
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
-    <jackson-version>2.14.2</jackson-version>
+    <jackson-version>2.15.2</jackson-version>
     <jakarta-jms-api-version>2.0.3</jakarta-jms-api-version>
     <jakarta-jms-api-v3-version>3.1.0</jakarta-jms-api-v3-version>
     <jasypt-version>1.9.3</jasypt-version>
@@ -75,7 +75,7 @@
     <jetty-version>${jetty9-version}</jetty-version>
     <jmdns-version>3.5.8</jmdns-version>
     <tomcat-api-version>9.0.65</tomcat-api-version>
-    <jettison-version>1.5.3</jettison-version>
+    <jettison-version>1.5.4</jettison-version>
     <jmock-version>2.5.1</jmock-version>
     <jolokia-version>1.7.1</jolokia-version>
     <josql-version>1.5_5</josql-version>
@@ -86,26 +86,24 @@
     <karaf-version>4.3.7</karaf-version>
     <log4j-version>2.20.0</log4j-version>
     <mockito-version>4.8.1</mockito-version>
-    <owasp-dependency-check-version>8.0.2</owasp-dependency-check-version>
+    <owasp-dependency-check-version>8.2.1</owasp-dependency-check-version>
     <mqtt-client-version>1.16</mqtt-client-version>
     <org-apache-derby-version>10.15.2.0</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
-    <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
-    <zookeeper-version>3.4.14</zookeeper-version>
     <qpid-proton-version>0.33.10</qpid-proton-version>
     <qpid-jms-version>1.6.0</qpid-jms-version>
     <netty-version>4.1.75.Final</netty-version>
     <regexp-version>1.4</regexp-version>
-    <rome-version>1.18.0</rome-version>
+    <rome-version>2.1.0</rome-version>
     <shiro-version>1.11.0</shiro-version>
     <slf4j-version>2.0.6</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
-    <spring-version>5.3.25</spring-version>
+    <spring-version>5.3.27</spring-version>
     <taglibs-version>1.2.5</taglibs-version>
     <velocity-version>2.3</velocity-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.20</xstream-version>
-    <xbean-version>4.22</xbean-version>
+    <xbean-version>4.23</xbean-version>
     <xerces-version>2.12.2</xerces-version>
     <jaxb-basics-version>0.12.0</jaxb-basics-version>
     <stompjms-version>1.19</stompjms-version>
@@ -122,34 +120,34 @@
     <javaee-javadoc-url>http://download.oracle.com/javaee/6/api/</javaee-javadoc-url>
 
     <!-- Maven Plugin Version for this Project -->
-    <maven-bundle-plugin-version>5.1.8</maven-bundle-plugin-version>
-    <maven-surefire-plugin-version>3.0.0-M8</maven-surefire-plugin-version>
+    <maven-bundle-plugin-version>5.1.9</maven-bundle-plugin-version>
+    <maven-surefire-plugin-version>3.1.2</maven-surefire-plugin-version>
     <maven-antrun-plugin-version>3.1.0</maven-antrun-plugin-version>
-    <maven-assembly-plugin-version>3.4.2</maven-assembly-plugin-version>
-    <maven-release-plugin-version>3.0.0-M7</maven-release-plugin-version>
+    <maven-assembly-plugin-version>3.6.0</maven-assembly-plugin-version>
+    <maven-release-plugin-version>3.0.1</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
-    <maven-enforcer-plugin-version>3.2.1</maven-enforcer-plugin-version>
+    <maven-enforcer-plugin-version>3.3.0</maven-enforcer-plugin-version>
     <maven-war-plugin-version>3.3.2</maven-war-plugin-version>
-    <maven-compiler-plugin-version>3.10.1</maven-compiler-plugin-version>
+    <maven-compiler-plugin-version>3.11.0</maven-compiler-plugin-version>
     <maven-rar-plugin-version>3.0.0</maven-rar-plugin-version>
     <maven-jar-plugin-version>3.3.0</maven-jar-plugin-version>
-    <maven-source-plugin-version>3.2.1</maven-source-plugin-version>
-    <maven-javadoc-plugin-version>3.4.1</maven-javadoc-plugin-version>
+    <maven-source-plugin-version>3.3.0</maven-source-plugin-version>
+    <maven-javadoc-plugin-version>3.5.0</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.5.2</maven-install-plugin-version>
-    <maven-shade-plugin-version>3.3.0</maven-shade-plugin-version>
+    <maven-shade-plugin-version>3.4.1</maven-shade-plugin-version>
     <findbugs-maven-plugin-version>3.0.5</findbugs-maven-plugin-version>
     <javacc-maven-plugin-version>3.0.1</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>3.0.0</taglist-maven-plugin-version>
-    <build-helper-maven-plugin-version>3.3.0</build-helper-maven-plugin-version>
+    <build-helper-maven-plugin-version>3.4.0</build-helper-maven-plugin-version>
     <replacer-maven-plugin-version>1.5.3</replacer-maven-plugin-version>
     <apache-rat-plugin-version>0.15</apache-rat-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.4.0</depends-maven-plugin-version>
     <maven-dependency-plugin-version>2.8</maven-dependency-plugin-version>
-    <maven-project-info-reports-plugin-version>3.4.2</maven-project-info-reports-plugin-version>
+    <maven-project-info-reports-plugin-version>3.4.5</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
-    <maven-plugin-plugin-version>3.7.1</maven-plugin-plugin-version>
+    <maven-plugin-plugin-version>3.9.0</maven-plugin-plugin-version>
     <maven-core-version>3.8.6</maven-core-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
@@ -229,7 +227,6 @@
     <module>activemq-runtime-config</module>
     <module>activemq-tooling</module>
     <module>activemq-web</module>
-    <module>activemq-partition</module>
     <module>activemq-osgi</module>
     <module>activemq-blueprint</module>
     <module>activemq-web-demo</module>
@@ -313,11 +310,6 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-all</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-partition</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -583,65 +575,6 @@
         <groupId>org.ops4j.pax.logging</groupId>
         <artifactId>pax-logging-log4j2</artifactId>
         <version>${pax-logging-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.hadoop.zookeeper</groupId>
-        <artifactId>zookeeper</artifactId>
-        <version>${zookeeper-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.zookeeper</groupId>
-        <artifactId>zookeeper</artifactId>
-        <version>${zookeeper-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.linkedin</groupId>
-        <artifactId>org.linkedin.zookeeper-impl</artifactId>
-        <version>${linkedin-zookeeper-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.linkedin</groupId>
-        <artifactId>org.linkedin.util-core</artifactId>
-        <version>${linkedin-zookeeper-version}</version>
       </dependency>
 
       <!-- zeroconf transport -->

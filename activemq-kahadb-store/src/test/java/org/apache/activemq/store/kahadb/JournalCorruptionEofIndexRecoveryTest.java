@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -239,9 +240,20 @@ public class JournalCorruptionEofIndexRecoveryTest {
         final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
             public void append(LogEvent event) {
-                if (event.getLevel() == Level.WARN
+                /** 
+                 * NOTE: As of JDK v11.0.19 RandomAccessFile throws a messageless EOFException when read fails
+                 * 
+                 *                 throw new EOFException();
+                 */
+                if (event != null 
+                        && event.getLevel() == Level.WARN
+                        && event.getMessage() != null
+                        && event.getMessage().getFormattedMessage() != null
                         && event.getMessage().getFormattedMessage().contains("Cannot recover message audit")
-                        && event.getThrown().getLocalizedMessage().contains("Invalid location size")) {
+                        && event.getThrown() != null
+                        && event.getThrown() instanceof EOFException
+                        && event.getThrown().getMessage() == null) {
+
                     trappedExpectedLogMessage.set(true);
                 }
             }
@@ -258,6 +270,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
         }
 
         assertEquals("no missing message", 50, broker.getAdminView().getTotalMessageCount());
+        assertEquals("Drain", 50, drainQueue(50));
+        assertEquals("no problem draining messages", 0, broker.getAdminView().getTotalMessageCount());
         assertTrue("Did replay records on invalid location size", trappedExpectedLogMessage.get());
     }
 

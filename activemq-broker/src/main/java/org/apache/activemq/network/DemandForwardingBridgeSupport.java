@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -136,7 +137,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected ActiveMQDestination[] durableDestinations;
     protected final ConcurrentMap<ConsumerId, DemandSubscription> subscriptionMapByLocalId = new ConcurrentHashMap<>();
     protected final ConcurrentMap<ConsumerId, DemandSubscription> subscriptionMapByRemoteId = new ConcurrentHashMap<>();
-    protected final Set<ConsumerId> forcedDurableRemoteId = Collections.newSetFromMap(new ConcurrentHashMap<ConsumerId, Boolean>());
+    protected final Set<ConsumerId> forcedDurableRemoteId = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    protected final ConcurrentMap<ConsumerId, Set<ConsumerId>> compositeConsumerIds = new ConcurrentHashMap<>();
+    protected final ConcurrentMap<SubscriptionInfo, Set<SubscriptionInfo>> compositeSubscriptions = new ConcurrentHashMap<>();
     protected final BrokerId localBrokerPath[] = new BrokerId[]{null};
     protected final CountDownLatch startedLatch = new CountDownLatch(2);
     protected final CountDownLatch localStartedLatch = new CountDownLatch(1);
@@ -1015,6 +1018,18 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
         } else if (data.getClass() == RemoveInfo.class) {
             ConsumerId id = (ConsumerId) ((RemoveInfo) data).getObjectId();
+
+            // If we have an entry in compositeConsumerIds then this consumer was a
+            // composite consumer and we need to remove the entries in the set and
+            // not the consumer id we received here
+            final Set<ConsumerId> compositeIds = compositeConsumerIds.remove(id);
+            if (compositeIds != null) {
+                for (ConsumerId compositeId : compositeIds) {
+                    serviceRemoteConsumerAdvisory(new RemoveInfo(compositeId));
+                }
+                return;
+            }
+
             removeDemandSubscription(id);
 
             if (forcedDurableRemoteId.remove(id)) {
@@ -1030,6 +1045,23 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         } else if (data.getClass() == RemoveSubscriptionInfo.class) {
             final RemoveSubscriptionInfo info = ((RemoveSubscriptionInfo) data);
             final SubscriptionInfo subscriptionInfo = new SubscriptionInfo(info.getClientId(), info.getSubscriptionName());
+
+            // If we have an entry in compositeSubscriptions then this consumer was a
+            // composite consumer and we need to remove the entries in the set and not
+            // the subscription that we received here
+            final Set<SubscriptionInfo> compositeSubs =
+                this.compositeSubscriptions.remove(subscriptionInfo);
+            if (compositeSubs != null) {
+                for (SubscriptionInfo compositeSub : compositeSubs) {
+                    RemoveSubscriptionInfo remove = new RemoveSubscriptionInfo();
+                    remove.setClientId(compositeSub.getClientId());
+                    remove.setSubscriptionName(compositeSub.getSubscriptionName());
+                    remove.setConnectionId(this.localConnectionInfo.getConnectionId());
+                    serviceRemoteConsumerAdvisory(remove);
+                }
+                return;
+            }
+
             final boolean proxyBridgeSub = isProxyBridgeSubscription(subscriptionInfo.getClientId(),
                     subscriptionInfo.getSubscriptionName());
             for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
@@ -1415,6 +1447,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void addConsumerInfo(final ConsumerInfo consumerInfo) throws IOException {
+        // Check if this was processed and split into new consumers for composite dests
+        if (splitCompositeConsumer(consumerInfo)) {
+            // If true we don't want to continue processing the original consumer info
+            return;
+        }
+
         ConsumerInfo info = consumerInfo.copy();
         addRemoteBrokerToBrokerPath(info);
         DemandSubscription sub = createDemandSubscription(info);
@@ -1441,6 +1479,65 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 LOG.debug("{} new demand subscription: {}", configuration.getBrokerName(), sub);
             }
         }
+    }
+
+    // Generate new consumers for each destination that part of a composite destination list for a consumer
+    private boolean splitCompositeConsumer(final ConsumerInfo consumerInfo) throws IOException {
+        // If not a composite destination or if an advisory topic then return false
+        // So we process normally and don't split
+        if (!consumerInfo.getDestination().isComposite() ||
+            AdvisorySupport.isAdvisoryTopic(consumerInfo.getDestination())) {
+            return false;
+        }
+
+        // At this point this is a composite destination and not an advisory topic. The destination
+        // will be split into individual destinations to create demand so that conduit subscriptions
+        // and durable subscriptions work correctly
+
+        // Handle duplicates, don't need to create again if we already have an entry
+        // Just return true so we stop processing
+        if (!isDuplicateSuppressionOff(consumerInfo) && compositeConsumerIds.containsKey(
+            consumerInfo.getConsumerId())) {
+            return true;
+        }
+
+        // Get a set to store mapped consumer Ids for each individual destination in the composite list
+        // and (if applicable) a set for subscriptions for durables
+        final Set<ConsumerId> consumerIds = compositeConsumerIds.computeIfAbsent(
+            consumerInfo.getConsumerId(),
+            k -> Collections.newSetFromMap(new ConcurrentHashMap<>()));
+        final Set<SubscriptionInfo> subscriptions = Optional.ofNullable(
+            consumerInfo.getSubscriptionName()).map(
+            subName -> compositeSubscriptions.computeIfAbsent(
+                new SubscriptionInfo(consumerInfo.getClientId(),
+                    consumerInfo.getSubscriptionName()),
+                k -> Collections.newSetFromMap(new ConcurrentHashMap<>()))).orElse(null);
+
+        // Split and go through each destination that is part of the composite list and process
+        for (ActiveMQDestination individualDest : consumerInfo.getDestination()
+            .getCompositeDestinations()) {
+            // Create a new consumer info with the individual destinations and
+            // generate new consumer Ids for each and add to the consumerIds set
+            final ConsumerInfo info = consumerInfo.copy();
+            info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),
+                consumerIdGenerator.getNextSequenceId()));
+            info.setDestination(individualDest);
+            consumerIds.add(info.getConsumerId());
+
+            // If there is a subscription name (durable) then generate a new one for the dest
+            // and add to the subscriptions set
+            Optional.ofNullable(subscriptions).ifPresent(
+                subs -> {
+                    info.setSubscriptionName(
+                        consumerInfo.getSubscriptionName() + individualDest.getPhysicalName());
+                    subs.add(
+                        new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
+                });
+
+            // Continue on and process the new consumer Info
+            addConsumerInfo(info);
+        }
+        return true;
     }
 
     private void undoMapRegistration(DemandSubscription sub) {

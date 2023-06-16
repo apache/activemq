@@ -78,21 +78,6 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.linkedin</groupId>
-      <artifactId>org.linkedin.zookeeper-impl</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.linkedin</groupId>
-      <artifactId>org.linkedin.util-core</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.zookeeper</groupId>
-      <artifactId>zookeeper</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>osgi.core</artifactId>
       <scope>provided</scope>
@@ -202,7 +187,6 @@
                 <include>${basedir}/../activemq-kahadb-store/src/main/java</include>
                 <include>${basedir}/../activemq-mqtt/src/main/java</include>
                 <include>${basedir}/../activemq-stomp/src/main/java</include>
-                <include>${basedir}/../activemq-partition/src/main/java</include>
                 <include>${basedir}/../activemq-runtime-config/src/main/java</include>
               </includes>
               <strictXsdOrder>false</strictXsdOrder>
