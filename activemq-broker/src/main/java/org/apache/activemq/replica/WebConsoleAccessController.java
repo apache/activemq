@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.Map;
 
 public class WebConsoleAccessController {
@@ -88,10 +89,14 @@ public class WebConsoleAccessController {
 
     private void invoke(Method method, BrokerContext brokerContext) {
         try {
-            Map servers = brokerContext.getBeansOfType(serverClass);
+            Map<String, ?> servers = brokerContext.getBeansOfType(serverClass);
             if (servers.size() > 0) {
-                for (Object server : servers.values()) {
-                    Object[] connectors = (Object[]) getConnectorsMethod.invoke(server);
+                for (Map.Entry<String, ?> server : servers.entrySet()) {
+                    if (server.getKey().toLowerCase(Locale.ROOT).contains("jolokia")) {
+                        continue;
+                    }
+
+                    Object[] connectors = (Object[]) getConnectorsMethod.invoke(server.getValue());
                     for (Object connector : connectors) {
                         method.invoke(connector);
                     }
