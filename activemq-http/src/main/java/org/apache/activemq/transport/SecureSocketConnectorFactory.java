@@ -19,6 +19,7 @@ package org.apache.activemq.transport;
 import javax.net.ssl.SSLContext;
 
 import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.transport.http.BlockingQueueTransport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -144,8 +145,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
                 connector = new ServerConnector(server, factory, httpConnectionFactory);
             }
 
-            server.setStopTimeout(60_000l);
-            //connector.setStopTimeout(500);
+            server.setStopTimeout(30_000L);
             return connector;
         }
     }

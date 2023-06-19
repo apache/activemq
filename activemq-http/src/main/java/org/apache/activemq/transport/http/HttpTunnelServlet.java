@@ -32,6 +32,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
@@ -102,6 +103,11 @@ public class HttpTunnelServlet extends HttpServlet {
             }
 
             packet = (Command)transportChannel.getQueue().poll(requestTimeout, TimeUnit.MILLISECONDS);
+
+            // If the packet is ShutDownInfo then we are shutting down so return.
+            if (packet instanceof ShutdownInfo) {
+                return;
+            }
 
             DataOutputStream stream = new DataOutputStream(response.getOutputStream());
             wireFormat.marshal(packet, stream);
@@ -204,7 +210,17 @@ public class HttpTunnelServlet extends HttpServlet {
             }
 
             public void stopped(Service service) {
-                clients.remove(clientID);
+                final BlockingQueueTransport removed = clients.remove(clientID);
+                if (removed != null) {
+                    try {
+                        // Send a ShutdownInfo() packet on stop so that we unblock any calls
+                        // to transportChannel.getQueue().poll()
+                        removed.getQueue().add(new ShutdownInfo());
+                    } catch (Exception e) {
+                        LOG.debug("Could not send ShutdownInfo() packet to BlockingQueueTransport "
+                            + "on shutdown for client {}", clientID);
+                    }
+                }
             }
         });
 
