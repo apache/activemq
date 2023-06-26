@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -2475,26 +2476,26 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         QueueMessageReference message = null;
         MessageId messageId = messageDispatchNotification.getMessageId();
 
-        Set<MessageReference> set = new LinkedHashSet<MessageReference>();
+        int size = 0;
         do {
             doPageIn(true, false, getMaxPageSize());
             pagedInMessagesLock.readLock().lock();
             try {
-                if (!set.addAll(pagedInMessages.values())) {
+                if (pagedInMessages.size() == size) {
                     // nothing new to check - mem constraint on page in
                     break;
-                };
+                }
+                size = pagedInMessages.size();
+                for (MessageReference ref : pagedInMessages) {
+                    if (ref.getMessageId().equals(messageId)) {
+                        message = (QueueMessageReference) ref;
+                        break;
+                    }
+                }
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
-            List<MessageReference> list = new ArrayList<MessageReference>(set);
-            for (MessageReference ref : list) {
-                if (ref.getMessageId().equals(messageId)) {
-                    message = (QueueMessageReference) ref;
-                    break;
-                }
-            }
-        } while (set.size() < this.destinationStatistics.getMessages().getCount());
+        } while (size < this.destinationStatistics.getMessages().getCount());
 
         if (message == null) {
             throw new JMSException("Slave broker out of sync with master - Message: "
