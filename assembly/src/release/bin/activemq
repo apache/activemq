@@ -546,7 +546,7 @@ invoke_start(){
 
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START $ACTIVEMQ_SSL_OPTS -Djava.awt.headless=true -Djava.io.tmpdir=\"${ACTIVEMQ_TMP}\""
 
-    echo "INFO: Starting - inspect logfiles specified in logging.properties and log4j.properties to get details"
+    echo "INFO: Starting - inspect logfiles specified in logging.properties and log4j2.properties to get details"
     invokeJar "$ACTIVEMQ_PIDFILE" start
     exit "$?"
 }
