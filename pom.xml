@@ -25,14 +25,14 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.18.2-SNAPSHOT</version>
+  <version>5.18.2</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
 
   <properties>
     <!-- for reproducible builds -->	
-    <project.build.outputTimestamp>2023-04-10T05:25:30Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2023-06-27T12:41:27Z</project.build.outputTimestamp>
 
     <activeio-version>3.1.4</activeio-version>
     <siteId>activemq-${project.version}</siteId>
@@ -245,7 +245,7 @@
     <connection>scm:git:http://gitbox.apache.org/repos/asf/activemq.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/activemq.git</developerConnection>
     <url>https://github.com/apache/activemq</url>
-    <tag>main</tag>
+    <tag>activemq-5.18.2</tag>
   </scm>
 
   <dependencyManagement>
