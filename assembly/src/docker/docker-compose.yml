@@ -19,7 +19,7 @@
 version: "2.1"
 services:
   activemq:
-    image: ${ACTIVEMQ_DOCKER_IMAGE_NAME:-qctivemq}
+    image: ${ACTIVEMQ_DOCKER_IMAGE_NAME:-activemq}
     expose:
       - "61616"
       - "5672"
