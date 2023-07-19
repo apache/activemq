@@ -37,27 +37,21 @@ public class ReplicaEventRetrier {
         this.task = task;
     }
 
-    public void process() {
+    public void process() throws InterruptedException {
         long attemptNumber = 0;
         while (running.get()) {
             try {
                 task.call();
                 return;
-            } catch (BrokerStoppedException bse) {
-                logger.error("The broker has been stopped");
-                return;
+            } catch (BrokerStoppedException | InterruptedException bse) {
+                throw bse;
             } catch (Exception e) {
-                logger.info("Caught exception while processing a replication event.", e);
-                try {
-                    int sleepInterval = Math.min((int) (INITIAL_SLEEP_RETRY_INTERVAL_MS * Math.pow(2.0, attemptNumber)),
-                            MAX_SLEEP_RETRY_INTERVAL_MS);
-                    attemptNumber++;
-                    logger.info("Retry attempt number {}. Sleeping for {} ms.", attemptNumber, sleepInterval);
-                    Thread.sleep(sleepInterval);
-                } catch (InterruptedException ie) {
-                    logger.error("Retry sleep interrupted: {}", ie.toString());
-                    return;
-                }
+                logger.error("Caught exception while processing a replication event.", e);
+                int sleepInterval = Math.min((int) (INITIAL_SLEEP_RETRY_INTERVAL_MS * Math.pow(2.0, attemptNumber)),
+                        MAX_SLEEP_RETRY_INTERVAL_MS);
+                attemptNumber++;
+                logger.info("Retry attempt number {}. Sleeping for {} ms.", attemptNumber, sleepInterval);
+                Thread.sleep(sleepInterval);
             }
         }
     }

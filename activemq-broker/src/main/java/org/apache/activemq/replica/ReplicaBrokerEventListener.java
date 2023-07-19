@@ -18,6 +18,7 @@ package org.apache.activemq.replica;
 
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerStoppedException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.TransactionBroker;
@@ -120,7 +121,13 @@ public class ReplicaBrokerEventListener implements MessageListener {
         logger.trace("Received replication message from replica source");
         ActiveMQMessage message = (ActiveMQMessage) jmsMessage;
 
-        processMessageWithRetries(message, null);
+        try {
+            processMessageWithRetries(message, null);
+        } catch (BrokerStoppedException bse) {
+            logger.warn("The broker has been stopped");
+        } catch (InterruptedException ie) {
+            logger.warn("Retrier interrupted: {}", ie.toString());
+        }
     }
 
     public void close() {
@@ -130,7 +137,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
         }
     }
 
-    private synchronized void processMessageWithRetries(ActiveMQMessage message, TransactionId transactionId) {
+    private synchronized void processMessageWithRetries(ActiveMQMessage message, TransactionId transactionId) throws InterruptedException {
         ReplicaEventRetrier retrier = new ReplicaEventRetrier(() -> {
             boolean commit = false;
             TransactionId tid = transactionId;
