@@ -23,6 +23,8 @@ import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +34,8 @@ import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -169,6 +173,10 @@ public class ReplicaPluginTest {
         when(brokerService.getDestinationPolicy()).thenReturn(new PolicyMap());
         when(broker.getBrokerService()).thenReturn(brokerService);
         when(brokerService.isUseJmx()).thenReturn(false);
+        SystemUsage systemUsage = mock(SystemUsage.class);
+        when(brokerService.getSystemUsage()).thenReturn(systemUsage);
+        MemoryUsage memoryUsage = mock(MemoryUsage.class);
+        when(systemUsage.getMemoryUsage()).thenReturn(memoryUsage);
         String replicationTransport = "tcp://localhost:61616";
 
         RegionBroker regionBroker = mock(RegionBroker.class);

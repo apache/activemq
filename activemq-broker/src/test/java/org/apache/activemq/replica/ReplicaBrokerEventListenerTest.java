@@ -38,6 +38,8 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOHelper;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,6 +61,8 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -106,8 +110,14 @@ public class ReplicaBrokerEventListenerTest {
         when(broker.getDestinations(sequenceQueue)).thenReturn(Set.of(sequenceDstinationQueue));
         when(broker.addConsumer(any(), any())).thenReturn(subscription);
         when(broker.getAdaptor(TransactionBroker.class)).thenReturn(transactionBroker);
-        acknowledgeCallback = new PeriodAcknowledge(new ReplicaPolicy());
-        listener = new ReplicaBrokerEventListener(replicaBroker, queueProvider, acknowledgeCallback, replicaStatistics);
+        SystemUsage systemUsage = mock(SystemUsage.class);
+        when(brokerService.getSystemUsage()).thenReturn(systemUsage);
+        MemoryUsage memoryUsage = mock(MemoryUsage.class);
+        when(systemUsage.getMemoryUsage()).thenReturn(memoryUsage);
+        when(memoryUsage.waitForSpace(anyLong(), anyInt())).thenReturn(true);
+        ReplicaPolicy replicaPolicy = new ReplicaPolicy();
+        acknowledgeCallback = new PeriodAcknowledge(replicaPolicy);
+        listener = new ReplicaBrokerEventListener(replicaBroker, queueProvider, acknowledgeCallback, replicaPolicy, replicaStatistics);
         listener.initialize();
     }
 

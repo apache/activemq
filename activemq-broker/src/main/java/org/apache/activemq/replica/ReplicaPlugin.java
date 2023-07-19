@@ -214,6 +214,20 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         replicaPolicy.setHeartBeatPeriod(heartBeatPeriod);
     }
 
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setSourceReplicationFlowControl(boolean sourceReplicationFlowControl) {
+        replicaPolicy.setSourceReplicationFlowControl(sourceReplicationFlowControl);
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setReplicaReplicationFlowControl(boolean replicaReplicationFlowControl) {
+        replicaPolicy.setReplicaReplicationFlowControl(replicaReplicationFlowControl);
+    }
+
     public ReplicaRole getRole() {
         return replicaRoleManagementBroker.getRole().getExternalRole();
     }

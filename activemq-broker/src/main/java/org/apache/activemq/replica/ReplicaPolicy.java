@@ -37,6 +37,9 @@ public class ReplicaPolicy {
 
     private int heartBeatPeriod = 60_000;
 
+    private boolean sourceReplicationFlowControl = true;
+    private boolean replicaReplicationFlowControl = true;
+
     public URI getTransportConnectorUri() {
         return Objects.requireNonNull(transportConnectorUri, "Need replication transport connection URI for this broker");
     }
@@ -131,6 +134,22 @@ public class ReplicaPolicy {
 
     public void setHeartBeatPeriod(int heartBeatPeriod) {
         this.heartBeatPeriod = heartBeatPeriod;
+    }
+
+    public boolean isSourceReplicationFlowControl() {
+        return sourceReplicationFlowControl;
+    }
+
+    public void setSourceReplicationFlowControl(boolean enableSourceReplicationFlowControl) {
+        this.sourceReplicationFlowControl = enableSourceReplicationFlowControl;
+    }
+
+    public boolean isReplicaReplicationFlowControl() {
+        return replicaReplicationFlowControl;
+    }
+
+    public void setReplicaReplicationFlowControl(boolean enableReplicaReplicationFlowControl) {
+        this.replicaReplicationFlowControl = enableReplicaReplicationFlowControl;
     }
 
     private void validateUser(ActiveMQConnectionFactory replicaSourceConnectionFactory) {

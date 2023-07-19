@@ -34,6 +34,8 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -45,6 +47,8 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -100,6 +104,12 @@ public class ReplicaSequencerTest {
 
         when(mainSubscription.getConsumerInfo()).thenReturn(consumerInfo);
         when(mainQueue.getConsumers()).thenReturn(List.of(mainSubscription));
+
+        SystemUsage systemUsage = mock(SystemUsage.class);
+        when(brokerService.getSystemUsage()).thenReturn(systemUsage);
+        MemoryUsage memoryUsage = mock(MemoryUsage.class);
+        when(systemUsage.getMemoryUsage()).thenReturn(memoryUsage);
+        when(memoryUsage.waitForSpace(anyLong(), anyInt())).thenReturn(true);
 
         when(intermediateSubscription.getConsumerInfo()).thenReturn(consumerInfo);
         when(broker.addConsumer(any(), any()))

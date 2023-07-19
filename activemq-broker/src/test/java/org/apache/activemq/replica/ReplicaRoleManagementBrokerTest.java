@@ -27,6 +27,8 @@ import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,6 +38,8 @@ import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -62,6 +66,10 @@ public class ReplicaRoleManagementBrokerTest {
         ReplicaPolicy replicaPolicy = new ReplicaPolicy();
         replicaPolicy.setControlWebConsoleAccess(false);
         replicaPolicy.setTransportConnectorUri(new URI("tcp://localhost:61617"));
+        SystemUsage systemUsage = mock(SystemUsage.class);
+        when(brokerService.getSystemUsage()).thenReturn(systemUsage);
+        MemoryUsage memoryUsage = mock(MemoryUsage.class);
+        when(systemUsage.getMemoryUsage()).thenReturn(memoryUsage);
 
         RegionBroker regionBroker = mock(RegionBroker.class);
         when(broker.getAdaptor(RegionBroker.class)).thenReturn(regionBroker);

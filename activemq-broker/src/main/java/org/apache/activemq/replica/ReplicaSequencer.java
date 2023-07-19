@@ -40,11 +40,13 @@ import org.apache.activemq.replica.storage.ReplicaRecoverySequenceStorage;
 import org.apache.activemq.replica.storage.ReplicaSequenceStorage;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,6 +87,7 @@ public class ReplicaSequencer {
     private final ReplicaPolicy replicaPolicy;
     private final ReplicaBatcher replicaBatcher;
     private final ReplicaStatistics replicaStatistics;
+    private final MemoryUsage memoryUsage;
 
     ReplicaCompactor replicaCompactor;
     private final LongSequenceGenerator sessionIdGenerator = new LongSequenceGenerator();
@@ -118,6 +121,7 @@ public class ReplicaSequencer {
         this.replicaPolicy = replicaPolicy;
         this.replicaBatcher = new ReplicaBatcher(replicaPolicy);
         this.replicaStatistics = replicaStatistics;
+        memoryUsage = broker.getBrokerService().getSystemUsage().getMemoryUsage();
     }
 
     void initialize() throws Exception {
@@ -468,6 +472,22 @@ public class ReplicaSequencer {
             lastProcessTime.set(System.currentTimeMillis());
             if (!initialized.get()) {
                 return false;
+            }
+
+            if (replicaPolicy.isSourceReplicationFlowControl()) {
+                long start = System.currentTimeMillis();
+                long nextWarn = start;
+                try {
+                    while (!memoryUsage.waitForSpace(1000, 95)) {
+                        long now = System.currentTimeMillis();
+                        if (now >= nextWarn) {
+                            logger.warn("High memory usage. Pausing replication (paused for: {}s)", (now - start) / 1000);
+                            nextWarn = now + 30000;
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             iterateSend0();

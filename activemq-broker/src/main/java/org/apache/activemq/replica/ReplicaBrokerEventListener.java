@@ -40,6 +40,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.replica.storage.ReplicaSequenceStorage;
 import org.apache.activemq.transaction.Transaction;
+import org.apache.activemq.usage.MemoryUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +71,9 @@ public class ReplicaBrokerEventListener implements MessageListener {
     private final ConnectionContext connectionContext;
     private final ReplicaInternalMessageProducer replicaInternalMessageProducer;
     private final PeriodAcknowledge acknowledgeCallback;
+    private final ReplicaPolicy replicaPolicy;
     private final ReplicaStatistics replicaStatistics;
+    private final MemoryUsage memoryUsage;
     private final AtomicReference<ReplicaEventRetrier> replicaEventRetrier = new AtomicReference<>();
     final ReplicaSequenceStorage sequenceStorage;
     private final TransactionBroker transactionBroker;
@@ -79,10 +82,11 @@ public class ReplicaBrokerEventListener implements MessageListener {
     MessageId sequenceMessageId;
 
     ReplicaBrokerEventListener(ReplicaBroker replicaBroker, ReplicaReplicationQueueSupplier queueProvider,
-            PeriodAcknowledge acknowledgeCallback, ReplicaStatistics replicaStatistics) {
+            PeriodAcknowledge acknowledgeCallback, ReplicaPolicy replicaPolicy, ReplicaStatistics replicaStatistics) {
         this.replicaBroker = requireNonNull(replicaBroker);
         this.broker = requireNonNull(replicaBroker.getNext());
         this.acknowledgeCallback = requireNonNull(acknowledgeCallback);
+        this.replicaPolicy = replicaPolicy;
         this.replicaStatistics = replicaStatistics;
         connectionContext = broker.getAdminConnectionContext().copy();
         connectionContext.setUserName(ReplicaSupport.REPLICATION_PLUGIN_USER_NAME);
@@ -95,6 +99,8 @@ public class ReplicaBrokerEventListener implements MessageListener {
         this.sequenceStorage = new ReplicaSequenceStorage(broker,
                 queueProvider, replicaInternalMessageProducer, SEQUENCE_NAME);
         this.transactionBroker = (TransactionBroker) broker.getAdaptor(TransactionBroker.class);
+
+        memoryUsage = broker.getBrokerService().getSystemUsage().getMemoryUsage();
     }
 
     public void initialize() throws Exception {
@@ -120,6 +126,22 @@ public class ReplicaBrokerEventListener implements MessageListener {
     public void onMessage(Message jmsMessage) {
         logger.trace("Received replication message from replica source");
         ActiveMQMessage message = (ActiveMQMessage) jmsMessage;
+
+        if (replicaPolicy.isReplicaReplicationFlowControl()) {
+            long start = System.currentTimeMillis();
+            long nextWarn = start;
+            try {
+                while (!memoryUsage.waitForSpace(1000, 90)) {
+                    long now = System.currentTimeMillis();
+                    if (now >= nextWarn) {
+                        logger.warn("High memory usage. Pausing replication (paused for: {}s)", (now - start) / 1000);
+                        nextWarn = now + 30000;
+                    }
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         try {
             processMessageWithRetries(message, null);
