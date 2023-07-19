@@ -21,6 +21,7 @@ import org.apache.activemq.replica.ReplicaRole;
 import org.apache.activemq.replica.ReplicaStatistics;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ReplicationView implements ReplicationViewMBean {
@@ -68,5 +69,15 @@ public class ReplicationView implements ReplicationViewMBean {
     public Long getReplicaWaitTime() {
         return Optional.ofNullable(replicaStatistics.getReplicaLastProcessedTime()).map(AtomicLong::get)
                 .map(v -> System.currentTimeMillis() - v).orElse(null);
+    }
+
+    @Override
+    public Boolean getSourceReplicationFlowControl() {
+        return Optional.ofNullable(replicaStatistics.getSourceReplicationFlowControl()).map(AtomicBoolean::get).orElse(null);
+    }
+
+    @Override
+    public Boolean getReplicaReplicationFlowControl() {
+        return Optional.ofNullable(replicaStatistics.getReplicaReplicationFlowControl()).map(AtomicBoolean::get).orElse(null);
     }
 }

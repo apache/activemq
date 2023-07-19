@@ -40,4 +40,10 @@ public interface ReplicationViewMBean {
 
     @MBeanInfo("Get wait time(if the broker's role is replica)")
     Long getReplicaWaitTime();
+
+    @MBeanInfo("Flow control is enabled for replication on the source side")
+    Boolean getSourceReplicationFlowControl();
+
+    @MBeanInfo("Flow control is enabled for replication on the replica side")
+    Boolean getReplicaReplicationFlowControl();
 }

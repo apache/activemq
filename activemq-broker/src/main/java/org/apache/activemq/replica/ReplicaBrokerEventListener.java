@@ -132,6 +132,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
             long nextWarn = start;
             try {
                 while (!memoryUsage.waitForSpace(1000, 90)) {
+                    replicaStatistics.setReplicaReplicationFlowControl(true);
                     long now = System.currentTimeMillis();
                     if (now >= nextWarn) {
                         logger.warn("High memory usage. Pausing replication (paused for: {}s)", (now - start) / 1000);
@@ -142,6 +143,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 throw new RuntimeException(e);
             }
         }
+        replicaStatistics.setReplicaReplicationFlowControl(false);
 
         try {
             processMessageWithRetries(message, null);

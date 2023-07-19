@@ -20,6 +20,7 @@ import org.apache.activemq.broker.jmx.MBeanInfo;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ReplicaStatistics {
@@ -32,6 +33,9 @@ public class ReplicaStatistics {
     private AtomicLong sourceLastProcessedTime;
     private AtomicLong replicationLag;
     private AtomicLong replicaLastProcessedTime;
+
+    private AtomicBoolean sourceReplicationFlowControl;
+    private AtomicBoolean replicaReplicationFlowControl;
 
     public ReplicaStatistics() {
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
@@ -60,6 +64,9 @@ public class ReplicaStatistics {
         sourceLastProcessedTime = null;
         replicationLag = null;
         replicaLastProcessedTime = null;
+
+        sourceReplicationFlowControl = null;
+        replicaReplicationFlowControl = null;
     }
 
     public void increaseTpsCounter(long size) {
@@ -115,5 +122,27 @@ public class ReplicaStatistics {
             this.replicaLastProcessedTime = new AtomicLong();
         }
         this.replicaLastProcessedTime.set(replicaLastProcessedTime);
+    }
+
+    public AtomicBoolean getSourceReplicationFlowControl() {
+        return sourceReplicationFlowControl;
+    }
+
+    public void setSourceReplicationFlowControl(boolean sourceReplicationFlowControl) {
+        if (this.sourceReplicationFlowControl == null) {
+            this.sourceReplicationFlowControl = new AtomicBoolean();
+        }
+        this.sourceReplicationFlowControl.set(sourceReplicationFlowControl);
+    }
+
+    public AtomicBoolean getReplicaReplicationFlowControl() {
+        return replicaReplicationFlowControl;
+    }
+
+    public void setReplicaReplicationFlowControl(boolean replicaReplicationFlowControl) {
+        if (this.replicaReplicationFlowControl == null) {
+            this.replicaReplicationFlowControl = new AtomicBoolean();
+        }
+        this.replicaReplicationFlowControl.set(replicaReplicationFlowControl);
     }
 }

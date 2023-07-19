@@ -479,6 +479,7 @@ public class ReplicaSequencer {
                 long nextWarn = start;
                 try {
                     while (!memoryUsage.waitForSpace(1000, 95)) {
+                        replicaStatistics.setSourceReplicationFlowControl(true);
                         long now = System.currentTimeMillis();
                         if (now >= nextWarn) {
                             logger.warn("High memory usage. Pausing replication (paused for: {}s)", (now - start) / 1000);
@@ -489,6 +490,7 @@ public class ReplicaSequencer {
                     throw new RuntimeException(e);
                 }
             }
+            replicaStatistics.setSourceReplicationFlowControl(false);
 
             iterateSend0();
 
