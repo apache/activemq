@@ -26,8 +26,6 @@ import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 class ReplicationMessageProducer {
 
     private static final Logger logger = LoggerFactory.getLogger(ReplicationMessageProducer.class);
@@ -71,7 +69,7 @@ class ReplicationMessageProducer {
         eventMessage.setTransactionId(event.getTransactionId());
         eventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, event.getVersion() == null ? ReplicaSupport.CURRENT_VERSION : event.getVersion());
         eventMessage.setTimestamp(event.getTimestamp() == null ? System.currentTimeMillis() : event.getTimestamp());
-        replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, eventMessage);
+        replicaInternalMessageProducer.sendForcingFlowControl(connectionContext, eventMessage);
     }
 }
 

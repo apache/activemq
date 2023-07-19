@@ -234,7 +234,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         message.setPersistent(false);
         message.setResponseRequired(false);
 
-        replicaInternalMessageProducer.sendIgnoringFlowControl(createConnectionContext(), message);
+        replicaInternalMessageProducer.sendForcingFlowControl(createConnectionContext(), message);
     }
 
     private ConnectionContext createConnectionContext() {

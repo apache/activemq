@@ -80,7 +80,7 @@ public class ReplicaSourceBrokerTest {
         when(broker.getBrokerService()).thenReturn(brokerService);
         when(broker.getAdminConnectionContext()).thenReturn(connectionContext);
         when(brokerService.addConnector(transportConnectorUri)).thenReturn(transportConnector);
-        when(connectionContext.isProducerFlowControl()).thenReturn(true);
+        when(connectionContext.isProducerFlowControl()).thenReturn(false);
         when(connectionContext.getConnector()).thenReturn(transportConnector);
         when(transportConnector.getName()).thenReturn("test");
         when(connectionContext.getClientId()).thenReturn("clientId");
@@ -559,7 +559,7 @@ public class ReplicaSourceBrokerTest {
 
     private void verifyConnectionContext(ConnectionContext context) {
         verify(context).isProducerFlowControl();
-        verify(context).setProducerFlowControl(false);
         verify(context).setProducerFlowControl(true);
+        verify(context).setProducerFlowControl(false);
     }
 }

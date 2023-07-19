@@ -130,6 +130,6 @@ public abstract class ReplicaBaseStorage {
     }
 
     public void send(ConnectionContext connectionContext, ActiveMQTextMessage seqMessage) throws Exception {
-        replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, seqMessage);
+        replicaInternalMessageProducer.sendForcingFlowControl(connectionContext, seqMessage);
     }
 }

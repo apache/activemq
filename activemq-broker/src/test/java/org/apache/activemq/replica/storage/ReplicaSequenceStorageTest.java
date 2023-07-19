@@ -117,7 +117,7 @@ public class ReplicaSequenceStorageTest {
 
         replicaSequenceStorage.enqueue(connectionContext, transactionId, messageToEnqueue);
 
-        verify(replicaProducer, times(1)).sendIgnoringFlowControl(any(), activeMQTextMessageArgumentCaptor.capture());
+        verify(replicaProducer, times(1)).sendForcingFlowControl(any(), activeMQTextMessageArgumentCaptor.capture());
         assertThat(activeMQTextMessageArgumentCaptor.getValue().getText()).isEqualTo(messageToEnqueue);
         assertThat(activeMQTextMessageArgumentCaptor.getValue().getTransactionId()).isEqualTo(transactionId);
         assertThat(activeMQTextMessageArgumentCaptor.getValue().getDestination()).isEqualTo(sequenceQueueDestination);

@@ -28,30 +28,12 @@ import static java.util.Objects.requireNonNull;
 public class ReplicaInternalMessageProducer {
 
     private final Broker broker;
-    private ConnectionContext connectionContext;
 
     ReplicaInternalMessageProducer(Broker broker) {
         this.broker = requireNonNull(broker);
     }
 
-    ReplicaInternalMessageProducer(Broker broker, ConnectionContext connectionContext) {
-        this.broker = requireNonNull(broker);
-        this.connectionContext = requireNonNull(connectionContext);
-    }
-
-    public void sendIgnoringFlowControl(ConnectionContext connectionContext, ActiveMQMessage eventMessage) throws Exception {
-        if (connectionContext != null) {
-            sendIgnoringFlowControl(eventMessage, connectionContext);
-            return;
-        }
-        sendIgnoringFlowControl(eventMessage, this.connectionContext);
-    }
-
-    void sendIgnoringFlowControl(ActiveMQMessage eventMessage) throws Exception {
-        sendIgnoringFlowControl(this.connectionContext, eventMessage);
-    }
-
-    private void sendIgnoringFlowControl(ActiveMQMessage eventMessage, ConnectionContext connectionContext) throws Exception {
+    public void sendForcingFlowControl(ConnectionContext connectionContext, ActiveMQMessage eventMessage) throws Exception {
         ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
         producerExchange.setConnectionContext(connectionContext);
         producerExchange.setMutable(true);
@@ -59,11 +41,10 @@ public class ReplicaInternalMessageProducer {
 
         boolean originalFlowControl = connectionContext.isProducerFlowControl();
         try {
-            connectionContext.setProducerFlowControl(false);
+            connectionContext.setProducerFlowControl(true);
             broker.send(producerExchange, eventMessage);
         } finally {
             connectionContext.setProducerFlowControl(originalFlowControl);
         }
     }
-
 }

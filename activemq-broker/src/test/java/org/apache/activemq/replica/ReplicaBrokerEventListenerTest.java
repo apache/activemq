@@ -95,7 +95,7 @@ public class ReplicaBrokerEventListenerTest {
         when(broker.getAdminConnectionContext()).thenReturn(adminConnectionContext);
         when(broker.getDestinations(testQueue)).thenReturn(Set.of(destinationQueue));
         when(broker.getDestinations(testTopic)).thenReturn(Set.of(destinationTopic));
-        when(connectionContext.isProducerFlowControl()).thenReturn(true);
+        when(connectionContext.isProducerFlowControl()).thenReturn(false);
         when(connectionContext.copy()).thenReturn(new ConnectionContext());
         when(connectionContext.getUserName()).thenReturn(ReplicaSupport.REPLICATION_PLUGIN_USER_NAME);
         BrokerService brokerService = mock(BrokerService.class);
@@ -219,9 +219,7 @@ public class ReplicaBrokerEventListenerTest {
         assertThat(values.get(0).getMessageId()).isEqualTo(message.getMessageId());
         assertThat(values.get(1).getDestination()).isEqualTo(sequenceQueue);
 
-        verify(connectionContext, times(2)).isProducerFlowControl();
-        verify(connectionContext, times(2)).setProducerFlowControl(false);
-        verify(connectionContext, times(2)).setProducerFlowControl(true);
+        verifyConnectionContext();
     }
 
     @Test
@@ -750,9 +748,7 @@ public class ReplicaBrokerEventListenerTest {
         assertThat(values.get(0).getMessageId()).isEqualTo(message.getMessageId());
         assertThat(values.get(1).getDestination()).isEqualTo(sequenceQueue);
 
-        verify(connectionContext, times(2)).isProducerFlowControl();
-        verify(connectionContext, times(2)).setProducerFlowControl(false);
-        verify(connectionContext, times(2)).setProducerFlowControl(true);
+        verifyConnectionContext();
 
         ArgumentCaptor<ConsumerInfo> ciArgumentCaptor = ArgumentCaptor.forClass(ConsumerInfo.class);
         verify(broker, times(2)).addConsumer(any(), ciArgumentCaptor.capture());
@@ -806,9 +802,7 @@ public class ReplicaBrokerEventListenerTest {
         assertThat(values.get(0).getMessageId()).isEqualTo(message.getMessageId());
         assertThat(values.get(1).getDestination()).isEqualTo(sequenceQueue);
 
-        verify(connectionContext, times(2)).isProducerFlowControl();
-        verify(connectionContext, times(2)).setProducerFlowControl(false);
-        verify(connectionContext, times(2)).setProducerFlowControl(true);
+        verifyConnectionContext();
     }
 
     @Test
@@ -899,9 +893,7 @@ public class ReplicaBrokerEventListenerTest {
         assertThat(values.get(0).getMessageId()).isEqualTo(message.getMessageId());
         assertThat(values.get(1).getDestination()).isEqualTo(sequenceQueue);
 
-        verify(connectionContext, times(2)).isProducerFlowControl();
-        verify(connectionContext, times(2)).setProducerFlowControl(false);
-        verify(connectionContext, times(2)).setProducerFlowControl(true);
+        verifyConnectionContext();
     }
 
     @Test
@@ -997,5 +989,11 @@ public class ReplicaBrokerEventListenerTest {
                 return "branchQualifier".getBytes(StandardCharsets.UTF_8);
             }
         };
+    }
+
+    private void verifyConnectionContext() {
+        verify(connectionContext, times(2)).isProducerFlowControl();
+        verify(connectionContext, times(2)).setProducerFlowControl(true);
+        verify(connectionContext, times(2)).setProducerFlowControl(false);
     }
 }

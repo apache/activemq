@@ -284,7 +284,7 @@ public class ReplicaSequencerTest {
         sequencer.iterateSend();
 
         ArgumentCaptor<ActiveMQMessage> argumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
-        verify(replicaInternalMessageProducer, times(3)).sendIgnoringFlowControl(any(), argumentCaptor.capture());
+        verify(replicaInternalMessageProducer, times(3)).sendForcingFlowControl(any(), argumentCaptor.capture());
 
         ActiveMQMessage activeMQMessage = argumentCaptor.getAllValues().get(0);
         assertThat(activeMQMessage.getMessageId()).isEqualTo(messageId);
@@ -319,7 +319,7 @@ public class ReplicaSequencerTest {
         sequencer.iterateSend();
 
         ArgumentCaptor<ActiveMQMessage> argumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
-        verify(replicaInternalMessageProducer, times(3)).sendIgnoringFlowControl(any(), argumentCaptor.capture());
+        verify(replicaInternalMessageProducer, times(3)).sendForcingFlowControl(any(), argumentCaptor.capture());
 
         ActiveMQMessage activeMQMessage = argumentCaptor.getAllValues().get(0);
         assertThat(activeMQMessage.getMessageId()).isEqualTo(messageId3);
@@ -357,7 +357,7 @@ public class ReplicaSequencerTest {
         sequencer.iterateSend();
 
         ArgumentCaptor<ActiveMQMessage> argumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
-        verify(replicaInternalMessageProducer, times(3)).sendIgnoringFlowControl(any(), argumentCaptor.capture());
+        verify(replicaInternalMessageProducer, times(3)).sendForcingFlowControl(any(), argumentCaptor.capture());
 
         ActiveMQMessage activeMQMessage = argumentCaptor.getAllValues().get(0);
         assertThat(activeMQMessage.getMessageId()).isEqualTo(messageId2);

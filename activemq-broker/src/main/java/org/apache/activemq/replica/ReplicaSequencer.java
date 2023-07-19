@@ -580,7 +580,7 @@ public class ReplicaSequencer {
             message.setDestination(queueProvider.getMainQueue());
             message.setTransactionId(transactionId);
             message.setPersistent(false);
-            replicaInternalMessageProducer.sendIgnoringFlowControl(connectionContext, message);
+            replicaInternalMessageProducer.sendForcingFlowControl(connectionContext, message);
             sequence = sequence.add(BigInteger.ONE);
             return sequence;
         }

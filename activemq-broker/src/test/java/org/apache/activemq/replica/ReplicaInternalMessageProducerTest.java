@@ -35,21 +35,21 @@ public class ReplicaInternalMessageProducerTest {
     private final Broker broker = mock(Broker.class);
     private final ConnectionContext connectionContext = mock(ConnectionContext.class);
 
-    ReplicaInternalMessageProducer producer = new ReplicaInternalMessageProducer(broker, connectionContext);
+    ReplicaInternalMessageProducer producer = new ReplicaInternalMessageProducer(broker);
 
     @Before
     public void setUp() {
-        when(connectionContext.isProducerFlowControl()).thenReturn(true);
+        when(connectionContext.isProducerFlowControl()).thenReturn(false);
     }
 
     @Test
-    public void sendsMessageIgnoringFlowControl() throws Exception {
+    public void sendsMessageForcingFlowControl() throws Exception {
         MessageId messageId = new MessageId("1:1");
 
         ActiveMQMessage message = new ActiveMQMessage();
         message.setMessageId(messageId);
 
-        producer.sendIgnoringFlowControl(message);
+        producer.sendForcingFlowControl(connectionContext, message);
 
         ArgumentCaptor<ActiveMQMessage> messageArgumentCaptor = ArgumentCaptor.forClass(ActiveMQMessage.class);
         verify(broker).send(any(), messageArgumentCaptor.capture());
@@ -58,8 +58,8 @@ public class ReplicaInternalMessageProducerTest {
         assertThat(value).isEqualTo(message);
 
         verify(connectionContext).isProducerFlowControl();
-        verify(connectionContext).setProducerFlowControl(false);
         verify(connectionContext).setProducerFlowControl(true);
+        verify(connectionContext).setProducerFlowControl(false);
     }
 
 }

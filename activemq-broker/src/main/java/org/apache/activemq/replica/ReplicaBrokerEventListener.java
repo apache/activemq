@@ -88,7 +88,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
         connectionContext.setUserName(ReplicaSupport.REPLICATION_PLUGIN_USER_NAME);
         connectionContext.setClientId(REPLICATION_CONSUMER_CLIENT_ID);
         connectionContext.setConnection(new DummyConnection());
-        replicaInternalMessageProducer = new ReplicaInternalMessageProducer(broker, connectionContext);
+        replicaInternalMessageProducer = new ReplicaInternalMessageProducer(broker);
 
         createTransactionMapIfNotExist();
 
@@ -387,7 +387,7 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 message.setExpiration(System.currentTimeMillis() + 1000);
             }
 
-            replicaInternalMessageProducer.sendIgnoringFlowControl(message);
+            replicaInternalMessageProducer.sendForcingFlowControl(connectionContext, message);
         } catch (Exception e) {
             logger.error("Failed to process message {} with JMS message id: {}", message.getMessageId(), message.getJMSMessageID(), e);
             throw e;
