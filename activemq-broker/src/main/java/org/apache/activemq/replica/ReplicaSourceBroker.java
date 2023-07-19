@@ -759,6 +759,16 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
         }
     }
 
+    @Override
+    public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription, Throwable poisonCause) {
+        if(ReplicaSupport.isReplicationDestination(messageReference.getMessage().getDestination())) {
+            logger.error("A replication event is being sent to DLQ. It shouldn't even happen: " + messageReference.getMessage(), poisonCause);
+            return false;
+        }
+
+        return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
+    }
+
     private void enqueueReplicaEvent(ConnectionContext connectionContext, ReplicaEvent event) throws Exception {
         if (isReplicaContext(connectionContext)) {
             return;
