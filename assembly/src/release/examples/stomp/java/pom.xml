@@ -34,7 +34,7 @@
       <version>2.0.3</version>
     </dependency>
     <dependency>
-      <groupId>org.fusesource.stompjms</groupId>
+      <groupId>io.hyte.stompjms</groupId>
       <artifactId>stompjms-client</artifactId>
       <version>${stompjms-version}</version>
     </dependency>

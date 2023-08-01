@@ -106,7 +106,7 @@
     <xbean-version>4.23</xbean-version>
     <xerces-version>2.12.2</xerces-version>
     <jaxb-basics-version>0.12.0</jaxb-basics-version>
-    <stompjms-version>1.19</stompjms-version>
+    <stompjms-version>1.27</stompjms-version>
 
     <pax-logging-version>2.1.3</pax-logging-version>
     <pax-exam-version>4.13.1</pax-exam-version>
