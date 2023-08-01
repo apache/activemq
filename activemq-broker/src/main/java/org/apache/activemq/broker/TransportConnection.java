@@ -307,7 +307,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 if (SERVICELOG.isDebugEnabled()) {
                     SERVICELOG.debug("Async error occurred: {}", e.getMessage(), e);
                 } else {
-                    SERVICELOG.warn("Async error occurred", e.getMessage());
+                    SERVICELOG.warn("Async error occurred: {}", e.getMessage());
                 }
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
