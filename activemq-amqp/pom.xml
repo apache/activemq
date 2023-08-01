@@ -168,7 +168,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.fusesource.stompjms</groupId>
+      <groupId>io.hyte.stompjms</groupId>
       <artifactId>stompjms-client</artifactId>
       <version>${stompjms-version}</version>
       <scope>test</scope>
