@@ -67,16 +67,15 @@
     <httpcore-version>4.4.16</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
     <jackson-version>2.15.2</jackson-version>
-    <jakarta-jms-api-version>2.0.3</jakarta-jms-api-version>
-    <jakarta-jms-api-v3-version>3.1.0</jakarta-jms-api-v3-version>
+    <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
-    <jetty9-version>9.4.51.v20230217</jetty9-version>
-    <jetty-version>${jetty9-version}</jetty-version>
+    <jetty11-version>11.0.15</jetty11-version>
+    <jetty-version>${jetty11-version}</jetty-version>
     <jmdns-version>3.5.8</jmdns-version>
     <tomcat-api-version>9.0.65</tomcat-api-version>
     <jettison-version>1.5.4</jettison-version>
-    <jmock-version>2.5.1</jmock-version>
+    <jmock-version>2.12.0</jmock-version>
     <jolokia-version>1.7.1</jolokia-version>
     <josql-version>1.5_5</josql-version>
     <!-- for json-simple use same version as jolokia uses -->
@@ -91,14 +90,14 @@
     <org-apache-derby-version>10.15.2.0</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
     <qpid-proton-version>0.34.1</qpid-proton-version>
-    <qpid-jms-version>1.9.0</qpid-jms-version>
+    <qpid-jms-version>2.4.0</qpid-jms-version>
     <netty-version>4.1.94.Final</netty-version>
     <regexp-version>1.4</regexp-version>
     <rome-version>2.1.0</rome-version>
     <shiro-version>1.11.0</shiro-version>
     <slf4j-version>2.0.6</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
-    <spring-version>5.3.27</spring-version>
+    <spring-version>6.0.7</spring-version>
     <taglibs-version>1.2.5</taglibs-version>
     <velocity-version>2.3</velocity-version>
     <xpp3-version>1.1.4c</xpp3-version>
@@ -106,7 +105,7 @@
     <xbean-version>4.23</xbean-version>
     <xerces-version>2.12.2</xerces-version>
     <jaxb-basics-version>0.12.0</jaxb-basics-version>
-    <stompjms-version>1.27</stompjms-version>
+    <stompjms-version>3.1.0</stompjms-version>
 
     <pax-logging-version>2.1.3</pax-logging-version>
     <pax-exam-version>4.13.1</pax-exam-version>
@@ -115,7 +114,7 @@
 
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
     <source-version>11</source-version>
-    <target-version>11</target-version>
+    <target-version>17</target-version>
     <javase-javadoc-url>http://docs.oracle.com/javase/8/docs/api/</javase-javadoc-url>
     <javaee-javadoc-url>http://download.oracle.com/javaee/6/api/</javaee-javadoc-url>
 
@@ -135,6 +134,7 @@
     <maven-javadoc-plugin-version>3.5.0</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.5.2</maven-install-plugin-version>
     <maven-shade-plugin-version>3.4.1</maven-shade-plugin-version>
+    <exec-maven-plugin-version>3.1.0</exec-maven-plugin-version>
     <findbugs-maven-plugin-version>3.0.5</findbugs-maven-plugin-version>
     <javacc-maven-plugin-version>3.0.1</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
@@ -439,9 +439,9 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-jta_1.1_spec</artifactId>
-        <version>1.1.1</version>
+        <groupId>jakarta.transaction</groupId>
+        <artifactId>jakarta.transaction-api</artifactId>
+        <version>2.0.1</version>
       </dependency>
 
       <dependency>
@@ -451,39 +451,32 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
-        <version>2.0.0</version>
+        <groupId>jakarta.resource</groupId>
+        <artifactId>jakarta.resource-api</artifactId>
+        <version>2.1.0</version>
       </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm</artifactId>
+        <version>9.4</version>
+      </dependency>
+
+     <!-- Servlet 5.0 and JSP -->
      <dependency>
-       <groupId>org.ow2.asm</groupId>
-       <artifactId>asm</artifactId>
-       <version>9.4</version>
+       <groupId>jakarta.servlet.jsp</groupId>
+       <artifactId>jakarta.servlet.jsp-api</artifactId>
+       <version>3.1.1</version>
      </dependency>
-
-      <!-- Servlet 3.1 and JSP -->
-      <dependency>
-          <groupId>org.apache.tomcat</groupId>
-          <artifactId>tomcat-jsp-api</artifactId>
-          <version>${tomcat-api-version}</version>
-      </dependency>
-       <dependency>
-          <groupId>org.apache.tomcat</groupId>
-          <artifactId>tomcat-servlet-api</artifactId>
-          <version>${tomcat-api-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.tomcat</groupId>
-        <artifactId>tomcat-websocket-api</artifactId>
-        <version>${tomcat-api-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-annotation_1.3_spec</artifactId>
-        <version>1.3</version>
-      </dependency>
-
+     <dependency>
+       <groupId>jakarta.servlet</groupId>
+       <artifactId>jakarta.servlet-api</artifactId>
+       <version>5.0.0</version>
+     </dependency>
+     <dependency>
+       <groupId>jakarta.websocket</groupId>
+       <artifactId>jakarta.websocket-api</artifactId>
+       <version>2.1.0</version>
+     </dependency>
 
       <!-- =============================== -->
       <!-- Optional dependencies -->
@@ -980,6 +973,7 @@
         <groupId>org.apache.geronimo.components</groupId>
         <artifactId>geronimo-transaction</artifactId>
         <version>3.1.5</version>
+        <classifier>jakarta</classifier>
       </dependency>
 
       <dependency>
@@ -998,9 +992,9 @@
         <version>2.3.1</version>
       </dependency>
       <dependency>
-        <groupId>javax.annotation</groupId>
-        <artifactId>javax.annotation-api</artifactId>
-        <version>1.3.2</version>
+        <groupId>jakarta.annotation</groupId>
+        <artifactId>jakarta.annotation-api</artifactId>
+        <version>2.1.1</version>
       </dependency>
 
     </dependencies>
@@ -1370,13 +1364,13 @@
           <links>
             <link>${javase-javadoc-url}</link>
             <link>${javaee-javadoc-url}</link>
-            <link>http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/</link>
+            <link>https://commons.apache.org/proper/commons-collections/javadocs/api-${commons-collections-version}/</link>
             <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
             <link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
-            <link>http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/</link>
+            <link>https://javadoc.io/doc/org.apache.httpcomponents/httpclient/${httpclient-version}/</link>
             <link>http://jakarta.apache.org/commons/pool/apidocs/</link>
-            <link>http://junit.sourceforge.net/javadoc/</link>
-            <link>http://logging.apache.org/log4j/docs/api/</link>
+            <link>https://junit.org/junit4/javadoc/latest/</link>
+            <link>https://logging.apache.org/log4j/2.x/javadoc/log4j-api/</link>
           </links>
           <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
           <maxmemory>2048m</maxmemory>
@@ -1555,9 +1549,9 @@
       </build>
     </profile>
     <profile>
-        <id>jetty9</id>
+        <id>jetty11</id>
         <properties>
-            <jetty-version>${jetty9-version}</jetty-version>
+            <jetty-version>${jetty11-version}</jetty-version>
         </properties>
     </profile>
 

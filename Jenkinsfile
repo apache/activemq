@@ -30,7 +30,7 @@ pipeline {
     tools {
         // ... tell Jenkins what java version, maven version or other tools are required ...
         maven 'maven_3_latest'
-        jdk 'jdk_11_latest'
+        jdk 'jdk_17_latest'
     }
 
     options {
@@ -86,18 +86,6 @@ pipeline {
             }
             steps {
                 echo 'Building JDK 17'
-                sh 'java -version'
-                sh 'mvn -version'
-                sh 'mvn -U -B -e clean install -DskipTests'
-            }
-        }
-
-        stage('Build JDK 11') {
-            tools {
-                jdk "jdk_11_latest"
-            }  
-            steps {
-                echo 'Building JDK 11'
                 sh 'java -version'
                 sh 'mvn -version'
                 sh 'mvn -U -B -e clean install -DskipTests'
