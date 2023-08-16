@@ -68,12 +68,13 @@ public class HttpMaxFrameSizeTest {
 
     private void send(int size) throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("http://localhost:8888");
-        Connection connection = connectionFactory.createConnection();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(new ActiveMQQueue("test"));
-        String payload = StringUtils.repeat("*", size);
-        TextMessage textMessage = session.createTextMessage(payload);
-        producer.send(textMessage);
+        try(Connection connection = connectionFactory.createConnection()) {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageProducer producer = session.createProducer(new ActiveMQQueue("test"));
+            String payload = StringUtils.repeat("*", size);
+            TextMessage textMessage = session.createTextMessage(payload);
+            producer.send(textMessage);
+        }
     }
 
 }

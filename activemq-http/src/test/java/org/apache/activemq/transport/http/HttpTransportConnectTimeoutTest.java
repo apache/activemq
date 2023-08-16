@@ -68,26 +68,27 @@ public class HttpTransportConnectTimeoutTest {
     public void testSendReceiveAfterPause() throws Exception {
         final CountDownLatch failed = new CountDownLatch(1);
 
-        Connection connection = factory.createConnection();
-        connection.start();
-        connection.setExceptionListener(new ExceptionListener() {
+        try (Connection connection = factory.createConnection()) {
+            connection.start();
+            connection.setExceptionListener(new ExceptionListener() {
 
-            @Override
-            public void onException(JMSException exception) {
-                LOG.info("Connection failed due to: {}", exception.getMessage());
-                failed.countDown();
-            }
-        });
+                @Override
+                public void onException(JMSException exception) {
+                    LOG.info("Connection failed due to: {}", exception.getMessage());
+                    failed.countDown();
+                }
+            });
 
-        assertFalse(failed.await(3, TimeUnit.SECONDS));
+            assertFalse(failed.await(3, TimeUnit.SECONDS));
 
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = session.createTemporaryQueue();
-        MessageProducer producer = session.createProducer(queue);
-        MessageConsumer consumer = session.createConsumer(queue);
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = session.createTemporaryQueue();
+            MessageProducer producer = session.createProducer(queue);
+            MessageConsumer consumer = session.createConsumer(queue);
 
-        producer.send(session.createMessage());
+            producer.send(session.createMessage());
 
-        assertNotNull(consumer.receive(5000));
+            assertNotNull(consumer.receive(5000));
+        }
     }
 }

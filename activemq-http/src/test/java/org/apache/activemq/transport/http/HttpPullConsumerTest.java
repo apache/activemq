@@ -202,6 +202,7 @@ public class HttpPullConsumerTest {
     }
 
     protected void stopBroker() throws Exception {
+        connection.close();
         if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();
