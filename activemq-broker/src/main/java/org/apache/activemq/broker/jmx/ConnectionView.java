@@ -176,4 +176,19 @@ public class ConnectionView implements ConnectionViewMBean {
     public Long getOldestActiveTransactionDuration() {
         return connection.getOldestActiveTransactionDuration();
     }
+
+    @Override
+    public boolean isFaultTolerantConnection() {
+        return connection.isFaultTolerantConnection();
+    }
+
+    @Override
+    public boolean isManageable() {
+        return connection.isManageable();
+    }
+
+    @Override
+    public boolean isNetworkConnection() {
+        return connection.isNetworkConnection();
+    }
 }
