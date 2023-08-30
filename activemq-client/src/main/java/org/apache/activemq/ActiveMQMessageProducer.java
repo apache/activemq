@@ -221,7 +221,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.send(destination, message, deliveryMode, priority, timeToLive, (AsyncCallback)null);
+        this.send(destination, message, deliveryMode, priority, timeToLive, (AsyncCallback)null, (CompletionListener)null);
     }
 
     /**
@@ -239,57 +239,73 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void send(Message message, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Message, CompletionListener) is not supported");
+        this.send(this.getDestination(),
+                message,
+                this.defaultDeliveryMode,
+                this.defaultPriority,
+                this.defaultTimeToLive, (AsyncCallback)null, completionListener);
     }
 
     @Override
-    public void send(Message message, int deliveryMode, int priority, long timeToLive,
-                      CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+    public void send(Message message, int deliveryMode, int priority, long timeToLive, CompletionListener completionListener) throws JMSException {
+        this.send(this.getDestination(),
+                message,
+                deliveryMode,
+                priority,
+                timeToLive,
+                null, completionListener);
     }
 
     @Override
     public void send(Destination destination, Message message, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Destination, Message, CompletionListener) is not supported");
+        this.send(destination,
+                message,
+                this.defaultDeliveryMode,
+                this.defaultPriority,
+                this.defaultTimeToLive, (AsyncCallback)null, completionListener);
     }
 
     @Override
-    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
-                     CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Destination, Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, CompletionListener completionListener) throws JMSException {
+        this.send(destination,
+                message,
+                deliveryMode,
+                priority,
+                timeToLive,
+                null, completionListener);
     }
 
-    public void send(Message message, AsyncCallback onComplete) throws JMSException {
+    public void send(Message message, AsyncCallback onComplete, CompletionListener completionListener) throws JMSException {
         this.send(this.getDestination(),
                   message,
                   this.defaultDeliveryMode,
                   this.defaultPriority,
-                  this.defaultTimeToLive, onComplete);
+                  this.defaultTimeToLive, onComplete, completionListener);
     }
 
-    public void send(Destination destination, Message message, AsyncCallback onComplete) throws JMSException {
+    public void send(Destination destination, Message message, AsyncCallback onComplete, CompletionListener completionListener) throws JMSException {
         this.send(destination,
                   message,
                   this.defaultDeliveryMode,
                   this.defaultPriority,
                   this.defaultTimeToLive,
-                  onComplete);
+                  onComplete, completionListener);
     }
 
-    public void send(Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete) throws JMSException {
+    public void send(Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete, CompletionListener completionListener) throws JMSException {
         this.send(this.getDestination(),
                   message,
                   deliveryMode,
                   priority,
                   timeToLive,
-                  onComplete);
+                  onComplete, completionListener);
     }
 
-    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete) throws JMSException {
-        this.send(destination, message, deliveryMode, priority, timeToLive, getDisableMessageID(), getDisableMessageTimestamp(), onComplete);
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete, CompletionListener completionListener) throws JMSException {
+        this.send(destination, message, deliveryMode, priority, timeToLive, getDisableMessageID(), getDisableMessageTimestamp(), onComplete, completionListener);
     }
 
-    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, boolean disableMessageID, boolean disableMessageTimestamp, AsyncCallback onComplete) throws JMSException {
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, boolean disableMessageID, boolean disableMessageTimestamp, AsyncCallback onComplete, CompletionListener completionListener) throws JMSException {
 
         checkClosed();
         if (destination == null) {
