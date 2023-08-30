@@ -16,12 +16,27 @@
  */
 package org.apache.activemq.jms2;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.lang.management.ManagementFactory;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSProducer;
 import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueBrowser;
 import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
+import jakarta.jms.Topic;
+
 import javax.management.JMX;
 import javax.management.MBeanServer;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -124,7 +139,19 @@ public abstract class ActiveMQJMS2TestBase {
         return JMX.newMBeanProxy(mbeanServer, BrokerMBeanSupport.createDestinationName(BrokerMBeanSupport.createBrokerObjectName(DEFAULT_JMX_DOMAIN_NAME, DEFAULT_JMX_BROKER_NAME).toString(), destination), TopicViewMBean.class);
     }
 
-    private static String cleanParameterizedMethodName(String methodName) {
+    protected void verifySession(Session session, int acknowledgeMode) throws JMSException {
+        try {
+            assertNotNull(session);
+            assertEquals(acknowledgeMode, session.getAcknowledgeMode());
+            assertEquals(acknowledgeMode == Session.SESSION_TRANSACTED, session.getTransacted());
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    protected static String cleanParameterizedMethodName(String methodName) {
         // clean up parameterized method string: TESTMESSAGETIMESTAMPTIMETOLIVE[DESTINATIONTYPE=QUEUE, MESSAGETYPE=BYTES]
         // returns: TESTMESSAGETIMESTAMPTIMETOLIVE.QUEUE.BYTES
 
@@ -137,5 +164,51 @@ public abstract class ActiveMQJMS2TestBase {
         String[] step3 = step2[0].split(",", 16);
 
         return step1[0] + "." + step3[0].split("=", 2)[1] + "." + step3[1].split("=", 2)[1];
+    }
+
+    protected static void sendMessage(JMSContext jmsContext, Destination testDestination, String textBody) {
+        assertNotNull(jmsContext);
+        JMSProducer jmsProducer = jmsContext.createProducer();
+        jmsProducer.send(testDestination, textBody);
+    }
+
+    protected static void browseMessage(JMSContext jmsContext, Destination testDestination, String expectedTextBody, boolean expectFound) throws JMSException {
+        assertNotNull(jmsContext);
+        assertTrue(Queue.class.isAssignableFrom(testDestination.getClass()));
+        Queue testQueue = Queue.class.cast(testDestination);
+        try(QueueBrowser queueBrowser = jmsContext.createBrowser(testQueue)) {
+            Enumeration<?> messageEnumeration = queueBrowser.getEnumeration();
+            assertNotNull(messageEnumeration);
+
+            boolean found = false; 
+            while(!found && messageEnumeration.hasMoreElements()) {
+                jakarta.jms.Message message = (jakarta.jms.Message)messageEnumeration.nextElement();
+                assertNotNull(message);
+                assertTrue(TextMessage.class.isAssignableFrom(message.getClass()));
+                assertEquals(expectedTextBody, TextMessage.class.cast(message).getText());
+                found = true;
+            }
+            assertEquals(expectFound, found);
+        }
+    }
+
+    protected static void recvMessage(JMSContext jmsContext, Destination testDestination, String expectedTextBody) throws JMSException {
+        assertNotNull(jmsContext);
+        try(JMSConsumer jmsConsumer = jmsContext.createConsumer(testDestination)) {
+            jakarta.jms.Message message = jmsConsumer.receive(1000l);
+            assertNotNull(message);
+            assertTrue(TextMessage.class.isAssignableFrom(message.getClass()));
+            assertEquals(expectedTextBody, TextMessage.class.cast(message).getText());
+        }
+    }
+
+    protected static void recvMessageDurable(JMSContext jmsContext, Topic testTopic, String subscriptionName, String selector, boolean noLocal, String expectedTextBody) throws JMSException {
+        assertNotNull(jmsContext);
+        try(JMSConsumer jmsConsumer = jmsContext.createDurableConsumer(testTopic, subscriptionName, selector, noLocal)) {
+            jakarta.jms.Message message = jmsConsumer.receive(1000l);
+            assertNotNull(message);
+            assertTrue(TextMessage.class.isAssignableFrom(message.getClass()));
+            assertEquals(expectedTextBody, TextMessage.class.cast(message).getText());
+        }
     }
 }
