@@ -62,7 +62,7 @@ public class ActiveMQContext implements JMSContext {
 
     private final ActiveMQConnection activemqConnection;
     private final AtomicLong connectionCounter;
-    private ActiveMQSession activemqSession = null;
+    protected ActiveMQSession activemqSession = null;
 
     // Configuration
     private boolean autoStart = DEFAULT_AUTO_START;
@@ -526,7 +526,7 @@ public class ActiveMQContext implements JMSContext {
         }
     }
 
-    private void checkContextState() {
+    protected void checkContextState() {
         if (activemqConnection == null) {
             throw new JMSRuntimeException("Connection not available");
         }
@@ -556,5 +556,4 @@ public class ActiveMQContext implements JMSContext {
          }
         return this.activemqMessageProducer;
     }
-
 }

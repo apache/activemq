@@ -50,16 +50,4 @@ public class ActiveMQJMS2ConnectionTest extends ActiveMQJMS2TestBase {
         verifySession(connection.createSession(Session.SESSION_TRANSACTED), Session.SESSION_TRANSACTED);
     }
 
-    private void verifySession(Session session, int acknowledgeMode) throws JMSException {
-        try {
-            assertNotNull(session);
-            assertEquals(acknowledgeMode, session.getAcknowledgeMode());
-            assertEquals(acknowledgeMode == Session.SESSION_TRANSACTED, session.getTransacted());
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-    }
-
 }

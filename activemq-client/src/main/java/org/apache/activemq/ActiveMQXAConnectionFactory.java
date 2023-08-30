@@ -30,6 +30,7 @@ import javax.jms.XATopicConnectionFactory;
 
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
  * A factory of {@link XAConnection} instances
@@ -80,15 +81,23 @@ public class ActiveMQXAConnectionFactory extends ActiveMQConnectionFactory imple
     public XATopicConnection createXATopicConnection(String userName, String password) throws JMSException {
         return (XATopicConnection) createActiveMQConnection(userName, password);
     }
-    
+
     @Override
     public XAJMSContext createXAContext() {
-        throw new UnsupportedOperationException("createXAContext() is not supported");
+        try {
+            return new ActiveMQXAContext((ActiveMQXAConnection)createXAConnection());
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     @Override
     public XAJMSContext createXAContext(String userName, String password) {
-        throw new UnsupportedOperationException("createXAContext(userName, password) is not supported");
+        try {
+            return new ActiveMQXAContext((ActiveMQXAConnection)createXAConnection(userName, password));
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
