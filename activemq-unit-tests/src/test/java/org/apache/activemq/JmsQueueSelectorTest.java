@@ -17,7 +17,7 @@
 
 package org.apache.activemq;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * 
@@ -58,7 +58,7 @@ public class JmsQueueSelectorTest extends JmsTopicSelectorTest {
         // now we, should only receive 1 message, not two
         int remaining = 2;
 
-        javax.jms.Message recievedMsg = null;
+        jakarta.jms.Message recievedMsg = null;
 
         while (true) {
             recievedMsg = consumer.receive(1000);

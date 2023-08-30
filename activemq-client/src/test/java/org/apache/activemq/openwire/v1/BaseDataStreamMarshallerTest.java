@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
-import javax.jms.MessageFormatException;
+import jakarta.jms.MessageFormatException;
 
 import org.junit.Test;
 

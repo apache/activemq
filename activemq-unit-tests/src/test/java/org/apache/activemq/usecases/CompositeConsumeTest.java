@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.usecases;
 
-import javax.jms.Destination;
-import javax.jms.Message;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
 
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;

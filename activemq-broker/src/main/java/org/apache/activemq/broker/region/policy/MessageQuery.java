@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import javax.jms.MessageListener;
+import jakarta.jms.MessageListener;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;

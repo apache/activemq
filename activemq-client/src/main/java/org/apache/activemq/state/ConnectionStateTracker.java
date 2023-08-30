@@ -25,7 +25,7 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.jms.TransactionRolledBackException;
+import jakarta.jms.TransactionRolledBackException;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.command.Command;

@@ -26,9 +26,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.JMSSecurityException;
-import javax.jms.Queue;
-import javax.jms.Session;
+import jakarta.jms.JMSSecurityException;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
 import javax.net.ServerSocketFactory;
 
 import org.apache.activemq.ActiveMQConnection;

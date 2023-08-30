@@ -24,7 +24,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.Test;

@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.karaf.itest;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.Test;

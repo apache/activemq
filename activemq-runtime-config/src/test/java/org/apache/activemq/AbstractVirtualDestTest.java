@@ -23,10 +23,10 @@ import static org.junit.Assert.assertNull;
 import java.util.Collections;
 import java.util.Map;
 
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 
 /**
  *

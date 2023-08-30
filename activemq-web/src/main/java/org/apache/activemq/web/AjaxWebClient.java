@@ -20,8 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Date;
 
-import javax.jms.MessageConsumer;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.jms.MessageConsumer;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

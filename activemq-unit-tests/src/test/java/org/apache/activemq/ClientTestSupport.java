@@ -23,7 +23,7 @@ import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import junit.framework.TestCase;
 

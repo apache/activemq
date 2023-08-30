@@ -28,9 +28,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageProducer;
@@ -276,7 +276,7 @@ public class AMQ5212Test {
                             }
                         }
 
-                    } catch (javax.jms.IllegalStateException expected) {
+                    } catch (jakarta.jms.IllegalStateException expected) {
                     } catch (Exception ignored) {
                         ignored.printStackTrace();
                     }

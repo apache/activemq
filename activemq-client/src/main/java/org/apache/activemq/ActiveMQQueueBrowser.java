@@ -19,8 +19,8 @@ package org.apache.activemq;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.jms.*;
-import javax.jms.IllegalStateException;
+import jakarta.jms.*;
+import jakarta.jms.IllegalStateException;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
@@ -46,10 +46,10 @@ import org.apache.activemq.selector.SelectorParser;
  * </CODE>
  * or a <CODE>QueueSession</CODE>.
  *
- * @see javax.jms.Session#createBrowser
- * @see javax.jms.QueueSession#createBrowser
- * @see javax.jms.QueueBrowser
- * @see javax.jms.QueueReceiver
+ * @see jakarta.jms.Session#createBrowser
+ * @see jakarta.jms.QueueSession#createBrowser
+ * @see jakarta.jms.QueueBrowser
+ * @see jakarta.jms.QueueReceiver
  */
 
 public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
@@ -183,7 +183,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
             }
 
             try {
-                javax.jms.Message answer = consumer.receiveNoWait();
+                jakarta.jms.Message answer = consumer.receiveNoWait();
                 if (answer != null) {
                     return answer;
                 }

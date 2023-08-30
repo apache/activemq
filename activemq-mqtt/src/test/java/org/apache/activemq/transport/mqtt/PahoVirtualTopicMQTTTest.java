@@ -23,8 +23,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.Session;
 
 import static org.junit.Assert.assertEquals;
 

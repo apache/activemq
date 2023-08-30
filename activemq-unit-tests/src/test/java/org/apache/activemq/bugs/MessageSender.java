@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.bugs;
 
-import javax.jms.Connection;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.Session;
 
 public class MessageSender {
     private MessageProducer producer;

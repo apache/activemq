@@ -34,11 +34,11 @@ package org.apache.activemq.usecases;
 
 import java.net.URI;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TemporaryQueue;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TemporaryQueue;
 import javax.management.ObjectName;
 
 import junit.framework.Test;
@@ -146,7 +146,7 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
         for (int i = 0; i < 500; i++) {
             TemporaryQueue tempDest = session.createTemporaryQueue();
             MessageProducer producer = session.createProducer(requestReplyDest);
-            javax.jms.Message message = session.createTextMessage("req-" + i);
+            jakarta.jms.Message message = session.createTextMessage("req-" + i);
             message.setJMSReplyTo(tempDest);
 
             ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(tempDest);
@@ -157,13 +157,13 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
             replyConnection.start();
             Session replySession = replyConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             ActiveMQMessageConsumer replyConsumer = (ActiveMQMessageConsumer) replySession.createConsumer(requestReplyDest);
-            javax.jms.Message msg = replyConsumer.receive(10000);
+            jakarta.jms.Message msg = replyConsumer.receive(10000);
             assertNotNull("request message not null: " + i, msg);
             MessageProducer replyProducer = replySession.createProducer(msg.getJMSReplyTo());
             replyProducer.send(session.createTextMessage("reply-" + i));
             replyConnection.close();
 
-            javax.jms.Message reply = consumer.receive(10000);
+            jakarta.jms.Message reply = consumer.receive(10000);
             assertNotNull("reply message : " + i + ", to: " + tempDest + ", by consumer:" + consumer.getConsumerId(), reply);
             consumer.close();
             tempDest.delete();

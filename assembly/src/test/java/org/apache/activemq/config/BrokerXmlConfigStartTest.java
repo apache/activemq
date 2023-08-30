@@ -30,7 +30,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -137,7 +137,9 @@ public class BrokerXmlConfigStartTest {
         System.setProperty("activemq.conf", "target/conf");
         secProps = new Properties();
         secProps.load(new FileInputStream(new File("target/conf/credentials.properties")));
-        setEnv("ACTIVEMQ_ENCRYPTION_PASSWORD", "activemq");
+        // AMQ-9239 - setEnv doesn't work w/ JDK 17
+        // This is only needed for running in IDE. surefire plugin sets this during mvn builds
+        // setEnv("ACTIVEMQ_ENCRYPTION_PASSWORD", "activemq");
     }
 
     @After

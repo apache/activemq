@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.ra;
 
-import javax.resource.spi.endpoint.MessageEndpointFactory;
+import jakarta.resource.spi.endpoint.MessageEndpointFactory;
 
 
 public class ActiveMQEndpointActivationKey {

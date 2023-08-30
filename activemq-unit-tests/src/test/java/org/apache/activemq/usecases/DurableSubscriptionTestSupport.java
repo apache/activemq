@@ -16,17 +16,17 @@
  */
 package org.apache.activemq.usecases;
 
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.Connection;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicSubscriber;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
@@ -111,7 +111,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     protected abstract PersistenceAdapter createPersistenceAdapter() throws Exception;
 
     public void testMessageExpire() throws Exception {
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
         producer = session.createProducer(topic);
@@ -137,7 +137,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     }
 
     public void testUnsubscribeSubscription() throws Exception {
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
         producer = session.createProducer(topic);
@@ -157,7 +157,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         // Reopen the connection.
         connection.close();
         connection = createConnection();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         producer = session.createProducer(topic);
         connection.start();
 
@@ -170,7 +170,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     }
 
     public void testInactiveDurableSubscriptionTwoConnections() throws Exception {
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
         producer = session.createProducer(topic);
@@ -190,7 +190,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         // Reopen the connection.
         connection.close();
         connection = createConnection();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         connection.start();
 
         // Activate the sub.
@@ -201,7 +201,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     }
 
     public void testInactiveDurableSubscriptionBrokerRestart() throws Exception {
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
         producer = session.createProducer(topic);
@@ -220,7 +220,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
         // Reopen the connection.
         restartBroker();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         connection.start();
 
         // Activate the sub.
@@ -235,7 +235,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
         // Create the durable sub.
         connection.start();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
 
         // Ensure that consumer will receive messages sent before it was created
         Topic topic = session.createTopic("TestTopic?consumer.retroactive=true");
@@ -257,7 +257,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
         // Create the durable sub.
         connection.start();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
 
         // Ensure that consumer will receive messages sent before it was created
         Topic topic = session.createTopic("TestTopic?consumer.retroactive=true");
@@ -268,7 +268,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
         // Reconnection
         connection.start();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         producer = session.createProducer(topic);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
@@ -292,7 +292,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
         // Create the durable sub.
         connection.start();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
 
         Topic topic = session.createTopic("TestTopic?consumer.retroactive=true");
         consumer = session.createDurableSubscriber(topic, "sub1");
@@ -301,7 +301,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         // Produce
         connection = createConnection();
         connection.start();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         producer = session.createProducer(topic);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
         producer.send(session.createTextMessage("Msg:1"));
@@ -310,7 +310,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
         // connect second durable to pick up retroactive message
         connection.start();
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         consumer = session.createDurableSubscriber(topic, "sub2");
 
         // Try to get the message.
@@ -323,11 +323,11 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         // Create the durable sub.
         connection.start();
 
-        session = connection.createSession(true, javax.jms.Session.SESSION_TRANSACTED);
+        session = connection.createSession(true, jakarta.jms.Session.SESSION_TRANSACTED);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
 
-        Session producerSession = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        Session producerSession = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         producer = producerSession.createProducer(topic);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
@@ -339,7 +339,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         consumer.close();
         session.close();
 
-        session = connection.createSession(true, javax.jms.Session.SESSION_TRANSACTED);
+        session = connection.createSession(true, jakarta.jms.Session.SESSION_TRANSACTED);
 
         // Ensure that consumer will receive messages sent and rolled back
         consumer = session.createDurableSubscriber(topic, "sub1");
@@ -351,7 +351,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     }
 
     public void xtestInactiveDurableSubscriptionOneConnection() throws Exception {
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
         producer = session.createProducer(topic);
@@ -376,7 +376,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     }
 
     public void testSelectorChange() throws Exception {
-        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1", "color='red'", false);
         producer = session.createProducer(topic);

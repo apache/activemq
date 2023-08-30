@@ -18,7 +18,7 @@ package org.apache.activemq.web.config;
 
 import java.util.Collection;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 import javax.management.remote.JMXServiceURL;
 
 /**

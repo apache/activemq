@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;

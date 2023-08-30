@@ -111,12 +111,12 @@
               javax.management.remote,
               javax.naming,
               org.w3c.dom,
-              javax.servlet,
-              javax.servlet.http,
-              javax.servlet.resources,
-              javax.servlet.jsp,
-              javax.servlet.jsp.tagext,
-              javax.servlet.jsp.el,
+              jakarta.servlet,
+              jakarta.servlet.http,
+              jakarta.servlet.resources,
+              jakarta.servlet.jsp,
+              jakarta.servlet.jsp.tagext,
+              jakarta.servlet.jsp.el,
               javax.management,
               javax.management.openmbean,
               javax.net,
@@ -146,8 +146,8 @@
       <artifactId>jakarta.jms-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jta_1.1_spec</artifactId>
+      <groupId>jakarta.transaction</groupId>
+      <artifactId>jakarta.transaction-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -186,6 +186,11 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-client</artifactId>
       <scope>test</scope>
     </dependency>
 

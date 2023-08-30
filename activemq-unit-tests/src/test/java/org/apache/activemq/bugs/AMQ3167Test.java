@@ -22,12 +22,12 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -83,7 +83,7 @@ public class AMQ3167Test {
      * @password Password for the JMS user; may be null.
      */
 
-    protected Connection createUnsecuredConnection(String username, String password) throws javax.jms.JMSException {
+    protected Connection createUnsecuredConnection(String username, String password) throws jakarta.jms.JMSException {
         ActiveMQConnectionFactory conn_fact;
 
         conn_fact = new ActiveMQConnectionFactory(embeddedBroker.getVmConnectorURI());
@@ -426,7 +426,7 @@ public class AMQ3167Test {
          * number (starting at 0).
          */
 
-        protected void checkMessage(Message msg, int exp_seq) throws javax.jms.JMSException {
+        protected void checkMessage(Message msg, int exp_seq) throws jakarta.jms.JMSException {
             int seq;
 
             seq = msg.getIntProperty("seq");

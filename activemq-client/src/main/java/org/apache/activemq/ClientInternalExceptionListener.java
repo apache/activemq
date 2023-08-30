@@ -18,7 +18,7 @@
 package org.apache.activemq;
 
 /**
- * An exception listener similar to the standard <code>javax.jms.ExceptionListener</code>
+ * An exception listener similar to the standard <code>jakarta.jms.ExceptionListener</code>
  * which can be used by client code to be notified of exceptions thrown by container components 
  * (e.g. an EJB container in case of Message Driven Beans) during asynchronous processing of a message.
  * <p>

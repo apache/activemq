@@ -34,9 +34,11 @@ import org.apache.activemq.transport.stomp.StompConnection;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Result;
+import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
 import org.eclipse.jetty.client.util.BufferingResponseListener;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -140,10 +142,13 @@ public class WSTransportTest extends WSTransportTestSupport {
     }
 
 
-    protected void testGet(final String uri, SslContextFactory
+    protected void testGet(final String uri, SslContextFactory.Client
             sslContextFactory) throws Exception {
-        HttpClient httpClient = sslContextFactory != null ? new HttpClient(sslContextFactory) :
-            new HttpClient(new SslContextFactory.Client());
+
+        ClientConnector clientConnector = new ClientConnector();
+        clientConnector.setSslContextFactory(sslContextFactory);
+
+        HttpClient httpClient = sslContextFactory != null ? new HttpClient(new HttpClientTransportDynamic(clientConnector)) : new HttpClient();
         httpClient.start();
 
         final CountDownLatch latch = new CountDownLatch(1);

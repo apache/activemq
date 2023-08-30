@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 /**
  * A filter performing a comparison of two objects

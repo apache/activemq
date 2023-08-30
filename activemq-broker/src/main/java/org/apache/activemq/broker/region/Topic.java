@@ -63,7 +63,7 @@ import org.apache.activemq.util.SubscriptionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import static org.apache.activemq.transaction.Transaction.IN_USE_STATE;
 
@@ -398,7 +398,7 @@ public class Topic extends BaseDestination implements Task {
                 }
 
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
-                    throw new javax.jms.ResourceAllocationException("Usage Manager memory limit ("
+                    throw new jakarta.jms.ResourceAllocationException("Usage Manager memory limit ("
                             + memoryUsage.getLimit() + ") reached. Rejecting send for producer (" + message.getProducerId()
                             + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                             + " See http://activemq.apache.org/producer-flow-control.html for more info");
@@ -528,7 +528,7 @@ public class Topic extends BaseDestination implements Task {
                         + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                         + " See http://activemq.apache.org/producer-flow-control.html for more info";
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
-                    throw new javax.jms.ResourceAllocationException(logMessage);
+                    throw new jakarta.jms.ResourceAllocationException(logMessage);
                 }
 
                 waitForSpace(context,producerExchange, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);

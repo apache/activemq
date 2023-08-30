@@ -14,10 +14,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
-<%@ attribute name="message" type="javax.jms.Message" required="true"  %>
+<%@ attribute name="message" type="jakarta.jms.Message" required="true"  %>
 <%
 	if (message != null) { 
-	  if (message.getJMSDeliveryMode() == javax.jms.DeliveryMode.PERSISTENT) {
+	  if (message.getJMSDeliveryMode() == jakarta.jms.DeliveryMode.PERSISTENT) {
   		  	  out.println("Persistent");
   		}
   		else {

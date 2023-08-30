@@ -24,12 +24,12 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
 
-import javax.jms.BytesMessage;
-import javax.jms.Destination;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.Destination;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 import javax.net.ServerSocketFactory;
 
 import org.apache.activemq.ActiveMQConnection;
@@ -202,6 +202,7 @@ public class HttpPullConsumerTest {
     }
 
     protected void stopBroker() throws Exception {
+        connection.close();
         if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();

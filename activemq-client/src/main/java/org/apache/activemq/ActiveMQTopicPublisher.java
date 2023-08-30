@@ -17,10 +17,10 @@
 
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.Topic;
-import javax.jms.TopicPublisher;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicPublisher;
 
 import org.apache.activemq.command.ActiveMQDestination;
 
@@ -114,9 +114,9 @@ public class ActiveMQTopicPublisher extends ActiveMQMessageProducer implements
      * @throws java.lang.UnsupportedOperationException
      *                                     if a client uses this method with a <CODE>TopicPublisher
      *                                     </CODE> that did not specify a topic at creation time.
-     * @see javax.jms.MessageProducer#getDeliveryMode()
-     * @see javax.jms.MessageProducer#getTimeToLive()
-     * @see javax.jms.MessageProducer#getPriority()
+     * @see jakarta.jms.MessageProducer#getDeliveryMode()
+     * @see jakarta.jms.MessageProducer#getTimeToLive()
+     * @see jakarta.jms.MessageProducer#getPriority()
      */
 
     public void publish(Message message) throws JMSException {
@@ -162,9 +162,9 @@ public class ActiveMQTopicPublisher extends ActiveMQMessageProducer implements
      *                                     some internal error.
      * @throws MessageFormatException      if an invalid message is specified.
      * @throws InvalidDestinationException if a client uses this method with an invalid topic.
-     * @see javax.jms.MessageProducer#getDeliveryMode()
-     * @see javax.jms.MessageProducer#getTimeToLive()
-     * @see javax.jms.MessageProducer#getPriority()
+     * @see jakarta.jms.MessageProducer#getDeliveryMode()
+     * @see jakarta.jms.MessageProducer#getTimeToLive()
+     * @see jakarta.jms.MessageProducer#getPriority()
      */
 
     public void publish(Topic topic, Message message) throws JMSException {

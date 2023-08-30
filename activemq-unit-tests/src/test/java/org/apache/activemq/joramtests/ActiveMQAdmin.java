@@ -20,7 +20,7 @@ import java.io.File;
 import java.net.URI;
 import java.util.Hashtable;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;

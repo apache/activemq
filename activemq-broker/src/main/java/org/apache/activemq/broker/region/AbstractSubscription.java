@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
+import jakarta.jms.InvalidSelectorException;
+import jakarta.jms.JMSException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.Broker;

@@ -28,9 +28,9 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.*;
-import javax.jms.Message;
+import jakarta.jms.Connection;
+import jakarta.jms.*;
+import jakarta.jms.Message;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;

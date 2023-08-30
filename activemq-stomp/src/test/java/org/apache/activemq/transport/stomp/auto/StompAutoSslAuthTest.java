@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 

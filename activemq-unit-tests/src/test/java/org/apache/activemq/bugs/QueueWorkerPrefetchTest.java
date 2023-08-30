@@ -24,14 +24,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Queue;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -128,7 +128,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements
             workItemConsumer.setMessageListener(this);
         }
 
-        public void onMessage(javax.jms.Message message) {
+        public void onMessage(jakarta.jms.Message message) {
             try {
                 WorkMessage work = (WorkMessage) ((ObjectMessage) message)
                         .getObject();
@@ -158,7 +158,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements
     }
 
     /** Master message handler. Process ack messages. */
-    public void onMessage(javax.jms.Message message) {
+    public void onMessage(jakarta.jms.Message message) {
         long acks = acksReceived.incrementAndGet();
         latch.get().countDown();
         if (acks % 1 == 0) {

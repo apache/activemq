@@ -16,14 +16,14 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import javax.jms.Session;
-import javax.jms.XAConnection;
-import javax.jms.XAQueueConnection;
-import javax.jms.XAQueueSession;
-import javax.jms.XASession;
-import javax.jms.XATopicConnection;
-import javax.jms.XATopicSession;
+import jakarta.jms.JMSException;
+import jakarta.jms.Session;
+import jakarta.jms.XAConnection;
+import jakarta.jms.XAQueueConnection;
+import jakarta.jms.XAQueueSession;
+import jakarta.jms.XASession;
+import jakarta.jms.XATopicConnection;
+import jakarta.jms.XATopicSession;
 
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.transport.Transport;
@@ -40,13 +40,13 @@ import org.apache.activemq.util.IdGenerator;
  * than use these XA  interfaces directly.
  *
  * 
- * @see javax.jms.Connection
- * @see javax.jms.ConnectionFactory
- * @see javax.jms.QueueConnection
- * @see javax.jms.TopicConnection
- * @see javax.jms.TopicConnectionFactory
- * @see javax.jms.QueueConnection
- * @see javax.jms.QueueConnectionFactory
+ * @see jakarta.jms.Connection
+ * @see jakarta.jms.ConnectionFactory
+ * @see jakarta.jms.QueueConnection
+ * @see jakarta.jms.TopicConnection
+ * @see jakarta.jms.TopicConnectionFactory
+ * @see jakarta.jms.QueueConnection
+ * @see jakarta.jms.QueueConnectionFactory
  */
 public class ActiveMQXAConnection extends ActiveMQConnection implements XATopicConnection, XAQueueConnection, XAConnection {
 

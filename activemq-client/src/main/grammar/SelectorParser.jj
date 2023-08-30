@@ -53,7 +53,7 @@ package org.apache.activemq.selector;
 import java.io.*;
 import java.util.*;
 
-import javax.jms.InvalidSelectorException;
+import jakarta.jms.InvalidSelectorException;
 
 import org.apache.activemq.filter.*;
 import org.apache.activemq.filter.FunctionCallExpression.invalidFunctionExpressionException;

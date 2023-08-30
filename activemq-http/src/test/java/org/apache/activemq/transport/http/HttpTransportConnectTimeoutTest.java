@@ -22,13 +22,13 @@ import static org.junit.Assert.assertNotNull;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.ExceptionListener;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -68,26 +68,27 @@ public class HttpTransportConnectTimeoutTest {
     public void testSendReceiveAfterPause() throws Exception {
         final CountDownLatch failed = new CountDownLatch(1);
 
-        Connection connection = factory.createConnection();
-        connection.start();
-        connection.setExceptionListener(new ExceptionListener() {
+        try (Connection connection = factory.createConnection()) {
+            connection.start();
+            connection.setExceptionListener(new ExceptionListener() {
 
-            @Override
-            public void onException(JMSException exception) {
-                LOG.info("Connection failed due to: {}", exception.getMessage());
-                failed.countDown();
-            }
-        });
+                @Override
+                public void onException(JMSException exception) {
+                    LOG.info("Connection failed due to: {}", exception.getMessage());
+                    failed.countDown();
+                }
+            });
 
-        assertFalse(failed.await(3, TimeUnit.SECONDS));
+            assertFalse(failed.await(3, TimeUnit.SECONDS));
 
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = session.createTemporaryQueue();
-        MessageProducer producer = session.createProducer(queue);
-        MessageConsumer consumer = session.createConsumer(queue);
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = session.createTemporaryQueue();
+            MessageProducer producer = session.createProducer(queue);
+            MessageConsumer consumer = session.createConsumer(queue);
 
-        producer.send(session.createMessage());
+            producer.send(session.createMessage());
 
-        assertNotNull(consumer.receive(5000));
+            assertNotNull(consumer.receive(5000));
+        }
     }
 }

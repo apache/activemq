@@ -20,7 +20,7 @@ package org.apache.activemq.bugs;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.openwire.OpenWireFormat;

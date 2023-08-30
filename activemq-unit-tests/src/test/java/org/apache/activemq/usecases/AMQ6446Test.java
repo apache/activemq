@@ -30,7 +30,7 @@ import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Test;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;

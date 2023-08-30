@@ -19,12 +19,12 @@ package org.apache.activemq.transport.amqp.client;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.jms.InvalidClientIDException;
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
-import javax.jms.JMSSecurityException;
-import javax.jms.ResourceAllocationException;
-import javax.jms.TransactionRolledBackException;
+import jakarta.jms.InvalidClientIDException;
+import jakarta.jms.InvalidDestinationException;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSSecurityException;
+import jakarta.jms.ResourceAllocationException;
+import jakarta.jms.TransactionRolledBackException;
 
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Modified;

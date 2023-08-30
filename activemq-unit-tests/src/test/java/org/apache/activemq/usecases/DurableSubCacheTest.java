@@ -36,11 +36,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.Connection;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
+import jakarta.jms.TopicSubscriber;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -187,7 +187,7 @@ public class DurableSubCacheTest {
         try {
 
             for (int i = 0; i < messageCount; i++) {
-                javax.jms.Message message = topicSubscriber.receive(4000l);
+                jakarta.jms.Message message = topicSubscriber.receive(4000l);
                 if (message == null) {
                     fail("should have received a message");
                 }

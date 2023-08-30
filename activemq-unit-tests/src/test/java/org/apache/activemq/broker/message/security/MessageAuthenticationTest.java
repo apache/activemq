@@ -19,13 +19,13 @@ package org.apache.activemq.broker.message.security;
 
 import java.io.IOException;
 
-import javax.jms.Connection;
-import javax.jms.Session;
-import javax.jms.Destination;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.TextMessage;
-import javax.jms.JMSException;
+import jakarta.jms.Connection;
+import jakarta.jms.Session;
+import jakarta.jms.Destination;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.TextMessage;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -69,7 +69,7 @@ public class MessageAuthenticationTest extends EmbeddedBrokerTestSupport {
         assertEquals("validBody", ((TextMessage) messageList.flushMessages().get(0)).getText());
     }
 
-    private javax.jms.Message createMessage(Session session, String body, String header, String value) throws JMSException {
+    private jakarta.jms.Message createMessage(Session session, String body, String header, String value) throws JMSException {
         TextMessage msg = session.createTextMessage(body);
         msg.setStringProperty(header, value);
         return msg;

@@ -19,7 +19,7 @@ package org.apache.activemq.console;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.LinkedList;
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;

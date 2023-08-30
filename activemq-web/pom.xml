@@ -76,11 +76,11 @@
     </dependency>
 
     <!-- web container -->
-	<dependency>
-      	<groupId>org.apache.tomcat</groupId>
-      	<artifactId>tomcat-servlet-api</artifactId>
+     <dependency>
+       <groupId>jakarta.servlet</groupId>
+       <artifactId>jakarta.servlet-api</artifactId>
       	<scope>provided</scope>
-      </dependency>
+     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
@@ -92,7 +92,7 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.websocket</groupId>
-      <artifactId>websocket-server</artifactId>
+      <artifactId>websocket-jetty-server</artifactId>
     </dependency>
 
     <!-- Rome RSS Reader -->

@@ -18,7 +18,7 @@ package org.apache.activemq.transport.amqp;
 
 import java.io.File;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;

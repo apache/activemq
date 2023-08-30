@@ -17,9 +17,9 @@
 
 package org.apache.activemq.ra;
 
-import javax.jms.JMSException;
-import javax.resource.spi.BootstrapContext;
-import javax.resource.spi.ResourceAdapter;
+import jakarta.jms.JMSException;
+import jakarta.resource.spi.BootstrapContext;
+import jakarta.resource.spi.ResourceAdapter;
 
 import org.apache.activemq.ActiveMQConnection;
 

@@ -61,7 +61,7 @@ This product includes software developed by the Sun Microsystems, Inc.
 This product includes some software developed at The Apache Software
 Foundation (http://www.apache.org/).
 
-The javax.servlet package used by Jetty is copyright
+The jakarta.servlet package used by Jetty is copyright
 Sun Microsystems, Inc and Apache Software Foundation. It is
 distributed under the Common Development and Distribution License.
 You can obtain a copy of the license at

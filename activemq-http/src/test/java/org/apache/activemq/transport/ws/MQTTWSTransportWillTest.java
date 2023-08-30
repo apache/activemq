@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
+import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -79,7 +81,13 @@ public class MQTTWSTransportWillTest extends WSTransportTestSupport {
         //turn off advisory support
         broker = createBroker(true, false);
 
-        wsClient = new WebSocketClient(new HttpClient(new SslContextFactory.Client(true)));
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        sslContextFactory.setTrustAll(true);
+        ClientConnector clientConnector = new ClientConnector();
+        clientConnector.setSslContextFactory(sslContextFactory);
+
+        HttpClient httpClient = new HttpClient(new HttpClientTransportDynamic(clientConnector));
+        wsClient = new WebSocketClient(httpClient);
         wsClient.start();
 
         request = new ClientUpgradeRequest();

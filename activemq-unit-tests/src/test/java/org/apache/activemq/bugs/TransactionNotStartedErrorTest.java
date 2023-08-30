@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.bugs;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.ObjectMessage;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.Session;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * simulate message flow which cause the following exception in the broker
  * (exception logged by client) <p/> 2007-07-24 13:51:23,624
  * com.easynet.halo.Halo ERROR (LoggingErrorHandler.java: 23) JMS failure
- * javax.jms.JMSException: Transaction 'TX:ID:dmt-53625-1185281414694-1:0:344'
+ * jakarta.jms.JMSException: Transaction 'TX:ID:dmt-53625-1185281414694-1:0:344'
  * has not been started. at
  * org.apache.activemq.broker.TransactionBroker.getTransaction(TransactionBroker.java:230)
  * This appears to be consistent in a MacBook. Haven't been able to replicate it

@@ -16,13 +16,13 @@
  */
 package org.apache.activemq;
 
-import javax.jms.Connection;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
 
 /**
  * 
@@ -51,7 +51,7 @@ public class JmsClientAckListenerTest extends TestSupport implements MessageList
     /**
      * Tests if acknowleged messages are being consumed.
      * 
-     * @throws javax.jms.JMSException
+     * @throws jakarta.jms.JMSException
      */
     public void testAckedMessageAreConsumed() throws Exception {
         connection.start();
@@ -83,7 +83,7 @@ public class JmsClientAckListenerTest extends TestSupport implements MessageList
      * Tests if unacknowleged messages are being redelivered when the consumer
      * connects again.
      * 
-     * @throws javax.jms.JMSException
+     * @throws jakarta.jms.JMSException
      */
     public void testUnAckedMessageAreNotConsumedOnSessionClose() throws Exception {
         connection.start();

@@ -26,9 +26,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import javax.jms.Connection;
-import javax.jms.Session;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.Connection;
+import jakarta.jms.Session;
+import jakarta.jms.TopicSubscriber;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.ActiveMQConnection;

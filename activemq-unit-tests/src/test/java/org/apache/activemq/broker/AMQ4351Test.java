@@ -25,8 +25,8 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.*;
+import jakarta.jms.Connection;
+import jakarta.jms.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;

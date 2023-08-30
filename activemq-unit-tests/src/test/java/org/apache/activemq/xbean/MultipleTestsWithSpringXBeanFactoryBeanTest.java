@@ -34,7 +34,7 @@ public class MultipleTestsWithSpringXBeanFactoryBeanTest extends MultipleTestsWi
     protected void tearDown() throws Exception {
         super.tearDown();
         if (context != null) {
-            context.destroy();
+            context.close();
         }
     }
 

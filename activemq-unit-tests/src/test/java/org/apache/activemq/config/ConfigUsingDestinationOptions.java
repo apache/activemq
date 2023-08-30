@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.config;
 
-import javax.jms.Connection;
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.InvalidSelectorException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Session;
 
 import junit.framework.TestCase;
 

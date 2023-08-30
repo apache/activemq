@@ -34,16 +34,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.IllegalStateRuntimeException;
-import javax.jms.JMSConsumer;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Session;
-import javax.jms.Topic;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.IllegalStateRuntimeException;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
 
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
@@ -219,7 +219,7 @@ public class ActiveMQJMS2MessageTypesTest extends ActiveMQJMS2TestBase {
 
             int validatedCount = 0;
             for(int validatedPriority : VALID_PRIORITIES) {
-                for(javax.jms.Message tmpMessage : recvMessages) {
+                for(jakarta.jms.Message tmpMessage : recvMessages) {
                     if(tmpMessage.getJMSPriority() == validatedPriority) {
                         MessageData messageData = new MessageData();
                         messageData.setMessageType(messageType).setMessagePayload(messagePayload).setPriority(validatedPriority);
@@ -330,7 +330,7 @@ public class ActiveMQJMS2MessageTypesTest extends ActiveMQJMS2TestBase {
             assertEquals(Integer.valueOf(1), Integer.valueOf(recvMessages.size()));
 
             int validatedCount = 0;
-            for(javax.jms.Message tmpMessage : recvMessages) {
+            for(jakarta.jms.Message tmpMessage : recvMessages) {
                 MessageData recvMessageData = new MessageData();
                 recvMessageData.setMessageType(messageType).setMessagePayload(messagePayload).setExpiration(messageExpiration).setTimestamp(messageTimestamp);
                 ActiveMQJMS2TestSupport.validateMessageData(tmpMessage, recvMessageData);
@@ -383,7 +383,7 @@ public class ActiveMQJMS2MessageTypesTest extends ActiveMQJMS2TestBase {
             jmsConsumer.close();
             jmsContext.stop();
 
-            for(javax.jms.Message tmpMessage : recvMessages) {
+            for(jakarta.jms.Message tmpMessage : recvMessages) {
                 MessageData recvMessageData = new MessageData();
                 recvMessageData.setMessagePayload(messagePayload).setMessageType(messageType).setExpiration(messageExpiration).setTimestamp(messageTimestamp).setDisableMessageTimestamp(true);
                 ActiveMQJMS2TestSupport.validateMessageData(tmpMessage, recvMessageData);
@@ -430,7 +430,7 @@ public class ActiveMQJMS2MessageTypesTest extends ActiveMQJMS2TestBase {
             jmsConsumer.close();
             jmsContext.stop();
 
-            for(javax.jms.Message tmpMessage : recvMessages) {
+            for(jakarta.jms.Message tmpMessage : recvMessages) {
                 MessageData recvMessageData = new MessageData();
                 recvMessageData.setMessagePayload(messagePayload).setMessageType(messageType).setCorrelationID(jmsCorrelationID).setReplyTo(jmsReplyTo).setJMSType(jmsType);
                 ActiveMQJMS2TestSupport.validateMessageData(tmpMessage, recvMessageData);
@@ -469,7 +469,7 @@ public class ActiveMQJMS2MessageTypesTest extends ActiveMQJMS2TestBase {
             jmsConsumer.close();
             jmsContext.stop();
 
-            for(javax.jms.Message tmpMessage : recvMessages) {
+            for(jakarta.jms.Message tmpMessage : recvMessages) {
                 MessageData messageData = new MessageData();
                 messageData.setMessageType(messageType).setMessagePayload(messagePayload).setMessageID(jmsMessageID);
                 ActiveMQJMS2TestSupport.validateMessageData(tmpMessage, messageData);
@@ -520,7 +520,7 @@ public class ActiveMQJMS2MessageTypesTest extends ActiveMQJMS2TestBase {
             jmsConsumerDurable.close();
             jmsContext.stop();
 
-            for(javax.jms.Message tmpMessage : recvMessages) {
+            for(jakarta.jms.Message tmpMessage : recvMessages) {
                 MessageData messageData = new MessageData();
                 messageData.setMessageType(messageType).setMessagePayload(messagePayload).setMessageID(jmsMessageID);
                 ActiveMQJMS2TestSupport.validateMessageData(tmpMessage, messageData);
@@ -585,7 +585,7 @@ public class ActiveMQJMS2MessageTypesTest extends ActiveMQJMS2TestBase {
             jmsConsumerDurable.close();
             jmsContext.stop();
 
-            for(javax.jms.Message tmpMessage : recvMessages) {
+            for(jakarta.jms.Message tmpMessage : recvMessages) {
                 MessageData recvMessageData = new MessageData();
                 recvMessageData.setMessageType(messageType).setMessagePayload(messagePayload).setMessageID(matchMessageId);
                 ActiveMQJMS2TestSupport.validateMessageData(tmpMessage, recvMessageData);

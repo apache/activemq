@@ -19,14 +19,14 @@ package org.apache.activemq;
 import java.net.URI;
 import java.util.Properties;
 
-import javax.jms.JMSException;
-import javax.jms.XAConnection;
-import javax.jms.XAConnectionFactory;
-import javax.jms.XAJMSContext;
-import javax.jms.XAQueueConnection;
-import javax.jms.XAQueueConnectionFactory;
-import javax.jms.XATopicConnection;
-import javax.jms.XATopicConnectionFactory;
+import jakarta.jms.JMSException;
+import jakarta.jms.XAConnection;
+import jakarta.jms.XAConnectionFactory;
+import jakarta.jms.XAJMSContext;
+import jakarta.jms.XAQueueConnection;
+import jakarta.jms.XAQueueConnectionFactory;
+import jakarta.jms.XATopicConnection;
+import jakarta.jms.XATopicConnectionFactory;
 
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.transport.Transport;

@@ -20,8 +20,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Set;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.Destination;
 
 import org.apache.activemq.console.filter.AmqMessagesQueryFilter;
 import org.apache.activemq.console.filter.GroupPropertiesViewFilter;

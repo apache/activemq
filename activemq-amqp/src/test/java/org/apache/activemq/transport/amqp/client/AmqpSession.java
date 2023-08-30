@@ -618,7 +618,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      */
     public void begin() throws Exception {
         if (txContext.isInTransaction()) {
-            throw new javax.jms.IllegalStateException("Session already has an active transaction");
+            throw new jakarta.jms.IllegalStateException("Session already has an active transaction");
         }
 
         txContext.begin();
@@ -631,7 +631,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      */
     public void commit() throws Exception {
         if (!txContext.isInTransaction()) {
-            throw new javax.jms.IllegalStateException(
+            throw new jakarta.jms.IllegalStateException(
                 "Commit called on Session that does not have an active transaction");
         }
 
@@ -645,7 +645,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      */
     public void rollback() throws Exception {
         if (!txContext.isInTransaction()) {
-            throw new javax.jms.IllegalStateException(
+            throw new jakarta.jms.IllegalStateException(
                 "Rollback called on Session that does not have an active transaction");
         }
 

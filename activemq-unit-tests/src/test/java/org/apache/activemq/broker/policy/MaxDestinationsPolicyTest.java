@@ -21,12 +21,12 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.ArrayList;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.jms.Topic;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -99,7 +99,7 @@ public class MaxDestinationsPolicyTest {
     /**
      * Test that default policy prevents going beyond max
      */
-    @Test(expected = javax.jms.IllegalStateException.class)
+    @Test(expected = jakarta.jms.IllegalStateException.class)
     public void testMaxDestinationDefaultPolicyFail() throws Exception {
         applyDefaultMaximumDestinationPolicy(10);
 
@@ -111,7 +111,7 @@ public class MaxDestinationsPolicyTest {
     /**
      * Test that a queue policy overrides the default policy
      */
-    @Test(expected = javax.jms.IllegalStateException.class)
+    @Test(expected = jakarta.jms.IllegalStateException.class)
     public void testMaxDestinationOnQueuePolicy() throws Exception {
         PolicyMap policyMap = applyDefaultMaximumDestinationPolicy(10);
         applyMaximumDestinationPolicy(policyMap, new ActiveMQQueue("queue.>"),
@@ -140,7 +140,7 @@ public class MaxDestinationsPolicyTest {
     /**
      * Test that topic creation will faill when exceeding the limit
      */
-    @Test(expected = javax.jms.IllegalStateException.class)
+    @Test(expected = jakarta.jms.IllegalStateException.class)
     public void testTopicMaxDestinationDefaultPolicyFail() throws Exception {
         applyDefaultMaximumDestinationPolicy(20);
 
@@ -183,7 +183,7 @@ public class MaxDestinationsPolicyTest {
         boolean fail = false;
         try {
             createTopic("topic.test");
-        } catch (javax.jms.IllegalStateException e) {
+        } catch (jakarta.jms.IllegalStateException e) {
             fail = true;
         }
         assertTrue(fail);
@@ -191,7 +191,7 @@ public class MaxDestinationsPolicyTest {
         fail = false;
         try {
             createQueue("queue.test");
-        } catch (javax.jms.IllegalStateException e) {
+        } catch (jakarta.jms.IllegalStateException e) {
             fail = true;
         }
         assertTrue(fail);
@@ -213,7 +213,7 @@ public class MaxDestinationsPolicyTest {
         boolean fail = false;
         try {
             createTopic("topic.abc.test");
-        } catch (javax.jms.IllegalStateException e) {
+        } catch (jakarta.jms.IllegalStateException e) {
             fail = true;
         }
         assertTrue(fail);
@@ -223,7 +223,7 @@ public class MaxDestinationsPolicyTest {
     /**
      * Test a topic policy overrides the default
      */
-    @Test(expected = javax.jms.IllegalStateException.class)
+    @Test(expected = jakarta.jms.IllegalStateException.class)
     public void testMaxDestinationOnTopicPolicy() throws Exception {
         PolicyMap policyMap = applyDefaultMaximumDestinationPolicy(10);
         applyMaximumDestinationPolicy(policyMap, new ActiveMQTopic("topic.>"),

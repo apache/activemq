@@ -16,11 +16,11 @@
  */
 package org.apache.activemq;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.Topic;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -84,7 +84,7 @@ public class TopicSubscriptionCountBeforeFullTest extends TestSupport {
     /**
      * Tests that countBeforeFull is 0 if prefetch is filled
      *
-     * @throws javax.jms.JMSException
+     * @throws jakarta.jms.JMSException
      */
     @Test
     public void testCountBeforeFullPrefetchFilled() throws JMSException {
@@ -96,7 +96,7 @@ public class TopicSubscriptionCountBeforeFullTest extends TestSupport {
      * Tests that countBeforeFull is a positive number when no messages have been sent
      * and prefetch is greater than 0
      *
-     * @throws javax.jms.JMSException
+     * @throws jakarta.jms.JMSException
      */
     @Test
     public void testCountBeforeFullNotNull() throws JMSException {

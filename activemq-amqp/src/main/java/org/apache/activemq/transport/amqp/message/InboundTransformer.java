@@ -29,8 +29,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -209,7 +209,7 @@ public abstract class InboundTransformer {
                 ttl = header.getTtl().longValue();
             }
 
-            if (ttl != javax.jms.Message.DEFAULT_TIME_TO_LIVE) {
+            if (ttl != jakarta.jms.Message.DEFAULT_TIME_TO_LIVE) {
                 jms.setExpiration(System.currentTimeMillis() + ttl);
             }
         }

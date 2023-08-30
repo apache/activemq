@@ -55,6 +55,6 @@ public interface FilterFunction {
      * @param message - the context within which to evaluate the call.
      */
     public Object evaluate(FunctionCallExpression expr, MessageEvaluationContext message)
-            throws javax.jms.JMSException;
+            throws jakarta.jms.JMSException;
 }
 

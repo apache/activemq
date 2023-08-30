@@ -90,7 +90,7 @@ public class SpringTest extends TestCase {
         }
 
         if (context != null) {
-            context.destroy();
+            context.close();
         }
     }
 

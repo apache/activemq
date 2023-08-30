@@ -18,8 +18,8 @@ package org.apache.activemq.bugs;
 
 import static org.junit.Assert.fail;
 
-import javax.jms.Connection;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -68,7 +68,7 @@ public class AMQ4671Test {
             try {
                 ts.unsubscribe("invalid-subscription-name");
                 fail("this should fail");
-            } catch (javax.jms.InvalidDestinationException e) {
+            } catch (jakarta.jms.InvalidDestinationException e) {
                 LOG.info("Test caught correct invalid destination exception");
             }
         } finally {

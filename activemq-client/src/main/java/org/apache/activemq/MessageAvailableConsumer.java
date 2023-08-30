@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.MessageConsumer;
+import jakarta.jms.MessageConsumer;
 
 /**
  * An extended JMS interface that adds the ability to be notified when a 

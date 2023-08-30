@@ -19,7 +19,7 @@ package org.apache.activemq.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.concurrent.CountDownLatch;
 
 public class ConsumerThread extends Thread {

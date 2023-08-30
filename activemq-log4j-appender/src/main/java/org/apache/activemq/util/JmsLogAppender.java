@@ -17,8 +17,8 @@
 package org.apache.activemq.util;
 
 import java.net.URISyntaxException;
-import javax.jms.Connection;
-import javax.jms.JMSException;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnection;
 

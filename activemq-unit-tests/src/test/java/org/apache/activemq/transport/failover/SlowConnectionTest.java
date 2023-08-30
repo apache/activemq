@@ -21,7 +21,7 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 import javax.net.ServerSocketFactory;
 
 import junit.framework.TestCase;

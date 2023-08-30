@@ -20,9 +20,9 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Enumeration;
 
-import javax.jms.Destination;
-import javax.jms.MessageConsumer;
-import javax.jms.QueueBrowser;
+import jakarta.jms.Destination;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.QueueBrowser;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.BrokerService;

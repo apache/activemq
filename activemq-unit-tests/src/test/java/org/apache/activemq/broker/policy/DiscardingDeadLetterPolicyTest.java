@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.broker.policy;
 
-import javax.jms.Message;
+import jakarta.jms.Message;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerService;

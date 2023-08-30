@@ -26,7 +26,7 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.MessageIdList;
 
-import javax.jms.MessageConsumer;
+import jakarta.jms.MessageConsumer;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;

@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.ExceptionListener;
+import jakarta.jms.ExceptionListener;
 
 /**
  * <p>

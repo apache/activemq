@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.jms.pool;
 
-import javax.jms.CompletionListener;
-import javax.jms.Destination;
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
+import jakarta.jms.CompletionListener;
+import jakarta.jms.Destination;
+import jakarta.jms.InvalidDestinationException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
 
 /**
  * A pooled {@link MessageProducer}
@@ -107,7 +107,7 @@ public class PooledProducer implements MessageProducer {
      *                 specified.
      * @throws InvalidDestinationException if a client uses this method with an
      *                 invalid destination.
-     * @see javax.jms.Session#createProducer
+     * @see jakarta.jms.Session#createProducer
      * @since 2.0
      */
     @Override
@@ -151,7 +151,7 @@ public class PooledProducer implements MessageProducer {
      * Gets the delivery delay value for this <CODE>MessageProducer</CODE>.
      *
      * @return the delivery delay for this messageProducer
-     * @throws javax.jms.JMSException if the JMS provider fails to determine if deliver delay is
+     * @throws jakarta.jms.JMSException if the JMS provider fails to determine if deliver delay is
      *                      disabled due to some internal error.
      */
     @Override

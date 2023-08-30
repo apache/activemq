@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.proxy;
 
-import javax.jms.DeliveryMode;
+import jakarta.jms.DeliveryMode;
 
 import junit.framework.Test;
 import org.apache.activemq.broker.StubConnection;

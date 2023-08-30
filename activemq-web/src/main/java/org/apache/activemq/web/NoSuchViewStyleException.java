@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.web;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /**
  * 

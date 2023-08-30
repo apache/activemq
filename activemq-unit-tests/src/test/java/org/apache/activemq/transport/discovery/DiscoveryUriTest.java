@@ -22,7 +22,7 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.net.URI;
 
 public class DiscoveryUriTest extends EmbeddedBrokerTestSupport {

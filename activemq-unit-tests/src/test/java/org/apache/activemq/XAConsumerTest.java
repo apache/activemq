@@ -26,15 +26,15 @@ import org.apache.activemq.command.XATransactionId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.XAConnection;
-import javax.jms.XASession;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.XAConnection;
+import jakarta.jms.XASession;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.io.ByteArrayOutputStream;
@@ -136,7 +136,7 @@ public class XAConsumerTest extends TestCase {
             xaSession.close();
 
             MessageConsumer messageConsumer1 = session.createConsumer(destination);
-            javax.jms.Message message = messageConsumer1.receive(5000);
+            jakarta.jms.Message message = messageConsumer1.receive(5000);
 
             assertNotNull("Got message", message);
             LOG.info("Got message on new session", message);
@@ -226,7 +226,7 @@ public class XAConsumerTest extends TestCase {
             Xid xidReceiveOk = createXid();
             xaResource.start(xidReceiveOk, 0);
 
-            javax.jms.Message message = messageConsumerTwo.receive(10000);
+            jakarta.jms.Message message = messageConsumerTwo.receive(10000);
 
             assertNotNull("Got message", message);
             LOG.info("Got message on new session", message);

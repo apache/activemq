@@ -29,11 +29,11 @@ import org.eclipse.jetty.webapp.WebAppContext;
 public class JspConfigurer {
 
     public static void configureJetty(Server server, HandlerCollection collection) {
-        Configuration.ClassList classlist = Configuration.ClassList
-                .setServerDefault( server );
-        classlist.addBefore(
-                "org.eclipse.jetty.webapp.JettyWebXmlConfiguration",
-                "org.eclipse.jetty.annotations.AnnotationConfiguration" );
+//        Configuration.ClassList classlist = Configuration.ClassList
+//                .setServerDefault( server );
+//        classlist.addBefore(
+//                "org.eclipse.jetty.webapp.JettyWebXmlConfiguration",
+//                "org.eclipse.jetty.annotations.AnnotationConfiguration" );
 
         // Set the ContainerIncludeJarPattern so that jetty examines these
         // container-path jars for tlds, web-fragments etc.
@@ -43,7 +43,7 @@ public class JspConfigurer {
             if (handler instanceof WebAppContext){
                 ((WebAppContext) handler).setAttribute(
                     "org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern",
-                    ".*/[^/]*servlet-api-[^/]*\\.jar$|.*/javax.servlet.jsp.jstl-.*\\.jar$|.*/[^/]*taglibs.*\\.jar$" );
+                    ".*/[^/]*servlet-api-[^/]*\\.jar$|.*/jakarta.servlet.jsp.jstl-.*\\.jar$|.*/[^/]*taglibs.*\\.jar$" );
             }
         }
     }

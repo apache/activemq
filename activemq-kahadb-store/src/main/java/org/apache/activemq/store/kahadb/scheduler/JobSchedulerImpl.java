@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.jms.MessageFormatException;
+import jakarta.jms.MessageFormatException;
 
 import org.apache.activemq.broker.scheduler.CronParser;
 import org.apache.activemq.broker.scheduler.Job;

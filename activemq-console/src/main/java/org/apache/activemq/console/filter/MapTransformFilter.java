@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Arrays;
 
-import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.JMSException;
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.ObjectInstance;

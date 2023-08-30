@@ -20,12 +20,12 @@ package org.apache.activemq.store.jdbc;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 
 import junit.framework.TestCase;
 
@@ -96,7 +96,7 @@ public class JDBCCommitExceptionTest extends TestCase {
     }
 
     protected int receiveMessages(int messagesExpected) throws Exception {
-        javax.jms.Connection connection = factory.createConnection();
+        jakarta.jms.Connection connection = factory.createConnection();
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
 
@@ -139,7 +139,7 @@ public class JDBCCommitExceptionTest extends TestCase {
     }
 
     protected void sendMessages(int messagesExpected) throws Exception {
-        javax.jms.Connection connection = factory.createConnection();
+        jakarta.jms.Connection connection = factory.createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = session.createQueue("TEST");

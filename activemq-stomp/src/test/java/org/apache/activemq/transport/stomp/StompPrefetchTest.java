@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Destination;
+import jakarta.jms.Destination;
 
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;

@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.ra;
 
-import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 
 /**
  * Represents an object which has-a {@link Session} instance and
@@ -43,7 +43,7 @@ public interface InboundContext {
      *
      * @return the current message producer or a new one is lazily created, using a null
      *         destination so the destination must be specified on a send() method.
-     * @throws javax.jms.JMSException
+     * @throws jakarta.jms.JMSException
      */
     MessageProducer getMessageProducer() throws JMSException;
 }

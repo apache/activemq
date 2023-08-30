@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 public class NetworkRestartTest extends TestSupport {
 

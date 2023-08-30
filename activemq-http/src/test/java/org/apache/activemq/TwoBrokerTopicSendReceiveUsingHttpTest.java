@@ -18,7 +18,7 @@ package org.apache.activemq;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.usecases.TwoBrokerTopicSendReceiveTest;
 

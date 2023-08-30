@@ -1,26 +1,29 @@
-/*
- * Copyright 2009 Red Hat, Inc.
- * Red Hat licenses this file to you under the Apache License, version
- * 2.0 (the "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *    http://www.apache.org/licenses/LICENSE-2.0
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied.  See the License for the specific language governing
- * permissions and limitations under the License.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.objectweb.jtests.jms.conform.session;
 
-import javax.jms.InvalidDestinationException;
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.Queue;
-import javax.jms.TextMessage;
+import jakarta.jms.InvalidDestinationException;
+import jakarta.jms.InvalidSelectorException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.Queue;
+import jakarta.jms.TextMessage;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -108,81 +111,81 @@ public class QueueSessionTest extends PTPTestCase
 
    /**
     * Test that a call to the <code>createBrowser()</code> method with an invalid
-    * messaeg session throws a <code>javax.jms.InvalidSelectorException</code>.
+    * messaeg session throws a <code>jakarta.jms.InvalidSelectorException</code>.
     */
    public void testCreateBrowser_2()
    {
       try
       {
          senderSession.createBrowser(senderQueue, "definitely not a message selector!");
-         Assert.fail("Should throw a javax.jms.InvalidSelectorException.\n");
+         Assert.fail("Should throw a jakarta.jms.InvalidSelectorException.\n");
       }
       catch (InvalidSelectorException e)
       {
       }
       catch (JMSException e)
       {
-         Assert.fail("Should throw a javax.jms.InvalidSelectorException, not a " + e);
+         Assert.fail("Should throw a jakarta.jms.InvalidSelectorException, not a " + e);
       }
    }
 
    /**
     * Test that a call to the <code>createBrowser()</code> method with an invalid
-    * <code>Queue</code> throws a <code>javax.jms.InvalidDestinationException</code>.
+    * <code>Queue</code> throws a <code>jakarta.jms.InvalidDestinationException</code>.
     */
    public void testCreateBrowser_1()
    {
       try
       {
          senderSession.createBrowser((Queue)null);
-         Assert.fail("Should throw a javax.jms.InvalidDestinationException.\n");
+         Assert.fail("Should throw a jakarta.jms.InvalidDestinationException.\n");
       }
       catch (InvalidDestinationException e)
       {
       }
       catch (JMSException e)
       {
-         Assert.fail("Should throw a javax.jms.InvalidDestinationException, not a " + e);
+         Assert.fail("Should throw a jakarta.jms.InvalidDestinationException, not a " + e);
       }
    }
 
    /**
     * Test that a call to the <code>createReceiver()</code> method with an invalid
-    * message selector throws a <code>javax.jms.InvalidSelectorException</code>.
+    * message selector throws a <code>jakarta.jms.InvalidSelectorException</code>.
     */
    public void testCreateReceiver_2()
    {
       try
       {
          receiver = senderSession.createReceiver(senderQueue, "definitely not a message selector!");
-         Assert.fail("Should throw a javax.jms.InvalidSelectorException.\n");
+         Assert.fail("Should throw a jakarta.jms.InvalidSelectorException.\n");
       }
       catch (InvalidSelectorException e)
       {
       }
       catch (JMSException e)
       {
-         Assert.fail("Should throw a javax.jms.InvalidSelectorException, not a " + e);
+         Assert.fail("Should throw a jakarta.jms.InvalidSelectorException, not a " + e);
       }
    }
 
    /**
     * Test that a call to the <code>createReceiver()</code> method with an invalid
-    * <code>Queue</code> throws a <code>javax.jms.InvalidDestinationException</code>>
+    * <code>Queue</code> throws a <code>jakarta.jms.InvalidDestinationException</code>>
     */
    public void testCreateReceiver_1()
    {
       try
       {
          receiver = senderSession.createReceiver((Queue)null);
-         Assert.fail("Should throw a javax.jms.InvalidDestinationException.\n");
+         Assert.fail("Should throw a jakarta.jms.InvalidDestinationException.\n");
       }
       catch (InvalidDestinationException e)
       {
       }
       catch (JMSException e)
       {
-         Assert.fail("Should throw a javax.jms.InvalidDestinationException, not a " + e);
+         Assert.fail("Should throw a jakarta.jms.InvalidDestinationException, not a " + e);
       }
    }
 

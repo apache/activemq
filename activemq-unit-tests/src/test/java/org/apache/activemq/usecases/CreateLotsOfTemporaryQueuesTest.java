@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.usecases;
 
-import javax.jms.Session;
-import javax.jms.TemporaryQueue;
+import jakarta.jms.Session;
+import jakarta.jms.TemporaryQueue;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;

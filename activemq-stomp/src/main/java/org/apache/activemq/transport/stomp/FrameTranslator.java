@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -120,7 +120,7 @@ public interface FrameTranslator {
             if (o != null) {
                 msg.setJMSPriority(Integer.parseInt((String)o));
             } else {
-                msg.setJMSPriority(javax.jms.Message.DEFAULT_PRIORITY);
+                msg.setJMSPriority(jakarta.jms.Message.DEFAULT_PRIORITY);
             }
 
             o = headers.remove(Stomp.Headers.Send.TYPE);

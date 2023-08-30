@@ -27,11 +27,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import jakarta.jms.Connection;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -161,7 +161,7 @@ public class CursorMemoryHighWaterMarkTest {
                     = session.createConsumer(session.createQueue(queue));
 
             for (int i = 0; i < messageCount; i++) {
-                javax.jms.Message message = messageConsumer.receive(5000l);
+                jakarta.jms.Message message = messageConsumer.receive(5000l);
                 if (message == null) {
                     fail("should have received a message");
                 }

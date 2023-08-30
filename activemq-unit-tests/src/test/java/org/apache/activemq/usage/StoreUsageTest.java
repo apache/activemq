@@ -26,9 +26,9 @@ import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.Session;
 import java.util.concurrent.TimeUnit;
 
 public class StoreUsageTest extends EmbeddedBrokerTestSupport {

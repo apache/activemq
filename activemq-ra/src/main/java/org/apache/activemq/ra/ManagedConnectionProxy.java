@@ -19,22 +19,22 @@ package org.apache.activemq.ra;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionConsumer;
-import javax.jms.ConnectionMetaData;
-import javax.jms.Destination;
-import javax.jms.ExceptionListener;
-import javax.jms.IllegalStateException;
-import javax.jms.JMSException;
-import javax.jms.Queue;
-import javax.jms.QueueConnection;
-import javax.jms.QueueSession;
-import javax.jms.ServerSessionPool;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicConnection;
-import javax.jms.TopicSession;
-import javax.resource.spi.ConnectionRequestInfo;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionConsumer;
+import jakarta.jms.ConnectionMetaData;
+import jakarta.jms.Destination;
+import jakarta.jms.ExceptionListener;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueConnection;
+import jakarta.jms.QueueSession;
+import jakarta.jms.ServerSessionPool;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicConnection;
+import jakarta.jms.TopicSession;
+import jakarta.resource.spi.ConnectionRequestInfo;
 import org.apache.activemq.ActiveMQQueueSession;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.ActiveMQTopicSession;
@@ -91,7 +91,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
 
     /**
      * @return "physical" underlying activemq connection, if proxy is associated with a managed connection
-     * @throws javax.jms.JMSException if managed connection is null
+     * @throws jakarta.jms.JMSException if managed connection is null
      */
     private Connection getConnection() throws JMSException {
         if (managedConnection == null) {
@@ -330,7 +330,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
 
     /**
      * 
-     * @see javax.jms.ConnectionConsumer
+     * @see jakarta.jms.ConnectionConsumer
      * @since 2.0
      */
     @Override
@@ -340,7 +340,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
 
     /**
      * 
-     * @see javax.jms.ConnectionConsumer
+     * @see jakarta.jms.ConnectionConsumer
      * @since 2.0
      */
     @Override

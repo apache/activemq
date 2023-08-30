@@ -19,12 +19,12 @@ package org.apache.activemq.broker.interceptor;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.Topic;
+import jakarta.jms.Connection;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
@@ -88,13 +88,13 @@ public class MessageInterceptorTest extends TestCase {
 
         consumer.setMessageListener(new MessageListener() {
             @Override
-            public void onMessage(javax.jms.Message message) {
+            public void onMessage(jakarta.jms.Message message) {
                 latch.countDown();
 
             }
         });
         for (int i  = 0; i < messageCount; i++){
-            javax.jms.Message message = producerSession.createTextMessage("test: " + i);
+            jakarta.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
         }
 
@@ -122,13 +122,13 @@ public class MessageInterceptorTest extends TestCase {
         final CountDownLatch latch = new CountDownLatch(messageCount);
         consumer.setMessageListener(new MessageListener() {
             @Override
-            public void onMessage(javax.jms.Message message) {
+            public void onMessage(jakarta.jms.Message message) {
                 latch.countDown();
 
             }
         });
         for (int i  = 0; i < messageCount; i++){
-            javax.jms.Message message = producerSession.createTextMessage("test: " + i);
+            jakarta.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
         }
 
@@ -149,13 +149,13 @@ public class MessageInterceptorTest extends TestCase {
 
         consumer.setMessageListener(new MessageListener() {
             @Override
-            public void onMessage(javax.jms.Message message) {
+            public void onMessage(jakarta.jms.Message message) {
                 latch.countDown();
 
             }
         });
         for (int i  = 0; i < messageCount; i++){
-            javax.jms.Message message = producerSession.createTextMessage("test: " + i);
+            jakarta.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
         }
 
@@ -184,13 +184,13 @@ public class MessageInterceptorTest extends TestCase {
         consumer = consumerSession.createConsumer(queue);
         consumer.setMessageListener(new MessageListener() {
             @Override
-            public void onMessage(javax.jms.Message message) {
+            public void onMessage(jakarta.jms.Message message) {
                 latch.countDown();
 
             }
         });
         for (int i  = 0; i < messageCount; i++){
-            javax.jms.Message message = producerSession.createTextMessage("test: " + i);
+            jakarta.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
         }
 
@@ -219,13 +219,13 @@ public class MessageInterceptorTest extends TestCase {
         consumer = consumerSession.createConsumer(queue);
         consumer.setMessageListener(new MessageListener() {
             @Override
-            public void onMessage(javax.jms.Message message) {
+            public void onMessage(jakarta.jms.Message message) {
                 latch.countDown();
 
             }
         });
         for (int i  = 0; i < messageCount; i++){
-            javax.jms.Message message = producerSession.createTextMessage("test: " + i);
+            jakarta.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
         }
 
@@ -256,7 +256,7 @@ public class MessageInterceptorTest extends TestCase {
 
         consumer.setMessageListener(new MessageListener() {
             @Override
-            public void onMessage(javax.jms.Message message) {
+            public void onMessage(jakarta.jms.Message message) {
                 latch.countDown();
 
             }
@@ -266,13 +266,13 @@ public class MessageInterceptorTest extends TestCase {
 
         consumer1.setMessageListener(new MessageListener() {
             @Override
-            public void onMessage(javax.jms.Message message) {
+            public void onMessage(jakarta.jms.Message message) {
                 latch.countDown();
 
             }
         });
         for (int i  = 0; i < messageCount; i++){
-            javax.jms.Message message = producerSession.createTextMessage("test: " + i);
+            jakarta.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
         }
 

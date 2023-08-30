@@ -18,7 +18,7 @@ package org.apache.activemq.web;
 
 import java.util.Collection;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.jmx.ProducerViewMBean;
 

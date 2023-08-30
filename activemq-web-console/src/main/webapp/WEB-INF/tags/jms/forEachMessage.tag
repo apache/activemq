@@ -15,9 +15,9 @@
     limitations under the License.
 --%>
 <%@ attribute name="var" type="java.lang.String" required="true"  %>
-<%@ attribute name="queueBrowser" type="javax.jms.QueueBrowser" required="true"  %>
+<%@ attribute name="queueBrowser" type="jakarta.jms.QueueBrowser" required="true"  %>
 <%@ tag import="java.util.Enumeration" %>
-<%@ tag import="javax.jms.Message" %>
+<%@ tag import="jakarta.jms.Message" %>
 <%
 
 	Enumeration iter = queueBrowser.getEnumeration();

@@ -37,7 +37,7 @@ import org.apache.activemq.jaas.GroupPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -88,7 +88,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
     }
 
     /**
-     * @throws javax.jms.JMSException
+     * @throws jakarta.jms.JMSException
      */
     public void testPopulateJMSXUserID() throws Exception {
         destination = new ActiveMQQueue("TEST");

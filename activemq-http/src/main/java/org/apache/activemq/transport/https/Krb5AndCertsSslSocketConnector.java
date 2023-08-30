@@ -155,8 +155,8 @@ public class Krb5AndCertsSslSocketConnector {
 //                Integer keySize = Integer.valueOf(ServletSSL.deduceKeyLength(cipherSuite));
 //                ;
 //
-//                request.setAttribute("javax.servlet.request.cipher_suite", cipherSuite);
-//                request.setAttribute("javax.servlet.request.key_size", keySize);
+//                request.setAttribute("jakarta.servlet.request.cipher_suite", cipherSuite);
+//                request.setAttribute("jakarta.servlet.request.key_size", keySize);
 //            }
 //        }
 //

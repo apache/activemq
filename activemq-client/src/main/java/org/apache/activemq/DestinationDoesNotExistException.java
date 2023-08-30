@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 /**
  * An exception thrown on a send if a destination does not exist.

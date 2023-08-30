@@ -18,7 +18,7 @@ package org.apache.activemq.web.handler;
 
 import java.util.Arrays;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.activemq.web.DestinationFacade;
 import org.slf4j.Logger;

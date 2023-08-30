@@ -18,7 +18,7 @@ package org.apache.activemq.jms.pool;
 
 import java.util.Set;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 

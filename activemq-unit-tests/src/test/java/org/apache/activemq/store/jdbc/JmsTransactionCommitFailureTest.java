@@ -30,7 +30,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.lang.reflect.Field;

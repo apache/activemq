@@ -25,7 +25,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 import static junit.framework.TestCase.assertTrue;
 

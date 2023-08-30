@@ -243,7 +243,8 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
 
         LOG.trace("WS Proxy sending string of size {} out", data.length());
         try {
-            session.getRemote().sendStringByFuture(data).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
+            // FIXME: Convert to async API w/ tiemeout getDefaultSendTimeOut(), TimeUnit.SECONDS);
+            session.getRemote().sendBytes(ByteBuffer.wrap(data.getBytes()));
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
@@ -263,7 +264,8 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
         LOG.trace("WS Proxy sending {} bytes out", data.remaining());
         int limit = data.limit();
         try {
-            session.getRemote().sendBytesByFuture(data).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
+            // FIXME: Convert to async API w/ tiemeout getDefaultSendTimeOut(), TimeUnit.SECONDS);
+            session.getRemote().sendBytes(data);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }

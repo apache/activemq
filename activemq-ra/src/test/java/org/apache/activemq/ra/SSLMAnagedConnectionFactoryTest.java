@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.ra;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
 

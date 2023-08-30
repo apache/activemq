@@ -128,10 +128,10 @@ public class ActiveMQSslConnectionFactoryTest {
             activeMQSslConnectionFactory.setTrustStore(name);
             activeMQSslConnectionFactory.setTrustStorePassword(TRUST_STORE_PASSWORD);
 
-            javax.jms.Connection connection = activeMQSslConnectionFactory.createConnection();
+            jakarta.jms.Connection connection = activeMQSslConnectionFactory.createConnection();
             connection.start();
             connection.stop();
-        } catch (javax.jms.JMSException e) {
+        } catch (jakarta.jms.JMSException e) {
             e.getCause().printStackTrace();
             throw e.getCause();
         }

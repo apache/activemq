@@ -18,7 +18,7 @@ package org.apache.activemq.usecases;
 
 import java.net.URI;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;

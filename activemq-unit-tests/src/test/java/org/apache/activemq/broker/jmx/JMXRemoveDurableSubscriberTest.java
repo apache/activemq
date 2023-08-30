@@ -156,7 +156,7 @@ public class JMXRemoveDurableSubscriberTest {
         try {
             brokerService.getAdminView().destroyDurableSubscriber(clientId, subscriberName);
             LOG.info("Successfully destroyed durable subscriber " + subscriberName + " via AdminView");
-        } catch (javax.jms.InvalidDestinationException t) {
+        } catch (jakarta.jms.InvalidDestinationException t) {
             if (t.getMessage().equals("No durable subscription exists for clientID: 10 and subscriptionName: testSubscriber")) {
                 subscriberAlreadyDeleted = true;
             }

@@ -26,23 +26,26 @@ import java.util.Timer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.resource.ResourceException;
-import javax.resource.spi.BootstrapContext;
-import javax.resource.spi.UnavailableException;
-import javax.resource.spi.XATerminator;
-import javax.resource.spi.endpoint.MessageEndpoint;
-import javax.resource.spi.endpoint.MessageEndpointFactory;
-import javax.resource.spi.work.ExecutionContext;
-import javax.resource.spi.work.Work;
-import javax.resource.spi.work.WorkException;
-import javax.resource.spi.work.WorkListener;
-import javax.resource.spi.work.WorkManager;
+import jakarta.jms.Connection;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
+import jakarta.resource.ResourceException;
+import jakarta.resource.spi.BootstrapContext;
+import jakarta.resource.spi.UnavailableException;
+import jakarta.resource.spi.XATerminator;
+import jakarta.resource.spi.endpoint.MessageEndpoint;
+import jakarta.resource.spi.endpoint.MessageEndpointFactory;
+import jakarta.resource.spi.work.ExecutionContext;
+import jakarta.resource.spi.work.Work;
+import jakarta.resource.spi.work.WorkContext;
+import jakarta.resource.spi.work.WorkException;
+import jakarta.resource.spi.work.WorkListener;
+import jakarta.resource.spi.work.WorkManager;
+import jakarta.transaction.TransactionSynchronizationRegistry;
+
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
@@ -166,6 +169,24 @@ public class FailoverManagedClusterTest {
             public boolean isDeliveryTransacted(Method method) throws NoSuchMethodException {
                 return true;
             }
+
+            @Override
+            public MessageEndpoint createEndpoint(XAResource xaResource, long timeout) throws UnavailableException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public String getActivationName() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public Class<?> getEndpointClass() {
+                // TODO Auto-generated method stub
+                return null;
+            }
         };
 
         // Activate an Endpoint
@@ -237,6 +258,18 @@ public class FailoverManagedClusterTest {
 
         @Override
         public Timer createTimer() throws UnavailableException {
+            return null;
+        }
+
+        @Override
+        public boolean isContextSupported(Class<? extends WorkContext> workContextClass) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public TransactionSynchronizationRegistry getTransactionSynchronizationRegistry() {
+            // TODO Auto-generated method stub
             return null;
         }
     }

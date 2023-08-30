@@ -23,7 +23,7 @@ import java.io.File;
 import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

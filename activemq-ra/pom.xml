@@ -49,8 +49,8 @@
       <artifactId>activemq-kahadb-store</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
+      <groupId>jakarta.resource</groupId>
+      <artifactId>jakarta.resource-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>

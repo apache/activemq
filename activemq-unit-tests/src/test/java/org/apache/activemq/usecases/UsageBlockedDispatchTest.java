@@ -33,7 +33,7 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
 import org.apache.logging.log4j.core.layout.MessageLayout;
-import javax.jms.*;
+import jakarta.jms.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

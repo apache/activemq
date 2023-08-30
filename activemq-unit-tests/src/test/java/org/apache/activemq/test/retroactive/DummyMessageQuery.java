@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.test.retroactive;
 
-import javax.jms.MessageListener;
+import jakarta.jms.MessageListener;
 
 import org.apache.activemq.broker.region.policy.MessageQuery;
 import org.apache.activemq.command.ActiveMQDestination;

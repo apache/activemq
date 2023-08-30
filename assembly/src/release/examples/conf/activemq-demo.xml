@@ -208,8 +208,8 @@
        For more details see
 
        http://activemq.apache.org/enterprise-integration-patterns.html
-    -->
     <import resource="camel.xml"/>
+    -->
 
 
     <!--

@@ -73,7 +73,7 @@ public class regexMatchFunction implements FilterFunction {
      */
 
     public Object evaluate(FunctionCallExpression expr, MessageEvaluationContext message)
-            throws javax.jms.JMSException {
+            throws jakarta.jms.JMSException {
         Object reg;
         Object cand;
         String reg_str;

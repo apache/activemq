@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 /**
  * An exception which is closed if you try to access a resource which has already

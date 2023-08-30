@@ -25,11 +25,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 
 public class HttpMaxFrameSizeTest {
 
@@ -68,12 +68,13 @@ public class HttpMaxFrameSizeTest {
 
     private void send(int size) throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("http://localhost:8888");
-        Connection connection = connectionFactory.createConnection();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(new ActiveMQQueue("test"));
-        String payload = StringUtils.repeat("*", size);
-        TextMessage textMessage = session.createTextMessage(payload);
-        producer.send(textMessage);
+        try(Connection connection = connectionFactory.createConnection()) {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageProducer producer = session.createProducer(new ActiveMQQueue("test"));
+            String payload = StringUtils.repeat("*", size);
+            TextMessage textMessage = session.createTextMessage(payload);
+            producer.send(textMessage);
+        }
     }
 
 }

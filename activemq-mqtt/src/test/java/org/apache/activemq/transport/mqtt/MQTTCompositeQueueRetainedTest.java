@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -97,8 +97,8 @@ public class MQTTCompositeQueueRetainedTest extends MQTTTestSupport {
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        javax.jms.Queue jmsQueue = s.createQueue(FORWARD_QUEUE);
-        javax.jms.Topic jmsTopic = s.createTopic(FORWARD_TOPIC);
+        jakarta.jms.Queue jmsQueue = s.createQueue(FORWARD_QUEUE);
+        jakarta.jms.Topic jmsTopic = s.createTopic(FORWARD_TOPIC);
 
         MessageConsumer queueConsumer = s.createConsumer(jmsQueue);
         MessageConsumer topicConsumer = s.createDurableSubscriber(jmsTopic, "jms-subscription");

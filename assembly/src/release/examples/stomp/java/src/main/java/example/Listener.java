@@ -16,8 +16,12 @@
  */
 package example;
 
+<<<<<<< HEAD
 import org.fusesource.stomp.jms.*;
-import javax.jms.*;
+=======
+import io.hyte.stomp.jms.*;
+>>>>>>> b76b26305 ([AMQ-9239] jakarta.jms - assembly changes)
+import jakarta.jms.*;
 
 class Listener {
 

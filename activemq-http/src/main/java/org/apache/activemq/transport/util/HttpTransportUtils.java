@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.transport.util;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class HttpTransportUtils {
 

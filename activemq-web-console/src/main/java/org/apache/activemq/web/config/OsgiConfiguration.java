@@ -23,7 +23,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 import javax.management.remote.JMXServiceURL;
 import java.util.Collection;
 import java.util.Dictionary;

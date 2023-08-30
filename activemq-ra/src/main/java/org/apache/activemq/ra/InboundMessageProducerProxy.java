@@ -16,20 +16,20 @@
  */
 package org.apache.activemq.ra;
 
-import javax.jms.CompletionListener;
-import javax.jms.Destination;
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.QueueSender;
-import javax.jms.Topic;
-import javax.jms.TopicPublisher;
+import jakarta.jms.CompletionListener;
+import jakarta.jms.Destination;
+import jakarta.jms.InvalidDestinationException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueSender;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicPublisher;
 
 /**
  * An implementation of {@link MessageProducer} which uses the ActiveMQ JCA ResourceAdapter's
- * current thread's JMS {@link javax.jms.Session} to send messages.
+ * current thread's JMS {@link jakarta.jms.Session} to send messages.
  *
  * 
  */
@@ -172,7 +172,7 @@ public class InboundMessageProducerProxy implements MessageProducer, QueueSender
      *                 specified.
      * @throws InvalidDestinationException if a client uses this method with an
      *                 invalid destination.
-     * @see javax.jms.Session#createProducer
+     * @see jakarta.jms.Session#createProducer
      * @since 2.0
      */
     @Override
@@ -213,7 +213,7 @@ public class InboundMessageProducerProxy implements MessageProducer, QueueSender
      * Gets the delivery delay value for this <CODE>MessageProducer</CODE>.
      *
      * @return the delivery delay for this messageProducer
-     * @throws javax.jms.JMSException if the JMS provider fails to determine if deliver delay is
+     * @throws jakarta.jms.JMSException if the JMS provider fails to determine if deliver delay is
      *                      disabled due to some internal error.
      */
     @Override

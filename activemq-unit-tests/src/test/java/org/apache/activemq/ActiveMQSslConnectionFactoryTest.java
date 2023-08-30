@@ -171,7 +171,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         try {
             connection = (ActiveMQConnection)cf.createConnection();
         }
-        catch (javax.jms.JMSException ignore) {
+        catch (jakarta.jms.JMSException ignore) {
             //Make sure it's an UnrecoverableKeyException
             assertTrue(getRootCause(ignore) instanceof UnrecoverableKeyException);
             // Expected exception
@@ -217,7 +217,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         try {
             connection = (ActiveMQConnection)cf.createConnection();
         }
-        catch (javax.jms.JMSException ignore) {
+        catch (jakarta.jms.JMSException ignore) {
             //Make sure it's an UnrecoverableKeyException
             assertTrue(getRootCause(ignore) instanceof UnrecoverableKeyException);
             // Expected exception
@@ -244,7 +244,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         try {
             connection = (ActiveMQConnection)cf.createConnection();
         }
-        catch (javax.jms.JMSException ignore) {
+        catch (jakarta.jms.JMSException ignore) {
             //Make sure it's an UnrecoverableKeyException and not NullPointerException
             assertTrue(getRootCause(ignore) instanceof UnrecoverableKeyException);
             // Expected exception
@@ -269,7 +269,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         try {
             connection = (ActiveMQConnection)cf.createConnection();
         }
-        catch (javax.jms.JMSException ignore) {
+        catch (jakarta.jms.JMSException ignore) {
             // Expected exception
             LOG.info("Expected SSLHandshakeException [" + ignore + "]");
         }

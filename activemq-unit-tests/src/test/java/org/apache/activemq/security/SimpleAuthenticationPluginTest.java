@@ -19,13 +19,13 @@ package org.apache.activemq.security;
 import java.net.URI;
 import java.util.Arrays;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.JMSSecurityException;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TemporaryTopic;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSSecurityException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TemporaryTopic;
 import javax.management.ObjectName;
 
 import junit.framework.Test;

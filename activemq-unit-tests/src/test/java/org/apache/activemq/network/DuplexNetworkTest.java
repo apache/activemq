@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import javax.jms.MessageProducer;
-import javax.jms.TemporaryQueue;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.TemporaryQueue;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;

@@ -18,14 +18,14 @@ package org.apache.activemq.ra;
 
 import static org.junit.Assert.assertNotNull;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
-import javax.resource.ResourceException;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicSubscriber;
+import jakarta.resource.ResourceException;
 import javax.transaction.xa.XAException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;

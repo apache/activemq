@@ -1539,7 +1539,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         // Add the message.
-        int priority = command.getPrioritySupported() ? command.getPriority() : javax.jms.Message.DEFAULT_PRIORITY;
+        int priority = command.getPrioritySupported() ? command.getPriority() : jakarta.jms.Message.DEFAULT_PRIORITY;
         long id = sd.orderIndex.getNextMessageId();
         Long previous = sd.locationIndex.put(tx, location, id);
         if (previous == null) {
@@ -1599,7 +1599,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (id != null) {
             MessageKeys previousKeys = sd.orderIndex.put(
                     tx,
-                    command.getPrioritySupported() ? command.getPriority() : javax.jms.Message.DEFAULT_PRIORITY,
+                    command.getPrioritySupported() ? command.getPriority() : jakarta.jms.Message.DEFAULT_PRIORITY,
                     id,
                     new MessageKeys(command.getMessageId(), location)
             );
@@ -3960,9 +3960,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         MessageKeys put(Transaction tx, int priority, Long key, MessageKeys value) throws IOException {
-            if (priority == javax.jms.Message.DEFAULT_PRIORITY) {
+            if (priority == jakarta.jms.Message.DEFAULT_PRIORITY) {
                 return defaultPriorityIndex.put(tx, key, value);
-            } else if (priority > javax.jms.Message.DEFAULT_PRIORITY) {
+            } else if (priority > jakarta.jms.Message.DEFAULT_PRIORITY) {
                 return highPriorityIndex.put(tx, key, value);
             } else {
                 return lowPriorityIndex.put(tx, key, value);

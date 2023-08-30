@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import javax.transaction.xa.XAException;
 
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;

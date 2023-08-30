@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.jms.JMSSecurityException;
+import jakarta.jms.JMSSecurityException;
 import javax.security.sasl.SaslException;
 
 import org.apache.qpid.proton.engine.Sasl;

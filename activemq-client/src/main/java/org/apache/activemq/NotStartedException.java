@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.IllegalStateException;
+import jakarta.jms.IllegalStateException;
 
 /**
  * An exception thrown when an operation is invoked on a service

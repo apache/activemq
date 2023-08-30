@@ -16,15 +16,15 @@
  */
 package org.apache.activemq.perf;
 
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
+import jakarta.jms.Connection;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
+import jakarta.jms.Topic;
 
 import junit.framework.TestCase;
 import junit.textui.TestRunner;
@@ -195,9 +195,9 @@ class Producer implements Runnable {
                     NetworkedSyncTest.broker1URL);
             connection = amq.createConnection();
 
-            connection.setExceptionListener(new javax.jms.ExceptionListener() {
+            connection.setExceptionListener(new jakarta.jms.ExceptionListener() {
                 @Override
-                public void onException(javax.jms.JMSException e) {
+                public void onException(jakarta.jms.JMSException e) {
                     e.printStackTrace();
                 }
             });
@@ -269,9 +269,9 @@ class Consumer implements Runnable {
             // need to set clientID when using durable subscription.
             connection.setClientID("tmielke");
 
-            connection.setExceptionListener(new javax.jms.ExceptionListener() {
+            connection.setExceptionListener(new jakarta.jms.ExceptionListener() {
                 @Override
-                public void onException(javax.jms.JMSException e) {
+                public void onException(jakarta.jms.JMSException e) {
                     e.printStackTrace();
                 }
             });

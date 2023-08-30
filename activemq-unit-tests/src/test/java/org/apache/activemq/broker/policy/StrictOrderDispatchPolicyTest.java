@@ -18,7 +18,7 @@ package org.apache.activemq.broker.policy;
 
 import java.util.Iterator;
 
-import javax.jms.MessageConsumer;
+import jakarta.jms.MessageConsumer;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TopicSubscriptionTest;

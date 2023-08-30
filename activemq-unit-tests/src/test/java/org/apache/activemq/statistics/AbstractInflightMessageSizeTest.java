@@ -23,12 +23,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.ActiveMQSession;
@@ -59,7 +59,7 @@ public abstract class AbstractInflightMessageSizeTest {
     protected Connection connection;
     protected String brokerUrlString;
     protected Session session;
-    protected javax.jms.Destination dest;
+    protected jakarta.jms.Destination dest;
     protected Destination amqDestination;
     protected MessageConsumer consumer;
     protected int prefetch = 100;
@@ -161,7 +161,7 @@ public abstract class AbstractInflightMessageSizeTest {
      * Tests that inflight message size goes up and comes back down to 0 after
      * messages are consumed
      *
-     * @throws javax.jms.JMSException
+     * @throws jakarta.jms.JMSException
      * @throws InterruptedException
      */
     @Test(timeout=60000)
@@ -265,7 +265,7 @@ public abstract class AbstractInflightMessageSizeTest {
     /**
      * Tests that inflight message size goes up and doesn't go down if receive is rolledback
      *
-     * @throws javax.jms.JMSException
+     * @throws jakarta.jms.JMSException
      * @throws InterruptedException
      */
     @Test(timeout=60000)
@@ -419,7 +419,7 @@ public abstract class AbstractInflightMessageSizeTest {
         return sendMessages(count, null, dest);
     }
 
-    protected long sendMessages(int count, javax.jms.Destination dest) throws JMSException {
+    protected long sendMessages(int count, jakarta.jms.Destination dest) throws JMSException {
         return sendMessages(count, null, dest);
     }
 
@@ -433,7 +433,7 @@ public abstract class AbstractInflightMessageSizeTest {
      * @param count
      * @throws JMSException
      */
-    protected long sendMessages(int count, Integer ttl, javax.jms.Destination dest) throws JMSException {
+    protected long sendMessages(int count, Integer ttl, jakarta.jms.Destination dest) throws JMSException {
         MessageProducer producer = session.createProducer(dest);
         if (ttl != null) {
             producer.setTimeToLive(ttl);
@@ -457,7 +457,7 @@ public abstract class AbstractInflightMessageSizeTest {
 
     protected void receiveMessages(int count) throws JMSException {
         for (int i = 0; i < count; i++) {
-            javax.jms.Message m = consumer.receive();
+            jakarta.jms.Message m = consumer.receive();
             if (ackType == ActiveMQSession.SESSION_TRANSACTED) {
                 session.commit();
             } else if (ackType != ActiveMQSession.AUTO_ACKNOWLEDGE) {
@@ -480,10 +480,10 @@ public abstract class AbstractInflightMessageSizeTest {
 
     protected abstract MessageConsumer getMessageConsumer(String destName) throws JMSException;
 
-    protected javax.jms.Destination getDestination() throws JMSException {
+    protected jakarta.jms.Destination getDestination() throws JMSException {
         return getDestination(destName);
     }
 
-    protected abstract javax.jms.Destination getDestination(String destName) throws JMSException;
+    protected abstract jakarta.jms.Destination getDestination(String destName) throws JMSException;
 
 }

@@ -21,9 +21,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import javax.jms.Destination;
-import javax.jms.MessageConsumer;
-import javax.jms.Topic;
+import jakarta.jms.Destination;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.Topic;
 
 import junit.framework.Test;
 

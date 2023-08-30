@@ -142,7 +142,7 @@
         <include>${pom.groupId}:activemq-jaas</include>
         <include>org.apache.activemq.protobuf:activemq-protobuf</include>
         <include>jakarta.jms:jakarta.jms-api</include>
-        <include>org.apache.geronimo.specs:geronimo-jta_1.1_spec</include>
+        <include>jakarta.transaction:jakarta.transaction-api</include>
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
         <include>javax.xml.bind:jaxb-api</include>
@@ -157,6 +157,7 @@
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
     </dependencySet>
+    <!-- AMQ-9239 as of 2023-06-05 Camel does not support jakarta.jms*
     <dependencySet>
       <outputDirectory>lib/camel</outputDirectory>
       <unpack>false</unpack>
@@ -169,6 +170,7 @@
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
     </dependencySet>
+    -->
     <dependencySet>
       <outputDirectory>lib/optional</outputDirectory>
       <unpack>false</unpack>
@@ -193,7 +195,7 @@
         <include>org.apache.logging.log4j:log4j-slf4j2-impl</include>
         <include>org.apache.logging.log4j:log4j-api</include>
         <include>org.apache.logging.log4j:log4j-core</include>
-        <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
+        <include>jakarta.resource:jakarta.resource-api</include>
         <include>org.apache.httpcomponents:httpclient</include>
         <include>org.apache.httpcomponents:httpcore</include>
         <include>org.apache.xbean:xbean-spring</include>
@@ -253,18 +255,21 @@
         <include>org.eclipse.jetty:jetty-util</include>
         <include>org.eclipse.jetty:jetty-http</include>
         <include>org.eclipse.jetty:jetty-io</include>
+        <include>org.eclipse.jetty:jetty-jndi</include>
         <include>org.eclipse.jetty:jetty-plus</include>
         <include>org.eclipse.jetty:jetty-servlet</include>
         <include>org.eclipse.jetty:jetty-security</include>
         <include>org.eclipse.jetty:jetty-rewrite</include>
-        <include>org.eclipse.jetty:jetty-continuation</include>
-        <include>org.eclipse.jetty.websocket:websocket-api</include>
-        <include>org.eclipse.jetty.websocket:websocket-common</include>
-        <include>org.eclipse.jetty.websocket:websocket-server</include>
+        <include>org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api</include>
+        <include>org.eclipse.jetty.websocket:websocket-core-common</include>
+        <include>org.eclipse.jetty.websocket:websocket-core-server</include>
+        <include>org.eclipse.jetty.websocket:websocket-jetty-api</include>
+        <include>org.eclipse.jetty.websocket:websocket-jetty-common</include>
+        <include>org.eclipse.jetty.websocket:websocket-jetty-server</include>
         <include>org.eclipse.jetty.websocket:websocket-servlet</include>
         <include>org.eclipse.jetty.orbit:javax.security.auth.message</include>
-        <include>org.apache.tomcat:tomcat-servlet-api</include>
-        <include>org.apache.tomcat:tomcat-websocket-api</include>
+        <!-- include>jakarta.servlet:jakarta.servlet-api</include -->
+        <include>jakarta.websocket:jakarta.websocket-api</include>
 
         <!-- JSP support -->
         <!-- Jetty JSP api-->
@@ -273,12 +278,14 @@
         <include>org.mortbay.jasper:apache-jsp</include>
         <!-- jstl and el api -->
         <include>org.eclipse.jetty:apache-jstl</include>
-        <include>org.apache.taglibs:taglibs-standard-spec</include>
+        <include>jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api</include>
+        <include>org.glassfish.web:jakarta.servlet.jsp.jstl</include>
+        <!-- include>org.apache.taglibs:taglibs-standard-spec</include -->
         <!-- jstl and el impl -->
         <include>org.mortbay.jasper:apache-el</include>
-        <include>org.apache.taglibs:taglibs-standard-impl</include>
+        <!-- include>org.apache.taglibs:taglibs-standard-impl</include -->
 
-        <include>org.apache.geronimo.specs:geronimo-annotation_1.3_spec</include>
+        <include>jakarta.annotation:jakarta.annotation-api</include>
         <include>org.ow2.asm:asm</include>
         <include>org.eclipse.jdt:ecj</include>
 
@@ -288,7 +295,7 @@
         <include>org.jdom:jdom2</include>
 
         <!-- REST API -->
-        <include>org.jolokia:jolokia-core</include>
+        <!-- include>org.jolokia:jolokia-core</include -->
         <include>com.googlecode.json-simple:json-simple</include>
       </includes>
       <fileMode>0644</fileMode>

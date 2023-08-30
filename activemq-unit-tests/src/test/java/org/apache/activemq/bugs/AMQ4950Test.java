@@ -21,9 +21,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.XASession;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.XASession;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;

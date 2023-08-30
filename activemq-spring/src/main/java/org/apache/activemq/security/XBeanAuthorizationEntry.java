@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.security;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.InitializingBean;
 

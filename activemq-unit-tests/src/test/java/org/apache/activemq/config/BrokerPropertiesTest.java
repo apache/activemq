@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.config;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;

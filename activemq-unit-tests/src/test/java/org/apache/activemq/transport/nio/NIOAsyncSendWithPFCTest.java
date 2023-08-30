@@ -31,7 +31,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import javax.management.ObjectName;
 import java.util.ArrayList;
 import java.util.List;

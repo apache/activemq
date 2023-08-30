@@ -18,7 +18,7 @@
 package org.apache.activemq;
 
 import java.util.List;
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.thread.Task;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * A utility class used by the Session for dispatching messages asynchronously
  * to consumers
  *
- * @see javax.jms.Session
+ * @see jakarta.jms.Session
  */
 public class ActiveMQSessionExecutor implements Task {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQSessionExecutor.class);

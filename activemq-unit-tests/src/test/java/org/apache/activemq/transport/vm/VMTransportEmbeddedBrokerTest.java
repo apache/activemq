@@ -19,7 +19,7 @@ package org.apache.activemq.transport.vm;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import javax.jms.DeliveryMode;
+import jakarta.jms.DeliveryMode;
 
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerTestSupport;

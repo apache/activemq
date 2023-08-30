@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.test;
 
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.jms.Topic;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
 
 import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 import org.slf4j.Logger;

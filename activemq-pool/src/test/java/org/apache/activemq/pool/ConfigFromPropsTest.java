@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.pool;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 import org.junit.Test;
 

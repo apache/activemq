@@ -21,9 +21,9 @@ import org.apache.activemq.util.ByteArrayInputStream;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-import javax.jms.BytesMessage;
-import javax.jms.JMSException;
-import javax.jms.TextMessage;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.TextMessage;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;

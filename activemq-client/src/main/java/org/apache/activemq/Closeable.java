@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 /**
  * Provides a uniform interface that can be used to close all the JMS obejcts

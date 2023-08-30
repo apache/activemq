@@ -19,9 +19,9 @@ package org.apache.activemq.usecases;
 import java.net.URI;
 import java.util.List;
 
-import javax.jms.Destination;
-import javax.jms.MessageConsumer;
-import javax.jms.TextMessage;
+import jakarta.jms.Destination;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.TextMessage;
 
 import junit.framework.Test;
 

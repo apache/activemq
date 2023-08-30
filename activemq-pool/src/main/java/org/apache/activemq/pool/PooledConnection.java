@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.pool;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.EnhancedConnection;
 import org.apache.activemq.advisory.DestinationSource;

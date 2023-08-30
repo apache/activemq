@@ -36,13 +36,13 @@ import org.apache.shiro.realm.text.IniRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 
 /**
  * @since 5.10.0
@@ -390,7 +390,7 @@ public class ShiroPluginTest extends TestSupport {
         /**
          * Creates a connection, authenticating with the specified username and password.
          *
-         * @see org.apache.activemq.test.JmsResourceProvider#createConnection(javax.jms.ConnectionFactory)
+         * @see org.apache.activemq.test.JmsResourceProvider#createConnection(jakarta.jms.ConnectionFactory)
          */
         public Connection createConnection(ConnectionFactory cf, String username, String password) throws JMSException {
             Connection connection = cf.createConnection(username, password);

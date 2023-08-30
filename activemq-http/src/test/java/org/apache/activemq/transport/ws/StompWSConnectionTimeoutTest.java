@@ -23,6 +23,7 @@ import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.util.Wait;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +47,10 @@ public class StompWSConnectionTimeoutTest extends WSTransportTestSupport {
         wsClient = new WebSocketClient();
         wsClient.start();
 
-        wsClient.connect(wsStompConnection, wsConnectUri);
+        ClientUpgradeRequest request = new ClientUpgradeRequest();
+        request.setSubProtocols("v11.stomp");
+
+        wsClient.connect(wsStompConnection, wsConnectUri, request);
         if (!wsStompConnection.awaitConnection(30, TimeUnit.SECONDS)) {
             throw new IOException("Could not connect to STOMP WS endpoint");
         }

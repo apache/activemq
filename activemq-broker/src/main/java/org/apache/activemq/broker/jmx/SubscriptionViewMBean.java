@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import javax.jms.InvalidSelectorException;
+import jakarta.jms.InvalidSelectorException;
 import javax.management.ObjectName;
 
 /**

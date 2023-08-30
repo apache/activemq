@@ -42,8 +42,8 @@
           <artifactId>jakarta.jms-api</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.apache.geronimo.specs</groupId>
-          <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
+          <groupId>jakarta.resource</groupId>
+          <artifactId>jakarta.resource-api</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.geronimo.specs</groupId>
@@ -164,8 +164,8 @@
           <artifactId>jakarta.jms-api</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.apache.geronimo.specs</groupId>
-          <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
+          <groupId>jakarta.resource</groupId>
+          <artifactId>jakarta.resource-api</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.geronimo.specs</groupId>

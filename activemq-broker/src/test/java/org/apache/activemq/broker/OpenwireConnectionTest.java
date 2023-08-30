@@ -21,7 +21,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 import java.net.URI;
 import java.util.concurrent.CopyOnWriteArrayList;
 

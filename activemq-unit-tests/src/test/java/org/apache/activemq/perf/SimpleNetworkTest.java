@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.perf;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;

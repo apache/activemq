@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import javax.jms.IllegalStateException;
+import jakarta.jms.IllegalStateException;
 
 /**
  * An exception thrown when attempt is made to use a connection when the connection has been closed.

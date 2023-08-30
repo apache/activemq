@@ -24,9 +24,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
-import javax.jms.InvalidClientIDException;
-import javax.jms.JMSException;
-import javax.jms.Message;
+import jakarta.jms.InvalidClientIDException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 import javax.security.auth.login.CredentialException;
 
 import org.apache.activemq.broker.BrokerService;

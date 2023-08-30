@@ -15,7 +15,7 @@
  */
 package org.apache.activemq.jms.pool;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 public class JcaPooledConnectionFactory extends XaPooledConnectionFactory {
 

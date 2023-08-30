@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.util.Map;
 
+import org.apache.activemq.transport.http.BlockingQueueTransport;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -71,7 +72,7 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
             server = new Server();
         }
         try {
-            server.getClass().getMethod("setStopTimeout", Long.TYPE).invoke(server, 500l);
+            server.getClass().getMethod("setStopTimeout", Long.TYPE).invoke(server, 30_000L);
         } catch (Throwable t) {
             //ignore, jetty 8.
         }

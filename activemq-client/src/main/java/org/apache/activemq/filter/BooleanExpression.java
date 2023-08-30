@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.filter;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 
 /**

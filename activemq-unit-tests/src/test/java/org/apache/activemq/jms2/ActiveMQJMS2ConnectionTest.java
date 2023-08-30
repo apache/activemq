@@ -19,8 +19,8 @@ package org.apache.activemq.jms2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import javax.jms.JMSException;
-import javax.jms.Session;
+import jakarta.jms.JMSException;
+import jakarta.jms.Session;
 import org.junit.Test;
 
 public class ActiveMQJMS2ConnectionTest extends ActiveMQJMS2TestBase {

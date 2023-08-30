@@ -19,7 +19,7 @@ package org.apache.activemq.command;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import javax.jms.MessageFormatException;
+import jakarta.jms.MessageFormatException;
 
 import org.apache.activemq.ScheduledMessage;
 import org.junit.Test;

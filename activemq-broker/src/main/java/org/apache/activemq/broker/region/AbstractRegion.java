@@ -25,8 +25,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.jms.IllegalStateException;
-import javax.jms.JMSException;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.advisory.AdvisorySupport;

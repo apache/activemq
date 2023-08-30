@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.ConnectionContext;

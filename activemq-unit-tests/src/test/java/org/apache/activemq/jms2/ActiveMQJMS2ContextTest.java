@@ -24,19 +24,19 @@ import static org.junit.Assert.fail;
 
 import java.util.Enumeration;
 
-import javax.jms.CompletionListener;
-import javax.jms.Destination;
-import javax.jms.JMSConsumer;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-import javax.jms.JMSProducer;
-import javax.jms.JMSRuntimeException;
-import javax.jms.Message;
-import javax.jms.Queue;
-import javax.jms.QueueBrowser;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
+import jakarta.jms.CompletionListener;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSProducer;
+import jakarta.jms.JMSRuntimeException;
+import jakarta.jms.Message;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueBrowser;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
+import jakarta.jms.Topic;
 
 import org.apache.activemq.ActiveMQContext;
 import org.junit.Test;
@@ -323,7 +323,7 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
 
             boolean found = false; 
             while(!found && messageEnumeration.hasMoreElements()) {
-                javax.jms.Message message = (javax.jms.Message)messageEnumeration.nextElement();
+                jakarta.jms.Message message = (jakarta.jms.Message)messageEnumeration.nextElement();
                 assertNotNull(message);
                 assertTrue(TextMessage.class.isAssignableFrom(message.getClass()));
                 assertEquals(expectedTextBody, TextMessage.class.cast(message).getText());
@@ -336,7 +336,7 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
     protected static void recvMessage(JMSContext jmsContext, Destination testDestination, String expectedTextBody) throws JMSException {
         assertNotNull(jmsContext);
         try(JMSConsumer jmsConsumer = jmsContext.createConsumer(testDestination)) {
-            javax.jms.Message message = jmsConsumer.receive(1000l);
+            jakarta.jms.Message message = jmsConsumer.receive(1000l);
             assertNotNull(message);
             assertTrue(TextMessage.class.isAssignableFrom(message.getClass()));
             assertEquals(expectedTextBody, TextMessage.class.cast(message).getText());
@@ -346,7 +346,7 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
     protected static void recvMessageDurable(JMSContext jmsContext, Topic testTopic, String subscriptionName, String selector, boolean noLocal, String expectedTextBody) throws JMSException {
         assertNotNull(jmsContext);
         try(JMSConsumer jmsConsumer = jmsContext.createDurableConsumer(testTopic, subscriptionName, selector, noLocal)) {
-            javax.jms.Message message = jmsConsumer.receive(1000l);
+            jakarta.jms.Message message = jmsConsumer.receive(1000l);
             assertNotNull(message);
             assertTrue(TextMessage.class.isAssignableFrom(message.getClass()));
             assertEquals(expectedTextBody, TextMessage.class.cast(message).getText());

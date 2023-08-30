@@ -25,12 +25,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TopicSession;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.Connection;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TopicSession;
+import jakarta.jms.TopicSubscriber;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -266,7 +266,7 @@ public class KahaDBPendingMessageCursorTest extends
         connection.setClientID("clientId");
         connection.start();
         Session session = connection.createSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-        javax.jms.Topic dest = session.createTopic(defaultTopicName);
+        jakarta.jms.Topic dest = session.createTopic(defaultTopicName);
         session.createDurableSubscriber(dest, "sub1");
         session.createDurableSubscriber(dest, "sub2");
         MessageProducer prod = session.createProducer(dest);
@@ -301,7 +301,7 @@ public class KahaDBPendingMessageCursorTest extends
         connection.setClientID("clientId");
         connection.start();
         Session session = connection.createSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-        javax.jms.Topic dest = session.createTopic(defaultTopicName);
+        jakarta.jms.Topic dest = session.createTopic(defaultTopicName);
         session.createDurableSubscriber(dest, "sub1");
         TopicSubscriber subscriber2 = session.createDurableSubscriber(dest, "sub2");
         MessageProducer prod = session.createProducer(dest);

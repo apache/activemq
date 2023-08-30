@@ -18,7 +18,7 @@ package org.apache.activemq.store;
 
 import java.io.IOException;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.MessageAck;

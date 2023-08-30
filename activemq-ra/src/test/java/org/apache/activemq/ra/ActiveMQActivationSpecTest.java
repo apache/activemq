@@ -28,10 +28,10 @@ import java.beans.PropertyDescriptor;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.resource.spi.InvalidPropertyException;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
+import jakarta.resource.spi.InvalidPropertyException;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.junit.Before;

@@ -18,13 +18,13 @@ package org.apache.activemq.jms.pool;
 
 import java.io.IOException;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.XAConnection;
-import javax.jms.XAConnectionFactory;
-import javax.jms.XASession;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.XAConnection;
+import jakarta.jms.XAConnectionFactory;
+import jakarta.jms.XASession;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.TransactionManager;
 
 import javax.transaction.xa.XAResource;
 import org.apache.geronimo.transaction.manager.NamedXAResourceFactory;

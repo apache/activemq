@@ -29,7 +29,7 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManager;

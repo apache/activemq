@@ -24,8 +24,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Destination;
-import javax.jms.MessageConsumer;
+import jakarta.jms.Destination;
+import jakarta.jms.MessageConsumer;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.util.MessageIdList;

@@ -249,10 +249,10 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         removeDestinationRole(new ActiveMQTopic(topic), operation, role);
     }
 
-    public void addDestinationRole(javax.jms.Destination destination, String operation, String role) {
+    public void addDestinationRole(jakarta.jms.Destination destination, String operation, String role) {
     }
 
-    public void removeDestinationRole(javax.jms.Destination destination, String operation, String role) {
+    public void removeDestinationRole(jakarta.jms.Destination destination, String operation, String role) {
     }
 
     @Override

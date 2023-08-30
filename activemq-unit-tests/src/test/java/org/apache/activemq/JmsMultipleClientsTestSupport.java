@@ -26,16 +26,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
+import jakarta.jms.TopicSubscriber;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -199,7 +199,7 @@ public class JmsMultipleClientsTestSupport {
         conn.start();
 
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        final TopicSubscriber consumer = sess.createDurableSubscriber((javax.jms.Topic)dest, name);
+        final TopicSubscriber consumer = sess.createDurableSubscriber((jakarta.jms.Topic)dest, name);
 
         return consumer;
     }

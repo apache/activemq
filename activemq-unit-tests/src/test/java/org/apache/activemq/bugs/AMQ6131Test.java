@@ -29,9 +29,9 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TopicSubscriber;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -106,7 +106,7 @@ public class AMQ6131Test {
         ActiveMQConnection connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.setClientID("myId");
         connection.start();
-        final Session jmsSession = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        final Session jmsSession = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
 
         TopicSubscriber durable = jmsSession.createDurableSubscriber(new ActiveMQTopic("durable.sub"), "sub");
         final MessageProducer producer = jmsSession.createProducer(new ActiveMQTopic("durable.sub"));
@@ -183,7 +183,7 @@ public class AMQ6131Test {
         ActiveMQConnection connection2 = (ActiveMQConnection) connectionFactory2.createConnection();
         connection2.setClientID("myId");
         connection2.start();
-        final Session jmsSession2 = connection2.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        final Session jmsSession2 = connection2.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
 
         TopicSubscriber durable2 = jmsSession2.createDurableSubscriber(new ActiveMQTopic("durable.sub"), "sub");
 
@@ -203,7 +203,7 @@ public class AMQ6131Test {
         ActiveMQConnection connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.setClientID("myId");
         connection.start();
-        final Session jmsSession = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        final Session jmsSession = connection.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
 
         TopicSubscriber durable = jmsSession.createDurableSubscriber(new ActiveMQTopic("durable.sub"), "sub");
         final MessageProducer producer = jmsSession.createProducer(new ActiveMQTopic("durable.sub"));
@@ -279,7 +279,7 @@ public class AMQ6131Test {
         ActiveMQConnection connection2 = (ActiveMQConnection) connectionFactory2.createConnection();
         connection2.setClientID("myId");
         connection2.start();
-        final Session jmsSession2 = connection2.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        final Session jmsSession2 = connection2.createSession(false, jakarta.jms.Session.AUTO_ACKNOWLEDGE);
 
         TopicSubscriber durable2 = jmsSession2.createDurableSubscriber(new ActiveMQTopic("durable.sub"), "sub");
 

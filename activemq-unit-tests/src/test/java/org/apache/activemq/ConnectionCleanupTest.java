@@ -16,8 +16,8 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import javax.jms.Session;
+import jakarta.jms.JMSException;
+import jakarta.jms.Session;
 
 import junit.framework.TestCase;
 

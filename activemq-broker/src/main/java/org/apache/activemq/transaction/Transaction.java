@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
-import javax.jms.TransactionRolledBackException;
+import jakarta.jms.TransactionRolledBackException;
 import javax.transaction.xa.XAException;
 
 import org.apache.activemq.TransactionContext;

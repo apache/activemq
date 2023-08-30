@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
-import javax.jms.MessageConsumer;
+import jakarta.jms.MessageConsumer;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.BrokerService;

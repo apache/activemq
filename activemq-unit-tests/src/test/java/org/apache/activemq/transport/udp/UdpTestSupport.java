@@ -18,7 +18,7 @@ package org.apache.activemq.transport.udp;
 
 import java.io.IOException;
 
-import javax.jms.MessageNotWriteableException;
+import jakarta.jms.MessageNotWriteableException;
 
 import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQDestination;

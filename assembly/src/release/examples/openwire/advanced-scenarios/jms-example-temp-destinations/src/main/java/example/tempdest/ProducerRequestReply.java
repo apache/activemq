@@ -17,7 +17,7 @@ package example.tempdest; /**
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.concurrent.TimeUnit;
 
 /**

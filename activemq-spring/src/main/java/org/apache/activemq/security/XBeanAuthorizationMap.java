@@ -18,7 +18,7 @@ package org.apache.activemq.security;
 
 import java.util.List;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.springframework.beans.factory.InitializingBean;

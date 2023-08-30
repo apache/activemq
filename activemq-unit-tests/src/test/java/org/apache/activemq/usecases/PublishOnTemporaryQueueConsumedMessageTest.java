@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.usecases;
 
-import javax.jms.DeliveryMode;
+import jakarta.jms.DeliveryMode;
 
 /**
  * 

@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.net.ServerSocketFactory;

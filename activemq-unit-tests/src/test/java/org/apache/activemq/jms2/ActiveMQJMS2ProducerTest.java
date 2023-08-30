@@ -27,13 +27,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.jms.Destination;
-import javax.jms.JMSConsumer;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-import javax.jms.JMSProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQMessageProducerSupport;
 import org.junit.Test;
@@ -177,7 +177,7 @@ public class ActiveMQJMS2ProducerTest extends ActiveMQJMS2TestBase {
 
     protected static void verifyTimestamp(JMSContext jmsContext, Destination destination, String expectedTextBody, boolean expectTimestampZero) throws JMSException {
         try(JMSConsumer jmsConsumer = jmsContext.createConsumer(destination)) {
-            javax.jms.Message message = jmsConsumer.receive(1000l);
+            jakarta.jms.Message message = jmsConsumer.receive(1000l);
             assertNotNull(message);
             assertTrue(TextMessage.class.isAssignableFrom(message.getClass()));
             assertEquals(expectedTextBody, TextMessage.class.cast(message).getText());

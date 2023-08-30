@@ -30,33 +30,33 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.BytesMessage;
-import javax.jms.Destination;
-import javax.jms.IllegalStateException;
-import javax.jms.InvalidDestinationException;
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Queue;
-import javax.jms.QueueBrowser;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
-import javax.jms.QueueSession;
-import javax.jms.Session;
-import javax.jms.StreamMessage;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
-import javax.jms.TopicPublisher;
-import javax.jms.TopicSession;
-import javax.jms.TopicSubscriber;
-import javax.jms.TransactionRolledBackException;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.Destination;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.InvalidDestinationException;
+import jakarta.jms.InvalidSelectorException;
+import jakarta.jms.JMSException;
+import jakarta.jms.MapMessage;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueBrowser;
+import jakarta.jms.QueueReceiver;
+import jakarta.jms.QueueSender;
+import jakarta.jms.QueueSession;
+import jakarta.jms.Session;
+import jakarta.jms.StreamMessage;
+import jakarta.jms.TemporaryQueue;
+import jakarta.jms.TemporaryTopic;
+import jakarta.jms.TextMessage;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicPublisher;
+import jakarta.jms.TopicSession;
+import jakarta.jms.TopicSubscriber;
+import jakarta.jms.TransactionRolledBackException;
 
 import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.blob.BlobTransferPolicy;
@@ -180,10 +180,10 @@ import org.slf4j.LoggerFactory;
  * integrating the JMS API into their application server products.
  *
  *
- * @see javax.jms.Session
- * @see javax.jms.QueueSession
- * @see javax.jms.TopicSession
- * @see javax.jms.XASession
+ * @see jakarta.jms.Session
+ * @see jakarta.jms.QueueSession
+ * @see jakarta.jms.TopicSession
+ * @see jakarta.jms.XASession
  */
 public class ActiveMQSession implements Session, QueueSession, TopicSession, StatsCapable, ActiveMQDispatcher {
 
@@ -553,7 +553,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *         acknowledgement mode for the session. If the session is
      *         transacted, returns SESSION_TRANSACTED.
      * @throws JMSException
-     * @see javax.jms.Connection#createSession(boolean,int)
+     * @see jakarta.jms.Connection#createSession(boolean,int)
      * @since 1.1 exception JMSException if there is some internal error.
      */
     @Override
@@ -570,14 +570,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 due to some internal error.
      * @throws TransactionRolledBackException if the transaction is rolled back
      *                 due to some internal error during commit.
-     * @throws javax.jms.IllegalStateException if the method is not called by a
+     * @throws jakarta.jms.IllegalStateException if the method is not called by a
      *                 transacted session.
      */
     @Override
     public void commit() throws JMSException {
         checkClosed();
         if (!getTransacted()) {
-            throw new javax.jms.IllegalStateException("Not a transacted session");
+            throw new jakarta.jms.IllegalStateException("Not a transacted session");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug(getSessionId() + " Transaction Commit :" + transactionContext.getTransactionId());
@@ -591,14 +591,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *
      * @throws JMSException if the JMS provider fails to roll back the
      *                 transaction due to some internal error.
-     * @throws javax.jms.IllegalStateException if the method is not called by a
+     * @throws jakarta.jms.IllegalStateException if the method is not called by a
      *                 transacted session.
      */
     @Override
     public void rollback() throws JMSException {
         checkClosed();
         if (!getTransacted()) {
-            throw new javax.jms.IllegalStateException("Not a transacted session");
+            throw new jakarta.jms.IllegalStateException("Not a transacted session");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug(getSessionId() + " Transaction Rollback, txid:"  + transactionContext.getTransactionId());
@@ -828,9 +828,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @return the message listener associated with this session
      * @throws JMSException if the JMS provider fails to get the message
      *                 listener due to an internal error.
-     * @see javax.jms.Session#setMessageListener(javax.jms.MessageListener)
-     * @see javax.jms.ServerSessionPool
-     * @see javax.jms.ServerSession
+     * @see jakarta.jms.Session#setMessageListener(jakarta.jms.MessageListener)
+     * @see jakarta.jms.ServerSessionPool
+     * @see jakarta.jms.ServerSession
      */
     @Override
     public MessageListener getMessageListener() throws JMSException {
@@ -855,9 +855,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @param listener the message listener to associate with this session
      * @throws JMSException if the JMS provider fails to set the message
      *                 listener due to an internal error.
-     * @see javax.jms.Session#getMessageListener()
-     * @see javax.jms.ServerSessionPool
-     * @see javax.jms.ServerSession
+     * @see jakarta.jms.Session#getMessageListener()
+     * @see jakarta.jms.ServerSessionPool
+     * @see jakarta.jms.ServerSession
      */
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
@@ -878,7 +878,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Optional operation, intended to be used only by Application Servers, not
      * by ordinary JMS clients.
      *
-     * @see javax.jms.ServerSession
+     * @see jakarta.jms.ServerSession
      */
     @Override
     public void run() {
@@ -1813,9 +1813,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *
      * @throws JMSException if the JMS provider fails to acknowledge the
      *                 messages due to some internal error.
-     * @throws javax.jms.IllegalStateException if this method is called on a
+     * @throws jakarta.jms.IllegalStateException if this method is called on a
      *                 closed session.
-     * @see javax.jms.Session#CLIENT_ACKNOWLEDGE
+     * @see jakarta.jms.Session#CLIENT_ACKNOWLEDGE
      */
     public void acknowledge() throws JMSException {
         for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {

@@ -26,11 +26,11 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSConsumer;
-import javax.jms.JMSContext;
-import javax.jms.Message;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
+import jakarta.jms.Message;
 
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
@@ -135,7 +135,7 @@ public class ActiveMQJMS2AckModesTest extends ActiveMQJMS2TestBase {
 
             int foundCount = 0;
             for(int validDeliveryMode : Arrays.asList(DeliveryMode.NON_PERSISTENT, DeliveryMode.PERSISTENT)) {
-                for(javax.jms.Message tmpMessage : recvMessages) {
+                for(jakarta.jms.Message tmpMessage : recvMessages) {
                     if(tmpMessage.getJMSDeliveryMode() == validDeliveryMode) {
                         MessageData messageData = new MessageData();
                         messageData.setMessageType("text").setMessagePayload(messagePayload).setDeliveryMode(validDeliveryMode);

@@ -25,11 +25,11 @@ import static org.junit.Assert.fail;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.Session;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;

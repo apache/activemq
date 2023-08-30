@@ -24,16 +24,16 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.TextMessage;
-import javax.jms.TopicRequestor;
-import javax.jms.TopicSession;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.TextMessage;
+import jakarta.jms.TopicRequestor;
+import jakarta.jms.TopicSession;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerService;
