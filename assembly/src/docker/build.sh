@@ -27,7 +27,7 @@ Usage:
 
   If the --image-name flag is not used the built image name will be 'activemq'.
   Check the supported build platforms; you can verify with this command: docker buildx ls
-  The supported platforms (OS/Arch) depend on the build's base image, in this case [eclipse-temurin:11-jre](https://hub.docker.com/_/eclipse-temurin).
+  The supported platforms (OS/Arch) depend on the build's base image, in this case [eclipse-temurin:17-jre](https://hub.docker.com/_/eclipse-temurin).
 
 HERE
   exit 1

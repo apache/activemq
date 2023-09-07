@@ -32,7 +32,7 @@ On macOS, an easy way to install `buildx` is to install [Docker Desktop Edge](ht
 
 ## Build
 
-Images are based on the Docker official [Eclipse Temurin 11 JRE](https://hub.docker.com/_/eclipse-temurin/tags?page=1&name=11-jre) image. If you want to
+Images are based on the Docker official [Eclipse Temurin 17 JRE](https://hub.docker.com/_/eclipse-temurin/tags?page=1&name=17-jre) image. If you want to
 build the ActiveMQ image you have the following choices:
 
 1. Create the docker image from a local distribution package
@@ -50,7 +50,7 @@ Usage:
 
   If the --image-name flag is not used the built image name will be 'activemq'.
   Check the supported build platforms; you can verify with this command: docker buildx ls
-  The supported platforms (OS/Arch) depend on the build's base image, in this case [eclipse-temurin:11-jre](https://hub.docker.com/_/eclipse-temurin).
+  The supported platforms (OS/Arch) depend on the build's base image, in this case [eclipse-temurin:17-jre](https://hub.docker.com/_/eclipse-temurin).
 ```
 
 To create the docker image from local distribution) you can execute the command
