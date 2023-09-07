@@ -23,6 +23,8 @@ ENV ACTIVEMQ_INSTALL_PATH /opt
 ENV ACTIVEMQ_HOME $ACTIVEMQ_INSTALL_PATH/apache-activemq
 ENV ACTIVEMQ_EXEC exec
 ENV PATH $PATH:$ACTIVEMQ_HOME/bin
+# Make the Web console accesible from outside the container
+ENV ACTIVEMQ_OPTS $ACTIVEMQ_OPTS -Djetty.host=0.0.0.0
 #WORKDIR $ACTIVEMQ_HOME
 
 # activemq_dist can point to a directory or a tarball on the local system
