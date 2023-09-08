@@ -104,7 +104,9 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
 
     protected transient Map<String, Object> map = new HashMap<String, Object>();
 
-    private Object readResolve() throws ObjectStreamException {
+    @Override
+    protected Object readResolve() throws ObjectStreamException {
+        super.readResolve();
         if (this.map == null) {
             this.map = new HashMap<String, Object>();
         }
