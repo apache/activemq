@@ -152,3 +152,10 @@ docker kill activemq
 * ActiveMQ WS connector on `61614`
 
 Edit the `docker-compose.yml` file to edit port settings.
+
+### Environment variables
+
+| Name              | Description                                                                   |
+|-------------------|-------------------------------------------------------------------------------|
+| ACTIVEMQ_USER     | User name to access the broker. If not set no user and password are required. |
+| ACTIVEMQ_PASSWORD | Password to access the broker. Only used if `ACTIVEMQ_USER` has been set.     |

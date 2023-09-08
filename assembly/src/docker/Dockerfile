@@ -28,6 +28,8 @@ ENV PATH $PATH:$ACTIVEMQ_HOME/bin
 # activemq_dist can point to a directory or a tarball on the local system
 ARG activemq_dist=NOT_SET
 
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+
 # Install build dependencies and activemq
 ADD $activemq_dist $ACTIVEMQ_INSTALL_PATH
 RUN set -x && \
@@ -35,4 +37,5 @@ RUN set -x && \
 	rm -r $ACTIVEMQ_INSTALL_PATH/apache-activemq-*
 
 EXPOSE 8161 61616 5672 61613 1883 61614
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["activemq", "console"]
