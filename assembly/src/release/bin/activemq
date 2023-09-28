@@ -55,10 +55,6 @@ EXEC_OPTION=""
 # a simple helper to get the current user
 setCurrentUser(){
    CUSER="`whoami 2>/dev/null`"
-   # Solaris hack
-   if [ ! $? -eq 0 ]; then
-      CUSER="`/usr/ucb/whoami 2>/dev/null`"
-   fi
 }
 
 # get a canonical path, macosx and slowlaris does not support radlink -f :-)
@@ -333,13 +329,6 @@ invokeJar(){
    # Get Java version
    # Use in priority xpg4 awk or nawk on SunOS as standard awk is outdated
    AWK=awk
-   if ${solaris}; then
-     if [ -x /usr/xpg4/bin/awk ]; then
-       AWK=/usr/xpg4/bin/awk
-     elif [ -x /usr/bin/nawk ]; then
-       AWK=/usr/bin/nawk
-     fi
-   fi
    VERSION=`"${JAVACMD}" -version 2>&1 | ${AWK} -F '"' '/version/ {print $2}' | sed -e 's/_.*//g; s/^1\.//g; s/\..*//g; s/-.*//g;'`
 
    # Execute java binary

@@ -1132,36 +1132,6 @@
           </build>
       </profile>
       <profile>
-          <id>activemq.tests.solaris.excludes</id>
-          <activation>
-              <property>
-                  <name>os.name</name>
-                  <value>SunOS</value>
-              </property>
-          </activation>
-          <build>
-              <plugins>
-                  <plugin>
-                      <artifactId>maven-surefire-plugin</artifactId>
-                      <configuration>
-                          <excludes combine.children="append">
-                              <exclude>**/QueueMasterSlaveSingleUrlTest.*</exclude>
-                              <exclude>**/AMQ2149Test.*</exclude>
-                              <exclude>**/AMQ2584Test.*</exclude>
-                              <exclude>**/ExpiredMessagesTest.*</exclude>
-                              <exclude>**/ManagedDurableSubscriptionTest.*</exclude>
-                              <exclude>**/ThreeBrokerVirtualTopicNetworkAMQPATest.*</exclude>
-                              <!-- These are performance tests and take too long to run -->
-                              <exclude>**/perf/*</exclude>
-                              <!-- These are load tests and take too long to run -->
-                              <exclude>**/load/*</exclude>
-                          </excludes>
-                      </configuration>
-                  </plugin>
-              </plugins>
-          </build>
-      </profile>
-      <profile>
           <id>activemq.tests.hpux.excludes</id>
           <activation>
               <os>
