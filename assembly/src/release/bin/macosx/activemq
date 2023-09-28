@@ -155,9 +155,6 @@ fi
 # Resolve the os
 DIST_OS=`uname -s | tr [:upper:] [:lower:] | tr -d [:blank:]`
 case "$DIST_OS" in
-    'sunos')
-        DIST_OS="solaris"
-        ;;
     'hp-ux' | 'hp-ux64')
         DIST_OS="hpux"
         ;;
@@ -187,9 +184,6 @@ case "$DIST_ARCH" in
         ;;
     'pa_risc' | 'pa-risc')
         DIST_ARCH="parisc"
-        ;;
-    'sun4u' | 'sparcv9')
-        DIST_ARCH="sparc"
         ;;
     '9000/800')
         DIST_ARCH="parisc"

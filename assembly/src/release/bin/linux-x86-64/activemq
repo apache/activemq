@@ -161,9 +161,6 @@ fi
 # Resolve the os
 DIST_OS=`uname -s | tr [:upper:] [:lower:] | tr -d [:blank:]`
 case "$DIST_OS" in
-    'sunos')
-        DIST_OS="solaris"
-        ;;
     'hp-ux' | 'hp-ux64')
         DIST_OS="hpux"
         ;;

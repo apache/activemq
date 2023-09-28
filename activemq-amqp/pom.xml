@@ -309,29 +309,6 @@
               </plugins>
           </build>
       </profile>
-      <profile>
-          <id>activemq.tests.solaris.excludes</id>
-          <activation>
-              <property>
-                  <name>os.name</name>
-                  <value>SunOS</value>
-              </property>
-          </activation>
-          <build>
-              <plugins>
-                  <plugin>
-                      <artifactId>maven-surefire-plugin</artifactId>
-                      <configuration>
-                          <excludes combine.children="append">
-                              <exclude>**/JoramJmsTest.*</exclude>
-                              <exclude>**/JMSClientSslTest.*</exclude>
-                              <exclude>**/JMSClientNioTest.*</exclude>
-                          </excludes>
-                      </configuration>
-                  </plugin>
-              </plugins>
-          </build>
-      </profile>
 
   </profiles>
 </project>
