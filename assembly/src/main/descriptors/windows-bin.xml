@@ -54,8 +54,6 @@
       <outputDirectory></outputDirectory>
       <includes>
         <include>bin/*.bat</include>
-        <include>bin/win32/*.bat</include>
-        <include>bin/win32/*.conf</include>
         <include>bin/win64/*.bat</include>
         <include>bin/win64/*.conf</include>
       </includes>
@@ -77,8 +75,6 @@
       <directory>src/release</directory>
       <outputDirectory></outputDirectory>
       <includes>
-        <include>bin/win32/*.exe</include>
-        <include>bin/win32/*.dll</include>
         <include>bin/win64/*.exe</include>
         <include>bin/win64/*.dll</include>
       </includes>
