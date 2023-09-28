@@ -24,20 +24,27 @@
         <property name="sendServerVersion" value="false"/>
     </bean>
 
-    <bean id="securityLoginService" class="org.eclipse.jetty.security.HashLoginService">
-        <property name="name" value="ActiveMQRealm" />
-        <property name="config" value="${activemq.conf}/jetty-realm.properties" />
+    <bean id="jaasLoginService" class="org.eclipse.jetty.jaas.JAASLoginService">
+        <property name="name" value="ActiveMQRealm"/>
+        <property name="loginModuleName" value="activemq"/>
+        <property name="roleClassNames">
+            <list>
+                <value>org.apache.activemq.jaas.GroupPrincipal</value>
+            </list>
+        </property>
     </bean>
+
+    <bean id="identityService" class="org.eclipse.jetty.security.DefaultIdentityService"/>
 
     <bean id="securityConstraint" class="org.eclipse.jetty.util.security.Constraint">
         <property name="name" value="BASIC" />
-        <property name="roles" value="user,admin" />
+        <property name="roles" value="user,admins" />
         <!-- set authenticate=false to disable login -->
         <property name="authenticate" value="true" />
     </bean>
     <bean id="adminSecurityConstraint" class="org.eclipse.jetty.util.security.Constraint">
         <property name="name" value="BASIC" />
-        <property name="roles" value="admin" />
+        <property name="roles" value="admins" />
          <!-- set authenticate=false to disable login -->
         <property name="authenticate" value="true" />
     </bean>
@@ -105,7 +112,8 @@
 		</property>
 	</bean>    
     <bean id="securityHandler" class="org.eclipse.jetty.security.ConstraintSecurityHandler">
-        <property name="loginService" ref="securityLoginService" />
+        <property name="identityService" ref="identityService" />
+        <property name="loginService" ref="jaasLoginService" />
         <property name="authenticator">
             <bean class="org.eclipse.jetty.security.authentication.BasicAuthenticator" />
         </property>

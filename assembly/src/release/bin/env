@@ -67,17 +67,19 @@ fi
 # controlRole abcd1234
 # ---
 #
+
+# Uncomment to enable remote JMX access using common JAAS config for users and groups
 # ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.port=11099 "
-# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.password.file=${ACTIVEMQ_CONF}/jmx.password"
 # ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.access.file=${ACTIVEMQ_CONF}/jmx.access"
 # ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.ssl=false"
+ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.login.config=activemq"
 ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
 
 # Set jvm jmx configuration for controlling the broker process
 # You only have to configure the first four settings if you run a ibm jvm, caused by the
 # fact that IBM's jvm does not support VirtualMachine.attach(PID)
 # (see also com.sun.management.jmxremote.port, .jmx.password.file and .jmx.access.file )
-#ACTIVEMQ_SUNJMX_CONTROL="--jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:1099/jmxrmi --jmxuser controlRole --jmxpassword abcd1234"
+#ACTIVEMQ_SUNJMX_CONTROL="--jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11099/jmxrmi --jmxuser controlRole --jmxpassword abcd1234"
 ACTIVEMQ_SUNJMX_CONTROL=""
 
 # Specify the queue manager URL for using "browse" option of sysv initscript

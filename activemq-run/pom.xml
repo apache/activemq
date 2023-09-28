@@ -34,6 +34,14 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-jaas</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
@@ -66,6 +74,8 @@
               <artifactSet>
                 <includes>
                   <include>${project.groupId}:activemq-console</include>
+                  <include>${project.groupId}:activemq-jaas</include>
+                  <include>org.slf4j:slf4j-api</include>
                 </includes>
               </artifactSet>
               <filters>
