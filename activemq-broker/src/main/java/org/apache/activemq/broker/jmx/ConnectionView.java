@@ -191,4 +191,9 @@ public class ConnectionView implements ConnectionViewMBean {
     public boolean isNetworkConnection() {
         return connection.isNetworkConnection();
     }
+
+    @Override
+    public long getConnectedTimestamp() {
+        return connection.getConnectedTimestamp();
+    }
 }

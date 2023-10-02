@@ -121,7 +121,6 @@ public interface Connection extends Service {
 
     void updateClient(ConnectionControl control);
 
-
     /**
      * Returns the number of active transactions established on this Connection.
      *
@@ -136,4 +135,10 @@ public interface Connection extends Service {
      */
     public Long getOldestActiveTransactionDuration();
 
+    /**
+     * Returns the time in ms since epoch when connection was established.
+     *
+     * @return time in ms since epoch when connection was established.
+     */
+    public Long getConnectedTimestamp();
 }

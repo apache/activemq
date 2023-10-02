@@ -133,4 +133,10 @@ public interface ConnectionViewMBean extends Service {
      */
     @MBeanInfo("Connection is a network connection.")
     boolean isNetworkConnection();
+
+    /**
+     * @return the time in ms since epoch when connection was established
+     */
+    @MBeanInfo("Time in ms since epoch when connection was established.")
+    long getConnectedTimestamp();
 }
