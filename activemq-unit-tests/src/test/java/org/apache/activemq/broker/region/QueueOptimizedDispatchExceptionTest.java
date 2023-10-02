@@ -104,6 +104,8 @@ public class QueueOptimizedDispatchExceptionTest {
         final ConnectionContext contextNotInTx = new ConnectionContext();
         contextNotInTx.setConnection(new Connection() {
 
+            private final long connectedTimestamp = System.currentTimeMillis();
+
             @Override
             public void stop() throws Exception {
             }
@@ -206,6 +208,11 @@ public class QueueOptimizedDispatchExceptionTest {
             @Override
             public Long getOldestActiveTransactionDuration() {
                 return null;
+            }
+
+            @Override
+            public Long getConnectedTimestamp() {
+                return connectedTimestamp;
             }
         });
 

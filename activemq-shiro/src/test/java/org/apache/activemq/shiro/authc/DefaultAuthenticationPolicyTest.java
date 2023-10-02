@@ -218,6 +218,9 @@ public class DefaultAuthenticationPolicyTest {
 
         ConnectionContext ctx = new ConnectionContext();
         Connection connection = new Connection() {
+
+            private final long connectedTimestamp = System.currentTimeMillis();
+
             @Override
             public Connector getConnector() {
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
@@ -327,6 +330,12 @@ public class DefaultAuthenticationPolicyTest {
             public Long getOldestActiveTransactionDuration() {
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
+
+            @Override
+            public Long getConnectedTimestamp() {
+                return connectedTimestamp;
+            }
+
         };
 
         ctx.setConnection(connection);
