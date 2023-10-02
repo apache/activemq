@@ -163,6 +163,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private TransportConnectionStateRegister connectionStateRegister = new SingleTransportConnectionStateRegister();
     private final ReentrantReadWriteLock serviceLock = new ReentrantReadWriteLock();
     private String duplexNetworkConnectorId;
+    private final long connectedTimestamp;
 
     /**
      * @param taskRunnerFactory - can be null if you want direct dispatch to the transport
@@ -220,6 +221,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
         });
         connected = true;
+        connectedTimestamp = System.currentTimeMillis();
     }
 
     /**
@@ -1725,5 +1727,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     @Override
     public Response processBrokerSubscriptionInfo(BrokerSubscriptionInfo info) throws Exception {
         return null;
+    }
+
+    @Override
+    public Long getConnectedTimestamp() {
+        return this.connectedTimestamp;
     }
 }

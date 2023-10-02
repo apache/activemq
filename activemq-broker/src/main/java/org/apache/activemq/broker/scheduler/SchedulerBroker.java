@@ -81,6 +81,9 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         this.context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
         // we only get response on unexpected error
         this.context.setConnection(new Connection() {
+
+            private final long connectedTimestamp = System.currentTimeMillis();
+
             @Override
             public Connector getConnector() {
                 return null;
@@ -181,6 +184,12 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             @Override
             public Long getOldestActiveTransactionDuration() {
                 return null;
+            }
+
+            
+            @Override
+            public Long getConnectedTimestamp() {
+                return connectedTimestamp;
             }
 
             @Override
