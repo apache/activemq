@@ -20,6 +20,7 @@ import java.beans.Transient;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectStreamException;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashMap;
@@ -857,5 +858,17 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     @Override
     public boolean canProcessAsExpired() {
         return processAsExpired.compareAndSet(false, true);
+    }
+
+    /**
+     * Initialize the transient fields at deserialization to get a normal state.
+     *
+     * @see <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html">Serializable Javadoc</a>
+     */
+    protected Object readResolve() throws ObjectStreamException {
+        if (this.processAsExpired == null) {
+            this.processAsExpired = new AtomicBoolean();
+        }
+        return this;
     }
 }
