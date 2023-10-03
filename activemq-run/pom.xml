@@ -38,10 +38,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
   </dependencies>
 
   <build>
@@ -60,7 +56,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>${maven-shade-plugin-version}</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -75,7 +70,6 @@
                 <includes>
                   <include>${project.groupId}:activemq-console</include>
                   <include>${project.groupId}:activemq-jaas</include>
-                  <include>org.slf4j:slf4j-api</include>
                 </includes>
               </artifactSet>
               <filters>

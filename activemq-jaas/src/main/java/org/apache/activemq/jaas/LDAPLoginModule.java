@@ -40,8 +40,8 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @version $Rev: $ $Date: $
@@ -65,7 +65,7 @@ public class LDAPLoginModule implements LoginModule {
     private static final String EXPAND_ROLES = "expandRoles";
     private static final String EXPAND_ROLES_MATCHING = "expandRolesMatching";
 
-    private static Logger log = LoggerFactory.getLogger(LDAPLoginModule.class);
+    private static Logger log = Logger.getLogger(LDAPLoginModule.class.getName());
 
     protected DirContext context;
 
@@ -190,7 +190,7 @@ public class LDAPLoginModule implements LoginModule {
         try {
             context.close();
         } catch (Exception e) {
-            log.error(e.toString());
+            log.log(Level.SEVERE, e.toString());
         } finally {
             context = null;
         }
@@ -201,8 +201,8 @@ public class LDAPLoginModule implements LoginModule {
         MessageFormat userSearchMatchingFormat;
         boolean userSearchSubtreeBool;
 
-        if (log.isDebugEnabled()) {
-            log.debug("Create the LDAP initial context.");
+        if (log.isLoggable(Level.FINE)) {
+            log.log(Level.FINE, "Create the LDAP initial context.");
         }
         try {
             openContext();
@@ -239,17 +239,17 @@ public class LDAPLoginModule implements LoginModule {
             list.toArray(attribs);
             constraints.setReturningAttributes(attribs);
 
-            if (log.isDebugEnabled()) {
-                log.debug("Get the user DN.");
-                log.debug("Looking for the user in LDAP with ");
-                log.debug("  base DN: " + getLDAPPropertyValue(USER_BASE));
-                log.debug("  filter: " + filter);
+            if (log.isLoggable(Level.FINE)) {
+                log.log(Level.FINE, "Get the user DN.");
+                log.log(Level.FINE, "Looking for the user in LDAP with ");
+                log.log(Level.FINE, "  base DN: " + getLDAPPropertyValue(USER_BASE));
+                log.log(Level.FINE, "  filter: " + filter);
             }
 
             NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(USER_BASE), filter, constraints);
 
             if (results == null || !results.hasMore()) {
-                log.warn("User " + username + " not found in LDAP.");
+                log.log(Level.WARNING, "User " + username + " not found in LDAP.");
                 throw new FailedLoginException("User " + username + " not found in LDAP.");
             }
 
@@ -261,7 +261,7 @@ public class LDAPLoginModule implements LoginModule {
 
             String dn;
             if (result.isRelative()) {
-                log.debug("LDAP returned a relative name: {}", result.getName());
+                log.log(Level.FINE, "LDAP returned a relative name: {}", result.getName());
 
                 NameParser parser = context.getNameParser("");
                 Name contextName = parser.parse(context.getNameInNamespace());
@@ -271,7 +271,7 @@ public class LDAPLoginModule implements LoginModule {
                 name = name.addAll(entryName);
                 dn = name.toString();
             } else {
-                log.debug("LDAP returned an absolute name: {}", result.getName());
+                log.log(Level.FINE, "LDAP returned an absolute name: {}", result.getName());
 
                 try {
                     URI uri = new URI(result.getName());
@@ -290,8 +290,8 @@ public class LDAPLoginModule implements LoginModule {
                 }
             }
 
-            if (log.isDebugEnabled()) {
-                log.debug("Using DN [" + dn + "] for binding.");
+            if (log.isLoggable(Level.FINE)) {
+                log.log(Level.FINE, "Using DN [" + dn + "] for binding.");
             }
 
             Attributes attrs = result.getAttributes();
@@ -307,8 +307,8 @@ public class LDAPLoginModule implements LoginModule {
             if (bindUser(context, dn, password)) {
                 // if authenticated add more roles
                 roles = getRoles(context, dn, username, roles);
-                if (log.isDebugEnabled()) {
-                    log.debug("Roles " + roles + " for user " + username);
+                if (log.isLoggable(Level.FINE)) {
+                    log.log(Level.FINE, "Roles " + roles + " for user " + username);
                 }
                 for (int i = 0; i < roles.size(); i++) {
                     groups.add(new GroupPrincipal(roles.get(i)));
@@ -355,11 +355,11 @@ public class LDAPLoginModule implements LoginModule {
         } else {
             constraints.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         }
-        if (log.isDebugEnabled()) {
-            log.debug("Get user roles.");
-            log.debug("Looking for the user roles in LDAP with ");
-            log.debug("  base DN: " + getLDAPPropertyValue(ROLE_BASE));
-            log.debug("  filter: " + filter);
+        if (log.isLoggable(Level.FINE)) {
+            log.log(Level.FINE, "Get user roles.");
+            log.log(Level.FINE, "Looking for the user roles in LDAP with ");
+            log.log(Level.FINE, "  base DN: " + getLDAPPropertyValue(ROLE_BASE));
+            log.log(Level.FINE, "  filter: " + filter);
         }
         HashSet<String> haveSeenNames = new HashSet<>();
         Queue<String> pendingNameExpansion = new LinkedList<>();
@@ -427,8 +427,8 @@ public class LDAPLoginModule implements LoginModule {
 
     protected boolean bindUser(DirContext context, String dn, String password) throws NamingException {
         boolean isValid = false;
-        if (log.isDebugEnabled()) {
-            log.debug("Binding the user.");
+        if (log.isLoggable(Level.FINE)) {
+            log.log(Level.FINE, "Binding the user.");
         }
         context.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
         context.addToEnvironment(Context.SECURITY_PRINCIPAL, dn);
@@ -436,12 +436,12 @@ public class LDAPLoginModule implements LoginModule {
         try {
             context.getAttributes("", null);
             isValid = true;
-            if (log.isDebugEnabled()) {
-                log.debug("User " + dn + " successfully bound.");
+            if (log.isLoggable(Level.FINE)) {
+                log.log(Level.FINE, "User " + dn + " successfully bound.");
             }
         } catch (AuthenticationException e) {
-            if (log.isDebugEnabled()) {
-                log.debug("Authentication failed for dn=" + dn);
+            if (log.isLoggable(Level.FINE)) {
+                log.log(Level.FINE, "Authentication failed for dn=" + dn);
             }
         }
 
@@ -504,7 +504,7 @@ public class LDAPLoginModule implements LoginModule {
 
         } catch (NamingException e) {
             closeContext();
-            log.error(e.toString());
+            log.log(Level.SEVERE, e.toString());
             throw e;
         }
     }

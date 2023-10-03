@@ -29,8 +29,9 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Always login the user with a default 'guest' identity.
@@ -44,7 +45,7 @@ public class GuestLoginModule implements LoginModule {
     private static final String GUEST_USER = "org.apache.activemq.jaas.guest.user";
     private static final String GUEST_GROUP = "org.apache.activemq.jaas.guest.group";
 
-    private static final Logger LOG = LoggerFactory.getLogger(GuestLoginModule.class);
+    private static final Logger LOG = Logger.getLogger(GuestLoginModule.class.getName());
     
 
     private String userName = "guest";
@@ -75,7 +76,7 @@ public class GuestLoginModule implements LoginModule {
         principals.add(new GroupPrincipal(groupName));
         
         if (debug) {
-            LOG.debug("Initialized debug=" + debug + " guestUser=" + userName + " guestGroup=" + groupName);
+            LOG.log(Level.FINE, "Initialized debug=" + debug + " guestUser=" + userName + " guestGroup=" + groupName);
         }
 
     }
@@ -89,7 +90,7 @@ public class GuestLoginModule implements LoginModule {
                  callbackHandler.handle(new Callback[]{passwordCallback});
                  if (passwordCallback.getPassword() != null) {
                      if (debug) {
-                        LOG.debug("Guest login failing (credentialsInvalidate=true) on presence of a password");
+                        LOG.log(Level.FINE, "Guest login failing (credentialsInvalidate=true) on presence of a password");
                      }
                      succeeded = false;
                      passwordCallback.clearPassword();
@@ -99,7 +100,7 @@ public class GuestLoginModule implements LoginModule {
              }
         }
         if (debug) {
-            LOG.debug("Guest login " + succeeded);
+            LOG.log(Level.FINE, "Guest login " + succeeded);
         }
         return succeeded;
     }
@@ -107,7 +108,7 @@ public class GuestLoginModule implements LoginModule {
     @Override
     public boolean commit() throws LoginException {
         if (debug) {
-            LOG.debug("commit");
+            LOG.log(Level.FINE, "commit");
         }
 
         if (!succeeded) {
@@ -123,7 +124,7 @@ public class GuestLoginModule implements LoginModule {
     public boolean abort() throws LoginException {
 
         if (debug) {
-            LOG.debug("abort");
+            LOG.log(Level.FINE, "abort");
         }
         if (!succeeded) {
             return false;
@@ -142,7 +143,7 @@ public class GuestLoginModule implements LoginModule {
         subject.getPrincipals().removeAll(principals);
 
         if (debug) {
-            LOG.debug("logout");
+            LOG.log(Level.FINE, "logout");
         }
 
         succeeded = false;

@@ -19,19 +19,18 @@ package org.apache.activemq.jaas;
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PropertiesLoader {
-    private static final Logger LOG = LoggerFactory.getLogger(PropertiesLoader.class);
+    private static final Logger LOG = Logger.getLogger(PropertiesLoader.class.getName());
     private static final Map<FileNameKey, ReloadableProperties> staticCache = new ConcurrentHashMap<FileNameKey, ReloadableProperties>();
     protected boolean debug;
 
     public void init(Map options) {
         debug = booleanOption("debug", options);
         if (debug) {
-            LOG.debug("Initialized debug");
+            LOG.log(Level.FINE, "Initialized debug");
         }
     }
 
@@ -108,7 +107,7 @@ public class PropertiesLoader {
                 }
             }
             if (debug) {
-                LOG.debug("Using basedir=" + baseDir.getAbsolutePath());
+                LOG.log(Level.FINE, "Using basedir=" + baseDir.getAbsolutePath());
             }
             return baseDir;
         }

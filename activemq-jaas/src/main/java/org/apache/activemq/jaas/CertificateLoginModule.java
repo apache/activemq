@@ -32,8 +32,8 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A LoginModule that allows for authentication based on SSL certificates.
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class CertificateLoginModule extends PropertiesLoader implements LoginModule {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CertificateLoginModule.class);
+    private static final Logger LOG = Logger.getLogger(CertificateLoginModule.class.getName());
 
     private CallbackHandler callbackHandler;
     private Subject subject;
@@ -89,7 +89,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
         }
 
         if (debug) {
-            LOG.debug("Certificate for user: " + username);
+            LOG.log(Level.FINE, "Certificate for user: " + username);
         }
         succeeded = true;
         return true;
@@ -101,7 +101,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
     @Override
     public boolean commit() throws LoginException {
         if (debug) {
-            LOG.debug("commit");
+            LOG.log(Level.FINE, "commit");
         }
 
         if (!succeeded) {
@@ -128,7 +128,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
     @Override
     public boolean abort() throws LoginException {
         if (debug) {
-            LOG.debug("abort");
+            LOG.log(Level.FINE, "abort");
         }
         if (!succeeded) {
             return false;
@@ -152,7 +152,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
         clear();
 
         if (debug) {
-            LOG.debug("logout");
+            LOG.log(Level.FINE, "logout");
         }
 
         succeeded = false;

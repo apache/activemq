@@ -33,15 +33,15 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PropertiesLoginModule extends PropertiesLoader implements LoginModule {
 
     private static final String USER_FILE_PROP_NAME = "org.apache.activemq.jaas.properties.user";
     private static final String GROUP_FILE_PROP_NAME = "org.apache.activemq.jaas.properties.group";
 
-    private static final Logger LOG = LoggerFactory.getLogger(PropertiesLoginModule.class);
+    private static final Logger LOG = Logger.getLogger(PropertiesLoginModule.class.getName());
 
     private Subject subject;
     private CallbackHandler callbackHandler;
@@ -97,7 +97,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         succeeded = true;
 
         if (debug) {
-            LOG.debug("login " + user);
+            LOG.log(Level.FINE, "login " + user);
         }
         return succeeded;
     }
@@ -107,7 +107,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         if (!succeeded) {
             clear();
             if (debug) {
-                LOG.debug("commit, result: false");
+                LOG.log(Level.FINE, "commit, result: false");
             }
             return false;
         }
@@ -124,7 +124,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         subject.getPrincipals().addAll(principals);
 
         if (debug) {
-            LOG.debug("commit, result: true");
+            LOG.log(Level.FINE, "commit, result: true");
         }
 
         commitSucceeded = true;
@@ -134,7 +134,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
     @Override
     public boolean abort() throws LoginException {
         if (debug) {
-            LOG.debug("abort");
+            LOG.log(Level.FINE, "abort");
         }
         if (!succeeded) {
             return false;
@@ -154,7 +154,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         subject.getPrincipals().removeAll(principals);
         clear();
         if (debug) {
-            LOG.debug("logout");
+            LOG.log(Level.FINE, "logout");
         }
 
         succeeded = false;

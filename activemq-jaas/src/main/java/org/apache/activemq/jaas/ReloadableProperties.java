@@ -26,11 +26,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ReloadableProperties {
-    private static final Logger LOG = LoggerFactory.getLogger(ReloadableProperties.class);
+    private static final Logger LOG = Logger.getLogger(ReloadableProperties.class.getName());
 
     private Properties props = new Properties();
     private Map<String, String> invertedProps;
@@ -56,12 +56,12 @@ public class ReloadableProperties {
                 invertedValueProps = null;
                 regexpProps = null;
                 if (key.isDebug()) {
-                    LOG.debug("Load of: " + key);
+                    LOG.log(Level.FINE, "Load of: " + key);
                 }
             } catch (IOException e) {
-                LOG.error("Failed to load: " + key + ", reason:" + e.getLocalizedMessage());
+                LOG.log(Level.SEVERE, "Failed to load: " + key + ", reason:" + e.getLocalizedMessage());
                 if (key.isDebug()) {
-                    LOG.debug("Load of: " + key + ", failure exception" + e);
+                    LOG.log(Level.FINE, "Load of: " + key + ", failure exception" + e);
                 }
             }
             reloadTime = System.currentTimeMillis();
@@ -110,7 +110,7 @@ public class ReloadableProperties {
                         Pattern p = Pattern.compile(str.substring(1, str.length() - 1));
                         regexpProps.put((String) val.getKey(), p);
                     } catch (PatternSyntaxException e) {
-                        LOG.warn("Ignoring invalid regexp: " + str);
+                        LOG.log(Level.WARNING, "Ignoring invalid regexp: " + str);
                     }
                 }
             }
