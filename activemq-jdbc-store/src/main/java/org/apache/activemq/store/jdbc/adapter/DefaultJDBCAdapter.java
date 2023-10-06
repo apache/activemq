@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
-import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
-import static javax.xml.bind.DatatypeConverter.printBase64Binary;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
@@ -239,7 +237,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             if (xid != null) {
                 byte[] xidVal = xid.getEncodedXidBytes();
                 xidVal[0] = '+';
-                String xidString = printBase64Binary(xidVal);
+                String xidString = Base64.getEncoder().encodeToString(xidVal);
                 s.setString(8, xidString);
             } else {
                 s.setString(8, null);
@@ -381,7 +379,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             } else {
                 byte[] xidVal = xid.getEncodedXidBytes();
                 xidVal[0] = '-';
-                String xidString = printBase64Binary(xidVal);
+                String xidString = Base64.getEncoder().encodeToString(xidVal);
                 s.setString(1, xidString);
                 s.setLong(2, seq);
             }
@@ -466,7 +464,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             if (xid != null) {
                 byte[] xidVal = encodeXid(xid, seq, priority);
-                String xidString = printBase64Binary(xidVal);
+                String xidString = Base64.getEncoder().encodeToString(xidVal);
                 s.setString(1, xidString);
             } else {
                 s.setLong(1, seq);
@@ -503,7 +501,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             if (xid != null) {
                 byte[] xidVal = encodeXid(xid, seq, priority);
-                String xidString = printBase64Binary(xidVal);
+                String xidString = Base64.getEncoder().encodeToString(xidVal);
                 s.setString(1, xidString);
             } else {
                 s.setLong(1, seq);
@@ -991,7 +989,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             while (rs.next()) {
                 long id = rs.getLong(1);
                 String encodedString = rs.getString(2);
-                byte[] encodedXid = parseBase64Binary(encodedString);
+                byte[] encodedXid = Base64.getDecoder().decode(encodedString);
                 if (encodedXid[0] == '+') {
                     jdbcMemoryTransactionStore.recoverAdd(id, getBinaryData(rs, 3));
                 } else {
@@ -1006,7 +1004,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             rs = s.executeQuery();
             while (rs.next()) {
                 String encodedString = rs.getString(1);
-                byte[] encodedXid = parseBase64Binary(encodedString);
+                byte[] encodedXid = Base64.getDecoder().decode(encodedString);
                 String destination = rs.getString(2);
                 String subId = rs.getString(3);
                 String subName = rs.getString(4);
