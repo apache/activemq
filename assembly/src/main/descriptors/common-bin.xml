@@ -145,11 +145,11 @@
         <include>jakarta.transaction:jakarta.transaction-api</include>
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
-        <include>javax.xml.bind:jaxb-api</include>
+        <include>jakarta.xml.bind:jaxb-api</include>
         <include>org.glassfish.jaxb:jaxb-runtime</include>
         <include>org.glassfish.jaxb:jaxb-core</include>
         <include>com.sun.istack:istack-commons-runtime</include>
-        <include>javax.activation:javax.activation-api</include>
+        <include>jakarta.activation:jakarta.activation-api</include>
         <include>com.fasterxml.jackson.core:jackson-core</include>
         <include>com.fasterxml.jackson.core:jackson-annotations</include>
         <include>com.fasterxml.jackson.core:jackson-databind</include>
@@ -217,7 +217,7 @@
         <include>org.jmdns:jmdns</include>
         <include>org.apache.qpid:proton-j</include>
         <include>${pom.groupId}:activemq-runtime-config</include>
-        <include>org.jvnet.jaxb2_commons:jaxb2-basics-runtime</include>
+        <include>org.jvnet.jaxb:jaxb-plugins-runtime</include>
 
         <!-- Apache Shiro dependencies: -->
         <include>org.apache.shiro:shiro-core</include>
