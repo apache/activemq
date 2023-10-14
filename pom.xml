@@ -1267,8 +1267,8 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>[11,)</version>
-                  <message>You must use Java 11+ to build.</message>
+                  <version>[17,)</version>
+                  <message>You must use Java 17+ to build.</message>
                 </requireJavaVersion>
               </rules>
             </configuration>
