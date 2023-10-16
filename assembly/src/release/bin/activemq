@@ -36,7 +36,7 @@
 # for additional commandline arguments
 #
 # System variables for this script, like ACTIVEMQ_OPTS and ACTIVEMQ_OPTS_MEMORY,
-# can be configured in 'env' script located in this directory.
+# can be configured in 'setenv' script located in this directory.
 #
 # For more information on configuring the script, see http://activemq.apache.org/unix-shell-script.html
 #
@@ -171,7 +171,7 @@ if ( basename $0 | grep "activemq-instance-" > /dev/null);then
   ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
   echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
 else
-  ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc $ACTIVEMQ_HOME/bin/env"
+  ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc $ACTIVEMQ_HOME/bin/setenv"
 fi
 
 # load activemq configuration
@@ -667,7 +667,7 @@ Configuration of this script:
     The configuration of this script is read from the following files:
     $ACTIVEMQ_CONFIGS
     This script searches for the files in the listed order and reads the first available file.
-    Modify $ACTIVEMQ_BASE/bin/env or create a copy of that file on a suitable location.
+    Modify $ACTIVEMQ_BASE/bin/setenv or create a copy of that file on a suitable location.
     To use additional configurations for running multiple instances on the same operating system
     rename or symlink script to a name matching to activemq-instance-<INSTANCENAME>.
     This changes the configuration location to /etc/default/activemq-instance-<INSTANCENAME> and

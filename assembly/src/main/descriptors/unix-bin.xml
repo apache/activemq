@@ -112,7 +112,7 @@
       <directory>src/release</directory>
       <outputDirectory></outputDirectory>
       <includes>
-        <include>bin/env</include>
+        <include>bin/setenv</include>
       </includes>
       <directoryMode>0755</directoryMode>
       <fileMode>0644</fileMode>
