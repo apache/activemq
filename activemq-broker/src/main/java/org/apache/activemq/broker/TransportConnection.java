@@ -892,14 +892,17 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
             }
             // Cascade the connection stop to temp destinations.
-            for (Iterator<DestinationInfo> iter = cs.getTempDestinations().iterator(); iter.hasNext(); ) {
-                DestinationInfo di = iter.next();
-                try {
-                    broker.removeDestination(cs.getContext(), di.getDestination(), 0);
-                } catch (Throwable e) {
-                    SERVICELOG.warn("Failed to remove tmp destination {}", di.getDestination(), e);
+            List<DestinationInfo> tempDestinations = cs.getTempDestinations();
+            synchronized (tempDestinations) {
+                for (Iterator<DestinationInfo> iter = tempDestinations.iterator(); iter.hasNext(); ) {
+                    DestinationInfo di = iter.next();
+                    try {
+                        broker.removeDestination(cs.getContext(), di.getDestination(), 0);
+                    } catch (Throwable e) {
+                        SERVICELOG.warn("Failed to remove tmp destination {}", di.getDestination(), e);
+                    }
+                    iter.remove();
                 }
-                iter.remove();
             }
             try {
                 broker.removeConnection(cs.getContext(), cs.getInfo(), transportException.get());
