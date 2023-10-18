@@ -572,6 +572,29 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     }
                 }
             }, null);
+
+            /*
+             * After we store the command in the journal we no longer need to keep the message
+             * on the command, and we can clear the field here.
+             *
+             * The reason to clear the message is that for messages added as part of a transaction the command
+             * will be added to the inflightTransactions map as a pending add operation.
+             * For long-running transactions and/or transactions with a lot of pending messages
+             * (or large messages) this can use up a decent amount of memory which can increase GC pressure.
+             *
+             * The commands are only tracked in the map so that the KahaDB index can be updated later
+             * on transaction commit, but updating the index only requires metadata from the command
+             * such as message id or destination and not the message itself, so we can safely clear the field.
+             *
+             * Note that on broker restart and recovery of the KahaDB journal the pending message
+             * adds for transactions will be loaded again and the memory won't be cleared in that case.
+             * This could be revisited in the future if an issue but that should not be a large
+             * issue because that's only done on first startup and during recovery and then
+             * after the broker is recovered the memory footprint will drop. Also, as of now, recovering
+             * XA transactions in the transaction broker requires loading the messages and acks anyway
+             * for processing, so we need to load the full message and keep it in the pending operation.
+             */
+            command.clearMessage();
         }
 
         @Override
