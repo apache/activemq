@@ -51,11 +51,11 @@ public class PortfolioPublishServlet extends MessageServletSupport {
         } else {
             Integer total = (Integer)request.getSession(true).getAttribute("total");
             if (total == null) {
-                total = Integer.valueOf(0);
+                total = 0;
             }
 
             int count = getNumberOfMessages(request);
-            total = Integer.valueOf(total.intValue() + count);
+            total = total + count;
             request.getSession().setAttribute("total", total);
 
             try {
@@ -102,14 +102,14 @@ public class PortfolioPublishServlet extends MessageServletSupport {
     protected String createStockText(String stock) {
         Double value = LAST_PRICES.get(stock);
         if (value == null) {
-            value = Double.valueOf(Math.random() * 100);
+            value = Math.random() * 100;
         }
 
         // lets mutate the value by some percentage
-        double oldPrice = value.doubleValue();
-        value = Double.valueOf(mutatePrice(oldPrice));
+        double oldPrice = value;
+        value = mutatePrice(oldPrice);
         LAST_PRICES.put(stock, value);
-        double price = value.doubleValue();
+        double price = value;
 
         double offer = price * 1.001;
 

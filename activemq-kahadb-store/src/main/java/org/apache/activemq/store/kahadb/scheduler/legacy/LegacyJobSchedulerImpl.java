@@ -142,7 +142,7 @@ final class LegacyJobSchedulerImpl extends ServiceSupport {
                 Iterator<Map.Entry<Long, List<LegacyJobLocation>>> iter = index.iterator(store.getPageFile().tx(), start);
                 while (iter.hasNext()) {
                     Map.Entry<Long, List<LegacyJobLocation>> next = iter.next();
-                    if (next != null && next.getKey().longValue() <= finish) {
+                    if (next != null && next.getKey() <= finish) {
                         for (LegacyJobLocation jl : next.getValue()) {
                             ByteSequence bs = getPayload(jl.getLocation());
                             LegacyJobImpl job = new LegacyJobImpl(jl, bs);

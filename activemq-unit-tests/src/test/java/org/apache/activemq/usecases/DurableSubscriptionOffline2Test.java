@@ -55,7 +55,7 @@ public class DurableSubscriptionOffline2Test extends DurableSubscriptionOfflineT
     }
 
     public DurableSubscriptionOffline2Test(Boolean keepDurableSubsActive) {
-        this.keepDurableSubsActive = keepDurableSubsActive.booleanValue();
+        this.keepDurableSubsActive = keepDurableSubsActive;
 
         LOG.info(">>>> running {} with keepDurableSubsActive: {}", testName.getMethodName(), this.keepDurableSubsActive);
     }

@@ -174,7 +174,7 @@ public class ProtocolConverter {
         command.setCommandId(generateCommandId());
         if (handler != null) {
             command.setResponseRequired(true);
-            resposeHandlers.put(Integer.valueOf(command.getCommandId()), handler);
+            resposeHandlers.put(command.getCommandId(), handler);
         }
         stompTransport.sendToActiveMQ(command);
     }
@@ -863,7 +863,7 @@ public class ProtocolConverter {
     public void onActiveMQCommand(Command command) throws IOException, JMSException {
         if (command.isResponse()) {
             Response response = (Response)command;
-            ResponseHandler rh = resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
+            ResponseHandler rh = resposeHandlers.remove(response.getCorrelationId());
             if (rh != null) {
                 rh.onResponse(this, response);
             } else {

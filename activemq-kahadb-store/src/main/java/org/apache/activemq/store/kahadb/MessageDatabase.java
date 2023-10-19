@@ -1682,7 +1682,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private void recordAckMessageReferenceLocation(Location ackLocation, Location messageLocation) {
-        Set<Integer> referenceFileIds = metadata.ackMessageFileMap.get(Integer.valueOf(ackLocation.getDataFileId()));
+        Set<Integer> referenceFileIds = metadata.ackMessageFileMap.get(ackLocation.getDataFileId());
         if (referenceFileIds == null) {
             referenceFileIds = new HashSet<>();
             referenceFileIds.add(messageLocation.getDataFileId());
@@ -1690,7 +1690,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             metadata.ackMessageFileMapDirtyFlag.lazySet(true);
 
         } else {
-            Integer id = Integer.valueOf(messageLocation.getDataFileId());
+            Integer id = messageLocation.getDataFileId();
             if (!referenceFileIds.contains(id)) {
                 referenceFileIds.add(id);
             }
@@ -3869,13 +3869,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         void setBatch(Transaction tx, Long sequence) throws IOException {
             if (sequence != null) {
-                Long nextPosition = Long.valueOf(sequence.longValue() + 1);
+                Long nextPosition = sequence + 1;
                 lastDefaultKey = sequence;
-                cursor.defaultCursorPosition = nextPosition.longValue();
+                cursor.defaultCursorPosition = nextPosition;
                 lastHighKey = sequence;
-                cursor.highPriorityCursorPosition = nextPosition.longValue();
+                cursor.highPriorityCursorPosition = nextPosition;
                 lastLowKey = sequence;
-                cursor.lowPriorityCursorPosition = nextPosition.longValue();
+                cursor.lowPriorityCursorPosition = nextPosition;
             }
         }
 
@@ -3904,13 +3904,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         void stoppedIterating() {
             if (lastDefaultKey!=null) {
-                cursor.defaultCursorPosition=lastDefaultKey.longValue()+1;
+                cursor.defaultCursorPosition= lastDefaultKey +1;
             }
             if (lastHighKey!=null) {
-                cursor.highPriorityCursorPosition=lastHighKey.longValue()+1;
+                cursor.highPriorityCursorPosition= lastHighKey +1;
             }
             if (lastLowKey!=null) {
-                cursor.lowPriorityCursorPosition=lastLowKey.longValue()+1;
+                cursor.lowPriorityCursorPosition= lastLowKey +1;
             }
             lastDefaultKey = null;
             lastHighKey = null;

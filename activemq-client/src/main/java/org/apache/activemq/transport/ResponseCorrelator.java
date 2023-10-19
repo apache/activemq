@@ -69,7 +69,7 @@ public class ResponseCorrelator extends TransportFilter {
         synchronized (requestMap) {
             priorError = this.error;
             if (priorError == null) {
-                requestMap.put(Integer.valueOf(command.getCommandId()), future);
+                requestMap.put(command.getCommandId(), future);
             }
         }
 
@@ -103,7 +103,7 @@ public class ResponseCorrelator extends TransportFilter {
             Response response = (Response)command;
             FutureResponse future = null;
             synchronized (requestMap) {
-                future = requestMap.remove(Integer.valueOf(response.getCorrelationId()));
+                future = requestMap.remove(response.getCorrelationId());
             }
             if (future != null) {
                 future.set(response);

@@ -127,7 +127,7 @@ public final class ReflectionUtil {
                     });
                 } else if (paramType == Character.TYPE) {
                     setterMethod.invoke(target, new Object[] {
-                        new Character(val.charAt(0))
+                            val.charAt(0)
                     });
                 }
             } else {

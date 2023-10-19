@@ -185,7 +185,7 @@ public class CronParser {
     static void validate(final CronEntry entry) throws MessageFormatException {
 
         List<Integer> list = entry.currentWhen;
-        if (list.isEmpty() || list.get(0).intValue() < entry.start || list.get(list.size() - 1).intValue() > entry.end) {
+        if (list.isEmpty() || list.get(0) < entry.start || list.get(list.size() - 1) > entry.end) {
             throw new MessageFormatException("Invalid token: " + entry);
         }
     }
@@ -200,15 +200,15 @@ public class CronParser {
         List<Integer> list = entry.currentWhen;
         int next = -1;
         for (Integer i : list) {
-            if (i.intValue() > current) {
-                next = i.intValue();
+            if (i > current) {
+                next = i;
                 break;
             }
         }
         if (next != -1) {
             result = next - current;
         } else {
-            int first = list.get(0).intValue();
+            int first = list.get(0);
 
             int fixedEnd = entry.end;
 
@@ -229,7 +229,7 @@ public class CronParser {
     }
 
     static boolean isCurrent(final CronEntry entry, final int current) throws MessageFormatException {
-        boolean result = entry.currentWhen.contains(Integer.valueOf(current));
+        boolean result = entry.currentWhen.contains(current);
         return result;
     }
 
@@ -265,7 +265,7 @@ public class CronParser {
             CronEntry ce = new CronEntry(entry.name, numerator, entry.start, entry.end);
             List<Integer> list = calculateValues(ce);
             for (Integer i : list) {
-                if (i.intValue() % denominator == 0) {
+                if (i % denominator == 0) {
                     result.add(i);
                 }
             }

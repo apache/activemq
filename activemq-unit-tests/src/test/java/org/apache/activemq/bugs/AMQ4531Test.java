@@ -132,7 +132,7 @@ public class AMQ4531Test extends TestCase {
     }
 
     private long openFileDescriptorCount() throws Exception {
-        return ((Long) mbeanServer.getAttribute(new ObjectName("java.lang:type=OperatingSystem"), "OpenFileDescriptorCount")).longValue();
+        return (Long) mbeanServer.getAttribute(new ObjectName("java.lang:type=OperatingSystem"), "OpenFileDescriptorCount");
     }
 
     private String getStack(Throwable aThrowable) {

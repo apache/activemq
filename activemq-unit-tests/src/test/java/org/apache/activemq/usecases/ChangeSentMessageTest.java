@@ -57,7 +57,7 @@ public class ChangeSentMessageTest extends TestSupport {
         HashMap<String, Integer> map = new HashMap<String, Integer>();
         ObjectMessage message = publisherSession.createObjectMessage();
         for (int i = 0; i < COUNT; i++) {
-            map.put(VALUE_NAME, Integer.valueOf(i));
+            map.put(VALUE_NAME, i);
             message.setObject(map);
             producer.send(message);
             assertTrue(message.getObject() == map);
@@ -66,7 +66,7 @@ public class ChangeSentMessageTest extends TestSupport {
             ObjectMessage msg = (ObjectMessage)consumer.receive();
             HashMap receivedMap = (HashMap)msg.getObject();
             Integer intValue = (Integer)receivedMap.get(VALUE_NAME);
-            assertTrue(intValue.intValue() == i);
+            assertTrue(intValue == i);
         }
     }
 }

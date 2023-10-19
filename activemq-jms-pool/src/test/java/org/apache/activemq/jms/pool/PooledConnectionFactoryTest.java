@@ -331,7 +331,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return result.isDone() && result.get().booleanValue();
+                return result.isDone() && result.get();
             }
         }, TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(50));
 

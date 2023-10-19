@@ -83,7 +83,7 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
-                return Integer.valueOf(message.getPriority());
+                return (int) message.getPriority();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSMessageID", new SubExpression() {
@@ -100,7 +100,7 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
-                return Long.valueOf(message.getTimestamp());
+                return message.getTimestamp();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSCorrelationID", new SubExpression() {
@@ -114,21 +114,21 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
-                return Long.valueOf(message.getExpiration());
+                return message.getExpiration();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSRedelivered", new SubExpression() {
 
             @Override
             public Object evaluate(Message message) {
-                return Boolean.valueOf(message.isRedelivered());
+                return message.isRedelivered();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXDeliveryCount", new SubExpression() {
 
             @Override
             public Object evaluate(Message message) {
-                return Integer.valueOf(message.getRedeliveryCounter() + 1);
+                return message.getRedeliveryCounter() + 1;
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXGroupID", new SubExpression() {
@@ -157,7 +157,7 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
-                return Integer.valueOf(message.getGroupSequence());
+                return message.getGroupSequence();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXProducerTXID", new SubExpression() {
@@ -178,14 +178,14 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
-                return Long.valueOf(message.getBrokerInTime());
+                return message.getBrokerInTime();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSActiveMQBrokerOutTime", new SubExpression() {
 
             @Override
             public Object evaluate(Message message) {
-                return Long.valueOf(message.getBrokerOutTime());
+                return message.getBrokerOutTime();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSActiveMQBrokerPath", new SubExpression() {
@@ -199,7 +199,7 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
-                return Boolean.valueOf(message.isJMSXGroupFirstForConsumer());
+                return message.isJMSXGroupFirstForConsumer();
             }
         });
     }

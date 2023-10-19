@@ -64,7 +64,7 @@ public class DurableSubscriptionOffline1Test extends DurableSubscriptionOfflineT
 
     public DurableSubscriptionOffline1Test(PersistenceAdapterChoice adapter, Boolean usePrioritySupport) {
         this.defaultPersistenceAdapter = adapter;
-        this.usePrioritySupport = usePrioritySupport.booleanValue();
+        this.usePrioritySupport = usePrioritySupport;
         LOG.debug(">>>> Created with adapter {} usePrioritySupport? {}", defaultPersistenceAdapter, usePrioritySupport);
 
     }

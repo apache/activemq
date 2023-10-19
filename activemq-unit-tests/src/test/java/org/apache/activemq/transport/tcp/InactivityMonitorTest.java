@@ -246,8 +246,8 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
      */
     public void initCombosForTestNoClientHangWithServerBlock() throws Exception {
 
-        addCombinationValues("clientInactivityLimit", new Object[] {Long.valueOf(1000)});
-        addCombinationValues("serverInactivityLimit", new Object[] {Long.valueOf(1000)});
+        addCombinationValues("clientInactivityLimit", new Object[] {1000L});
+        addCombinationValues("serverInactivityLimit", new Object[] {1000L});
         addCombinationValues("serverRunOnCommand", new Object[] {new Runnable() {
             @Override
             public void run() {

@@ -281,29 +281,29 @@ public class WireFormatInfo implements Command, MarshallAware {
      */
     public long getMaxInactivityDuration() throws IOException {
         Long l = (Long)getProperty("MaxInactivityDuration");
-        return l == null ? 0 : l.longValue();
+        return l == null ? 0 : l;
     }
 
     public void setMaxInactivityDuration(long maxInactivityDuration) throws IOException {
-        setProperty("MaxInactivityDuration", Long.valueOf(maxInactivityDuration));
+        setProperty("MaxInactivityDuration", maxInactivityDuration);
     }
 
     public long getMaxInactivityDurationInitalDelay() throws IOException {
         Long l = (Long)getProperty("MaxInactivityDurationInitalDelay");
-        return l == null ? 0 : l.longValue();
+        return l == null ? 0 : l;
     }
 
     public void setMaxInactivityDurationInitalDelay(long maxInactivityDurationInitalDelay) throws IOException {
-        setProperty("MaxInactivityDurationInitalDelay", Long.valueOf(maxInactivityDurationInitalDelay));
+        setProperty("MaxInactivityDurationInitalDelay", maxInactivityDurationInitalDelay);
     }
 
     public long getMaxFrameSize() throws IOException {
         Long l = (Long)getProperty("MaxFrameSize");
-        return l == null ? 0 : l.longValue();
+        return l == null ? 0 : l;
     }
 
     public void setMaxFrameSize(long maxFrameSize) throws IOException {
-        setProperty("MaxFrameSize", Long.valueOf(maxFrameSize));
+        setProperty("MaxFrameSize", maxFrameSize);
     }
 
     /**
@@ -311,11 +311,11 @@ public class WireFormatInfo implements Command, MarshallAware {
      */
     public int getCacheSize() throws IOException {
         Integer i = (Integer)getProperty("CacheSize");
-        return i == null ? 0 : i.intValue();
+        return i == null ? 0 : i;
     }
 
     public void setCacheSize(int cacheSize) throws IOException {
-        setProperty("CacheSize", Integer.valueOf(cacheSize));
+        setProperty("CacheSize", cacheSize);
     }
 
     /**

@@ -134,7 +134,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
         Long expiration = asLong(parameters.remove("JMSExpiration"));
         if (expiration != null) {
-            message.setJMSExpiration(expiration.longValue());
+            message.setJMSExpiration(expiration);
         }
         Destination replyTo = asDestination(parameters.remove("JMSReplyTo"));
         if (replyTo != null) {

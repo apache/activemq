@@ -54,7 +54,7 @@ public class DurableSubscriptionOffline4Test extends DurableSubscriptionOfflineT
 
     public DurableSubscriptionOffline4Test(Boolean keepDurableSubsActive) {
         this.journalMaxFileLength = 64 * 1024;
-        this.keepDurableSubsActive = keepDurableSubsActive.booleanValue();
+        this.keepDurableSubsActive = keepDurableSubsActive;
 
         LOG.info(">>>> running {} with keepDurableSubsActive: {}, journalMaxFileLength", testName.getMethodName(), this.keepDurableSubsActive, journalMaxFileLength);
     }

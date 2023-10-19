@@ -117,7 +117,7 @@ public class ListIndexTest extends IndexTestSupport {
         tx = pf.tx();
         Long value = listIndex.get(tx, key(10));
         assertNotNull(value);
-        listIndex.put(tx, key(10), Long.valueOf(1024));
+        listIndex.put(tx, key(10), 1024L);
         tx.commit();
 
         tx = pf.tx();
@@ -127,7 +127,7 @@ public class ListIndexTest extends IndexTestSupport {
         tx.commit();
 
         tx = pf.tx();
-        value = listIndex.put(tx, key(31), Long.valueOf(2048));
+        value = listIndex.put(tx, key(31), 2048L);
         assertNull(value);
         assertTrue(listIndex.size() == 31);
         tx.commit();
@@ -407,7 +407,7 @@ public class ListIndexTest extends IndexTestSupport {
         for (long i = 0; i < NUM_ADDITIONS; ++i) {
             final int stringSize = getMessageSize(1, 4096);
             String val = new String(new byte[stringSize]);
-            expected.add(Long.valueOf(stringSize));
+            expected.add((long) stringSize);
             test.add(tx, i, val);
         }
         tx.commit();
@@ -425,7 +425,7 @@ public class ListIndexTest extends IndexTestSupport {
         for (long i = 0; i < NUM_ADDITIONS; ++i) {
             final int stringSize = getMessageSize(1, 4096);
             String val = new String(new byte[stringSize]);
-            expected.add(Long.valueOf(stringSize));
+            expected.add((long) stringSize);
             test.addFirst(tx, i+NUM_ADDITIONS, val);
         }
         tx.commit();
@@ -443,7 +443,7 @@ public class ListIndexTest extends IndexTestSupport {
         for (long i = 0; i < NUM_ADDITIONS; ++i) {
             final int stringSize = getMessageSize(1, 4096);
             String val = new String(new byte[stringSize]);
-            expected.add(Long.valueOf(stringSize));
+            expected.add((long) stringSize);
             test.put(tx, i, val);
         }
         tx.commit();

@@ -432,7 +432,7 @@ public class MQTTProtocolConverter {
     public void onActiveMQCommand(Command command) throws Exception {
         if (command.isResponse()) {
             Response response = (Response) command;
-            ResponseHandler rh = resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
+            ResponseHandler rh = resposeHandlers.remove(response.getCorrelationId());
             if (rh != null) {
                 rh.onResponse(this, response);
             } else {

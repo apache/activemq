@@ -68,14 +68,14 @@ public class SocketTstFactory extends SocketFactory {
                             if (lastDelay == null) {
                                 lastDelayVal = 0;
                             } else {
-                                lastDelayVal = lastDelay.intValue();
+                                lastDelayVal = lastDelay;
                                 if (lastDelayVal > 10)
                                     lastDelayVal += 20;
                                 else
                                     lastDelayVal += 1;
                             }
 
-                            lastDelay = Integer.valueOf(lastDelayVal);
+                            lastDelay = lastDelayVal;
 
                             LOG.info("Trying to close client socket " + socket.toString() + " in " + lastDelayVal + " milliseconds");
 

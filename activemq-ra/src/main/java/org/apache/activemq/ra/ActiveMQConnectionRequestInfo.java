@@ -281,27 +281,27 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public boolean isUseInboundSessionEnabled() {
-        return useInboundSession != null && useInboundSession.booleanValue();
+        return useInboundSession != null && useInboundSession;
     }
 
     public Double getRedeliveryBackOffMultiplier() {
-        return Double.valueOf(redeliveryPolicy().getBackOffMultiplier());
+        return redeliveryPolicy().getBackOffMultiplier();
     }
 
     public Long getInitialRedeliveryDelay() {
-        return Long.valueOf(redeliveryPolicy().getInitialRedeliveryDelay());
+        return redeliveryPolicy().getInitialRedeliveryDelay();
     }
 
     public Long getMaximumRedeliveryDelay() {
-        return Long.valueOf(redeliveryPolicy().getMaximumRedeliveryDelay());
+        return redeliveryPolicy().getMaximumRedeliveryDelay();
     }
 
     public Integer getMaximumRedeliveries() {
-        return Integer.valueOf(redeliveryPolicy().getMaximumRedeliveries());
+        return redeliveryPolicy().getMaximumRedeliveries();
     }
 
     public Boolean getRedeliveryUseExponentialBackOff() {
-        return Boolean.valueOf(redeliveryPolicy().isUseExponentialBackOff());
+        return redeliveryPolicy().isUseExponentialBackOff();
     }
 
     public void setRedeliveryBackOffMultiplier(Double value) {
@@ -312,34 +312,34 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
 
     public void setInitialRedeliveryDelay(Long value) {
         if (value != null) {
-            redeliveryPolicy().setInitialRedeliveryDelay(value.longValue());
+            redeliveryPolicy().setInitialRedeliveryDelay(value);
         }
     }
 
     public void setMaximumRedeliveryDelay(Long value) {
         if (value != null) {
-            redeliveryPolicy().setMaximumRedeliveryDelay(value.longValue());
+            redeliveryPolicy().setMaximumRedeliveryDelay(value);
         }
     }
 
     public void setMaximumRedeliveries(Integer value) {
         if (value != null) {
-            redeliveryPolicy().setMaximumRedeliveries(value.intValue());
+            redeliveryPolicy().setMaximumRedeliveries(value);
         }
     }
 
     public void setRedeliveryUseExponentialBackOff(Boolean value) {
         if (value != null) {
-            redeliveryPolicy().setUseExponentialBackOff(value.booleanValue());
+            redeliveryPolicy().setUseExponentialBackOff(value);
         }
     }
 
     public Integer getDurableTopicPrefetch() {
-        return Integer.valueOf(prefetchPolicy().getDurableTopicPrefetch());
+        return prefetchPolicy().getDurableTopicPrefetch();
     }
 
     public Integer getOptimizeDurableTopicPrefetch() {
-        return Integer.valueOf(prefetchPolicy().getOptimizeDurableTopicPrefetch());
+        return prefetchPolicy().getOptimizeDurableTopicPrefetch();
     }
 
     @Deprecated
@@ -348,50 +348,50 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public Integer getQueueBrowserPrefetch() {
-        return Integer.valueOf(prefetchPolicy().getQueueBrowserPrefetch());
+        return prefetchPolicy().getQueueBrowserPrefetch();
     }
 
     public Integer getQueuePrefetch() {
-        return Integer.valueOf(prefetchPolicy().getQueuePrefetch());
+        return prefetchPolicy().getQueuePrefetch();
     }
 
     public Integer getTopicPrefetch() {
-        return Integer.valueOf(prefetchPolicy().getTopicPrefetch());
+        return prefetchPolicy().getTopicPrefetch();
     }
 
     public void setAllPrefetchValues(Integer i) {
         if (i != null) {
-            prefetchPolicy().setAll(i.intValue());
+            prefetchPolicy().setAll(i);
         }
     }
 
     public void setDurableTopicPrefetch(Integer durableTopicPrefetch) {
         if (durableTopicPrefetch != null) {
-            prefetchPolicy().setDurableTopicPrefetch(durableTopicPrefetch.intValue());
+            prefetchPolicy().setDurableTopicPrefetch(durableTopicPrefetch);
         }
     }
 
     public void setOptimizeDurableTopicPrefetch(Integer optimizeDurableTopicPrefetch) {
         if (optimizeDurableTopicPrefetch != null) {
-            prefetchPolicy().setOptimizeDurableTopicPrefetch(optimizeDurableTopicPrefetch.intValue());
+            prefetchPolicy().setOptimizeDurableTopicPrefetch(optimizeDurableTopicPrefetch);
         }
     }
 
     public void setQueueBrowserPrefetch(Integer queueBrowserPrefetch) {
         if (queueBrowserPrefetch != null) {
-            prefetchPolicy().setQueueBrowserPrefetch(queueBrowserPrefetch.intValue());
+            prefetchPolicy().setQueueBrowserPrefetch(queueBrowserPrefetch);
         }
     }
 
     public void setQueuePrefetch(Integer queuePrefetch) {
         if (queuePrefetch != null) {
-            prefetchPolicy().setQueuePrefetch(queuePrefetch.intValue());
+            prefetchPolicy().setQueuePrefetch(queuePrefetch);
         }
     }
 
     public void setTopicPrefetch(Integer topicPrefetch) {
         if (topicPrefetch != null) {
-            prefetchPolicy().setTopicPrefetch(topicPrefetch.intValue());
+            prefetchPolicy().setTopicPrefetch(topicPrefetch);
         }
     }
 
@@ -418,7 +418,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public boolean isUseSessionArgs() {
-        return useSessionArgs != null ? useSessionArgs.booleanValue() : false;
+        return useSessionArgs != null ? useSessionArgs : false;
     }
 
     public Boolean getUseSessionArgs() {

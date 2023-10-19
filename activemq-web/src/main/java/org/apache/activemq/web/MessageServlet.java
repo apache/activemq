@@ -400,9 +400,9 @@ public class MessageServlet extends MessageServletSupport {
                 timeout = maximumReadTimeout;
             }
 
-            answer = Long.valueOf(System.currentTimeMillis() + timeout);
+            answer = System.currentTimeMillis() + timeout;
         }
-        return answer.longValue();
+        return answer;
     }
 
     /**

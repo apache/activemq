@@ -45,8 +45,8 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
         Map map = (Map)message.getObjectProperty("mapField");
         assertNotNull(map);
         assertEquals("mapField.a", "foo", map.get("a"));
-        assertEquals("mapField.b", Integer.valueOf(23), map.get("b"));
-        assertEquals("mapField.c", Long.valueOf(45), map.get("c"));
+        assertEquals("mapField.b", 23, map.get("b"));
+        assertEquals("mapField.c", 45L, map.get("c"));
 
         value = map.get("d");
         assertTrue("mapField.d should be a Map", value instanceof Map);
@@ -82,8 +82,8 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
 
         Map<String, Object> nestedMap = new HashMap<String, Object>();
         nestedMap.put("a", "foo");
-        nestedMap.put("b", Integer.valueOf(23));
-        nestedMap.put("c", Long.valueOf(45));
+        nestedMap.put("b", 23);
+        nestedMap.put("c", 45L);
         nestedMap.put("d", grandChildMap);
 
         answer.setObjectProperty("mapField", nestedMap);

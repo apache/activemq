@@ -50,10 +50,10 @@ public class DefaultReplayBuffer implements ReplayBuffer {
             int max = size - 1;
             while (map.size() >= max) {
                 // lets find things to evict
-                Object evictedBuffer = map.remove(Integer.valueOf(++lowestCommandId));
+                Object evictedBuffer = map.remove(++lowestCommandId);
                 onEvictedBuffer(lowestCommandId, evictedBuffer);
             }
-            map.put(Integer.valueOf(commandId), buffer);
+            map.put(commandId, buffer);
         }
     }
 
@@ -71,7 +71,7 @@ public class DefaultReplayBuffer implements ReplayBuffer {
         for (int i = fromCommandId; i <= toCommandId; i++) {
             Object buffer = null;
             synchronized (lock) {
-                buffer = map.get(Integer.valueOf(i));
+                buffer = map.get(i);
             }
             replayer.sendBuffer(i, buffer);
         }

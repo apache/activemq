@@ -88,6 +88,6 @@ public class inListFunction implements FilterFunction {
             cur++;
         }
 
-        return Boolean.valueOf(found_f);
+        return found_f;
     }
 }
