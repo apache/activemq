@@ -30,7 +30,7 @@ pipeline {
     tools {
         // ... tell Jenkins what java version, maven version or other tools are required ...
         maven 'maven_3_latest'
-        jdk 'jdk_17_latest'
+        jdk params.jdkVersion
     }
 
     options {
@@ -43,6 +43,7 @@ pipeline {
 
     parameters {
         choice(name: 'nodeLabel', choices: ['ubuntu', 's390x']) 
+        choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest']) 
     }
 
     stages {
@@ -93,15 +94,25 @@ pipeline {
         }
 
         stage('Verify') {
+            tools {
+                jdk params.jdkVersion
+            }
             steps {
                 echo 'Running apache-rat:check'
+                sh 'java -version'
+                sh 'mvn -version'
                 sh 'mvn apache-rat:check'
             }
         }
 
         stage('Tests') {
+            tools {
+                jdk params.jdkVersion
+            }
             steps {
                 echo 'Running tests'
+                sh 'java -version'
+                sh 'mvn -version'
                 // all tests is very very long (10 hours on Apache Jenkins)
                 // sh 'mvn -B -e test -pl activemq-unit-tests -Dactivemq.tests=all'
                 sh 'mvn -B -e -fae test -Dsurefire.rerunFailingTestsCount=3'
@@ -115,6 +126,9 @@ pipeline {
         }
 
         stage('Deploy') {
+            tools {
+                jdk params.jdkVersion
+            }
             when {
                 expression {
                     env.BRANCH_NAME ==~ /(activemq-5.18.x|activemq-5.17.x|main)/
@@ -122,6 +136,8 @@ pipeline {
             }
             steps {
                 echo 'Deploying'
+                sh 'java -version'
+                sh 'mvn -version'
                 sh 'mvn -B -e deploy -Pdeploy -DskipTests'
             }
         }
