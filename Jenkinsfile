@@ -68,12 +68,12 @@ pipeline {
             }
         }
 
-        stage('Build JDK 20') {
+        stage('Build JDK 21') {
             tools {
-                jdk "jdk_20_latest"
+                jdk "jdk_21_latest"
             }
             steps {
-                echo 'Building JDK 20'
+                echo 'Building JDK 21'
                 sh 'java -version'
                 sh 'mvn -version'
                 sh 'mvn -U -B -e clean install -DskipTests'
