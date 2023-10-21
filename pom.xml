@@ -88,7 +88,7 @@
     <mockito-version>4.8.1</mockito-version>
     <owasp-dependency-check-version>8.4.0</owasp-dependency-check-version>
     <mqtt-client-version>1.16</mqtt-client-version>
-    <org-apache-derby-version>10.15.2.0</org-apache-derby-version>
+    <org-apache-derby-version>10.16.1.1</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
     <qpid-proton-version>0.34.1</qpid-proton-version>
     <qpid-jms-version>2.4.0</qpid-jms-version>
