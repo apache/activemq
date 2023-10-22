@@ -36,7 +36,7 @@ Images are based on the Docker official [Eclipse Temurin 17 JRE](https://hub.doc
 build the ActiveMQ image you have the following choices:
 
 1. Create the docker image from a local distribution package
-2. Create the docker image from an Apache ActiveMQ archive, for example (apache-activemq-5.18.1.tar.gz)
+2. Create the docker image from an Apache ActiveMQ archive, for example (apache-activemq-6.0.0.tar.gz)
 3. Create the docker image from a specific version of Apache ActiveMQ
 4. Create the docker image from remote or local custom Apache ActiveMQ distribution
 
@@ -66,14 +66,14 @@ you can execute the below command. Remember that before you can successfully run
 this command.
 
 ```bash
-./build.sh --from-local-dist --archive ~/path/to/apache-activemq-5.18.1.tar.gz
+./build.sh --from-local-dist --archive ~/path/to/apache-activemq-6.0.0.tar.gz
 ```
 
 You can also specify the image name with the `--image-name` flag, for example
 (replacing the version, image name, and targets as appropriate):
 
 ```bash
-./build.sh --from-local-dist --archive ~/Downloads/apache-activemq-5.18.1.tar.gz --image-name myrepo/myamq:x.x.x
+./build.sh --from-local-dist --archive ~/Downloads/apache-activemq-6.0.0.tar.gz --image-name myrepo/myamq:x.x.x
 ```
 
 If you want to build the docker image for a specific version of ActiveMQ
@@ -81,7 +81,7 @@ you can run `build.sh` command in this way (replacing the version, image name,
 and targets as appropriate):
 
 ```bash
-./build.sh --from-release --activemq-version 5.18.1 --image-name myrepo/myamq:x.x.x
+./build.sh --from-release --activemq-version 6.0.0 --image-name myrepo/myamq:x.x.x
 ```
 
 If you want to build the container for a specific version of ActiveMQ and
@@ -89,14 +89,14 @@ specific version of the platform, and push the image to the Docker Hub repositor
 you can use this command (replacing the version, image name, and targets as appropriate):
 
 ```bash
-./build.sh --from-release --activemq-version 5.18.1 --image-name myrepo/myamq:x.x.x \
+./build.sh --from-release --activemq-version 6.0.0 --image-name myrepo/myamq:x.x.x \
  --build-multi-platform linux/arm64,linux/arm/v7,linux/amd64
 ```
 
 Below is the output you should get from running the previous command.
 
 ```
-Downloading apache-activemq-5.18.1.tar.gz from https://downloads.apache.org/activemq/5.18.1/
+Downloading apache-activemq-6.0.0.tar.gz from https://downloads.apache.org/activemq/6.0.0/
 Checking if buildx installed...
 Found buildx {github.com/docker/buildx v0.3.1-tp-docker 6db68d029599c6710a32aa7adcba8e5a344795a7} on your docker system
 Starting build of the docker image for the platform linux/arm64,linux/arm/v7,linux/amd64
