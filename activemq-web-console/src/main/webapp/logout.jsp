@@ -17,7 +17,6 @@
 <%
 response.setStatus(401);
 %>
-<%@include file="WEB-INF/jspf/headertags.jspf" %>
 <html>
 <head>
 <c:set var="pageTitle" value="ActiveMQ Console"/>
