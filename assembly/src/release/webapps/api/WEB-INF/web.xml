@@ -45,11 +45,9 @@
         -->
     </servlet>
 
-    <!-- AMQ-9239 jakarta - jolokia does not support jakarta
     <servlet>
         <servlet-name>jolokia-agent</servlet-name>
-        <servlet-class>org.jolokia.http.AgentServlet</servlet-class>
-    -->
+        <servlet-class>org.jolokia.server.core.http.AgentServlet</servlet-class>
         <!-- Uncomment this if you want jolokia multicast discovery to be enabled         
         <init-param>
           <param-name>discoveryEnabled</param-name>
@@ -64,33 +62,27 @@
           <param-value>Apache ActiveMQ</param-value>
         </init-param>
         -->
-    <!-- AMQ-9239 jakarta - jolokia does not support jakarta
         <init-param>
             <param-name>policyLocation</param-name>
             <param-value>${prop:jolokia.conf}</param-value>
         </init-param>
-    -->
         <!-- turn off returning exceptions and stacktraces from jolokia -->
-    <!-- AMQ-9239 jakarta - jolokia does not support jakarta
         <init-param>
           <param-name>allowErrorDetails</param-name>
           <param-value>false</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup> 
     </servlet>
-    -->
 
     <servlet-mapping>
         <servlet-name>MessageServlet</servlet-name>
         <url-pattern>/message/*</url-pattern>
     </servlet-mapping>
 
-    <!-- AMQ-9239 jakarta - jolokia does not support jakarta
     <servlet-mapping>
         <servlet-name>jolokia-agent</servlet-name>
         <url-pattern>/jolokia/*</url-pattern>
     </servlet-mapping>
-    -->
 
     <session-config>
         <cookie-config>

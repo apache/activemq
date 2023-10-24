@@ -295,7 +295,9 @@
         <include>org.jdom:jdom2</include>
 
         <!-- REST API -->
-        <!-- include>org.jolokia:jolokia-core</include -->
+        <include>org.jolokia:jolokia-server-core</include>
+        <include>org.jolokia:jolokia-service-jmx</include>
+        <include>org.jolokia:jolokia-service-serializer</include>
         <include>com.googlecode.json-simple:json-simple</include>
       </includes>
       <fileMode>0644</fileMode>
