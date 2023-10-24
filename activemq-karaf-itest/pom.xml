@@ -111,14 +111,6 @@
       <version>${qpid-jms-version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.apache.camel.karaf</groupId>
-      <artifactId>apache-camel</artifactId>
-      <version>${camel-version}</version>
-      <type>xml</type>
-      <classifier>features</classifier>
-      <scope>test</scope>
-    </dependency>
     
     <!-- test and logging -->
     <dependency>
