@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.activemq.command.CommandTypes;
@@ -43,7 +44,7 @@ public class OpenWireValidationTest {
 
     @Parameters(name = "version={0}")
     public static Collection<Object[]> data() {
-        List<Integer> versions = List.of(1, 9, 10, 11, 12);
+        List<Integer> versions = Arrays.asList(1, 9, 10, 11, 12);
         List<Object[]> versionObjs = new ArrayList<>();
         for (int i : versions) {
             versionObjs.add(new Object[]{i});
