@@ -70,6 +70,7 @@ http\://activemq.apache.org/schema/core/activemq-core-5.15.12.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.15.13.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.15.14.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.15.15.xsd=activemq.xsd
+http\://activemq.apache.org/schema/core/activemq-core-5.15.16.xsd=activemq.xsd
 
 http\://camel.apache.org/schema/spring/camel-spring.xsd=camel-spring.xsd
 
