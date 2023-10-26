@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.openwire;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.DataOutput;
@@ -24,9 +25,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.util.ByteSequence;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -40,6 +44,12 @@ import org.junit.runners.Parameterized.Parameters;
 public class OpenWireValidationTest {
 
     protected final int version;
+    private static final AtomicBoolean initialized = new AtomicBoolean(false);
+
+    @Before
+    public void before() {
+        initialized.set(false);
+    }
 
     @Parameters(name = "version={0}")
     public static Collection<Object[]> data() {
@@ -87,10 +97,18 @@ public class OpenWireValidationTest {
 
         assertTrue(response.getException() instanceof IllegalArgumentException);
         assertTrue(response.getException().getMessage().contains("is not assignable to Throwable"));
+
+        // assert the class was never initialized
+        assertFalse(initialized.get());
     }
 
     static class NotAThrowable {
         private String message;
+
+        static {
+            // Class should not be initialized so set flag here to verify
+            initialized.set(true);
+        }
 
         public NotAThrowable(String message) {
             this.message = message;
