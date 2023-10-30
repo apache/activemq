@@ -23,7 +23,7 @@
     <groupId>example</groupId>
     <artifactId>advanced-openwire-example</artifactId>
     <packaging>pom</packaging>
-    <version>0.1-SNAPSHOT</version>
+    <version>5.15.16</version>
     <modules>
         <module>jms-example-queue</module>
         <module>jms-example-topic</module>
