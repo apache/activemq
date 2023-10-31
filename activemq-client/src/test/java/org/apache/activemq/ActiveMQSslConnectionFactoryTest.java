@@ -30,7 +30,7 @@ public class ActiveMQSslConnectionFactoryTest {
     final String TRUST_STORE_DIRECTORY_NAME = "src/test/resources/ssl/";
     final String TRUST_STORE_RESOURCE_PREFIX = "ssl/";
     final String TRUST_STORE_PASSWORD = "password";
-    final String SSL_TRANSPORT = "ssl://localhost:0";
+    final String SSL_TRANSPORT = "ssl://localhost:61617";
     final String FAILOVER_SSL_TRANSPORT = "failover:(" + SSL_TRANSPORT + ")?maxReconnectAttempts=1";
 
     @Test(expected = ConnectException.class)
