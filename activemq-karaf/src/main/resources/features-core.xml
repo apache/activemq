@@ -22,13 +22,23 @@
 
     <!-- Bundles needed if only client will be deployed in the container -->
     <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}">
-        <feature version="[5,6)">spring</feature>
+        <feature version="[5,7)">spring</feature>
         <feature>aries-blueprint</feature>
         <feature>activemq-combined-jms-spec</feature>
+        <bundle>mvn:jakarta.activation/jakarta.activation-api/2.1.2</bundle>
+        <bundle>mvn:jakarta.xml.bind/jakarta.xml.bind-api/4.0.0</bundle>
+        <bundle>mvn:jakarta.jms/jakarta.jms-api/3.1.0</bundle>
+        <bundle>mvn:jakarta.activation/jakarta.activation-api/2.1.2</bundle>
+        <bundle>mvn:jakarta.annotation/jakarta.annotation-api/2.1.1</bundle>
+        <bundle>mvn:jakarta.enterprise/jakarta.enterprise.lang-model/4.0.1</bundle>
+        <bundle>mvn:jakarta.el/jakarta.el-api/5.0.1</bundle>
+        <bundle>mvn:jakarta.inject/jakarta.inject-api/2.0.1</bundle>
+        <bundle>mvn:jakarta.interceptor/jakarta.interceptor-api/2.1.0</bundle>
+        <bundle>mvn:jakarta.enterprise/jakarta.enterprise.cdi-api/4.0.1</bundle>
+        <bundle>mvn:jakarta.transaction/jakarta.transaction-api/2.0.1</bundle>
+        <bundle>mvn:jakarta.resource/jakarta.resource-api/2.1.0</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.3_spec/1.0</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
-        <bundle dependency="true">mvn:org.jvnet.jaxb2_commons/jaxb2-basics-runtime/${jaxb-basics-version}</bundle>
-        <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jaxb-runtime/${jaxb-bundle-version}</bundle>
         <bundle>mvn:org.apache.commons/commons-pool2/${commons-pool2-version}</bundle>
         <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
         <bundle>mvn:org.apache.activemq/activemq-osgi/${project.version}</bundle>
