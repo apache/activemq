@@ -34,10 +34,8 @@
      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
   
     <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
-
         <!-- You can use Spring XML syntax to define the routes here using the <route> element -->
         <route>
-            <description>Example Camel Route</description>
             <from uri="activemq:example.A"/>
             <to uri="activemq:example.B"/>
         </route>

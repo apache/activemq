@@ -145,8 +145,6 @@ public abstract class AbstractFeatureTest {
         String karafVersion = MavenUtils.getArtifactVersion("org.apache.karaf", "apache-karaf");
         MavenUrlReference karafUrl = maven().groupId("org.apache.karaf").artifactId("apache-karaf")
             .type("tar.gz").versionAsInProject();
-        UrlReference camelUrl = maven().groupId("org.apache.camel.karaf")
-            .artifactId("apache-camel").type("xml").classifier("features").versionAsInProject();
         UrlReference activeMQUrl = maven().groupId("org.apache.activemq").
             artifactId("activemq-karaf").versionAsInProject().type("xml").classifier("features").versionAsInProject();
         return composite(
@@ -157,13 +155,8 @@ public abstract class AbstractFeatureTest {
          editConfigurationFilePut("etc/org.ops4j.pax.url.mvn.cfg", "org.ops4j.pax.url.mvn.repositories", "https://repo1.maven.org/maven2@id=central"),
          editConfigurationFilePut("etc/config.properties", "karaf.startlevel.bundle", "50"),
          // debugConfiguration("5005", true),
-         features(activeMQUrl, features), //
-         features(camelUrl)
+         features(activeMQUrl, features)
         );
-    }
-
-    protected static String camelVersion() {
-        return MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel");
     }
 
     public static boolean withinReason(Callable<Boolean> callable) throws Exception {

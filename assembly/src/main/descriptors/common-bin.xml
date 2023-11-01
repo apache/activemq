@@ -145,7 +145,7 @@
         <include>jakarta.transaction:jakarta.transaction-api</include>
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
-        <include>jakarta.xml.bind:jaxb-api</include>
+        <include>jakarta.xml.bind:jakarta.xml.bind-api</include>
         <include>org.glassfish.jaxb:jaxb-runtime</include>
         <include>org.glassfish.jaxb:jaxb-core</include>
         <include>com.sun.istack:istack-commons-runtime</include>
@@ -157,20 +157,36 @@
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
     </dependencySet>
-    <!-- AMQ-9239 as of 2023-06-05 Camel does not support jakarta.jms*
     <dependencySet>
       <outputDirectory>lib/camel</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
+        <include>org.apache.camel:camel-activemq</include>
+        <include>org.apache.camel:camel-api</include>
+        <include>org.apache.camel:camel-base</include>
+        <include>org.apache.camel:camel-base-engine</include>
         <include>org.apache.camel:camel-core</include>
+        <include>org.apache.camel:camel-core-catalog</include>
+        <include>org.apache.camel:camel-core-engine</include>
+        <include>org.apache.camel:camel-core-languages</include>
+        <include>org.apache.camel:camel-core-model</include>
+        <include>org.apache.camel:camel-core-processor</include>
+        <include>org.apache.camel:camel-core-reifier</include>
+        <include>org.apache.camel:camel-core-xml</include>
+        <include>org.apache.camel:camel-log</include>
+        <include>org.apache.camel:camel-management-api</include>
         <include>org.apache.camel:camel-spring</include>
+        <include>org.apache.camel:camel-spring-xml</include>
+        <include>org.apache.camel:camel-support</include>
+        <include>org.apache.camel:camel-timer</include>
+        <include>org.apache.camel:camel-util</include>
         <include>org.apache.camel:camel-jms</include>
+        <include>org.apache.camel:camel-xml-jaxb</include>
       </includes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
     </dependencySet>
-    -->
     <dependencySet>
       <outputDirectory>lib/optional</outputDirectory>
       <unpack>false</unpack>

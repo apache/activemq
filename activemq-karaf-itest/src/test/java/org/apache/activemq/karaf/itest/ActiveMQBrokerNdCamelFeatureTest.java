@@ -39,7 +39,6 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractFeatureTest {
         return new Option[] //
         {
          composite(configure("activemq", "activemq-shell", "camel-jms")),
-         editConfigurationFilePut("etc/system.properties", "camel.version", camelVersion()),
          replaceConfigurationFile("etc/activemq.xml", new File(RESOURCE_BASE + "activemq-nd-camel.xml")),
          replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(RESOURCE_BASE + "org.apache.activemq.server-default.cfg"))
         };

@@ -94,11 +94,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-spring</artifactId>
     </dependency>
-    
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-blueprint</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -254,15 +249,6 @@
                   <overWrite>false</overWrite>
                   <outputDirectory>${basedir}/target/extra-resources/</outputDirectory>
                   <includes>camel-spring.xsd</includes>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>org.apache.camel</groupId>
-                  <artifactId>camel-blueprint</artifactId>
-                  <version>${camel-version}</version>
-                  <type>jar</type>
-                  <overWrite>false</overWrite>
-                  <outputDirectory>${basedir}/target/extra-resources/</outputDirectory>
-                  <includes>camel-blueprint.xsd</includes>
                 </artifactItem>
               </artifactItems>
             </configuration>

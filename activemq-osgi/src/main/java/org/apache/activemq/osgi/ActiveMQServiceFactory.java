@@ -26,7 +26,6 @@ import java.util.Properties;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
-import org.apache.camel.blueprint.CamelContextFactoryBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
@@ -93,9 +92,10 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
                             @Override
                             public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-                                if (bean instanceof CamelContextFactoryBean) {
-                                    ((CamelContextFactoryBean) bean).setBundleContext(bundleContext);
-                                }
+                                // camel-blueprint is not provided by camel 4.1.0
+                                //if (bean instanceof CamelContextFactoryBean) {
+                                //    ((CamelContextFactoryBean) bean).setBundleContext(bundleContext);
+                                //}
                                 return bean;
                             }
 
