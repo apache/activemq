@@ -271,6 +271,7 @@
         <include>org.eclipse.jetty:jetty-util</include>
         <include>org.eclipse.jetty:jetty-http</include>
         <include>org.eclipse.jetty:jetty-io</include>
+        <include>org.eclipse.jetty:jetty-jaas</include>
         <include>org.eclipse.jetty:jetty-jndi</include>
         <include>org.eclipse.jetty:jetty-plus</include>
         <include>org.eclipse.jetty:jetty-servlet</include>
