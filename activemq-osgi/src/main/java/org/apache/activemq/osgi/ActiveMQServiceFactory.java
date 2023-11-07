@@ -22,6 +22,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringBrokerContext;
@@ -182,7 +183,8 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
 	}
 
     synchronized public void destroy() {
-        for (String broker : brokers.keySet()) {
+        Set<String> tmpBrokersSet = brokers.keySet();
+        for (String broker : tmpBrokersSet) {
             deleted(broker);
         }
     }
