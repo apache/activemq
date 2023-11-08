@@ -30,11 +30,14 @@ ENV ACTIVEMQ_OPTS $ACTIVEMQ_OPTS -Djetty.host=0.0.0.0
 # activemq_dist can point to a directory or a tarball on the local system
 ARG activemq_dist=NOT_SET
 
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+
 # Install build dependencies and activemq
 ADD $activemq_dist $ACTIVEMQ_INSTALL_PATH
 RUN set -x && \
   cp -r $ACTIVEMQ_INSTALL_PATH/apache-activemq-* $ACTIVEMQ_HOME && \
 	rm -r $ACTIVEMQ_INSTALL_PATH/apache-activemq-*
 
-EXPOSE 8161 61616 5672 61613 1883 61614
+EXPOSE 8161 61616 5672 61613 1883 61614 1099
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["activemq", "console"]
