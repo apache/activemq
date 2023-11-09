@@ -159,7 +159,7 @@ public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAwa
 
                 proxy = new WSTransportProxy(remoteAddress, transport);
                 proxy.setPeerCertificates(request.getCertificates());
-                proxy.setTransportOptions(transportOptions);
+                proxy.setTransportOptions(new HashMap<>(transportOptions));
 
                 response.setAcceptedSubProtocol(proxy.getSubProtocol());
             } catch (Exception e) {
