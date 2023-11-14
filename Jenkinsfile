@@ -42,8 +42,8 @@ pipeline {
     }
 
     parameters {
-        choice(name: 'nodeLabel', choices: ['ubuntu', 's390x']) 
-        choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest']) 
+        choice(name: 'nodeLabel', choices: ['ubuntu', 's390x', 'arm', 'Windows']) 
+        choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest', 'jdk_22_latest', 'jdk_17_latest_windows', 'jdk_21_latest_windows', 'jdk_22_latest_windows']) 
     }
 
     stages {
@@ -66,6 +66,18 @@ pipeline {
             steps {
                 echo 'Checking out branch ' + env.BRANCH_NAME
                 checkout scm
+            }
+        }
+
+        stage('Build JDK 22') {
+            tools {
+                jdk "jdk_22_latest"
+            }
+            steps {
+                echo 'Building JDK 22'
+                sh 'java -version'
+                sh 'mvn -version'
+                sh 'mvn -U -B -e clean install -DskipTests'
             }
         }
 
