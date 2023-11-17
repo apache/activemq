@@ -91,7 +91,7 @@ public class TaskRunnerTest {
                         for (int i = 0; i < enqueueCount / workerCount; i++) {
                             queue.incrementAndGet();
                             runner.wakeup();
-                            yield();
+                            // yield(); // [AMQ-9394] JDK 21 does not allow yield(); invocation 
                         }
                     } catch (BrokenBarrierException e) {
                     } catch (InterruptedException e) {

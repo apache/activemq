@@ -314,8 +314,51 @@
         </plugins>
     </pluginManagement>
   </build>
-
   <profiles>
+    <profile>
+      <id>jdk21</id>
+      <activation>
+        <jdk>21</jdk>
+      </activation>
+      <properties>
+          <source-version>21</source-version>
+          <target-version>21</target-version>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-source-jdk21</id>
+                <phase>generate-sources</phase>
+                  <goals>
+                    <goal>add-source</goal>
+                  </goals>
+                  <configuration>
+                    <sources>
+                      <source>src/main/java-jdk21</source>
+                    </sources>
+                  </configuration>
+                </execution>
+                <execution>
+                  <id>add-test-source-jdk21</id>
+                  <phase>generate-test-sources</phase>
+                  <goals>
+                    <goal>add-test-source</goal>
+                  </goals>
+                  <configuration>
+                  <sources>
+                    <source>src/test/java-jdk21</source>
+                  </sources>
+                </configuration>
+              </execution>
+             </executions>
+           </plugin>
+        </plugins>
+      </build>
+    </profile>
     <!-- Execute with: mvn -P openwire-generate antrun:run -->
     <profile>
       <id>openwire-generate</id>

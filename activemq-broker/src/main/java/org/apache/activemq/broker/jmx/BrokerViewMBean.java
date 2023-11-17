@@ -327,4 +327,10 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("JMSJobScheduler")
     ObjectName getJMSJobScheduler();
 
+    @MBeanInfo("Dedicated Task Runner enabled.")
+    boolean isDedicatedTaskRunner();
+
+    @MBeanInfo("Virtual Thread Task Runner enabled.")
+    boolean isVirtualThreadTaskRunner();
+
 }
