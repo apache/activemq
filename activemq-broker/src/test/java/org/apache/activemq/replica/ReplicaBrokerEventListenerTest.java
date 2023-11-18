@@ -40,6 +40,7 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
+
 import org.apache.activemq.util.IOHelper;
 import org.junit.Before;
 import org.junit.Test;
@@ -940,6 +941,12 @@ public class ReplicaBrokerEventListenerTest {
         verify(replicaEventMessage, never()).acknowledge();
     }
 
+    private void verifyConnectionContext() {
+        verify(connectionContext, times(2)).isProducerFlowControl();
+        verify(connectionContext, times(2)).setProducerFlowControl(true);
+        verify(connectionContext, times(2)).setProducerFlowControl(false);
+    }
+
 
     @Test
     public void canHandleEventOfType_FAIL_OVER() throws Exception {
@@ -999,11 +1006,5 @@ public class ReplicaBrokerEventListenerTest {
                 return "branchQualifier".getBytes(StandardCharsets.UTF_8);
             }
         };
-    }
-
-    private void verifyConnectionContext() {
-        verify(connectionContext, times(2)).isProducerFlowControl();
-        verify(connectionContext, times(2)).setProducerFlowControl(true);
-        verify(connectionContext, times(2)).setProducerFlowControl(false);
     }
 }

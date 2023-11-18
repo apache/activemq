@@ -25,7 +25,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.TransactionId;
 
 public class ReplicaDestinationFilter extends DestinationFilter {
-
     private final boolean nextIsComposite;
     private final ReplicaSourceBroker sourceBroker;
     private final ReplicaRoleManagementBroker roleManagementBroker;
@@ -53,6 +52,14 @@ public class ReplicaDestinationFilter extends DestinationFilter {
                 super.send(producerExchange, messageSend);
             }
         }
+    }
+
+    @Override
+    public boolean canGC() {
+        if (ReplicaRole.source == roleManagementBroker.getRole()) {
+            return super.canGC();
+        }
+        return false;
     }
 
     private void replicateSend(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
