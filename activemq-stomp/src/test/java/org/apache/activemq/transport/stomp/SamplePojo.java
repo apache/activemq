@@ -52,4 +52,16 @@ public class SamplePojo implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
+
+    //implement equals
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof SamplePojo) {
+            SamplePojo other = (SamplePojo) obj;
+            return name.equals(other.name) && city.equals(other.city);
+        }
+        return false;
+    }
+
 }
