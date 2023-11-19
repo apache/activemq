@@ -35,6 +35,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.*;
 import jakarta.jms.BytesMessage;
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
@@ -1089,8 +1092,9 @@ public class StompTest extends StompTestSupport {
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
+        String xmlReceived = frame.trim().substring(frame.indexOf("<pojo>"));
 
-        assertTrue(frame.trim().endsWith(xmlObject));
+        compareXML(xmlReceived, xmlObject);
     }
 
     @Test(timeout = 60000)
@@ -1110,7 +1114,9 @@ public class StompTest extends StompTestSupport {
 
         frame = stompConnection.receiveFrame();
 
-        assertTrue(frame.trim().endsWith(jsonObject));
+        String receivedJson = frame.trim().substring(frame.indexOf("{\"pojo\":{"));
+
+        compareJson(receivedJson, jsonObject);
     }
 
     @Test(timeout = 60000)
@@ -1131,7 +1137,8 @@ public class StompTest extends StompTestSupport {
 
         frame = stompConnection.receiveFrame();
 
-        assertTrue(frame.trim().endsWith(xmlObject));
+        String xmlReceived = frame.trim().substring(frame.indexOf("<pojo>"));
+        compareXML(xmlReceived, xmlObject);
     }
 
     @Test(timeout = 60000)
@@ -1152,7 +1159,23 @@ public class StompTest extends StompTestSupport {
 
         frame = stompConnection.receiveFrame();
 
-        assertTrue(frame.trim().endsWith(xmlObject));
+        String xmlReceived = frame.trim().substring(frame.indexOf("<pojo>"));
+
+        compareXML(xmlReceived, xmlObject);
+    }
+
+    private void compareXML(String xmlReceived, String xmlObject) {
+        try {
+            //use jackson xml to compare
+            XmlMapper xmlMapper = new XmlMapper();
+            SamplePojo pojoReceived = xmlMapper.readValue(xmlReceived, SamplePojo.class);
+            SamplePojo pojoObject = xmlMapper.readValue(xmlObject, SamplePojo.class);
+
+            assertEquals(pojoReceived.getName(), pojoObject.getName());
+        } catch (Exception e) {
+            fail("Exception while comparing XML: " + e.getMessage());
+        }
+
     }
 
     @Test(timeout = 60000)
@@ -1177,7 +1200,8 @@ public class StompTest extends StompTestSupport {
 
         frame = stompConnection.receiveFrame();
 
-        assertTrue(frame.trim().endsWith(xmlObject));
+        String receivedXml = frame.trim().substring(frame.indexOf("<pojo>"));
+        compareXML(receivedXml, xmlObject);
 
         StompFrame xmlFrame = stompConnection.receive();
 
@@ -1335,8 +1359,21 @@ public class StompTest extends StompTestSupport {
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
+        String jsonReceived = frame.trim().substring(frame.indexOf("{\"pojo\":{"));
 
-        assertTrue(frame.trim().endsWith(jsonObject));
+        compareJson(jsonReceived, jsonObject);
+    }
+
+    private void compareJson(String jsonReceived, String jsonObject) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode pojoReceived = mapper.readTree(jsonReceived);
+            JsonNode pojoObject = mapper.readTree(jsonObject);
+
+            assertTrue(pojoReceived.equals(pojoObject));
+        } catch (Exception e) {
+            fail("Exception while comparing JSON: " + e.getMessage());
+        }
     }
 
     @Test(timeout = 60000)

@@ -612,6 +612,11 @@
         <artifactId>jackson-databind</artifactId>
         <version>${jackson-version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-xml</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
 
       <!-- Used to configure the activemq logs -->
       <dependency>
