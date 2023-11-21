@@ -147,25 +147,19 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
 
     public boolean isValidUseRAManagedTransaction(List<String> errorMessages) {
-        try {
-            new Boolean(useRAManagedTransaction);
-            return true;
-        } catch (Throwable e) {
-            //
+        boolean valid = isValidBooleanString(useRAManagedTransaction); 
+        if(!valid) {
+            errorMessages.add("useRAManagedTransaction must be set to: true or false.");
         }
-        errorMessages.add("useRAManagedTransaction must be set to: true or false.");
-        return false;
+        return valid; 
     }
 
     public boolean isValidNoLocal(List<String> errorMessages) {
-        try {
-            new Boolean(noLocal);
-            return true;
-        } catch (Throwable e) {
-            //
+        boolean valid = isValidBooleanString(noLocal); 
+        if(!valid) {
+            errorMessages.add("noLocal must be set to: true or false.");
         }
-        errorMessages.add("noLocal must be set to: true or false.");
-        return false;
+        return valid;
     }
 
     public boolean isValidMessageSelector(List<String> errorMessages) {
@@ -217,14 +211,11 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
 
     public boolean isValidEnableBatch(List<String> errorMessages) {
-        try {
-            new Boolean(enableBatch);
-            return true;
-        } catch (Throwable e) {
-            //
+        boolean valid = isValidBooleanString(enableBatch);
+        if(!valid) {
+            errorMessages.add("enableBatch must be set to: true or false");
         }
-        errorMessages.add("enableBatch must be set to: true or false");
-        return false;
+        return valid;
     }
 
     public ResourceAdapter getResourceAdapter() {
@@ -734,5 +725,9 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
 
     public void setKeyStoreKeyPassword(String keyStoreKeyPassword) {
         this.keyStoreKeyPassword = keyStoreKeyPassword;
+    }
+
+    private static boolean isValidBooleanString(String booleanString) {
+        return ("true".equalsIgnoreCase(booleanString) || ("false".equalsIgnoreCase(booleanString)));
     }
 }

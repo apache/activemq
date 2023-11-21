@@ -16,15 +16,14 @@
     limitations under the License.
 -->
 
-<connector xmlns="http://java.sun.com/xml/ns/j2ee"
+<connector xmlns="https://jakarta.ee/xml/ns/jakartaee"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
-    http://java.sun.com/xml/ns/j2ee/connector_1_5.xsd"
-    version="1.5">
+    xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/connector_2_0.xsd"
+    version="2.0">
     <description>ActiveMQ  inbound and outbound JMS ResourceAdapter</description>
     <display-name>ActiveMQ JMS Resource Adapter</display-name>
     <vendor-name>activemq.org</vendor-name>
-    <eis-type>JMS 1.1</eis-type>
+    <eis-type>JMS 3.1</eis-type>
     <resourceadapter-version>1.0</resourceadapter-version>
     <license>
         <description>
@@ -106,7 +105,7 @@
             <config-property-type>java.lang.String</config-property-type>
         </config-property>
 
-			  <!-- NOTE disable the following property if you do not wish to deploy an embedded broker -->
+        <!-- NOTE disable the following property if you do not wish to deploy an embedded broker -->
         <config-property>
             <description>
               Sets the XML configuration file used to configure the embedded ActiveMQ broker via 
@@ -131,36 +130,36 @@
         <outbound-resourceadapter>
             <connection-definition>
                 <managedconnectionfactory-class>org.apache.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
-                <connectionfactory-interface>javax.jms.ConnectionFactory</connectionfactory-interface>
+                <connectionfactory-interface>jakarta.jms.ConnectionFactory</connectionfactory-interface>
                 <connectionfactory-impl-class>org.apache.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
-                <connection-interface>javax.jms.Connection</connection-interface>
+                <connection-interface>jakarta.jms.Connection</connection-interface>
                 <connection-impl-class>org.apache.activemq.ra.ManagedConnectionProxy</connection-impl-class>
             </connection-definition>
             <connection-definition>
                 <managedconnectionfactory-class>org.apache.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
-                <connectionfactory-interface>javax.jms.QueueConnectionFactory</connectionfactory-interface>
+                <connectionfactory-interface>jakarta.jms.QueueConnectionFactory</connectionfactory-interface>
                 <connectionfactory-impl-class>org.apache.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
-                <connection-interface>javax.jms.QueueConnection</connection-interface>
+                <connection-interface>jakarta.jms.QueueConnection</connection-interface>
                 <connection-impl-class>org.apache.activemq.ra.ManagedConnectionProxy</connection-impl-class>
             </connection-definition>
             <connection-definition>
                 <managedconnectionfactory-class>org.apache.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
-                <connectionfactory-interface>javax.jms.TopicConnectionFactory</connectionfactory-interface>
+                <connectionfactory-interface>jakarta.jms.TopicConnectionFactory</connectionfactory-interface>
                 <connectionfactory-impl-class>org.apache.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
-                <connection-interface>javax.jms.TopicConnection</connection-interface>
+                <connection-interface>jakarta.jms.TopicConnection</connection-interface>
                 <connection-impl-class>org.apache.activemq.ra.ManagedConnectionProxy</connection-impl-class>
             </connection-definition>
             <transaction-support>XATransaction</transaction-support>
             <authentication-mechanism>
                 <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
-                <credential-interface>javax.resource.spi.security.PasswordCredential</credential-interface>
+                <credential-interface>jakarta.resource.spi.security.PasswordCredential</credential-interface>
             </authentication-mechanism>
             <reauthentication-support>false</reauthentication-support>
         </outbound-resourceadapter>
         <inbound-resourceadapter>
             <messageadapter>
                 <messagelistener>
-                    <messagelistener-type>javax.jms.MessageListener</messagelistener-type>
+                    <messagelistener-type>jakarta.jms.MessageListener</messagelistener-type>
                     <activationspec>
                         <activationspec-class>org.apache.activemq.ra.ActiveMQActivationSpec</activationspec-class>
                         
@@ -176,7 +175,7 @@
             </messageadapter>
         </inbound-resourceadapter>
         <adminobject>
-            <adminobject-interface>javax.jms.Queue</adminobject-interface>
+            <adminobject-interface>jakarta.jms.Queue</adminobject-interface>
             <adminobject-class>org.apache.activemq.command.ActiveMQQueue</adminobject-class>
             <config-property>
                 <config-property-name>PhysicalName</config-property-name>
@@ -184,7 +183,7 @@
             </config-property>
         </adminobject>
         <adminobject>
-            <adminobject-interface>javax.jms.Topic</adminobject-interface>
+            <adminobject-interface>jakarta.jms.Topic</adminobject-interface>
             <adminobject-class>org.apache.activemq.command.ActiveMQTopic</adminobject-class>
             <config-property>
                 <config-property-name>PhysicalName</config-property-name>
@@ -192,7 +191,7 @@
             </config-property>
         </adminobject>
       <adminobject>
-          <adminobject-interface>javax.jms.ConnectionFactory</adminobject-interface>
+          <adminobject-interface>jakarta.jms.ConnectionFactory</adminobject-interface>
           <adminobject-class>org.apache.activemq.ActiveMQConnectionFactory</adminobject-class>
           <config-property>
               <config-property-name>brokerUrl</config-property-name>
@@ -200,7 +199,7 @@
           </config-property>
       </adminobject>
       <adminobject>
-          <adminobject-interface>javax.jms.ConnectionFactory</adminobject-interface>
+          <adminobject-interface>jakarta.jms.ConnectionFactory</adminobject-interface>
           <adminobject-class>org.apache.activemq.pool.XaPooledConnectionFactory</adminobject-class>
           <config-property>
               <config-property-name>brokerUrl</config-property-name>
@@ -212,14 +211,13 @@
           </config-property>
       </adminobject>
       <adminobject>
-          <adminobject-interface>javax.jms.XAConnectionFactory</adminobject-interface>
+          <adminobject-interface>jakarta.jms.XAConnectionFactory</adminobject-interface>
           <adminobject-class>org.apache.activemq.ActiveMQXAConnectionFactory</adminobject-class>
           <config-property>
             <config-property-name>brokerURL</config-property-name>
             <config-property-type>java.lang.String</config-property-type>
           </config-property>
        </adminobject>
-
 
     </resourceadapter>
 </connector>
