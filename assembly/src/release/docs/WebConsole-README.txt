@@ -36,7 +36,7 @@ and jmx uri(s):
    ----
      If your servlet container supports JNDI it's possible to use a JMS-ConnectionFactory
      configured outside the war:
-	java:comp/env/jms/connectionFactory: javax.jms.ConnectionFactory for the broker
+	java:comp/env/jms/connectionFactory: jakarta.jms.ConnectionFactory for the broker
 	java:comp/env/jmx/url: URL of the brokers JMX (Type java.lang.String)       
 	
 	
@@ -46,7 +46,7 @@ Installing Web consoles in Apache Karaf / Apache ServiceMix
 
 If you are using Apache Karaf, you can install ActiveMQ broker / client into the container using:
 
-   features:chooseurl activemq 5.9.0
+   features:chooseurl activemq 6.0.0
 
 To install the broker:
 
