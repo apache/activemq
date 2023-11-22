@@ -41,47 +41,36 @@ public class IdGenerator {
 
     static {
         String stub = "";
-        boolean canAccessSystemProps = true;
+
+        int idGeneratorPort = 0;
+        ServerSocket ss = null;
         try {
-            SecurityManager sm = System.getSecurityManager();
-            if (sm != null) {
-                sm.checkPropertiesAccess();
+            idGeneratorPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_PORT, "0"));
+            LOG.trace("Using port {}", idGeneratorPort);
+            hostName = getLocalHostName();
+            ss = new ServerSocket(idGeneratorPort);
+            stub = "-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
+            Thread.sleep(100);
+        } catch (Exception e) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("could not generate unique stub by using DNS and binding to local port", e);
+            } else {
+                LOG.warn("could not generate unique stub by using DNS and binding to local port: {} {}", e.getClass().getCanonicalName(), e.getMessage());
             }
-        } catch (SecurityException se) {
-            canAccessSystemProps = false;
-        }
 
-        if (canAccessSystemProps) {
-            int idGeneratorPort = 0;
-            ServerSocket ss = null;
-            try {
-                idGeneratorPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_PORT, "0"));
-                LOG.trace("Using port {}", idGeneratorPort);
-                hostName = getLocalHostName();
-                ss = new ServerSocket(idGeneratorPort);
-                stub = "-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
-                Thread.sleep(100);
-            } catch (Exception e) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("could not generate unique stub by using DNS and binding to local port", e);
-                } else {
-                    LOG.warn("could not generate unique stub by using DNS and binding to local port: {} {}", e.getClass().getCanonicalName(), e.getMessage());
-                }
-
-                // Restore interrupted state so higher level code can deal with it.
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                }
-            } finally {
-                if (ss != null) {
-                    try {
-                        ss.close();
-                    } catch (IOException ioe) {
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("Closing the server socket failed", ioe);
-                        } else {
-                            LOG.warn("Closing the server socket failed" + " due " + ioe.getMessage());
-                        }
+            // Restore interrupted state so higher level code can deal with it.
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+        } finally {
+            if (ss != null) {
+                try {
+                    ss.close();
+                } catch (IOException ioe) {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Closing the server socket failed", ioe);
+                    } else {
+                        LOG.warn("Closing the server socket failed" + " due " + ioe.getMessage());
                     }
                 }
             }
