@@ -175,8 +175,7 @@
                 <!-- bean id="SecureConnector" class="org.eclipse.jetty.server.ServerConnector">
 					<constructor-arg ref="Server" />
 					<constructor-arg>
-						<bean id="handlers" class="org.eclipse.jetty.util.ssl.SslContextFactory">
-						
+						<bean id="handlers" class="org.eclipse.jetty.util.ssl.SslContextFactory$Server">
 							<property name="keyStorePath" value="${activemq.conf}/broker.ks" />
 							<property name="keyStorePassword" value="password" />
 						</bean>
