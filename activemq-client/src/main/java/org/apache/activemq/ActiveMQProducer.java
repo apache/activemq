@@ -87,7 +87,7 @@ public class ActiveMQProducer implements JMSProducer {
                 }
             }
 
-            activemqMessageProducer.send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), getDisableMessageID(), getDisableMessageTimestamp(), null);
+            activemqMessageProducer.send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), getDisableMessageID(), getDisableMessageTimestamp(), (AsyncCallback)null, (CompletionListener)null);
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
