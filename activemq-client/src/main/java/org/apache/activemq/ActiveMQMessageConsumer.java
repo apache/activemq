@@ -35,6 +35,7 @@ import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageFormatException;
 import jakarta.jms.MessageListener;
 import jakarta.jms.TransactionRolledBackException;
 
@@ -590,6 +591,35 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     /**
+     * JMS 2.0 support method for receiveBody(bodyType)
+     * AMQ-8464
+     */
+    <T> T receiveBody(Class<T> bodyType) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+
+        sendPullCommand(0);
+        MessageDispatch md = dequeue(-1);
+        if (md == null) {
+            return null;
+        }
+
+        beforeMessageIsConsumed(md);
+        Message message = createActiveMQMessage(md);
+        try {
+            // This throws MessageFormatException if body is not of bodyType
+            T body = message.getBody(bodyType);
+            afterMessageIsConsumed(md, false);
+            return body;
+        } catch (MessageFormatException e) {
+            synchronized (unconsumedMessages.getMutex()) {
+                unconsumedMessages.enqueueFirst(md);
+            }
+            throw e;
+        }
+    }
+
+    /**
      * @param md
      *      the MessageDispatch that arrived from the Broker.
      *
@@ -676,6 +706,49 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     /**
+     * JMS 2.0 support method for receiveBody(long timeout)
+     * AMQ-8464
+     */
+    <T> T receiveBody(Class<T> bodyType, long timeout) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+        if (timeout == 0) {
+            return this.receiveBody(bodyType);
+        }
+
+        sendPullCommand(timeout);
+        while (timeout > 0) {
+
+            MessageDispatch md;
+            if (info.getPrefetchSize() == 0) {
+                md = dequeue(-1); // We let the broker let us know when we timeout.
+            } else {
+                md = dequeue(timeout);
+            }
+
+            if (md == null) {
+                return null;
+            }
+
+            beforeMessageIsConsumed(md);
+            Message message = createActiveMQMessage(md);
+
+            try {
+                // This throws MessageFormatException if body is not of bodyType
+                T body = message.getBody(bodyType);
+                afterMessageIsConsumed(md, false);
+                return body;
+            } catch (MessageFormatException e) {
+                synchronized (unconsumedMessages.getMutex()) {
+                    unconsumedMessages.enqueueFirst(md);
+                }
+                throw e;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Receives the next message if one is immediately available.
      *
      * @return the next message produced for this message consumer, or null if
@@ -704,6 +777,38 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         beforeMessageIsConsumed(md);
         afterMessageIsConsumed(md, false);
         return createActiveMQMessage(md);
+    }
+
+    <T> T receiveBodyNoWait(Class<T> bodyType) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+        sendPullCommand(-1);
+
+        MessageDispatch md;
+        if (info.getPrefetchSize() == 0) {
+            md = dequeue(-1); // We let the broker let us know when we
+            // timeout.
+        } else {
+            md = dequeue(0);
+        }
+
+        if (md == null) {
+            return null;
+        }
+
+        beforeMessageIsConsumed(md);
+        Message message = createActiveMQMessage(md);
+        try {
+            // This throws MessageFormatException if body is not of bodyType
+            T body = message.getBody(bodyType);
+            afterMessageIsConsumed(md, false);
+            return body;
+        } catch (MessageFormatException e) {
+            synchronized (unconsumedMessages.getMutex()) {
+                unconsumedMessages.enqueueFirst(md);
+            }
+            throw e;
+        }
     }
 
     /**
