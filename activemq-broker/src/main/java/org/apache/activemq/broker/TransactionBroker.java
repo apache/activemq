@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.JMSException;
+import javax.jms.ResourceAllocationException;
 import javax.transaction.xa.XAException;
 
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;
@@ -146,6 +147,7 @@ public class TransactionBroker extends BrokerFilter {
         final ActiveMQDestination destination;
         final boolean messageSend;
         int opCount = 1;
+
         public PreparedDestinationCompletion(final TransactionBroker transactionBroker, ActiveMQDestination destination, boolean messageSend) {
             this.transactionBroker = transactionBroker;
             this.destination = destination;
@@ -291,10 +293,36 @@ public class TransactionBroker extends BrokerFilter {
             transaction = getTransaction(context, message.getTransactionId(), false);
         }
         context.setTransaction(transaction);
+
         try {
+            // [AMQ-9344] Limit uncommitted transactions by count
+            verifyUncommittedCount(producerExchange, transaction, message);
             next.send(producerExchange, message);
         } finally {
             context.setTransaction(originalTx);
+        }
+    }
+
+    protected void verifyUncommittedCount(ProducerBrokerExchange producerExchange, Transaction transaction, Message message) throws Exception {
+        // maxUncommittedCount <= 0 disables
+        int maxUncommittedCount = this.getBrokerService().getMaxUncommittedCount();
+        if (maxUncommittedCount > 0 && transaction.size() >= maxUncommittedCount) {
+
+            try {
+                // Rollback as we are throwing an error the client as throwing the error will cause
+                // the client to reset to a new transaction so we need to clean up
+                transaction.rollback();
+
+                // Send ResourceAllocationException which will translate to a JMSException
+                final ResourceAllocationException e = new ResourceAllocationException(
+                    "Can not send message on transaction with id: '" + transaction.getTransactionId().toString()
+                      + "', Transaction has reached the maximum allowed number of pending send operations before commit of '"
+                      + maxUncommittedCount + "'", "42900");
+                LOG.warn("ConnectionId:{} exceeded maxUncommittedCount:{} for destination:{} in transactionId:{}", (producerExchange.getConnectionContext() != null ? producerExchange.getConnectionContext().getConnectionId() : "<not set>"), maxUncommittedCount, message.getDestination().getQualifiedName(), transaction.getTransactionId().toString());
+                throw e;
+            } finally {
+                producerExchange.getRegionDestination().getDestinationStatistics().getMaxUncommittedExceededCount().increment();
+            }
         }
     }
 

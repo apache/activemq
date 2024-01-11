@@ -44,7 +44,7 @@ public class DestinationStatistics extends StatsImpl {
     protected CountStatisticImpl blockedSends;
     protected TimeStatisticImpl blockedTime;
     protected SizeStatisticImpl messageSize;
-
+    protected CountStatisticImpl maxUncommittedExceededCount;
 
     public DestinationStatistics() {
 
@@ -67,6 +67,7 @@ public class DestinationStatistics extends StatsImpl {
         blockedSends = new CountStatisticImpl("blockedSends", "number of messages that have to wait for flow control");
         blockedTime = new TimeStatisticImpl("blockedTime","amount of time messages are blocked for flow control");
         messageSize = new SizeStatisticImpl("messageSize","Size of messages passing through the destination");
+        maxUncommittedExceededCount = new CountStatisticImpl("maxUncommittedExceededCount", "number of times maxUncommittedCount has been exceeded");
         addStatistic("enqueues", enqueues);
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
@@ -81,6 +82,7 @@ public class DestinationStatistics extends StatsImpl {
         addStatistic("blockedSends",blockedSends);
         addStatistic("blockedTime",blockedTime);
         addStatistic("messageSize",messageSize);
+        addStatistic("maxUncommittedExceededCount", maxUncommittedExceededCount);
     }
 
     public CountStatisticImpl getEnqueues() {
@@ -145,6 +147,10 @@ public class DestinationStatistics extends StatsImpl {
         return this.messageSize;
     }
 
+    public CountStatisticImpl getMaxUncommittedExceededCount(){
+        return this.maxUncommittedExceededCount;
+    }
+
     public void reset() {
         if (this.isDoReset()) {
             super.reset();
@@ -158,6 +164,7 @@ public class DestinationStatistics extends StatsImpl {
             blockedSends.reset();
             blockedTime.reset();
             messageSize.reset();
+            maxUncommittedExceededCount.reset();
         }
     }
 
@@ -178,6 +185,7 @@ public class DestinationStatistics extends StatsImpl {
         blockedSends.setEnabled(enabled);
         blockedTime.setEnabled(enabled);
         messageSize.setEnabled(enabled);
+        maxUncommittedExceededCount.setEnabled(enabled);
 
     }
 
@@ -198,6 +206,7 @@ public class DestinationStatistics extends StatsImpl {
             blockedSends.setParent(parent.blockedSends);
             blockedTime.setParent(parent.blockedTime);
             messageSize.setParent(parent.messageSize);
+            maxUncommittedExceededCount.setParent(parent.maxUncommittedExceededCount);
         } else {
             enqueues.setParent(null);
             dispatched.setParent(null);
@@ -214,6 +223,7 @@ public class DestinationStatistics extends StatsImpl {
             blockedSends.setParent(null);
             blockedTime.setParent(null);
             messageSize.setParent(null);
+            maxUncommittedExceededCount.setParent(null);
         }
     }
 
