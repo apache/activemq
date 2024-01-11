@@ -541,4 +541,19 @@ public class BrokerView implements BrokerViewMBean {
 
         return context;
     }
+
+    @Override
+    public int getMaxUncommittedCount() {
+        return brokerService.getMaxUncommittedCount();
+    }
+
+    @Override
+    public void setMaxUncommittedCount(int maxUncommittedCount) {
+        brokerService.setMaxUncommittedCount(maxUncommittedCount);
+    }
+
+    @Override
+    public long getTotalMaxUncommittedExceededCount() {
+        return safeGetBroker().getDestinationStatistics().getMaxUncommittedExceededCount().getCount();
+	}
 }
