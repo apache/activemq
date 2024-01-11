@@ -34,7 +34,7 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-client</artifactId>
         <version>${project.version}</version>
-        <message>ActiveMQ Jakarta transition client no longer needed. Use activemq-client going forward.</message>
+        <message>ActiveMQ Jakarta transition client no longer needed. Use activemq-client going forward with 6.x and higher.</message>
       </relocation>
     </distributionManagement>
 </project>
