@@ -479,4 +479,6 @@ public interface DestinationViewMBean {
     @MBeanInfo("Total time (ms) messages have been blocked by flow control")
     long getTotalBlockedTime();
 
+    @MBeanInfo("Number of times the max uncommitted limit has been exceed for this destination")
+    long getMaxUncommittedExceededCount();
 }

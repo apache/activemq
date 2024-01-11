@@ -594,4 +594,9 @@ public class DestinationView implements DestinationViewMBean {
     public boolean isSendDuplicateFromStoreToDLQ() {
         return destination.isSendDuplicateFromStoreToDLQ();
     }
+
+    @Override
+    public long getMaxUncommittedExceededCount() {
+        return destination.getDestinationStatistics().getMaxUncommittedExceededCount().getCount();
+    }
 }

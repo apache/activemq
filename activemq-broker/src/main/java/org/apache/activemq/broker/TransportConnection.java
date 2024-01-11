@@ -104,6 +104,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import jakarta.jms.ResourceAllocationException;
+
 public class TransportConnection implements Connection, Task, CommandVisitor {
     private static final Logger LOG = LoggerFactory.getLogger(TransportConnection.class);
     private static final Logger TRANSPORTLOG = LoggerFactory.getLogger(TransportConnection.class.getName() + ".Transport");
