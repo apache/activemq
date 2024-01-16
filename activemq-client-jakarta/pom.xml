@@ -108,18 +108,50 @@
                         <goals>
                             <goal>replace</goal>
                         </goals>
+                        <configuration>
+                            <includes>
+                                <include>${project.build.directory}/copied-sources/activemq-client/**/*.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>${project.build.directory}/copied-sources/activemq-client/**/openwire/OpenWireUtil.java</exclude>
+                            </excludes>
+                            <token>javax.jms</token>
+                            <value>jakarta.jms</value>
+                            <regexFlags>
+                                <regexFlag>MULTILINE</regexFlag>
+                            </regexFlags>
+                        </configuration>
+                    </execution>
+                    <!-- Special case to handle OpenWireUtil which will do conversions for JMS exception types -->
+                    <execution>
+                        <id>jms-package-to-replace</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>${project.build.directory}/copied-sources/activemq-client/**/openwire/OpenWireUtil.java</include>
+                            </includes>
+                            <token>jmsPackageToReplace = "jakarta.jms"</token>
+                            <value>jmsPackageToReplace = "javax.jms"</value>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jms-package-to-use</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>${project.build.directory}/copied-sources/activemq-client/**/openwire/OpenWireUtil.java</include>
+                            </includes>
+                            <token>jmsPackageToUse = "javax.jms"</token>
+                            <value>jmsPackageToUse = "jakarta.jms"</value>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <includes>
-                        <include>${project.build.directory}/copied-sources/activemq-client/**/*.java</include>
-                    </includes>
-                    <token>javax.jms</token>
-                    <value>jakarta.jms</value>
-                    <regexFlags>
-                        <regexFlag>MULTILINE</regexFlag>
-                    </regexFlags>
-                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
