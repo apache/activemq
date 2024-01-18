@@ -327,4 +327,12 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("JMSJobScheduler")
     ObjectName getJMSJobScheduler();
 
+    @MBeanInfo(value="Returns the allowed max uncommitted count per transaction")
+    int getMaxUncommittedCount();
+
+    @MBeanInfo(value="Temporarily set the allowed max uncommitted count per transaction")
+    void setMaxUncommittedCount(int maxUncommittedCount);
+
+    @MBeanInfo(value="The total number of times that the max number of uncommitted count has been exceeded across all destinations")
+    long getTotalMaxUncommittedExceededCount();
 }
