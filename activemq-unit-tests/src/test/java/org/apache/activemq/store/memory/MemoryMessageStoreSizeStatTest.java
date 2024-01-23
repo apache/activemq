@@ -55,7 +55,8 @@ public class MemoryMessageStoreSizeStatTest extends AbstractMessageStoreSizeStat
 
         //The expected value is only 100 because for durables a LRUCache is being used
         //with a max size of 100
-        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1"}, 200, 100, publishedMessageSize);
+        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1"}, 200, 100,
+            publishedMessageSize, null);
 
         //verify the count and size, should be 100 because of the LRUCache
         //verify size is at least the minimum of 100 messages times 100 bytes
@@ -80,7 +81,8 @@ public class MemoryMessageStoreSizeStatTest extends AbstractMessageStoreSizeStat
 
         //The expected value is only 100 because for durables a LRUCache is being used
         //with a max size of 100, so only 100 messages are kept
-        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1", "sub2"}, 200, 100, publishedMessageSize);
+        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1", "sub2"}, 200, 100,
+            publishedMessageSize, null);
 
         //verify the count and size
         //verify size is at least the minimum of 100 messages times 100 bytes

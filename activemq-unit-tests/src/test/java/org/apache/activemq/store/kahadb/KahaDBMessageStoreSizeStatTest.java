@@ -18,6 +18,8 @@ package org.apache.activemq.store.kahadb;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.broker.BrokerService;
@@ -27,6 +29,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,13 +42,28 @@ import org.slf4j.LoggerFactory;
  * AMQ-5748
  *
  */
+@RunWith(Parameterized.class)
 public class KahaDBMessageStoreSizeStatTest extends
         AbstractMessageStoreSizeStatTest {
     protected static final Logger LOG = LoggerFactory
             .getLogger(KahaDBMessageStoreSizeStatTest.class);
 
+    @Parameters(name = "subStatsEnabled={0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+            // Subscription stats on
+            {true},
+            // Subscription stats off
+            {false}
+        });
+    }
+
     @Rule
     public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
+
+    public KahaDBMessageStoreSizeStatTest(boolean subStatsEnabled) {
+        super(subStatsEnabled);
+    }
 
     @Override
     protected void setUpBroker(boolean clearDataDir) throws Exception {
@@ -57,6 +77,8 @@ public class KahaDBMessageStoreSizeStatTest extends
             throws IOException {
         broker.setPersistent(true);
         broker.setDataDirectoryFile(dataFileDir.getRoot());
+        KahaDBPersistenceAdapter adapter = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+        adapter.setEnableSubscriptionStatistics(subStatsEnabled);
     }
 
     /**

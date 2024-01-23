@@ -533,7 +533,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
 
         return publishTestMessagesDurable(connection, subNames, defaultTopicName,
                 publishSize, 0, AbstractStoreStatTestSupport.defaultMessageSize,
-                publishedMessageSize, false, deliveryMode);
+                publishedMessageSize, null, false, deliveryMode);
     }
 
     protected org.apache.activemq.broker.region.Topic publishTestTopicMessages(int publishSize,
