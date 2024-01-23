@@ -18,19 +18,22 @@ package org.apache.activemq.store;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.concurrent.atomic.AtomicLong;
-
 import jakarta.jms.Connection;
 import jakarta.jms.DeliveryMode;
-
+import java.io.IOException;
+import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.util.Wait;
-import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,11 +50,20 @@ public abstract class AbstractMessageStoreSizeStatTest extends AbstractStoreStat
     protected static final Logger LOG = LoggerFactory
             .getLogger(AbstractMessageStoreSizeStatTest.class);
 
-
     protected BrokerService broker;
     protected URI brokerConnectURI;
     protected String defaultQueueName = "test.queue";
     protected String defaultTopicName = "test.topic";
+    // Only applies to KahaDB
+    protected final boolean subStatsEnabled;
+
+    protected AbstractMessageStoreSizeStatTest(boolean subStatsEnabled) {
+        this.subStatsEnabled = subStatsEnabled;
+    }
+
+    protected AbstractMessageStoreSizeStatTest() {
+        this.subStatsEnabled = false;
+    }
 
     @Before
     public void startBroker() throws Exception {
@@ -119,16 +131,39 @@ public abstract class AbstractMessageStoreSizeStatTest extends AbstractStoreStat
         connection.setClientID("clientId");
         connection.start();
 
-        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1"}, 200, 200, publishedMessageSize);
+        ActiveMQTopic topic = new ActiveMQTopic(defaultTopicName);
+        Set<String> publishedMessages = new HashSet<>();
+        Topic dest = publishTestMessagesDurable(connection, new String[] {"sub1"}, 200, 200,
+            publishedMessageSize, publishedMessages);
+
+        PersistenceAdapter adapter = this.broker.getPersistenceAdapter();
+        TopicMessageStore store = adapter.createTopicMessageStore(topic);
 
         //verify the count and size
         verifyStats(dest, 200, publishedMessageSize.get());
+
+        if (subStatsEnabled) {
+            verifyDurableStats(dest, "clientId:sub1", 200, publishedMessageSize.get());
+        }
 
         //consume all messages
         consumeDurableTestMessages(connection, "sub1", 200, publishedMessageSize);
 
         //All messages should now be gone
         verifyStats(dest, 0, 0);
+
+        if (subStatsEnabled) {
+            verifyDurableStats(dest, "clientId:sub1", 0, publishedMessageSize.get());
+        }
+
+        // Send 10 duplicates to verify our metrics are not broken
+        sendAcks(store, publishedMessages);
+
+        // Stats should still show 0 after duplicates
+        verifyStats(dest, 0, publishedMessageSize.get());
+        if (subStatsEnabled) {
+            verifyDurableStats(dest, "clientId:sub1", 0, publishedMessageSize.get());
+        }
 
         connection.close();
     }
@@ -140,17 +175,46 @@ public abstract class AbstractMessageStoreSizeStatTest extends AbstractStoreStat
         connection.setClientID("clientId");
         connection.start();
 
-        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1", "sub2"}, 200, 200, publishedMessageSize);
+        ActiveMQTopic topic = new ActiveMQTopic(defaultTopicName);
+        Set<String> publishedMessages = new HashSet<>();
+        Topic dest = publishTestMessagesDurable(connection, new String[] {"sub1", "sub2"}, 200, 200,
+            publishedMessageSize, publishedMessages);
+
+        PersistenceAdapter adapter = this.broker.getPersistenceAdapter();
+        TopicMessageStore store = adapter.createTopicMessageStore(topic);
 
         //verify the count and size
         verifyStats(dest, 200, publishedMessageSize.get());
+
+        // Verify each subscription counter is correct
+        if (subStatsEnabled) {
+            verifyDurableStats(dest, "clientId:sub1", 200, publishedMessageSize.get());
+            verifyDurableStats(dest, "clientId:sub2", 200, publishedMessageSize.get());
+        }
 
         //consume messages just for sub1
         consumeDurableTestMessages(connection, "sub1", 200, publishedMessageSize);
 
         //There is still a durable that hasn't consumed so the messages should exist
         verifyStats(dest, 200, publishedMessageSize.get());
+        if (subStatsEnabled) {
+            verifyDurableStats(dest, "clientId:sub1", 0, publishedMessageSize.get());
+            verifyDurableStats(dest, "clientId:sub2", 200, publishedMessageSize.get());
+        }
 
+        // Send 10 duplicates to verify our metrics are not broken
+        // This used to break in memory subscription statistics before AMQ-9420
+        sendAcks(store, publishedMessages);
+
+        // Stats should still show 200 after duplicates
+        verifyStats(dest, 200, publishedMessageSize.get());
+
+        // Verify each subscription counter is correct
+        // Sub 2 should still have 200 messages
+        if (subStatsEnabled) {
+            verifyDurableStats(dest, "clientId:sub1", 0, publishedMessageSize.get());
+            verifyDurableStats(dest, "clientId:sub2", 200, publishedMessageSize.get());
+        }
         connection.stop();
 
     }
@@ -179,30 +243,30 @@ public abstract class AbstractMessageStoreSizeStatTest extends AbstractStoreStat
         final MessageStore messageStore = dest.getMessageStore();
         final MessageStoreStatistics storeStats = dest.getMessageStore().getMessageStoreStatistics();
 
-        assertTrue(Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return (count == messageStore.getMessageCount()) && (messageStore.getMessageCount() ==
-                        storeStats.getMessageCount().getCount()) && (messageStore.getMessageSize() ==
-                messageStore.getMessageStoreStatistics().getMessageSize().getTotalSize());
-            }
-        }));
+        assertTrue(Wait.waitFor(
+            () -> (count == messageStore.getMessageCount()) && (messageStore.getMessageCount() ==
+                    storeStats.getMessageCount().getCount()) && (messageStore.getMessageSize() ==
+            messageStore.getMessageStoreStatistics().getMessageSize().getTotalSize())));
 
         if (count > 0) {
             assertTrue(storeStats.getMessageSize().getTotalSize() > minimumSize);
-            assertTrue(Wait.waitFor(new Condition() {
-                @Override
-                public boolean isSatisified() throws Exception {
-                    return storeStats.getMessageSize().getTotalSize() > minimumSize;
-                }
-            }));
+            assertTrue(Wait.waitFor(() -> storeStats.getMessageSize().getTotalSize() > minimumSize));
         } else {
-            assertTrue(Wait.waitFor(new Condition() {
-                @Override
-                public boolean isSatisified() throws Exception {
-                    return storeStats.getMessageSize().getTotalSize() == 0;
-                }
-            }));
+            assertTrue(Wait.waitFor(() -> storeStats.getMessageSize().getTotalSize() == 0));
+        }
+    }
+
+    protected void verifyDurableStats(Topic dest, String subKey, final int count, final long minimumSize) throws Exception {
+        final TopicMessageStore messageStore = (TopicMessageStore) dest.getMessageStore();
+        MessageStoreSubscriptionStatistics subStats = messageStore.getMessageStoreSubStatistics();
+
+        assertTrue(Wait.waitFor(
+            () -> count == subStats.getMessageCount(subKey).getCount()));
+
+        if (count > 0) {
+            assertTrue(subStats.getMessageSize(subKey).getTotalSize() > minimumSize);
+        } else {
+            assertTrue(Wait.waitFor(() -> subStats.getMessageSize(subKey).getTotalSize() == 0));
         }
     }
 
@@ -226,11 +290,27 @@ public abstract class AbstractMessageStoreSizeStatTest extends AbstractStoreStat
         return consumeDurableTestMessages(connection, sub, size, defaultTopicName, publishedMessageSize);
     }
 
-    protected Destination publishTestMessagesDurable(Connection connection, String[] subNames,
-            int publishSize, int expectedSize, AtomicLong publishedMessageSize) throws Exception {
+    protected Topic publishTestMessagesDurable(Connection connection, String[] subNames,
+            int publishSize, int expectedSize, AtomicLong publishedMessageSize, Set<String> publishedMessages) throws Exception {
        return publishTestMessagesDurable(connection, subNames, defaultTopicName,
                 publishSize, expectedSize, AbstractStoreStatTestSupport.defaultMessageSize,
-                publishedMessageSize, true);
+                publishedMessageSize, publishedMessages, true);
+    }
+
+    protected void sendAcks(TopicMessageStore store, Set<String> publishedMessages) {
+        publishedMessages.stream().limit(10).forEach(id -> {
+            try {
+                MessageId messageId = new MessageId(id);
+                MessageAck ack = new MessageAck();
+                ack.setMessageID(messageId);
+                ack.setDestination(store.getDestination());
+                ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
+                ack.setMessageCount(1);
+                store.acknowledge(broker.getAdminConnectionContext(), "clientId", "sub1", messageId, ack);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
 }

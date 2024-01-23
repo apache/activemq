@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -31,6 +33,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +46,28 @@ import org.slf4j.LoggerFactory;
  * AMQ-5748
  *
  */
+@RunWith(Parameterized.class)
 public class MultiKahaDBMessageStoreSizeStatTest extends
         AbstractMessageStoreSizeStatTest {
     protected static final Logger LOG = LoggerFactory
             .getLogger(MultiKahaDBMessageStoreSizeStatTest.class);
 
+    @Parameters(name = "subStatsEnabled={0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+            // Subscription stats on
+            {true},
+            // Subscription stats off
+            {false}
+        });
+    }
+
     @Rule
     public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
+
+    public MultiKahaDBMessageStoreSizeStatTest(boolean subStatsEnabled) {
+        super(subStatsEnabled);
+    }
 
     @Override
     protected void setUpBroker(boolean clearDataDir) throws Exception {
@@ -67,6 +87,7 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
 
         KahaDBPersistenceAdapter kahaStore = new KahaDBPersistenceAdapter();
         kahaStore.setJournalMaxFileLength(1024 * 512);
+        kahaStore.setEnableSubscriptionStatistics(subStatsEnabled);
 
         //set up a store per destination
         FilteredKahaDBPersistenceAdapter filtered = new FilteredKahaDBPersistenceAdapter();

@@ -1545,8 +1545,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (previous == null) {
             previous = sd.messageIdIndex.put(tx, command.getMessageId(), id);
             if (previous == null) {
-                incrementAndAddSizeToStoreStat(tx, command.getDestination(), location.getSize());
                 sd.orderIndex.put(tx, priority, id, new MessageKeys(command.getMessageId(), location));
+                // increment after putting into the order index first
+                incrementAndAddSizeToStoreStat(tx, command.getDestination(), location.getSize());
                 if (sd.subscriptions != null && !sd.subscriptions.isEmpty(tx)) {
                     addAckLocationForNewMessage(tx, command.getDestination(), sd, id);
                 }
@@ -3148,18 +3149,30 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (messageSequence != null) {
             SequenceSet range = sd.ackPositions.get(tx, subscriptionKey);
             if (range != null && !range.isEmpty()) {
-                range.remove(messageSequence);
+                boolean removed = range.remove(messageSequence);
                 if (!range.isEmpty()) {
                     sd.ackPositions.put(tx, subscriptionKey, range);
                 } else {
                     sd.ackPositions.remove(tx, subscriptionKey);
                 }
 
-                MessageKeys key = sd.orderIndex.get(tx, messageSequence);
-                decrementAndSubSizeToStoreStat(command.getDestination(), subscriptionKey,
+                // Only decrement the statistics if the message was removed
+                // from the ack set for the subscription
+                // Fix for AMQ-9420
+                if (removed) {
+                    MessageKeys key = sd.orderIndex.get(tx, messageSequence);
+                    decrementAndSubSizeToStoreStat(command.getDestination(), subscriptionKey,
                         key.location.getSize());
+                } else {
+                    LOG.warn("Received unexpected duplicate ack: messageId: {}, Sub: {}, Dest: {}",
+                        command.getMessageId(), subscriptionKey, command.getDestination());
+                }
 
                 // Check if the message is reference by any other subscription.
+                // If removed was previously false then we could return before
+                // this check as this should always return true (should still be
+                // a reference) but removed being false is unexpected in the first
+                // place so this is a good second check to verify.
                 if (isSequenceReferenced(tx, sd, messageSequence)) {
                     return;
                 }
