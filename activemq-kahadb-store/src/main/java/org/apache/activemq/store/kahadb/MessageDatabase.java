@@ -1545,9 +1545,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (previous == null) {
             previous = sd.messageIdIndex.put(tx, command.getMessageId(), id);
             if (previous == null) {
-                sd.orderIndex.put(tx, priority, id, new MessageKeys(command.getMessageId(), location));
-                // increment after putting into the order index first
                 incrementAndAddSizeToStoreStat(tx, command.getDestination(), location.getSize());
+                sd.orderIndex.put(tx, priority, id, new MessageKeys(command.getMessageId(), location));
                 if (sd.subscriptions != null && !sd.subscriptions.isEmpty(tx)) {
                     addAckLocationForNewMessage(tx, command.getDestination(), sd, id);
                 }
