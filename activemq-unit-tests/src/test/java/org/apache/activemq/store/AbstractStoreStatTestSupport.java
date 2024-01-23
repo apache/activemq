@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import java.net.URI;
 import java.util.Enumeration;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.BytesMessage;
@@ -189,14 +190,14 @@ public abstract class AbstractStoreStatTestSupport {
     }
 
     protected org.apache.activemq.broker.region.Topic publishTestMessagesDurable(Connection connection, String[] subNames, String topicName,
-            int publishSize, int expectedSize, int messageSize, AtomicLong publishedMessageSize,
+            int publishSize, int expectedSize, int messageSize, AtomicLong publishedMessageSize, Set<String> publishedMessages,
             boolean verifyBrowsing) throws Exception {
         return this.publishTestMessagesDurable(connection, subNames, topicName, publishSize, expectedSize, messageSize,
-                publishedMessageSize, verifyBrowsing, DeliveryMode.PERSISTENT);
+                publishedMessageSize, publishedMessages, verifyBrowsing, DeliveryMode.PERSISTENT);
     }
 
     protected org.apache.activemq.broker.region.Topic publishTestMessagesDurable(Connection connection, String[] subNames, String topicName,
-            int publishSize, int expectedSize, int messageSize, AtomicLong publishedMessageSize,
+            int publishSize, int expectedSize, int messageSize, AtomicLong publishedMessageSize, Set<String> publishedMessages,
             boolean verifyBrowsing, int deliveryMode) throws Exception {
         // create a new queue
         final ActiveMQDestination activeMqTopic = new ActiveMQTopic(
@@ -228,7 +229,11 @@ public abstract class AbstractStoreStatTestSupport {
             MessageProducer prod = session.createProducer(topic);
             prod.setDeliveryMode(deliveryMode);
             for (int i = 0; i < publishSize; i++) {
-                prod.send(createMessage(i, session, messageSize, publishedMessageSize));
+                Message message = createMessage(i, session, messageSize, publishedMessageSize);
+                prod.send(message);
+                if (publishedMessages != null) {
+                    publishedMessages.add(message.getJMSMessageID());
+                }
             }
 
             //verify the view has expected messages
