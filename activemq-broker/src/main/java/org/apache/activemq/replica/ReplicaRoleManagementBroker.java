@@ -25,6 +25,7 @@ import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.virtual.MirroredQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageId;
@@ -85,6 +86,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         replicaBroker = buildReplicaBroker(queueProvider);
 
         addInterceptor4CompositeQueues();
+        addInterceptor4MirroredQueues();
     }
 
     @Override
@@ -202,6 +204,27 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         interceptors = Arrays.copyOf(interceptors, interceptors.length + 1);
         interceptors[interceptors.length - 1] = new ReplicaDestinationInterceptor(sourceBroker, this);
         compositeInterceptor.setInterceptors(interceptors);
+    }
+    
+    private void addInterceptor4MirroredQueues() {
+        final RegionBroker regionBroker = (RegionBroker) broker.getAdaptor(RegionBroker.class);
+        final CompositeDestinationInterceptor compositeInterceptor = (CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor();
+        DestinationInterceptor[] interceptors = compositeInterceptor.getInterceptors();
+        int index = -1;
+        for (int i = 0; i < interceptors.length; i++) {
+            if (interceptors[i] instanceof MirroredQueue) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0) {
+            return;
+        }
+        DestinationInterceptor[] newInterceptors = new DestinationInterceptor[interceptors.length + 1];
+        System.arraycopy(interceptors, 0, newInterceptors, 0, index + 1);
+        System.arraycopy(interceptors, index + 1, newInterceptors, index + 2, interceptors.length - index - 1);
+        newInterceptors[index + 1] = new ReplicaMirroredDestinationInterceptor(this);
+        compositeInterceptor.setInterceptors(newInterceptors);
     }
 
     private MutativeRoleBroker getNextByRole() {
