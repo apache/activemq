@@ -67,9 +67,9 @@
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
-    <jackson-version>2.16.0</jackson-version>
     <jakarta-jms-api-version>2.0.3</jakarta-jms-api-version>
     <jakarta-jms-api-v3-version>3.1.0</jakarta-jms-api-v3-version>
+    <jackson-version>2.16.1</jackson-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty9-version>9.4.53.v20231009</jetty9-version>
