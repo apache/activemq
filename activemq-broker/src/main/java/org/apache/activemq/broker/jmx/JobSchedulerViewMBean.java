@@ -67,6 +67,7 @@ public interface JobSchedulerViewMBean {
     @MBeanInfo("remove all scheduled jobs between time ranges ")
     public abstract void removeAllJobs(@MBeanInfo("start: yyyy-MM-dd hh:mm:ss")String start,@MBeanInfo("finish: yyyy-MM-dd hh:mm:ss")String finish) throws Exception;
 
+
     /**
      * Get the next time jobs will be fired from this scheduler store.
      *
