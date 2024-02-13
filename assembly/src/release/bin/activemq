@@ -370,7 +370,7 @@ invokeJar(){
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               -Djolokia.conf=\"${JOLOKIA_CONF}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> "$ACTIVEMQ_OUT" 2>&1 &
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> \"$ACTIVEMQ_OUT\" 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > \"${PIDFILE}\";
               echo \"INFO: pidfile created : '${PIDFILE}' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
@@ -384,7 +384,7 @@ invokeJar(){
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               -Djolokia.conf=\"${JOLOKIA_CONF}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> "$ACTIVEMQ_OUT" 2>&1 &
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> \"$ACTIVEMQ_OUT\" 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > \"${PIDFILE}\";
               echo \"INFO: pidfile created : '${PIDFILE}' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
