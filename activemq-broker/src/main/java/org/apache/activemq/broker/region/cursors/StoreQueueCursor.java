@@ -53,7 +53,9 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized void start() throws Exception {
-        started = true;
+        if (isStarted()) {
+            return;
+        }
         super.start();
         if (nonPersistent == null) {
             if (broker.getBrokerService().isPersistent()) {
@@ -76,7 +78,9 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized void stop() throws Exception {
-        started = false;
+        if (!isStarted()) {
+            return;
+        }
         if (nonPersistent != null) {
           nonPersistent.destroy();
         }
