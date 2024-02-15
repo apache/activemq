@@ -1552,7 +1552,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
                 metadata.lastUpdate = location;
             } else {
-
                 MessageKeys messageKeys = sd.orderIndex.get(tx, previous);
                 if (messageKeys != null && messageKeys.location.compareTo(location) < 0) {
                     // If the message ID is indexed, then the broker asked us to store a duplicate before the message was dispatched and acked, we ignore this add attempt
@@ -1560,6 +1559,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
                 sd.messageIdIndex.put(tx, command.getMessageId(), previous);
                 sd.locationIndex.remove(tx, location);
+                // ensure sequence is not broken
+                sd.orderIndex.revertNextMessageId();
                 id = -1;
             }
         } else {
