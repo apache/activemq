@@ -29,10 +29,13 @@ import javax.management.ObjectName;
 
 import junit.framework.TestCase;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.SubscriptionStatistics;
+import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.StoreQueueCursor;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
@@ -117,6 +120,18 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
         queue.initialize();
         queue.start();
 
+        // verify that the cursor message audit is created and set with the
+        // correct audit depth and shared with the persistent and non peristent
+        // cursors
+        final StoreQueueCursor messages = (StoreQueueCursor) queue.getMessages();
+        ActiveMQMessageAudit messageAudit = messages.getMessageAudit();
+        assertNotNull(messageAudit);
+        assertEquals(auditDepth, messageAudit.getAuditDepth());
+        assertSame(messageAudit, messages.getPersistent().getMessageAudit());
+        assertSame(messageAudit, messages.getNonPersistent().getMessageAudit());
+        // Verify calling start again doesn't re-initial the audit
+        messages.start();
+        assertSame(messageAudit, messages.getMessageAudit());
 
         ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
         ProducerInfo producerInfo = new ProducerInfo();
