@@ -18,6 +18,7 @@ package org.apache.activemq.transport.ws;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -282,6 +283,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
     @Override
     public void onWebSocketConnect(org.eclipse.jetty.websocket.api.Session session) {
         this.connection = session;
+        this.connection.setIdleTimeout(Duration.ZERO);
         this.connectLatch.countDown();
     }
 }

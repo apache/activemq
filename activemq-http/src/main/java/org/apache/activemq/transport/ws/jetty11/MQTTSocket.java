@@ -18,6 +18,7 @@ package org.apache.activemq.transport.ws.jetty11;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -116,6 +117,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
     @Override
     public void onWebSocketConnect(Session session) {
         this.session = session;
+        this.session.setIdleTimeout(Duration.ZERO);
     }
 
     @Override

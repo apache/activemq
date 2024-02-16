@@ -19,6 +19,7 @@ package org.apache.activemq.transport.ws;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -218,6 +219,7 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
     @Override
     public void onWebSocketConnect(Session session) {
         this.session = session;
+        this.session.setIdleTimeout(Duration.ZERO);
 
         if (wsTransport.getMaxFrameSize() > 0) {
             this.session.getPolicy().setMaxBinaryMessageSize(wsTransport.getMaxFrameSize());
