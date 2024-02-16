@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.ws;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -143,6 +144,7 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
     @Override
     public void onWebSocketConnect(org.eclipse.jetty.websocket.api.Session session) {
         this.connection = session;
+        this.connection.setIdleTimeout(Duration.ZERO);
         this.connectLatch.countDown();
     }
 

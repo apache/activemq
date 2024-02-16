@@ -341,4 +341,26 @@ public class StompWSTransportTest extends WSTransportTestSupport {
             LOG.info("Caught exception on write of disconnect", ex);
         }
     }
+
+    @Test(timeout = 60000)
+    public void testNoDefaultJettyWebSocketIdleTimeout() throws Exception {
+        String connectFrame = "STOMP\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
+                              "accept-version:1.1\n" +
+                              "heart-beat:60000,0\n" +
+                              "host:localhost\n" +
+                              "\n" + Stomp.NULL;
+
+        wsStompConnection.sendRawFrame(connectFrame);
+        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+        assertTrue(incoming.startsWith("CONNECTED"));
+        assertTrue(incoming.indexOf("version:1.1") >= 0);
+        assertTrue(incoming.indexOf("heart-beat:") >= 0);
+        assertTrue(incoming.indexOf("session:") >= 0);
+
+        TimeUnit.SECONDS.sleep(35);
+
+        wsStompConnection.sendFrame(new StompFrame(Stomp.Commands.DISCONNECT));
+    }
 }

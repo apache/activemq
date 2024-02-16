@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.ws.jetty11;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.stomp.Stomp;
@@ -86,6 +87,7 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     @Override
     public void onWebSocketConnect(Session session) {
         this.session = session;
+        this.session.setIdleTimeout(Duration.ZERO);
     }
 
     @Override
