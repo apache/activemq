@@ -409,6 +409,16 @@ public class DestinationFilter implements Destination {
         next.setSendDuplicateFromStoreToDLQ(sendDuplicateFromStoreToDLQ);
     }
 
+    @Override
+    public boolean isAdvancedNetworkStatisticsEnabled() {
+        return next.isAdvancedNetworkStatisticsEnabled();
+    }
+
+    @Override
+    public void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled) {
+        next.setAdvancedNetworkStatisticsEnabled(advancedNetworkStatisticsEnabled);
+    }
+
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
         if (next instanceof DestinationFilter) {
             DestinationFilter filter = (DestinationFilter) next;
