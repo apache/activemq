@@ -778,6 +778,11 @@ public class Topic extends BaseDestination implements Task {
         // misleading metrics.
         // destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();
+
+        if(context.isNetworkConnection() && isAdvancedStatisticsEnabled()) {
+            destinationStatistics.getNetworkEnqueues().increment();
+        }
+
         destinationStatistics.getMessageSize().addSize(message.getSize());
         MessageEvaluationContext msgContext = null;
 

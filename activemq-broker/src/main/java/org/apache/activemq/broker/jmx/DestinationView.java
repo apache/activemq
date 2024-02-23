@@ -599,4 +599,25 @@ public class DestinationView implements DestinationViewMBean {
     public long getMaxUncommittedExceededCount() {
         return destination.getDestinationStatistics().getMaxUncommittedExceededCount().getCount();
     }
+
+    @Override
+    public boolean isAdvancedStatisticsEnabled() {
+        return destination.isAdvancedStatisticsEnabled();
+    }
+
+    @Override
+    public void setAdvancedStatisticsEnabled(boolean advancedStatisticsEnabled) {
+        destination.setAdvancedStatisticsEnabled(advancedStatisticsEnabled);
+    }
+
+    @Override
+    public long getNetworkEnqueues() {
+        return destination.getDestinationStatistics().getNetworkEnqueues().getCount();
+    }
+
+    @Override
+    public long getNetworkDequeues() {
+        return destination.getDestinationStatistics().getNetworkDequeues().getCount();
+    }
+
 }
