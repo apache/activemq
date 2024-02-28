@@ -199,11 +199,13 @@ public class ReplicaBrokerEventListener implements MessageListener {
             }
             return null;
         });
+
+        ReplicaEventRetrier outerRetrier = replicaEventRetrier.get();
         replicaEventRetrier.set(retrier);
         try {
             retrier.process();
         } finally {
-            replicaEventRetrier.set(null);
+            replicaEventRetrier.set(outerRetrier);
         }
     }
 

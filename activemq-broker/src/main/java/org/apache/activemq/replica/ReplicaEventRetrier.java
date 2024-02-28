@@ -54,6 +54,9 @@ public class ReplicaEventRetrier {
                 Thread.sleep(sleepInterval);
             }
         }
+        if (!running.get()) {
+            throw new InterruptedException("Retried was stopped");
+        }
     }
 
     public void stop() {

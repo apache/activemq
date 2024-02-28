@@ -86,7 +86,7 @@ public class ReplicaBroker extends MutativeRoleBroker {
 
     @Override
     public void stop() throws Exception {
-        logger.info("Stopping Source broker");
+        logger.info("Stopping broker replication.");
         deinitialize();
         super.stop();
     }
@@ -109,9 +109,8 @@ public class ReplicaBroker extends MutativeRoleBroker {
     }
 
     void completeBeforeRoleChange() throws Exception {
-        messageListener.deinitialize();
-        removeReplicationQueues();
         deinitialize();
+        removeReplicationQueues();
         onStopSuccess();
     }
 
@@ -131,7 +130,7 @@ public class ReplicaBroker extends MutativeRoleBroker {
         messageListener = new ReplicaBrokerEventListener(this, queueProvider, periodAcknowledgeCallBack, replicaPolicy, replicaStatistics);
     }
 
-    private void deinitialize() throws JMSException {
+    private void deinitialize() throws Exception {
         if (replicationScheduledFuture != null) {
             replicationScheduledFuture.cancel(true);
         }
@@ -142,12 +141,18 @@ public class ReplicaBroker extends MutativeRoleBroker {
         ActiveMQMessageConsumer consumer = eventConsumer.get();
         ActiveMQSession session = connectionSession.get();
         ActiveMQConnection brokerConnection = connection.get();
+        if (consumer != null) {
+            consumer.setMessageListener(null);
+        }
         if (messageListener != null) {
             messageListener.close();
         }
         if (consumer != null) {
             consumer.stop();
             consumer.close();
+        }
+        if (messageListener != null) {
+            messageListener.deinitialize();
         }
         if (session != null) {
             session.close();
@@ -162,6 +167,7 @@ public class ReplicaBroker extends MutativeRoleBroker {
         connection.set(null);
         replicationScheduledFuture = null;
         ackPollerScheduledFuture = null;
+        messageListener = null;
     }
 
     @Override
