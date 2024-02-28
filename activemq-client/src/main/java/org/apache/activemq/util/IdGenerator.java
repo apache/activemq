@@ -41,63 +41,52 @@ public class IdGenerator {
 
     static {
         String stub = "";
-        boolean canAccessSystemProps = true;
+
+        hostName = System.getProperty(PROPERTY_IDGENERATOR_HOSTNAME);
+        int localPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_LOCALPORT, "0"));
+
+        int idGeneratorPort = 0;
+        ServerSocket ss = null;
         try {
-            SecurityManager sm = System.getSecurityManager();
-            if (sm != null) {
-                sm.checkPropertiesAccess();
+            if( hostName==null ) {
+                hostName = InetAddressUtil.getLocalHostName();
             }
-        } catch (SecurityException se) {
-            canAccessSystemProps = false;
-        }
+            if( localPort==0 ) {
+                idGeneratorPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_PORT, "0"));
+                LOG.trace("Using port {}", idGeneratorPort);
+                ss = new ServerSocket(idGeneratorPort);
+                localPort = ss.getLocalPort();
+                stub = "-" + localPort + "-" + System.currentTimeMillis() + "-";
+                Thread.sleep(100);
+            } else {
+                stub = "-" + localPort + "-" + System.currentTimeMillis() + "-";
+            }
+        } catch (Exception e) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("could not generate unique stub by using DNS and binding to local port", e);
+            } else {
+                LOG.warn("could not generate unique stub by using DNS and binding to local port: {} {}", e.getClass().getCanonicalName(), e.getMessage());
+            }
 
-        if (canAccessSystemProps) {
-
-            hostName = System.getProperty(PROPERTY_IDGENERATOR_HOSTNAME);
-            int localPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_LOCALPORT, "0"));
-
-            int idGeneratorPort = 0;
-            ServerSocket ss = null;
-            try {
-                if( hostName==null ) {
-                    hostName = InetAddressUtil.getLocalHostName();
-                }
-                if( localPort==0 ) {
-                    idGeneratorPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_PORT, "0"));
-                    LOG.trace("Using port {}", idGeneratorPort);
-                    ss = new ServerSocket(idGeneratorPort);
-                    localPort = ss.getLocalPort();
-                    stub = "-" + localPort + "-" + System.currentTimeMillis() + "-";
-                    Thread.sleep(100);
-                } else {
-                    stub = "-" + localPort + "-" + System.currentTimeMillis() + "-";
-                }
-            } catch (Exception e) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("could not generate unique stub by using DNS and binding to local port", e);
-                } else {
-                    LOG.warn("could not generate unique stub by using DNS and binding to local port: {} {}", e.getClass().getCanonicalName(), e.getMessage());
-                }
-
-                // Restore interrupted state so higher level code can deal with it.
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                }
-            } finally {
-                if (ss != null) {
-                    try {
-                        // TODO: replace the following line with IOHelper.close(ss) when Java 6 support is dropped
-                        ss.close();
-                    } catch (IOException ioe) {
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("Closing the server socket failed", ioe);
-                        } else {
-                            LOG.warn("Closing the server socket failed" + " due " + ioe.getMessage());
-                        }
+            // Restore interrupted state so higher level code can deal with it.
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+        } finally {
+            if (ss != null) {
+                try {
+                    // TODO: replace the following line with IOHelper.close(ss) when Java 6 support is dropped
+                    ss.close();
+                } catch (IOException ioe) {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Closing the server socket failed", ioe);
+                    } else {
+                        LOG.warn("Closing the server socket failed" + " due " + ioe.getMessage());
                     }
                 }
             }
         }
+
         // fallback
         if (hostName == null) {
             hostName = "localhost";
