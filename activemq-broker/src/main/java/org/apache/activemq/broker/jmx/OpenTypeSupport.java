@@ -420,6 +420,7 @@ public final class OpenTypeSupport {
             addItem("next", "next time", SimpleType.STRING);
             addItem("period", "period between jobs", SimpleType.LONG);
             addItem("repeat", "number of times to repeat", SimpleType.INTEGER);
+            addItem("destinationName", "destination name", SimpleType.STRING);
         }
 
         @Override
@@ -433,6 +434,7 @@ public final class OpenTypeSupport {
             rc.put("next", job.getNextExecutionTime());
             rc.put("period", job.getPeriod());
             rc.put("repeat", job.getRepeat());
+            rc.put("destinationName", job.getDestinationName());
             return rc;
         }
     }
