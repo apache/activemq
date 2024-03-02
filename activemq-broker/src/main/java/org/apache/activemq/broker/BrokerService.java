@@ -271,17 +271,20 @@ public class BrokerService implements Service {
     static {
 
         try {
-            ClassLoader loader = BrokerService.class.getClassLoader();
-            Class<?> clazz = loader.loadClass("org.bouncycastle.jce.provider.BouncyCastleProvider");
-            Provider bouncycastle = (Provider) clazz.getDeclaredConstructor().newInstance();
-            Integer bouncyCastlePosition = Integer.getInteger("org.apache.activemq.broker.BouncyCastlePosition");
-            int ret;
-            if (bouncyCastlePosition != null) {
-                ret = Security.insertProviderAt(bouncycastle, bouncyCastlePosition);
-            } else {
-                ret = Security.addProvider(bouncycastle);
+            Boolean bouncyCastleNotAdded = Boolean.getBoolean("org.apache.activemq.broker.BouncyCastleNotAdded");
+            if (bouncyCastleNotAdded == null || bouncyCastleNotAdded == false) {
+                ClassLoader loader = BrokerService.class.getClassLoader();
+                Class<?> clazz = loader.loadClass("org.bouncycastle.jce.provider.BouncyCastleProvider");
+                Provider bouncycastle = (Provider) clazz.getDeclaredConstructor().newInstance();
+                Integer bouncyCastlePosition = Integer.getInteger("org.apache.activemq.broker.BouncyCastlePosition");
+                int ret;
+                if (bouncyCastlePosition != null) {
+                    ret = Security.insertProviderAt(bouncycastle, bouncyCastlePosition);
+                } else {
+                    ret = Security.addProvider(bouncycastle);
+                }
+                LOG.info("Loaded the Bouncy Castle security provider at position: {}", ret);
             }
-            LOG.info("Loaded the Bouncy Castle security provider at position: {}", ret);
         } catch(Throwable e) {
             // No BouncyCastle found so we use the default Java Security Provider
         }
