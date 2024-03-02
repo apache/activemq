@@ -1399,9 +1399,11 @@ public class FailoverTransport implements CompositeTransport {
             } catch(IOException e) {
 
                 if (firstAddr == null) {
-                    LOG.error("Failed to Lookup INetAddress for URI[{}] : {}", first, e);
+                    LOG.error("Failed to Lookup INetAddress for URI[{}]", first);
+                    LOG.debug("Lookup Failure stack trace", e);
                 } else {
-                    LOG.error("Failed to Lookup INetAddress for URI[{}] : {}", second, e);
+                    LOG.error("Failed to Lookup INetAddress for URI[{}]", second);
+                    LOG.debug("Lookup Failure stack trace", e);
                 }
 
                 if (first.getHost().equalsIgnoreCase(second.getHost())) {
