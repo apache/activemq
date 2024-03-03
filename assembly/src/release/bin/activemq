@@ -171,7 +171,7 @@ if ( basename $0 | grep "activemq-instance-" > /dev/null);then
   ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
   echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
 else
-  ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc $ACTIVEMQ_HOME/bin/setenv"
+  ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc \"$ACTIVEMQ_HOME\"/bin/setenv"
 fi
 
 # load activemq configuration
@@ -199,7 +199,7 @@ if [ "$CONFIG_LOAD" != "yes" ];then
 fi
 
 if [ -z "$ACTIVEMQ_OPTS" ] ; then
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=\"$ACTIVEMQ_CONF\"/login.config"
 fi
 
 
@@ -358,9 +358,9 @@ invokeJar(){
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               -Djolokia.conf=\"${JOLOKIA_CONF}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> $ACTIVEMQ_OUT 2>&1 &
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> \"$ACTIVEMQ_OUT\" 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
-              echo \$APID > "${PIDFILE}";
+              echo \$APID > \"${PIDFILE}\";
               echo \"INFO: pidfile created : '${PIDFILE}' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
         RET="$?"
    elif [ -n "$TASK_TODO" ] && [ "$TASK_TODO" = "stop" ];then
@@ -389,7 +389,7 @@ invokeJar(){
             $ACTIVEMQ_CYGWIN \
             -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $SPID &
             RET=\"\$?\"; APID=\"\$!\";
-            echo \$APID > "${PIDFILE}.stop"; exit \$RET" $DOIT_POSTFIX
+            echo \$APID > \"${PIDFILE}.stop\"; exit \$RET" $DOIT_POSTFIX
           RET="$?"
    else
       $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
@@ -434,7 +434,7 @@ invokeJar(){
 checkRunning(){
     local pidfile="${1}"
 
-    if [ -f $pidfile ]; then
+    if [ -f "$pidfile" ]; then
        if  [ -z "`cat "$pidfile"`" ];then
         echo "ERROR: Pidfile '$pidfile' exists but contains no pid"
         return 2
@@ -463,7 +463,7 @@ checkRunning(){
 
 invoke_status(){
     if ( checkRunning "$ACTIVEMQ_PIDFILE" );then
-         PID="`cat $ACTIVEMQ_PIDFILE`"
+         PID="`cat \"$ACTIVEMQ_PIDFILE\"`"
          echo "ActiveMQ is running (pid '$PID')"
          exit 0
     fi
@@ -538,7 +538,7 @@ invoke_console(){
 
 invoke_kill(){
     if ( checkRunning "$ACTIVEMQ_PIDFILE" );then
-       ACTIVEMQ_PID="`cat ${ACTIVEMQ_PIDFILE}`"
+       ACTIVEMQ_PID="`cat \"${ACTIVEMQ_PIDFILE}\"`"
        echo "INFO: sending SIGKILL to pid '$ACTIVEMQ_PID'"
        kill -KILL $ACTIVEMQ_PID
        RET="$?"
