@@ -30,17 +30,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>groovy</groupId>
-      <artifactId>gram</artifactId>
-      <version>1.1</version>
-      <exclusions>
-        <exclusion>
-          <groupId>ant</groupId>
-          <artifactId>ant</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
       <version>4.0.6</version>
