@@ -517,6 +517,16 @@ public class BrokerView implements BrokerViewMBean {
         return brokerService.isSlave();
     }
 
+    @Override
+    public boolean isDedicatedTaskRunner() {
+        return brokerService.isDedicatedTaskRunner();
+    }
+
+    @Override
+    public boolean isVirtualThreadTaskRunner() {
+        return brokerService.isVirtualThreadTaskRunner();
+    }
+
     private ManagedRegionBroker safeGetBroker() {
         if (broker == null) {
             throw new IllegalStateException("Broker is not yet started.");

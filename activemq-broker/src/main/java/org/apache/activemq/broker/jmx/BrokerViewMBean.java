@@ -335,4 +335,11 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo(value="The total number of times that the max number of uncommitted count has been exceeded across all destinations")
     long getTotalMaxUncommittedExceededCount();
+
+    @MBeanInfo("Dedicated Task Runner enabled.")
+    boolean isDedicatedTaskRunner();
+
+    @MBeanInfo("Virtual Thread Task Runner enabled.")
+    boolean isVirtualThreadTaskRunner();
+
 }
