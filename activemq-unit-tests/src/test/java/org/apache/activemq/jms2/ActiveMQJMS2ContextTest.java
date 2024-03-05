@@ -57,9 +57,18 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
         }
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testConnectionFactoryCreateContextSession() {
-        activemqConnectionFactory.createContext(Session.AUTO_ACKNOWLEDGE);
+        try(JMSContext jmsContext = activemqConnectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
+            assertNotNull(jmsContext);
+            jmsContext.start();
+            assertTrue(ActiveMQContext.class.isAssignableFrom(jmsContext.getClass()));
+            Destination destination = jmsContext.createQueue(methodNameDestinationName);
+            sendMessage(jmsContext, destination, "Test-" + methodNameDestinationName);
+            recvMessage(jmsContext, destination, "Test-" + methodNameDestinationName);
+        } catch (JMSException e) {
+            fail(e.getMessage());
+        }
     }
 
     @Test
