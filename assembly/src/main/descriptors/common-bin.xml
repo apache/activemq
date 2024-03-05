@@ -159,6 +159,16 @@
       <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
+      <outputDirectory>lib/jdk21</outputDirectory>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <includes>
+        <include>${pom.groupId}:activemq-client-jdk21</include>
+      </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
+    </dependencySet>
+    <dependencySet>
       <outputDirectory>lib/camel</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>

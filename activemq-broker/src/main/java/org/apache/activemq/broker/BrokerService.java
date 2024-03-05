@@ -50,6 +50,7 @@ import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
+import org.apache.activemq.annotation.Experimental;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
@@ -223,6 +224,7 @@ public class BrokerService implements Service {
     private boolean monitorConnectionSplits = false;
     private int taskRunnerPriority = Thread.NORM_PRIORITY;
     private boolean dedicatedTaskRunner;
+    private boolean virtualThreadTaskRunner;
     private boolean cacheTempDestinations = false;// useful for failover
     private int timeBeforePurgeTempDestinations = 5000;
     private final List<Runnable> shutdownHooks = new ArrayList<>();
@@ -1269,7 +1271,7 @@ public class BrokerService implements Service {
     public TaskRunnerFactory getTaskRunnerFactory() {
         if (this.taskRunnerFactory == null) {
             this.taskRunnerFactory = new TaskRunnerFactory("ActiveMQ BrokerService["+getBrokerName()+"] Task", getTaskRunnerPriority(), true, 1000,
-                    isDedicatedTaskRunner());
+                    isDedicatedTaskRunner(), isVirtualThreadTaskRunner());
             this.taskRunnerFactory.setThreadClassLoader(this.getClass().getClassLoader());
         }
         return this.taskRunnerFactory;
@@ -1280,9 +1282,10 @@ public class BrokerService implements Service {
     }
 
     public TaskRunnerFactory getPersistenceTaskRunnerFactory() {
+        // [AMQ-9394] TODO: Should we have a separate config flag for virtualThread for persistence task runner?
         if (taskRunnerFactory == null) {
             persistenceTaskRunnerFactory = new TaskRunnerFactory("Persistence Adaptor Task", persistenceThreadPriority,
-                    true, 1000, isDedicatedTaskRunner());
+                    true, 1000, isDedicatedTaskRunner(), isVirtualThreadTaskRunner());
         }
         return persistenceTaskRunnerFactory;
     }
@@ -1889,6 +1892,15 @@ public class BrokerService implements Service {
 
     public void setDedicatedTaskRunner(boolean dedicatedTaskRunner) {
         this.dedicatedTaskRunner = dedicatedTaskRunner;
+    }
+
+   public boolean isVirtualThreadTaskRunner() {
+        return virtualThreadTaskRunner;
+    }
+
+    @Experimental("Tech Preview for Virtaul Thread support")
+    public void setVirtualThreadTaskRunner(boolean virtualThreadTaskRunner) {
+        this.virtualThreadTaskRunner = virtualThreadTaskRunner;
     }
 
     public boolean isCacheTempDestinations() {
