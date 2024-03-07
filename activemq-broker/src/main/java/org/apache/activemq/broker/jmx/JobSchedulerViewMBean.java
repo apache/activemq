@@ -99,6 +99,19 @@ public interface JobSchedulerViewMBean {
     public abstract TabularData getNextScheduleJobs() throws Exception;
 
     /**
+     * Get all the jobs scheduled to run next.
+     *
+     * @param includeDestinationName
+     *        include the destination name with the job metadata.
+     *
+     * @return a list of jobs that will be scheduled next
+     *
+     * @throws Exception if an error occurs while reading the scheduler store.
+     */
+    @MBeanInfo("get the next job(s) to be scheduled including the destination name. Not HTML friendly ")
+    public abstract TabularData getNextScheduleJobs(boolean includeDestinationName) throws Exception;
+
+    /**
      * Get all the outstanding Jobs that are scheduled in this scheduler store.
      *
      * @return a table of all jobs in this scheduler store.
@@ -107,6 +120,19 @@ public interface JobSchedulerViewMBean {
      */
     @MBeanInfo("get the scheduled Jobs in the Store. Not HTML friendly ")
     public abstract TabularData getAllJobs() throws Exception;
+
+    /**
+     * Get all the outstanding Jobs that are scheduled in this scheduler store.
+     *
+     * @param includeDestinationName
+     *        include the destination name with the job metadata.
+     *
+     * @return a table of all jobs in this scheduler store.
+     *
+     * @throws Exception if an error occurs while reading the store.
+     */
+    @MBeanInfo("get the scheduled Jobs in the Store including the destination name. Not HTML friendly ")
+    public abstract TabularData getAllJobs(boolean includeDestinationName) throws Exception;
 
     /**
      * Get all outstanding jobs due to run between start and finish time range.
@@ -123,6 +149,22 @@ public interface JobSchedulerViewMBean {
     @MBeanInfo("get the scheduled Jobs in the Store within the time range. Not HTML friendly ")
     public abstract TabularData getAllJobs(@MBeanInfo("start: yyyy-MM-dd hh:mm:ss")String start,@MBeanInfo("finish: yyyy-MM-dd hh:mm:ss")String finish)throws Exception;
 
+    /**
+     * Get all outstanding jobs due to run between start and finish time range.
+     *
+     * @param start
+     *        the starting time range to query the store for jobs.
+     * @param finish
+     *        the ending time of this query for scheduled jobs.
+     * @param includeDestinationName
+     *        include the destination name with the job metadata.
+     *
+     * @return a table of jobs in the range given.
+     *
+     * @throws Exception if an error occurs while querying the scheduler store.
+     */
+    @MBeanInfo("get the scheduled Jobs in the Store within the time range including the destination name. Not HTML friendly ")
+    public abstract TabularData getAllJobs(@MBeanInfo("start: yyyy-MM-dd hh:mm:ss")String startTime, @MBeanInfo("finish: yyyy-MM-dd hh:mm:ss")String finishTime, boolean includeDestinationName) throws Exception;
     /**
      * Get the number of messages in the scheduler.
      *
