@@ -54,6 +54,11 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
 
     @Override
     public TabularData getAllJobs() throws Exception {
+        return getAllJobs(false);
+    }
+
+    @Override
+    public TabularData getAllJobs(boolean includeDestinationName) throws Exception {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(Job.class);
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("Scheduled Jobs", "Scheduled Jobs", ct, new String[] { "jobId" });
@@ -67,6 +72,11 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
 
     @Override
     public TabularData getAllJobs(String startTime, String finishTime) throws Exception {
+        return getAllJobs(startTime, finishTime, false);
+    }
+
+    @Override
+    public TabularData getAllJobs(String startTime, String finishTime, boolean includeDestinationName) throws Exception {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(Job.class);
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("Scheduled Jobs", "Scheduled Jobs", ct, new String[] { "jobId" });
@@ -100,6 +110,11 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
 
     @Override
     public TabularData getNextScheduleJobs() throws Exception {
+        return getNextScheduleJobs(false);
+    }
+
+    @Override
+    public TabularData getNextScheduleJobs(boolean includeDestinationName) throws Exception {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(Job.class);
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("Scheduled Jobs", "Scheduled Jobs", ct, new String[] { "jobId" });
