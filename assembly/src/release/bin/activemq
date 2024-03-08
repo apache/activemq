@@ -175,7 +175,7 @@ if ( basename $0 | grep "activemq-instance-" > /dev/null);then
   ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
   echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
 else
-  ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc \"$ACTIVEMQ_HOME\"/bin/env"
+  ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc $ACTIVEMQ_HOME/bin/env"
 fi
 
 # load activemq configuration
