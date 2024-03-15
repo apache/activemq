@@ -203,7 +203,6 @@
   <modules>
     <module>activemq-openwire-generator</module>
     <module>activemq-client</module>
-    <module>activemq-client-jakarta</module>
     <module>activemq-openwire-legacy</module>
     <module>activemq-broker</module>
     <module>activemq-stomp</module>
