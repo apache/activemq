@@ -138,6 +138,7 @@
     <maven-shade-plugin-version>3.5.1</maven-shade-plugin-version>
     <exec-maven-plugin-version>3.1.0</exec-maven-plugin-version>
     <findbugs-maven-plugin-version>3.0.5</findbugs-maven-plugin-version>
+    <flatten-maven-plugin-version>1.6.0</flatten-maven-plugin-version>
     <javacc-maven-plugin-version>3.0.1</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>3.0.0</taglist-maven-plugin-version>
@@ -203,6 +204,7 @@
   </distributionManagement>
 
   <modules>
+    <module>bom</module>
     <module>activemq-openwire-generator</module>
     <module>activemq-client</module>
     <module>activemq-openwire-legacy</module>
@@ -1081,6 +1083,11 @@
           <groupId>org.apache.geronimo.genesis.plugins</groupId>
           <artifactId>tools-maven-plugin</artifactId>
           <version>${tools-maven-plugin-version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>flatten-maven-plugin</artifactId>
+          <version>${flatten-maven-plugin-version}</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
