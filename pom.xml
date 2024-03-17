@@ -72,7 +72,7 @@
     <jackson-version>2.16.1</jackson-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
-    <jetty9-version>9.4.53.v20231009</jetty9-version>
+    <jetty9-version>9.4.54.v20240208</jetty9-version>
     <jetty-version>${jetty9-version}</jetty-version>
     <jmdns-version>3.5.9</jmdns-version>
     <tomcat-api-version>9.0.65</tomcat-api-version>
