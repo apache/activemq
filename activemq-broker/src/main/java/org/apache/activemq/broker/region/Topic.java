@@ -64,6 +64,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.jms.JMSException;
+import jakarta.jms.MessageFormatException;
+import jakarta.jms.MessageFormatRuntimeException;
 
 import static org.apache.activemq.transaction.Transaction.IN_USE_STATE;
 
@@ -370,6 +372,14 @@ public class Topic extends BaseDestination implements Task {
                 && !context.isInRecoveryMode();
 
         message.setRegionDestination(this);
+
+        if(getMessageInterceptorStrategy() != null) {
+            try {
+                getMessageInterceptorStrategy().process(producerExchange, message);
+            } catch (MessageFormatRuntimeException e) {
+                throw new MessageFormatException(e.getMessage(), e.getErrorCode());
+            }
+        }
 
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.

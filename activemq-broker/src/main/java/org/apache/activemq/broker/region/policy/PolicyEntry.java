@@ -115,6 +115,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int sendFailIfNoSpace = -1;
     private long sendFailIfNoSpaceAfterTimeout = -1;
 
+    private MessageInterceptorStrategy messageInterceptorStrategy = null;
 
     public void configure(Broker broker,Queue queue) {
         baseConfiguration(broker,queue);
@@ -139,6 +140,7 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
         queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
         queue.setPersistJMSRedelivered(isPersistJMSRedelivered());
+        queue.setMessageInterceptorStrategy(getMessageInterceptorStrategy());
     }
 
     public void update(Queue queue) {
@@ -201,6 +203,7 @@ public class PolicyEntry extends DestinationMapEntry {
             topic.getMemoryUsage().setLimit(memoryLimit);
         }
         topic.setLazyDispatch(isLazyDispatch());
+        topic.setMessageInterceptorStrategy(getMessageInterceptorStrategy());
     }
 
     public void update(Topic topic) {
@@ -1164,5 +1167,13 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setUseTopicSubscriptionInflightStats(boolean useTopicSubscriptionInflightStats) {
         this.useTopicSubscriptionInflightStats = useTopicSubscriptionInflightStats;
+    }
+
+    public void setMessageInterceptorStrategy(MessageInterceptorStrategy messageInterceptorStrategy) {
+        this.messageInterceptorStrategy = messageInterceptorStrategy;
+    }
+
+    public MessageInterceptorStrategy getMessageInterceptorStrategy() {
+        return this.messageInterceptorStrategy;
     }
 }

@@ -28,6 +28,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
+import org.apache.activemq.broker.region.policy.MessageInterceptorStrategy;
 import org.apache.activemq.broker.region.policy.SlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -35,7 +36,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
@@ -99,6 +99,7 @@ public abstract class BaseDestination implements Destination {
     private int maxExpirePageSize = MAX_BROWSE_PAGE_SIZE;
     protected int cursorMemoryHighWaterMark = 70;
     protected int storeUsageHighWaterMark = 100;
+    private MessageInterceptorStrategy messageInterceptorStrategy;
     private SlowConsumerStrategy slowConsumerStrategy;
     private boolean prioritizedMessages;
     private long inactiveTimeoutBeforeGC = DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
@@ -941,5 +942,13 @@ public abstract class BaseDestination implements Destination {
 
     public SystemUsage getSystemUsage() {
         return systemUsage;
+    }
+
+    public MessageInterceptorStrategy getMessageInterceptorStrategy() {
+        return this.messageInterceptorStrategy;
+    }
+
+    public void setMessageInterceptorStrategy(MessageInterceptorStrategy messageInterceptorStrategy) {
+        this.messageInterceptorStrategy = messageInterceptorStrategy;
     }
 }
