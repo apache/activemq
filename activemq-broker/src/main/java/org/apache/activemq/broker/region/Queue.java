@@ -49,6 +49,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.jms.ResourceAllocationException;
+import javax.jms.MessageFormatException;
+import javax.jms.MessageFormatRuntimeException;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerStoppedException;
@@ -625,6 +627,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
         final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0
                 && !context.isInRecoveryMode();
+
+        if(getMessageInterceptorStrategy() != null) {
+            try {
+                getMessageInterceptorStrategy().process(producerExchange, message);
+            } catch (MessageFormatRuntimeException e) {
+                throw new MessageFormatException(e.getMessage(), e.getErrorCode());
+            }
+        }
+
         if (message.isExpired()) {
             // message not stored - or added to stats yet - so chuck here
             broker.getRoot().messageExpired(context, message, null);
