@@ -119,4 +119,27 @@ public class JmsCronSchedulerTest extends JobSchedulerTestSupport {
 
         connection.close();
     }
+
+    @Test(timeout = 90000)
+    public void testRepeatedCronDoesNotDeadlock() throws Exception {
+        Connection connection = createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(destination);
+        connection.start();
+
+        MessageProducer producer = session.createProducer(destination);
+        TextMessage message = session.createTextMessage("test msg");
+        message.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_CRON, "* * * * *");
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, 1000);
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 1000);
+        message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, 1);
+
+        producer.send(message);
+        producer.close();
+
+        assertNotNull(consumer.receive());
+        assertNotNull(consumer.receive());
+
+        connection.close();
+    }
 }
