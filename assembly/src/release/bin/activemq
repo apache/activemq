@@ -358,6 +358,7 @@ invokeJar(){
               --add-opens java.rmi/sun.rmi.transport.tcp=ALL-UNNAMED \
               --add-opens java.base/java.util.concurrent=ALL-UNNAMED \
               --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED \
+              --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
               --add-exports=java.base/sun.net.www.protocol.http=ALL-UNNAMED \
               --add-exports=java.base/sun.net.www.protocol.https=ALL-UNNAMED \
               --add-exports=java.base/sun.net.www.protocol.jar=ALL-UNNAMED \
@@ -403,6 +404,7 @@ invokeJar(){
                 --add-opens java.rmi/sun.rmi.transport.tcp=ALL-UNNAMED \
                 --add-opens java.base/java.util.concurrent=ALL-UNNAMED \
                 --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED \
+                --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
                 --add-exports=java.base/sun.net.www.protocol.http=ALL-UNNAMED \
                 --add-exports=java.base/sun.net.www.protocol.https=ALL-UNNAMED \
                 --add-exports=java.base/sun.net.www.protocol.jar=ALL-UNNAMED \
@@ -445,6 +447,7 @@ invokeJar(){
           --add-opens java.rmi/sun.rmi.transport.tcp=ALL-UNNAMED \
           --add-opens java.base/java.util.concurrent=ALL-UNNAMED \
           --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED \
+          --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
           --add-exports=java.base/sun.net.www.protocol.http=ALL-UNNAMED \
           --add-exports=java.base/sun.net.www.protocol.https=ALL-UNNAMED \
           --add-exports=java.base/sun.net.www.protocol.jar=ALL-UNNAMED \
