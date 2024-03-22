@@ -34,6 +34,7 @@ import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -141,6 +142,10 @@ public class StatisticsBroker extends BrokerFilter {
                         statsMessage.setLong("consumerCount", stats.getConsumers().getCount());
                         statsMessage.setLong("producerCount", stats.getProducers().getCount());
                         if (includeFirstMessageTimestamp) {
+                            //AMQ-9452: unwrap BaseDestination
+                            while (dest instanceof DestinationFilter) {
+                                dest = ((DestinationFilter) dest).getNext();
+                            }
                             if (dest instanceof Queue) {
                                 ((Queue) dest).doBrowse(tempFirstMessage, 1);
                             }
