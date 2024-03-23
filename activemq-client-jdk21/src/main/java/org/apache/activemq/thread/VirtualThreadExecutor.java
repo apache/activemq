@@ -21,8 +21,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.annotation.Experimental;
 import org.slf4j.Logger;
 
+@Experimental("Tech Preview for Virtual Thread support")
 public class VirtualThreadExecutor {
 
     private VirtualThreadExecutor() {}

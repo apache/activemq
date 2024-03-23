@@ -25,9 +25,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 class VirtualThreadTaskRunner implements TaskRunner {
 
     private static final Logger LOG = LoggerFactory.getLogger(VirtualThreadTaskRunner.class);

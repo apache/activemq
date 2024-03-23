@@ -50,6 +50,7 @@ import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
+import org.apache.activemq.annotation.Experimental;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
@@ -1897,6 +1898,7 @@ public class BrokerService implements Service {
         return virtualThreadTaskRunner;
     }
 
+    @Experimental("Tech Preview for Virtaul Thread support")
     public void setVirtualThreadTaskRunner(boolean virtualThreadTaskRunner) {
         this.virtualThreadTaskRunner = virtualThreadTaskRunner;
     }
