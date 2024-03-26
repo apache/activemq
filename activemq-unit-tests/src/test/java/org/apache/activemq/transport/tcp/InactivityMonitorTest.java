@@ -16,9 +16,18 @@
  */
 package org.apache.activemq.transport.tcp;
 
+import static java.lang.Thread.getAllStackTraces;
+import static java.util.stream.Collectors.toList;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.hamcrest.core.IsNot.not;
+
 import java.io.IOException;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -33,6 +42,7 @@ import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
+import org.hamcrest.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,32 +83,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
      */
     private void startClient() throws Exception, URISyntaxException {
         clientTransport = TransportFactory.connect(new URI("tcp://localhost:" + serverPort + "?trace=true&wireFormat.maxInactivityDuration=1000"));
-        clientTransport.setTransportListener(new TransportListener() {
-            @Override
-            public void onCommand(Object command) {
-                clientReceiveCount.incrementAndGet();
-                if (clientRunOnCommand != null) {
-                    clientRunOnCommand.run();
-                }
-            }
-
-            @Override
-            public void onException(IOException error) {
-                if (!ignoreClientError.get()) {
-                    LOG.info("Client transport error:");
-                    error.printStackTrace();
-                    clientErrorCount.incrementAndGet();
-                }
-            }
-
-            @Override
-            public void transportInterupted() {
-            }
-
-            @Override
-            public void transportResumed() {
-            }
-        });
+        clientTransport.setTransportListener(new TestClientTransportListener());
 
         clientTransport.start();
     }
@@ -181,32 +166,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         // Manually create a client transport so that it does not send KeepAlive
         // packets.  this should simulate a client hang.
         clientTransport = new TcpTransport(new OpenWireFormat(), SocketFactory.getDefault(), new URI("tcp://localhost:" + serverPort), null);
-        clientTransport.setTransportListener(new TransportListener() {
-            @Override
-            public void onCommand(Object command) {
-                clientReceiveCount.incrementAndGet();
-                if (clientRunOnCommand != null) {
-                    clientRunOnCommand.run();
-                }
-            }
-
-            @Override
-            public void onException(IOException error) {
-                if (!ignoreClientError.get()) {
-                    LOG.info("Client transport error:");
-                    error.printStackTrace();
-                    clientErrorCount.incrementAndGet();
-                }
-            }
-
-            @Override
-            public void transportInterupted() {
-            }
-
-            @Override
-            public void transportResumed() {
-            }
-        });
+        clientTransport.setTransportListener(new TestClientTransportListener());
 
         clientTransport.start();
         WireFormatInfo info = new WireFormatInfo();
@@ -235,6 +195,34 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
         assertEquals(0, clientErrorCount.get());
         assertEquals(0, serverErrorCount.get());
+    }
+
+    public void testReadCheckTimerIsNotLeakedOnError() throws Exception {
+        // Intentionally picks a port that is not the listening port to generate a failure
+        clientTransport = TransportFactory.connect(new URI("tcp://localhost:" + (serverPort ^ 1)));
+        clientTransport.setTransportListener(new TestClientTransportListener());
+
+        // Control test to verify there was no timer from a previous test
+        assertThat(getCurrentThreadNames(), not(hasReadCheckTimer()));
+
+        try {
+            clientTransport.start();
+            fail("A ConnectionException was expected");
+        } catch (SocketException e) {
+            // A SocketException is expected.
+        }
+
+        // If there is any read check timer at this point, calling stop should clean it up (because CHECKER_COUNTER becomes 0)
+        clientTransport.stop();
+        assertThat(getCurrentThreadNames(), not(hasReadCheckTimer()));
+    }
+
+    private static Matcher<Iterable<? super String>> hasReadCheckTimer() {
+        return hasItem("ActiveMQ InactivityMonitor ReadCheckTimer");
+    }
+
+    private static List<String> getCurrentThreadNames() {
+        return getAllStackTraces().keySet().stream().map(Thread::getName).collect(toList());
     }
 
     /**
@@ -271,5 +259,32 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
         assertEquals(0, clientErrorCount.get());
         assertEquals(0, serverErrorCount.get());
+    }
+
+    private class TestClientTransportListener implements TransportListener {
+        @Override
+        public void onCommand(Object command) {
+            clientReceiveCount.incrementAndGet();
+            if (clientRunOnCommand != null) {
+                clientRunOnCommand.run();
+            }
+        }
+
+        @Override
+        public void onException(IOException error) {
+            if (!ignoreClientError.get()) {
+                LOG.info("Client transport error:");
+                error.printStackTrace();
+                clientErrorCount.incrementAndGet();
+            }
+        }
+
+        @Override
+        public void transportInterupted() {
+        }
+
+        @Override
+        public void transportResumed() {
+        }
     }
 }
