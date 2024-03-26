@@ -199,6 +199,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private DestinationSource destinationSource;
     private final Object ensureConnectionInfoSentMutex = new Object();
     private boolean useDedicatedTaskRunner;
+    private boolean useVirtualThreadTaskRunner;
     protected AtomicInteger transportInterruptionProcessingComplete = new AtomicInteger(0);
     private long consumerFailoverRedeliveryWaitPeriod;
     private volatile Scheduler scheduler;
@@ -1068,10 +1069,22 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.useDedicatedTaskRunner = useDedicatedTaskRunner;
     }
 
+    public boolean isUseVirtualThreadTaskRunner() {
+        return useVirtualThreadTaskRunner;
+    }
+
+    public void setUseVirtualThreadTaskRunner(boolean useVirtualThreadTaskRunner) {
+        this.useVirtualThreadTaskRunner = useVirtualThreadTaskRunner;
+    }
+
     public TaskRunnerFactory getSessionTaskRunner() {
         synchronized (this) {
             if (sessionTaskRunner == null) {
-                sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000, isUseDedicatedTaskRunner(), maxThreadPoolSize);
+                if(isUseVirtualThreadTaskRunner()) {
+                    sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000, isUseDedicatedTaskRunner(), isUseVirtualThreadTaskRunner());
+                } else {
+                    sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000, isUseDedicatedTaskRunner(), maxThreadPoolSize);
+                }
                 sessionTaskRunner.setRejectedTaskHandler(rejectedTaskHandler);
             }
         }
