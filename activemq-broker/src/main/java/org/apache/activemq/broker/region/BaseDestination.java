@@ -28,6 +28,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
+import org.apache.activemq.broker.region.policy.MessageStrategy;
 import org.apache.activemq.broker.region.policy.SlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -99,6 +100,7 @@ public abstract class BaseDestination implements Destination {
     private int maxExpirePageSize = MAX_BROWSE_PAGE_SIZE;
     protected int cursorMemoryHighWaterMark = 70;
     protected int storeUsageHighWaterMark = 100;
+    private MessageStrategy messageStrategy;
     private SlowConsumerStrategy slowConsumerStrategy;
     private boolean prioritizedMessages;
     private long inactiveTimeoutBeforeGC = DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
@@ -941,5 +943,13 @@ public abstract class BaseDestination implements Destination {
 
     public SystemUsage getSystemUsage() {
         return systemUsage;
+    }
+
+    public MessageStrategy getMessageStrategy() {
+        return this.messageStrategy;
+    }
+
+    public void setMessageStrategy(MessageStrategy messageStrategy) {
+        this.messageStrategy = messageStrategy;
     }
 }
