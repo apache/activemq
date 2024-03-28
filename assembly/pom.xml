@@ -396,11 +396,6 @@
 
     <!-- dependencies specific to this module -->
     <dependency>
-      <groupId>jrms</groupId>
-      <artifactId>jrms</artifactId>
-      <version>1.1</version>
-    </dependency>
-    <dependency>
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
       <version>${xerces-version}</version>
