@@ -29,8 +29,10 @@ import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.usage.SystemUsage;
 
 public class HealthView implements HealthViewMBean {
@@ -165,6 +167,25 @@ public class HealthView implements HealthViewMBean {
                     }
                 }
             }
+        }
+
+        /**
+         * Check The Transport Connector limits
+         */
+
+        if (brokerService != null && !brokerService.getTransportConnectors().isEmpty()) {
+        	for(TransportConnector tc: brokerService.getTransportConnectors()) {
+        		if(tc.getServer() instanceof TcpTransportServer) {
+        			int connectionUsage = (int) (((TcpTransportServer)tc.getServer()).getCurrentTransportCount().get() * 100 ) / ((TcpTransportServer)tc.getServer()).getMaximumConnections();
+        			if(((TcpTransportServer)tc.getServer()).getCurrentTransportCount().get() >= ((TcpTransportServer)tc.getServer()).getMaximumConnections()) {
+        				String message = "Exceeded the maximum number of allowed client connections: " + ((TcpTransportServer)tc.getServer()).getMaximumConnections();
+        				answer.add(new HealthStatus("org.apache.activemq.transport.tcp.TcpTransportServer", "ERROR", message, tc.getName()));
+        			} else if(connectionUsage > 90) {
+        				String message = "The Current connection count is within  " + connectionUsage + "% of MaximumConnections limit";
+        				answer.add(new HealthStatus("org.apache.activemq.transport.tcp.TcpTransportServer", "WARNING", message, tc.getName()));
+        			}
+        		}	
+        	}
         }
 
         StringBuilder currentState = new StringBuilder();
