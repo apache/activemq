@@ -33,7 +33,9 @@
 if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
     ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
 fi
-ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY $ACTIVEMQ_OPTS -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+if [ -z "$ACTIVEMQ_OPTS" ] ; then
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+fi
 
 if [ -z "$ACTIVEMQ_OUT" ]; then
    ACTIVEMQ_OUT="/dev/null"
