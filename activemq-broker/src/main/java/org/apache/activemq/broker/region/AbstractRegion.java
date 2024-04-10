@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -543,7 +545,11 @@ public abstract class AbstractRegion implements Region {
         return sub.pullMessage(context, pull);
     }
 
-    protected Destination lookup(ConnectionContext context, ActiveMQDestination destination,boolean createTemporary) throws Exception {
+    protected Destination lookup(ConnectionContext context, ActiveMQDestination destination, boolean createTemporary) throws Exception {
+        return lookup(context, destination, createTemporary, true);
+    }
+
+    protected Destination lookup(ConnectionContext context, ActiveMQDestination destination, boolean createTemporary, boolean autoCreate) throws Exception {
         Destination dest = null;
 
         destinationsLock.readLock().lock();
@@ -553,7 +559,7 @@ public abstract class AbstractRegion implements Region {
             destinationsLock.readLock().unlock();
         }
 
-        if (dest == null) {
+        if (autoCreate && dest == null) {
             if (isAutoCreateDestinations()) {
                 // Try to auto create the destination... re-invoke broker
                 // from the
@@ -679,8 +685,8 @@ public abstract class AbstractRegion implements Region {
 
     @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
-        Subscription sub = subscriptions.get(control.getConsumerId());
-        if (sub != null && sub instanceof AbstractSubscription) {
+        final Subscription sub = subscriptions.get(control.getConsumerId());
+        if (sub instanceof AbstractSubscription) {
             ((AbstractSubscription) sub).setPrefetchSize(control.getPrefetch());
             if (broker.getDestinationPolicy() != null) {
                 PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(control.getDestination());
@@ -691,7 +697,17 @@ public abstract class AbstractRegion implements Region {
             LOG.debug("setting prefetch: {}, on subscription: {}; resulting value: {}",
                     control.getPrefetch(), control.getConsumerId(), sub.getConsumerInfo().getPrefetchSize());
             try {
-                lookup(consumerExchange.getConnectionContext(), control.getDestination(),false).wakeup();
+                final ActiveMQDestination controlDest = Objects.requireNonNull(control.getDestination(),
+                    "Destination must not be null in ConsumerControl");
+                // Don't auto create patterns (wildcard topics) or composite, this matches addConsumer()
+                final boolean autoCreate = !controlDest.isPattern() && !controlDest.isComposite();
+
+                // If autoCreate is false then lookup() will just return null if the destination
+                // does not exist and we can skip the call to wakeup. This will prevent creating
+                // wildcard destinations for wildcard consumers but will use them if they exist
+                Optional.ofNullable(lookup(consumerExchange.getConnectionContext(),
+                    control.getDestination(),false, autoCreate))
+                    .ifPresent(Destination::wakeup);
             } catch (Exception e) {
                 LOG.warn("failed to deliver post consumerControl dispatch-wakeup, to destination: {}", control.getDestination(), e);
             }
