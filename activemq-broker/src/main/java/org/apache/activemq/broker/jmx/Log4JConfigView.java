@@ -216,26 +216,11 @@ public class Log4JConfigView implements Log4JConfigViewMBean {
                 return;
             }
 
-            Method resetConfiguration = logManagerClass.getMethod("resetConfiguration", new Class[]{});
-            resetConfiguration.invoke(null, new Object[]{});
-
-            String configurationOptionStr = System.getProperty("log4j.configuration");
-            URL log4jprops = null;
-            if (configurationOptionStr != null) {
-                try {
-                    log4jprops = new URL(configurationOptionStr);
-                } catch (MalformedURLException ex) {
-                    log4jprops = cl.getResource("log4j.properties");
-                }
-            } else {
-               log4jprops = cl.getResource("log4j.properties");
-            }
-
-            if (log4jprops != null) {
-                Class<?> propertyConfiguratorClass = cl.loadClass("org.apache.log4j.PropertyConfigurator");
-                Method configure = propertyConfiguratorClass.getMethod("configure", new Class[]{URL.class});
-                configure.invoke(null, new Object[]{log4jprops});
-            }
+            Method getContext = logManagerClass.getMethod("getContext", boolean.class);
+            Object logContext = getContext.invoke(logManagerClass, false);
+            Method reconfigure = logContext.getClass().getMethod("reconfigure");
+            reconfigure.invoke(logContext);
+			
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
         }
