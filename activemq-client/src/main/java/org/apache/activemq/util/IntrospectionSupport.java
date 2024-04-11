@@ -169,6 +169,9 @@ public final class IntrospectionSupport {
             if (target instanceof SSLServerSocket) {
                 // overcome illegal access issues with internal implementation class
                 clazz = SSLServerSocket.class;
+            } else if (target instanceof javax.net.ssl.SSLSocket) {
+                // overcome illegal access issues with internal implementation class
+                clazz = javax.net.ssl.SSLSocket.class;
             }
             Method setter = findSetterMethod(clazz, name);
             if (setter == null) {
