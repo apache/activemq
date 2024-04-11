@@ -21,7 +21,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.TextMessage;
@@ -52,10 +54,10 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
 
         final StringBuffer buf = new StringBuffer();
-        final CountDownLatch latch =
+        final Future<Result> result =
                 asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue", buf);
 
-        latch.await();
+        assertEquals(HttpStatus.OK_200, result.get().getResponse().getStatus());
         assertEquals("test", buf.toString());
     }
 
@@ -66,7 +68,7 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
 
         final StringBuffer buf = new StringBuffer();
-        final CountDownLatch latch =
+        final Future<Result> result =
             asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=5000&type=queue", buf);
 
         //Sleep 2 seconds before sending, should still get the response as timeout is 5 seconds
@@ -74,7 +76,7 @@ public class RestTest extends JettyTestSupport {
         producer.send(session.createTextMessage("test"));
         LOG.info("message sent");
 
-        latch.await();
+        assertEquals(HttpStatus.OK_200, result.get().getResponse().getStatus());
         assertEquals("test", buf.toString());
     }
 
@@ -85,12 +87,11 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
 
         final StringBuffer buf = new StringBuffer();
-        final CountDownLatch latch =
+        final Future<Result> result =
             asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue", buf);
 
         //Test timeout, no message was sent
-        latch.await();
-        assertTrue(buf.toString().contains("AsyncContext timeout"));
+        assertEquals(HttpStatus.NO_CONTENT_204, result.get().getResponse().getStatus());
     }
 
     @Test(timeout = 60 * 1000)
@@ -101,13 +102,13 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
 
         final StringBuffer buf = new StringBuffer();
-        final CountDownLatch latch =
+        final Future<Result> result =
                 asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=5000&type=queue", buf);
 
         producer.send(session.createTextMessage("test"));
         LOG.info("message sent");
 
-        latch.await();
+        assertEquals(HttpStatus.OK_200, result.get().getResponse().getStatus());
         assertEquals("test", buf.toString());
 
     }
@@ -163,12 +164,11 @@ public class RestTest extends JettyTestSupport {
             producer.send(message);
 
             final StringBuffer buf = new StringBuffer();
-            final CountDownLatch latch =
+            final Future<Result> result =
                     asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", buf);
 
-            latch.await();
-            LOG.info("Received: " +  buf.toString());
-           // assertEquals(200, contentExchange.getResponseStatus());
+            assertEquals(HttpStatus.OK_200, result.get().getResponse().getStatus());
+            LOG.info("Received: " +  buf);
             assertEquals(correlId,  buf.toString());
         }
         httpClient.stop();
@@ -183,11 +183,11 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
 
         final StringBuffer buf = new StringBuffer();
-        final CountDownLatch latch =
+        final Future<Result> result =
                 asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", buf);
 
-        latch.await();
-        LOG.info("Received: " + buf.toString());
+        assertEquals(HttpStatus.OK_200, result.get().getResponse().getStatus());
+        LOG.info("Received: " + buf);
 
         final StringBuffer buf2 = new StringBuffer();
         final CountDownLatch latch2 = new CountDownLatch(1);
@@ -316,16 +316,16 @@ public class RestTest extends JettyTestSupport {
         assertTrue("success status", HttpStatus.isSuccess(status.get()));
     }
 
-    protected CountDownLatch asyncRequest(final HttpClient httpClient, final String url, final StringBuffer buffer) {
-        final CountDownLatch latch = new CountDownLatch(1);
+    protected Future<Result> asyncRequest(final HttpClient httpClient, final String url, final StringBuffer buffer) {
+        final CompletableFuture<Result> futureResult = new CompletableFuture<>();
         httpClient.newRequest(url).send(new BufferingResponseListener() {
             @Override
             public void onComplete(Result result) {
                 buffer.append(getContentAsString());
-                latch.countDown();
+                futureResult.complete(result);
             }
         });
-        return latch;
+        return futureResult;
     }
 
     protected CountDownLatch asyncRequest(final HttpClient httpClient, final String url, final StringBuffer buffer,

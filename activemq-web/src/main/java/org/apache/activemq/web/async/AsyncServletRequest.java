@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.web.async;
 
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -110,6 +112,17 @@ public class AsyncServletRequest implements AsyncListener  {
         this.expired.set(true);
         if (LOG.isDebugEnabled()) {
             LOG.debug("ActiveMQAsyncRequest " + event + " timeout.");
+        }
+
+        final AsyncContext context = event.getAsyncContext();
+        if (context != null) {
+            // We must call complete and then set the status code to prevent a 500
+            // error. The spec requires a 500 error on timeout unless complete() is called.
+            context.complete();
+            final ServletResponse response = context.getResponse();
+            if (response instanceof  HttpServletResponse) {
+                ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }
         }
     }
 
