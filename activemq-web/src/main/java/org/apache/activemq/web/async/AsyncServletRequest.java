@@ -113,12 +113,16 @@ public class AsyncServletRequest implements AsyncListener  {
         if (LOG.isDebugEnabled()) {
             LOG.debug("ActiveMQAsyncRequest " + event + " timeout.");
         }
-        // We must call complete and then set the status code to prevent a 500
-        // error. The spec requires a 500 error on timeout unless complete() is called.
-        event.getAsyncContext().complete();
-        final ServletResponse response = event.getAsyncContext().getResponse();
-        if (response instanceof  HttpServletResponse) {
-            ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_NO_CONTENT);
+
+        final AsyncContext context = event.getAsyncContext();
+        if (context != null) {
+            // We must call complete and then set the status code to prevent a 500
+            // error. The spec requires a 500 error on timeout unless complete() is called.
+            context.complete();
+            final ServletResponse response = context.getResponse();
+            if (response instanceof  HttpServletResponse) {
+                ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }
         }
     }
 
