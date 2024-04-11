@@ -173,7 +173,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
         DtoBroker jaxbConfig = null;
         if (configToMonitor != null) {
             try {
-                JAXBContext context = JAXBContext.newInstance(DtoBroker.class);
+                JAXBContext context = JAXBContext.newInstance(DtoBroker.class.getPackageName(), DtoBroker.class.getClassLoader());
                 Unmarshaller unMarshaller = context.createUnmarshaller();
                 unMarshaller.setSchema(getSchema());
 
