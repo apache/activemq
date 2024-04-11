@@ -120,7 +120,7 @@ public class AsyncServletRequest implements AsyncListener  {
             // error. The spec requires a 500 error on timeout unless complete() is called.
             context.complete();
             final ServletResponse response = context.getResponse();
-            if (response instanceof  HttpServletResponse) {
+            if (response instanceof HttpServletResponse) {
                 ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_NO_CONTENT);
             }
         }
