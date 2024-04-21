@@ -86,11 +86,20 @@ public class RestTest extends JettyTestSupport {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
-        final StringBuffer buf = new StringBuffer();
-        final Future<Result> result =
-            asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue", buf);
+        // AMQ-9330 - test no 500 error on timeout and instead 204 error
+        Future<Result> result =
+            asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=2000&type=queue&clientId=test", new StringBuffer());
+        // try a second request while the first is running, this should get a 500 error since the first is still running and
+        // concurrent access to the same consumer is not allowed
+        Future<Result> errorResult = asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1&type=queue&clientId=test", new StringBuffer());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR_500, errorResult.get().getResponse().getStatus());
+        //After the original request finishes, verify 204 and not 500 error
+        assertEquals(HttpStatus.NO_CONTENT_204, result.get().getResponse().getStatus());
 
-        //Test timeout, no message was sent
+        // AMQ-9481 - test to make sure we can re-use the consumer after timeout by trying again and ensuring
+        // no 500 error. Before the fix in AMQ-9418 this would fail even after the previous request timed out
+        result =
+            asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", new StringBuffer());
         assertEquals(HttpStatus.NO_CONTENT_204, result.get().getResponse().getStatus());
     }
 
