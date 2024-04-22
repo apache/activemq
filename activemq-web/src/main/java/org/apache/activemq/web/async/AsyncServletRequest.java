@@ -115,10 +115,10 @@ public class AsyncServletRequest implements AsyncListener  {
         }
 
         final AsyncContext context = event.getAsyncContext();
-        if (context != null) {
-            // We must call complete and then set the status code to prevent a 500
-            // error. The spec requires a 500 error on timeout unless complete() is called.
-            context.complete();
+        if (context != null && event.getSuppliedRequest().isAsyncStarted()) {
+            // We must call dispatch to finish the request on timeout.
+            // then set the status code to prevent a 500 error.
+            context.dispatch();
             final ServletResponse response = context.getResponse();
             if (response instanceof HttpServletResponse) {
                 ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_NO_CONTENT);
