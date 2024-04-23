@@ -398,6 +398,19 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     }
 
+    /**
+     * @param offset
+     * @param maxReturned
+     * @param listener
+     * @throws Exception
+     * @see org.apache.activemq.store.MessageStore#recoverNextMessages(int,
+     *      org.apache.activemq.store.MessageRecoveryListener)
+     */
+    @Override
+    public void recoverNextMessages(int offset, int maxReturned, final MessageRecoveryListener listener) throws Exception {
+        throw new UnsupportedOperationException("recoverNextMesage(offset,maxReturned,listener) is not supported.");
+    }
+
     public void trackRollbackAck(Message message) {
         synchronized (rolledBackAcks) {
             rolledBackAcks.put((Long)message.getMessageId().getEntryLocator(), message);
