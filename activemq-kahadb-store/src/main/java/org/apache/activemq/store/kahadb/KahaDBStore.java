@@ -732,6 +732,52 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             }
         }
 
+        @Override
+        public void recoverNextMessages(final int offset, final int maxReturned, final MessageRecoveryListener listener, final boolean keepCurrentNextMessageId) throws Exception {
+            indexLock.writeLock().lock();
+            try {
+                pageFile.tx().execute(new Transaction.Closure<Exception>() {
+                    @Override
+                    public void execute(Transaction tx) throws Exception {
+                        StoredDestination sd = getStoredDestination(dest, tx);
+                        Entry<Long, MessageKeys> entry = null;
+                        int counter = recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, maxReturned, listener);
+                        Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
+                        long currentDefaultCursorPosition = sd.orderIndex.cursor.defaultCursorPosition;
+
+                        try {
+                            if(offset > 0) {
+                                // setBatch does a +1 internally
+                                sd.orderIndex.setBatch(tx, currentDefaultCursorPosition - 1 + offset);
+                            }
+                            for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext(); ) {
+                                entry = iterator.next();
+    
+                                if (ackedAndPrepared != null && ackedAndPrepared.contains(entry.getValue().messageId)) {
+                                    continue;
+                                }
+
+                                Message msg = loadMessage(entry.getValue().location);
+                                msg.getMessageId().setFutureOrSequenceLong(entry.getKey());
+                                listener.recoverMessage(msg);
+                                counter++;
+                                if (counter >= maxReturned || !listener.canRecoveryNextMessage()) {
+                                    break;
+                                }
+                            }
+                            sd.orderIndex.stoppedIterating();
+                        } finally {
+                            if(keepCurrentNextMessageId) {
+                                sd.orderIndex.setBatch(tx, currentDefaultCursorPosition - 1);
+                            }
+                        }
+                    }
+                });
+            } finally {
+                indexLock.writeLock().unlock();
+            }
+        }
+
         protected int recoverRolledBackAcks(String recoveredTxStateMapKey, StoredDestination sd, Transaction tx, int maxReturned, MessageRecoveryListener listener) throws Exception {
             int counter = 0;
             String id;
