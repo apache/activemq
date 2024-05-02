@@ -49,7 +49,7 @@ public interface Broker extends Region, Service {
     /**
      * Get a Broker from the Broker Stack that is a particular class
      *
-     * @param type
+     * @param type a Broker type.
      * @return a Broker instance.
      */
     Broker getAdaptor(Class<?> type);
@@ -72,8 +72,8 @@ public interface Broker extends Region, Service {
     /**
      * Remove a BrokerInfo
      *
-     * @param connection
-     * @param info
+     * @param connection Broker connection
+     * @param info metadata about the Broker
      */
     void removeBroker(Connection connection, BrokerInfo info);
 
@@ -88,7 +88,7 @@ public interface Broker extends Region, Service {
      * A client is disconnecting from the broker.
      *
      * @param context the environment the operation is being executed under.
-     * @param info
+     * @param info metadata about the Broker
      * @param error null if the client requested the disconnect or the error
      *                that caused the client to disconnect.
      * @throws Exception TODO
@@ -98,8 +98,8 @@ public interface Broker extends Region, Service {
     /**
      * Adds a session.
      *
-     * @param context
-     * @param info
+     * @param context connection context
+     * @param info metadata about the Broker
      * @throws Exception TODO
      */
     void addSession(ConnectionContext context, SessionInfo info) throws Exception;
@@ -107,8 +107,8 @@ public interface Broker extends Region, Service {
     /**
      * Removes a session.
      *
-     * @param context
-     * @param info
+     * @param context connection context
+     * @param info metadata about the Broker
      * @throws Exception TODO
      */
     void removeSession(ConnectionContext context, SessionInfo info) throws Exception;
@@ -146,11 +146,11 @@ public interface Broker extends Region, Service {
     /**
      * return a reference destination map of a region based on the destination type
      *
-     * @param destination
+     * @param destination ActiveMQ Destination
      *
      * @return destination Map
      */
-    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination);
+    Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination);
 
     /**
      * Gets a list of all the prepared xa transactions.
@@ -164,8 +164,8 @@ public interface Broker extends Region, Service {
     /**
      * Starts a transaction.
      *
-     * @param context
-     * @param xid
+     * @param context connection context
+     * @param xid transaction id
      * @throws Exception TODO
      */
     void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception;
@@ -173,18 +173,18 @@ public interface Broker extends Region, Service {
     /**
      * Prepares a transaction. Only valid for xa transactions.
      *
-     * @param context
-     * @param xid
+     * @param context connection context
+     * @param xid transaction id
      * @return id
      * @throws Exception TODO
      */
     int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception;
 
     /**
-     * Rollsback a transaction.
+     * Rollback a transaction.
      *
-     * @param context
-     * @param xid
+     * @param context connection context
+     * @param xid transaction id
      * @throws Exception TODO
      */
     void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception;
@@ -192,9 +192,9 @@ public interface Broker extends Region, Service {
     /**
      * Commits a transaction.
      *
-     * @param context
-     * @param xid
-     * @param onePhase
+     * @param context connection context
+     * @param xid transaction id
+     * @param onePhase is COMMIT_ONE_PHASE
      * @throws Exception TODO
      */
     void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception;
@@ -202,9 +202,9 @@ public interface Broker extends Region, Service {
     /**
      * Forgets a transaction.
      *
-     * @param context
-     * @param transactionId
-     * @throws Exception
+     * @param context connection context
+     * @param transactionId transaction id
+     * @throws Exception TODO
      */
     void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception;
 
@@ -218,14 +218,14 @@ public interface Broker extends Region, Service {
     /**
      * Notify the Broker that a dispatch is going to happen
      *
-     * @param messageDispatch
+     * @param messageDispatch MessageDispatch object being dispatched
      */
     void preProcessDispatch(MessageDispatch messageDispatch);
 
     /**
      * Notify the Broker that a dispatch has happened
      *
-     * @param messageDispatch
+     * @param messageDispatch MessageDispatch that has dispatched
      */
     void postProcessDispatch(MessageDispatch messageDispatch);
 
@@ -242,24 +242,24 @@ public interface Broker extends Region, Service {
     /**
      * Add and process a DestinationInfo object
      *
-     * @param context
-     * @param info
-     * @throws Exception
+     * @param context connection context
+     * @param info destination info
+     * @throws Exception TODO
      */
     void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception;
 
     /**
      * Remove and process a DestinationInfo object
      *
-     * @param context
-     * @param info
+     * @param context connection context
+     * @param info destination info
      *
-     * @throws Exception
+     * @throws Exception TODO
      */
     void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception;
 
     /**
-     * @return true if fault tolerant
+     * @return true if fault-tolerant
      */
     boolean isFaultTolerantConfiguration();
 
@@ -273,7 +273,7 @@ public interface Broker extends Region, Service {
      * Sets the default administration connection context used when configuring
      * the broker on startup or via JMX
      *
-     * @param adminConnectionContext
+     * @param adminConnectionContext default administration connection context
      */
     void setAdminConnectionContext(ConnectionContext adminConnectionContext);
 
@@ -306,10 +306,10 @@ public interface Broker extends Region, Service {
 
     /**
      * Determine if a message has expired -allows default behaviour to be
-     * overriden - as the timestamp set by the producer can be out of sync with
+     * overridden - as the timestamp set by the producer can be out of sync with
      * the broker
      *
-     * @param messageReference
+     * @param messageReference message reference
      * @return true if the message is expired
      */
     boolean isExpired(MessageReference messageReference);
@@ -317,18 +317,18 @@ public interface Broker extends Region, Service {
     /**
      * A Message has Expired
      *
-     * @param context
-     * @param messageReference
-     * @param subscription (may be null)
+     * @param context connection context
+     * @param messageReference message reference
+     * @param subscription (maybe null)
      */
     void messageExpired(ConnectionContext context, MessageReference messageReference, Subscription subscription);
 
     /**
-     * A message needs to go the a DLQ
+     * A message needs to go to the DLQ
      *
      *
-     * @param context
-     * @param messageReference
+     * @param context connection context
+     * @param messageReference message reference
      * @param poisonCause reason for dlq submission, may be null
      * @return true if Message was placed in a DLQ false if discarded.
      */
@@ -341,56 +341,56 @@ public interface Broker extends Region, Service {
 
     /**
      * called when message is consumed
-     * @param context
-     * @param messageReference
+     * @param context connection context
+     * @param messageReference message reference
      */
     void messageConsumed(ConnectionContext context, MessageReference messageReference);
 
     /**
      * Called when message is delivered to the broker
-     * @param context
-     * @param messageReference
+     * @param context connection context
+     * @param messageReference message reference
      */
     void messageDelivered(ConnectionContext context, MessageReference messageReference);
 
     /**
      * Called when message is dispatched to a consumer
-     * @param context
-     * @param sub
-     * @param messageReference
+     * @param context connection context
+     * @param sub subscription
+     * @param messageReference message reference
      */
     void messageDispatched(ConnectionContext context, Subscription sub, MessageReference messageReference);
 
     /**
      * Called when a message is discarded - e.g. running low on memory
-     * This will happen only if the policy is enabled - e.g. non durable topics
-     * @param context
-     * @param sub
-     * @param messageReference
+     * This will happen only if the policy is enabled - e.g. non-durable topics
+     * @param context connection context
+     * @param sub subscription
+     * @param messageReference message reference
      */
     void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference);
 
     /**
      * Called when there is a slow consumer
-     * @param context
-     * @param destination
-     * @param subs
+     * @param context connection context
+     * @param destination destination
+     * @param subs subscription
      */
-    void slowConsumer(ConnectionContext context,Destination destination, Subscription subs);
+    void slowConsumer(ConnectionContext context, Destination destination, Subscription subs);
 
     /**
      * Called to notify a producer is too fast
-     * @param context
-     * @param producerInfo
-     * @param destination
+     * @param context connection context
+     * @param producerInfo producer info
+     * @param destination destination
      */
     void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination);
 
     /**
      * Called when a Usage reaches a limit
-     * @param context
-     * @param destination
-     * @param usage
+     * @param context create new scratch file from selection
+     * @param destination destination
+     * @param usage usage
      */
     void isFull(ConnectionContext context,Destination destination,Usage<?> usage);
 
@@ -399,17 +399,33 @@ public interface Broker extends Region, Service {
     void virtualDestinationRemoved(ConnectionContext context, VirtualDestination virtualDestination);
 
     /**
-     *  called when the broker becomes the master in a master/slave
-     *  configuration
+     * called when the broker becomes the master in a master/slave
+     * configuration
      */
     void nowMasterBroker();
 
+    /**
+     * called to get scheduler for executing TimerTask
+     */
     Scheduler getScheduler();
 
+    /**
+     * called to get Java thread pool executor
+     */
     ThreadPoolExecutor getExecutor();
 
+    /**
+     * called to when a network bridge is started
+     * @param brokerInfo metadata about the broker
+     * @param createdByDuplex is created by duplex
+     * @param remoteIp ip address of the broker
+     */
     void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp);
 
+    /**
+     * called to when a network bridge is stopped
+     * @param brokerInfo metadata about the broker
+     */
     void networkBridgeStopped(BrokerInfo brokerInfo);
 
 
