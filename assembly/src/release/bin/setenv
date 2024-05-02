@@ -19,8 +19,8 @@
 #
 # This file overwrites the predefined settings of the sysv init-script.
 # You can also use alternate location for default settings -
-# invoke the init-script without a argument an review help section "Configuration of this script"
-# /etc/default/activemq <activemq user home>/.activemqrc <activemq installation dir>/bin/env
+# invoke the init-script without an argument and review help section "Configuration of this script"
+# /etc/default/activemq <activemq user home>/.activemqrc <activemq installation dir>/bin/setenv
 
 # Active MQ installation dirs
 # ACTIVEMQ_HOME="<Installationdir>/"
