@@ -437,6 +437,8 @@ public class ReplicaSourceBroker extends MutativeRoleBroker {
                     new ReplicaEvent()
                             .setEventType(ReplicaEventType.REMOVE_DURABLE_CONSUMER)
                             .setEventData(eventSerializer.serializeReplicationData(consumerInfo))
+                            .setReplicationProperty(ReplicaSupport.CLIENT_ID_PROPERTY, context.getClientId())
+                            .setVersion(2)
             );
         } catch (Exception e) {
             logger.error("Failed to replicate adding {}", consumerInfo, e);

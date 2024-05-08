@@ -67,7 +67,7 @@ class ReplicationMessageProducer {
         eventMessage.setContent(event.getEventData());
         eventMessage.setProperties(event.getReplicationProperties());
         eventMessage.setTransactionId(event.getTransactionId());
-        eventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, event.getVersion() == null ? ReplicaSupport.CURRENT_VERSION : event.getVersion());
+        eventMessage.setIntProperty(ReplicaSupport.VERSION_PROPERTY, event.getVersion() == null ? ReplicaSupport.DEFAULT_VERSION : event.getVersion());
         eventMessage.setTimestamp(event.getTimestamp() == null ? System.currentTimeMillis() : event.getTimestamp());
         replicaInternalMessageProducer.sendForcingFlowControl(connectionContext, eventMessage);
     }

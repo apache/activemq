@@ -33,7 +33,8 @@ public class ReplicaSupport {
         // Intentionally hidden
     }
 
-    public static final int CURRENT_VERSION = 1;
+    public static final int CURRENT_VERSION = 2;
+    public static final int DEFAULT_VERSION = 1;
 
     public static final int INTERMEDIATE_QUEUE_PREFETCH_SIZE = 10000;
 

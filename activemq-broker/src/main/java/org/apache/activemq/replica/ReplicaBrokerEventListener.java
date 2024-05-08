@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -312,7 +313,13 @@ public class ReplicaBrokerEventListener implements MessageListener {
                 return;
             case REMOVE_DURABLE_CONSUMER:
                 logger.trace("Processing replicated remove consumer");
-                removeDurableConsumer((ConsumerInfo) deserializedData);
+                try {
+                    removeDurableConsumer((ConsumerInfo) deserializedData,
+                            message.getStringProperty(ReplicaSupport.CLIENT_ID_PROPERTY));
+                } catch (JMSException e) {
+                    logger.error("Failed to extract property to replicate remove consumer [{}]", deserializedData, e);
+                    throw new Exception(e);
+                }
                 return;
             case MESSAGE_EXPIRED:
                 logger.trace("Processing replicated message expired");
@@ -529,15 +536,17 @@ public class ReplicaBrokerEventListener implements MessageListener {
         }
     }
 
-    private void removeDurableConsumer(ConsumerInfo consumerInfo) throws Exception {
+    private void removeDurableConsumer(ConsumerInfo consumerInfo, String clientId) throws Exception {
         try {
             ConnectionContext context = broker.getDestinations(consumerInfo.getDestination()).stream()
                     .findFirst()
                     .map(Destination::getConsumers)
                     .stream().flatMap(Collection::stream)
-                    .filter(v -> v.getConsumerInfo().getClientId().equals(consumerInfo.getClientId()))
-                    .findFirst()
+                    .filter(v -> v.getConsumerInfo().getSubscriptionName().equals(consumerInfo.getSubscriptionName()))
                     .map(Subscription::getContext)
+
+                    .filter(v -> clientId == null || clientId.equals(v.getClientId()))
+                    .findFirst()
                     .orElse(null);
             if (context == null || !ReplicaSupport.REPLICATION_PLUGIN_USER_NAME.equals(context.getUserName())) {
                 // a real consumer had stolen the context before we got the message
