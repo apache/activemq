@@ -271,8 +271,8 @@ public class BrokerService implements Service {
     static {
 
         try {
-            Boolean bouncyCastleNotAdded = Boolean.getBoolean("org.apache.activemq.broker.BouncyCastleNotAdded");
-            if (bouncyCastleNotAdded == null || bouncyCastleNotAdded == false) {
+            boolean bouncyCastleNotAdded = Boolean.getBoolean("org.apache.activemq.broker.BouncyCastleNotAdded");
+            if (!bouncyCastleNotAdded) {
                 ClassLoader loader = BrokerService.class.getClassLoader();
                 Class<?> clazz = loader.loadClass("org.bouncycastle.jce.provider.BouncyCastleProvider");
                 Provider bouncycastle = (Provider) clazz.getDeclaredConstructor().newInstance();
@@ -286,7 +286,8 @@ public class BrokerService implements Service {
                 LOG.info("Loaded the Bouncy Castle security provider at position: {}", ret);
             }
         } catch(Throwable e) {
-            // No BouncyCastle found so we use the default Java Security Provider
+            // No BouncyCastle found, so we use the default Java Security Provider
+            LOG.info("Using the default Java security provider");
         }
 
         String localHostName = "localhost";
@@ -768,7 +769,7 @@ public class BrokerService implements Service {
         startAllConnectors();
 
         LOG.info("Apache ActiveMQ {} ({}, {}) started", getBrokerVersion(), getBrokerName(), brokerId);
-        LOG.info("For help or more information please see: http://activemq.apache.org");
+        LOG.info("For help or more information please see: https://activemq.apache.org");
 
         getBroker().brokerServiceStarted();
         checkStoreSystemUsageLimits();
@@ -831,10 +832,8 @@ public class BrokerService implements Service {
             this.scheduler.stop();
             this.scheduler = null;
         }
-        if (services != null) {
-            for (Service service : services) {
-                stopper.stop(service);
-            }
+        for (Service service : services) {
+            stopper.stop(service);
         }
         stopAllConnectors(stopper);
         this.slave = true;
@@ -953,7 +952,7 @@ public class BrokerService implements Service {
             }
             long start = System.currentTimeMillis();
             while (System.currentTimeMillis() - start < timeout * 1000) {
-                // check quesize until it gets zero
+                // check queue size until it gets zero
                 if (checkQueueSize(queueName)) {
                     stop();
                     break;
@@ -1768,7 +1767,7 @@ public class BrokerService implements Service {
 
             try {
                 PersistenceAdapter pa = getPersistenceAdapter();
-                if( pa!=null && pa instanceof PListStore) {
+                if(pa instanceof PListStore) {
                     return (PListStore) pa;
                 }
             } catch (IOException e) {
@@ -2048,7 +2047,7 @@ public class BrokerService implements Service {
                 long maxJournalFileSize;
 
                 PListStore store = usage.getTempUsage().getStore();
-                if (store != null && store instanceof JournaledStore) {
+                if (store instanceof JournaledStore) {
                     maxJournalFileSize = ((JournaledStore) store).getJournalMaxFileLength();
                 } else {
                     maxJournalFileSize = DEFAULT_MAX_FILE_LENGTH;
@@ -2219,21 +2218,17 @@ public class BrokerService implements Service {
     }
 
     public void stopAllConnectors(ServiceStopper stopper) {
-        for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-            NetworkConnector connector = iter.next();
+        for (NetworkConnector connector : getNetworkConnectors()) {
             unregisterNetworkConnectorMBean(connector);
             stopper.stop(connector);
         }
-        for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
-            ProxyConnector connector = iter.next();
+        for (ProxyConnector connector : getProxyConnectors()) {
             stopper.stop(connector);
         }
-        for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
-            JmsConnector connector = iter.next();
+        for (JmsConnector connector : jmsConnectors) {
             stopper.stop(connector);
         }
-        for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            TransportConnector connector = iter.next();
+        for (TransportConnector connector : getTransportConnectors()) {
             try {
                 unregisterConnectorMBean(connector);
             } catch (IOException e) {
@@ -2271,7 +2266,6 @@ public class BrokerService implements Service {
     }
 
     protected void unregisterPersistenceAdapterMBean(PersistenceAdapter adaptor) throws IOException {
-        if (isUseJmx()) {}
     }
 
     private ObjectName createConnectorObjectName(TransportConnector connector) throws MalformedObjectNameException {
@@ -2474,8 +2468,7 @@ public class BrokerService implements Service {
             broker = new ConnectionSplitBroker(broker);
         }
         if (plugins != null) {
-            for (int i = 0; i < plugins.length; i++) {
-                BrokerPlugin plugin = plugins[i];
+            for (BrokerPlugin plugin : plugins) {
                 broker = plugin.installPlugin(broker);
             }
         }
@@ -2592,9 +2585,8 @@ public class BrokerService implements Service {
     protected void startDestinations() throws Exception {
         if (destinations != null) {
             ConnectionContext adminConnectionContext = getAdminConnectionContext();
-            for (int i = 0; i < destinations.length; i++) {
-                ActiveMQDestination destination = destinations[i];
-                getBroker().addDestination(adminConnectionContext, destination,true);
+            for (ActiveMQDestination destination : destinations) {
+                getBroker().addDestination(adminConnectionContext, destination, true);
             }
         }
         if (isUseVirtualTopics()) {
@@ -2654,8 +2646,7 @@ public class BrokerService implements Service {
                     });
             }
 
-            for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-                final NetworkConnector connector = iter.next();
+            for (final NetworkConnector connector : getNetworkConnectors()) {
                 connector.setLocalUri(getVmConnectorURI());
                 startNetworkConnector(connector, durableDestinations, networkConnectorStartExecutor);
             }
@@ -2664,12 +2655,10 @@ public class BrokerService implements Service {
                 ThreadPoolUtils.shutdown(networkConnectorStartExecutor);
             }
 
-            for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
-                ProxyConnector connector = iter.next();
+            for (ProxyConnector connector : getProxyConnectors()) {
                 connector.start();
             }
-            for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
-                JmsConnector connector = iter.next();
+            for (JmsConnector connector : jmsConnectors) {
                 connector.start();
             }
             for (Service service : services) {
@@ -2708,15 +2697,12 @@ public class BrokerService implements Service {
             }
         }
         if (networkConnectorStartExecutor != null) {
-            networkConnectorStartExecutor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        LOG.info("Async start of {}", connector);
-                        connector.start();
-                    } catch(Exception e) {
-                        LOG.error("Async start of network connector: {} failed", connector, e);
-                    }
+            networkConnectorStartExecutor.execute(() -> {
+                try {
+                    LOG.info("Async start of {}", connector);
+                    connector.start();
+                } catch(Exception e) {
+                    LOG.error("Async start of network connector: {} failed", connector, e);
                 }
             });
         } else {
