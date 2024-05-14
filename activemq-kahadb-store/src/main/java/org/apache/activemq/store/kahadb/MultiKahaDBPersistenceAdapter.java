@@ -383,11 +383,14 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     private void findAndRegisterExistingAdapters(FilteredKahaDBPersistenceAdapter template) throws IOException {
-        FileFilter destinationNames = new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.getName().startsWith("queue#") || file.getName().startsWith("topic#");
+        FileFilter destinationNames = file -> {
+            if ( adapters.stream().anyMatch(adapter -> adapter.getDirectory().equals(file)) ) {
+                LOG.trace("Adapter for path: {} is already configured as other filtered persistence adapter.", file);
+                return false;
             }
+
+            String fileName = file.getName();
+            return fileName.startsWith("queue#") || fileName.startsWith("topic#");
         };
         File[] candidates = template.getPersistenceAdapter().getDirectory().listFiles(destinationNames);
         if (candidates != null) {
