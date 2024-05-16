@@ -286,7 +286,7 @@ public class BrokerService implements Service {
                 LOG.info("Loaded the Bouncy Castle security provider at position: {}", ret);
             }
         } catch(Throwable e) {
-            // No BouncyCastle found, so we use the default Java Security Provider
+            // No BouncyCastle found, so we use the default Java Security Provider.
             LOG.debug("Using the default Java security provider since no Bouncy Castle is found.");
         }
 
