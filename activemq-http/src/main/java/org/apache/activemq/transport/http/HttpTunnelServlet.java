@@ -176,7 +176,7 @@ public class HttpTunnelServlet extends HttpServlet {
         }
         BlockingQueueTransport answer = clients.get(clientID);
         if (answer == null) {
-            LOG.warn("The clientID header specified is invalid. Client sesion has not yet been established for it: " + clientID);
+            LOG.warn("The clientID header specified is invalid. Client session has not yet been established for it: " + clientID);
             return null;
         }
         return answer;
