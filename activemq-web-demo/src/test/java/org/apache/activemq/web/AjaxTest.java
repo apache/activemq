@@ -19,8 +19,8 @@ package org.apache.activemq.web;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayInputStream;
 import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -34,10 +34,10 @@ import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.BufferingResponseListener;
-import org.eclipse.jetty.client.util.InputStreamContentProvider;
+import org.eclipse.jetty.client.Request;
+import org.eclipse.jetty.client.Result;
+import org.eclipse.jetty.client.BufferingResponseListener;
+import org.eclipse.jetty.client.BytesRequestContent;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.junit.Test;
@@ -422,9 +422,9 @@ public class AjaxTest extends JettyTestSupport {
         final StringBuffer buf = new StringBuffer();
         httpClient
                 .newRequest("http://localhost:" + port + "/amq")
-                .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-                .content(
-                        new InputStreamContentProvider(new ByteArrayInputStream(content)))
+                .headers(headers -> headers
+                        .put("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8"))
+                .body(new BytesRequestContent(content))
                 .method(HttpMethod.POST).send(new BufferingResponseListener() {
                     @Override
                     public void onComplete(Result result) {
@@ -445,24 +445,28 @@ public class AjaxTest extends JettyTestSupport {
         final StringBuffer sessionId = new StringBuffer();
         Request request = httpClient.newRequest("http://localhost:" + port + "/amq");
         if (selector != null) {
-            request.header("selector", selector);
+            request.headers(headers -> headers
+                    .put("selector", selector));
         }
         if (session != null) {
-            request.header(HttpHeader.COOKIE, session);
+            request.headers(headers -> headers
+                    .put(HttpHeader.COOKIE, session));
         }
-        request.header("Content-Type","application/x-www-form-urlencoded; charset=UTF-8")
-           .content(new InputStreamContentProvider(new ByteArrayInputStream(content.getBytes())))
-           .method(HttpMethod.POST).send(new BufferingResponseListener() {
-            @Override
-            public void onComplete(Result result) {
-                buf.append(getContentAsString());
-                String cookie = result.getResponse().getHeaders().get(HttpHeader.SET_COOKIE);
-                if (cookie != null) {
-                    String[] cookieParts = cookie.split(";");
-                    sessionId.append(cookieParts[0]);
+        request
+            .headers(headers -> headers
+                .put("Content-Type","application/x-www-form-urlencoded; charset=UTF-8"))
+            .body(new BytesRequestContent(content.getBytes(StandardCharsets.UTF_8)))
+            .method(HttpMethod.POST).send(new BufferingResponseListener() {
+                @Override
+                public void onComplete(Result result) {
+                    buf.append(getContentAsString());
+                    String cookie = result.getResponse().getHeaders().get(HttpHeader.SET_COOKIE);
+                    if (cookie != null) {
+                        String[] cookieParts = cookie.split(";");
+                        sessionId.append(cookieParts[0]);
+                    }
+                    latch.countDown();
                 }
-                latch.countDown();
-            }
         });
         latch.await();
 
@@ -474,7 +478,8 @@ public class AjaxTest extends JettyTestSupport {
         final CountDownLatch latch = new CountDownLatch(1);
         Request request = httpClient.newRequest(url);
         if (sessionId != null) {
-            request.header(HttpHeader.COOKIE, sessionId);
+            request.headers(headers -> headers
+                    .put(HttpHeader.COOKIE, sessionId));
         }
         request.send(new BufferingResponseListener() {
             @Override
