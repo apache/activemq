@@ -23,7 +23,7 @@ import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.transport.ws.MQTTWSConnection;
 import org.apache.activemq.transport.ws.StompWSConnection;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
+import org.eclipse.jetty.client.transport.HttpClientTransportDynamic;
 import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.api.Session;
@@ -145,12 +145,12 @@ public class WSSTransportNeedClientAuthTest {
         MQTTWSConnection wsMQTTConnection = new MQTTWSConnection();
 
         wsClient.connect(wsMQTTConnection, new URI("wss://localhost:61618"), request);
+
         if (!wsMQTTConnection.awaitConnection(30, TimeUnit.SECONDS)) {
             throw new IOException("Could not connect to MQTT WS endpoint");
         }
 
         wsMQTTConnection.connect();
-
         assertTrue("Client not connected", wsMQTTConnection.isConnected());
 
         wsMQTTConnection.disconnect();
