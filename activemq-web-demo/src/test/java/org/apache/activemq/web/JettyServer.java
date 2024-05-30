@@ -22,7 +22,8 @@ import org.apache.activemq.demo.DefaultQueueSender;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.util.resource.ResourceFactory;
+import org.eclipse.jetty.ee9.webapp.WebAppContext;
 
 /**
  * A simple bootstrap class for starting Jetty in your IDE using the local web
@@ -66,8 +67,9 @@ public final class JettyServer {
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(port);
         WebAppContext context = new WebAppContext();
+        ResourceFactory resourceFactory = ResourceFactory.of(context);
 
-        context.setResourceBase(WEBAPP_DIR);
+        context.setBaseResource(resourceFactory.newResource(WEBAPP_DIR));
         context.setContextPath(WEBAPP_CTX);
         context.setServer(server);
         server.setHandler(context);
