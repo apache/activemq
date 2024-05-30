@@ -75,7 +75,7 @@
     <jmdns-version>3.5.9</jmdns-version>
     <tomcat-api-version>9.0.65</tomcat-api-version>
     <jettison-version>1.5.4</jettison-version>
-    <jmock-version>2.12.0</jmock-version>
+    <jmock-version>2.13.1</jmock-version>
     <jolokia-version>2.0.3</jolokia-version>
     <josql-version>1.5_5</josql-version>
     <!-- for json-simple use same version as jolokia uses -->
