@@ -18,9 +18,8 @@ package org.apache.activemq.web.config;
 
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.webapp.Configuration;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.server.Handler.Sequence;
+import org.eclipse.jetty.ee9.webapp.WebAppContext;
 
 /**
  *
@@ -28,7 +27,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
  */
 public class JspConfigurer {
 
-    public static void configureJetty(Server server, HandlerCollection collection) {
+    public static void configureJetty(Server server, Sequence sequence) {
 //        Configuration.ClassList classlist = Configuration.ClassList
 //                .setServerDefault( server );
 //        classlist.addBefore(
@@ -39,7 +38,7 @@ public class JspConfigurer {
         // container-path jars for tlds, web-fragments etc.
         // If you omit the jar that contains the jstl .tlds, the jsp engine will
         // scan for them instead.
-        for (Handler handler: collection.getHandlers()) {
+        for (Handler handler: sequence.getHandlers()) {
             if (handler instanceof WebAppContext){
                 ((WebAppContext) handler).setAttribute(
                     "org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern",
