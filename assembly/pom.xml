@@ -379,13 +379,15 @@
       <artifactId>jettison</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-annotations</artifactId>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-annotations</artifactId>
     </dependency>
+    <!--
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-jaas</artifactId>
     </dependency>
+    -->
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-jndi</artifactId>
@@ -446,8 +448,8 @@
     </dependency>
 
     <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>apache-jsp</artifactId>
+        <groupId>org.eclipse.jetty.ee9</groupId>
+        <artifactId>jetty-ee9-apache-jsp</artifactId>
     </dependency>
     <dependency>
         <groupId>org.eclipse.jetty</groupId>
