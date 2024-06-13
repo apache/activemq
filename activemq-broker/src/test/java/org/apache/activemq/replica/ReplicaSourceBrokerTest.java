@@ -174,7 +174,7 @@ public class ReplicaSourceBrokerTest {
         assertThat(replicaMessage.getType()).isEqualTo("ReplicaEvent");
         assertThat(replicaMessage.getDestination().getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
         assertThat(replicaMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.QUEUE_PURGED.name());
-        assertThat(replicaMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicaMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
 
         ActiveMQDestination sentMessage = (ActiveMQDestination) eventSerializer.deserializeMessageData(replicaMessage.getContent());
         assertThat(sentMessage).isEqualTo(testDestination);
@@ -200,7 +200,7 @@ public class ReplicaSourceBrokerTest {
         assertThat(replicaMessage.getType()).isEqualTo("ReplicaEvent");
         assertThat(replicaMessage.getDestination().getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
         assertThat(replicaMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.MESSAGE_EXPIRED.name());
-        assertThat(replicaMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicaMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
 
         ActiveMQMessage sentMessage = (ActiveMQMessage) eventSerializer.deserializeMessageData(replicaMessage.getContent());
         assertThat(sentMessage.getDestination().getPhysicalName()).isEqualTo(testDestination.getPhysicalName());
@@ -238,7 +238,7 @@ public class ReplicaSourceBrokerTest {
         ActiveMQMessage replicationMessage = messageArgumentCaptor.getValue();
         final TransactionId replicatedTransactionId = (TransactionId) eventSerializer.deserializeMessageData(replicationMessage.getContent());
         assertThat(replicationMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.TRANSACTION_BEGIN.name());
-        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
         assertThat(replicatedTransactionId).isEqualTo(transactionId);
         verifyConnectionContext(connectionContext);
     }
@@ -257,7 +257,7 @@ public class ReplicaSourceBrokerTest {
         ActiveMQMessage replicationMessage = messageArgumentCaptor.getValue();
         final TransactionId replicatedTransactionId = (TransactionId) eventSerializer.deserializeMessageData(replicationMessage.getContent());
         assertThat(replicationMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.TRANSACTION_PREPARE.name());
-        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
         assertThat(replicatedTransactionId).isEqualTo(transactionId);
         verifyConnectionContext(connectionContext);
     }
@@ -276,7 +276,7 @@ public class ReplicaSourceBrokerTest {
         ActiveMQMessage replicationMessage = messageArgumentCaptor.getValue();
         final TransactionId replicatedTransactionId = (TransactionId) eventSerializer.deserializeMessageData(replicationMessage.getContent());
         assertThat(replicationMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.TRANSACTION_ROLLBACK.name());
-        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
         assertThat(replicatedTransactionId).isEqualTo(transactionId);
         verifyConnectionContext(connectionContext);
     }
@@ -295,7 +295,7 @@ public class ReplicaSourceBrokerTest {
         ActiveMQMessage replicationMessage = messageArgumentCaptor.getValue();
         final TransactionId replicatedTransactionId = (TransactionId) eventSerializer.deserializeMessageData(replicationMessage.getContent());
         assertThat(replicationMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.TRANSACTION_FORGET.name());
-        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
         assertThat(replicatedTransactionId).isEqualTo(transactionId);
         verifyConnectionContext(connectionContext);
     }
@@ -314,7 +314,7 @@ public class ReplicaSourceBrokerTest {
         ActiveMQMessage replicationMessage = messageArgumentCaptor.getValue();
         final TransactionId replicatedTransactionId = (TransactionId) eventSerializer.deserializeMessageData(replicationMessage.getContent());
         assertThat(replicationMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.TRANSACTION_COMMIT.name());
-        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
         assertThat(replicatedTransactionId).isEqualTo(transactionId);
         assertThat(replicationMessage.getProperty(ReplicaSupport.TRANSACTION_ONE_PHASE_PROPERTY)).isEqualTo(true);
         verifyConnectionContext(connectionContext);
@@ -339,7 +339,7 @@ public class ReplicaSourceBrokerTest {
         assertThat(replicaMessage.getType()).isEqualTo("ReplicaEvent");
         assertThat(replicaMessage.getDestination().getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
         assertThat(replicaMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.ADD_DURABLE_CONSUMER.name());
-        assertThat(replicaMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicaMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
 
         final ConsumerInfo ackMessage = (ConsumerInfo) eventSerializer.deserializeMessageData(replicaMessage.getContent());
         assertThat(ackMessage.getDestination()).isEqualTo(destination);
@@ -389,7 +389,7 @@ public class ReplicaSourceBrokerTest {
         assertThat(replicaMessage.getType()).isEqualTo("ReplicaEvent");
         assertThat(replicaMessage.getDestination().getPhysicalName()).isEqualTo(ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
         assertThat(replicaMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.REMOVE_DURABLE_CONSUMER_SUBSCRIPTION.name());
-        assertThat(replicaMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicaMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
 
         final RemoveSubscriptionInfo removeSubscriptionInfoMsg = (RemoveSubscriptionInfo) eventSerializer.deserializeMessageData(replicaMessage.getContent());
         assertThat(removeSubscriptionInfoMsg.getClientId()).isEqualTo("clientId");
@@ -432,7 +432,7 @@ public class ReplicaSourceBrokerTest {
         ActiveMQMessage replicationMessage = sendMessageArgumentCaptor.getValue();
         final MessageAck originalMessage = (MessageAck) eventSerializer.deserializeMessageData(replicationMessage.getContent());
         assertThat(replicationMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.MESSAGE_ACK.name());
-        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
         assertThat(originalMessage.getLastMessageId()).isEqualTo(messageId);
         assertThat(originalMessage.getDestination()).isEqualTo(testDestination);
         assertThat((List<String>) replicationMessage.getProperty(ReplicaSupport.MESSAGE_IDS_PROPERTY)).containsOnly(messageId.toString());
@@ -520,7 +520,7 @@ public class ReplicaSourceBrokerTest {
         ActiveMQMessage replicationMessage = sendMessageArgumentCaptor.getValue();
         final MessageAck originalMessage = (MessageAck) eventSerializer.deserializeMessageData(replicationMessage.getContent());
         assertThat(replicationMessage.getProperty(ReplicaEventType.EVENT_TYPE_PROPERTY)).isEqualTo(ReplicaEventType.MESSAGE_ACK.name());
-        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.CURRENT_VERSION);
+        assertThat(replicationMessage.getProperty(ReplicaSupport.VERSION_PROPERTY)).isEqualTo(ReplicaSupport.DEFAULT_VERSION);
         assertThat(originalMessage.getFirstMessageId()).isEqualTo(firstMessageId);
         assertThat(originalMessage.getLastMessageId()).isEqualTo(thirdMessageId);
         assertThat(originalMessage.getDestination()).isEqualTo(testDestination);

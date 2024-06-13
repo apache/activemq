@@ -552,8 +552,8 @@ public class ReplicaBrokerEventListenerTest {
         consumerInfo.setDestination(testQueue);
         ActiveMQMessage replicaEventMessage = spy(new ActiveMQMessage());
         replicaEventMessage.setMessageId(messageId);
-        String clientId = "clientId";
-        consumerInfo.setClientId(clientId);
+        consumerInfo.setClientId("clientId");
+        consumerInfo.setSubscriptionName("subscriptionName");
         ReplicaEvent event = new ReplicaEvent()
                 .setEventType(ReplicaEventType.REMOVE_DURABLE_CONSUMER)
                 .setEventData(eventSerializer.serializeReplicationData(consumerInfo));
