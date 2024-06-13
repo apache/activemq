@@ -190,9 +190,20 @@ public class TransactionBroker extends BrokerFilter {
                 dest.clearPendingMessages(opCount);
                 dest.getDestinationStatistics().getEnqueues().add(opCount);
                 dest.getDestinationStatistics().getMessages().add(opCount);
+
+                if(dest.isAdvancedStatisticsEnabled()) {
+                    if(transactionBroker.context.isNetworkConnection()) {
+                        dest.getDestinationStatistics().getNetworkEnqueues().add(opCount);
+                    }
+                }
                 LOG.debug("cleared pending from afterCommit: {}", destination);
             } else {
                 dest.getDestinationStatistics().getDequeues().add(opCount);
+                if(dest.isAdvancedStatisticsEnabled()) {
+                    if(transactionBroker.context.isNetworkConnection()) {
+                        dest.getDestinationStatistics().getNetworkDequeues().add(opCount);
+                    }
+                }
             }
         }
     }

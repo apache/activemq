@@ -35,7 +35,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
@@ -109,6 +108,8 @@ public abstract class BaseDestination implements Destination {
     protected final Scheduler scheduler;
     private boolean disposed = false;
     private boolean doOptimzeMessageStorage = true;
+    private boolean advancedStatisticsEnabled = false;
+
     /*
      * percentage of in-flight messages above which optimize message store is disabled
      */
@@ -867,6 +868,15 @@ public abstract class BaseDestination implements Destination {
         this.optimizeMessageStoreInFlightLimit = optimizeMessageStoreInFlightLimit;
     }
 
+    @Override
+    public boolean isAdvancedStatisticsEnabled() {
+        return this.advancedStatisticsEnabled;
+    }
+
+    @Override
+    public void setAdvancedStatisticsEnabled(boolean advancedStatisticsEnabled) {
+        this.advancedStatisticsEnabled = advancedStatisticsEnabled;
+    }
 
     @Override
     public abstract List<Subscription> getConsumers();
