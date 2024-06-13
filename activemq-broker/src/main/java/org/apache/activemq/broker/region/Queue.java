@@ -1594,6 +1594,55 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         return new ArrayList<>(set);
     }
 
+
+    /**
+     * Gets messages until found one matching the given filter(including the matching message)
+     *
+     * @return the list messages or {@code null} if a matching message not found
+     */
+    public List<QueueMessageReference> getMessagesUntilMatches(ConnectionContext context, MessageReferenceFilter filter) throws Exception {
+        Set<QueueMessageReference> set = new LinkedHashSet<>();
+
+        pagedInMessagesLock.readLock().lock();
+        try {
+            for (MessageReference pagedInMessage : pagedInMessages) {
+                QueueMessageReference qmr = (QueueMessageReference) pagedInMessage;
+                set.add(qmr);
+                if (filter.evaluate(context, qmr)) {
+                    return new ArrayList<>(set);
+                }
+            }
+        } finally {
+            pagedInMessagesLock.readLock().unlock();
+        }
+
+        messagesLock.writeLock().lock();
+        try {
+            try {
+                messages.setMaxBatchSize(getMaxPageSize());
+                messages.reset();
+                while (messages.hasNext()) {
+                    MessageReference mr = messages.next();
+                    QueueMessageReference qmr = createMessageReference(mr.getMessage());
+                    qmr.decrementReferenceCount();
+                    messages.rollback(qmr.getMessageId());
+                    set.add(qmr);
+                    if (filter.evaluate(context, qmr)) {
+                        return new ArrayList<>(set);
+                    }
+
+                }
+            } finally {
+                messages.release();
+            }
+        } finally {
+            messagesLock.writeLock().unlock();
+        }
+
+        return null;
+    }
+
+
     /**
      * Move a message
      *
