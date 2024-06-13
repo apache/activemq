@@ -22,8 +22,10 @@ import org.apache.activemq.broker.BrokerStoppedException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.MessageReferenceFilter;
 import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionId;
@@ -33,6 +35,7 @@ import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.TransactionId;
@@ -46,7 +49,7 @@ import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import javax.jms.JMSException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -166,7 +169,7 @@ public class ReplicaSequencer {
         intermediateQueue.iterate();
         String savedSequences = sequenceStorage.initialize(subscriptionConnectionContext);
         List<String> savedSequencesToRestore = restoreSequenceStorage.initialize(subscriptionConnectionContext);
-        restoreSequence(savedSequences, savedSequencesToRestore);
+        restoreSequence(intermediateQueue, savedSequences, savedSequencesToRestore);
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(this::asyncSendWakeup,
@@ -217,7 +220,7 @@ public class ReplicaSequencer {
 
     }
 
-    void restoreSequence(String savedSequence, List<String> savedSequencesToRestore) throws Exception {
+    void restoreSequence(Queue intermediateQueue, String savedSequence, List<String> savedSequencesToRestore) throws Exception {
         if (savedSequence != null) {
             String[] split = savedSequence.split("#");
             if (split.length != 2) {
@@ -246,8 +249,30 @@ public class ReplicaSequencer {
                 break;
             }
         }
+
+        ConnectionContext connectionContext = createConnectionContext();
+
         if (!found) {
-            throw new IllegalStateException("Can't recover sequence. Message with id: " + recoveryMessageId + " not found");
+            Set<String> matchingIds = matchingMessages.stream()
+                    .map(MessageReference::getMessageId)
+                    .map(MessageId::toString)
+                    .collect(Collectors.toSet());
+
+            List<QueueMessageReference> extraMessages = intermediateQueue.getMessagesUntilMatches(connectionContext,
+                    (context, mr) -> mr.getMessageId().equals(recoveryMessageId));
+            if (extraMessages == null) {
+                throw new IllegalStateException("Can't recover sequence. Message with id: " + recoveryMessageId + " not found");
+            }
+
+            List<MessageReference> toDispatch = new ArrayList<>();
+            for (MessageReference mr : extraMessages) {
+                if (matchingIds.contains(mr.getMessageId().toString())) {
+                    continue;
+                }
+                matchingMessages.add(mr);
+                toDispatch.add(mr);
+            }
+            intermediateQueue.dispatchNotification(subscription, toDispatch);
         }
 
         TransactionId transactionId = new LocalTransactionId(
@@ -255,7 +280,6 @@ public class ReplicaSequencer {
                 ReplicaSupport.LOCAL_TRANSACTION_ID_GENERATOR.getNextSequenceId());
         boolean rollbackOnFail = false;
 
-        ConnectionContext connectionContext = createConnectionContext();
         BigInteger sequence = null;
         try {
             broker.beginTransaction(connectionContext, transactionId);
@@ -406,7 +430,7 @@ public class ReplicaSequencer {
             }
         }
 
-        return pendingAckWakeups.get() > 0;
+        return !broker.getBrokerService().isStopping() && pendingAckWakeups.get() > 0;
     }
 
     private void iterateAck0() {
@@ -499,7 +523,7 @@ public class ReplicaSequencer {
             }
         }
 
-        return pendingSendTriggeredWakeups.get() > 0;
+        return !broker.getBrokerService().isStopping() && pendingSendTriggeredWakeups.get() > 0;
     }
 
     private void iterateSend0() {

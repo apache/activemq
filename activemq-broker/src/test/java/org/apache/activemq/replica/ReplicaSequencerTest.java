@@ -125,7 +125,7 @@ public class ReplicaSequencerTest {
     public void restoreSequenceWhenNoSequence() throws Exception {
         sequencer.sequence = null;
 
-        sequencer.restoreSequence(null, Collections.emptyList());
+        sequencer.restoreSequence(intermediateQueue, null, Collections.emptyList());
 
         assertThat(sequencer.sequence).isNull();
     }
@@ -135,7 +135,7 @@ public class ReplicaSequencerTest {
         sequencer.sequence = null;
 
         MessageId messageId = new MessageId("1:0:0:1");
-        sequencer.restoreSequence("1#" + messageId, Collections.emptyList());
+        sequencer.restoreSequence(intermediateQueue, "1#" + messageId, Collections.emptyList());
         verify(replicationMessageProducer, never()).enqueueMainReplicaEvent(any(), any(ReplicaEvent.class));
 
         assertThat(sequencer.sequence).isEqualTo(1);
@@ -167,7 +167,7 @@ public class ReplicaSequencerTest {
 
         when(intermediateSubscription.getDispatched()).thenReturn(new ArrayList<>(List.of(message1, message2, message3, message4)));
 
-        sequencer.restoreSequence("4#" + messageId4, List.of("1#" + messageId1 + "#" + messageId2, "3#" + messageId3 + "#" + messageId4));
+        sequencer.restoreSequence(intermediateQueue, "4#" + messageId4, List.of("1#" + messageId1 + "#" + messageId2, "3#" + messageId3 + "#" + messageId4));
 
         assertThat(sequencer.sequence).isEqualTo(4);
 
