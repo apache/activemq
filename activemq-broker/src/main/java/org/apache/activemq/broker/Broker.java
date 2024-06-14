@@ -428,5 +428,5 @@ public interface Broker extends Region, Service {
      */
     void networkBridgeStopped(BrokerInfo brokerInfo);
 
-
+    void queuePurged(ConnectionContext context, ActiveMQDestination destination);
 }
