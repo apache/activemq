@@ -17,7 +17,9 @@
 package org.apache.activemq.broker.region.virtual;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
@@ -37,12 +39,15 @@ import java.util.Set;
 public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicInterceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SelectorAwareVirtualTopicInterceptor.class);
     LRUCache<String,BooleanExpression> expressionCache = new LRUCache<String,BooleanExpression>();
-    private final SubQueueSelectorCacheBroker selectorCachePlugin;
+    private SubQueueSelectorCacheBroker selectorCachePlugin;
 
     public SelectorAwareVirtualTopicInterceptor(Destination next, VirtualTopic virtualTopic) {
         super(next, virtualTopic);
-        selectorCachePlugin = (SubQueueSelectorCacheBroker)
-                ((Topic)next).createConnectionContext().getBroker().getAdaptor(SubQueueSelectorCacheBroker.class);
+        BaseDestination baseDestination = getBaseDestination(next);
+        if (baseDestination != null) {
+            selectorCachePlugin = (SubQueueSelectorCacheBroker)
+                    baseDestination.createConnectionContext().getBroker().getAdaptor(SubQueueSelectorCacheBroker.class);
+        }
     }
 
     /**
@@ -114,5 +119,14 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
      */
     private BooleanExpression compileSelector(final String selectorExpression) throws Exception {
         return SelectorParser.parse(selectorExpression);
+    }
+
+    private BaseDestination getBaseDestination(Destination virtualDest) {
+        if (virtualDest instanceof BaseDestination) {
+            return (BaseDestination) virtualDest;
+        } else if (virtualDest instanceof DestinationFilter) {
+            return ((DestinationFilter) virtualDest).getAdaptor(BaseDestination.class);
+        }
+        return null;
     }
 }
