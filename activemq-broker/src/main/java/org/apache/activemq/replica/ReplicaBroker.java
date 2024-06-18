@@ -230,12 +230,20 @@ public class ReplicaBroker extends MutativeRoleBroker {
     private void establishConnection() throws JMSException {
         ActiveMQConnectionFactory replicaSourceConnectionFactory = replicaPolicy.getOtherBrokerConnectionFactory();
         logger.trace("Replica connection URL {}", replicaSourceConnectionFactory.getBrokerURL());
-        ActiveMQConnection newConnection = (ActiveMQConnection) replicaSourceConnectionFactory.createConnection();
-        newConnection.setSendAcksAsync(false);
-        newConnection.start();
-        connection.set(newConnection);
-        periodAcknowledgeCallBack.setConnection(newConnection);
-        logger.debug("Established connection to replica source: {}", replicaSourceConnectionFactory.getBrokerURL());
+        ActiveMQConnection newConnection = null;
+        try {
+            newConnection = (ActiveMQConnection) replicaSourceConnectionFactory.createConnection();
+            newConnection.setSendAcksAsync(false);
+            newConnection.start();
+            connection.set(newConnection);
+            periodAcknowledgeCallBack.setConnection(newConnection);
+            logger.debug("Established connection to replica source: {}", replicaSourceConnectionFactory.getBrokerURL());
+        } catch (Exception e) {
+            if (newConnection != null) {
+                newConnection.close();
+            }
+            throw e;
+        }
     }
 
     private void consumeReplicationEvents(ReplicaRole initialRole) throws Exception {
