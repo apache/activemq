@@ -18,6 +18,11 @@
 package org.apache.activemq.broker.replica;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.region.DestinationInterceptor;
+import org.apache.activemq.broker.region.virtual.MirroredQueue;
+import org.apache.activemq.broker.region.virtual.VirtualDestination;
+import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
+import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.command.ActiveMQTextMessage;
 
 import javax.jms.Connection;
@@ -52,7 +57,7 @@ public class ReplicaPluginMirrorQueueTest extends ReplicaPluginTestSupport {
 
     public void testSendMessageWhenPrimaryIsMirrored() throws Exception {
         firstBroker = createFirstBroker();
-        firstBroker.setUseMirroredQueues(true);
+        firstBroker.setDestinationInterceptors(getDestinationInterceptors());
         secondBroker = createSecondBroker();
         startFirstBroker();
         startSecondBroker();
@@ -103,7 +108,7 @@ public class ReplicaPluginMirrorQueueTest extends ReplicaPluginTestSupport {
     public void testSendMessageWhenReplicaIsMirrored() throws Exception {
         firstBroker = createFirstBroker();
         secondBroker = createSecondBroker();
-        secondBroker.setUseMirroredQueues(true);
+        secondBroker.setDestinationInterceptors(getDestinationInterceptors());
         startFirstBroker();
         startSecondBroker();
 
@@ -154,9 +159,9 @@ public class ReplicaPluginMirrorQueueTest extends ReplicaPluginTestSupport {
 
     public void testSendMessageWhenBothSidesMirrored() throws Exception {
         firstBroker = createFirstBroker();
-        firstBroker.setUseMirroredQueues(true);
+        firstBroker.setDestinationInterceptors(getDestinationInterceptors());
         secondBroker = createSecondBroker();
-        secondBroker.setUseMirroredQueues(true);
+        secondBroker.setDestinationInterceptors(getDestinationInterceptors());
         startFirstBroker();
         startSecondBroker();
 
@@ -203,5 +208,12 @@ public class ReplicaPluginMirrorQueueTest extends ReplicaPluginTestSupport {
         secondBrokerSession.close();
     }
 
-
+    private DestinationInterceptor[] getDestinationInterceptors() {
+        VirtualDestinationInterceptor virtualDestinationInterceptor = new VirtualDestinationInterceptor();
+        VirtualTopic virtualTopic = new VirtualTopic();
+        virtualTopic.setName("VirtualTopic.>");
+        virtualTopic.setSelectorAware(true);
+        virtualDestinationInterceptor.setVirtualDestinations(new VirtualDestination[]{ virtualTopic });
+        return new DestinationInterceptor[]{new MirroredQueue(), virtualDestinationInterceptor};
+    }
 }
