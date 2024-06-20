@@ -242,6 +242,43 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         }
 
         @Override
+        public void recoverNextMessages(final int offset, final int maxReturned, final MessageRecoveryListener listener, final boolean keepCurrentNextMessageId) throws Exception {
+            synchronized(indexMutex) {
+                pageFile.tx().execute(new Transaction.Closure<Exception>(){
+                    @Override
+                    public void execute(Transaction tx) throws Exception {
+                        StoredDestination sd = getStoredDestination(dest, tx);
+                        Entry<Long, MessageRecord> entry=null;
+                        int counter = 0;
+                        long currentCursorPosition = cursorPos;
+                        try {
+                            long recoverCursPos = cursorPos;
+                            if(offset > 0) {
+                                recoverCursPos = cursorPos + offset;
+                            }
+                            for (Iterator<Entry<Long, MessageRecord>> iterator = sd.orderIndex.iterator(tx, recoverCursPos); iterator.hasNext();) {
+                                entry = iterator.next();
+
+                                listener.recoverMessage( (Message) wireFormat.unmarshal(entry.getValue().data ) );
+                                counter++;
+                                if( counter >= maxReturned ) {
+                                    break;
+                                }
+                            }
+                            if( entry!=null ) {
+                                cursorPos = entry.getKey()+1;
+                            }
+                        } finally {
+                            if(offset > 0 && keepCurrentNextMessageId) {
+                                cursorPos = currentCursorPosition;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        @Override
         public void resetBatching() {
             cursorPos=0;
         }

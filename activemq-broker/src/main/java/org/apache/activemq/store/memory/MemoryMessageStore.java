@@ -131,6 +131,32 @@ public class MemoryMessageStore extends AbstractMessageStore {
     }
 
     @Override
+    public void recoverNextMessages(int offset, int maxReturned, MessageRecoveryListener listener, boolean keepCurrentNextMessageId) throws Exception {
+        synchronized (messageTable) {
+            boolean pastLackBatch = lastBatchId == null;
+            int position = 0;
+            for (Map.Entry<MessageId, Message> entry : messageTable.entrySet()) {
+                if(offset > 0 && offset > position) {
+                    position++;
+                    continue;
+                }
+                if (pastLackBatch) {
+                    Object msg = entry.getValue();
+                    lastBatchId = entry.getKey();
+                    if (msg.getClass() == MessageId.class) {
+                        listener.recoverMessageReference((MessageId) msg);
+                    } else {
+                        listener.recoverMessage((Message) msg);
+                    }
+                } else {
+                    pastLackBatch = entry.getKey().equals(lastBatchId);
+                }
+                position++;
+            }
+        }
+    }
+
+    @Override
     public void resetBatching() {
         lastBatchId = null;
     }

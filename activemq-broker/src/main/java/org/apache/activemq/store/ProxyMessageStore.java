@@ -111,6 +111,11 @@ public class ProxyMessageStore implements MessageStore {
     }
 
     @Override
+    public void recoverNextMessages(int offset, int maxReturned, MessageRecoveryListener listener, boolean keepCurrentNextMessageId) throws Exception {
+        delegate.recoverNextMessages(offset, maxReturned, listener, keepCurrentNextMessageId);
+    }
+
+    @Override
     public void resetBatching() {
         delegate.resetBatching();
     }
