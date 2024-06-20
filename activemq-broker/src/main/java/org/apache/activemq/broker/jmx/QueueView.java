@@ -17,12 +17,14 @@
 package org.apache.activemq.broker.jmx;
 
 import java.util.Map;
+import java.util.Optional;
 
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -254,5 +256,16 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     public boolean isPaused() {
         Queue queue = (Queue) destination;
         return queue.isDispatchPaused();
+    }
+
+    @Override
+    public Long getFirstMessageAge() {
+        return Optional.ofNullable(getFirstMessageTimestamp()).map(val -> System.currentTimeMillis() - val).orElse(null);
+    }
+
+    @Override
+    public Long getFirstMessageTimestamp() {
+        QueueMessageReference firstMessage = ((Queue) destination).getFirstMessage();
+        return Optional.ofNullable(firstMessage).map(MessageReference::getMessage).map(Message::getBrokerInTime).orElse(null);
     }
 }
