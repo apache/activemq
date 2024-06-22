@@ -286,7 +286,8 @@ public class BrokerService implements Service {
                 LOG.info("Loaded the Bouncy Castle security provider at position: {}", ret);
             }
         } catch(Throwable e) {
-            // No BouncyCastle found so we use the default Java Security Provider
+            // No BouncyCastle found, so we use the default Java Security Provider.
+            LOG.debug("Using the default Java security provider since no Bouncy Castle is found.");
         }
 
         String localHostName = "localhost";
@@ -2219,21 +2220,17 @@ public class BrokerService implements Service {
     }
 
     public void stopAllConnectors(ServiceStopper stopper) {
-        for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-            NetworkConnector connector = iter.next();
+        for (NetworkConnector connector : getNetworkConnectors()) {
             unregisterNetworkConnectorMBean(connector);
             stopper.stop(connector);
         }
-        for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
-            ProxyConnector connector = iter.next();
+        for (ProxyConnector connector : getProxyConnectors()) {
             stopper.stop(connector);
         }
-        for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
-            JmsConnector connector = iter.next();
+        for (JmsConnector connector : jmsConnectors) {
             stopper.stop(connector);
         }
-        for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            TransportConnector connector = iter.next();
+        for (TransportConnector connector : getTransportConnectors()) {
             try {
                 unregisterConnectorMBean(connector);
             } catch (IOException e) {
@@ -2271,7 +2268,6 @@ public class BrokerService implements Service {
     }
 
     protected void unregisterPersistenceAdapterMBean(PersistenceAdapter adaptor) throws IOException {
-        if (isUseJmx()) {}
     }
 
     private ObjectName createConnectorObjectName(TransportConnector connector) throws MalformedObjectNameException {
@@ -2474,8 +2470,7 @@ public class BrokerService implements Service {
             broker = new ConnectionSplitBroker(broker);
         }
         if (plugins != null) {
-            for (int i = 0; i < plugins.length; i++) {
-                BrokerPlugin plugin = plugins[i];
+            for (BrokerPlugin plugin : plugins) {
                 broker = plugin.installPlugin(broker);
             }
         }
@@ -2592,9 +2587,8 @@ public class BrokerService implements Service {
     protected void startDestinations() throws Exception {
         if (destinations != null) {
             ConnectionContext adminConnectionContext = getAdminConnectionContext();
-            for (int i = 0; i < destinations.length; i++) {
-                ActiveMQDestination destination = destinations[i];
-                getBroker().addDestination(adminConnectionContext, destination,true);
+            for (ActiveMQDestination destination : destinations) {
+                getBroker().addDestination(adminConnectionContext, destination, true);
             }
         }
         if (isUseVirtualTopics()) {
@@ -2626,8 +2620,7 @@ public class BrokerService implements Service {
     public void startAllConnectors() throws Exception {
         final Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
         List<TransportConnector> al = new ArrayList<>();
-        for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            TransportConnector connector = iter.next();
+        for (TransportConnector connector : getTransportConnectors()) {
             al.add(startTransportConnector(connector));
         }
         if (al.size() > 0) {
@@ -2654,8 +2647,7 @@ public class BrokerService implements Service {
                     });
             }
 
-            for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-                final NetworkConnector connector = iter.next();
+            for (final NetworkConnector connector : getNetworkConnectors()) {
                 connector.setLocalUri(getVmConnectorURI());
                 startNetworkConnector(connector, durableDestinations, networkConnectorStartExecutor);
             }
@@ -2664,12 +2656,10 @@ public class BrokerService implements Service {
                 ThreadPoolUtils.shutdown(networkConnectorStartExecutor);
             }
 
-            for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
-                ProxyConnector connector = iter.next();
+            for (ProxyConnector connector : getProxyConnectors()) {
                 connector.start();
             }
-            for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
-                JmsConnector connector = iter.next();
+            for (JmsConnector connector : jmsConnectors) {
                 connector.start();
             }
             for (Service service : services) {
