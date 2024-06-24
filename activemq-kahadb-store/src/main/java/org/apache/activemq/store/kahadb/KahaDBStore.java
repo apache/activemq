@@ -101,7 +101,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             PROPERTY_CANCELED_TASK_MOD_METRIC, "0"), 10);
     public static final String PROPERTY_ASYNC_EXECUTOR_MAX_THREADS = "org.apache.activemq.store.kahadb.ASYNC_EXECUTOR_MAX_THREADS";
     private static final int asyncExecutorMaxThreads = Integer.parseInt(System.getProperty(
-            PROPERTY_ASYNC_EXECUTOR_MAX_THREADS, "1"), 10);;
+            PROPERTY_ASYNC_EXECUTOR_MAX_THREADS, "1"), 10);
 
     protected ExecutorService queueExecutor;
     protected ExecutorService topicExecutor;
@@ -115,7 +115,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     Semaphore globalTopicSemaphore;
     private boolean concurrentStoreAndDispatchQueues = true;
     // when true, message order may be compromised when cache is exhausted if store is out
-    // or order w.r.t cache
+    // of order w.r.t cache
     private boolean concurrentStoreAndDispatchTopics = false;
     private int maxAsyncJobs = MAX_ASYNC_JOBS;
     private final KahaDBTransactionStore transactionStore;
