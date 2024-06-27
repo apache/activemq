@@ -32,6 +32,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.replica.ReplicaEvent;
 import org.apache.activemq.replica.ReplicaEventSerializer;
 import org.apache.activemq.replica.ReplicaEventType;
+import org.apache.activemq.replica.ReplicaJmxBroker;
 import org.apache.activemq.replica.ReplicaPlugin;
 import org.apache.activemq.replica.ReplicaPolicy;
 import org.apache.activemq.replica.ReplicaRole;
@@ -147,7 +148,7 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
         firstBrokerProducer.send(mockMainQueue, replicaEventMessage);
         Thread.sleep(LONG_TIMEOUT);
 
-        QueueViewMBean secondBrokerSequenceQueueView = getQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+        QueueViewMBean secondBrokerSequenceQueueView = getReplicationQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
         assertEquals(secondBrokerSequenceQueueView.browseMessages().size(), 1);
 
         MessageId messageId = new MessageId("1:1");
@@ -199,7 +200,7 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
         firstBrokerProducer.send(mockMainQueue, replicaEventMessage);
         Thread.sleep(LONG_TIMEOUT);
 
-        QueueViewMBean secondBrokerSequenceQueueView = getQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+        QueueViewMBean secondBrokerSequenceQueueView = getReplicationQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
         assertEquals(secondBrokerSequenceQueueView.browseMessages().size(), 1);
         TextMessage sequenceQueueMessage = (TextMessage) secondBrokerSequenceQueueView.browseMessages().get(0);
         String[] textMessageSequence = sequenceQueueMessage.getText().split("#");
@@ -256,7 +257,7 @@ public class ReplicationEventHandlingTest extends ReplicaPluginTestSupport {
             @Override
             public Broker installPlugin(final Broker broker) {
                 nextBrokerSpy = spy(broker);
-                return new ReplicaRoleManagementBroker(nextBrokerSpy, replicaPolicy, ReplicaRole.replica, new ReplicaStatistics());
+                return new ReplicaRoleManagementBroker(new ReplicaJmxBroker(nextBrokerSpy, replicaPolicy), replicaPolicy, ReplicaRole.replica, new ReplicaStatistics());
             }
         };
         replicaPlugin.setRole(ReplicaRole.replica);

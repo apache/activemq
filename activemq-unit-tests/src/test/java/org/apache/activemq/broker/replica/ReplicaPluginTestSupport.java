@@ -201,6 +201,14 @@ public abstract class ReplicaPluginTestSupport extends AutoFailTestSupport {
         };
     }
 
+    protected QueueViewMBean getReplicationQueueView(BrokerService broker, String queueName) throws MalformedObjectNameException {
+        MBeanServer mbeanServer = broker.getManagementContext().getMBeanServer();
+        String objectNameStr = broker.getBrokerObjectName().toString();
+        objectNameStr += ",service=Plugins,instanceName=ReplicationPlugin,destinationType=Queue,destinationName="+queueName;
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(mbeanServer, objectNameStr);
+        return MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+    }
+
     protected QueueViewMBean getQueueView(BrokerService broker, String queueName) throws MalformedObjectNameException {
         MBeanServer mbeanServer = broker.getManagementContext().getMBeanServer();
         String objectNameStr = broker.getBrokerObjectName().toString();
@@ -258,7 +266,7 @@ public abstract class ReplicaPluginTestSupport extends AutoFailTestSupport {
         assertTrue("Replication Main Queue has Consumer",
                 Wait.waitFor(() -> {
                     try {
-                        QueueViewMBean brokerMainQueueView = getQueueView(broker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+                        QueueViewMBean brokerMainQueueView = getReplicationQueueView(broker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
                         return brokerMainQueueView.getConsumerCount() > 0;
                     } catch (Exception e) {
                         e.printStackTrace();

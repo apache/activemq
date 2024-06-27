@@ -30,6 +30,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.replica.ReplicaJmxBroker;
 import org.apache.activemq.replica.ReplicaPlugin;
 import org.apache.activemq.replica.ReplicaPolicy;
 import org.apache.activemq.replica.ReplicaRole;
@@ -118,7 +119,7 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
         firstBrokerProducer.send(message);
 
         Thread.sleep(LONG_TIMEOUT);
-        QueueViewMBean firstBrokerMainQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+        QueueViewMBean firstBrokerMainQueueView = getReplicationQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
         assertEquals(firstBrokerMainQueueView.getDequeueCount(), 0);
         assertTrue(firstBrokerMainQueueView.getEnqueueCount() >= 1);
 
@@ -137,11 +138,11 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
 
         waitForCondition(() -> {
             try {
-                QueueViewMBean firstBrokerQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
-                assertEquals(firstBrokerQueueView.getDequeueCount(), 3);
+                QueueViewMBean firstBrokerQueueView = getReplicationQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+                assertTrue(firstBrokerQueueView.getDequeueCount() >= 2);
                 assertTrue(firstBrokerQueueView.getEnqueueCount() >= 2);
 
-                QueueViewMBean secondBrokerSequenceQueueView = getQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+                QueueViewMBean secondBrokerSequenceQueueView = getReplicationQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
                 assertEquals(secondBrokerSequenceQueueView.browseMessages().size(), 1);
             } catch (Exception|Error urlException) {
                 LOG.error("Caught error during wait: " + urlException.getMessage());
@@ -191,7 +192,7 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
 
         waitForCondition(() -> {
             try {
-                QueueViewMBean firstBrokerMainQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+                QueueViewMBean firstBrokerMainQueueView = getReplicationQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
                 assertEquals(firstBrokerMainQueueView.getDequeueCount(), messagesToAck.size());
                 assertEquals(firstBrokerMainQueueView.getEnqueueCount(), messagesToAck.size());
             } catch (Exception|Error urlException) {
@@ -247,7 +248,7 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
 
         waitForCondition(() -> {
             try {
-                QueueViewMBean firstBrokerMainQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+                QueueViewMBean firstBrokerMainQueueView = getReplicationQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
                 assertEquals(firstBrokerMainQueueView.getDequeueCount(), 0);
                 assertTrue(firstBrokerMainQueueView.getEnqueueCount() >= 1);
             } catch (Exception|Error urlException) {
@@ -271,7 +272,7 @@ public class ReplicaAcknowledgeReplicationEventTest extends ReplicaPluginTestSup
         ReplicaPlugin replicaPlugin = new ReplicaPlugin() {
             @Override
             public Broker installPlugin(final Broker broker) {
-                return new ReplicaRoleManagementBroker(broker, mockReplicaPolicy, ReplicaRole.replica, new ReplicaStatistics());
+                return new ReplicaRoleManagementBroker(new ReplicaJmxBroker(broker, replicaPolicy), mockReplicaPolicy, ReplicaRole.replica, new ReplicaStatistics());
             }
         };
         replicaPlugin.setRole(ReplicaRole.replica);

@@ -126,8 +126,8 @@ public class ReplicationQueueOperationsTest extends ReplicaPluginTestSupport {
             secondBrokerProducer.send(message);
         }
 
-        QueueViewMBean firstBrokerMainQueue = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
-        QueueViewMBean firstBrokerIntermediateQueue = getQueueView(firstBroker, ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
+        QueueViewMBean firstBrokerMainQueue = getReplicationQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+        QueueViewMBean firstBrokerIntermediateQueue = getReplicationQueueView(firstBroker, ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
 
         waitForQueueHasMessage(firstBrokerMainQueue);
         firstBrokerMainQueue.purge();

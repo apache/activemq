@@ -163,7 +163,7 @@ public class ReplicaSoftFailoverTest extends ReplicaPluginTestSupport {
         MessageProducer firstBrokerProducer = firstBrokerSession.createProducer(destination);
 
         int retryCounter = 1;
-        QueueViewMBean firstBrokerIntermediateQueueView = getQueueView(firstBroker, ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
+        QueueViewMBean firstBrokerIntermediateQueueView = getReplicationQueueView(firstBroker, ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
         while (firstBrokerIntermediateQueueView.getInFlightCount() <= 1) {
             sendMessages(firstBrokerProducer, MESSAGES_TO_SEND * retryCounter);
             retryCounter++;
@@ -246,7 +246,7 @@ public class ReplicaSoftFailoverTest extends ReplicaPluginTestSupport {
         Session secondBrokerSession = secondBrokerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer secondBrokerProducer = secondBrokerSession.createProducer(destination);
         int retryCounter = 1;
-        QueueViewMBean secondBrokerIntermediateQueueView = getQueueView(secondBroker, ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
+        QueueViewMBean secondBrokerIntermediateQueueView = getReplicationQueueView(secondBroker, ReplicaSupport.INTERMEDIATE_REPLICATION_QUEUE_NAME);
         while (secondBrokerIntermediateQueueView.getInFlightCount() <= 1) {
             sendMessages(secondBrokerProducer, MESSAGES_TO_SEND * retryCounter);
             retryCounter++;

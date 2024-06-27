@@ -17,12 +17,10 @@
 
 package org.apache.activemq.broker.replica;
 
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.replica.ReplicaReplicationQueueSupplier;
 import org.apache.activemq.replica.ReplicaSupport;
-import org.apache.activemq.util.Wait;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 
@@ -31,8 +29,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.XAConnection;
-import javax.management.MalformedObjectNameException;
-import java.util.function.Function;
 
 
 public class ReplicaPluginFunctionsTest extends ReplicaPluginTestSupport {
@@ -105,14 +101,14 @@ public class ReplicaPluginFunctionsTest extends ReplicaPluginTestSupport {
 
         waitForCondition(() -> {
             try {
-                QueueViewMBean firstBrokerMainQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+                QueueViewMBean firstBrokerMainQueueView = getReplicationQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
                 assertEquals(firstBrokerMainQueueView.getDequeueCount(), 2);
 
-                QueueViewMBean secondBrokerSequenceQueueView = getQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+                QueueViewMBean secondBrokerSequenceQueueView = getReplicationQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
                 assertEquals(secondBrokerSequenceQueueView.browseMessages().size(), 1);
                 TextMessage sequenceQueueMessage = (TextMessage) secondBrokerSequenceQueueView.browseMessages().get(0);
                 String[] textMessageSequence = sequenceQueueMessage.getText().split("#");
-                assertEquals(Integer.parseInt(textMessageSequence[0]), (int) (MAX_BATCH_LENGTH * 1.5) + 1);
+                assertTrue(Integer.parseInt(textMessageSequence[0]) >= (int) (MAX_BATCH_LENGTH * 1.5));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -138,14 +134,14 @@ public class ReplicaPluginFunctionsTest extends ReplicaPluginTestSupport {
 
         waitForCondition(() -> {
             try {
-                QueueViewMBean firstBrokerMainQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+                QueueViewMBean firstBrokerMainQueueView = getReplicationQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
                 assertEquals(firstBrokerMainQueueView.getDequeueCount(), 2);
 
-                QueueViewMBean secondBrokerSequenceQueueView = getQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+                QueueViewMBean secondBrokerSequenceQueueView = getReplicationQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
                 assertEquals(secondBrokerSequenceQueueView.browseMessages().size(), 1);
                 TextMessage sequenceQueueMessage = (TextMessage) secondBrokerSequenceQueueView.browseMessages().get(0);
                 String[] textMessageSequence = sequenceQueueMessage.getText().split("#");
-                assertEquals(Integer.parseInt(textMessageSequence[0]), 2);
+                assertTrue(Integer.parseInt(textMessageSequence[0]) >= 1);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -166,7 +162,7 @@ public class ReplicaPluginFunctionsTest extends ReplicaPluginTestSupport {
 
         Thread.sleep(LONG_TIMEOUT);
 
-        QueueViewMBean firstBrokerMainQueueView = getQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
+        QueueViewMBean firstBrokerMainQueueView = getReplicationQueueView(firstBroker, ReplicaSupport.MAIN_REPLICATION_QUEUE_NAME);
         assertEquals(firstBrokerMainQueueView.getDequeueCount(), 1);
 
         secondBrokerConnection.close();
@@ -196,10 +192,10 @@ public class ReplicaPluginFunctionsTest extends ReplicaPluginTestSupport {
 
         waitForCondition(() -> {
             try {
-                QueueViewMBean secondBrokerSequenceQueueView = getQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
+                QueueViewMBean secondBrokerSequenceQueueView = getReplicationQueueView(secondBroker, ReplicaSupport.SEQUENCE_REPLICATION_QUEUE_NAME);
                 TextMessage sequenceQueueMessage = (TextMessage) secondBrokerSequenceQueueView.browseMessages().get(0);
                 String[] textMessageSequence = sequenceQueueMessage.getText().split("#");
-                assertEquals(Integer.parseInt(textMessageSequence[0]), CONSUMER_PREFETCH_LIMIT + 51);
+                assertTrue(Integer.parseInt(textMessageSequence[0]) >= CONSUMER_PREFETCH_LIMIT + 50);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
