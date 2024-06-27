@@ -98,7 +98,7 @@ public class ReplicaPlugin extends BrokerPluginSupport {
         interceptors[interceptors.length - 1] = new ReplicaAdvisorySuppressor();
         compositeInterceptor.setInterceptors(interceptors);
 
-        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(broker, replicaPolicy, role, replicaStatistics);
+        replicaRoleManagementBroker = new ReplicaRoleManagementBroker(new ReplicaJmxBroker(broker, replicaPolicy), replicaPolicy, role, replicaStatistics);
 
         return new ReplicaAuthorizationBroker(replicaRoleManagementBroker);
     }
@@ -205,6 +205,13 @@ public class ReplicaPlugin extends BrokerPluginSupport {
      */
     public void setControlWebConsoleAccess(boolean controlWebConsoleAccess) {
         replicaPolicy.setControlWebConsoleAccess(controlWebConsoleAccess);
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="com.sun.beans.editors.StringEditor"
+     */
+    public void setHideReplicationDestination(boolean hideReplicationDestination) {
+        replicaPolicy.setHideReplicationDestination(hideReplicationDestination);
     }
 
     /**

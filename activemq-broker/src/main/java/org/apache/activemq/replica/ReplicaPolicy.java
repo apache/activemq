@@ -34,6 +34,7 @@ public class ReplicaPolicy {
     private int replicaAckPeriod = 5_000;
     private int replicaMaxAckBatchSize = 100;
     private boolean controlWebConsoleAccess = true;
+    private boolean hideReplicationDestination = true;
 
     private int heartBeatPeriod = 60_000;
 
@@ -126,6 +127,14 @@ public class ReplicaPolicy {
 
     public void setControlWebConsoleAccess(boolean controlWebConsoleAccess) {
         this.controlWebConsoleAccess = controlWebConsoleAccess;
+    }
+
+    public boolean isHideReplicationDestination() {
+        return hideReplicationDestination;
+    }
+
+    public void setHideReplicationDestination(boolean hideReplicationDestination) {
+        this.hideReplicationDestination = hideReplicationDestination;
     }
 
     public int getHeartBeatPeriod() {

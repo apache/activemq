@@ -166,7 +166,7 @@ public class ReplicaReplicationQueueSupplier {
             return new ActiveMQQueue(existingReplicationQueue.get().getPhysicalName());
         } else {
             ActiveMQQueue newReplicationQueue = new ActiveMQQueue(replicationQueueName);
-            broker.getBrokerService().getBroker().addDestination(
+            broker.addDestination(
                     broker.getAdminConnectionContext(),
                     newReplicationQueue,
                     false
@@ -187,7 +187,7 @@ public class ReplicaReplicationQueueSupplier {
             return new ActiveMQTopic(existingReplicationQueue.get().getPhysicalName());
         } else {
             ActiveMQTopic newReplicationQueue = new ActiveMQTopic(replicationQueueName);
-            broker.getBrokerService().getBroker().addDestination(
+            broker.addDestination(
                     broker.getAdminConnectionContext(),
                     newReplicationQueue,
                     false

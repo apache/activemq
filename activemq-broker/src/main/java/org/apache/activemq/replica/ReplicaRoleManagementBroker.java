@@ -45,7 +45,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
     private static final String FAIL_OVER_CONSUMER_CLIENT_ID = "DUMMY_FAIL_OVER_CONSUMER";
 
     private final Logger logger = LoggerFactory.getLogger(ReplicaRoleManagementBroker.class);
-    private final Broker broker;
+    private final ReplicaJmxBroker jmxBroker;
     private final ReplicaPolicy replicaPolicy;
     private final ClassLoader contextClassLoader;
     private ReplicaRole role;
@@ -61,9 +61,9 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
     ReplicaBroker replicaBroker;
     private ReplicaRoleStorage replicaRoleStorage;
 
-    public ReplicaRoleManagementBroker(Broker broker, ReplicaPolicy replicaPolicy, ReplicaRole role, ReplicaStatistics replicaStatistics) {
-        super(broker);
-        this.broker = broker;
+    public ReplicaRoleManagementBroker(ReplicaJmxBroker jmxBroker, ReplicaPolicy replicaPolicy, ReplicaRole role, ReplicaStatistics replicaStatistics) {
+        super(jmxBroker);
+        this.jmxBroker = jmxBroker;
         this.replicaPolicy = replicaPolicy;
         this.role = role;
         this.replicaStatistics = replicaStatistics;
@@ -72,14 +72,14 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
 
         replicationProducerId.setConnectionId(new IdGenerator().generateId());
 
-        queueProvider = new ReplicaReplicationQueueSupplier(broker);
-        webConsoleAccessController = new WebConsoleAccessController(broker.getBrokerService(),
+        queueProvider = new ReplicaReplicationQueueSupplier(jmxBroker);
+        webConsoleAccessController = new WebConsoleAccessController(jmxBroker.getBrokerService(),
                 replicaPolicy.isControlWebConsoleAccess());
 
-        replicaInternalMessageProducer = new ReplicaInternalMessageProducer(broker);
+        replicaInternalMessageProducer = new ReplicaInternalMessageProducer(jmxBroker);
         ReplicationMessageProducer replicationMessageProducer =
                 new ReplicationMessageProducer(replicaInternalMessageProducer, queueProvider);
-        ReplicaSequencer replicaSequencer = new ReplicaSequencer(broker, queueProvider, replicaInternalMessageProducer,
+        ReplicaSequencer replicaSequencer = new ReplicaSequencer(jmxBroker, queueProvider, replicaInternalMessageProducer,
                 replicationMessageProducer, replicaPolicy, replicaStatistics);
 
         sourceBroker = buildSourceBroker(replicationMessageProducer, replicaSequencer, queueProvider);
@@ -141,10 +141,6 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         setNext(nextByRole);
     }
 
-    public Broker getBroker() {
-        return broker;
-    }
-
     public synchronized void updateBrokerState(ConnectionContext connectionContext, TransactionId tid, ReplicaRole role) throws Exception {
         replicaRoleStorage.enqueue(connectionContext, tid, role.name());
         this.role = role;
@@ -180,7 +176,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
         connectionContext.setClientId(FAIL_OVER_CONSUMER_CLIENT_ID);
         connectionContext.setConnection(new DummyConnection());
         queueProvider.initializeRoleQueueAndTopic();
-        replicaRoleStorage = new ReplicaRoleStorage(broker, queueProvider, replicaInternalMessageProducer);
+        replicaRoleStorage = new ReplicaRoleStorage(jmxBroker, queueProvider, replicaInternalMessageProducer);
         ReplicaRole savedRole = replicaRoleStorage.initialize(connectionContext);
         if (savedRole != null) {
             role = savedRole;
@@ -189,16 +185,16 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
 
     private ReplicaSourceBroker buildSourceBroker(ReplicationMessageProducer replicationMessageProducer,
             ReplicaSequencer replicaSequencer, ReplicaReplicationQueueSupplier queueProvider) {
-        return new ReplicaSourceBroker(broker, this, replicationMessageProducer, replicaSequencer,
+        return new ReplicaSourceBroker(jmxBroker, this, replicationMessageProducer, replicaSequencer,
                 queueProvider, replicaPolicy);
     }
 
     private ReplicaBroker buildReplicaBroker(ReplicaReplicationQueueSupplier queueProvider) {
-        return new ReplicaBroker(broker, this, queueProvider, replicaPolicy, replicaStatistics);
+        return new ReplicaBroker(jmxBroker, this, queueProvider, replicaPolicy, replicaStatistics);
     }
 
     private void addInterceptor4CompositeQueues() {
-        final RegionBroker regionBroker = (RegionBroker) broker.getAdaptor(RegionBroker.class);
+        final RegionBroker regionBroker = (RegionBroker) getAdaptor(RegionBroker.class);
         final CompositeDestinationInterceptor compositeInterceptor = (CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor();
         DestinationInterceptor[] interceptors = compositeInterceptor.getInterceptors();
         interceptors = Arrays.copyOf(interceptors, interceptors.length + 1);
@@ -207,7 +203,7 @@ public class ReplicaRoleManagementBroker extends MutableBrokerFilter implements 
     }
     
     private void addInterceptor4MirroredQueues() {
-        final RegionBroker regionBroker = (RegionBroker) broker.getAdaptor(RegionBroker.class);
+        final RegionBroker regionBroker = (RegionBroker) getAdaptor(RegionBroker.class);
         final CompositeDestinationInterceptor compositeInterceptor = (CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor();
         DestinationInterceptor[] interceptors = compositeInterceptor.getInterceptors();
         int index = -1;
