@@ -67,7 +67,9 @@ public class ReplicaPluginInstallationTest {
         assertThat(installedBroker).isInstanceOf(ReplicaAuthorizationBroker.class);
         Broker nextBroker = ((BrokerFilter) installedBroker).getNext();
         assertThat(nextBroker).isInstanceOf(ReplicaRoleManagementBroker.class);
-        assertThat(((BrokerFilter) nextBroker).getNext()).isEqualTo(broker);
+        Broker next = ((BrokerFilter) nextBroker).getNext();
+        assertThat(next).isInstanceOf(ReplicaJmxBroker.class);
+        assertThat(((BrokerFilter) next).getNext()).isEqualTo(broker);
         assertThat(ReplicaRole.source).isEqualTo(pluginUnderTest.getRole());
     }
 
@@ -80,6 +82,8 @@ public class ReplicaPluginInstallationTest {
         Broker nextBroker = ((BrokerFilter) installedBroker).getNext();
         assertThat(nextBroker).isInstanceOf(ReplicaRoleManagementBroker.class);
 
-        assertThat(((BrokerFilter) nextBroker).getNext()).isEqualTo(broker);
+        Broker next = ((BrokerFilter) nextBroker).getNext();
+        assertThat(next).isInstanceOf(ReplicaJmxBroker.class);
+        assertThat(((BrokerFilter) next).getNext()).isEqualTo(broker);
     }
 }
