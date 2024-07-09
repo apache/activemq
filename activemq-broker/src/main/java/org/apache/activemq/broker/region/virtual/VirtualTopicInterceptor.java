@@ -25,7 +25,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -39,7 +38,7 @@ import jakarta.jms.ResourceAllocationException;
 /**
  * A Destination which implements <a href="https://activemq.apache.org/virtual-destinations">Virtual Topic</a>
  */
-public class VirtualTopicInterceptor extends DestinationFilter {
+public class VirtualTopicInterceptor extends BaseVirtualDestinationFilter {
 
     private final String prefix;
     private final String postfix;
