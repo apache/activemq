@@ -68,7 +68,7 @@
     <jackson-version>2.17.2</jackson-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
     <jasypt-version>1.9.3</jasypt-version>
-    <jaxb-version>4.0.2</jaxb-version>
+    <jaxb-version>4.0.5</jaxb-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty-version>11.0.22</jetty-version>
     <jetty-version-range>[11,13)</jetty-version-range>
@@ -105,7 +105,7 @@
     <xstream-version>1.4.20</xstream-version>
     <xbean-version>4.25</xbean-version>
     <xerces-version>2.12.2</xerces-version>
-    <jaxb-tools-version>4.0.0</jaxb-tools-version>
+    <jaxb-tools-version>4.0.8</jaxb-tools-version>
     <stompjms-version>3.1.0</stompjms-version>
 
     <pax-logging-version>2.1.3</pax-logging-version>
