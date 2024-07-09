@@ -55,10 +55,6 @@
       <artifactId>activemq-pool</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-unit-tests</artifactId>
       <scope>test</scope>
