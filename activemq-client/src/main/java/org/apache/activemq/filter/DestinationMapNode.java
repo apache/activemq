@@ -17,6 +17,7 @@
 package org.apache.activemq.filter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,14 +74,19 @@ public class DestinationMapNode implements DestinationNode {
      * Returns the child node for the given named path, lazily creating one if
      * it does not yet exist
      */
-    public DestinationMapNode getChildOrCreate(String path) {
-        DestinationMapNode answer = (DestinationMapNode)childNodes.get(path);
-        if (answer == null) {
-            answer = createChildNode();
-            answer.path = path;
-            childNodes.put(path, answer);
+    public DestinationMapNode getChildOrCreate(String[] paths) {
+        DestinationMapNode node = this;
+        for (String path : paths) {
+            DestinationMapNode child = (DestinationMapNode) node.childNodes.get(path);
+            if (child == null) {
+                child = node.createChildNode();
+                child.path = path;
+                node.childNodes.put(path, child);
+            }
+            node = child;
         }
-        return answer;
+
+        return node;
     }
 
     /**
@@ -134,30 +140,42 @@ public class DestinationMapNode implements DestinationNode {
         return answer;
     }
 
-    public void add(String[] paths, int idx, Object value) {
-        if (idx >= paths.length) {
-            values.add(value);
+    public void add(String[] paths, Object value) {
+        if (paths.length == 0) {
+            add(value);
         } else {
-            getChildOrCreate(paths[idx]).add(paths, idx + 1, value);
+            getChildOrCreate(paths).add(value);
         }
     }
 
-    public void set(String[] paths, int idx, Object value) {
-        if (idx >= paths.length) {
-            values.clear();
-            values.add(value);
+    private void add(Object value) {
+        values.add(value);
+    }
+
+    public void set(String[] paths, Object value) {
+        if (paths.length == 0) {
+            set(value);
         } else {
-            getChildOrCreate(paths[idx]).set(paths, idx + 1, value);
+            getChildOrCreate(paths).set(value);
         }
     }
 
-    public void remove(String[] paths, int idx, Object value) {
-        if (idx >= paths.length) {
-            values.remove(value);
-            pruneIfEmpty();
+    private void set(Object value) {
+        values.clear();
+        values.add(value);
+    }
+
+    public void remove(String[] paths, Object value) {
+        if (paths.length == 0) {
+            remove(value);
         } else {
-            getChildOrCreate(paths[idx]).remove(paths, ++idx, value);
+            getChildOrCreate(paths).remove(value);
         }
+    }
+
+    private void remove(Object value) {
+        values.remove(value);
+        pruneIfEmpty();
     }
 
     public void removeAll(Set<DestinationNode> answer, String[] paths, int startIndex) {
