@@ -28,3 +28,4 @@ org.apache.activemq.console.command.StoreExportCommand
 org.apache.activemq.console.command.PurgeCommand
 org.apache.activemq.console.command.ProducerCommand
 org.apache.activemq.console.command.ConsumerCommand
+org.apache.activemq.console.command.StoreBackupCommand
