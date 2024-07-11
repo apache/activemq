@@ -55,7 +55,7 @@
     <commons-dbcp2-version>2.12.0</commons-dbcp2-version>
     <commons-io-version>2.15.1</commons-io-version>
     <commons-lang-version>3.14.0</commons-lang-version>
-    <commons-logging-version>1.3.0</commons-logging-version>
+    <commons-logging-version>1.3.3</commons-logging-version>
     <commons-pool2-version>2.12.0</commons-pool2-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <directory-version>2.0.0.AM25</directory-version>
