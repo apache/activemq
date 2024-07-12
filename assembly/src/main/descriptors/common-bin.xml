@@ -145,6 +145,7 @@
         <include>jakarta.transaction:jakarta.transaction-api</include>
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
+        <include>org.fusesource.hawtbuf:hawtbuf-proto</include>
         <include>jakarta.xml.bind:jakarta.xml.bind-api</include>
         <include>org.glassfish.jaxb:jaxb-runtime</include>
         <include>org.glassfish.jaxb:jaxb-core</include>
