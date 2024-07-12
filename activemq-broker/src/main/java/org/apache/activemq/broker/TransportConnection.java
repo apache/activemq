@@ -1214,8 +1214,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         // Run the MessageDispatch callbacks so that message references get
         // cleaned up.
         synchronized (dispatchQueue) {
-            for (Iterator<Command> iter = dispatchQueue.iterator(); iter.hasNext(); ) {
-                Command command = iter.next();
+            for (Command command : dispatchQueue) {
                 if (command.isMessageDispatch()) {
                     MessageDispatch md = (MessageDispatch) command;
                     TransmitCallback sub = md.getTransmitCallback();
@@ -1421,8 +1420,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 String duplexNetworkConnectorId = config.getName() + "@" + info.getBrokerId();
                 CopyOnWriteArrayList<TransportConnection> connections = this.connector.getConnections();
                 synchronized (connections) {
-                    for (Iterator<TransportConnection> iter = connections.iterator(); iter.hasNext(); ) {
-                        TransportConnection c = iter.next();
+                    for (TransportConnection c : connections) {
                         if ((c != this) && (duplexNetworkConnectorId.equals(c.getDuplexNetworkConnectorId()))) {
                             LOG.warn("Stopping an existing active duplex connection [{}] for network connector ({}).", c, duplexNetworkConnectorId);
                             c.stopAsync();
