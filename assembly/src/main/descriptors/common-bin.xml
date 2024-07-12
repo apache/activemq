@@ -145,6 +145,7 @@
         <include>org.apache.geronimo.specs:geronimo-jta_1.1_spec</include>
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
+        <include>org.fusesource.hawtbuf:hawtbuf-proto</include>
         <include>javax.xml.bind:jaxb-api</include>
         <include>org.glassfish.jaxb:jaxb-runtime</include>
         <include>org.glassfish.jaxb:jaxb-core</include>
