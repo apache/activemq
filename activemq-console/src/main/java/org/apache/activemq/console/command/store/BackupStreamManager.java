@@ -27,9 +27,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-/**
- * @author Matt Pavlovich <mattrpav@apache.org>
- */
 public class BackupStreamManager {
 
     private final OutputStream target;

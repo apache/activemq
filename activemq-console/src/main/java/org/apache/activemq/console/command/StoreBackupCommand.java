@@ -23,9 +23,6 @@ import org.apache.activemq.console.command.store.amq.CommandLineSupport;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * @author Matt Pavlovich <mattrpav@apache.org>
- */
 public class StoreBackupCommand implements Command {
 
     private CommandContext context;

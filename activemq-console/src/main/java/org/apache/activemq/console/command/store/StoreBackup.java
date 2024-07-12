@@ -50,9 +50,6 @@ import org.apache.activemq.protobuf.UTF8Buffer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * @author Matt Pavlovich <mattrpav@apache.org>
- */
 public class StoreBackup {
 
     static final int OPENWIRE_VERSION = 11;
