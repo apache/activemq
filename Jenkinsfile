@@ -44,6 +44,7 @@ pipeline {
     parameters {
         choice(name: 'nodeLabel', choices: ['ubuntu', 's390x', 'arm', 'Windows']) 
         choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest', 'jdk_22_latest', 'jdk_17_latest_windows', 'jdk_21_latest_windows', 'jdk_22_latest_windows']) 
+        booleanParam(name: 'sonarEnabled', defaultValue: false)
     }
 
     stages {
@@ -153,6 +154,14 @@ pipeline {
                 sh 'mvn -B -e deploy -Pdeploy -DskipTests'
             }
         }
+
+        stage('Quality') {
+            when { expression { return params.sonarEnabled } }
+            steps {
+                sh 'echo "Running the Sonar stage"'
+            }
+        }
+
     }
 
     // Do any post build stuff ... such as sending emails depending on the overall build result.
