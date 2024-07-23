@@ -48,8 +48,8 @@ public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
 
     @Override
     protected void setUp() throws Exception {
-        startProcess("ssh -Nn -L60006:localhost:61616 localhost");
-        startProcess("ssh -Nn -L60007:localhost:61617 localhost");
+        startProcess("ssh", "-Nn", "-L60006:localhost:61616", "localhost");
+        startProcess("ssh", "-Nn", "-L60007:localhost:61617", "localhost");
         super.setUp();
     }
 
@@ -61,7 +61,7 @@ public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
         }
     }
 
-    private void startProcess(String command) throws IOException {
+    private void startProcess(String... command) throws IOException {
         final Process process = Runtime.getRuntime().exec(command);
         processes.add(process);
         new Thread("stdout: " + command) {
