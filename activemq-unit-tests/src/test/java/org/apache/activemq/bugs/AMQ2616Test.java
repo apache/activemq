@@ -34,6 +34,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
@@ -92,7 +93,7 @@ public class AMQ2616Test {
         brokerService = new BrokerService();
 
         KahaDBPersistenceAdapter adaptor = new KahaDBPersistenceAdapter();
-        adaptor.setEnableJournalDiskSyncs(false);
+        adaptor.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.NEVER.name());
         File file = new File("target/AMQ2616Test");
         IOHelper.mkdirs(file);
         IOHelper.deleteChildren(file);
