@@ -14,24 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.discovery.masterslave;
+package org.apache.activemq.transport.discovery.staticfailover;
 
+import java.net.URI;
 import org.apache.activemq.transport.discovery.simple.SimpleDiscoveryAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-
 /**
- * A static DiscoveryAgent that supports connecting to a Master / Slave tuple
- * of brokers.
- *
- * @deprecated This class is superseded by StaticFailoverDiscoveryAgent and will be removed in a future release
+ * A static DiscoveryAgent that supports connecting to an HA tuple of brokers.
  */
-@Deprecated(forRemoval = true)
-public class MasterSlaveDiscoveryAgent extends SimpleDiscoveryAgent {
+public class StaticFailoverDiscoveryAgent extends SimpleDiscoveryAgent {
 
-    private final static Logger LOG = LoggerFactory.getLogger(MasterSlaveDiscoveryAgent.class);
+    private final static Logger LOG = LoggerFactory.getLogger(StaticFailoverDiscoveryAgent.class);
 
     private String[] msServices = new String[]{};
 
@@ -62,10 +57,8 @@ public class MasterSlaveDiscoveryAgent extends SimpleDiscoveryAgent {
     }
 
     protected void configureServices() {
-        LOG.warn("masterSlave is deprecated and will be removed in a future release. Use staticfailover instead.");
-
         if ((msServices == null) || (msServices.length < 2)) {
-            LOG.error("masterSlave requires at least 2 URIs");
+            LOG.error("ha requires at least 2 URIs");
             msServices = new String[]{};
             throw new IllegalArgumentException("Expecting at least 2 arguments");
         }
