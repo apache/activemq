@@ -29,8 +29,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
@@ -431,7 +429,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
-            s = c.getConnection().prepareStatement(this.statements.getFindAllMessageIdsStatement());
+            s = c.getConnection().prepareStatement(this.limitQuery(this.statements.getFindAllMessageIdsStatement()));
             s.setMaxRows(limit);
             rs = s.executeQuery();
             // jdbc scrollable cursor requires jdbc ver > 1.0 and is often implemented locally so avoid
@@ -591,7 +589,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
-            s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesStatement());
+            s = c.getConnection().prepareStatement(this.limitQuery(this.statements.getFindDurableSubMessagesStatement()));
             s.setMaxRows(Math.min(maxReturned * 2, maxRows));
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
@@ -625,7 +623,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
-            s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesByPriorityStatement());
+            s = c.getConnection().prepareStatement(this.limitQuery(this.statements.getFindDurableSubMessagesByPriorityStatement()));
             s.setMaxRows(Math.min(maxReturned * 2, maxRows));
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
