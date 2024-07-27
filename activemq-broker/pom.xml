@@ -50,7 +50,8 @@
       <groupId>jakarta.annotation</groupId>
       <artifactId>jakarta.annotation-api</artifactId>
     </dependency>
-    
+
+
     <!-- =============================== -->
     <!-- Optional Dependencies -->
     <!-- =============================== -->
@@ -66,6 +67,23 @@
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
     </dependency>
+
+    <!-- =============================== -->
+    <!-- oAuth and OIDC Dependencies -->
+    <!-- Nimbus JOSE + JWT dependencies -->
+    <!-- =============================== -->
+
+    <dependency>
+      <groupId>com.nimbusds</groupId>
+      <artifactId>oauth2-oidc-sdk</artifactId>
+      <version>9.15</version>
+    </dependency>
+    <dependency>
+      <groupId>com.nimbusds</groupId>
+      <artifactId>nimbus-jose-jwt</artifactId>
+      <version>9.40</version>
+    </dependency>
+
 
     <!-- =============================== -->
     <!-- Testing Dependencies -->
