@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq.tooling</groupId>
     <artifactId>activemq-tooling</artifactId>
-    <version>6.1.3-SNAPSHOT</version>
+    <version>6.1.3</version>
   </parent>
 
   <artifactId>activemq-memtest-maven-plugin</artifactId>
