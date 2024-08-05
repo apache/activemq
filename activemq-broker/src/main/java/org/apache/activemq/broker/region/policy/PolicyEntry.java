@@ -1037,7 +1037,7 @@ public class PolicyEntry extends DestinationMapEntry {
     /**
      * @return the amount of time spent inactive before GC of the destination kicks in.
      *
-     * @deprecated use getInactiveTimeoutBeforeGC instead.
+     * @deprecated use {@link #getInactiveTimeoutBeforeGC} instead.
      */
     @Deprecated
     public long getInactiveTimoutBeforeGC() {
@@ -1050,7 +1050,7 @@ public class PolicyEntry extends DestinationMapEntry {
      * @param inactiveTimoutBeforeGC
      *        time in milliseconds to configure as the inactive timeout.
      *
-     * @deprecated use getInactiveTimeoutBeforeGC instead.
+     * @deprecated use {@link #setInactiveTimeoutBeforeGC} instead.
      */
     @Deprecated
     public void setInactiveTimoutBeforeGC(long inactiveTimoutBeforeGC) {
