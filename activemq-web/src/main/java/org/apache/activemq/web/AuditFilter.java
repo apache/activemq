@@ -24,11 +24,13 @@ import org.slf4j.LoggerFactory;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AuditFilter implements Filter {
 
     private static final Logger LOG = LoggerFactory.getLogger("org.apache.activemq.audit");
-
+    private static final String[] SENSITIVE_PARAM_KEYS = {"JMSText"};
     private boolean audit;
     private AuditLogService auditLog;
 
@@ -44,7 +46,6 @@ public class AuditFilter implements Filter {
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         if (audit && request instanceof HttpServletRequest) {
-
             HttpServletRequest http = (HttpServletRequest)request;
             AuditLogEntry entry = new HttpAuditLogEntry();
             if (http.getRemoteUser() != null) {
@@ -53,9 +54,23 @@ public class AuditFilter implements Filter {
             entry.setTimestamp(System.currentTimeMillis());
             entry.setOperation(http.getRequestURI());
             entry.setRemoteAddr(http.getRemoteAddr());
-            entry.getParameters().put("params", http.getParameterMap());
+            entry.getParameters().put("params", redactSensitiveHttpParameters(http.getParameterMap()));
             auditLog.log(entry);
         }
         chain.doFilter(request, response);
+    }
+
+    /**
+     * Redact sensitive data present in HTTP params
+     */
+    public Map<String, String[]> redactSensitiveHttpParameters(Map<String, String[]> httpParams) {
+        final Map<String, String[]> sanitizedParamsMap = new HashMap<>(httpParams);
+        final String[] redactedEntry = {"*****"};
+        for (String param : SENSITIVE_PARAM_KEYS) {
+            if (sanitizedParamsMap.containsKey(param)) {
+                sanitizedParamsMap.put(param, redactedEntry);
+            }
+        }
+        return sanitizedParamsMap;
     }
 }
