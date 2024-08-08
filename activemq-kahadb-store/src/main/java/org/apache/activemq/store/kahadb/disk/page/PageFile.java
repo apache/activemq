@@ -423,7 +423,8 @@ public class PageFile {
             }
 
             if (writeFile.length() < PAGE_FILE_HEADER_SIZE) {
-                writeFile.setLength(PAGE_FILE_HEADER_SIZE);
+                throw new IllegalStateException("File " + file + " is corrupt, length of "
+                    + writeFile.length() + " is less than page file header size of " + PAGE_FILE_HEADER_SIZE);
             }
             nextFreePageId.set((writeFile.length() - PAGE_FILE_HEADER_SIZE) / pageSize);
 
@@ -1165,12 +1166,6 @@ public class PageFile {
                     recoveryFile.write(w.getDiskBound(tmpFilesForRemoval), 0, pageSize);
                 }
 
-                // Can we shrink the recovery buffer??
-                if (recoveryPageCount > recoveryFileMaxPageCount) {
-                    int t = Math.max(recoveryFileMinPageCount, batch.size());
-                    recoveryFile.setLength(recoveryFileSizeForPages(t));
-                }
-
                 // Record the page writes in the recovery buffer.
                 recoveryFile.seek(0);
                 // Store the next tx id...
@@ -1262,8 +1257,6 @@ public class PageFile {
         if (recoveryFile.length() == 0) {
             // Write an empty header..
             recoveryFile.write(new byte[RECOVERY_FILE_HEADER_SIZE]);
-            // Preallocate the minium size for better performance.
-            recoveryFile.setLength(recoveryFileSizeForPages(recoveryFileMinPageCount));
             return 0;
         }
 

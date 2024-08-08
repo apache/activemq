@@ -374,10 +374,6 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
         }
     }
 
-    public void setLength(long length) throws IOException {
-        throw new IllegalStateException("File size is pre allocated");
-    }
-
     public void seek(long pos) throws IOException {
         try {
             getRaf().seek(pos);
