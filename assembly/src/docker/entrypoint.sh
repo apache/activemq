@@ -73,6 +73,7 @@ fi
 if [ -n "${ACTIVEMQ_WEB_USER}" ]; then
   echo "Enabling ActiveMQ WebConsole security"
   sed -i s/admin=/${ACTIVEMQ_WEB_USER}=/g ${ACTIVEMQ_HOME}/conf/users.properties
+  sed -i s/=admin/=${ACTIVEMQ_WEB_USER}/g ${ACTIVEMQ_HOME}/conf/groups.properties
   if [ -n "${ACTIVEMQ_WEB_PASSWORD}" ]; then
     sed -i s/=admin/=${ACTIVEMQ_WEB_PASSWORD}/g ${ACTIVEMQ_HOME}/conf/users.properties
   fi
