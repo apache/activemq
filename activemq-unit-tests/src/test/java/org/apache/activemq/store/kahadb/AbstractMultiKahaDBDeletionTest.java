@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 
 public abstract class AbstractMultiKahaDBDeletionTest {
+    private final static WildcardFileFilter DB_FILE_FILTER = WildcardFileFilter.builder().setWildcards("db*").get();
     protected static final Logger LOG = LoggerFactory
             .getLogger(MultiKahaDBTopicDeletionTest.class);
 
@@ -131,7 +132,7 @@ public abstract class AbstractMultiKahaDBDeletionTest {
         // try and create a consumer on dest2, before AMQ-5875 this
         //would cause an IllegalStateException for Topics
         createConsumer(dest2);
-        Collection<File> storeFiles = FileUtils.listFiles(storeDir, new WildcardFileFilter("db*"), getStoreFileFilter());
+        Collection<File> storeFiles = FileUtils.listFiles(storeDir, DB_FILE_FILTER, getStoreFileFilter());
         assertTrue("Store index should still exist", storeFiles.size() >= 1);
     }
 
@@ -151,7 +152,7 @@ public abstract class AbstractMultiKahaDBDeletionTest {
         // try and create a consumer on dest1, before AMQ-5875 this
         //would cause an IllegalStateException for Topics
         createConsumer(dest1);
-        Collection<File> storeFiles = FileUtils.listFiles(storeDir, new WildcardFileFilter("db*"), getStoreFileFilter());
+        Collection<File> storeFiles = FileUtils.listFiles(storeDir, DB_FILE_FILTER, getStoreFileFilter());
         assertTrue("Store index should still exist", storeFiles.size() >= 1);
     }
 
@@ -170,7 +171,7 @@ public abstract class AbstractMultiKahaDBDeletionTest {
         broker.removeDestination(brokerService.getAdminConnectionContext(), dest2, 100);
 
         //Assert that with no more destinations attached to a store that it has been cleaned up
-        Collection<File> storeFiles = FileUtils.listFiles(storeDir, new WildcardFileFilter("db*"), getStoreFileFilter());
+        Collection<File> storeFiles = FileUtils.listFiles(storeDir, DB_FILE_FILTER, getStoreFileFilter());
         assertEquals("Store files should be deleted", 0, storeFiles.size());
 
     }
@@ -189,7 +190,7 @@ public abstract class AbstractMultiKahaDBDeletionTest {
         broker.removeDestination(brokerService.getAdminConnectionContext(), dest1, 100);
 
         //Assert that with no more destinations attached to a store that it has been cleaned up
-        Collection<File> storeFiles = FileUtils.listFiles(storeDir, new WildcardFileFilter("db*"), getStoreFileFilter());
+        Collection<File> storeFiles = FileUtils.listFiles(storeDir, DB_FILE_FILTER, getStoreFileFilter());
         assertEquals("Store files should be deleted", 0, storeFiles.size());
 
     }

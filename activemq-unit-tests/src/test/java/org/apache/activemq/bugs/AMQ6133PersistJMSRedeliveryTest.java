@@ -117,8 +117,9 @@ public class AMQ6133PersistJMSRedeliveryTest {
         broker.stop();
         broker.waitUntilStopped();
 
+        final WildcardFileFilter fileFilter = WildcardFileFilter.builder().setWildcards("db.*").get();
         // delete the index so that it needs to be rebuilt from replay
-        for (File index : FileUtils.listFiles(persistenceDir, new WildcardFileFilter("db.*"), TrueFileFilter.INSTANCE)) {
+        for (File index : FileUtils.listFiles(persistenceDir, fileFilter, TrueFileFilter.INSTANCE)) {
             FileUtils.deleteQuietly(index);
         }
 
@@ -201,9 +202,8 @@ public class AMQ6133PersistJMSRedeliveryTest {
     }
 
     private int getLogFileCount() throws Exception {
-        return new ArrayList<File>(
-                FileUtils.listFiles(getPersistentDir(),
-                    new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size();
+        final WildcardFileFilter fileFilter = WildcardFileFilter.builder().setWildcards("*.log").get();
+        return new ArrayList<File>(FileUtils.listFiles(getPersistentDir(), fileFilter, TrueFileFilter.INSTANCE)).size();
     }
 
     private File getPersistentDir() throws IOException {

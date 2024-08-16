@@ -124,7 +124,8 @@ public abstract class AbstractKahaDBMessageStoreSizeTest extends AbstractMessage
             FileUtils.deleteDirectory(new File(dataDirectory));
         FileUtils.copyDirectory(new File(getVersion5Dir()),
                 dataDir);
-        for (File index : FileUtils.listFiles(new File(dataDirectory), new WildcardFileFilter("*.data"), TrueFileFilter.INSTANCE)) {
+        final WildcardFileFilter fileFilter = WildcardFileFilter.builder().setWildcards("*.data").get();
+        for (File index : FileUtils.listFiles(new File(dataDirectory), fileFilter, TrueFileFilter.INSTANCE)) {
             FileUtils.deleteQuietly(index);
         }
 

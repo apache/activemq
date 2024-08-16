@@ -80,7 +80,7 @@ public class MultiKahaDBTopicDeletionTest extends AbstractMultiKahaDBDeletionTes
 
     @Override
     protected WildcardFileFilter getStoreFileFilter() {
-        return new WildcardFileFilter("topic*");
+        return WildcardFileFilter.builder().setWildcards("topic*").get();
     }
 
 }

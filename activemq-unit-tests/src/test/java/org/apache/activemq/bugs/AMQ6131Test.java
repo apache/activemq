@@ -56,6 +56,9 @@ import org.junit.Test;
  */
 public class AMQ6131Test {
 
+    private final static WildcardFileFilter LOG_FILE_FILTER = WildcardFileFilter.builder().setWildcards("*.log").get();
+    private final static WildcardFileFilter DB_FILE_FILTER = WildcardFileFilter.builder().setWildcards("db.*").get();
+
     protected BrokerService broker;
     protected URI brokerConnectURI;
 
@@ -111,7 +114,7 @@ public class AMQ6131Test {
         TopicSubscriber durable = jmsSession.createDurableSubscriber(new ActiveMQTopic("durable.sub"), "sub");
         final MessageProducer producer = jmsSession.createProducer(new ActiveMQTopic("durable.sub"));
 
-        final int original = new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size();
+        final int original = new ArrayList<File>(FileUtils.listFiles(persistentDir, LOG_FILE_FILTER, TrueFileFilter.INSTANCE)).size();
 
         // 100k messages
         final byte[] data = new byte[100000];
@@ -132,7 +135,7 @@ public class AMQ6131Test {
                     messageCount.getAndIncrement();
                 }
 
-                return new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size() > original;
+                return new ArrayList<File>(FileUtils.listFiles(persistentDir, LOG_FILE_FILTER, TrueFileFilter.INSTANCE)).size() > original;
             }
         }));
 
@@ -159,7 +162,7 @@ public class AMQ6131Test {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size() == original;
+                return new ArrayList<File>(FileUtils.listFiles(persistentDir, LOG_FILE_FILTER, TrueFileFilter.INSTANCE)).size() == original;
             }
         }, 5000, 500));
 
@@ -169,7 +172,7 @@ public class AMQ6131Test {
 
         // delete the index so that the durables are gone from the index
         // The test passes if you take out this delete section
-        for (File index : FileUtils.listFiles(persistentDir, new WildcardFileFilter("db.*"), TrueFileFilter.INSTANCE)) {
+        for (File index : FileUtils.listFiles(persistentDir, DB_FILE_FILTER, TrueFileFilter.INSTANCE)) {
             FileUtils.deleteQuietly(index);
         }
 
@@ -208,7 +211,7 @@ public class AMQ6131Test {
         TopicSubscriber durable = jmsSession.createDurableSubscriber(new ActiveMQTopic("durable.sub"), "sub");
         final MessageProducer producer = jmsSession.createProducer(new ActiveMQTopic("durable.sub"));
 
-        final int original = new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size();
+        final int original = new ArrayList<File>(FileUtils.listFiles(persistentDir, LOG_FILE_FILTER, TrueFileFilter.INSTANCE)).size();
 
         // 100k messages
         final byte[] data = new byte[100000];
@@ -229,7 +232,7 @@ public class AMQ6131Test {
                     messageCount.getAndIncrement();
                 }
 
-                return new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size() > original;
+                return new ArrayList<File>(FileUtils.listFiles(persistentDir, LOG_FILE_FILTER, TrueFileFilter.INSTANCE)).size() > original;
             }
         }));
 
@@ -255,7 +258,7 @@ public class AMQ6131Test {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size() == original;
+                return new ArrayList<File>(FileUtils.listFiles(persistentDir, LOG_FILE_FILTER, TrueFileFilter.INSTANCE)).size() == original;
             }
         }));
 
@@ -265,7 +268,7 @@ public class AMQ6131Test {
 
         // delete the index so that the durables are gone from the index
         // The test passes if you take out this delete section
-        for (File index : FileUtils.listFiles(persistentDir, new WildcardFileFilter("db.*"), TrueFileFilter.INSTANCE)) {
+        for (File index : FileUtils.listFiles(persistentDir, DB_FILE_FILTER, TrueFileFilter.INSTANCE)) {
             FileUtils.deleteQuietly(index);
         }
 
