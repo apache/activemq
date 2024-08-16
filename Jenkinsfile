@@ -44,7 +44,7 @@ pipeline {
     parameters {
         choice(name: 'nodeLabel', choices: ['ubuntu', 's390x', 'arm', 'Windows']) 
         choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest', 'jdk_22_latest', 'jdk_17_latest_windows', 'jdk_21_latest_windows', 'jdk_22_latest_windows']) 
-        booleanParam(name: 'deployEnabled', defaultValue: true)
+        booleanParam(name: 'deployEnabled', defaultValue: false)
         booleanParam(name: 'sonarEnabled', defaultValue: false)
         booleanParam(name: 'testsEnabled', defaultValue: true)
     }
