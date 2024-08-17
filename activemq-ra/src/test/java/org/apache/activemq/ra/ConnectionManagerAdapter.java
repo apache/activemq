@@ -17,7 +17,6 @@
 package org.apache.activemq.ra;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import jakarta.resource.ResourceException;
 import jakarta.resource.spi.ConnectionEvent;
@@ -50,8 +49,7 @@ public class ConnectionManagerAdapter implements ConnectionManager, ConnectionEv
      * @param l
      */
     public void addConnectionEventListener(ConnectionEventListener l) {
-        for (Iterator<ManagedConnection> iter = connections.iterator(); iter.hasNext();) {
-            ManagedConnection c = iter.next();
+        for (ManagedConnection c : connections) {
             c.addConnectionEventListener(l);
         }
         listners.add(l);
@@ -66,8 +64,7 @@ public class ConnectionManagerAdapter implements ConnectionManager, ConnectionEv
         Subject subject = null;
         ManagedConnection connection = connectionFactory.createManagedConnection(subject, info);
         connection.addConnectionEventListener(this);
-        for (Iterator<ConnectionEventListener> iter = listners.iterator(); iter.hasNext();) {
-            ConnectionEventListener l = iter.next();
+        for (ConnectionEventListener l : listners) {
             connection.addConnectionEventListener(l);
         }
         connections.add(connection);
