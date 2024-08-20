@@ -310,18 +310,24 @@ public final class MarshallingSupport {
     }
 
     /**
-     * From: http://svn.apache.org/repos/asf/harmony/enhanced/java/trunk/classlib/modules/luni/src/main/java/java/io/DataOutputStream.java
+     * Inspired by: http://svn.apache.org/repos/asf/harmony/enhanced/java/trunk/classlib/modules/luni/src/main/java/java/io/DataOutputStream.java
      */
-    public static long countUTFBytes(String str) {
+    public static long countUTFBytes(String str) throws UTFDataFormatException {
         int utfCount = 0, length = str.length();
         for (int i = 0; i < length; i++) {
-            int charValue = str.charAt(i);
-            if (charValue > 0 && charValue <= 127) {
+            int codePoint = str.codePointAt(i);
+
+            if (codePoint > 0 && codePoint <= 127) {
                 utfCount++;
-            } else if (charValue <= 2047) {
+            } else if (codePoint <= 2047) {
                 utfCount += 2;
-            } else {
+            } else if (codePoint <= 65535) {
                 utfCount += 3;
+            } else if (codePoint <= 1114111) {
+                utfCount += 4;
+                i++;
+            } else {
+                throw new UTFDataFormatException();
             }
         }
         return utfCount;
@@ -334,16 +340,27 @@ public final class MarshallingSupport {
                                      byte[] buffer, int offset) throws IOException {
         int length = str.length();
         for (int i = 0; i < length; i++) {
-            int charValue = str.charAt(i);
-            if (charValue > 0 && charValue <= 127) {
-                buffer[offset++] = (byte) charValue;
-            } else if (charValue <= 2047) {
-                buffer[offset++] = (byte) (0xc0 | (0x1f & (charValue >> 6)));
-                buffer[offset++] = (byte) (0x80 | (0x3f & charValue));
+            int codePoint = str.codePointAt(i);
+
+            if (codePoint > 0 && codePoint <= 127) {
+                buffer[offset++] = (byte) codePoint;
+            } else if (codePoint <= 2047) {
+                buffer[offset++] = (byte) (0xC0 | (0x1F & (codePoint >> 6)));
+                buffer[offset++] = (byte) (0x80 | (0x3F & codePoint));
+            } else if (codePoint <= 65535) {
+                buffer[offset++] = (byte) (0xE0 | (0x0F & (codePoint >> 12)));
+                buffer[offset++] = (byte) (0x80 | (0x3F & (codePoint >> 6)));
+                buffer[offset++] = (byte) (0x80 | (0x3F & codePoint));
+            } else if (codePoint <= 1114111) {
+                char highSurrogate = Character.highSurrogate(codePoint);
+                char lowSurrogate = Character.lowSurrogate(str.codePointAt(++i));
+                codePoint = 0x10000 + ((highSurrogate - 0xD800) << 10) + (lowSurrogate - 0xDC00);
+                buffer[offset++] = (byte) (0xF0 | (0x07 & (codePoint >> 18)));
+                buffer[offset++] = (byte) (0x80 | (0x3F & (codePoint >> 12)));
+                buffer[offset++] = (byte) (0x80 | (0x3F & (codePoint >> 6)));
+                buffer[offset++] = (byte) (0x80 | (0x3F & codePoint));
             } else {
-                buffer[offset++] = (byte) (0xe0 | (0x0f & (charValue >> 12)));
-                buffer[offset++] = (byte) (0x80 | (0x3f & (charValue >> 6)));
-                buffer[offset++] = (byte) (0x80 | (0x3f & charValue));
+                throw new UTFDataFormatException();
             }
         }
         return offset;
@@ -368,16 +385,16 @@ public final class MarshallingSupport {
                                             int utfSize) throws UTFDataFormatException {
         int count = 0, s = 0, a;
         while (count < utfSize) {
-            if ((out[s] = (char) buf[offset + count++]) < '\u0080')
+            if ((out[s] = (char) buf[offset + count++]) < 0x80)
                 s++;
-            else if (((a = out[s]) & 0xe0) == 0xc0) {
+            else if (((a = out[s]) & 0xE0) == 0xC0) {
                 if (count >= utfSize)
                     throw new UTFDataFormatException();
                 int b = buf[offset + count++];
                 if ((b & 0xC0) != 0x80)
                     throw new UTFDataFormatException();
                 out[s++] = (char) (((a & 0x1F) << 6) | (b & 0x3F));
-            } else if ((a & 0xf0) == 0xe0) {
+            } else if ((a & 0xF0) == 0xE0) {
                 if (count + 1 >= utfSize)
                     throw new UTFDataFormatException();
                 int b = buf[offset + count++];
@@ -385,6 +402,17 @@ public final class MarshallingSupport {
                 if (((b & 0xC0) != 0x80) || ((c & 0xC0) != 0x80))
                     throw new UTFDataFormatException();
                 out[s++] = (char) (((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
+            } else if ((a & 0xF8) == 0xF0) {
+                if (count + 2 >= utfSize)
+                    throw new UTFDataFormatException();
+                int b = buf[offset + count++];
+                int c = buf[offset + count++];
+                int d = buf[offset + count++];
+                if (((b & 0xC0) != 0x80) || ((c & 0xC0) != 0x80) || ((d & 0xC0) != 0x80))
+                    throw new UTFDataFormatException();
+                int codePoint = (((a & 0x07) << 18) | ((b & 0x3F) << 12) | ((c & 0x3F) << 6) | (d & 0x3F));
+                out[s++] = Character.highSurrogate(codePoint);
+                out[s++] = Character.lowSurrogate(codePoint);
             } else {
                 throw new UTFDataFormatException();
             }
