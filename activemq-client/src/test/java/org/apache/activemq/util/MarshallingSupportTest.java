@@ -16,8 +16,14 @@
  */
 package org.apache.activemq.util;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.util.Properties;
 
 import org.junit.Test;
@@ -41,5 +47,21 @@ public class MarshallingSupportTest {
         String str = MarshallingSupport.propertiesToString(props);
         Properties props2 = MarshallingSupport.stringToProperties(str);
         assertEquals(props, props2);
+    }
+
+    @Test
+    public void testReadWriteUtf8() throws Exception {
+        byte[] bytes = {0, 0, 0, 10, 33, -62, -82, -32, -79, -87, -16, -97, -103, -126};
+        String str = "!®౩\uD83D\uDE42";
+
+        DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(bytes));
+        String resultStr = MarshallingSupport.readUTF8(dataIn);
+        assertEquals(str, resultStr);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutput dataOut = new DataOutputStream(baos);
+        MarshallingSupport.writeUTF8(dataOut, str);
+        byte[] resultBytes = baos.toByteArray();
+        assertArrayEquals(bytes, resultBytes);
     }
 }
