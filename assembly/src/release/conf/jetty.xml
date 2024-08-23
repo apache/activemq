@@ -74,6 +74,11 @@
                   <property name="name" value="X-Content-Type-Options"/>
                   <property name="value" value="nosniff"/>
                 </bean>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                    <property name="pattern" value="*"/>
+                    <property name="name" value="Cache-Control"/>
+                    <property name="value" value="no-store"/>
+                </bean>
             </list>
         </property>
     </bean>
