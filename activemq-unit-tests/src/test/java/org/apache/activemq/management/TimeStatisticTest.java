@@ -30,9 +30,12 @@ public class TimeStatisticTest extends StatisticTestSupport {
         TimeStatisticImpl stat = new TimeStatisticImpl("myTimer", "millis", "myDescription");
         assertStatistic(stat, "myTimer", "millis", "myDescription");
 
+        assertFalse(stat.hasUpdated());
+
         assertEquals(0, stat.getCount());
 
         stat.addTime(100);
+        assertTrue(stat.hasUpdated());
         assertEquals(1, stat.getCount());
         assertEquals(100, stat.getMinTime());
         assertEquals(100, stat.getMaxTime());
@@ -59,6 +62,7 @@ public class TimeStatisticTest extends StatisticTestSupport {
         LOG.info("Stat is: " + stat);
 
         stat.reset();
+        assertFalse(stat.hasUpdated());
 
         assertEquals(0, stat.getCount());
         assertEquals(0, stat.getMinTime());

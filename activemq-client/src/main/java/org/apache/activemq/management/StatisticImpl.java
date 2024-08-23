@@ -30,6 +30,7 @@ public class StatisticImpl implements Statistic, Resettable {
     private String description;
     private long startTime;
     private long lastSampleTime;
+    private boolean hasUpdated;
     private boolean doReset = true;
 
     public StatisticImpl(String name, String unit, String description) {
@@ -38,17 +39,20 @@ public class StatisticImpl implements Statistic, Resettable {
         this.description = description;
         this.startTime = System.currentTimeMillis();
         this.lastSampleTime = this.startTime;
+        this.hasUpdated = false;
     }
 
     public synchronized void reset() {
         if(isDoReset()) {
             this.startTime = System.currentTimeMillis();
             this.lastSampleTime = this.startTime;
+            this.hasUpdated = false;
         }
     }
 
     protected synchronized void updateSampleTime() {
         this.lastSampleTime = System.currentTimeMillis();
+        this.hasUpdated = true;
     }
 
     public synchronized String toString() {
@@ -101,6 +105,9 @@ public class StatisticImpl implements Statistic, Resettable {
         return this.doReset;
     }
 
+    public boolean hasUpdated(){
+        return hasUpdated;
+    }
     /**
      * @param doReset the doReset to set
      */
