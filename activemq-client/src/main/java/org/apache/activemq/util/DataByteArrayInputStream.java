@@ -264,8 +264,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         if (pos + length > buf.length) {
             throw new UTFDataFormatException("bad string");
         }
-        char chararr[] = new char[length];
-        String result = MarshallingSupport.convertUTF8WithBuf(buf, chararr, pos, length);
+        String result = MarshallingSupport.convertUTF8WithBuf(buf, pos, length);
         pos += length;
         return result;
     }

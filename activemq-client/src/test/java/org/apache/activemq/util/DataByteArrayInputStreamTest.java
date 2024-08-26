@@ -20,60 +20,62 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+/**
+ * https://issues.apache.org/jira/browse/AMQ-1911
+ * https://issues.apache.org/jira/browse/AMQ-8122
+ */
 public class DataByteArrayInputStreamTest {
 
-    /**
-     * https://issues.apache.org/activemq/browse/AMQ-1911
-     */
     @Test
-    public void testNonAscii() throws Exception {
-        doMarshallUnMarshallValidation("mei\u00DFen");
-
-        String accumulator = new String();
-
-        int test = 0; // int to get Supplementary chars
-        while(Character.isDefined(test)) {
-            String toTest = String.valueOf((char)test);
-            accumulator += toTest;
-            doMarshallUnMarshallValidation(toTest);
-            test++;
-        }
-
-        int massiveThreeByteCharValue = 0x0FFF;
-        String toTest = String.valueOf((char)massiveThreeByteCharValue);
-        accumulator += toTest;
-        doMarshallUnMarshallValidation(String.valueOf((char)massiveThreeByteCharValue));
-
-        // Altogether
-        doMarshallUnMarshallValidation(accumulator);
-
-        // the three byte values
-        char t = '\u0800';
-        final char max =  '\uffff';
-        accumulator = String.valueOf(t);
-        while (t < max) {
-            String val = String.valueOf(t);
-            accumulator += val;
-            doMarshallUnMarshallValidation(val);
-            t++;
-        }
-
-        // Altogether so long as it is not too big
-        while (accumulator.length() > 20000) {
-            accumulator = accumulator.substring(20000);
-        }
-        doMarshallUnMarshallValidation(accumulator);
+    public void testOneByteCharacters() throws Exception {
+        testCodePointRange(0x0000, 0x007F);
     }
 
-    void doMarshallUnMarshallValidation(String value) throws Exception {
+    @Test
+    public void testTwoBytesCharacters() throws Exception {
+        testCodePointRange(0x0080, 0x07FF);
+    }
+
+    @Test
+    public void testThreeBytesCharacters() throws Exception {
+        testCodePointRange(0x0800, 0xFFFF);
+    }
+
+    @Test
+    public void testFourBytesCharacters() throws Exception {
+        testCodePointRange(0x10000, 0X10FFFF);
+    }
+
+    private void testCodePointRange(int from, int to) throws Exception {
+        StringBuilder accumulator = new StringBuilder();
+        for (int codePoint = from; codePoint <= to; codePoint++) {
+            if (Character.isDefined(codePoint)
+                // a single surrogate code point does not represent a real character
+                && !Character.isHighSurrogate((char) codePoint)
+                && !Character.isLowSurrogate((char) codePoint)) {
+                    String val = String.valueOf(Character.toChars(codePoint));
+                    accumulator.append(val);
+                    doMarshallUnMarshallValidation(val);
+            }
+        }
+
+        // truncate string to last 20k characters
+        if (accumulator.length() > 20_000) {
+            doMarshallUnMarshallValidation(accumulator.substring(
+                accumulator.length() - 20_000));
+        } else {
+            doMarshallUnMarshallValidation(accumulator.toString());
+        }
+    }
+
+    private void doMarshallUnMarshallValidation(String value) throws Exception {
         DataByteArrayOutputStream out = new DataByteArrayOutputStream();
-        out.writeBoolean(true);
         out.writeUTF(value);
         out.close();
 
         DataByteArrayInputStream in = new DataByteArrayInputStream(out.getData());
-        in.readBoolean();
         String readBack = in.readUTF();
+
         assertEquals(value, readBack);
     }
 

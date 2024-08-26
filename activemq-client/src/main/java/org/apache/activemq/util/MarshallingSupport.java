@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UTFDataFormatException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -317,7 +318,7 @@ public final class MarshallingSupport {
         for (int i = 0; i < length; i++) {
             int codePoint = str.codePointAt(i);
 
-            if (codePoint > 0 && codePoint <= 127) {
+            if (codePoint >= 0 && codePoint <= 127) {
                 utfCount++;
             } else if (codePoint <= 2047) {
                 utfCount += 2;
@@ -333,91 +334,30 @@ public final class MarshallingSupport {
         return utfCount;
     }
 
-    /**
-     * From: http://svn.apache.org/repos/asf/harmony/enhanced/java/trunk/classlib/modules/luni/src/main/java/java/io/DataOutputStream.java
-     */
-    public static int writeUTFBytesToBuffer(String str, long count,
+    public static int writeUTFBytesToBuffer(String str, int count,
                                      byte[] buffer, int offset) throws IOException {
-        int length = str.length();
-        for (int i = 0; i < length; i++) {
-            int codePoint = str.codePointAt(i);
-
-            if (codePoint > 0 && codePoint <= 127) {
-                buffer[offset++] = (byte) codePoint;
-            } else if (codePoint <= 2047) {
-                buffer[offset++] = (byte) (0xC0 | (0x1F & (codePoint >> 6)));
-                buffer[offset++] = (byte) (0x80 | (0x3F & codePoint));
-            } else if (codePoint <= 65535) {
-                buffer[offset++] = (byte) (0xE0 | (0x0F & (codePoint >> 12)));
-                buffer[offset++] = (byte) (0x80 | (0x3F & (codePoint >> 6)));
-                buffer[offset++] = (byte) (0x80 | (0x3F & codePoint));
-            } else if (codePoint <= 1114111) {
-                char highSurrogate = Character.highSurrogate(codePoint);
-                char lowSurrogate = Character.lowSurrogate(str.codePointAt(++i));
-                codePoint = 0x10000 + ((highSurrogate - 0xD800) << 10) + (lowSurrogate - 0xDC00);
-                buffer[offset++] = (byte) (0xF0 | (0x07 & (codePoint >> 18)));
-                buffer[offset++] = (byte) (0x80 | (0x3F & (codePoint >> 12)));
-                buffer[offset++] = (byte) (0x80 | (0x3F & (codePoint >> 6)));
-                buffer[offset++] = (byte) (0x80 | (0x3F & codePoint));
-            } else {
-                throw new UTFDataFormatException();
-            }
+        byte[] bytes = str.getBytes(StandardCharsets.UTF_8);
+        if (bytes.length != count) {
+            throw new UTFDataFormatException();
         }
-        return offset;
+        System.arraycopy(bytes, 0, buffer, offset, count);
+        return offset + count;
     }
 
     public static String readUTF8(DataInput dataIn) throws IOException {
         int utflen = dataIn.readInt();
         if (utflen > -1) {
             byte bytearr[] = new byte[utflen];
-            char chararr[] = new char[utflen];
             dataIn.readFully(bytearr, 0, utflen);
-            return convertUTF8WithBuf(bytearr, chararr, 0, utflen);
+            return convertUTF8WithBuf(bytearr, 0, utflen);
         } else {
             return null;
         }
     }
 
-    /**
-     * From: http://svn.apache.org/repos/asf/harmony/enhanced/java/trunk/classlib/modules/luni/src/main/java/org/apache/harmony/luni/util/Util.java
-     */
-    public static String convertUTF8WithBuf(byte[] buf, char[] out, int offset,
-                                            int utfSize) throws UTFDataFormatException {
-        int count = 0, s = 0, a;
-        while (count < utfSize) {
-            if ((out[s] = (char) buf[offset + count++]) < 0x80)
-                s++;
-            else if (((a = out[s]) & 0xE0) == 0xC0) {
-                if (count >= utfSize)
-                    throw new UTFDataFormatException();
-                int b = buf[offset + count++];
-                if ((b & 0xC0) != 0x80)
-                    throw new UTFDataFormatException();
-                out[s++] = (char) (((a & 0x1F) << 6) | (b & 0x3F));
-            } else if ((a & 0xF0) == 0xE0) {
-                if (count + 1 >= utfSize)
-                    throw new UTFDataFormatException();
-                int b = buf[offset + count++];
-                int c = buf[offset + count++];
-                if (((b & 0xC0) != 0x80) || ((c & 0xC0) != 0x80))
-                    throw new UTFDataFormatException();
-                out[s++] = (char) (((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
-            } else if ((a & 0xF8) == 0xF0) {
-                if (count + 2 >= utfSize)
-                    throw new UTFDataFormatException();
-                int b = buf[offset + count++];
-                int c = buf[offset + count++];
-                int d = buf[offset + count++];
-                if (((b & 0xC0) != 0x80) || ((c & 0xC0) != 0x80) || ((d & 0xC0) != 0x80))
-                    throw new UTFDataFormatException();
-                int codePoint = (((a & 0x07) << 18) | ((b & 0x3F) << 12) | ((c & 0x3F) << 6) | (d & 0x3F));
-                out[s++] = Character.highSurrogate(codePoint);
-                out[s++] = Character.lowSurrogate(codePoint);
-            } else {
-                throw new UTFDataFormatException();
-            }
-        }
-        return new String(out, 0, s);
+    public static String convertUTF8WithBuf(byte[] buf, int offset,
+                                            int utfSize) {
+        return new String(buf, offset, utfSize, StandardCharsets.UTF_8);
     }
 
     public static String propertiesToString(Properties props) throws IOException {
