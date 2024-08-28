@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.stomp;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
@@ -75,11 +76,7 @@ public class StompFrame implements Command {
     }
 
     public String getBody() {
-        try {
-            return new String(content, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return new String(content);
-        }
+        return new String(content, StandardCharsets.UTF_8);
     }
 
     public void setContent(byte[] data) {
