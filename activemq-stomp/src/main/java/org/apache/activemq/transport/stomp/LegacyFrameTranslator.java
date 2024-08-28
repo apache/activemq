@@ -18,6 +18,7 @@ package org.apache.activemq.transport.stomp;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,12 +54,9 @@ public class LegacyFrameTranslator implements FrameTranslator {
             if(intendedType.equalsIgnoreCase("text")){
                 ActiveMQTextMessage text = new ActiveMQTextMessage();
                 try {
-                    ByteArrayOutputStream bytes = new ByteArrayOutputStream(command.getContent().length + 4);
-                    DataOutputStream data = new DataOutputStream(bytes);
-                    data.writeInt(command.getContent().length);
-                    data.write(command.getContent());
-                    text.setContent(bytes.toByteSequence());
-                    data.close();
+                    // AMQ-8398 - get the original text back so we decode from standard UTF-8
+                    // and set on the message so it will re-encode using AMQ modified UTF-8
+                    text.setText(command.getBody());
                 } catch (Throwable e) {
                     throw new ProtocolException("Text could not bet set: " + e, false, e);
                 }
@@ -78,12 +76,9 @@ public class LegacyFrameTranslator implements FrameTranslator {
         } else {
             ActiveMQTextMessage text = new ActiveMQTextMessage();
             try {
-                ByteArrayOutputStream bytes = new ByteArrayOutputStream(command.getContent().length + 4);
-                DataOutputStream data = new DataOutputStream(bytes);
-                data.writeInt(command.getContent().length);
-                data.write(command.getContent());
-                text.setContent(bytes.toByteSequence());
-                data.close();
+                // AMQ-8398 - get the original text back so we decode from standard UTF-8
+                // and set on the message so it will re-encode using AMQ modified UTF-8
+                text.setText(command.getBody());
             } catch (Throwable e) {
                 throw new ProtocolException("Text could not bet set: " + e, false, e);
             }
@@ -103,22 +98,13 @@ public class LegacyFrameTranslator implements FrameTranslator {
         FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(converter, message, command, this);
 
         if (message.getDataStructureType() == ActiveMQTextMessage.DATA_STRUCTURE_TYPE) {
-
-            if (!message.isCompressed() && message.getContent() != null) {
-                ByteSequence msgContent = message.getContent();
-                if (msgContent.getLength() > 4) {
-                    byte[] content = new byte[msgContent.getLength() - 4];
-                    System.arraycopy(msgContent.data, 4, content, 0, content.length);
-                    command.setContent(content);
-                }
-            } else {
-                ActiveMQTextMessage msg = (ActiveMQTextMessage)message.copy();
-                String messageText = msg.getText();
-                if (messageText != null) {
-                    command.setContent(msg.getText().getBytes("UTF-8"));
-                }
+            ActiveMQTextMessage msg = (ActiveMQTextMessage)message.copy();
+            // AMQ-8398 - get the original text back so we decode from modified UTF-8
+            // and then we can re-encode using the standard JDK encoding
+            String messageText = msg.getText();
+            if (messageText != null) {
+                command.setContent(msg.getText().getBytes(StandardCharsets.UTF_8));
             }
-
         } else if (message.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE) {
 
             ActiveMQBytesMessage msg = (ActiveMQBytesMessage)message.copy();
