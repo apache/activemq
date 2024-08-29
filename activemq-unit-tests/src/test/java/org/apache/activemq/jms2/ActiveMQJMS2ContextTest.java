@@ -296,24 +296,57 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
         messageProducer.setDeliveryDelay(1000l);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testProducerSendMessageCompletionListener() throws JMSException {
-         messageProducer.send(session.createQueue(methodNameDestinationName), null, (CompletionListener)null);
+        messageProducer.send(session.createQueue(methodNameDestinationName), session.createTextMessage("test message"), null);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testProducerSendMessageQoSParamsCompletionListener() throws JMSException {
-         messageProducer.send(null, 1, 4, 0l, null);
+         messageProducer.send(session.createTextMessage("test message"), 1, 4, 0l, null);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testProducerSendDestinationMessageCompletionListener() throws JMSException {
-         messageProducer.send(session.createQueue(methodNameDestinationName), null, null);
+         messageProducer.send(session.createQueue(methodNameDestinationName), session.createTextMessage("test message"), null);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testProducerSendDestinationMessageQosParamsCompletionListener() throws JMSException {
-         messageProducer.send(session.createQueue(methodNameDestinationName), null, 1, 4, 0l, null);
+         messageProducer.send(session.createQueue(methodNameDestinationName), session.createTextMessage("test message"), 1, 4, 0l, null);
+    }
+
+    @Test
+    public void testProducerSendMessageWithNonNullCompletionListener() throws JMSException {
+        final String testTextMessageBody = "this is a test message";
+        final CompletionListener completionListener = new CompletionListener() {
+            @Override
+            public void onCompletion(Message message) {
+                TextMessage textMessage = (TextMessage) message;
+                try {
+                    assertEquals(textMessage.getText(), testTextMessageBody);
+                } catch (JMSException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void onException(Message message, Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+        messageProducer.send(
+                session.createQueue(methodNameDestinationName),
+                session.createTextMessage(testTextMessageBody),
+                completionListener);
+        try(JMSContext jmsContext = activemqConnectionFactory.createContext()) {
+            jmsContext.setAutoStart(false);
+            jmsContext.setClientID(testName.getMethodName());
+            jmsContext.start();
+            recvMessage(jmsContext,session.createQueue(methodNameDestinationName), testTextMessageBody);
+        } catch (JMSException e) {
+            fail(e.getMessage());
+        }
     }
 
     protected static void sendMessage(JMSContext jmsContext, Destination testDestination, String textBody) {

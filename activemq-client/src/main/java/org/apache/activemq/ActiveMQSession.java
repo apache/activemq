@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.BytesMessage;
+import jakarta.jms.CompletionListener;
 import jakarta.jms.Destination;
 import jakarta.jms.IllegalStateException;
 import jakarta.jms.InvalidDestinationException;
@@ -1963,6 +1964,30 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
                         boolean disableMessageID, boolean disableMessageTimestamp, MemoryUsage producerWindow, int sendTimeout, AsyncCallback onComplete) throws JMSException {
+        CompletionListener completionListener = null;
+        if (onComplete != null) {
+            completionListener = new CompletionListener() {
+                @Override
+                public void onCompletion(Message message) {
+                    onComplete.onSuccess();
+                }
+
+                @Override
+                public void onException(Message message, Exception e) {
+                    if (e instanceof JMSException) {
+                        onComplete.onException((JMSException) e);
+                    } else {
+                        onComplete.onException(new JMSException(e.getMessage()));
+                    }
+                }
+            };
+        }
+        send(producer, destination, message, deliveryMode, priority, timeToLive, disableMessageID,
+                disableMessageTimestamp, producerWindow, sendTimeout, completionListener);
+    }
+
+    protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
+            boolean disableMessageID, boolean disableMessageTimestamp, MemoryUsage producerWindow, int sendTimeout, CompletionListener completionListener) throws JMSException {
 
         checkClosed();
         if (destination.isTemporary() && connection.isDeleted(destination)) {
@@ -2025,7 +2050,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             if (LOG.isTraceEnabled()) {
                 LOG.trace(getSessionId() + " sending message: " + msg);
             }
-            if (onComplete==null && sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
+            if (completionListener==null && sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
                 this.connection.asyncSendPacket(msg);
                 if (producerWindow != null) {
                     // Since we defer lots of the marshaling till we hit the
@@ -2039,10 +2064,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     producerWindow.increaseUsage(size);
                 }
             } else {
-                if (sendTimeout > 0 && onComplete==null) {
-                    this.connection.syncSendPacket(msg,sendTimeout);
+                if (sendTimeout > 0 && completionListener==null) {
+                    this.connection.syncSendPacket(msg, sendTimeout);
                 }else {
-                    this.connection.syncSendPacket(msg, onComplete);
+                    this.connection.syncSendPacket(msg, completionListener);
                 }
             }
 
