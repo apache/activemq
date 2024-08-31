@@ -237,7 +237,6 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
         ensureEnoughBuffer((int)(pos + encodedsize + 2));
         writeShort((int)encodedsize);
 
-        byte[] buffer = new byte[(int)encodedsize];
         MarshallingSupport.writeUTFBytesToBuffer(text, (int) encodedsize, buf, pos);
         pos += encodedsize;
         onWrite();
