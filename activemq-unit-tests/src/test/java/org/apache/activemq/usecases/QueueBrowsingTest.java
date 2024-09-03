@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Enumeration;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.Connection;
@@ -355,6 +356,7 @@ public class QueueBrowsingTest {
         final Connection browseConnection = factory.createConnection();
         browseConnection.start();
 
+        final AtomicBoolean browserInterrupted = new AtomicBoolean(false);
         final AtomicInteger browseCounter = new AtomicInteger(0);
         final AtomicInteger jmsExceptionCounter = new AtomicInteger(0);
 
@@ -367,11 +369,12 @@ public class QueueBrowsingTest {
                 try {
                     browser = browseSession.createBrowser(queueDLQ);
                     Enumeration<?> enumeration = browser.getEnumeration();
-                    if(Thread.currentThread().isInterrupted()) {
-                        Thread.currentThread().interrupt();
-                    }
                     while (enumeration.hasMoreElements()) {
                         Message message = (Message)enumeration.nextElement();
+                        if(Thread.currentThread().isInterrupted()) {
+                            browserInterrupted.set(true);
+                            Thread.currentThread().interrupt();
+                        }
                         if(message != null) {
                             browseCounter.incrementAndGet();
                         }
@@ -389,6 +392,7 @@ public class QueueBrowsingTest {
         Thread.sleep(2000l);
         browseThread.interrupt();
 
+        assertEquals(Boolean.valueOf(dlqDlqExpected), Boolean.valueOf(browserInterrupted.get()));
         assertEquals(Integer.valueOf(browseExpected), Integer.valueOf(browseCounter.get()));
         assertEquals(Integer.valueOf(0), Integer.valueOf(jmsExceptionCounter.get()));
 
