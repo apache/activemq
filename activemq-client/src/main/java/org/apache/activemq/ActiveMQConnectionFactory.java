@@ -19,8 +19,6 @@ package org.apache.activemq;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.*;
 import java.util.concurrent.RejectedExecutionHandler;
 
@@ -67,23 +65,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         String host = null;
         String port = null;
         try {
-             host = AccessController.doPrivileged(new PrivilegedAction<String>() {
-                 @Override
-                 public String run() {
-                     String result = System.getProperty("org.apache.activemq.AMQ_HOST");
-                     result = (result==null||result.isEmpty()) ?  System.getProperty("AMQ_HOST","localhost") : result;
-                     return result;
-                 }
-             });
-             port = AccessController.doPrivileged(new PrivilegedAction<String>() {
-                 @Override
-                 public String run() {
-                     String result = System.getProperty("org.apache.activemq.AMQ_PORT");
-                     result = (result==null||result.isEmpty()) ?  System.getProperty("AMQ_PORT","61616") : result;
-                     return result;
-                 }
-             });
-        }catch(Throwable e){
+            host = System.getProperty("org.apache.activemq.AMQ_HOST");
+            host = (host==null||host.isBlank()) ?  System.getProperty("AMQ_HOST","localhost") : host;
+
+            port = System.getProperty("org.apache.activemq.AMQ_PORT");
+            port = (port==null||port.isBlank()) ?  System.getProperty("AMQ_PORT","61616") : port;
+        } catch(Throwable e){
             LOG.debug("Failed to look up System properties for host and port",e);
         }
         host = (host == null || host.isEmpty()) ? "localhost" : host;
@@ -92,7 +79,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         DEFAULT_BROKER_PORT = Integer.parseInt(port);
     }
 
-
     public static final String DEFAULT_BROKER_BIND_URL;
 
     static{
@@ -100,15 +86,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         String bindURL = null;
 
         try {
-            bindURL = AccessController.doPrivileged(new PrivilegedAction<String>() {
-                @Override
-                public String run() {
-                    String result = System.getProperty("org.apache.activemq.BROKER_BIND_URL");
-                    result = (result==null||result.isEmpty()) ?  System.getProperty("BROKER_BIND_URL",defaultURL) : result;
-                    return result;
-                }
-            });
-        }catch(Throwable e){
+            bindURL = System.getProperty("org.apache.activemq.BROKER_BIND_URL");
+            bindURL = (bindURL==null||bindURL.isEmpty()) ?  System.getProperty("BROKER_BIND_URL",defaultURL) : bindURL;
+        } catch(Throwable e){
             LOG.debug("Failed to look up System properties for host and port",e);
         }
         bindURL = (bindURL == null || bindURL.isEmpty()) ? defaultURL : bindURL;
