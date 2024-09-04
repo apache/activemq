@@ -278,13 +278,13 @@ public class StompTest extends StompTestSupport {
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
 
         // publish message with string that requires 4-byte UTF-8 encoding
         frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + body + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        frame = stompConnection.receiveFrame();
-        assertTrue(frame.startsWith("CONNECTED"));
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
