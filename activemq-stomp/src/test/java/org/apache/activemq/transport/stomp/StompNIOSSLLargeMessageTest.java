@@ -103,6 +103,7 @@ public class StompNIOSSLLargeMessageTest extends StompTestSupport {
 
     @Override
     public void tearDown() throws Exception {
+        super.tearDown();
         // unregister Log4J appender
         org.apache.logging.log4j.core.Logger rootLogger = (org.apache.logging.log4j.core.Logger) org.apache.logging.log4j.LogManager.getRootLogger();
         rootLogger.removeAppender(appender);
