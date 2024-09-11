@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.virtual;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
@@ -37,12 +38,16 @@ import java.util.Set;
 public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicInterceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SelectorAwareVirtualTopicInterceptor.class);
     LRUCache<String,BooleanExpression> expressionCache = new LRUCache<String,BooleanExpression>();
-    private final SubQueueSelectorCacheBroker selectorCachePlugin;
+    private SubQueueSelectorCacheBroker selectorCachePlugin = null;
 
     public SelectorAwareVirtualTopicInterceptor(Destination next, VirtualTopic virtualTopic) {
         super(next, virtualTopic);
-        selectorCachePlugin = (SubQueueSelectorCacheBroker)
-                ((Topic)next).createConnectionContext().getBroker().getAdaptor(SubQueueSelectorCacheBroker.class);
+        if (next instanceof org.apache.activemq.broker.region.DestinationFilter) {
+            selectorCachePlugin = ((DestinationFilter)next).getAdaptor(SubQueueSelectorCacheBroker.class);
+        } else if (next instanceof org.apache.activemq.broker.region.Topic) {
+            selectorCachePlugin = (SubQueueSelectorCacheBroker)
+                    ((Topic)next).createConnectionContext().getBroker().getAdaptor(SubQueueSelectorCacheBroker.class);
+        }
     }
 
     /**
