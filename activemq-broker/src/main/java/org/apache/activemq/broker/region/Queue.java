@@ -1916,7 +1916,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             getDestinationStatistics().getDequeues().increment();
             getDestinationStatistics().getMessages().decrement();
 
-            if(context.getConnection().isNetworkConnection() && isAdvancedStatisticsEnabled()) {
+            if(isAdvancedNetworkStatisticsEnabled() && context.getConnection() != null && context.getConnection().isNetworkConnection()) {
                 getDestinationStatistics().getNetworkDequeues().increment();
             }
 
@@ -1975,7 +1975,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         destinationStatistics.getMessages().increment();
         destinationStatistics.getMessageSize().addSize(msg.getSize());
 
-        if(context.getConnection().isNetworkConnection() && isAdvancedStatisticsEnabled()) {
+        if(isAdvancedNetworkStatisticsEnabled() && context.getConnection() != null && context.getConnection().isNetworkConnection()) {
             destinationStatistics.getNetworkEnqueues().increment();
         }
 

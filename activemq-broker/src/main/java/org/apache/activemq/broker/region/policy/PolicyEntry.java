@@ -106,7 +106,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean doOptimzeMessageStorage = true;
     private int maxDestinations = -1;
     private boolean useTopicSubscriptionInflightStats = true;
-    private boolean advancedStatisticsEnabled = false; // [AMQ-9437]
+    private boolean advancedNetworkStatisticsEnabled = false; // [AMQ-9437]
     /*
      * percentage of in-flight messages above which optimize message store is disabled
      */
@@ -306,8 +306,8 @@ public class PolicyEntry extends DestinationMapEntry {
         if (isUpdate("sendDuplicateFromStoreToDLQ", includedProperties)) {
             destination.setSendDuplicateFromStoreToDLQ(isSendDuplicateFromStoreToDLQ());
         }
-        if (isUpdate("advancedStatisticsEnabled", includedProperties)) {
-            destination.setAdvancedStatisticsEnabled(isAdvancedStatisticsEnabled());
+        if (isUpdate("advancedNetworkStatisticsEnabled", includedProperties)) {
+            destination.setAdvancedNetworkStatisticsEnabled(isAdvancedNetworkStatisticsEnabled());
         }
     }
 
@@ -1180,11 +1180,11 @@ public class PolicyEntry extends DestinationMapEntry {
         return this.messageInterceptorStrategy;
     } 
 
-    public boolean isAdvancedStatisticsEnabled() {
-        return this.advancedStatisticsEnabled;
+    public boolean isAdvancedNetworkStatisticsEnabled() {
+        return this.advancedNetworkStatisticsEnabled;
     }
 
-    public void setAdvancedStatisticsEnabled(boolean advancedStatisticsEnabled) {
-        this.advancedStatisticsEnabled = advancedStatisticsEnabled;
+    public void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled) {
+        this.advancedNetworkStatisticsEnabled = advancedNetworkStatisticsEnabled;
     }
 }

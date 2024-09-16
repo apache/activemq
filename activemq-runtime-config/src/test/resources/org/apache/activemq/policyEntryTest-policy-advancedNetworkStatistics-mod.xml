@@ -28,7 +28,7 @@
     <destinationPolicy>
       <policyMap>
         <policyEntries>
-          <policyEntry queue="AMQ.9437" advancedStatisticsEnabled="true"/>
+          <policyEntry queue="AMQ.9437" advancedNetworkStatisticsEnabled="true"/>
         </policyEntries>
       </policyMap>
     </destinationPolicy>

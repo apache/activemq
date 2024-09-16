@@ -449,7 +449,7 @@ public class TopicSubscription extends AbstractSubscription {
         destination.getDestinationStatistics().getInflight().subtract(count);
         if (info.isNetworkSubscription()) {
             destination.getDestinationStatistics().getForwards().add(count);
-            if(destination.isAdvancedStatisticsEnabled()) {
+            if(destination.isAdvancedNetworkStatisticsEnabled() && getContext() != null && getContext().isNetworkConnection()) {
                 destination.getDestinationStatistics().getNetworkDequeues().add(count);
             }
         }
@@ -749,7 +749,7 @@ public class TopicSubscription extends AbstractSubscription {
             matched.remove(message);
             if (destination != null) {
                 destination.getDestinationStatistics().getDequeues().increment();
-                if(destination.isAdvancedStatisticsEnabled()) {
+                if(destination.isAdvancedNetworkStatisticsEnabled() && getContext() != null && getContext().isNetworkConnection()) {
                     destination.getDestinationStatistics().getNetworkDequeues().increment();
                 }
             }

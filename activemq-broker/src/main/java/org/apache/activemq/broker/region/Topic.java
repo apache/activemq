@@ -779,7 +779,7 @@ public class Topic extends BaseDestination implements Task {
         // destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();
 
-        if(context.isNetworkConnection() && isAdvancedStatisticsEnabled()) {
+        if(isAdvancedNetworkStatisticsEnabled() && context != null && context.isNetworkConnection()) {
             destinationStatistics.getNetworkEnqueues().increment();
         }
 

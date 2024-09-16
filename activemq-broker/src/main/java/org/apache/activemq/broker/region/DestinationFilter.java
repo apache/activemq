@@ -410,13 +410,13 @@ public class DestinationFilter implements Destination {
     }
 
     @Override
-    public boolean isAdvancedStatisticsEnabled() {
-        return next.isAdvancedStatisticsEnabled();
+    public boolean isAdvancedNetworkStatisticsEnabled() {
+        return next.isAdvancedNetworkStatisticsEnabled();
     }
 
     @Override
-    public void setAdvancedStatisticsEnabled(boolean advancedStatisticsEnabled) {
-        next.setAdvancedStatisticsEnabled(advancedStatisticsEnabled);
+    public void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled) {
+        next.setAdvancedNetworkStatisticsEnabled(advancedNetworkStatisticsEnabled);
     }
 
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {

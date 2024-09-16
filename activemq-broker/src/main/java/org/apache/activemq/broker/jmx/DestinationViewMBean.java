@@ -482,11 +482,11 @@ public interface DestinationViewMBean {
     @MBeanInfo("Number of times the max uncommitted limit has been exceed for this destination")
     long getMaxUncommittedExceededCount();
 
-    @MBeanInfo("Query Advanced Statistics flag")
-    boolean isAdvancedStatisticsEnabled();
+    @MBeanInfo("Query Advanced Network Statistics flag")
+    boolean isAdvancedNetworkStatisticsEnabled();
 
-    @MBeanInfo("Toggle Advanced Statistics flag")
-    void setAdvancedStatisticsEnabled(boolean advancedStatisticsEnabled);
+    @MBeanInfo("Toggle Advanced Network Statistics flag")
+    void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled);
 
     @MBeanInfo("Number of messages sent to the destination via network connection")
     long getNetworkEnqueues();

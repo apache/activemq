@@ -58,15 +58,15 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
     }
 
     @Test
-    public void testModAdvancedStatistics() throws Exception {
+    public void testModAdvancedNetworkStatistics() throws Exception {
         final String brokerConfig = configurationSeed + "-policy-ml-broker";
-        applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedStatistics");
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedNetworkStatistics");
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
 
-        verifyBooleanField("AMQ.9437", "advancedStatisticsEnabled", false);
-        applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedStatistics-mod", SLEEP);
-        verifyBooleanField("AMQ.9437", "advancedStatisticsEnabled", true);
+        verifyBooleanField("AMQ.9437", "advancedNetworkStatisticsEnabled", false);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedNetworkStatistics-mod", SLEEP);
+        verifyBooleanField("AMQ.9437", "advancedNetworkStatisticsEnabled", true);
     }
 
     @Test
@@ -133,8 +133,8 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
             session.createConsumer(session.createQueue(dest));
 
             switch(fieldName) {
-            case "advancedStatisticsEnabled":
-                assertEquals(value, brokerService.getRegionBroker().getDestinationMap().get(new ActiveMQQueue(dest)).isAdvancedStatisticsEnabled());
+            case "advancedNetworkStatisticsEnabled":
+                assertEquals(value, brokerService.getRegionBroker().getDestinationMap().get(new ActiveMQQueue(dest)).isAdvancedNetworkStatisticsEnabled());
                 break;
             case "sendDuplicateFromStoreToDLQ":
                 assertEquals(value, brokerService.getRegionBroker().getDestinationMap().get(new ActiveMQQueue(dest)).isSendDuplicateFromStoreToDLQ());

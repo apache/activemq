@@ -601,13 +601,13 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     @Override
-    public boolean isAdvancedStatisticsEnabled() {
-        return destination.isAdvancedStatisticsEnabled();
+    public boolean isAdvancedNetworkStatisticsEnabled() {
+        return destination.isAdvancedNetworkStatisticsEnabled();
     }
 
     @Override
-    public void setAdvancedStatisticsEnabled(boolean advancedStatisticsEnabled) {
-        destination.setAdvancedStatisticsEnabled(advancedStatisticsEnabled);
+    public void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled) {
+        destination.setAdvancedNetworkStatisticsEnabled(advancedNetworkStatisticsEnabled);
     }
 
     @Override
