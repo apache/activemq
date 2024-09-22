@@ -1873,7 +1873,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         // This sends the ack the the journal..
         if (!ack.isInTransaction()) {
             acknowledge(context, sub, ack, reference);
-            dropMessage(reference);
+            dropMessage(context, reference);
         } else {
             try {
                 acknowledge(context, sub, ack, reference);
@@ -1882,7 +1882,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                     @Override
                     public void afterCommit() throws Exception {
-                        dropMessage(reference);
+                        dropMessage(context, reference);
                         wakeup();
                     }
 
@@ -1910,11 +1910,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         reference.setAcked(true);
     }
 
-    private void dropMessage(QueueMessageReference reference) {
+    private void dropMessage(ConnectionContext context, QueueMessageReference reference) {
         //use dropIfLive so we only process the statistics at most one time
         if (reference.dropIfLive()) {
             getDestinationStatistics().getDequeues().increment();
             getDestinationStatistics().getMessages().decrement();
+
+            if(isAdvancedNetworkStatisticsEnabled() && context.getConnection() != null && context.getConnection().isNetworkConnection()) {
+                getDestinationStatistics().getNetworkDequeues().increment();
+            }
+
             pagedInMessagesLock.writeLock().lock();
             try {
                 pagedInMessages.remove(reference);
@@ -1969,6 +1974,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         destinationStatistics.getMessageSize().addSize(msg.getSize());
+
+        if(isAdvancedNetworkStatisticsEnabled() && context.getConnection() != null && context.getConnection().isNetworkConnection()) {
+            destinationStatistics.getNetworkEnqueues().increment();
+        }
+
         messageDelivered(context, msg);
         consumersLock.readLock().lock();
         try {
@@ -2115,7 +2125,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             LOG.warn("{}, duplicate message {} - {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessageId(), ref.getMessage().getMessageId().getFutureOrSequenceLong());
                             if (store != null) {
                                 ConnectionContext connectionContext = createConnectionContext();
-                                dropMessage(ref);
+                                dropMessage(connectionContext, ref);
                                 if (gotToTheStore(ref.getMessage())) {
                                     LOG.debug("Duplicate message {} from cursor, removing from store", ref.getMessage());
                                     store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POISON_ACK_TYPE, 1));
