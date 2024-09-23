@@ -139,7 +139,7 @@
     <exec-maven-plugin-version>3.1.0</exec-maven-plugin-version>
     <findbugs-maven-plugin-version>3.0.5</findbugs-maven-plugin-version>
     <flatten-maven-plugin-version>1.6.0</flatten-maven-plugin-version>
-    <javacc-maven-plugin-version>3.0.1</javacc-maven-plugin-version>
+    <javacc-maven-plugin-version>3.1.0</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>3.0.0</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>3.6.0</build-helper-maven-plugin-version>
