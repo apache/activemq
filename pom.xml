@@ -142,7 +142,7 @@
     <javacc-maven-plugin-version>3.0.1</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>3.0.0</taglist-maven-plugin-version>
-    <build-helper-maven-plugin-version>3.5.0</build-helper-maven-plugin-version>
+    <build-helper-maven-plugin-version>3.6.0</build-helper-maven-plugin-version>
     <replacer-maven-plugin-version>1.5.3</replacer-maven-plugin-version>
     <apache-rat-plugin-version>0.16.1</apache-rat-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
