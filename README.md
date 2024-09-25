@@ -7,6 +7,7 @@ ActiveMQ supports several API and protocols:
 - AMQP
 - MQTT
 - HTTP/WS
+
 ActiveMQ also provides advanced features like:
 - network of brokers
 - scheduling

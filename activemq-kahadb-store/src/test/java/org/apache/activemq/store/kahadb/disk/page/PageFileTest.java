@@ -367,20 +367,7 @@ public class PageFileTest extends TestCase {
     public void testRecoveryAfterUncleanShutdownAndZeroFreePages() throws Exception {
         final int numberOfPages = 1000;
         final AtomicBoolean recoveryEnd = new AtomicBoolean();
-
-        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(PageFile.class));
-        final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
-            @Override
-            public void append(LogEvent event) {
-                if (event.toImmutable().getLevel().equals(Level.INFO) && event.toImmutable().getMessage().getFormattedMessage().contains("Recovered pageFile free list")) {
-                    recoveryEnd.set(true);
-                }
-            }
-        };
-        appender.start();
-
-        logger.addAppender(appender);
-        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        createRecoveryAppender("testRecoveryAfterUncleanShutdownAndZeroFreePagesAppender", recoveryEnd);
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
         pf.delete();
@@ -414,22 +401,50 @@ public class PageFileTest extends TestCase {
 
     }
 
+    public void testRecoveryAfterUncleanShutdownAndMissingRecoveryFile() throws Exception {
+        final int numberOfPages = 1000;
+        final AtomicBoolean recoveryEnd = new AtomicBoolean();
+        createRecoveryAppender("testRecoveryAfterUncleanShutdownAndMissingRecoveryFileAppender", recoveryEnd);
+
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(false);
+        pf.load();
+
+        LOG.info("Creating Transactions");
+        for (int i = 0; i < numberOfPages; i++) {
+            Transaction tx = pf.tx();
+            Page page = tx.allocate();
+            String t = "page:" + i;
+            page.set(t);
+            tx.store(page, StringMarshaller.INSTANCE, false);
+            tx.commit();
+        }
+
+        pf.flush();
+
+        assertEquals(pf.getFreePageCount(), 0);
+
+        //Simulate an unclean shutdown
+        PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        pf2.setEnableRecoveryFile(true);
+
+        // Simulate a missing recovery file
+        pf2.getRecoveryFile().delete();
+        pf2.load();
+
+        assertTrue("Recovery Finished", Wait.waitFor(recoveryEnd::get, 100000));
+
+        //Simulate a clean shutdown
+        pf2.unload();
+        assertTrue(pf2.isCleanShutdown());
+
+    }
+
     public void testBackgroundWillMarkUsedPagesAsFreeInTheBeginning() throws Exception {
         final int numberOfPages = 100000;
         final AtomicBoolean recoveryEnd = new AtomicBoolean();
-
-        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(PageFile.class));
-        final var appender = new AbstractAppender("pageAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
-            @Override
-            public void append(LogEvent event) {
-                if (event.toImmutable().getLevel().equals(Level.INFO) && event.toImmutable().getMessage().getFormattedMessage().contains("Recovered pageFile free list")) {
-                    recoveryEnd.set(true);
-                }
-            }
-        };
-        appender.start();
-        logger.addAppender(appender);
-        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
+        createRecoveryAppender("testBackgroundWillMarkUsedPagesAsFreeInTheBeginningAppender", recoveryEnd);
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
         pf.delete();
@@ -518,5 +533,21 @@ public class PageFileTest extends TestCase {
         assertEquals(pf2.getPageCount(), totalPages);
 
         assertEquals("pages freed during recovery should be reused", numberOfPages, totalPages);
+    }
+
+    private void createRecoveryAppender(String name, AtomicBoolean recoveryEnd) {
+        final var logger = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(PageFile.class));
+        final var appender = new AbstractAppender(name, new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
+            @Override
+            public void append(LogEvent event) {
+                if (event.toImmutable().getLevel().equals(Level.INFO) && event.toImmutable().getMessage().getFormattedMessage().contains("Recovered pageFile free list")) {
+                    recoveryEnd.set(true);
+                }
+            }
+        };
+        appender.start();
+
+        logger.addAppender(appender);
+        logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
     }
 }

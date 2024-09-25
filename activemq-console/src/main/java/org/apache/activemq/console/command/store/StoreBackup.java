@@ -34,31 +34,34 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.console.command.store.proto.MessagePB;
-import org.apache.activemq.console.command.store.proto.QueueEntryPB;
-import org.apache.activemq.console.command.store.proto.QueuePB;
+import org.apache.activemq.console.command.store.protobuf.MessagePB;
+import org.apache.activemq.console.command.store.protobuf.QueueEntryPB;
+import org.apache.activemq.console.command.store.protobuf.QueuePB;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
-import org.fusesource.hawtbuf.AsciiBuffer;
 import org.fusesource.hawtbuf.DataByteArrayOutputStream;
-import org.fusesource.hawtbuf.UTF8Buffer;
+import org.apache.activemq.protobuf.AsciiBuffer;
+import org.apache.activemq.protobuf.Buffer;
+import org.apache.activemq.protobuf.UTF8Buffer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
- */
-public class StoreExporter {
+public class StoreBackup {
 
-    static final int OPENWIRE_VERSION = 8;
+    static final int OPENWIRE_VERSION = 11;
     static final boolean TIGHT_ENCODING = false;
 
     URI config;
+    String filename;
     File file;
+
+    String queue;
+    Integer offset;
+    Integer count;
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final AsciiBuffer ds_kind = new AsciiBuffer("ds");
@@ -66,7 +69,7 @@ public class StoreExporter {
     private final AsciiBuffer codec_id = new AsciiBuffer("openwire");
     private final OpenWireFormat wireformat = new OpenWireFormat();
 
-    public StoreExporter() throws URISyntaxException {
+    public StoreBackup() throws URISyntaxException {
         config = new URI("xbean:activemq.xml");
         wireformat.setCacheEnabled(false);
         wireformat.setTightEncodingEnabled(TIGHT_ENCODING);
@@ -77,23 +80,25 @@ public class StoreExporter {
         if (config == null) {
             throw new Exception("required --config option missing");
         }
-        if (file == null) {
-            throw new Exception("required --file option missing");
+        if (filename == null) {
+            throw new Exception("required --filename option missing");
         }
+
+        if (offset != null && count == null) {
+            throw new Exception("optional --offset and --count must be specified together");
+        }
+
+        setFile(new File(filename));
         System.out.println("Loading: " + config);
         BrokerFactory.setStartDefault(false); // to avoid the broker auto-starting..
         BrokerService broker = BrokerFactory.createBroker(config);
         BrokerFactory.resetStartDefault();
         PersistenceAdapter store = broker.getPersistenceAdapter();
+
         System.out.println("Starting: " + store);
         store.start();
-        try {
-            BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(file));
-            try {
-                export(store, fos);
-            } finally {
-                fos.close();
-            }
+        try(BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(file))) {
+            export(store, fos);
         } finally {
             store.stop();
         }
@@ -101,11 +106,9 @@ public class StoreExporter {
 
     void export(PersistenceAdapter store, BufferedOutputStream fos) throws Exception {
 
-
         final long[] messageKeyCounter = new long[]{0};
         final long[] containerKeyCounter = new long[]{0};
-        final ExportStreamManager manager = new ExportStreamManager(fos, 1);
-
+        final BackupStreamManager manager = new BackupStreamManager(fos, 1);
 
         final int[] preparedTxs = new int[]{0};
         store.createTransactionStore().recover(new TransactionRecoveryListener() {
@@ -116,16 +119,21 @@ public class StoreExporter {
         });
 
         if (preparedTxs[0] > 0) {
-            throw new Exception("Cannot export a store with prepared XA transactions.  Please commit or rollback those transactions before attempting to export.");
+            throw new Exception("Cannot export a store with prepared XA transactions.  Please commit or rollback those transactions before attempting to backup.");
         }
 
         for (ActiveMQDestination odest : store.getDestinations()) {
+
+            if(queue != null && !queue.equals(odest.getPhysicalName())) {
+                continue;
+            }
+
             containerKeyCounter[0]++;
             if (odest instanceof ActiveMQQueue) {
                 ActiveMQQueue dest = (ActiveMQQueue) odest;
                 MessageStore queue = store.createQueueMessageStore(dest);
 
-                QueuePB.Bean destRecord = new QueuePB.Bean();
+                QueuePB destRecord = new QueuePB();
                 destRecord.setKey(containerKeyCounter[0]);
                 destRecord.setBindingKind(ptp_kind);
 
@@ -139,7 +147,8 @@ public class StoreExporter {
                 destRecord.setBindingData(new UTF8Buffer(json));
                 manager.store_queue(destRecord);
 
-                queue.recover(new MessageRecoveryListener() {
+                MessageRecoveryListener queueRecoveryListener = new MessageRecoveryListener() {
+
                     @Override
                     public boolean hasSpace() {
                         return true;
@@ -160,23 +169,27 @@ public class StoreExporter {
                         messageKeyCounter[0]++;
                         seqKeyCounter[0]++;
 
-                        MessagePB.Bean messageRecord = createMessagePB(message, messageKeyCounter[0]);
+                        MessagePB messageRecord = createMessagePB(message, messageKeyCounter[0]);
                         manager.store_message(messageRecord);
 
-                        QueueEntryPB.Bean entryRecord = createQueueEntryPB(message, containerKeyCounter[0], seqKeyCounter[0], messageKeyCounter[0]);
+                        QueueEntryPB entryRecord = createQueueEntryPB(message, containerKeyCounter[0], seqKeyCounter[0], messageKeyCounter[0]);
                         manager.store_queue_entry(entryRecord);
 
                         return true;
                     }
-                });
-
+                };
+                if(offset != null) {
+                    queue.recoverNextMessages(offset, count, queueRecoveryListener);
+                } else {
+                    queue.recover(queueRecoveryListener);
+                }
             } else if (odest instanceof ActiveMQTopic) {
                 ActiveMQTopic dest = (ActiveMQTopic) odest;
 
                 TopicMessageStore topic = store.createTopicMessageStore(dest);
                 for (SubscriptionInfo sub : topic.getAllSubscriptions()) {
 
-                    QueuePB.Bean destRecord = new QueuePB.Bean();
+                    QueuePB destRecord = new QueuePB();
                     destRecord.setKey(containerKeyCounter[0]);
                     destRecord.setBindingKind(ds_kind);
 
@@ -219,10 +232,10 @@ public class StoreExporter {
                             messageKeyCounter[0]++;
                             seqKeyCounter[0]++;
 
-                            MessagePB.Bean messageRecord = createMessagePB(message, messageKeyCounter[0]);
+                            MessagePB messageRecord = createMessagePB(message, messageKeyCounter[0]);
                             manager.store_message(messageRecord);
 
-                            QueueEntryPB.Bean entryRecord = createQueueEntryPB(message, containerKeyCounter[0], seqKeyCounter[0], messageKeyCounter[0]);
+                            QueueEntryPB entryRecord = createQueueEntryPB(message, containerKeyCounter[0], seqKeyCounter[0], messageKeyCounter[0]);
                             manager.store_queue_entry(entryRecord);
                             return true;
                         }
@@ -234,8 +247,8 @@ public class StoreExporter {
         manager.finish();
     }
 
-    private QueueEntryPB.Bean createQueueEntryPB(Message message, long queueKey, long queueSeq, long messageKey) {
-        QueueEntryPB.Bean entryRecord = new QueueEntryPB.Bean();
+    private QueueEntryPB createQueueEntryPB(Message message, long queueKey, long queueSeq, long messageKey) {
+        QueueEntryPB entryRecord = new QueueEntryPB();
         entryRecord.setQueueKey(queueKey);
         entryRecord.setQueueSeq(queueSeq);
         entryRecord.setMessageKey(messageKey);
@@ -249,29 +262,33 @@ public class StoreExporter {
         return entryRecord;
     }
 
-    private MessagePB.Bean createMessagePB(Message message, long messageKey) throws IOException {
+    private MessagePB createMessagePB(Message message, long messageKey) throws IOException {
         DataByteArrayOutputStream mos = new DataByteArrayOutputStream();
         mos.writeBoolean(TIGHT_ENCODING);
         mos.writeVarInt(OPENWIRE_VERSION);
         wireformat.marshal(message, mos);
 
-        MessagePB.Bean messageRecord = new MessagePB.Bean();
+        MessagePB messageRecord = new MessagePB();
         messageRecord.setCodec(codec_id);
         messageRecord.setMessageKey(messageKey);
         messageRecord.setSize(message.getSize());
-        messageRecord.setValue(mos.toBuffer());
+        messageRecord.setValue(new Buffer(mos.toBuffer().getData()));
         return messageRecord;
     }
 
-    public File getFilehandle() {
+    public File getFile() {
         return file;
     }
 
-    public void setFile(String file) {
-        setFilehandle(new File(file));
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
-    public void setFilehandle(File file) {
+    public String getFilename() {
+        return filename;
+    }
+    
+    public void setFile(File file) {
         this.file = file;
     }
 
@@ -281,5 +298,29 @@ public class StoreExporter {
 
     public void setConfig(URI config) {
         this.config = config;
+    }
+
+    public void setQueue(String queue) {
+        this.queue = queue;
+    }
+
+    public String getQueue() {
+        return queue;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public Integer getOffset() {
+        return offset;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+
+    public Integer getCount() {
+        return count;
     }
 }

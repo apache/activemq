@@ -106,7 +106,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean doOptimzeMessageStorage = true;
     private int maxDestinations = -1;
     private boolean useTopicSubscriptionInflightStats = true;
-
+    private boolean advancedNetworkStatisticsEnabled = false; // [AMQ-9437]
     /*
      * percentage of in-flight messages above which optimize message store is disabled
      */
@@ -305,6 +305,9 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         if (isUpdate("sendDuplicateFromStoreToDLQ", includedProperties)) {
             destination.setSendDuplicateFromStoreToDLQ(isSendDuplicateFromStoreToDLQ());
+        }
+        if (isUpdate("advancedNetworkStatisticsEnabled", includedProperties)) {
+            destination.setAdvancedNetworkStatisticsEnabled(isAdvancedNetworkStatisticsEnabled());
         }
     }
 
@@ -1175,5 +1178,13 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public MessageInterceptorStrategy getMessageInterceptorStrategy() {
         return this.messageInterceptorStrategy;
+    } 
+
+    public boolean isAdvancedNetworkStatisticsEnabled() {
+        return this.advancedNetworkStatisticsEnabled;
+    }
+
+    public void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled) {
+        this.advancedNetworkStatisticsEnabled = advancedNetworkStatisticsEnabled;
     }
 }

@@ -17,13 +17,13 @@
 package org.apache.activemq.console.command;
 
 import org.apache.activemq.console.CommandContext;
-import org.apache.activemq.console.command.store.StoreExporter;
+import org.apache.activemq.console.command.store.StoreBackup;
 import org.apache.activemq.console.command.store.amq.CommandLineSupport;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class StoreExportCommand implements Command {
+public class StoreBackupCommand implements Command {
 
     private CommandContext context;
 
@@ -34,21 +34,21 @@ public class StoreExportCommand implements Command {
 
     @Override
     public String getName() {
-        return "export";
+        return "backup";
     }
 
     @Override
     public String getOneLineDescription() {
-        return "Exports a stopped brokers data files to an archive file";
+        return "Backup a message (or range) from a queue to an archive file";
     }
 
     @Override
     public void execute(List<String> tokens) throws Exception {
-        StoreExporter exporter = new StoreExporter();
-        String[] remaining = CommandLineSupport.setOptions(exporter, tokens.toArray(new String[tokens.size()]));
+        StoreBackup backup = new StoreBackup();
+        String[] remaining = CommandLineSupport.setOptions(backup, tokens.toArray(new String[tokens.size()]));
         if (remaining.length > 0) {
           throw new Exception("Unexpected arguments: " + Arrays.asList(remaining));
         }
-        exporter.execute();
+        backup.execute();
     }
 }

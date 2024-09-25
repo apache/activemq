@@ -154,8 +154,7 @@ public class AdvisoryBroker extends BrokerFilter {
             // for this newly added consumer.
             if (AdvisorySupport.isConnectionAdvisoryTopic(info.getDestination())) {
                 // Replay the connections.
-                for (Iterator<ConnectionInfo> iter = connections.values().iterator(); iter.hasNext(); ) {
-                    ConnectionInfo value = iter.next();
+                for (ConnectionInfo value : connections.values()) {
                     ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
                     fireAdvisory(context, topic, value, info.getConsumerId());
                 }

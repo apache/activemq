@@ -44,6 +44,9 @@ pipeline {
     parameters {
         choice(name: 'nodeLabel', choices: ['ubuntu', 's390x', 'arm', 'Windows']) 
         choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest', 'jdk_22_latest', 'jdk_17_latest_windows', 'jdk_21_latest_windows', 'jdk_22_latest_windows']) 
+        booleanParam(name: 'deployEnabled', defaultValue: false)
+        booleanParam(name: 'sonarEnabled', defaultValue: false)
+        booleanParam(name: 'testsEnabled', defaultValue: true)
     }
 
     stages {
@@ -121,6 +124,7 @@ pipeline {
             tools {
                 jdk params.jdkVersion
             }
+            when { expression { return params.testsEnabled } }
             steps {
                 echo 'Running tests'
                 sh 'java -version'
@@ -143,7 +147,7 @@ pipeline {
             }
             when {
                 expression {
-                    env.BRANCH_NAME ==~ /(activemq-5.18.x|activemq-5.17.x|main)/
+                    params.deployEnabled && env.BRANCH_NAME ==~ /(activemq-5.18.x|activemq-5.17.x|main)/
                 }
             }
             steps {
@@ -153,6 +157,14 @@ pipeline {
                 sh 'mvn -B -e deploy -Pdeploy -DskipTests'
             }
         }
+
+        stage('Quality') {
+            when { expression { return params.sonarEnabled } }
+            steps {
+                sh 'echo "Running the Sonar stage"'
+            }
+        }
+
     }
 
     // Do any post build stuff ... such as sending emails depending on the overall build result.
@@ -160,7 +172,7 @@ pipeline {
         // If this build failed, send an email to the list.
         failure {
             script {
-                if(env.BRANCH_NAME == "activemq-5.18.x" || env.BRANCH_NAME == "activemq-5.17.x" || env.BRANCH_NAME == "main") {
+                if(env.BRANCH_NAME == "activemq-5.18.x" || env.BRANCH_NAME == "activemq-6.1.x" || env.BRANCH_NAME == "main") {
                     emailext(
                             subject: "[BUILD-FAILURE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
@@ -177,7 +189,7 @@ Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BRANC
         // If this build didn't fail, but there were failing tests, send an email to the list.
         unstable {
             script {
-                if(env.BRANCH_NAME == "activemq-5.18.x" || env.BRANCH_NAME == "activemq-5.17.x" || env.BRANCH_NAME == "main") {
+                if(env.BRANCH_NAME == "activemq-5.18.x" || env.BRANCH_NAME == "activemq-6.1.x" || env.BRANCH_NAME == "main") {
                     emailext(
                             subject: "[BUILD-UNSTABLE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
@@ -197,7 +209,7 @@ Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BRANC
             // (in this cae we probably don't have to do any post-build analysis)
             deleteDir()
             script {
-                if ((env.BRANCH_NAME == "activemq-5.18.x" || env.BRANCH_NAME == "activemq-5.17.x" || env.BRANCH_NAME == "main") && (currentBuild.previousBuild != null) && (currentBuild.previousBuild.result != 'SUCCESS')) {
+                if ((env.BRANCH_NAME == "activemq-5.18.x" || env.BRANCH_NAME == "activemq-6.1.x" || env.BRANCH_NAME == "main") && (currentBuild.previousBuild != null) && (currentBuild.previousBuild.result != 'SUCCESS')) {
                     emailext (
                             subject: "[BUILD-STABLE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
