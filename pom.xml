@@ -149,7 +149,7 @@
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.5.0</depends-maven-plugin-version>
     <maven-dependency-plugin-version>3.6.1</maven-dependency-plugin-version>
-    <maven-project-info-reports-plugin-version>3.5.0</maven-project-info-reports-plugin-version>
+    <maven-project-info-reports-plugin-version>3.7.0</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
     <maven-plugin-plugin-version>3.13.1</maven-plugin-plugin-version>
     <maven-core-version>3.8.6</maven-core-version>
