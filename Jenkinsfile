@@ -160,8 +160,11 @@ pipeline {
 
         stage('Quality') {
             when { expression { return params.sonarEnabled } }
+
             steps {
+                withCredentials([string(credentialsId: 'SONARCLOUD_TOKEN', variable: 'SONAR_TOKEN')]) {
                 sh 'echo "Running the Sonar stage"'
+                sh 'mvn -B -e -fae clean verify sonar:sonar -Dsonar.projectKey=apache_activemq -Dsonar.organization=apache -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${SONAR_TOKEN} -Dsurefire.rerunFailingTestsCount=3'
             }
         }
 
