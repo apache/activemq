@@ -34,6 +34,9 @@
     <transportConnectors>
       <transportConnector name="openwire" uri="tcp://localhost:61616" />
       <transportConnector name="stomp" uri="stomp://localhost:61613" />
+      <!-- Add Jetty Transport Connector for Web Console -->
+      <transportConnector name="jetty" uri="http://localhost:8161"/>
+
     </transportConnectors>
 
   </broker>
