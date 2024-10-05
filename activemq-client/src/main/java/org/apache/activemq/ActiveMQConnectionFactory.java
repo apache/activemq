@@ -148,6 +148,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int auditDepth = ActiveMQMessageAudit.DEFAULT_WINDOW_SIZE;
     private int auditMaximumProducerNumber = ActiveMQMessageAudit.MAXIMUM_PRODUCER_COUNT;
     private boolean useDedicatedTaskRunner;
+    private boolean useVirtualThreadTaskRunner;
     private long consumerFailoverRedeliveryWaitPeriod = 0;
     private boolean checkForDuplicates = true;
     private ClientInternalExceptionListener clientInternalExceptionListener;
@@ -438,6 +439,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setAuditDepth(getAuditDepth());
         connection.setAuditMaximumProducerNumber(getAuditMaximumProducerNumber());
         connection.setUseDedicatedTaskRunner(isUseDedicatedTaskRunner());
+        connection.setUseVirtualThreadTaskRunner(isUseVirtualThreadTaskRunner());
         connection.setConsumerFailoverRedeliveryWaitPeriod(getConsumerFailoverRedeliveryWaitPeriod());
         connection.setCheckForDuplicates(isCheckForDuplicates());
         connection.setMessagePrioritySupported(isMessagePrioritySupported());
@@ -1146,6 +1148,14 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     public boolean isUseDedicatedTaskRunner() {
         return useDedicatedTaskRunner;
+    }
+
+    public void setUseVirtualThreadTaskRunner(boolean useVirtualThreadTaskRunner) {
+        this.useVirtualThreadTaskRunner = useVirtualThreadTaskRunner;
+    }
+
+    public boolean isUseVirtualThreadTaskRunner() {
+        return useVirtualThreadTaskRunner;
     }
 
     public void setConsumerFailoverRedeliveryWaitPeriod(long consumerFailoverRedeliveryWaitPeriod) {
