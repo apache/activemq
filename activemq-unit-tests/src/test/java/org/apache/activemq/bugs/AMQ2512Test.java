@@ -38,6 +38,7 @@ import jakarta.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
@@ -185,7 +186,7 @@ public class AMQ2512Test {
 
         KahaDBStore kaha = new KahaDBStore();
         kaha.setDirectory(dataFileDir);
-        kaha.setEnableJournalDiskSyncs(false);
+        kaha.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.NEVER.name());
 
         BrokerService answer = new BrokerService();
         answer.setPersistenceAdapter(kaha);
