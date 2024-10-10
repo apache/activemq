@@ -272,7 +272,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                     }
                 }
                 if (jobId != null && action.equals(ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVE)) {
-                    scheduler.remove(jobId);
+                    scheduler.remove(jobId, messageSend);
                 } else if (action.equals(ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL)) {
 
                     if (startTime != null && endTime != null) {
@@ -280,9 +280,9 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                         long start = (Long) TypeConversionSupport.convert(startTime, Long.class);
                         long finish = (Long) TypeConversionSupport.convert(endTime, Long.class);
 
-                        scheduler.removeAllJobs(start, finish);
+                        scheduler.removeAllJobs(start, finish, messageSend);
                     } else {
-                        scheduler.removeAllJobs();
+                        scheduler.removeAllJobs(messageSend);
                     }
                 }
             }

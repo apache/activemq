@@ -19,6 +19,7 @@ package org.apache.activemq.broker.scheduler;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteSequence;
 
 /**
@@ -89,34 +90,34 @@ public class JobSchedulerFacade implements JobScheduler {
     }
 
     @Override
-    public void remove(long time) throws Exception {
+    public void remove(long time, Message message) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
         if (js != null) {
-            js.remove(time);
+            js.remove(time, message);
         }
     }
 
     @Override
-    public void remove(String jobId) throws Exception {
+    public void remove(String jobId, Message message) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
         if (js != null) {
-            js.remove(jobId);
+            js.remove(jobId, message);
         }
     }
 
     @Override
-    public void removeAllJobs() throws Exception {
+    public void removeAllJobs(Message message) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
         if (js != null) {
-            js.removeAllJobs();
+            js.removeAllJobs(message);
         }
     }
 
     @Override
-    public void removeAllJobs(long start, long finish) throws Exception {
+    public void removeAllJobs(long start, long finish, Message message) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
         if (js != null) {
-            js.removeAllJobs(start, finish);
+            js.removeAllJobs(start, finish, message);
         }
     }
 

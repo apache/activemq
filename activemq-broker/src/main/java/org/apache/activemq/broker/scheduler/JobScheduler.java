@@ -18,6 +18,7 @@ package org.apache.activemq.broker.scheduler;
 
 import java.util.List;
 
+import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteSequence;
 
 public interface JobScheduler {
@@ -118,27 +119,34 @@ public interface JobScheduler {
      *
      * @param time
      *      The UTC time to use to remove a batch of scheduled Jobs.
+     * @param message
+     *      The message from management queue, that triggered the removal action
      *
      * @throws Exception
      */
-    void remove(long time) throws Exception;
+    void remove(long time, Message message) throws Exception;
 
     /**
      * remove a job with the matching jobId
      *
      * @param jobId
      *      The unique Job Id to search for and remove from the scheduled set of jobs.
+     * @param message
+     *      The message from management queue, that triggered the removal action
      *
      * @throws Exception if an error occurs while removing the Job.
      */
-    void remove(String jobId) throws Exception;
+    void remove(String jobId, Message message) throws Exception;
 
     /**
      * remove all the Jobs from the scheduler
      *
+     * @param message
+     *      The message from management queue, that triggered the removal action
+     *
      * @throws Exception
      */
-    void removeAllJobs() throws Exception;
+    void removeAllJobs(Message message) throws Exception;
 
     /**
      * remove all the Jobs from the scheduler that are due between the start and finish times
@@ -147,9 +155,11 @@ public interface JobScheduler {
      *            time in milliseconds
      * @param finish
      *            time in milliseconds
+     * @param message
+     *      The message from management queue, that triggered the removal action
      * @throws Exception
      */
-    void removeAllJobs(long start, long finish) throws Exception;
+    void removeAllJobs(long start, long finish, Message message) throws Exception;
 
     /**
      * Get the next time jobs will be fired
