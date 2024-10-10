@@ -17,9 +17,9 @@
 
 package org.apache.activemq.web;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -35,7 +35,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.commons.io.input.BoundedInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +64,7 @@ public abstract class MessageServletSupport extends HttpServlet {
      * is given by DEFAULT_MAX_MESSAGE_SIZE below.
      */
     private static final String MAX_MESSAGE_SIZE_TAG = "maxMessageSize";
-    private static final Long DEFAULT_MAX_MESSAGE_SIZE = 100000L;
+    private static final Long DEFAULT_MAX_MESSAGE_SIZE = 100_000L;
 
     private boolean defaultTopicFlag = true;
     private Destination defaultDestination;
@@ -355,21 +354,43 @@ public abstract class MessageServletSupport extends HttpServlet {
     protected String getPostedMessageBody(HttpServletRequest request) throws IOException {
         String answer = request.getParameter(bodyParameter);
         String contentType = request.getContentType();
-        if (answer == null && contentType != null) {
-            LOG.debug("Content-Type={}", contentType);
-            // lets read the message body instead
-            BoundedInputStream boundedInputStream = new BoundedInputStream(request.getInputStream(), maxMessageSize);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(boundedInputStream));
-            StringBuilder buffer = new StringBuilder();
-            while (true) {
-                String line = reader.readLine();
-                if (line == null) {
-                    break;
-                }
-                buffer.append(line);
-                buffer.append("\n");
+        long contentLengthLong = request.getContentLengthLong();
+
+        if (answer == null && contentType != null && contentLengthLong > -1l) {
+            LOG.debug("Content-Type={} Content-Length={} maxMessageSize={}", contentType, contentLengthLong, maxMessageSize);
+
+            if (contentLengthLong > maxMessageSize) {
+                LOG.warn("Message body exceeds max allowed size. Content-Type={} Content-Length={} maxMessageSize={}", contentType, contentLengthLong, maxMessageSize);
+                throw new IOException("Message body exceeds max allowed size");
             }
-            return buffer.toString();
+
+            if (contentLengthLong >= Long.valueOf(Integer.MAX_VALUE)) {
+                LOG.warn("Message body longer than {} is not supported", Integer.MAX_VALUE);
+                throw new IOException("Message body exceeds max supported size");
+            }
+
+            // This is safe b/c we bounds checked above
+            int expectedBodySize = (int) contentLengthLong;
+            try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(expectedBodySize)) {
+                byte[] buffer = new byte[2048];
+                int length;
+                int totalRead = 0;
+                while ((length = request.getInputStream().read(buffer)) != -1) {
+
+                    if((Integer.MAX_VALUE - totalRead) < length) {
+                        LOG.warn("Message body exceeds max allowed size. Content-Type={} Content-Length={} maxMessageSize={}", contentType, contentLengthLong, maxMessageSize);
+                        throw new IOException("Message body exceeded expected size");
+                    }
+
+                    totalRead += length;
+                    if(totalRead < 0 || totalRead >= Integer.MAX_VALUE || totalRead >= maxMessageSize || totalRead > expectedBodySize) {
+                        LOG.warn("Message body exceeds max allowed size. Content-Type={} Content-Length={} maxMessageSize={}", contentType, contentLengthLong, maxMessageSize);
+                        throw new IOException("Message body exceeds max allowed size");
+                    }
+                    byteArrayOutputStream.write(buffer, 0, length);
+                }
+                return byteArrayOutputStream.toString(StandardCharsets.UTF_8);
+            }
         }
         return answer;
     }
