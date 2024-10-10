@@ -33,6 +33,7 @@ import org.apache.activemq.broker.scheduler.CronParser;
 import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.broker.scheduler.JobListener;
 import org.apache.activemq.broker.scheduler.JobScheduler;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.kahadb.data.KahaAddScheduledJobCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveScheduledJobCommand;
@@ -101,22 +102,22 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
     }
 
     @Override
-    public void remove(final long time) throws IOException {
+    public void remove(final long time, Message message) throws IOException {
         doRemoveRange(time, time);
     }
 
     @Override
-    public void remove(final String jobId) throws IOException {
+    public void remove(final String jobId, Message message) throws IOException {
         doRemove(-1, jobId);
     }
 
     @Override
-    public void removeAllJobs() throws IOException {
+    public void removeAllJobs(Message message) throws IOException {
         doRemoveRange(0, Long.MAX_VALUE);
     }
 
     @Override
-    public void removeAllJobs(final long start, final long finish) throws IOException {
+    public void removeAllJobs(final long start, final long finish, Message message) throws IOException {
         doRemoveRange(start, finish);
     }
 
