@@ -1279,6 +1279,37 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
+    public QueueMessageReference getFirstMessage() {
+        pagedInMessagesLock.readLock().lock();
+        try {
+            Iterator<MessageReference> iterator = pagedInMessages.iterator();
+            if (iterator.hasNext()) {
+                return (QueueMessageReference) iterator.next();
+            }
+        } finally {
+            pagedInMessagesLock.readLock().unlock();
+        }
+
+        messagesLock.writeLock().lock();
+        try{
+            try {
+                messages.reset();
+                if (messages.hasNext()) {
+                    MessageReference mr = messages.next();
+                    QueueMessageReference qmr = createMessageReference(mr.getMessage());
+                    qmr.decrementReferenceCount();
+                    messages.rollback(qmr.getMessageId());
+                    return qmr;
+                }
+            } finally {
+                messages.release();
+            }
+        }finally {
+            messagesLock.writeLock().unlock();
+        }
+        return null;
+    }
+
     public QueueMessageReference getMessage(String id) {
         MessageId msgId = new MessageId(id);
         pagedInMessagesLock.readLock().lock();
