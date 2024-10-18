@@ -1198,14 +1198,13 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         StoredDestination sd = getStoredDestination(dest, tx);
                         sd.orderIndex.resetCursorPosition();
                         MessageOrderCursor moc = sd.subscriptionCursors.get(subscriptionKey);
-                        SequenceSet subAckPositions = null;
+                        SequenceSet subAckPositions = getSequenceSet(tx, sd, subscriptionKey);;
                         if (moc == null) {
                             LastAck pos = getLastAck(tx, sd, subscriptionKey);
                             if (pos == null) {
                                 // sub deleted
                                 return;
                             }
-                            subAckPositions = getSequenceSet(tx, sd, subscriptionKey);
                             //If we have ackPositions tracked then compare the first one as individual acknowledge mode
                             //may have bumped lastAck even though there are earlier messages to still consume
                             if (subAckPositions != null && !subAckPositions.isEmpty()
