@@ -25,6 +25,8 @@ import java.net.URL;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static jakarta.jms.Message.DEFAULT_PRIORITY;
+
 public class ProducerThread extends Thread {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProducerThread.class);
@@ -40,7 +42,7 @@ public class ProducerThread extends Thread {
     long msgTTL = 0L;
     String msgGroupID=null;
     int transactionBatchSize;
-    int priority = 4;
+    int priority = DEFAULT_PRIORITY;
     boolean disableMessageTimestamp = false;
 
     int transactions = 0;

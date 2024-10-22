@@ -27,6 +27,8 @@ import jakarta.jms.Session;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import static jakarta.jms.Message.DEFAULT_PRIORITY;
+
 public class ProducerCommand extends AbstractCommand {
     private static final Logger LOG = LoggerFactory.getLogger(ProducerCommand.class);
 
@@ -45,7 +47,7 @@ public class ProducerCommand extends AbstractCommand {
     String msgGroupID=null;
     int transactionBatchSize;
     private int parallelThreads = 1;
-    int priority = 4; // Default priority
+    int priority = DEFAULT_PRIORITY;
     boolean disableMessageTimestamp = false;
 
     @Override
