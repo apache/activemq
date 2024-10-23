@@ -264,4 +264,9 @@ public interface Destination extends Service, Task, Message.MessageDestination {
 
     void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled);
 
+    // [AMQ-8463]
+    boolean isAdvancedMessageStatisticsEnabled();
+
+    void setAdvancedMessageStatisticsEnabled(boolean advancedMessageStatisticsEnabled);
+
 }
