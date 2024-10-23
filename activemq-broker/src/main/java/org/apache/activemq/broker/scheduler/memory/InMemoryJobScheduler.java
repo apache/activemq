@@ -38,6 +38,7 @@ import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.broker.scheduler.JobListener;
 import org.apache.activemq.broker.scheduler.JobScheduler;
 import org.apache.activemq.broker.scheduler.JobSupport;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IdGenerator;
 import org.slf4j.Logger;
@@ -129,22 +130,22 @@ public class InMemoryJobScheduler implements JobScheduler {
     }
 
     @Override
-    public void remove(long time) throws Exception {
+    public void remove(long time, Message message) throws Exception {
         doRemoveRange(time, time);
     }
 
     @Override
-    public void remove(String jobId) throws Exception {
+    public void remove(String jobId, Message message) throws Exception {
         doRemoveJob(jobId);
     }
 
     @Override
-    public void removeAllJobs() throws Exception {
+    public void removeAllJobs(Message message) throws Exception {
         doRemoveRange(0, Long.MAX_VALUE);
     }
 
     @Override
-    public void removeAllJobs(long start, long finish) throws Exception {
+    public void removeAllJobs(long start, long finish, Message message) throws Exception {
         doRemoveRange(start, finish);
     }
 
