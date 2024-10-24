@@ -303,6 +303,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-client-jdk21</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-client</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
@@ -1597,5 +1602,48 @@
         <javadoc.options>-Xdoclint:none</javadoc.options>
      </properties>
    </profile>
+   <profile>
+     <id>jdk-21</id>
+     <activation>
+       <jdk>[21,)</jdk>
+     </activation>
+     <modules>
+       <module>activemq-openwire-generator</module>
+       <module>activemq-client</module>
+       <module>activemq-client-jdk21</module>
+       <module>activemq-client-jdk21-test</module>
+       <module>activemq-openwire-legacy</module>
+       <module>activemq-broker</module>
+       <module>activemq-stomp</module>
+       <module>activemq-mqtt</module>
+       <module>activemq-amqp</module>
+       <module>activemq-kahadb-store</module>
+       <module>activemq-jdbc-store</module>
+       <module>activemq-unit-tests</module>
+       <module>activemq-all</module>
+       <module>activemq-console</module>
+       <module>activemq-jaas</module>
+       <module>activemq-jms-pool</module>
+       <module>activemq-pool</module>
+       <module>activemq-cf</module>
+       <module>activemq-ra</module>
+       <module>activemq-rar</module>
+       <module>activemq-run</module>
+       <module>activemq-shiro</module>
+       <module>activemq-spring</module>
+       <module>activemq-runtime-config</module>
+       <module>activemq-tooling</module>
+       <module>activemq-web</module>
+       <module>activemq-web-demo</module>
+       <module>activemq-web-console</module>
+       <module>activemq-karaf</module>
+       <module>activemq-osgi</module>
+       <module>activemq-blueprint</module>
+       <module>activemq-karaf-itest</module>
+       <module>assembly</module>
+       <module>activemq-log4j-appender</module>
+       <module>activemq-http</module>
+     </modules>
+   </profile> 
   </profiles>
 </project>
