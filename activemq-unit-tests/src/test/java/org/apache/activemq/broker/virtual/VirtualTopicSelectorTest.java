@@ -22,11 +22,15 @@ import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.spring.ConsumerBean;
@@ -99,7 +103,25 @@ public class VirtualTopicSelectorTest extends CompositeTopicTest {
         virtualTopic.setSelectorAware(true);
         VirtualDestinationInterceptor interceptor = new VirtualDestinationInterceptor();
         interceptor.setVirtualDestinations(new VirtualDestination[]{virtualTopic});
-        broker.setDestinationInterceptors(new DestinationInterceptor[]{interceptor});
+        TestDestinationInterceptor testInterceptor = new TestDestinationInterceptor();
+        broker.setDestinationInterceptors(new DestinationInterceptor[]{testInterceptor, interceptor});
         return broker;
     }
+
+    private static class TestDestinationInterceptor implements DestinationInterceptor {
+
+        @Override
+        public org.apache.activemq.broker.region.Destination intercept(org.apache.activemq.broker.region.Destination destination) {
+            return new DestinationFilter(destination);
+        }
+
+        @Override
+        public void remove(org.apache.activemq.broker.region.Destination destination) {
+        }
+
+        @Override
+        public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
+        }
+    }
+
 }
