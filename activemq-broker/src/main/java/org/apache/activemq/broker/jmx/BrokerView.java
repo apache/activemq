@@ -282,7 +282,17 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public int getTotalTopicsCount() {
-        return getTopics().length;
+        return safeGetBroker().getTopicRegion().getDestinationMap().size();
+    }
+
+    @Override
+    public int getTotalNonSuppressedTopicsCount() {
+        return safeGetBroker().getTopicViews().size();
+    }
+
+    @Override
+    public int getTotalTemporaryTopicsCount() {
+        return safeGetBroker().getTempTopicRegion().getDestinationMap().size();
     }
 
     @Override
@@ -292,7 +302,17 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public int getTotalQueuesCount() {
-        return getQueues().length;
+        return safeGetBroker().getQueueRegion().getDestinationMap().size();
+    }
+
+    @Override
+    public int getTotalNonSuppressedQueuesCount() {
+        return safeGetBroker().getQueueViews().size();
+    }
+
+    @Override
+    public int getTotalTemporaryQueuesCount() {
+        return safeGetBroker().getTempQueueRegion().getDestinationMap().size();
     }
 
     @Override
