@@ -115,7 +115,7 @@
       <plugin>
         <groupId>org.apache.cxf</groupId>
         <artifactId>cxf-xjc-plugin</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.2</version>
         <executions>
           <execution>
             <id>compile-xsd</id>
