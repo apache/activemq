@@ -135,7 +135,7 @@
     <maven-source-plugin-version>3.3.1</maven-source-plugin-version>
     <maven-javadoc-plugin-version>3.10.0</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.5.2</maven-install-plugin-version>
-    <maven-shade-plugin-version>3.5.3</maven-shade-plugin-version>
+    <maven-shade-plugin-version>3.6.0</maven-shade-plugin-version>
     <exec-maven-plugin-version>3.1.0</exec-maven-plugin-version>
     <findbugs-maven-plugin-version>3.0.5</findbugs-maven-plugin-version>
     <flatten-maven-plugin-version>1.6.0</flatten-maven-plugin-version>
