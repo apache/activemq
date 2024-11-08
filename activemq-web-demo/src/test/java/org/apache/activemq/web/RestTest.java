@@ -88,10 +88,10 @@ public class RestTest extends JettyTestSupport {
 
         // AMQ-9330 - test no 500 error on timeout and instead 204 error
         Future<Result> result =
-            asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=2000&type=queue&clientId=test", new StringBuffer());
+            asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", new StringBuffer());
         // try a second request while the first is running, this should get a 500 error since the first is still running and
         // concurrent access to the same consumer is not allowed
-        Future<Result> errorResult = asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1&type=queue&clientId=test", new StringBuffer());
+        Future<Result> errorResult = asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=10000&type=queue&clientId=test", new StringBuffer());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR_500, errorResult.get().getResponse().getStatus());
         //After the original request finishes, verify 204 and not 500 error
         assertEquals(HttpStatus.NO_CONTENT_204, result.get().getResponse().getStatus());
