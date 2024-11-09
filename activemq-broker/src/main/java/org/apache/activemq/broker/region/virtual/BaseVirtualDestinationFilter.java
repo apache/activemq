@@ -20,8 +20,6 @@ import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
 
-import java.util.Optional;
-
 public class BaseVirtualDestinationFilter extends DestinationFilter {
     
     public BaseVirtualDestinationFilter(Destination next) {

@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.activemq.broker.ConnectionContext;
