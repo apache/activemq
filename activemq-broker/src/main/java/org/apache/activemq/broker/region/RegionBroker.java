@@ -781,23 +781,8 @@ public class RegionBroker extends EmptyBroker {
                                 return false;
                             }
 
-                            // message may be inflight to other subscriptions so do not modify
-                            message = message.copy();
-                            long dlqExpiration = deadLetterStrategy.getExpiration();
-                            if (dlqExpiration > 0) {
-                                dlqExpiration += System.currentTimeMillis();
-                            } else {
-                                stampAsExpired(message);
-                            }
-                            message.setExpiration(dlqExpiration);
-                            if (!message.isPersistent()) {
-                                message.setPersistent(true);
-                                message.setProperty("originalDeliveryMode", "NON_PERSISTENT");
-                            }
-                            if (poisonCause != null) {
-                                message.setProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY,
-                                        poisonCause.toString());
-                            }
+                            message = prepareMessageForDeadLetterQueue(message, deadLetterStrategy, poisonCause);
+
                             // The original destination and transaction id do
                             // not get filled when the message is first sent,
                             // it is only populated if the message is routed to
@@ -820,6 +805,28 @@ public class RegionBroker extends EmptyBroker {
         }
 
         return false;
+    }
+
+    private Message prepareMessageForDeadLetterQueue(Message message, DeadLetterStrategy deadLetterStrategy, Throwable poisonCause) throws IOException {
+        // message may be inflight to other subscriptions so do not modify
+        message = message.copy();
+        long dlqExpiration = deadLetterStrategy.getExpiration();
+        if (dlqExpiration > 0) {
+            dlqExpiration += System.currentTimeMillis();
+        } else {
+            stampAsExpired(message);
+        }
+        message.setExpiration(dlqExpiration);
+        if (!message.isPersistent() && !deadLetterStrategy.isPreserveDeliveryMode()) {
+            message.setPersistent(true);
+            message.setProperty("originalDeliveryMode", "NON_PERSISTENT");
+        }
+        if (poisonCause != null) {
+            message.setProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY,
+                    poisonCause.toString());
+        }
+
+        return message;
     }
 
     @Override
