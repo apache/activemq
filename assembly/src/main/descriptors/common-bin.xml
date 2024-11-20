@@ -314,9 +314,9 @@
 
         <!-- REST API -->
         <include>org.jolokia:jolokia-server-core</include>
+        <include>org.jolokia:jolokia-json</include>
         <include>org.jolokia:jolokia-service-jmx</include>
         <include>org.jolokia:jolokia-service-serializer</include>
-        <include>com.googlecode.json-simple:json-simple</include>
       </includes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
