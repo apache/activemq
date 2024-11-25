@@ -218,6 +218,7 @@ public class BrokerStatisticsPluginTest extends TestCase{
         assertEquals(1, reply.getLong("size"));
         assertTrue(reply.getJMSTimestamp() > 0);
         assertTrue(reply.getLong("firstMessageTimestamp") > 0);
+        assertTrue(reply.getLong("lastMessageTimestamp") > 0);
         // Assert that we got the brokerInTime for the first message in queue as value of key "firstMessageTimestamp"
         assertTrue(System.currentTimeMillis() >= reply.getLong("firstMessageTimestamp"));
         assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
