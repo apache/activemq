@@ -21,16 +21,20 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
+import java.net.http.HttpRequest;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.BufferingResponseListener;
-import org.eclipse.jetty.client.util.InputStreamContentProvider;
+import org.eclipse.jetty.client.InputStreamRequestContent;
+import org.eclipse.jetty.client.Request;
+import org.eclipse.jetty.client.Result;
+import org.eclipse.jetty.client.BufferingResponseListener;
+import org.eclipse.jetty.client.InputStreamContentProvider;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.io.content.InputStreamContentSource;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -64,6 +68,7 @@ public class RestPersistentTest extends JettyTestSupport {
         final String property1="terminalNumber=lane1";
         final String selector1="terminalNumber='lane1'";
 
+        java.net.http.HttpClient httpClient = java.net.http.HttpClient.newHttpClient();
         HttpClient httpClient = new HttpClient();
         httpClient.start();
 
@@ -79,9 +84,12 @@ public class RestPersistentTest extends JettyTestSupport {
         final CountDownLatch latch = new CountDownLatch(1);
         final StringBuffer buf = new StringBuffer();
         final AtomicInteger status = new AtomicInteger();
+
+        
         httpClient.newRequest(url+"&"+properties)
-            .header("Content-Type","text/xml")
-           .content(new InputStreamContentProvider(new ByteArrayInputStream(message.getBytes("UTF-8"))))
+            .headers(headers -> headers 
+                    .put(HttpHeader.CONTENT_TYPE,"text/xml"))
+           .body(new InputStreamRequestContent(new ByteArrayInputStream(message.getBytes("UTF-8"))))
            .method(HttpMethod.POST).send(new BufferingResponseListener() {
             @Override
             public void onComplete(Result result) {
@@ -101,6 +109,7 @@ public class RestPersistentTest extends JettyTestSupport {
         final CountDownLatch latch = new CountDownLatch(1);
         final StringBuffer buf = new StringBuffer();
         final AtomicInteger status = new AtomicInteger();
+
         Request request = httpClient.newRequest(url)
             .header("accept", "text/xml")
             .header("Content-Type","text/xml");

@@ -28,17 +28,17 @@ import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.WebTransportServerSupport;
-import org.apache.activemq.transport.ws.jetty11.WSServlet;
+import org.apache.activemq.transport.ws.jetty12.WSServlet;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
+import org.eclipse.jetty.ee9.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee9.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee9.servlet.ServletHolder;
+import org.eclipse.jetty.ee9.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,6 +77,7 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
 
         ServletContextHandler contextHandler =
                 new ServletContextHandler(server, "/", ServletContextHandler.SECURITY);
+        // server.setHandler(contextHandler); Future: Jetty 12 EE10 API change
 
         ServletHolder holder = new ServletHolder();
         JettyWebSocketServletContainerInitializer.configure(contextHandler, null);
@@ -96,7 +97,7 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
         contextHandler.addServlet(holder, "/");
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
-
+ 
         server.start();
 
         // Update the Connect To URI with our actual location in case the configured port
@@ -118,7 +119,7 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
         LOG.info("Listening for connections at {}", getConnectURI());
     }
 
-    private Servlet createWSServlet() throws Exception {
+    private WSServlet createWSServlet() throws Exception {
         servlet = new WSServlet();
         servlet.setTransportOptions(transportOptions);
         servlet.setBrokerService(brokerService);

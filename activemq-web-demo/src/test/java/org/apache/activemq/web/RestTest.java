@@ -31,8 +31,8 @@ import javax.management.ObjectName;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.BufferingResponseListener;
+import org.eclipse.jetty.client.Result;
+import org.eclipse.jetty.client.BufferingResponseListener;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;

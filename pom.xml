@@ -70,8 +70,8 @@
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-version>4.0.5</jaxb-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
-    <jetty-version>11.0.24</jetty-version>
-    <jetty-version-range>[11,13)</jetty-version-range>
+    <jetty-version>12.0.15</jetty-version>
+    <jetty-version-range>[12,13)</jetty-version-range>
     <jmdns-version>3.5.12</jmdns-version>
     <tomcat-api-version>9.0.65</tomcat-api-version>
     <jettison-version>1.5.4</jettison-version>
@@ -867,6 +867,14 @@
       <dependency>
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-bom</artifactId>
+        <version>${jetty-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.jetty.ee9</groupId>
+        <artifactId>jetty-ee9-bom</artifactId>
         <version>${jetty-version}</version>
         <type>pom</type>
         <scope>import</scope>

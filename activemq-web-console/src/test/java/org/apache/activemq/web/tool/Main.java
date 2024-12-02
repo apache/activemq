@@ -20,7 +20,7 @@ package org.apache.activemq.web.tool;
 import org.apache.activemq.web.config.JspConfigurer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.ee9.webapp.WebAppContext;
 
 /**
  * A simple bootstrap class for starting Jetty in your IDE using the local web
