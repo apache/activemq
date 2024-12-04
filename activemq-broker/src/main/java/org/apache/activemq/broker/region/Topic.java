@@ -779,6 +779,13 @@ public class Topic extends BaseDestination implements Task {
         // destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();
 
+        if(isAdvancedMessageStatisticsEnabled()) {
+            destinationStatistics.getEnqueuedMessageBrokerInTime().setValue(message.getBrokerInTime());
+            destinationStatistics.getEnqueuedMessageClientID().setValue(context.getClientId());
+            destinationStatistics.getEnqueuedMessageID().setValue(message.getMessageId().toString());
+            destinationStatistics.getEnqueuedMessageTimestamp().setValue(message.getTimestamp());
+        }
+
         if(isAdvancedNetworkStatisticsEnabled() && context != null && context.isNetworkConnection()) {
             destinationStatistics.getNetworkEnqueues().increment();
         }

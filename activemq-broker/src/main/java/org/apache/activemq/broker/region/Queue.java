@@ -1916,6 +1916,14 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             getDestinationStatistics().getDequeues().increment();
             getDestinationStatistics().getMessages().decrement();
 
+            if(isAdvancedMessageStatisticsEnabled()) {
+                getDestinationStatistics().getDequeuedMessageBrokerInTime().setValue(reference.getMessage().getBrokerInTime());
+                getDestinationStatistics().getDequeuedMessageBrokerOutTime().setValue(reference.getMessage().getBrokerOutTime());
+                getDestinationStatistics().getDequeuedMessageClientID().setValue(context.getClientId());
+                getDestinationStatistics().getDequeuedMessageID().setValue(reference.getMessageId().toString());
+                getDestinationStatistics().getDequeuedMessageTimestamp().setValue(reference.getMessage().getTimestamp());
+            }
+
             if(isAdvancedNetworkStatisticsEnabled() && context.getConnection() != null && context.getConnection().isNetworkConnection()) {
                 getDestinationStatistics().getNetworkDequeues().increment();
             }
@@ -1974,6 +1982,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         destinationStatistics.getMessageSize().addSize(msg.getSize());
+
+        if(isAdvancedMessageStatisticsEnabled()) {
+            destinationStatistics.getEnqueuedMessageBrokerInTime().setValue(msg.getBrokerInTime());
+            destinationStatistics.getEnqueuedMessageClientID().setValue(context.getClientId());
+            destinationStatistics.getEnqueuedMessageID().setValue(msg.getMessageId().toString());
+            destinationStatistics.getEnqueuedMessageTimestamp().setValue(msg.getTimestamp());
+        }
 
         if(isAdvancedNetworkStatisticsEnabled() && context.getConnection() != null && context.getConnection().isNetworkConnection()) {
             destinationStatistics.getNetworkEnqueues().increment();

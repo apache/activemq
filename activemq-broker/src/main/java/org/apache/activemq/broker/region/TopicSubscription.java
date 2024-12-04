@@ -453,6 +453,10 @@ public class TopicSubscription extends AbstractSubscription {
                 destination.getDestinationStatistics().getNetworkDequeues().add(count);
             }
         }
+        if(destination.isAdvancedMessageStatisticsEnabled()) {
+            destination.getDestinationStatistics().getDequeuedMessageClientID().setValue(context.getClientId());
+            destination.getDestinationStatistics().getDequeuedMessageID().setValue(ack.getLastMessageId().toString());
+        }
         if (ack.isExpiredAck()) {
             destination.getDestinationStatistics().getExpired().add(count);
         }

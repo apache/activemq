@@ -111,6 +111,7 @@ public abstract class BaseDestination implements Destination {
     private boolean disposed = false;
     private boolean doOptimzeMessageStorage = true;
     private boolean advancedNetworkStatisticsEnabled = false;
+    private boolean advancedMessageStatisticsEnabled = false;
 
     /*
      * percentage of in-flight messages above which optimize message store is disabled
@@ -878,6 +879,16 @@ public abstract class BaseDestination implements Destination {
     @Override
     public void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled) {
         this.advancedNetworkStatisticsEnabled = advancedNetworkStatisticsEnabled;
+    }
+
+    @Override
+    public boolean isAdvancedMessageStatisticsEnabled() {
+        return this.advancedMessageStatisticsEnabled;
+    }
+
+    @Override
+    public void setAdvancedMessageStatisticsEnabled(boolean advancedMessageStatisticsEnabled) {
+        this.advancedMessageStatisticsEnabled = advancedMessageStatisticsEnabled;
     }
 
     @Override

@@ -28,11 +28,11 @@
     <destinationPolicy>
       <policyMap>
         <policyEntries>
-          <policyEntry queue="exclude.>" advancedNetworkStatisticsEnabled="true"/>
-          <policyEntry queue="include.>" advancedNetworkStatisticsEnabled="true"/> 
+          <policyEntry queue="exclude.>" advancedMessageStatisticsEnabled="true" advancedNetworkStatisticsEnabled="true"/>
+          <policyEntry queue="include.>" advancedMessageStatisticsEnabled="true" advancedNetworkStatisticsEnabled="true"/> 
           <policyEntry topic="ActiveMQ.Advisory.>" />
-          <policyEntry topic="exclude.>" advancedNetworkStatisticsEnabled="true"/>
-          <policyEntry topic="include.>" advancedNetworkStatisticsEnabled="true"/> 
+          <policyEntry topic="exclude.>" advancedMessageStatisticsEnabled="true" advancedNetworkStatisticsEnabled="true"/>
+          <policyEntry topic="include.>" advancedMessageStatisticsEnabled="true" advancedNetworkStatisticsEnabled="true"/> 
         </policyEntries>
       </policyMap>
     </destinationPolicy>
@@ -43,17 +43,19 @@
          conduitSubscriptions = "true"
          decreaseNetworkConsumerPriority = "false"
          name="networkConnector">
-      	<dynamicallyIncludedDestinations>
-      		<queue physicalName="include.test.foo"/>
-      		<topic physicalName="include.test.bar"/>
-      	</dynamicallyIncludedDestinations>
-      	<excludedDestinations>
-      		<queue physicalName="exclude.test.foo"/>
-      		<topic physicalName="exclude.test.bar"/>
-      	</excludedDestinations>
+         <dynamicallyIncludedDestinations>
+            <queue physicalName="include.test.foo"/>
+            <topic physicalName="include.test.durable"/>
+            <topic physicalName="include.test.nondurable"/>
+        </dynamicallyIncludedDestinations>
+        <excludedDestinations>
+            <queue physicalName="exclude.test.foo"/>
+            <topic physicalName="exclude.test.durable"/>
+            <topic physicalName="exclude.test.nondurable"/>
+        </excludedDestinations>
       </networkConnector>
     </networkConnectors>
-    
+
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61616"/>
     </transportConnectors>

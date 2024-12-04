@@ -28,11 +28,11 @@
     <destinationPolicy>
       <policyMap>
         <policyEntries>
-          <policyEntry queue="exclude.>" advancedNetworkStatisticsEnabled="true"/>
-          <policyEntry queue="include.>" advancedNetworkStatisticsEnabled="true"/> 
+          <policyEntry queue="exclude.>" advancedMessageStatisticsEnabled="true" advancedNetworkStatisticsEnabled="true"/>
+          <policyEntry queue="include.>" advancedMessageStatisticsEnabled="true" advancedNetworkStatisticsEnabled="true"/> 
           <policyEntry topic="ActiveMQ.Advisory.>" />
-          <policyEntry topic="exclude.>" advancedNetworkStatisticsEnabled="true"/>
-          <policyEntry topic="include.>" advancedNetworkStatisticsEnabled="true"/> 
+          <policyEntry topic="exclude.>" advancedMessageStatisticsEnabled="true" advancedNetworkStatisticsEnabled="true"/>
+          <policyEntry topic="include.>" advancedMessageStatisticsEnabled="true" advancedNetworkStatisticsEnabled="true"/> 
         </policyEntries>
       </policyMap>
     </destinationPolicy>

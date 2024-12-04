@@ -620,4 +620,59 @@ public class DestinationView implements DestinationViewMBean {
         return destination.getDestinationStatistics().getNetworkDequeues().getCount();
     }
 
+    @Override
+    public boolean isAdvancedMessageStatisticsEnabled() {
+        return destination.isAdvancedMessageStatisticsEnabled();
+    }
+
+    @Override
+    public void setAdvancedMessageStatisticsEnabled(boolean advancedMessageStatisticsEnabled) {
+        destination.setAdvancedMessageStatisticsEnabled(advancedMessageStatisticsEnabled);
+    }
+
+    @Override
+    public long getEnqueuedMessageBrokerInTime() {
+        return destination.getDestinationStatistics().getEnqueuedMessageBrokerInTime().getValue();
+    }
+
+    @Override
+    public String getEnqueuedMessageClientId() {
+        return destination.getDestinationStatistics().getEnqueuedMessageClientID().getValue();
+    }
+
+    @Override
+    public String getEnqueuedMessageId() {
+        return destination.getDestinationStatistics().getEnqueuedMessageID().getValue();
+    }
+
+    @Override
+    public long getEnqueuedMessageTimestamp() {
+        return destination.getDestinationStatistics().getEnqueuedMessageTimestamp().getValue();
+    }
+
+    @Override
+    public long getDequeuedMessageBrokerInTime() {
+        return destination.getDestinationStatistics().getDequeuedMessageBrokerInTime().getValue();
+    }
+
+    @Override
+    public long getDequeuedMessageBrokerOutTime() {
+        return destination.getDestinationStatistics().getDequeuedMessageBrokerOutTime().getValue();
+    }
+
+    @Override
+    public String getDequeuedMessageClientId() {
+        return destination.getDestinationStatistics().getDequeuedMessageClientID().getValue();
+    }
+
+    @Override
+    public String getDequeuedMessageId() {
+        return destination.getDestinationStatistics().getDequeuedMessageID().getValue();
+    }
+
+    @Override
+    public long getDequeuedMessageTimestamp() {
+        return destination.getDestinationStatistics().getDequeuedMessageTimestamp().getValue();
+    }
+
 }

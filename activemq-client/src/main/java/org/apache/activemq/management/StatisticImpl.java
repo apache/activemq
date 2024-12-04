@@ -25,11 +25,11 @@ public class StatisticImpl implements Statistic, Resettable {
 
     protected boolean enabled;
 
-    private String name;
-    private String unit;
-    private String description;
-    private long startTime;
-    private long lastSampleTime;
+    protected String name;
+    protected String unit;
+    protected String description;
+    protected long startTime;
+    protected long lastSampleTime;
     private boolean doReset = true;
 
     public StatisticImpl(String name, String unit, String description) {
@@ -38,6 +38,14 @@ public class StatisticImpl implements Statistic, Resettable {
         this.description = description;
         this.startTime = System.currentTimeMillis();
         this.lastSampleTime = this.startTime;
+    }
+
+    protected StatisticImpl(String name, String unit, String description, long startTime, long lastSampleTime) {
+        this.name = name;
+        this.unit = unit;
+        this.description = description;
+        this.startTime = startTime;
+        this.lastSampleTime = lastSampleTime;
     }
 
     public synchronized void reset() {
