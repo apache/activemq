@@ -96,7 +96,9 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     }
 
     @Override
-    public boolean isPreserveDeliveryMode() { return this.preserveDeliveryMode; }
+    public boolean isPreserveDeliveryMode() {
+        return this.preserveDeliveryMode;
+    }
 
     @Override
     public void setPreserveDeliveryMode(boolean preserveDeliveryMode) {
