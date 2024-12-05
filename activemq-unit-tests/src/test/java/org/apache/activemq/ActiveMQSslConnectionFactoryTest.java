@@ -128,7 +128,6 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         cf.setTrustStore("server.keystore");
         cf.setTrustStorePassword("password");
         connection = (ActiveMQConnection)cf.createConnection();
-        LOG.info("Created client connection");
         assertNotNull(connection);
         connection.start();
         connection.stop();
