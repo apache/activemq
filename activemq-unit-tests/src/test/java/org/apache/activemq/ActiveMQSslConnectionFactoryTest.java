@@ -72,6 +72,20 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         brokerStop();
     }
 
+    public void testCreateTcpConnectionWithSocketParameters() throws Exception {
+        // Control case: check that the factory can create an ordinary (non-ssl) connection.
+        String tcpUri = "tcp://localhost:61610?socket.OOBInline=true";
+        broker = createBroker(tcpUri);
+
+        // This should create the connection.
+        ActiveMQSslConnectionFactory cf = getFactory(tcpUri);
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertNotNull(connection);
+        connection.start();
+        connection.stop();
+        brokerStop();
+    }
+
     public void testCreateFailoverTcpConnectionUsingKnownPort() throws Exception {
         // Control case: check that the factory can create an ordinary (non-ssl) connection.
         broker = createBroker("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
@@ -88,6 +102,24 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
     public void testCreateSslConnection() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
         String sslUri = "ssl://localhost:61611";
+        broker = createSslBroker(sslUri);
+        assertNotNull(broker);
+
+        // This should create the connection.
+        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        cf.setTrustStore("server.keystore");
+        cf.setTrustStorePassword("password");
+        connection = (ActiveMQConnection)cf.createConnection();
+        LOG.info("Created client connection");
+        assertNotNull(connection);
+        connection.start();
+        connection.stop();
+        brokerStop();
+    }
+
+    public void testCreateSslConnectionWithSocketParameters() throws Exception {
+        // Create SSL/TLS connection with trusted cert from truststore.
+        String sslUri = "ssl://localhost:61611?socket.enabledProtocols=TLSv1.3";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
