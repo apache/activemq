@@ -74,7 +74,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testCreateTcpConnectionWithSocketParameters() throws Exception {
         // Control case: check that the factory can create an ordinary (non-ssl) connection.
-        String tcpUri = "tcp://localhost:61610?socket.OOBInline=true";
+        String tcpUri = "tcp://localhost:61610?socket.OOBInline=true&socket.keepAlive=true&tcpNoDelay=true";
         broker = createBroker(tcpUri);
 
         // This should create the connection.
@@ -119,7 +119,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testCreateSslConnectionWithSocketParameters() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-        String sslUri = "ssl://localhost:61611?socket.enabledProtocols=TLSv1.3";
+        String sslUri = "ssl://localhost:61611?socket.enabledProtocols=TLSv1.3&socket.enableSessionCreation=true&socket.needClientAuth=true";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
