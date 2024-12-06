@@ -20,19 +20,30 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.Socket;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslBrokerService;
+import org.apache.activemq.transport.MutexTransport;
+import org.apache.activemq.transport.InactivityMonitor;
+import org.apache.activemq.transport.ResponseCorrelator;
+import org.apache.activemq.transport.tcp.SslTransport;
+import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.WireFormatNegotiator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import static org.junit.Assert.assertArrayEquals;
 
 public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory.getLog(ActiveMQSslConnectionFactoryTest.class);
@@ -81,6 +92,21 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         ActiveMQSslConnectionFactory cf = getFactory(tcpUri);
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
+
+        ResponseCorrelator responseCorrelator = (ResponseCorrelator) connection.getTransport();
+        MutexTransport mutexTransport = (MutexTransport) responseCorrelator.getNext();
+        WireFormatNegotiator wireFormatNegotiator = (WireFormatNegotiator) mutexTransport.getNext();
+        InactivityMonitor inactivityMonitor = (InactivityMonitor) wireFormatNegotiator.getNext();
+        TcpTransport tcpTransport = (TcpTransport) inactivityMonitor.getNext();
+        Class<? extends TcpTransport> transportClass = tcpTransport.getClass();
+        Field socket = transportClass.getDeclaredField("socket");
+        socket.setAccessible(true);
+        Socket socketObject = (Socket) socket.get(tcpTransport);
+
+        assertTrue(socketObject.getOOBInline());
+        assertTrue(socketObject.getKeepAlive());
+        assertTrue(socketObject.getTcpNoDelay());
+
         connection.start();
         connection.stop();
         brokerStop();
@@ -129,6 +155,23 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         cf.setTrustStorePassword("password");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
+
+        ResponseCorrelator responseCorrelator = (ResponseCorrelator) connection.getTransport();
+        MutexTransport mutexTransport = (MutexTransport) responseCorrelator.getNext();
+        WireFormatNegotiator wireFormatNegotiator = (WireFormatNegotiator) mutexTransport.getNext();
+        InactivityMonitor inactivityMonitor = (InactivityMonitor) wireFormatNegotiator.getNext();
+        SslTransport sslTransport = (SslTransport) inactivityMonitor.getNext();
+        Class<? extends SslTransport> transportClass = sslTransport.getClass();
+        Class<?> tcpTransportClass = transportClass.getSuperclass();
+        Field socket = tcpTransportClass.getDeclaredField("socket");
+        socket.setAccessible(true);
+        SSLSocket socketObject = (SSLSocket) socket.get(sslTransport);
+
+        String[] expectedProtocols = {"TLSv1.3"};
+        assertArrayEquals(expectedProtocols, socketObject.getEnabledProtocols());
+        assertTrue(socketObject.getEnableSessionCreation());
+        assertTrue(socketObject.getNeedClientAuth());
+
         connection.start();
         connection.stop();
         brokerStop();
