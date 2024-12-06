@@ -39,7 +39,9 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
     private static final Logger LOG = LoggerFactory.getLogger(StompWSConnection.class);
 
     private Session connection;
+    private Throwable connectionError;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
+    private final CountDownLatch errorLatch = new CountDownLatch(1);
 
     private final BlockingQueue<String> prefetch = new LinkedBlockingDeque<String>();
     private final StompWireFormat wireFormat = new StompWireFormat();
@@ -49,7 +51,7 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
 
     @Override
     public boolean isConnected() {
-        return connection != null ? connection.isOpen() : false;
+        return connection != null && connection.isOpen();
     }
 
     public void close() {
@@ -62,6 +64,9 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
         return connection;
     }
 
+    public Throwable getConnectionError() {
+        return connectionError;
+    }
     //---- Send methods ------------------------------------------------------//
 
     public synchronized void sendRawFrame(String rawFrame) throws Exception {
@@ -106,6 +111,10 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
         return connectLatch.await(time, unit);
     }
 
+    public boolean awaitError(long time, TimeUnit unit) throws InterruptedException {
+        return errorLatch.await(time, unit);
+    }
+
     //----- Property Accessors -----------------------------------------------//
 
     public int getCloseCode() {
@@ -146,6 +155,13 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
         this.connection = session;
         this.connection.setIdleTimeout(Duration.ZERO);
         this.connectLatch.countDown();
+    }
+
+    @Override
+    public void onWebSocketError(Throwable cause) {
+        this.connection = null;
+        this.connectionError = cause;
+        this.errorLatch.countDown();
     }
 
     //----- Internal implementation ------------------------------------------//

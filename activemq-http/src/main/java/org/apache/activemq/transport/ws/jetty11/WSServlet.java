@@ -26,18 +26,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.tcp.ExceededMaximumConnectionsException;
 import org.apache.activemq.transport.util.HttpTransportUtils;
 import org.apache.activemq.transport.ws.WSTransportProxy;
+import org.apache.activemq.util.ServiceListener;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
 import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
@@ -48,7 +53,7 @@ import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 /**
  * Handle connection upgrade requests and creates web sockets
  */
-public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAware {
+public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAware, ServiceListener {
 
     private static final long serialVersionUID = -4716657876092884139L;
 
@@ -59,6 +64,10 @@ public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAwa
 
     private Map<String, Object> transportOptions;
     private BrokerService brokerService;
+
+    private int maximumConnections = Integer.MAX_VALUE;
+    protected final AtomicLong maximumConnectionsExceededCount = new AtomicLong();
+    private final AtomicInteger currentTransportCount = new AtomicInteger();
 
     private enum Protocol {
         MQTT, STOMP, UNKNOWN
@@ -93,6 +102,23 @@ public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAwa
         factory.setCreator(new JettyWebSocketCreator() {
             @Override
             public Object createWebSocket(JettyServerUpgradeRequest req, JettyServerUpgradeResponse resp) {
+                int currentCount;
+                do {
+                    currentCount = currentTransportCount.get();
+                    if (currentCount >= maximumConnections) {
+                        maximumConnectionsExceededCount.incrementAndGet();
+                        listener.onAcceptError(new ExceededMaximumConnectionsException(
+                                "Exceeded the maximum number of allowed client connections. See the '" +
+                                        "maximumConnections' property on the WS transport configuration URI " +
+                                        "in the ActiveMQ configuration file (e.g., activemq.xml)"));
+                        return null;
+                    }
+
+                    //Increment this value before configuring the transport
+                    //This is necessary because some of the transport servers must read from the
+                    //socket during configureTransport() so we want to make sure this value is
+                    //accurate as the transport server could pause here waiting for data to be sent from a client
+                } while(!currentTransportCount.compareAndSet(currentCount, currentCount + 1));
                 WebSocketListener socket;
                 Protocol requestedProtocol = Protocol.UNKNOWN;
 
@@ -114,6 +140,7 @@ public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAwa
                         socket = new MQTTSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
                         ((MQTTSocket) socket).setTransportOptions(new HashMap<>(transportOptions));
                         ((MQTTSocket) socket).setPeerCertificates(req.getCertificates());
+                        ((MQTTSocket) socket).addServiceListener(WSServlet.this);
                         resp.setAcceptedSubProtocol(getAcceptedSubProtocol(mqttProtocols, req.getSubProtocols(), "mqtt"));
                         break;
                     case UNKNOWN:
@@ -124,11 +151,13 @@ public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAwa
                     case STOMP:
                         socket = new StompSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
                         ((StompSocket) socket).setPeerCertificates(req.getCertificates());
+                        ((StompSocket) socket).addServiceListener(WSServlet.this);
                         resp.setAcceptedSubProtocol(getAcceptedSubProtocol(stompProtocols, req.getSubProtocols(), "stomp"));
                         break;
                     default:
                         socket = null;
                         listener.onAcceptError(new IOException("Unknown protocol requested"));
+                        currentTransportCount.decrementAndGet();
                         break;
                 }
 
@@ -160,6 +189,7 @@ public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAwa
                 proxy = new WSTransportProxy(remoteAddress, transport);
                 proxy.setPeerCertificates(request.getCertificates());
                 proxy.setTransportOptions(new HashMap<>(transportOptions));
+                proxy.addServiceListener(this);
 
                 response.setAcceptedSubProtocol(proxy.getSubProtocol());
             } catch (Exception e) {
@@ -216,5 +246,43 @@ public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAwa
     @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
+    }
+
+
+    @Override
+    public void started(Service service) {
+    }
+
+    @Override
+    public void stopped(Service service) {
+        this.currentTransportCount.decrementAndGet();
+    }
+
+    /**
+     * @return the maximumConnections
+     */
+    public int getMaximumConnections() {
+        return maximumConnections;
+    }
+
+
+    public long getMaxConnectionExceededCount() {
+        return this.maximumConnectionsExceededCount.get();
+    }
+
+    public void resetStatistics() {
+        this.maximumConnectionsExceededCount.set(0L);
+    }
+
+    /**
+     * @param maximumConnections
+     *            the maximumConnections to set
+     */
+    public void setMaximumConnections(int maximumConnections) {
+        this.maximumConnections = maximumConnections;
+    }
+
+    public AtomicInteger getCurrentTransportCount() {
+        return currentTransportCount;
     }
 }

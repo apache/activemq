@@ -55,7 +55,7 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
     }
 
     public String getConnectorScheme() {
-        return connectorScheme;
+        return connectorScheme.contains("ws") ? connectorScheme.replace("amqp+", "") : connectorScheme;
     }
 
     public boolean isUseSSL() {

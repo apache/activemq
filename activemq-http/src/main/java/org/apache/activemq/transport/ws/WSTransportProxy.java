@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * A proxy class that manages sending WebSocket events to the wrapped protocol level
  * WebSocket Transport.
  */
-public final class WSTransportProxy extends TransportSupport implements Transport, WebSocketListener, BrokerServiceAware, WSTransportSink {
+public final class WSTransportProxy extends AbstractWsSocket implements Transport, WebSocketListener, BrokerServiceAware, WSTransportSink {
 
     private static final Logger LOG = LoggerFactory.getLogger(WSTransportProxy.class);
 
@@ -201,7 +201,7 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
     }
 
     @Override
-    public void onWebSocketClose(int statusCode, String reason) {
+    public void doWebSocketClose(int statusCode, String reason) {
         try {
             if (protocolLock.tryLock() || protocolLock.tryLock(ORDERLY_CLOSE_TIMEOUT, TimeUnit.SECONDS)) {
                 LOG.debug("WebSocket closed: code[{}] message[{}]", statusCode, reason);
