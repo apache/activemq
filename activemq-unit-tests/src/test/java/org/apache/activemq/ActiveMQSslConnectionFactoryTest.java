@@ -20,19 +20,28 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.Socket;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslBrokerService;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFilter;
+import org.apache.activemq.transport.tcp.SslTransport;
+import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import static org.junit.Assert.assertArrayEquals;
 
 public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory.getLog(ActiveMQSslConnectionFactoryTest.class);
@@ -72,6 +81,34 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         brokerStop();
     }
 
+    public void testCreateTcpConnectionWithSocketParameters() throws Exception {
+        // Control case: check that the factory can create an ordinary (non-ssl) connection.
+        String tcpUri = "tcp://localhost:61610?socket.OOBInline=true&socket.keepAlive=true&tcpNoDelay=true";
+        broker = createBroker(tcpUri);
+
+        // This should create the connection.
+        ActiveMQSslConnectionFactory cf = getFactory(tcpUri);
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertNotNull(connection);
+
+        Transport transport = connection.getTransport();
+        while(!(transport instanceof TcpTransport)) {
+            transport = ((TransportFilter) transport).getNext();
+        }
+        Class<? extends Transport> transportClass = transport.getClass();
+        Field socket = transportClass.getDeclaredField("socket");
+        socket.setAccessible(true);
+        Socket socketObject = (Socket) socket.get(transport);
+
+        assertTrue(socketObject.getOOBInline());
+        assertTrue(socketObject.getKeepAlive());
+        assertTrue(socketObject.getTcpNoDelay());
+
+        connection.start();
+        connection.stop();
+        brokerStop();
+    }
+
     public void testCreateFailoverTcpConnectionUsingKnownPort() throws Exception {
         // Control case: check that the factory can create an ordinary (non-ssl) connection.
         broker = createBroker("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
@@ -98,6 +135,39 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         connection = (ActiveMQConnection)cf.createConnection();
         LOG.info("Created client connection");
         assertNotNull(connection);
+        connection.start();
+        connection.stop();
+        brokerStop();
+    }
+
+    public void testCreateSslConnectionWithSocketParameters() throws Exception {
+        // Create SSL/TLS connection with trusted cert from truststore.
+        String sslUri = "ssl://localhost:61611?socket.enabledProtocols=TLSv1.3&socket.enableSessionCreation=true&socket.needClientAuth=true";
+        broker = createSslBroker(sslUri);
+        assertNotNull(broker);
+
+        // This should create the connection.
+        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        cf.setTrustStore("server.keystore");
+        cf.setTrustStorePassword("password");
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertNotNull(connection);
+
+        Transport transport = connection.getTransport();
+        while(!(transport instanceof SslTransport)) {
+            transport = ((TransportFilter) transport).getNext();
+        }
+        Class<? extends Transport> transportClass = transport.getClass();
+        Class<?> tcpTransportClass = transportClass.getSuperclass();
+        Field socket = tcpTransportClass.getDeclaredField("socket");
+        socket.setAccessible(true);
+        SSLSocket socketObject = (SSLSocket) socket.get(transport);
+
+        String[] expectedProtocols = {"TLSv1.3"};
+        assertArrayEquals(expectedProtocols, socketObject.getEnabledProtocols());
+        assertTrue(socketObject.getEnableSessionCreation());
+        assertTrue(socketObject.getNeedClientAuth());
+
         connection.start();
         connection.stop();
         brokerStop();
