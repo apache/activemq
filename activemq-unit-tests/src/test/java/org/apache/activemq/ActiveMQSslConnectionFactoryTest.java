@@ -91,18 +91,10 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
 
-        Transport transport = connection.getTransport();
-        while(!(transport instanceof TcpTransport)) {
-            transport = ((TransportFilter) transport).getNext();
-        }
-        Class<? extends Transport> transportClass = transport.getClass();
-        Field socket = transportClass.getDeclaredField("socket");
-        socket.setAccessible(true);
-        Socket socketObject = (Socket) socket.get(transport);
-
-        assertTrue(socketObject.getOOBInline());
-        assertTrue(socketObject.getKeepAlive());
-        assertTrue(socketObject.getTcpNoDelay());
+        Socket socket = getSocketFromConnection(connection);
+        assertTrue(socket.getOOBInline());
+        assertTrue(socket.getKeepAlive());
+        assertTrue(socket.getTcpNoDelay());
 
         connection.start();
         connection.stop();
@@ -153,20 +145,11 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
 
-        Transport transport = connection.getTransport();
-        while(!(transport instanceof SslTransport)) {
-            transport = ((TransportFilter) transport).getNext();
-        }
-        Class<? extends Transport> transportClass = transport.getClass();
-        Class<?> tcpTransportClass = transportClass.getSuperclass();
-        Field socket = tcpTransportClass.getDeclaredField("socket");
-        socket.setAccessible(true);
-        SSLSocket socketObject = (SSLSocket) socket.get(transport);
-
+        SSLSocket socket = (SSLSocket) getSocketFromConnection(connection);
         String[] expectedProtocols = {"TLSv1.3"};
-        assertArrayEquals(expectedProtocols, socketObject.getEnabledProtocols());
-        assertTrue(socketObject.getEnableSessionCreation());
-        assertTrue(socketObject.getNeedClientAuth());
+        assertArrayEquals(expectedProtocols, socket.getEnabledProtocols());
+        assertTrue(socket.getEnableSessionCreation());
+        assertTrue(socket.getNeedClientAuth());
 
         connection.start();
         connection.stop();
@@ -439,6 +422,20 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
             cause = cause.getCause();
         }
         return rootCause;
+    }
+
+    private Socket getSocketFromConnection(ActiveMQConnection connection) throws Exception {
+        Transport transport = connection.getTransport();
+        while(!(transport instanceof TcpTransport)) {
+            transport = ((TransportFilter) transport).getNext();
+        }
+        Class<?> transportClass = transport.getClass();
+        if (transport instanceof SslTransport) {
+            transportClass = transportClass.getSuperclass();
+        }
+        Field socket = transportClass.getDeclaredField("socket");
+        socket.setAccessible(true);
+        return (Socket) socket.get(transport);
     }
 
 }
