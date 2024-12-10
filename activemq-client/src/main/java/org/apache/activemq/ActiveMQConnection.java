@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import jakarta.jms.CompletionListener;
 import jakarta.jms.Connection;
 import jakarta.jms.ConnectionConsumer;
 import jakarta.jms.ConnectionMetaData;
@@ -1431,6 +1432,68 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         } else {
                             onComplete.onSuccess();
                         }
+                    }
+                });
+            } catch (IOException e) {
+                throw JMSExceptionSupport.create(e);
+            }
+        }
+    }
+
+    /**
+     * Send a packet through a Connection - for internal use only
+     *
+     * @param command
+     *
+     * @throws JMSException
+     */
+    public void syncSendPacket(final Command command, final CompletionListener completionListener) throws JMSException {
+        if(completionListener==null) {
+            syncSendPacket(command);
+        } else {
+            if (isClosed()) {
+                throw new ConnectionClosedException();
+            }
+            try {
+                this.transport.asyncRequest(command, resp -> {
+                    Response response;
+                    Throwable exception = null;
+                    try {
+                        response = resp.getResult();
+                        if (response.isException()) {
+                            ExceptionResponse er = (ExceptionResponse)response;
+                            exception = er.getException();
+                        }
+                    } catch (Exception e) {
+                        exception = e;
+                    }
+                    if (exception != null) {
+                        if ( exception instanceof JMSException) {
+                            completionListener.onException((jakarta.jms.Message) command, (JMSException) exception);
+                        } else {
+                            if (isClosed() || closing.get()) {
+                                LOG.debug("Received an exception but connection is closing");
+                            }
+                            JMSException jmsEx = null;
+                            try {
+                                jmsEx = JMSExceptionSupport.create(exception);
+                            } catch(Throwable e) {
+                                LOG.error("Caught an exception trying to create a JMSException for " +exception,e);
+                            }
+                            // dispose of transport for security exceptions on connection initiation
+                            if (exception instanceof SecurityException && command instanceof ConnectionInfo){
+                                try {
+                                    forceCloseOnSecurityException(exception);
+                                } catch (Throwable t) {
+                                    // We throw the original error from the ExceptionResponse instead.
+                                }
+                            }
+                            if (jmsEx != null) {
+                                completionListener.onException((jakarta.jms.Message) command, jmsEx);
+                            }
+                        }
+                    } else {
+                        completionListener.onCompletion((jakarta.jms.Message) command);
                     }
                 });
             } catch (IOException e) {
