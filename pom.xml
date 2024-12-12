@@ -50,7 +50,7 @@
     <commons-beanutils-version>1.9.4</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
     <commons-daemon-version>1.4.0</commons-daemon-version>
-    <commons-dbcp2-version>2.12.0</commons-dbcp2-version>
+    <commons-dbcp2-version>2.13.0</commons-dbcp2-version>
     <commons-io-version>2.17.0</commons-io-version>
     <commons-lang-version>3.14.0</commons-lang-version>
     <commons-logging-version>1.3.4</commons-logging-version>
