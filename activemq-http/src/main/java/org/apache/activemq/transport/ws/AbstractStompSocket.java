@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Base implementation of a STOMP based WebSocket handler.
  */
-public abstract class AbstractStompSocket extends TransportSupport implements StompTransport {
+public abstract class AbstractStompSocket extends AbstractWsSocket implements StompTransport {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractStompSocket.class);
 
