@@ -51,6 +51,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
+import org.apache.activemq.management.MessageFlowStats;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.NoLocalSubscriptionAware;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -778,6 +779,11 @@ public class Topic extends BaseDestination implements Task {
         // misleading metrics.
         // destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();
+
+        final var tmpMessageFlowStats = destinationStatistics.getMessageFlowStats();
+        if(tmpMessageFlowStats != null) {
+            tmpMessageFlowStats.enqueueStats(context.getClientId(), message.getMessageId().toString(), message.getTimestamp(), message.getBrokerInTime());
+        }
 
         if(isAdvancedNetworkStatisticsEnabled() && context != null && context.isNetworkConnection()) {
             destinationStatistics.getNetworkEnqueues().increment();

@@ -493,4 +493,37 @@ public interface DestinationViewMBean {
 
     @MBeanInfo("Number of messages acknowledged from the destination via network connection")
     long getNetworkDequeues();
+   
+    @MBeanInfo("Query Advanced Message Statistics flag")
+    boolean isAdvancedMessageStatisticsEnabled();
+
+    @MBeanInfo("Toggle Advanced Message Statistics flag")
+    void setAdvancedMessageStatisticsEnabled(boolean advancedMessageStatisticsEnabled);
+
+    @MBeanInfo("Broker in time (ms) of last enqueued message to the destination")
+    long getEnqueuedMessageBrokerInTime();
+
+    @MBeanInfo("ClientID of last enqueued message to the destination")
+    String getEnqueuedMessageClientId();
+
+    @MBeanInfo("MessageID of last enqueued message to the destination")
+    String getEnqueuedMessageId();
+
+    @MBeanInfo("Message timestamp in (ms) of last enqueued message to the destination")
+    long getEnqueuedMessageTimestamp();
+
+    @MBeanInfo("Broker in time (ms) of last dequeued message to the destination")
+    long getDequeuedMessageBrokerInTime();
+
+    @MBeanInfo("Broker out time (ms) of last dequeued message to the destination")
+    long getDequeuedMessageBrokerOutTime();
+
+    @MBeanInfo("ClientID of last dequeued message to the destination")
+    String getDequeuedMessageClientId();
+
+    @MBeanInfo("MessageID of last dequeued message to the destination")
+    String getDequeuedMessageId();
+
+    @MBeanInfo("Message timestamp in (ms) of last dequeued message to the destination")
+    long getDequeuedMessageTimestamp();
 }

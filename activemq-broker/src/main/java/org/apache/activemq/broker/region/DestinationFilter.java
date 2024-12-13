@@ -419,6 +419,16 @@ public class DestinationFilter implements Destination {
         next.setAdvancedNetworkStatisticsEnabled(advancedNetworkStatisticsEnabled);
     }
 
+    @Override
+    public boolean isAdvancedMessageStatisticsEnabled() {
+        return next.isAdvancedMessageStatisticsEnabled();
+    }
+
+    @Override
+    public void setAdvancedMessageStatisticsEnabled(boolean advancedMessageStatisticsEnabled) {
+        next.setAdvancedMessageStatisticsEnabled(advancedMessageStatisticsEnabled);
+    }
+
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
         if (next instanceof DestinationFilter) {
             DestinationFilter filter = (DestinationFilter) next;
