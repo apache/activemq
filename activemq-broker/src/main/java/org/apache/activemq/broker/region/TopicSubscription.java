@@ -25,6 +25,7 @@ import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.policy.MessageEvictionStrategy;
 import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
 import org.apache.activemq.command.*;
+import org.apache.activemq.management.MessageFlowStats;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.transport.TransmitCallback;
@@ -452,6 +453,11 @@ public class TopicSubscription extends AbstractSubscription {
             if(destination.isAdvancedNetworkStatisticsEnabled() && getContext() != null && getContext().isNetworkConnection()) {
                 destination.getDestinationStatistics().getNetworkDequeues().add(count);
             }
+        }
+
+        final var tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        if(tmpMessageFlowStats != null) {
+            tmpMessageFlowStats.dequeueStats(context.getClientId(), ack.getLastMessageId().toString());
         }
         if (ack.isExpiredAck()) {
             destination.getDestinationStatistics().getExpired().add(count);

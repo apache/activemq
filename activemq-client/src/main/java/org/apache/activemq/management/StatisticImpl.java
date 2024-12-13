@@ -15,22 +15,19 @@
  * limitations under the License.
  */
 package org.apache.activemq.management;
-
 /**
- * Base class for a Statistic implementation
- * 
- * 
+ * A thread-safe class for a Statistic implementation
  */
 public class StatisticImpl implements Statistic, Resettable {
 
-    protected boolean enabled;
+    protected volatile boolean enabled;
 
-    private String name;
-    private String unit;
-    private String description;
-    private long startTime;
-    private long lastSampleTime;
-    private boolean doReset = true;
+    protected final String name;
+    protected final String unit;
+    protected final String description;
+    protected volatile long startTime;
+    protected volatile long lastSampleTime;
+    private volatile boolean doReset = true;
 
     public StatisticImpl(String name, String unit, String description) {
         this.name = name;
@@ -38,6 +35,14 @@ public class StatisticImpl implements Statistic, Resettable {
         this.description = description;
         this.startTime = System.currentTimeMillis();
         this.lastSampleTime = this.startTime;
+    }
+
+    protected StatisticImpl(String name, String unit, String description, long startTime, long lastSampleTime) {
+        this.name = name;
+        this.unit = unit;
+        this.description = description;
+        this.startTime = startTime;
+        this.lastSampleTime = lastSampleTime;
     }
 
     public synchronized void reset() {
@@ -51,7 +56,8 @@ public class StatisticImpl implements Statistic, Resettable {
         this.lastSampleTime = System.currentTimeMillis();
     }
 
-    public synchronized String toString() {
+    public String toString() {
+        // NOTE: Do not double-lock here as appendFileDescription performs the lock
         StringBuffer buffer = new StringBuffer();
         buffer.append(name);
         buffer.append("{");
@@ -83,31 +89,30 @@ public class StatisticImpl implements Statistic, Resettable {
     /**
      * @return the enabled
      */
-    public boolean isEnabled() {
+    public synchronized boolean isEnabled() {
         return this.enabled;
     }
 
     /**
      * @param enabled the enabled to set
      */
-    public void setEnabled(boolean enabled) {
+    public synchronized void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-    
+
     /**
      * @return the doReset
      */
-    public boolean isDoReset() {
+    public synchronized boolean isDoReset() {
         return this.doReset;
     }
 
     /**
      * @param doReset the doReset to set
      */
-    public void setDoReset(boolean doReset) {
+    public synchronized void setDoReset(boolean doReset) {
         this.doReset = doReset;
     }
-
 
     protected synchronized void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" unit: ");

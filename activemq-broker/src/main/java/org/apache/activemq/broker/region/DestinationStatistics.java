@@ -14,41 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.broker.region;
 
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.PollCountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.management.*;
 
 /**
- * The J2EE Statistics for the a Destination.
- *
- *
+ * The Statistics for a Destination.
  */
 public class DestinationStatistics extends StatsImpl {
 
-    protected CountStatisticImpl enqueues;
-    protected CountStatisticImpl dequeues;
-    protected CountStatisticImpl forwards;
-    protected CountStatisticImpl consumers;
-    protected CountStatisticImpl producers;
-    protected CountStatisticImpl messages;
-    protected PollCountStatisticImpl messagesCached;
-    protected CountStatisticImpl dispatched;
-    protected CountStatisticImpl duplicateFromStore;
-    protected CountStatisticImpl inflight;
-    protected CountStatisticImpl expired;
-    protected TimeStatisticImpl processTime;
-    protected CountStatisticImpl blockedSends;
-    protected TimeStatisticImpl blockedTime;
-    protected SizeStatisticImpl messageSize;
-    protected CountStatisticImpl maxUncommittedExceededCount;
+    private final CountStatisticImpl enqueues;
+    private final CountStatisticImpl dequeues;
+    private final CountStatisticImpl forwards;
+    private final CountStatisticImpl consumers;
+    private final CountStatisticImpl producers;
+    private final CountStatisticImpl messages;
+    private final PollCountStatisticImpl messagesCached;
+    private final CountStatisticImpl dispatched;
+    private final CountStatisticImpl duplicateFromStore;
+    private final CountStatisticImpl inflight;
+    private final CountStatisticImpl expired;
+    private final TimeStatisticImpl processTime;
+    private final CountStatisticImpl blockedSends;
+    private final TimeStatisticImpl blockedTime;
+    private final SizeStatisticImpl messageSize;
+    private final CountStatisticImpl maxUncommittedExceededCount;
 
-    // [AMQ-9437] Advanced Statistics are optionally enabled
-    protected CountStatisticImpl networkEnqueues;
-    protected CountStatisticImpl networkDequeues;
+    // [AMQ-9437] Advanced Network Statistics
+    private final CountStatisticImpl networkEnqueues;
+    private final CountStatisticImpl networkDequeues;
+
+    // [AMQ-8463] Advanced Message Statistics are disabled by default
+    private final AtomicReference<MessageFlowStatsImpl> messageFlowStats = new AtomicReference<>();
 
     public DestinationStatistics() {
 
@@ -75,25 +78,6 @@ public class DestinationStatistics extends StatsImpl {
 
         networkEnqueues = new CountStatisticImpl("networkEnqueues", "The number of messages that have been sent to the destination via network connection");
         networkDequeues = new CountStatisticImpl("networkDequeues", "The number of messages that have been acknowledged from the destination via network connection");
-
-        addStatistic("enqueues", enqueues);
-        addStatistic("dispatched", dispatched);
-        addStatistic("dequeues", dequeues);
-        addStatistic("duplicateFromStore", duplicateFromStore);
-        addStatistic("inflight", inflight);
-        addStatistic("expired", expired);
-        addStatistic("consumers", consumers);
-        addStatistic("producers", producers);
-        addStatistic("messages", messages);
-        addStatistic("messagesCached", messagesCached);
-        addStatistic("processTime", processTime);
-        addStatistic("blockedSends",blockedSends);
-        addStatistic("blockedTime",blockedTime);
-        addStatistic("messageSize",messageSize);
-        addStatistic("maxUncommittedExceededCount", maxUncommittedExceededCount);
-
-        addStatistic("networkEnqueues", networkEnqueues);
-        addStatistic("networkDequeues", networkDequeues);
     }
 
     public CountStatisticImpl getEnqueues() {
@@ -132,10 +116,6 @@ public class DestinationStatistics extends StatsImpl {
         return messages;
     }
 
-    public void setMessagesCached(PollCountStatisticImpl messagesCached) {
-        this.messagesCached = messagesCached;
-    }
-
     public CountStatisticImpl getDispatched() {
         return dispatched;
     }
@@ -170,6 +150,10 @@ public class DestinationStatistics extends StatsImpl {
         return networkDequeues;
     }
 
+    public MessageFlowStats getMessageFlowStats() {
+        return messageFlowStats.get();
+    }
+
     public void reset() {
         if (this.isDoReset()) {
             super.reset();
@@ -186,6 +170,8 @@ public class DestinationStatistics extends StatsImpl {
             maxUncommittedExceededCount.reset();
             networkEnqueues.reset();
             networkDequeues.reset();
+            Optional.ofNullable(messageFlowStats.get())
+                .ifPresent(MessageFlowStatsImpl::reset);
         }
     }
 
@@ -208,9 +194,13 @@ public class DestinationStatistics extends StatsImpl {
         messageSize.setEnabled(enabled);
         maxUncommittedExceededCount.setEnabled(enabled);
 
-        // [AMQ-9437] Advanced Statistics
+        // [AMQ-9437] Advanced Network Statistics
         networkEnqueues.setEnabled(enabled);
         networkDequeues.setEnabled(enabled);
+
+        // [AMQ-9437] Advanced Message Statistics
+        Optional.ofNullable(messageFlowStats.get())
+            .ifPresent(stats -> stats.setEnabled(enabled));
     }
 
     public void setParent(DestinationStatistics parent) {
@@ -233,6 +223,7 @@ public class DestinationStatistics extends StatsImpl {
             maxUncommittedExceededCount.setParent(parent.maxUncommittedExceededCount);
             networkEnqueues.setParent(parent.networkEnqueues);
             networkDequeues.setParent(parent.networkDequeues);
+            // [AMQ-9437] Advanced Message Statistics do not parent.
         } else {
             enqueues.setParent(null);
             dispatched.setParent(null);
@@ -252,7 +243,24 @@ public class DestinationStatistics extends StatsImpl {
             maxUncommittedExceededCount.setParent(null);
             networkEnqueues.setParent(null);
             networkDequeues.setParent(null);
+            // [AMQ-9437] Advanced Message Statistics do not parent.
         }
     }
 
+    // This is the only method that can mutate the messageFlowStats state
+    // so we only need to synchronize this method to make sure we don't have 2 threads
+    // trying to set at the same time.
+    public synchronized void setAdvancedMessageStatisticsEnabled(boolean enabled) {
+        // we can just use the get() here on the reference as no other spot can
+        // set the reference so there is no race condition
+        if(enabled && this.messageFlowStats.get() == null) {
+            this.messageFlowStats.set(new MessageFlowStatsImpl());
+        } else {
+            this.messageFlowStats.set(null);
+        }
+    }
+
+    public boolean isAdvancedMessageStatisticsEnabled() {
+        return this.messageFlowStats.get() != null;
+    }
 }
