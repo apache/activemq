@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.management;
 
+import java.util.Set;
+
 /**
  * Statistics for a JCA connection pool
  * 
@@ -39,9 +41,7 @@ public class JCAConnectionPoolStatsImpl extends JCAConnectionStatsImpl {
         this.waitingThreadCount = waitingThreadCount;
 
         // lets add named stats
-        addStatistic("freePoolSize", freePoolSize);
-        addStatistic("poolSize", poolSize);
-        addStatistic("waitingThreadCount", waitingThreadCount);
+        addStatistics(Set.of(freePoolSize, poolSize, waitingThreadCount));
     }
 
     public CountStatisticImpl getCloseCount() {

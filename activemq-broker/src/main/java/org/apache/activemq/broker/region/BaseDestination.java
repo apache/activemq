@@ -827,7 +827,7 @@ public abstract class BaseDestination implements Destination {
     @Override
     public void markForGC(long timeStamp) {
         if (isGcIfInactive() && this.lastActiveTime == 0 && isActive() == false
-                && destinationStatistics.messages.getCount() == 0 && getInactiveTimeoutBeforeGC() > 0l) {
+                && destinationStatistics.getMessages().getCount() == 0 && getInactiveTimeoutBeforeGC() > 0l) {
             this.lastActiveTime = timeStamp;
         }
     }
@@ -836,7 +836,7 @@ public abstract class BaseDestination implements Destination {
     public boolean canGC() {
         boolean result = false;
         final long currentLastActiveTime = this.lastActiveTime;
-        if (isGcIfInactive() && currentLastActiveTime != 0l && destinationStatistics.messages.getCount() == 0L ) {
+        if (isGcIfInactive() && currentLastActiveTime != 0l && destinationStatistics.getMessages().getCount() == 0L ) {
             if ((System.currentTimeMillis() - currentLastActiveTime) >= getInactiveTimeoutBeforeGC()) {
                 result = true;
             }
@@ -878,6 +878,16 @@ public abstract class BaseDestination implements Destination {
     @Override
     public void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled) {
         this.advancedNetworkStatisticsEnabled = advancedNetworkStatisticsEnabled;
+    }
+
+    @Override
+    public boolean isAdvancedMessageStatisticsEnabled() {
+        return this.destinationStatistics.isAdvancedMessageStatisticsEnabled();
+    }
+
+    @Override
+    public void setAdvancedMessageStatisticsEnabled(boolean advancedMessageStatisticsEnabled) {
+        this.destinationStatistics.setAdvancedMessageStatisticsEnabled(advancedMessageStatisticsEnabled);
     }
 
     @Override
