@@ -28,6 +28,7 @@ import jakarta.jms.Destination;
 import jakarta.jms.JMSContext;
 import jakarta.jms.JMSException;
 import jakarta.jms.JMSProducer;
+import jakarta.jms.JMSRuntimeException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
@@ -413,10 +414,8 @@ public class ActiveMQJMS2AsyncSendTest extends ActiveMQJMS2TestBase{
     }
 
     @Test
-    public void testAbleToAccessMessageHeaderAfterAsyncSendCompleted_spec7_3_6_spec7_3_9() throws Exception {
+    public void testUnAbleToAccessMessageHeaderAfterAsyncSendCompleted_spec7_3_6_spec7_3_9() throws Exception {
         // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#message-headers
-        // We won't throw exception because it's optional as stated in the spec.
-        // "If the Jakarta Messaging provider does not throw an exception then the behaviour is undefined."
         try(JMSContext jmsContext = activemqConnectionFactory.createContext(DEFAULT_JMS_USER, DEFAULT_JMS_PASS, Session.AUTO_ACKNOWLEDGE)) {
             assertNotNull(jmsContext);
             JMSProducer jmsProducer = jmsContext.createProducer();
@@ -429,10 +428,8 @@ public class ActiveMQJMS2AsyncSendTest extends ActiveMQJMS2TestBase{
                 @Override
                 public void onCompletion(Message message) {
                     try {
-                        if (!((TextMessage) message).getText().equals(textBody)) {
-                            log.error("messages don't match");
-                            throw new RuntimeException("messages don't match");
-                        }
+                        // Running the getter within the CompletionListener shouldn't trigger exception
+                        message.getJMSDeliveryMode();
                     } catch (JMSException e) {
                         throw new RuntimeException(e);
                     }
@@ -448,12 +445,23 @@ public class ActiveMQJMS2AsyncSendTest extends ActiveMQJMS2TestBase{
             TextMessage message = jmsContext.createTextMessage();
             message.setText(textBody);
             jmsProducer.send(destination, message);
-            // Trying to get the message header
-            int deliveryMode = message.getJMSDeliveryMode();
+            // Test one messages getter, the rest are tested in ActiveMQMessage unit test
+            try {
+                message.getJMSDeliveryMode();
+                fail("getJMSDeliveryMode didn't throw exception when accessed before CompletionListener is invoked");
+            } catch (JMSException e) {
+                if (!e.getMessage().equals("Can not access and mutate message, the message is sent asynchronously and its completion listener has not been invoked")) {
+                    throw e;
+                }
+                log.info("got expected exception for getJMSDeliveryMode: {}", e.getMessage());
+            }
+
             boolean status = latch.await(10L, TimeUnit.SECONDS);
             if (!status) {
                 fail("the completion listener was not triggered within 10 seconds or threw an exception");
             }
+            // Now the message should be unlocked and accessible
+            message.getJMSDeliveryMode();
         } catch (Exception e) {
             fail(e.getMessage());
         }

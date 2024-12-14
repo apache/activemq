@@ -159,16 +159,21 @@ public final class OpenTypeSupport {
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQMessage m = (ActiveMQMessage)o;
             Map<String, Object> rc = super.getFields(o);
-            rc.put("JMSCorrelationID", m.getJMSCorrelationID());
-            rc.put("JMSDestination", "" + m.getJMSDestination());
-            rc.put("JMSMessageID", m.getJMSMessageID());
-            rc.put("JMSReplyTo",toString(m.getJMSReplyTo()));
-            rc.put("JMSType", m.getJMSType());
-            rc.put("JMSDeliveryMode", m.getJMSDeliveryMode() == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON-PERSISTENT");
-            rc.put("JMSExpiration", m.getJMSExpiration());
-            rc.put("JMSPriority", m.getJMSPriority());
-            rc.put("JMSRedelivered", m.getJMSRedelivered());
-            rc.put("JMSTimestamp", new Date(m.getJMSTimestamp()));
+            try {
+                rc.put("JMSCorrelationID", m.getJMSCorrelationID());
+                rc.put("JMSDestination", "" + m.getJMSDestination());
+                rc.put("JMSMessageID", m.getJMSMessageID());
+                rc.put("JMSReplyTo",toString(m.getJMSReplyTo()));
+                rc.put("JMSType", m.getJMSType());
+                rc.put("JMSDeliveryMode", m.getJMSDeliveryMode() == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON-PERSISTENT");
+                rc.put("JMSExpiration", m.getJMSExpiration());
+                rc.put("JMSPriority", m.getJMSPriority());
+                rc.put("JMSRedelivered", m.getJMSRedelivered());
+                rc.put("JMSTimestamp", new Date(m.getJMSTimestamp()));
+            } catch (JMSException e) {
+                throw new OpenDataException(e.getMessage());
+            }
+
             rc.put(CompositeDataConstants.JMSXGROUP_ID, m.getGroupID());
             rc.put(CompositeDataConstants.JMSXGROUP_SEQ, m.getGroupSequence());
             rc.put(CompositeDataConstants.JMSXUSER_ID, m.getUserID());

@@ -2136,7 +2136,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             msg.setBrokerPath(null);
 
             msg.setTransactionId(txid);
-            if (connection.isCopyMessageOnSend()) {
+            final ActiveMQMessage originalMessage = msg;
+            if (connection.isCopyMessageOnSend() || completionListener != null) {
+                // We need to make the message inaccessible per Jakarta Messaging 3.1 - 7.3.6 & 7.3.9
+                // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#restrictions-on-the-use-of-the-message-object
+                // To do that, we need to set a flag in the message referenced in sender thread. To avoid making
+                // the message inaccessible once received on the server side (even tho the WireFormat marshaller doesn't marshal that field, so it shouldn't matter)
                 msg = (ActiveMQMessage)msg.copy();
             }
             msg.setConnection(connection);
@@ -2167,10 +2172,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                         // Make the Message object unaccessible and unmutable
                         // per Jakarta Messaging 3.1 spec section 7.3.9 and 7.3.6
                         numIncompletedAsyncSend.doIncrement();
+                        originalMessage.setMessageAccessible(false);
                         wrapperCompletionListener = new CompletionListener() {
                             @Override
                             public void onCompletion(Message message) {
                                 try {
+                                    originalMessage.setMessageAccessible(true);
                                     inCompletionListenerCallback.set(true);
                                     producerInCompletionListenerCallback.set(true);
                                     numIncompletedAsyncSend.doDecrement();
@@ -2188,6 +2195,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                             @Override
                             public void onException(Message message, Exception e) {
                                 try {
+                                    originalMessage.setMessageAccessible(true);
                                     inCompletionListenerCallback.set(true);
                                     completionListener.onException(message, e);
                                 } finally {

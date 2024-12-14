@@ -72,7 +72,7 @@ public class AMQ4893Test {
         }
     }
 
-    private void fakeUnmarshal(ActiveMQObjectMessage message) throws IOException {
+    private void fakeUnmarshal(ActiveMQObjectMessage message) throws IOException, JMSException {
         // we need to force the unmarshalled property field to be set so it
         // gives us a hawtbuffer for the string
         OpenWireFormat format = new OpenWireFormat();
