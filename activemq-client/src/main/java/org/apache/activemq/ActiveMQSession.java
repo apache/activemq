@@ -26,12 +26,16 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.BytesMessage;
 import jakarta.jms.CompletionListener;
+import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.IllegalStateException;
 import jakarta.jms.IllegalStateRuntimeException;
@@ -236,8 +240,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     private MessageTransformer transformer;
     private BlobTransferPolicy blobTransferPolicy;
     private long lastDeliveredSequenceId = -2;
-    private CountdownLock numIncompletedAsyncSend = new CountdownLock();
+    private CountdownLock numIncompleteAsyncSend = new CountdownLock();
     private ThreadLocal<Boolean> inCompletionListenerCallback = new ThreadLocal<>();
+    private ExecutorService asyncSendExecutor;
 
     /**
      * Construct the Session
@@ -265,6 +270,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         setBlobTransferPolicy(connection.getBlobTransferPolicy());
         this.connectionExecutor=connection.getExecutor();
         this.executor = new ActiveMQSessionExecutor(this);
+        asyncSendExecutor = Executors.newSingleThreadExecutor();
         connection.addSession(this);
         if (connection.isStarted()) {
             start();
@@ -2080,11 +2086,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @param producerWindow
      * @param completionListener
      * @param producerInCompletionListenerCallback
+     * @param producerNumIncompleteSend
      * @throws JMSException
      */
     protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
-            boolean disableMessageID, boolean disableMessageTimestamp, MemoryUsage producerWindow, int sendTimeout,
-            CompletionListener completionListener, ThreadLocal<Boolean> producerInCompletionListenerCallback) throws JMSException {
+            boolean disableMessageID, boolean disableMessageTimestamp, MemoryUsage producerWindow, int sendTimeout, CompletionListener completionListener,
+            ThreadLocal<Boolean> producerInCompletionListenerCallback, CountdownLock producerNumIncompleteSend) throws JMSException {
 
         checkClosed();
         if (destination.isTemporary() && connection.isDeleted(destination)) {
@@ -2167,45 +2174,71 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 if (sendTimeout > 0 && completionListener==null) {
                     this.connection.syncSendPacket(msg, sendTimeout);
                 }else {
-                    CompletionListener wrapperCompletionListener = null;
                     if (completionListener != null) {
+                        final ActiveMQMessage finalMsgRef = msg;
                         // Make the Message object unaccessible and unmutable
                         // per Jakarta Messaging 3.1 spec section 7.3.9 and 7.3.6
-                        numIncompletedAsyncSend.doIncrement();
+                        numIncompleteAsyncSend.doIncrement();
+                        producerNumIncompleteSend.doIncrement();
                         originalMessage.setMessageAccessible(false);
-                        wrapperCompletionListener = new CompletionListener() {
+                        // Submit to a another async thread for sending the message asynchronously
+                        // The reason is we want to execute async send and invoke its CompletionListner one at a time
+                        // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#use-of-the-completionlistener-by-the-jakarta-messaging-provider
+                        asyncSendExecutor.submit(new Runnable() {
                             @Override
-                            public void onCompletion(Message message) {
-                                try {
-                                    originalMessage.setMessageAccessible(true);
-                                    inCompletionListenerCallback.set(true);
-                                    producerInCompletionListenerCallback.set(true);
-                                    numIncompletedAsyncSend.doDecrement();
-                                    completionListener.onCompletion(message);
-                                } catch (Exception e) {
-                                    // invoke onException if the exception can't be thrown in the thread that calls the send
-                                    // per Jakarta Messaging 3.1 spec section 7.3.2
-                                    completionListener.onException(message, e);
-                                } finally {
-                                    inCompletionListenerCallback.set(false);
-                                    producerInCompletionListenerCallback.set(false);
-                                }
-                            }
+                            public void run() {
+                                CountDownLatch isAsyncSendCompleted = new CountDownLatch(1);
+                                CompletionListener wrapperCompletionListener = new CompletionListener() {
+                                    @Override
+                                    public void onCompletion(Message message) {
+                                        try {
+                                            originalMessage.setMessageAccessible(true);
+                                            inCompletionListenerCallback.set(true);
+                                            producerInCompletionListenerCallback.set(true);
+                                            // Invoke application provided completionListener
+                                            completionListener.onCompletion(message);
+                                        } catch (Exception e) {
+                                            // invoke onException if the exception can't be thrown in the thread that calls the send
+                                            // per Jakarta Messaging 3.1 spec section 7.3.2
+                                            completionListener.onException(message, e);
+                                        } finally {
+                                            inCompletionListenerCallback.set(false);
+                                            producerInCompletionListenerCallback.set(false);
+                                            numIncompleteAsyncSend.doDecrement();
+                                            producerNumIncompleteSend.doDecrement();
+                                            isAsyncSendCompleted.countDown();
+                                        }
+                                    }
 
-                            @Override
-                            public void onException(Message message, Exception e) {
+                                    @Override
+                                    public void onException(Message message, Exception e) {
+                                        try {
+                                            originalMessage.setMessageAccessible(true);
+                                            inCompletionListenerCallback.set(true);
+                                            producerInCompletionListenerCallback.set(true);
+                                            completionListener.onException(message, e);
+                                        } finally {
+                                            inCompletionListenerCallback.set(false);
+                                            producerInCompletionListenerCallback.set(false);
+                                            numIncompleteAsyncSend.doDecrement();
+                                            producerNumIncompleteSend.doDecrement();
+                                            isAsyncSendCompleted.countDown();
+                                        }
+                                    }
+                                };
                                 try {
-                                    originalMessage.setMessageAccessible(true);
-                                    inCompletionListenerCallback.set(true);
-                                    completionListener.onException(message, e);
-                                } finally {
-                                    numIncompletedAsyncSend.doDecrement();
-                                    inCompletionListenerCallback.set(false);
+                                    connection.syncSendPacket(finalMsgRef, wrapperCompletionListener);
+                                    isAsyncSendCompleted.await();
+                                } catch (JMSException e) {
+                                    completionListener.onException(finalMsgRef, e);
+                                } catch (InterruptedException e) {
+                                    completionListener.onException(finalMsgRef, e);
                                 }
                             }
-                        };
+                        });
+                    } else {
+                        this.connection.syncSendPacket(msg, (CompletionListener) null);
                     }
-                    this.connection.syncSendPacket(msg, wrapperCompletionListener);
                 }
             }
 
@@ -2504,6 +2537,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     private void waitForAsyncSendToFinish() {
-        numIncompletedAsyncSend.doWaitForZero();
+        numIncompleteAsyncSend.doWaitForZero();
     }
 }

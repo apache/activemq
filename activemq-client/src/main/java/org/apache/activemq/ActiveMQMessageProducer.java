@@ -35,6 +35,7 @@ import org.apache.activemq.management.JMSProducerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.util.CountdownLock;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,6 +85,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     private MessageTransformer transformer;
     private MemoryUsage producerWindow;
     private final ThreadLocal<Boolean> inCompletionListenerCallback = new ThreadLocal<>();
+    private final CountdownLock numIncompleteAsyncSend = new CountdownLock();
 
     protected ActiveMQMessageProducer(ActiveMQSession session, ProducerId producerId, ActiveMQDestination destination, int sendTimeout) throws JMSException {
         super(session);
@@ -173,6 +175,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         if (inCompletionListenerCallback != null && inCompletionListenerCallback.get()) {
             throw new IllegalStateRuntimeException("Can't close message producer within CompletionListener");
         }
+        waitForAsyncSendToFinish();
         if (!closed) {
             dispose();
             this.session.asyncSendPacket(info.createRemoveCommand());
@@ -232,7 +235,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     /**
      *
      * @param message the message to send
-     * @param CompletionListener to callback
+     * @param completionListener to callback
      * @throws JMSException if the JMS provider fails to send the message due to
      *                 some internal error.
      * @throws UnsupportedOperationException if an invalid destination is
@@ -319,7 +322,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         }
 
         this.session.send(this, dest, message, deliveryMode, priority, timeToLive, disableMessageID,
-                disableMessageTimestamp, producerWindow, sendTimeout, completionListener, inCompletionListenerCallback);
+                disableMessageTimestamp, producerWindow, sendTimeout, completionListener, inCompletionListenerCallback, numIncompleteAsyncSend);
 
         stats.onMessage();
     }
@@ -455,4 +458,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         }
     }
 
+    private void waitForAsyncSendToFinish() {
+        numIncompleteAsyncSend.doWaitForZero();
+    }
 }

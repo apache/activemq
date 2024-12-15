@@ -31,6 +31,7 @@ import jakarta.jms.JMSProducer;
 import jakarta.jms.JMSRuntimeException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import org.junit.Test;
@@ -225,6 +226,36 @@ public class ActiveMQJMS2AsyncSendTest extends ActiveMQJMS2TestBase{
     }
 
     @Test
+    public void testUnableToCloseSessionInCompletionListener_spec_7_3_4() throws Exception {
+        // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#close-commit-or-rollback
+        Destination destination = session.createQueue(methodNameDestinationName);
+        MessageProducer messageProducer = session.createProducer(destination);
+        String textBody = "Test-" + methodNameDestinationName;
+        CountDownLatch latch = new CountDownLatch(1);
+        CompletionListener completionListener = new CompletionListener() {
+
+            @Override
+            public void onCompletion(Message message) {
+                try {
+                    session.close(); // This should cause a RuntimeException to throw and trigger the onException
+                } catch (JMSException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void onException(Message message, Exception e) {
+                latch.countDown();
+            }
+        };
+        messageProducer.send(destination, session.createTextMessage(textBody), completionListener);
+        boolean status = latch.await(10L, TimeUnit.SECONDS);
+        if (!status) {
+            fail("the completion listener onException was not triggered within 10 seconds or threw an exception");
+        }
+    }
+
+    @Test
     public void testUnableToCloseProducerInCompletionListener_spec_7_3_4() throws Exception {
         // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#close-commit-or-rollback
         CountDownLatch latch = new CountDownLatch(1);
@@ -322,7 +353,93 @@ public class ActiveMQJMS2AsyncSendTest extends ActiveMQJMS2TestBase{
     }
 
     @Test
-    public void testCloseContextWailUntilAllIncompleteSentToFinish_spec_7_3_4() throws Exception {
+    public void testSessionCloseBlockUntilAllAsyncSendFinish_spec_7_3_4() throws Exception {
+        // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#close-commit-or-rollback
+        Destination destination = session.createQueue(methodNameDestinationName);
+        MessageProducer messageProducer = session.createProducer(destination);
+        ArrayList<String> expectedOrderedMessages = new ArrayList<>();
+        ArrayList<String> actualOrderedMessages = new ArrayList<>();
+        Object mutex = new Object();
+        int num_msgs = 100;
+        CompletionListener completionListener = new CompletionListener() {
+            @Override
+            public void onCompletion(Message message) {
+                synchronized (mutex) {
+                    try {
+                        String text = ((TextMessage) message).getText();
+                        actualOrderedMessages.add(text);
+                    } catch (JMSException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+            @Override
+            public void onException(Message message, Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        for (int i = 0; i < num_msgs; i++) {
+            String textBody = "Test-" + methodNameDestinationName + "-" + String.valueOf(i);
+            expectedOrderedMessages.add(textBody);
+            messageProducer.send(
+                    destination,
+                    session.createTextMessage(textBody),
+                    completionListener);
+        }
+        session.close();
+        if (expectedOrderedMessages.size() != actualOrderedMessages.size()) {
+            fail("jmsContext doesn't wait until all inComplete send to finish");
+        }
+    }
+
+    @Test
+    public void testProducerCloseBlockUntilAllAsyncSendFinish_spec_7_3_4() throws Exception {
+        // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#close-commit-or-rollback
+        Destination destination = session.createQueue(methodNameDestinationName);
+        MessageProducer messageProducer = session.createProducer(destination);
+        ArrayList<String> expectedOrderedMessages = new ArrayList<>();
+        ArrayList<String> actualOrderedMessages = new ArrayList<>();
+        Object mutex = new Object();
+        int num_msgs = 100;
+        CompletionListener completionListener = new CompletionListener() {
+            @Override
+            public void onCompletion(Message message) {
+                synchronized (mutex) {
+                    try {
+                        String text = ((TextMessage) message).getText();
+                        actualOrderedMessages.add(text);
+                    } catch (JMSException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+            @Override
+            public void onException(Message message, Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        for (int i = 0; i < num_msgs; i++) {
+            String textBody = "Test-" + methodNameDestinationName + "-" + String.valueOf(i);
+            expectedOrderedMessages.add(textBody);
+            messageProducer.send(
+                    destination,
+                    session.createTextMessage(textBody),
+                    completionListener);
+        }
+        messageProducer.close();
+        if (expectedOrderedMessages.size() != actualOrderedMessages.size()) {
+            fail("jmsContext doesn't wait until all inComplete send to finish");
+        }
+    }
+
+
+
+    @Test
+    public void testContextCloseBlockUntilAllAsyncSendFinish_spec_7_3_4() throws Exception {
         // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#close-commit-or-rollback
         try(JMSContext jmsContext = activemqConnectionFactory.createContext(DEFAULT_JMS_USER, DEFAULT_JMS_PASS, Session.AUTO_ACKNOWLEDGE)) {
             assertNotNull(jmsContext);
@@ -368,7 +485,7 @@ public class ActiveMQJMS2AsyncSendTest extends ActiveMQJMS2TestBase{
     }
 
     @Test
-    public void testCommitContextWailUntilAllIncompleteSentToFinish_spec_7_3_4() throws Exception {
+    public void testContextCommitBlockUntilAllAsyncSendFinish_spec_7_3_4() throws Exception {
         // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#close-commit-or-rollback
         try(JMSContext jmsContext = activemqConnectionFactory.createContext(DEFAULT_JMS_USER, DEFAULT_JMS_PASS, Session.SESSION_TRANSACTED)) {
             assertNotNull(jmsContext);
