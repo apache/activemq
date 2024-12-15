@@ -170,7 +170,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void close() throws JMSException {
-        if (inCompletionListenerCallback.get()) {
+        if (inCompletionListenerCallback != null && inCompletionListenerCallback.get()) {
             throw new IllegalStateRuntimeException("Can't close message producer within CompletionListener");
         }
         if (!closed) {

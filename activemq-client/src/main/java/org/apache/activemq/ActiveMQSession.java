@@ -606,7 +606,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void rollback() throws JMSException {
         checkClosed();
-        if (inCompletionListenerCallback.get()) {
+        if (inCompletionListenerCallback.get() != null && inCompletionListenerCallback.get()) {
             throw new IllegalStateRuntimeException("Can't rollback transacted session within CompletionListener");
         }
         if (!getTransacted()) {
