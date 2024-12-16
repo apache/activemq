@@ -587,9 +587,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void commit() throws JMSException {
         checkClosed();
-        if (inCompletionListenerCallback.get()) {
-            throw new IllegalStateRuntimeException("Can't commit transacted session within CompletionListener");
-        }
+        checkIsSessionUseAllowed("Can't commit transacted session within CompletionListener");
         if (!getTransacted()) {
             throw new jakarta.jms.IllegalStateException("Not a transacted session");
         }
@@ -612,9 +610,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void rollback() throws JMSException {
         checkClosed();
-        if (inCompletionListenerCallback.get() != null && inCompletionListenerCallback.get()) {
-            throw new IllegalStateRuntimeException("Can't rollback transacted session within CompletionListener");
-        }
+        checkIsSessionUseAllowed("Can't rollback transacted session within CompletionListener");
         if (!getTransacted()) {
             throw new jakarta.jms.IllegalStateException("Not a transacted session");
         }
@@ -656,9 +652,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void close() throws JMSException {
         if (!closed) {
-            if (inCompletionListenerCallback.get()) {
-                throw new IllegalStateRuntimeException("Can't close session within CompletionListener");
-            }
+            checkIsSessionUseAllowed("Can't close session within CompletionListener");
             if (getTransactionContext().isInXATransaction()) {
                 if (!synchronizationRegistered) {
                     synchronizationRegistered = true;
@@ -2538,5 +2532,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     private void waitForAsyncSendToFinish() {
         numIncompleteAsyncSend.doWaitForZero();
+    }
+
+    private void checkIsSessionUseAllowed(String errorMsg) {
+        if (inCompletionListenerCallback.get() != null && inCompletionListenerCallback.get()) {
+            throw new IllegalStateRuntimeException(errorMsg);
+        }
     }
 }
