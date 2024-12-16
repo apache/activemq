@@ -1248,7 +1248,6 @@
         <configuration>
           <source>${source-version}</source>
           <target>${target-version}</target>
-          <optimize>true</optimize>
           <debug>true</debug>
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>
