@@ -127,7 +127,7 @@ public class AMQ3324Test {
 
         PolicyEntry entry = new PolicyEntry();
         entry.setGcInactiveDestinations(true);
-        entry.setInactiveTimoutBeforeGC(2000);
+        entry.setInactiveTimeoutBeforeGC(2000);
         entry.setProducerFlowControl(true);
         entry.setAdvisoryForConsumed(true);
         entry.setAdvisoryForFastProducers(true);
