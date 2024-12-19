@@ -52,6 +52,7 @@ import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
+import org.apache.activemq.management.MessageFlowStats;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.util.URISupport;
@@ -620,4 +621,67 @@ public class DestinationView implements DestinationViewMBean {
         return destination.getDestinationStatistics().getNetworkDequeues().getCount();
     }
 
+    @Override
+    public boolean isAdvancedMessageStatisticsEnabled() {
+        return destination.isAdvancedMessageStatisticsEnabled();
+    }
+
+    @Override
+    public void setAdvancedMessageStatisticsEnabled(boolean advancedMessageStatisticsEnabled) {
+        destination.setAdvancedMessageStatisticsEnabled(advancedMessageStatisticsEnabled);
+    }
+
+    @Override
+    public long getEnqueuedMessageBrokerInTime() {
+        MessageFlowStats tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        return (tmpMessageFlowStats != null ? tmpMessageFlowStats.getEnqueuedMessageBrokerInTime().getValue() : 0l);
+    }
+
+    @Override
+    public String getEnqueuedMessageClientId() {
+        MessageFlowStats tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        return (tmpMessageFlowStats != null ? tmpMessageFlowStats.getEnqueuedMessageClientID().getValue() : null);
+    }
+
+    @Override
+    public String getEnqueuedMessageId() {
+        MessageFlowStats tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        return (tmpMessageFlowStats != null ? tmpMessageFlowStats.getEnqueuedMessageID().getValue() : null);
+    }
+
+    @Override
+    public long getEnqueuedMessageTimestamp() {
+        MessageFlowStats tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        return (tmpMessageFlowStats != null ? tmpMessageFlowStats.getEnqueuedMessageTimestamp().getValue() : 0l);
+    }
+
+    @Override
+    public long getDequeuedMessageBrokerInTime() {
+        MessageFlowStats tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        return (tmpMessageFlowStats != null ? tmpMessageFlowStats.getDequeuedMessageBrokerInTime().getValue() : 0l);
+    }
+
+    @Override
+    public long getDequeuedMessageBrokerOutTime() {
+        MessageFlowStats tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        return (tmpMessageFlowStats != null ? tmpMessageFlowStats.getDequeuedMessageBrokerOutTime().getValue() : 0l);
+    }
+
+    @Override
+    public String getDequeuedMessageClientId() {
+        MessageFlowStats tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        return (tmpMessageFlowStats != null ? tmpMessageFlowStats.getDequeuedMessageClientID().getValue() : null);
+    }
+
+    @Override
+    public String getDequeuedMessageId() {
+        MessageFlowStats tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        return (tmpMessageFlowStats != null ? tmpMessageFlowStats.getDequeuedMessageID().getValue() : null);
+    }
+
+    @Override
+    public long getDequeuedMessageTimestamp() {
+        MessageFlowStats tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        return (tmpMessageFlowStats != null ? tmpMessageFlowStats.getDequeuedMessageTimestamp().getValue() : 0l);
+    }
 }
