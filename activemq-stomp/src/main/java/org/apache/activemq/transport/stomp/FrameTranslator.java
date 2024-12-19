@@ -51,7 +51,7 @@ public interface FrameTranslator {
         private Helper() {
         }
 
-        public static void copyStandardHeadersFromMessageToFrame(ProtocolConverter converter, ActiveMQMessage message, StompFrame command, FrameTranslator ft) throws IOException {
+        public static void copyStandardHeadersFromMessageToFrame(ProtocolConverter converter, ActiveMQMessage message, StompFrame command, FrameTranslator ft) throws IOException, JMSException {
             final Map<String, String> headers = command.getHeaders();
             headers.put(Stomp.Headers.Message.DESTINATION, ft.convertDestination(converter, message.getDestination()));
             headers.put(Stomp.Headers.Message.MESSAGE_ID, message.getJMSMessageID());
