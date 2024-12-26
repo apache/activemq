@@ -116,6 +116,7 @@ public class JobSchedulerTestSupport {
         answer.setSchedulerDirectoryFile(schedulerDirectory);
         answer.setSchedulerSupport(true);
         answer.setUseJmx(isUseJmx());
+        answer.setDeleteAllScheduledMessagesOnStartup(shouldDeleteAllScheduledMessagesOnStartup());
         return answer;
     }
 
@@ -135,5 +136,9 @@ public class JobSchedulerTestSupport {
 
         broker.start();
         broker.waitUntilStarted();
+    }
+
+    protected boolean shouldDeleteAllScheduledMessagesOnStartup() throws Exception {
+        return false;
     }
 }

@@ -72,6 +72,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     private final JobSchedulerStore store;
     private JobScheduler scheduler;
     private int maxRepeatAllowed = MAX_REPEAT_ALLOWED;
+    private boolean deleteAllScheduledMessagesOnStartup;
 
     public SchedulerBroker(BrokerService brokerService, Broker next, JobSchedulerStore store) throws Exception {
         super(next);
@@ -212,6 +213,9 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     public void start() throws Exception {
         this.started.set(true);
         getInternalScheduler();
+        if (deleteAllScheduledMessagesOnStartup) {
+            deleteAllScheduledMessages();
+        }
         super.start();
     }
 
@@ -364,6 +368,11 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay, period, repeat);
     }
 
+    private void deleteAllScheduledMessages() throws Exception {
+        LOG.info("Deleting all scheduled messages on startup because deleteAllScheduledMessagesOnStartup configuration has been provided");
+        getInternalScheduler().removeAllJobs();
+    }
+
     @Override
     public void scheduledJob(String id, ByteSequence job) {
         org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getData(), job.getOffset(), job.getLength());
@@ -486,5 +495,13 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
     public void setMaxRepeatAllowed(int maxRepeatAllowed) {
         this.maxRepeatAllowed = maxRepeatAllowed;
+    }
+
+    public boolean getDeleteAllScheduledMessagesOnStartup() {
+        return deleteAllScheduledMessagesOnStartup;
+    }
+
+    public void setDeleteAllScheduledMessagesOnStartup(boolean deleteAllSchedulerdMessagesOnStartup) {
+        this.deleteAllScheduledMessagesOnStartup = deleteAllSchedulerdMessagesOnStartup;
     }
 }

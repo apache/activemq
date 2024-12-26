@@ -170,6 +170,7 @@ public class ConfigTest {
             assertEquals("Broker Config Error (persistent)", false, broker.isPersistent());
             assertEquals("Broker Config Error (useShutdownHook)", false, broker.isUseShutdownHook());
             assertEquals("Broker Config Error (deleteAllMessagesOnStartup)", true, broker.isDeleteAllMessagesOnStartup());
+            assertEquals("Broker Config Error (deleteAllScheduledMessagesOnStartup)", true, broker.isDeleteAllScheduledMessagesOnStartup());
             LOG.info("Success");
 
             // Check specific vm transport
