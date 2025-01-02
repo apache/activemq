@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import java.util.stream.Collectors;
 import javax.transaction.xa.Xid;
 
 import org.apache.activemq.broker.BrokerService;
@@ -88,7 +89,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     };
     final DelegateDestinationMap destinationMap = new DelegateDestinationMap();
 
-    List<PersistenceAdapter> adapters = new CopyOnWriteArrayList<PersistenceAdapter>();
+    List<PersistenceAdapter> adapters = new CopyOnWriteArrayList<>();
     private File directory = new File(IOHelper.getDefaultDataDirectory() + File.separator + "mKahaDB");
 
     MultiKahaDBTransactionStore transactionStore = new MultiKahaDBTransactionStore(this);
@@ -383,16 +384,18 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     private void findAndRegisterExistingAdapters(FilteredKahaDBPersistenceAdapter template) throws IOException {
-        FileFilter destinationNames = new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.getName().startsWith("queue#") || file.getName().startsWith("topic#");
-            }
-        };
+        FileFilter destinationNames = file ->
+            file.getName().startsWith("queue#") || file.getName().startsWith("topic#");
+
         File[] candidates = template.getPersistenceAdapter().getDirectory().listFiles(destinationNames);
         if (candidates != null) {
+            Set<File> existing = adapters.stream().map(PersistenceAdapter::getDirectory).collect(
+                Collectors.toSet());
             for (File candidate : candidates) {
-                registerExistingAdapter(template, candidate);
+                if(!existing.contains(candidate)) {
+                    LOG.debug("Adapter does not exist for dir: {} so will register it", candidate);
+                    registerExistingAdapter(template, candidate);
+                }
             }
         }
     }

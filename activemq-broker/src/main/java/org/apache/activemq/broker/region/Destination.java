@@ -258,4 +258,10 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     boolean isSendDuplicateFromStoreToDLQ();
 
     void setSendDuplicateFromStoreToDLQ(boolean sendDuplicateFromStoreToDLQ);
+
+    // [AMQ-9437]
+    boolean isAdvancedNetworkStatisticsEnabled();
+
+    void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled);
+
 }

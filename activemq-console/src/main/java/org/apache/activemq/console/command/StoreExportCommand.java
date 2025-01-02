@@ -23,9 +23,6 @@ import org.apache.activemq.console.command.store.amq.CommandLineSupport;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
- */
 public class StoreExportCommand implements Command {
 
     private CommandContext context;

@@ -263,15 +263,15 @@ public class StoreExporter {
         return messageRecord;
     }
 
-    public File getFile() {
+    public File getFilehandle() {
         return file;
     }
 
     public void setFile(String file) {
-        setFile(new File(file));
+        setFilehandle(new File(file));
     }
 
-    public void setFile(File file) {
+    public void setFilehandle(File file) {
         this.file = file;
     }
 

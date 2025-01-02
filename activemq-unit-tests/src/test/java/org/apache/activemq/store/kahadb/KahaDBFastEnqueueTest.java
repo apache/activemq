@@ -42,6 +42,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.store.kahadb.disk.journal.FileAppender;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
+import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -213,7 +214,7 @@ public class KahaDBFastEnqueueTest {
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter)broker.getPersistenceAdapter();
-        kahaDBPersistenceAdapter.setEnableJournalDiskSyncs(false);
+        kahaDBPersistenceAdapter.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.NEVER.name());
         // defer checkpoints which require a sync
         kahaDBPersistenceAdapter.setCleanupInterval(checkPointPeriod);
         kahaDBPersistenceAdapter.setCheckpointInterval(checkPointPeriod);

@@ -219,6 +219,84 @@ public class StompTest extends StompTestSupport {
         assertTrue(Math.abs(tnow - tmsg) < 1000);
     }
 
+    // Test that a string that requires 4 bytes to encode using standard
+    // UTF-8 does not break when sent by Stomp and received by JMS/OpenWire
+    // AMQ uses a modified UTF-8 encoding that only uses 3 bytes so conversion
+    // needs to happen so this works.
+    @Test(timeout = 60000)
+    public void testSend4ByteUtf8StompToJms() throws Exception {
+        // Create test string using emojis, requires 4 bytes with standard UTF-8
+        String body = "!®౩\uD83D\uDE42";
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        // publish message with string that requires 4-byte UTF-8 encoding
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + body + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        // Verify received message is original sent string
+        TextMessage message = (TextMessage)consumer.receive(2500);
+        assertNotNull(message);
+        assertEquals(body, message.getText());
+    }
+
+    // Test that a string that requires 4 bytes to encode using standard
+    // UTF-8 does not break when sent by JMS/OpenWire and received by Stomp
+    // AMQ uses a modified UTF-8 encoding that only uses 3 bytes so conversion
+    // needs to happen so this works.
+    @Test(timeout = 60000)
+    public void testSend4ByteUtf8JmsToStomp() throws Exception {
+        // Create test string using emojis, requires 4 bytes with standard UTF-8
+        String body = "!®౩\uD83D\uDE42";
+        MessageProducer producer = session.createProducer(queue);
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        // publish message with string that requires 4-byte UTF-8 encoding
+        producer.send(session.createTextMessage(body));
+
+        // Verify received message is original sent string
+        StompFrame message = stompConnection.receive();
+        assertNotNull(message);
+        assertEquals(body, message.getBody());
+    }
+
+    // Test that a string that requires 4 bytes to encode using standard
+    // UTF-8 does not break when sent by Stomp and received by Stomp
+    @Test(timeout = 60000)
+    public void testSend4ByteUtf8StompToStomp() throws Exception {
+        // Create test string using emojis, requires 4 bytes with standard UTF-8
+        String body = "!®౩\uD83D\uDE42";
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        // publish message with string that requires 4-byte UTF-8 encoding
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + body + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        // Verify received message is original sent string
+        StompFrame message = stompConnection.receive();
+        assertNotNull(message);
+        assertEquals(body, message.getBody());
+    }
+
     @Test(timeout = 60000)
     public void testJMSXGroupIdCanBeSet() throws Exception {
 

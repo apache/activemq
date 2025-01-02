@@ -101,7 +101,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             PROPERTY_CANCELED_TASK_MOD_METRIC, "0"), 10);
     public static final String PROPERTY_ASYNC_EXECUTOR_MAX_THREADS = "org.apache.activemq.store.kahadb.ASYNC_EXECUTOR_MAX_THREADS";
     private static final int asyncExecutorMaxThreads = Integer.parseInt(System.getProperty(
-            PROPERTY_ASYNC_EXECUTOR_MAX_THREADS, "1"), 10);;
+            PROPERTY_ASYNC_EXECUTOR_MAX_THREADS, "1"), 10);
 
     protected ExecutorService queueExecutor;
     protected ExecutorService topicExecutor;
@@ -115,7 +115,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     Semaphore globalTopicSemaphore;
     private boolean concurrentStoreAndDispatchQueues = true;
     // when true, message order may be compromised when cache is exhausted if store is out
-    // or order w.r.t cache
+    // of order w.r.t cache
     private boolean concurrentStoreAndDispatchTopics = false;
     private int maxAsyncJobs = MAX_ASYNC_JOBS;
     private final KahaDBTransactionStore transactionStore;
@@ -732,6 +732,47 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             }
         }
 
+        @Override
+        public void recoverNextMessages(final int offset, final int maxReturned, final MessageRecoveryListener listener) throws Exception {
+            indexLock.writeLock().lock();
+            try {
+                pageFile.tx().execute(new Transaction.Closure<Exception>() {
+                    @Override
+                    public void execute(Transaction tx) throws Exception {
+                        StoredDestination sd = getStoredDestination(dest, tx);
+                        Entry<Long, MessageKeys> entry = null;
+                        int position = 0;
+                        int counter = recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, maxReturned, listener);
+                        Set ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
+                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext(); ) {
+                            entry = iterator.next();
+
+                            if (ackedAndPrepared != null && ackedAndPrepared.contains(entry.getValue().messageId)) {
+                                continue;
+                            }
+
+                            if(offset > 0 && offset > position) {
+                                position++;
+                                continue;
+                            }
+
+                            Message msg = loadMessage(entry.getValue().location);
+                            msg.getMessageId().setFutureOrSequenceLong(entry.getKey());
+                            listener.recoverMessage(msg);
+                            counter++;
+                            position++;
+                            if (counter >= maxReturned || !listener.canRecoveryNextMessage()) {
+                                break;
+                            }
+                        }
+                        sd.orderIndex.stoppedIterating();
+                    }
+                });
+            } finally {
+                indexLock.writeLock().unlock();
+            }
+        }
+
         protected int recoverRolledBackAcks(String recoveredTxStateMapKey, StoredDestination sd, Transaction tx, int maxReturned, MessageRecoveryListener listener) throws Exception {
             int counter = 0;
             String id;
@@ -1198,14 +1239,13 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         StoredDestination sd = getStoredDestination(dest, tx);
                         sd.orderIndex.resetCursorPosition();
                         MessageOrderCursor moc = sd.subscriptionCursors.get(subscriptionKey);
-                        SequenceSet subAckPositions = null;
+                        SequenceSet subAckPositions = getSequenceSet(tx, sd, subscriptionKey);;
                         if (moc == null) {
                             LastAck pos = getLastAck(tx, sd, subscriptionKey);
                             if (pos == null) {
                                 // sub deleted
                                 return;
                             }
-                            subAckPositions = getSequenceSet(tx, sd, subscriptionKey);
                             //If we have ackPositions tracked then compare the first one as individual acknowledge mode
                             //may have bumped lastAck even though there are earlier messages to still consume
                             if (subAckPositions != null && !subAckPositions.isEmpty()

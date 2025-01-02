@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.1.1-SNAPSHOT</version>
+    <version>6.2.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-osgi</artifactId>
@@ -178,11 +178,11 @@
               com.fasterxml.jackson*;resolution:=optional,
               org.codehaus.jettison*;resolution:=optional,
               org.jasypt*;resolution:=optional,
-              org.eclipse.jetty*;resolution:=optional;version="[9.0,10)",
+              org.eclipse.jetty*;resolution:=optional;version="${jetty-version-range}",
               org.fusesource.hawtjni*;resolution:=optional,
-              org.springframework.jms*;version="[4,6)";resolution:=optional,
-              org.springframework.transaction*;version="[4,6)";resolution:=optional,
-              org.springframework*;version="[4,6)";resolution:=optional,
+              org.springframework.jms*;version="${spring-version-range}";resolution:=optional,
+              org.springframework.transaction*;version="${spring-version-range}";resolution:=optional,
+              org.springframework*;version="${spring-version-range}";resolution:=optional,
               org.xmlpull*;resolution:=optional,
               !javax.annotation.meta,
               javax.annotation*;version="[1,4)",

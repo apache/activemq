@@ -25,14 +25,14 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>6.1.1-SNAPSHOT</version>
+  <version>6.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
 
   <properties>
     <!-- for reproducible builds -->	
-    <project.build.outputTimestamp>2024-03-11T13:41:18Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2024-04-29T15:51:45Z</project.build.outputTimestamp>
 
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
@@ -43,17 +43,17 @@
     <activemq-protobuf-version>1.1</activemq-protobuf-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
-    <ant-version>1.10.14</ant-version>
+    <ant-version>1.10.15</ant-version>
     <aries-version>1.1.0</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>4.4.1</camel-version>
+    <camel-version>4.8.1</camel-version>
     <commons-beanutils-version>1.9.4</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
-    <commons-daemon-version>1.3.4</commons-daemon-version>
-    <commons-dbcp2-version>2.12.0</commons-dbcp2-version>
-    <commons-io-version>2.15.1</commons-io-version>
+    <commons-daemon-version>1.4.0</commons-daemon-version>
+    <commons-dbcp2-version>2.13.0</commons-dbcp2-version>
+    <commons-io-version>2.18.0</commons-io-version>
     <commons-lang-version>3.14.0</commons-lang-version>
-    <commons-logging-version>1.3.0</commons-logging-version>
+    <commons-logging-version>1.3.4</commons-logging-version>
     <commons-pool2-version>2.12.0</commons-pool2-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <directory-version>2.0.0.AM25</directory-version>
@@ -65,26 +65,27 @@
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
-    <jackson-version>2.16.2</jackson-version>
+    <jackson-version>2.18.2</jackson-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
     <jasypt-version>1.9.3</jasypt-version>
-    <jaxb-version>4.0.2</jaxb-version>
+    <jaxb-version>4.0.5</jaxb-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
-    <jetty-version>11.0.20</jetty-version>
-    <jmdns-version>3.5.9</jmdns-version>
+    <jetty-version>11.0.24</jetty-version>
+    <jetty-version-range>[11,13)</jetty-version-range>
+    <jmdns-version>3.6.0</jmdns-version>
     <tomcat-api-version>9.0.65</tomcat-api-version>
     <jettison-version>1.5.4</jettison-version>
-    <jmock-version>2.12.0</jmock-version>
-    <jolokia-version>2.0.0-M4</jolokia-version>
+    <jmock-version>2.13.1</jmock-version>
+    <jolokia-version>2.0.3</jolokia-version>
     <josql-version>1.5_5</josql-version>
     <!-- for json-simple use same version as jolokia uses -->
     <json-simple-version>1.1.1</json-simple-version>
     <junit-version>4.13.2</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <karaf-version>4.3.7</karaf-version>
-    <log4j-version>2.23.1</log4j-version>
+    <log4j-version>2.24.1</log4j-version>
     <mockito-version>4.8.1</mockito-version>
-    <owasp-dependency-check-version>8.4.2</owasp-dependency-check-version>
+    <owasp-dependency-check-version>11.1.0</owasp-dependency-check-version>
     <mqtt-client-version>1.16</mqtt-client-version>
     <org-apache-derby-version>10.16.1.1</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
@@ -94,16 +95,17 @@
     <regexp-version>1.4</regexp-version>
     <rome-version>2.1.0</rome-version>
     <shiro-version>1.13.0</shiro-version>
-    <slf4j-version>2.0.12</slf4j-version>
+    <slf4j-version>2.0.13</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
-    <spring-version>6.1.5</spring-version>
+    <spring-version>6.2.0</spring-version>
+    <spring-version-range>[6,7)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
-    <velocity-version>2.3</velocity-version>
+    <velocity-version>2.4.1</velocity-version>
     <xpp3-version>1.1.4c</xpp3-version>
-    <xstream-version>1.4.20</xstream-version>
-    <xbean-version>4.24</xbean-version>
+    <xstream-version>1.4.21</xstream-version>
+    <xbean-version>4.26</xbean-version>
     <xerces-version>2.12.2</xerces-version>
-    <jaxb-tools-version>4.0.0</jaxb-tools-version>
+    <jaxb-tools-version>4.0.8</jaxb-tools-version>
     <stompjms-version>3.1.0</stompjms-version>
 
     <pax-logging-version>2.1.3</pax-logging-version>
@@ -119,35 +121,37 @@
 
     <!-- Maven Plugin Version for this Project -->
     <maven-bundle-plugin-version>5.1.9</maven-bundle-plugin-version>
-    <maven-surefire-plugin-version>3.2.5</maven-surefire-plugin-version>
+    <maven-surefire-plugin-version>3.5.2</maven-surefire-plugin-version>
     <maven-antrun-plugin-version>3.1.0</maven-antrun-plugin-version>
-    <maven-assembly-plugin-version>3.6.0</maven-assembly-plugin-version>
-    <maven-clean-plugin-version>3.3.2</maven-clean-plugin-version>
-    <maven-release-plugin-version>3.0.1</maven-release-plugin-version>
+    <maven-assembly-plugin-version>3.7.1</maven-assembly-plugin-version>
+    <maven-clean-plugin-version>3.4.0</maven-clean-plugin-version>
+    <maven-release-plugin-version>3.1.1</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
-    <maven-enforcer-plugin-version>3.4.1</maven-enforcer-plugin-version>
+    <maven-enforcer-plugin-version>3.5.0</maven-enforcer-plugin-version>
     <maven-war-plugin-version>3.4.0</maven-war-plugin-version>
-    <maven-compiler-plugin-version>3.12.1</maven-compiler-plugin-version>
+    <maven-compiler-plugin-version>3.13.0</maven-compiler-plugin-version>
     <maven-rar-plugin-version>3.0.0</maven-rar-plugin-version>
-    <maven-jar-plugin-version>3.3.0</maven-jar-plugin-version>
-    <maven-source-plugin-version>3.3.0</maven-source-plugin-version>
-    <maven-javadoc-plugin-version>3.6.3</maven-javadoc-plugin-version>
+    <maven-jar-plugin-version>3.4.2</maven-jar-plugin-version>
+    <maven-source-plugin-version>3.3.1</maven-source-plugin-version>
+    <maven-javadoc-plugin-version>3.11.1</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.5.2</maven-install-plugin-version>
-    <maven-shade-plugin-version>3.5.1</maven-shade-plugin-version>
+    <maven-shade-plugin-version>3.6.0</maven-shade-plugin-version>
     <exec-maven-plugin-version>3.1.0</exec-maven-plugin-version>
     <findbugs-maven-plugin-version>3.0.5</findbugs-maven-plugin-version>
-    <javacc-maven-plugin-version>3.0.1</javacc-maven-plugin-version>
+    <flatten-maven-plugin-version>1.6.0</flatten-maven-plugin-version>
+    <javacc-maven-plugin-version>3.1.0</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
-    <taglist-maven-plugin-version>3.0.0</taglist-maven-plugin-version>
-    <build-helper-maven-plugin-version>3.5.0</build-helper-maven-plugin-version>
+    <taglist-maven-plugin-version>3.2.1</taglist-maven-plugin-version>
+    <build-helper-maven-plugin-version>3.6.0</build-helper-maven-plugin-version>
     <replacer-maven-plugin-version>1.5.3</replacer-maven-plugin-version>
+    <sonar-maven-plugin-version>4.0.0.4121</sonar-maven-plugin-version>
     <apache-rat-plugin-version>0.16.1</apache-rat-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.5.0</depends-maven-plugin-version>
     <maven-dependency-plugin-version>3.6.1</maven-dependency-plugin-version>
-    <maven-project-info-reports-plugin-version>3.5.0</maven-project-info-reports-plugin-version>
+    <maven-project-info-reports-plugin-version>3.8.0</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
-    <maven-plugin-plugin-version>3.11.0</maven-plugin-plugin-version>
+    <maven-plugin-plugin-version>3.15.1</maven-plugin-plugin-version>
     <maven-core-version>3.8.6</maven-core-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
@@ -201,6 +205,7 @@
   </distributionManagement>
 
   <modules>
+    <module>bom</module>
     <module>activemq-openwire-generator</module>
     <module>activemq-client</module>
     <module>activemq-openwire-legacy</module>
@@ -464,7 +469,7 @@
       <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm</artifactId>
-        <version>9.6</version>
+        <version>9.7.1</version>
       </dependency>
 
      <!-- Servlet 5.0 and JSP -->
@@ -1082,6 +1087,11 @@
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
+          <artifactId>flatten-maven-plugin</artifactId>
+          <version>${flatten-maven-plugin-version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
           <artifactId>javacc-maven-plugin</artifactId>
           <version>${javacc-maven-plugin-version}</version>
         </plugin>
@@ -1140,6 +1150,11 @@
           <groupId>com.google.code.maven-replacer-plugin</groupId>
           <artifactId>replacer</artifactId>
           <version>${replacer-maven-plugin-version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>${sonar-maven-plugin-version}</version>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only.
             It has no influence on the Maven build itself.-->
@@ -1233,7 +1248,6 @@
         <configuration>
           <source>${source-version}</source>
           <target>${target-version}</target>
-          <optimize>true</optimize>
           <debug>true</debug>
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>

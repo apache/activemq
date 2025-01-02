@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.1.1-SNAPSHOT</version>
+    <version>6.2.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-console</artifactId>
@@ -168,7 +168,20 @@
           </includes>
         </configuration>
       </plugin>
-
+      <plugin>
+        <groupId>org.apache.activemq.protobuf</groupId>
+        <artifactId>activemq-protobuf</artifactId>
+        <configuration>
+            <sourceDirectory>src/main/protobuf</sourceDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.fusesource.hawtbuf</groupId>
         <artifactId>hawtbuf-protoc</artifactId>

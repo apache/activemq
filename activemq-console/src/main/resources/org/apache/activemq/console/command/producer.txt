@@ -16,3 +16,5 @@ Options :
     [--message                                      ..] - a text string to use as the message body
     [--payloadUrl                                  URL] - a url pointing to a document to use as the message body
     [--msgGroupID                                   ..] - JMS message group identifier
+    [--messagePriority                               N] - The message priority. Default is 4
+    [--disableMessageTimestamp              true|false] - Whether or not to disable timestamp on message, default false

@@ -48,6 +48,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import jakarta.jms.InvalidSelectorException;
 import jakarta.jms.JMSException;
+import jakarta.jms.MessageFormatException;
+import jakarta.jms.MessageFormatRuntimeException;
 import jakarta.jms.ResourceAllocationException;
 
 import org.apache.activemq.broker.BrokerService;
@@ -625,6 +627,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
         final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0
                 && !context.isInRecoveryMode();
+
+        if(getMessageInterceptorStrategy() != null) {
+            try {
+                getMessageInterceptorStrategy().process(producerExchange, message);
+            } catch (MessageFormatRuntimeException e) {
+                throw new MessageFormatException(e.getMessage(), e.getErrorCode());
+            }
+        }
+
         if (message.isExpired()) {
             // message not stored - or added to stats yet - so chuck here
             broker.getRoot().messageExpired(context, message, null);
@@ -1862,7 +1873,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         // This sends the ack the the journal..
         if (!ack.isInTransaction()) {
             acknowledge(context, sub, ack, reference);
-            dropMessage(reference);
+            dropMessage(context, reference);
         } else {
             try {
                 acknowledge(context, sub, ack, reference);
@@ -1871,7 +1882,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                     @Override
                     public void afterCommit() throws Exception {
-                        dropMessage(reference);
+                        dropMessage(context, reference);
                         wakeup();
                     }
 
@@ -1899,11 +1910,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         reference.setAcked(true);
     }
 
-    private void dropMessage(QueueMessageReference reference) {
+    private void dropMessage(ConnectionContext context, QueueMessageReference reference) {
         //use dropIfLive so we only process the statistics at most one time
         if (reference.dropIfLive()) {
             getDestinationStatistics().getDequeues().increment();
             getDestinationStatistics().getMessages().decrement();
+
+            if(isAdvancedNetworkStatisticsEnabled() && context.getConnection() != null && context.getConnection().isNetworkConnection()) {
+                getDestinationStatistics().getNetworkDequeues().increment();
+            }
+
             pagedInMessagesLock.writeLock().lock();
             try {
                 pagedInMessages.remove(reference);
@@ -1958,6 +1974,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         destinationStatistics.getMessageSize().addSize(msg.getSize());
+
+        if(isAdvancedNetworkStatisticsEnabled() && context.getConnection() != null && context.getConnection().isNetworkConnection()) {
+            destinationStatistics.getNetworkEnqueues().increment();
+        }
+
         messageDelivered(context, msg);
         consumersLock.readLock().lock();
         try {
@@ -2104,7 +2125,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             LOG.warn("{}, duplicate message {} - {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessageId(), ref.getMessage().getMessageId().getFutureOrSequenceLong());
                             if (store != null) {
                                 ConnectionContext connectionContext = createConnectionContext();
-                                dropMessage(ref);
+                                dropMessage(connectionContext, ref);
                                 if (gotToTheStore(ref.getMessage())) {
                                     LOG.debug("Duplicate message {} from cursor, removing from store", ref.getMessage());
                                     store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POISON_ACK_TYPE, 1));

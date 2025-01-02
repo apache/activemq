@@ -205,6 +205,7 @@ public class AnnotatedMBean extends StandardMBean {
         objects = (objects == null) ? new Object[]{} : objects;
         JMXAuditLogEntry entry = null;
         if (audit != OFF) {
+            // [AMQ-9563] TODO: JDK 21 use Subject.current() instead
             Subject subject = Subject.getSubject(AccessController.getContext());
             String caller = "anonymous";
             if (subject != null) {

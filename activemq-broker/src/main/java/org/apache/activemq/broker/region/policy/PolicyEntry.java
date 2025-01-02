@@ -106,7 +106,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean doOptimzeMessageStorage = true;
     private int maxDestinations = -1;
     private boolean useTopicSubscriptionInflightStats = true;
-
+    private boolean advancedNetworkStatisticsEnabled = false; // [AMQ-9437]
     /*
      * percentage of in-flight messages above which optimize message store is disabled
      */
@@ -115,6 +115,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int sendFailIfNoSpace = -1;
     private long sendFailIfNoSpaceAfterTimeout = -1;
 
+    private MessageInterceptorStrategy messageInterceptorStrategy = null;
 
     public void configure(Broker broker,Queue queue) {
         baseConfiguration(broker,queue);
@@ -139,6 +140,7 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
         queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
         queue.setPersistJMSRedelivered(isPersistJMSRedelivered());
+        queue.setMessageInterceptorStrategy(getMessageInterceptorStrategy());
     }
 
     public void update(Queue queue) {
@@ -201,6 +203,7 @@ public class PolicyEntry extends DestinationMapEntry {
             topic.getMemoryUsage().setLimit(memoryLimit);
         }
         topic.setLazyDispatch(isLazyDispatch());
+        topic.setMessageInterceptorStrategy(getMessageInterceptorStrategy());
     }
 
     public void update(Topic topic) {
@@ -302,6 +305,9 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         if (isUpdate("sendDuplicateFromStoreToDLQ", includedProperties)) {
             destination.setSendDuplicateFromStoreToDLQ(isSendDuplicateFromStoreToDLQ());
+        }
+        if (isUpdate("advancedNetworkStatisticsEnabled", includedProperties)) {
+            destination.setAdvancedNetworkStatisticsEnabled(isAdvancedNetworkStatisticsEnabled());
         }
     }
 
@@ -1034,7 +1040,7 @@ public class PolicyEntry extends DestinationMapEntry {
     /**
      * @return the amount of time spent inactive before GC of the destination kicks in.
      *
-     * @deprecated use getInactiveTimeoutBeforeGC instead.
+     * @deprecated use {@link #getInactiveTimeoutBeforeGC} instead.
      */
     @Deprecated
     public long getInactiveTimoutBeforeGC() {
@@ -1047,7 +1053,7 @@ public class PolicyEntry extends DestinationMapEntry {
      * @param inactiveTimoutBeforeGC
      *        time in milliseconds to configure as the inactive timeout.
      *
-     * @deprecated use getInactiveTimeoutBeforeGC instead.
+     * @deprecated use {@link #setInactiveTimeoutBeforeGC} instead.
      */
     @Deprecated
     public void setInactiveTimoutBeforeGC(long inactiveTimoutBeforeGC) {
@@ -1164,5 +1170,21 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setUseTopicSubscriptionInflightStats(boolean useTopicSubscriptionInflightStats) {
         this.useTopicSubscriptionInflightStats = useTopicSubscriptionInflightStats;
+    }
+
+    public void setMessageInterceptorStrategy(MessageInterceptorStrategy messageInterceptorStrategy) {
+        this.messageInterceptorStrategy = messageInterceptorStrategy;
+    }
+
+    public MessageInterceptorStrategy getMessageInterceptorStrategy() {
+        return this.messageInterceptorStrategy;
+    } 
+
+    public boolean isAdvancedNetworkStatisticsEnabled() {
+        return this.advancedNetworkStatisticsEnabled;
+    }
+
+    public void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled) {
+        this.advancedNetworkStatisticsEnabled = advancedNetworkStatisticsEnabled;
     }
 }
