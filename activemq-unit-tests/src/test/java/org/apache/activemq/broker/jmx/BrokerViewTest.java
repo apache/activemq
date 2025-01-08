@@ -23,7 +23,9 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
 
 public class BrokerViewTest {
     @Test(timeout=120000)
@@ -45,6 +47,10 @@ public class BrokerViewTest {
         Queue tempQueue = tempProducerSession.createTemporaryQueue();
         MessageProducer tempProducer = tempProducerSession.createProducer(tempQueue);
         tempProducer.send(tempProducerSession.createTextMessage("testMessage"));
+        Session tempProducerSession2 = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue tempQueue2 = tempProducerSession2.createTemporaryQueue();
+        MessageProducer tempProducer2 = tempProducerSession2.createProducer(tempQueue2);
+        tempProducer2.send(tempProducerSession2.createTextMessage("testMessage"));
         // Create non-suppressed topic
         Session topicProducerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = topicProducerSession.createTopic("testTopic");
@@ -58,11 +64,11 @@ public class BrokerViewTest {
 
         assertTrue(Wait.waitFor(() -> (brokerService.getAdminView()) != null));
         final BrokerView view = brokerService.getAdminView();
-        assert(view.getTotalTopicsCount() == 11); // Including advisory topics
-        assert(view.getTotalNonSuppressedTopicsCount() == 11);
-        assert(view.getTotalTemporaryTopicsCount() == 1);
-        assert(view.getTotalQueuesCount() == 1);
-        assert(view.getTotalNonSuppressedQueuesCount() == 1);
-        assert(view.getTotalTemporaryQueuesCount() == 1);
+        assertEquals(view.getTotalTopicsCount(), 12);
+        assertEquals(view.getTotalNonSuppressedTopicsCount(), 12);
+        assertEquals(view.getTotalTemporaryTopicsCount(), 1);
+        assertEquals(view.getTotalQueuesCount(), 1);
+        assertEquals(view.getTotalNonSuppressedQueuesCount(), 1);
+        assertEquals(view.getTotalTemporaryQueuesCount(), 2);
     }
 }
