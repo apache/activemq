@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Enumeration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.jms.CompletionListener;
 import jakarta.jms.Destination;
@@ -294,26 +296,6 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
     @Test(expected = UnsupportedOperationException.class)
     public void testProducerDeliveryDelaySet() throws JMSException {
         messageProducer.setDeliveryDelay(1000l);
-    }
-
-    @Test(expected = UnsupportedOperationException.class)
-    public void testProducerSendMessageCompletionListener() throws JMSException {
-         messageProducer.send(session.createQueue(methodNameDestinationName), null, (CompletionListener)null);
-    }
-
-    @Test(expected = UnsupportedOperationException.class)
-    public void testProducerSendMessageQoSParamsCompletionListener() throws JMSException {
-         messageProducer.send(null, 1, 4, 0l, null);
-    }
-
-    @Test(expected = UnsupportedOperationException.class)
-    public void testProducerSendDestinationMessageCompletionListener() throws JMSException {
-         messageProducer.send(session.createQueue(methodNameDestinationName), null, null);
-    }
-
-    @Test(expected = UnsupportedOperationException.class)
-    public void testProducerSendDestinationMessageQosParamsCompletionListener() throws JMSException {
-         messageProducer.send(session.createQueue(methodNameDestinationName), null, 1, 4, 0l, null);
     }
 
     protected static void sendMessage(JMSContext jmsContext, Destination testDestination, String textBody) {
