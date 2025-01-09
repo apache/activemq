@@ -18,7 +18,7 @@
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <import resource="classpath:jetty.xml" />
+    <import resource="jetty.xml" />
 
     <bean id="secHandlerCollection" class="org.eclipse.jetty.server.handler.HandlerCollection">
         <property name="handlers">
