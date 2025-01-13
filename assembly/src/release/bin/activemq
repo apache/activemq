@@ -108,14 +108,14 @@ if [ -z "$ACTIVEMQ_USER_CLASSPATH" ] ; then
 fi
 
 # ActiveMQ Classpath configuration
-ACTIVEMQ_CLASSPATH="$ACTIVEMQ_BASE/../lib/:$ACTIVEMQ_USER_CLASSPATH"
+ACTIVEMQ_CLASSPATH="${ACTIVEMQ_BASE%/}/../lib/:$ACTIVEMQ_USER_CLASSPATH"
 
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
 
     # For backwards compat with old variables we let ACTIVEMQ_CONFIG_DIR set ACTIVEMQ_CONF
     if [ -z "$ACTIVEMQ_CONFIG_DIR" ] ; then
-        ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
+        ACTIVEMQ_CONF="${ACTIVEMQ_BASE%/}/conf"
     else
         ACTIVEMQ_CONF="$ACTIVEMQ_CONFIG_DIR"
     fi
@@ -136,14 +136,14 @@ if [ -z "$ACTIVEMQ_DATA" ] ; then
 
     # For backwards compat with old variables we let ACTIVEMQ_DATA_DIR set ACTIVEMQ_DATA
     if [ -z "$ACTIVEMQ_DATA_DIR" ] ; then
-        ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
+        ACTIVEMQ_DATA="${ACTIVEMQ_BASE%/}/data"
     else
         ACTIVEMQ_DATA="$ACTIVEMQ_DATA_DIR"
     fi
 fi
 
 if [ -z "$ACTIVEMQ_TMP" ] ; then
-  ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
+  ACTIVEMQ_TMP="${ACTIVEMQ_BASE%/}/tmp"
 fi
 
 if [ ! -d "$ACTIVEMQ_DATA" ]; then
@@ -171,7 +171,7 @@ if ( basename $0 | grep "activemq-instance-" > /dev/null);then
   ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
   echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
 else
-  ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc $ACTIVEMQ_HOME/bin/setenv"
+  ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc ${ACTIVEMQ_HOME%/}/bin/setenv"
 fi
 
 # load activemq configuration
@@ -310,8 +310,8 @@ invokeJar(){
    TASK_TODO="$2"
    RET="1"
 
-   if [ ! -f "${ACTIVEMQ_HOME}/bin/activemq.jar" ];then
-    echo "ERROR: '${ACTIVEMQ_HOME}/bin/activemq.jar' does not exist, define ACTIVEMQ_HOME in the config"
+   if [ ! -f "${ACTIVEMQ_HOME%/}/bin/activemq.jar" ];then
+    echo "ERROR: '${ACTIVEMQ_HOME%/}/bin/activemq.jar' does not exist, define ACTIVEMQ_HOME in the config"
     exit 1
    fi
 
@@ -359,7 +359,7 @@ invokeJar(){
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               -Djolokia.conf=\"${JOLOKIA_CONF}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> \"$ACTIVEMQ_OUT\" 2>&1 &
+              -jar \"${ACTIVEMQ_HOME%/}/bin/activemq.jar\" $COMMANDLINE_ARGS >> \"$ACTIVEMQ_OUT\" 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > \"${PIDFILE}\";
               echo \"INFO: pidfile created : '${PIDFILE}' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
@@ -389,7 +389,7 @@ invokeJar(){
             -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
             -Djolokia.conf=\"${JOLOKIA_CONF}\" \
             $ACTIVEMQ_CYGWIN \
-            -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $SPID &
+            -jar \"${ACTIVEMQ_HOME%/}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $SPID &
             RET=\"\$?\"; APID=\"\$!\";
             echo \$APID > \"${PIDFILE}.stop\"; exit \$RET" $DOIT_POSTFIX
           RET="$?"
@@ -417,7 +417,7 @@ invokeJar(){
           -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
           -Djolokia.conf=\"${JOLOKIA_CONF}\" \
           $ACTIVEMQ_CYGWIN \
-          -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
+          -jar \"${ACTIVEMQ_HOME%/}/bin/activemq.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
       RET="$?"
    fi
    return $RET
