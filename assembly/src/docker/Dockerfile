@@ -25,12 +25,11 @@ ENV ACTIVEMQ_CONF $ACTIVEMQ_HOME/conf
 ENV ACTIVEMQ_OPTS_MEMORY -Xms64M -Xmx1G
 ENV ACTIVEMQ_EXEC exec
 ENV PATH $PATH:$ACTIVEMQ_HOME/bin
-ENV ACTIVEMQ_CONNECTION_ANONYMOUS true
 ENV ACTIVEMQ_CONNECTION_USER system
 ENV ACTIVEMQ_CONNECTION_PASSWORD manager
 
 # Make the Web console accesible from outside the container
-ENV ACTIVEMQ_OPTS $ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config -Djetty.host=0.0.0.0 -Dactivemq.username=$ACTIVEMQ_CONNECTION_USER -Dactivemq.password=$ACTIVEMQ_CONNECTION_PASSWORD -Dactivemq.anonymous.enabled=$ACTIVEMQ_CONNECTION_ANONYMOUS
+ENV ACTIVEMQ_OPTS $ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config -Djetty.host=0.0.0.0 -Dactivemq.username=$ACTIVEMQ_CONNECTION_USER -Dactivemq.password=$ACTIVEMQ_CONNECTION_PASSWORD
 #WORKDIR $ACTIVEMQ_HOME
 
 # activemq_dist can point to a directory or a tarball on the local system
