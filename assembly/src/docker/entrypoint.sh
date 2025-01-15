@@ -30,7 +30,7 @@
     sed -i "s/activemq.password=manager//" ${ACTIVEMQ_HOME}/conf/credentials.properties
     read -r -d '' REPLACE << END
       <plugins>
-        <simpleAuthenticationPlugin anonymousAccessAllowed=$\{activemq.anonymous.enabled\}>
+        <simpleAuthenticationPlugin>
           <users>
             <authenticationUser username="$\{activemq.username}" password="$\{activemq.password}"/>
           </users>
