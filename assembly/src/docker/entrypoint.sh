@@ -19,29 +19,12 @@
 ################################################################################
 
 # JMX security
-if [ -n "${ACTIVEMQ_JMX_USER}" ]; then
-  if [ -f "${ACTIVEMQ_HOME}/conf/jmx.security.enabled" ]; then
-    echo "JMX Security already enabled"
-  else
-     echo "Enabling ActiveMQ JMX security"
-     read -r -d '' REPLACE << END
-       <managementContext>
-         <managementContext createConnector="true" />
-       </managementContext>
-     </broker>
-END
-     REPLACE=${REPLACE//\//\\\/}
-     REPLACE=${REPLACE//$\\/$}
-     REPLACE=$(echo $REPLACE | tr '\n' ' ')
-     sed -i "s/<\/broker>/$REPLACE/" ${ACTIVEMQ_HOME}/conf/activemq.xml
-     sed -i "s/admin/${ACTIVEMQ_JMX_USER}/" ${ACTIVEMQ_HOME}/conf/jmx.access
-     sed -i "s/admin/${ACTIVEMQ_JMX_USER}/" ${ACTIVEMQ_HOME}/conf/jmx.password
-     if [ -n "${ACTIVEMQ_JMX_PASSWORD}" ]; then
-       sed -i "s/\ activemq/\ ${ACTIVEMQ_JMX_PASSWORD}/" ${ACTIVEMQ_HOME}/conf/jmx.password
-     fi
-     touch "${ACTIVEMQ_HOME}/conf/jmx.security.enabled"
-  fi
+if [ -n $ACTIVEMQ_JMX_USER ]; then
+  ACTIVEMQ_SUNJMX_START="-Dcom.sun.management.jmxremote.authenticate=true"
+  ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.password.file=${ACTIVEMQ_HOME}/conf/jmxremote.password"
+  ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.access.file=${ACTIVEMQ_HOME}/conf/jmxremote.access"
 fi
+export ACTIVEMQ_SUNJMX_START
 
 # WebConsole security
 if [ -n "${ACTIVEMQ_WEB_USER}" ]; then

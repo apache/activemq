@@ -17,8 +17,11 @@
 ################################################################################
 FROM debian:bookworm-slim AS amq_tpl
 ENV DEBIAN_FRONTEND=noninteractive
+ARG JMX_USER
+ARG JMX_PASSWORD
 # activemq_dist can point to a directory or a tarball on the local system
 ARG activemq_dist=NOT_SET
+
 # deploy ActiveMQ distribution
 ADD $activemq_dist /
 RUN mv /apache-activemq-* /apache-activemq
@@ -43,6 +46,10 @@ RUN xmlstarlet ed -L \
   -N a='http://activemq.apache.org/schema/core' \
   -u '/d:beans/a:broker/a:managementContext/a:managementContext/@createConnector' -v '${activemq.jmx.enabled}' \
   conf/activemq.xml
+RUN if [ -n $JMX_USER ]; then \
+    sed -i "s/admin/${JMX_USER}/" conf/jmx.access && \
+    sed -i "s/admin activemq/${JMX_USER} ${JMX_PASSWORD}/" conf/jmx.password; \
+    fi
 RUN rm conf/credentials.properties && touch conf/credentials.properties
 
 FROM eclipse-temurin:17-jre
@@ -58,6 +65,7 @@ ENV ACTIVEMQ_CONNECTION_USER=system
 ENV ACTIVEMQ_CONNECTION_GROUPS=users
 ENV ACTIVEMQ_CONNECTION_PASSWORD=manager
 ENV ACTIVEMQ_JMX_ENABLED=false
+ENV JMX_USER=$JMX_USER
 
 # Make the Web console accesible from outside the container
 ENV ACTIVEMQ_OPTS='$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config -Djetty.host=0.0.0.0 -Dactivemq.username=$ACTIVEMQ_CONNECTION_USER -Dactivemq.groups=$ACTIVEMQ_CONNECTION_GROUPS -Dactivemq.password=$ACTIVEMQ_CONNECTION_PASSWORD -Dactivemq.jmx.enabled=$ACTIVEMQ_JMX_ENABLED'
