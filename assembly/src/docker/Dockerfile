@@ -38,6 +38,11 @@ RUN xmlstarlet ed -L \
   -a '/d:beans/a:broker/plugins/simpleAuthenticationPlugin/users/authenticationUser' -t attr -name password -v '${activemq.password}' \
   -a '/d:beans/a:broker/plugins/simpleAuthenticationPlugin/users/authenticationUser' -t attr -name groups -v '${activemq.groups}' \
   conf/activemq.xml
+RUN xmlstarlet ed -L \
+  -N d='http://www.springframework.org/schema/beans' \
+  -N a='http://activemq.apache.org/schema/core' \
+  -u '/d:beans/a:broker/a:managementContext/a:managementContext/@createConnector' -v '${activemq.jmx.enabled}' \
+  conf/activemq.xml
 RUN rm conf/credentials.properties && touch conf/credentials.properties
 
 FROM eclipse-temurin:17-jre
@@ -52,9 +57,10 @@ ENV PATH $PATH:$ACTIVEMQ_HOME/bin
 ENV ACTIVEMQ_CONNECTION_USER=system
 ENV ACTIVEMQ_CONNECTION_GROUPS=users
 ENV ACTIVEMQ_CONNECTION_PASSWORD=manager
+ENV ACTIVEMQ_JMX_ENABLED=false
 
 # Make the Web console accesible from outside the container
-ENV ACTIVEMQ_OPTS='$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config -Djetty.host=0.0.0.0 -Dactivemq.username=$ACTIVEMQ_CONNECTION_USER -Dactivemq.groups=$ACTIVEMQ_CONNECTION_GROUPS -Dactivemq.password=$ACTIVEMQ_CONNECTION_PASSWORD'
+ENV ACTIVEMQ_OPTS='$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config -Djetty.host=0.0.0.0 -Dactivemq.username=$ACTIVEMQ_CONNECTION_USER -Dactivemq.groups=$ACTIVEMQ_CONNECTION_GROUPS -Dactivemq.password=$ACTIVEMQ_CONNECTION_PASSWORD -Dactivemq.jmx.enabled=$ACTIVEMQ_JMX_ENABLED'
 #WORKDIR $ACTIVEMQ_HOME
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
