@@ -19,13 +19,6 @@
 ################################################################################
 
 # JMX security
-if [ -n "$JMX_USER" -o -n"$ACTIVEMQ_JMX_USER" ]; then
-  ACTIVEMQ_SUNJMX_START="-Dcom.sun.management.jmxremote.authenticate=true"
-  ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.password.file=${ACTIVEMQ_HOME}/conf/jmx.password"
-  ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.access.file=${ACTIVEMQ_HOME}/conf/jmx.access"
-  export ACTIVEMQ_SUNJMX_START
-fi
-
 if [ -n "${ACTIVEMQ_JMX_USER}" ]; then
   if [ -f "${ACTIVEMQ_HOME}/conf/jmx.security.enabled" ]; then
     echo "JMX Security already enabled"
