@@ -20,6 +20,8 @@ FROM debian:bookworm-slim AS amq_tpl
 ARG activemq_dist=NOT_SET
 ARG JMX_USER
 ARG JMX_PASSWORD
+ARG ACTIVEMQ_WEB_DEFAULT_USER=admin
+ARG ACTIVEMQ_WEB_DEFAULT_PASSWORD=admin
 ARG LOG_TO_FS=true
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -34,7 +36,6 @@ RUN xmlstarlet ed -L \
   -N d='http://www.springframework.org/schema/beans' \
   -N a='http://activemq.apache.org/schema/core' \
   -d '//comment()' \
-  -d '/d:beans/d:bean[@class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"]/d:property[@name="locations"]' \
   -s '/d:beans/a:broker' -t elem -n plugins \
   -s '/d:beans/a:broker/plugins' -t elem -n simpleAuthenticationPlugin \
   -s '/d:beans/a:broker/plugins/simpleAuthenticationPlugin' -t elem -n users \
@@ -49,12 +50,23 @@ RUN xmlstarlet ed -L \
   -N a='http://activemq.apache.org/schema/core' \
   -u '/d:beans/a:broker/a:managementContext/a:managementContext/@createConnector' -v '${activemq.jmx.enabled}' \
   conf/activemq.xml
+# Configure default web console authentication for ActiveMQ 5.x and 6.x
+RUN if [ -n "$ACTIVEMQ_WEB_DEFAULT_USER" ]; then \
+    sed -i "s/admin=/${ACTIVEMQ_WEB_DEFAULT_USER}=/g" conf/users.properties; \
+    sed -i "s/=admin/=${ACTIVEMQ_WEB_DEFAULT_USER}/g" conf/groups.properties; \
+    fi; \
+    if [ -n "$ACTIVEMQ_WEB_DEFAULT_PASSWORD" ]; then \
+    sed -i "s/=admin/=${ACTIVEMQ_WEB_DEFAULT_PASSWORD}/g" conf/users.properties; \
+    fi; \
+    if [ -f conf/jetty-realm.properties ]; then \
+    sed -i "s/admin: admin/${ACTIVEMQ_WEB_DEFAULT_USER}: ${ACTIVEMQ_WEB_DEFAULT_PASSWORD}/" conf/jetty-realm.properties; \
+    fi
 RUN if [ -n "$JMX_USER" ]; then \
     sed -i "s/admin/${JMX_USER}/" conf/jmx.access && \
     sed -i "s/admin activemq/${JMX_USER} ${JMX_PASSWORD}/" conf/jmx.password; \
     fi
 RUN if [ "$LOG_TO_FS" = "false" ]; then \
-    sed -ri "s/^appender\.(logfile|auditlog).*//g" conf/log4j2.properties; \
+    sed -ri "s/^(rootLogger\.)?appender(Ref)?\.(logfile|auditlog).*//g" conf/log4j2.properties; \
     fi
 RUN rm conf/credentials.properties && touch conf/credentials.properties && \
     mkdir tmp && \
@@ -64,6 +76,8 @@ FROM eclipse-temurin:17-jre
 ARG JMX_USER
 ARG ACTIVEMQ_USERNAME=activemq
 ARG ACTIVEMQ_GROUPNAME=activemq
+ARG ACTIVEMQ_WEB_DEFAULT_USER=admin
+ARG ACTIVEMQ_WEB_DEFAULT_PASSWORD=admin
 
 # ActiveMQ environment variables
 ENV ACTIVEMQ_INSTALL_PATH=/opt
@@ -77,6 +91,8 @@ ENV ACTIVEMQ_CONNECTION_GROUPS=users
 ENV ACTIVEMQ_CONNECTION_PASSWORD=manager
 ENV ACTIVEMQ_JMX_ENABLED=false
 ENV JMX_USER=$JMX_USER
+ENV ACTIVEMQ_WEB_DEFAULT_USER=$ACTIVEMQ_WEB_DEFAULT_USER
+ENV ACTIVEMQ_WEB_DEFAULT_PASSWORD=$ACTIVEMQ_WEB_DEFAULT_PASSWORD
 
 # Make the Web console accesible from outside the container
 ENV ACTIVEMQ_OPTS='$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config -Djetty.host=0.0.0.0 -Dactivemq.username=$ACTIVEMQ_CONNECTION_USER -Dactivemq.groups=$ACTIVEMQ_CONNECTION_GROUPS -Dactivemq.password=$ACTIVEMQ_CONNECTION_PASSWORD -Dactivemq.jmx.enabled=$ACTIVEMQ_JMX_ENABLED'
