@@ -20,6 +20,7 @@ FROM debian:bookworm-slim AS amq_tpl
 ARG activemq_dist=NOT_SET
 ARG JMX_USER
 ARG JMX_PASSWORD
+ARG LOG_TO_FS=true
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -51,6 +52,9 @@ RUN xmlstarlet ed -L \
 RUN if [ -n "$JMX_USER" ]; then \
     sed -i "s/admin/${JMX_USER}/" conf/jmx.access && \
     sed -i "s/admin activemq/${JMX_USER} ${JMX_PASSWORD}/" conf/jmx.password; \
+    fi
+RUN if [ "$LOG_TO_FS" = "false" ]; then \
+    sed -ri "s/^appender\.(logfile|auditlog).*//g" conf/log4j2.properties; \
     fi
 RUN rm conf/credentials.properties && touch conf/credentials.properties && \
     mkdir tmp && \
