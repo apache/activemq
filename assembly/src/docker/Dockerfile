@@ -20,7 +20,6 @@ FROM debian:bookworm-slim AS amq_tpl
 ARG activemq_dist=NOT_SET
 ARG ACTIVEMQ_WEB_DEFAULT_USER=admin
 ARG ACTIVEMQ_WEB_DEFAULT_PASSWORD=admin
-ARG LOG_TO_FS=true
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -58,9 +57,6 @@ RUN if [ -n "$ACTIVEMQ_WEB_DEFAULT_USER" ]; then \
     fi; \
     if [ -f conf/jetty-realm.properties ]; then \
     sed -i "s/admin: admin/${ACTIVEMQ_WEB_DEFAULT_USER}: ${ACTIVEMQ_WEB_DEFAULT_PASSWORD}/" conf/jetty-realm.properties; \
-    fi
-RUN if [ "$LOG_TO_FS" = "false" ]; then \
-    sed -ri "s/^(rootLogger\.)?appender(Ref)?\.(logfile|auditlog).*//g" conf/log4j2.properties; \
     fi
 RUN rm conf/credentials.properties && touch conf/credentials.properties && \
     mkdir tmp && \
