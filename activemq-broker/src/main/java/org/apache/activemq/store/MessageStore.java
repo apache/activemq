@@ -180,6 +180,8 @@ public interface MessageStore extends Service {
 
     void recoverNextMessages(int offset, int maxReturned, MessageRecoveryListener listener) throws Exception;
 
+    void recoverNextMessages(int offset, int maxReturned, MessageRecoveryListener listener, boolean revertOrderIndex) throws Exception;
+
     void dispose(ConnectionContext context);
 
     /**
@@ -211,4 +213,5 @@ public interface MessageStore extends Service {
     void updateMessage(Message message) throws IOException;
 
     void registerIndexListener(IndexListener indexListener);
+
 }

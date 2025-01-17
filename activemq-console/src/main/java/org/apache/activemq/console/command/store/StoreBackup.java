@@ -22,7 +22,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -62,6 +66,8 @@ public class StoreBackup {
     String queue;
     Integer offset;
     Integer count;
+    String indexes;
+    Collection<Integer> indexesList;
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final AsciiBuffer ds_kind = new AsciiBuffer("ds");
@@ -86,6 +92,10 @@ public class StoreBackup {
 
         if (offset != null && count == null) {
             throw new Exception("optional --offset and --count must be specified together");
+        }
+
+        if (indexes != null && !indexes.isBlank()) {
+            indexesList = parseIndexesParam(indexes);
         }
 
         setFile(new File(filename));
@@ -178,7 +188,14 @@ public class StoreBackup {
                         return true;
                     }
                 };
-                if(offset != null) {
+                if(indexesList != null) {
+                    for(int idx : indexesList) {
+                        if(idx < 0) {
+                            continue;
+                        }
+                        queue.recoverNextMessages(idx, 1, queueRecoveryListener, true);
+                    }
+                } else if(offset != null) {
                     queue.recoverNextMessages(offset, count, queueRecoveryListener);
                 } else {
                     queue.recover(queueRecoveryListener);
@@ -322,5 +339,30 @@ public class StoreBackup {
 
     public Integer getCount() {
         return count;
+    }
+
+    public void setIndexes(String indexes) {
+        this.indexes = indexes;
+    }
+
+    public String getIndexes() {
+        return indexes;
+    }
+
+    private Collection<Integer> parseIndexesParam(final String indexesParam) {
+        String tmp = indexesParam;
+        String[] parts;
+        if(tmp.contains(",")) {
+            parts = tmp.split(",");
+        } else {
+            return Set.of(Integer.valueOf(tmp));
+        }
+
+        List<Integer> indexes = new LinkedList<>();
+        for(String tmpPart : parts) {
+            indexes.add(Integer.valueOf(tmpPart.trim()));
+        }
+
+        return indexes;
     }
 }
