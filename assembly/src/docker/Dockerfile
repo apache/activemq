@@ -15,16 +15,17 @@
 #  See the License for the specific language governing permissions and
 # limitations under the License.
 ################################################################################
+FROM debian:bookworm-slim AS amq_tpl
+# activemq_dist can point to a directory or a tarball on the local system
+ARG activemq_dist=NOT_SET
 ARG JMX_USER
 ARG JMX_PASSWORD
 
-FROM debian:bookworm-slim AS amq_tpl
 ENV DEBIAN_FRONTEND=noninteractive
-# activemq_dist can point to a directory or a tarball on the local system
-ARG activemq_dist=NOT_SET
 
 # Prepare ActiveMQ distribution
 ADD $activemq_dist /
+
 RUN mv /apache-activemq-* /apache-activemq
 WORKDIR /apache-activemq
 RUN apt-get update && apt-get install xmlstarlet -y
@@ -47,16 +48,16 @@ RUN xmlstarlet ed -L \
   -N a='http://activemq.apache.org/schema/core' \
   -u '/d:beans/a:broker/a:managementContext/a:managementContext/@createConnector' -v '${activemq.jmx.enabled}' \
   conf/activemq.xml
-RUN if [ -n $JMX_USER ]; then \
+RUN if [ -n "$JMX_USER" ]; then \
     sed -i "s/admin/${JMX_USER}/" conf/jmx.access && \
     sed -i "s/admin activemq/${JMX_USER} ${JMX_PASSWORD}/" conf/jmx.password; \
     fi
 RUN rm conf/credentials.properties && touch conf/credentials.properties && \
     mkdir tmp && \
-    chmod -R g+w data tmp
+    chmod -R g+w conf data tmp
 
 FROM eclipse-temurin:17-jre
-
+ARG JMX_USER
 ARG ACTIVEMQ_USERNAME=activemq
 ARG ACTIVEMQ_GROUPNAME=activemq
 
