@@ -18,8 +18,6 @@
 FROM debian:bookworm-slim AS amq_tpl
 # activemq_dist can point to a directory or a tarball on the local system
 ARG activemq_dist=NOT_SET
-ARG JMX_USER
-ARG JMX_PASSWORD
 ARG ACTIVEMQ_WEB_DEFAULT_USER=admin
 ARG ACTIVEMQ_WEB_DEFAULT_PASSWORD=admin
 ARG LOG_TO_FS=true
@@ -61,10 +59,6 @@ RUN if [ -n "$ACTIVEMQ_WEB_DEFAULT_USER" ]; then \
     if [ -f conf/jetty-realm.properties ]; then \
     sed -i "s/admin: admin/${ACTIVEMQ_WEB_DEFAULT_USER}: ${ACTIVEMQ_WEB_DEFAULT_PASSWORD}/" conf/jetty-realm.properties; \
     fi
-RUN if [ -n "$JMX_USER" ]; then \
-    sed -i "s/admin/${JMX_USER}/" conf/jmx.access && \
-    sed -i "s/admin activemq/${JMX_USER} ${JMX_PASSWORD}/" conf/jmx.password; \
-    fi
 RUN if [ "$LOG_TO_FS" = "false" ]; then \
     sed -ri "s/^(rootLogger\.)?appender(Ref)?\.(logfile|auditlog).*//g" conf/log4j2.properties; \
     fi
@@ -73,7 +67,6 @@ RUN rm conf/credentials.properties && touch conf/credentials.properties && \
     chmod -R g+w conf data tmp
 
 FROM eclipse-temurin:17-jre
-ARG JMX_USER
 ARG ACTIVEMQ_USERNAME=activemq
 ARG ACTIVEMQ_GROUPNAME=activemq
 ARG ACTIVEMQ_WEB_DEFAULT_USER=admin
@@ -90,7 +83,6 @@ ENV ACTIVEMQ_CONNECTION_USER=system
 ENV ACTIVEMQ_CONNECTION_GROUPS=users
 ENV ACTIVEMQ_CONNECTION_PASSWORD=manager
 ENV ACTIVEMQ_JMX_ENABLED=false
-ENV JMX_USER=$JMX_USER
 ENV ACTIVEMQ_WEB_DEFAULT_USER=$ACTIVEMQ_WEB_DEFAULT_USER
 ENV ACTIVEMQ_WEB_DEFAULT_PASSWORD=$ACTIVEMQ_WEB_DEFAULT_PASSWORD
 
@@ -103,6 +95,9 @@ RUN groupadd --system ${ACTIVEMQ_GROUPNAME} && \
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY --from=amq_tpl --chown=:${ACTIVEMQ_GROUPNAME} /apache-activemq $ACTIVEMQ_INSTALL_PATH/apache-activemq
+
+RUN chmod 600 ${ACTIVEMQ_HOME}/conf/jmx.password && \
+    chown ${ACTIVEMQ_USERNAME}:${ACTIVEMQ_GROUPNAME} ${ACTIVEMQ_HOME}/conf/jmx.password
 
 USER ${ACTIVEMQ_USERNAME}
 EXPOSE 8161 61616 5672 61613 1883 61614 1099
