@@ -15,14 +15,15 @@
 #  See the License for the specific language governing permissions and
 # limitations under the License.
 ################################################################################
-FROM debian:bookworm-slim AS amq_tpl
-ENV DEBIAN_FRONTEND=noninteractive
 ARG JMX_USER
 ARG JMX_PASSWORD
+
+FROM debian:bookworm-slim AS amq_tpl
+ENV DEBIAN_FRONTEND=noninteractive
 # activemq_dist can point to a directory or a tarball on the local system
 ARG activemq_dist=NOT_SET
 
-# deploy ActiveMQ distribution
+# Prepare ActiveMQ distribution
 ADD $activemq_dist /
 RUN mv /apache-activemq-* /apache-activemq
 WORKDIR /apache-activemq
@@ -50,9 +51,14 @@ RUN if [ -n $JMX_USER ]; then \
     sed -i "s/admin/${JMX_USER}/" conf/jmx.access && \
     sed -i "s/admin activemq/${JMX_USER} ${JMX_PASSWORD}/" conf/jmx.password; \
     fi
-RUN rm conf/credentials.properties && touch conf/credentials.properties
+RUN rm conf/credentials.properties && touch conf/credentials.properties && \
+    mkdir tmp && \
+    chmod -R g+w data tmp
 
 FROM eclipse-temurin:17-jre
+
+ARG ACTIVEMQ_USERNAME=activemq
+ARG ACTIVEMQ_GROUPNAME=activemq
 
 # ActiveMQ environment variables
 ENV ACTIVEMQ_INSTALL_PATH /opt
@@ -71,9 +77,13 @@ ENV JMX_USER=$JMX_USER
 ENV ACTIVEMQ_OPTS='$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config -Djetty.host=0.0.0.0 -Dactivemq.username=$ACTIVEMQ_CONNECTION_USER -Dactivemq.groups=$ACTIVEMQ_CONNECTION_GROUPS -Dactivemq.password=$ACTIVEMQ_CONNECTION_PASSWORD -Dactivemq.jmx.enabled=$ACTIVEMQ_JMX_ENABLED'
 #WORKDIR $ACTIVEMQ_HOME
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY --from=amq_tpl /apache-activemq $ACTIVEMQ_INSTALL_PATH/apache-activemq
+RUN groupadd --system ${ACTIVEMQ_GROUPNAME} && \
+    useradd -l --system -g ${ACTIVEMQ_GROUPNAME} -d ${ACTIVEMQ_HOME} -s /bin/false ${ACTIVEMQ_USERNAME}
 
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --from=amq_tpl --chown=:${ACTIVEMQ_GROUPNAME} /apache-activemq $ACTIVEMQ_INSTALL_PATH/apache-activemq
+
+USER ${ACTIVEMQ_USERNAME}
 EXPOSE 8161 61616 5672 61613 1883 61614 1099
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["activemq", "console"]
