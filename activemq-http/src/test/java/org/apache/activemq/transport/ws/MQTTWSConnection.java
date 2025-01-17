@@ -55,7 +55,6 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
 
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
 
-    private Session connection;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     private final MQTTWireFormat wireFormat = new MQTTWireFormat();
 
@@ -67,17 +66,17 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
 
     @Override
     public boolean isConnected() {
-        return connection != null ? connection.isOpen() : false;
+        return getSession() != null ? getSession().isOpen() : false;
     }
 
     public void close() {
-        if (connection != null) {
-            connection.close();
+        if (getSession() != null) {
+            getSession().close();
         }
     }
 
     protected Session getConnection() {
-        return connection;
+        return getSession();
     }
 
     //----- Connection and Disconnection methods -----------------------------//
@@ -193,7 +192,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
             frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(data, offset, length));
         } catch (IOException e) {
             LOG.error("Could not decode incoming MQTT Frame: {}", e.getMessage());
-            connection.close();
+            getSession().close();
         }
 
         try {
@@ -243,11 +242,11 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
                 break;
             default:
                 LOG.error("Unknown MQTT  Frame received.");
-                connection.close();
+                getSession().close();
             }
         } catch (Exception e) {
             LOG.error("Could not decode incoming MQTT Frame: {}", e.getMessage());
-            connection.close();
+            getSession().close();
         }
     }
 
@@ -255,11 +254,11 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
 
     private void sendBytes(ByteSequence payload) throws IOException {
         if (!isWritePartialFrames()) {
-            connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data, payload.offset, payload.length));
+            getRemote().sendBytes(ByteBuffer.wrap(payload.data, payload.offset, payload.length));
         } else {
-            connection.getRemote().sendBytes(ByteBuffer.wrap(
+            getRemote().sendBytes(ByteBuffer.wrap(
                 payload.data, payload.offset, payload.length / 2));
-            connection.getRemote().sendBytes(ByteBuffer.wrap(
+            getRemote().sendBytes(ByteBuffer.wrap(
                 payload.data, payload.offset + payload.length / 2, payload.length / 2));
         }
     }
@@ -274,7 +273,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
     public void onWebSocketClose(int statusCode, String reason) {
         LOG.trace("MQTT WS Connection closed, code:{} message:{}", statusCode, reason);
 
-        this.connection = null;
+        getSession().close(statusCode, reason);
         this.closeCode = statusCode;
         this.closeMessage = reason;
 
@@ -282,8 +281,8 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
 
     @Override
     public void onWebSocketConnect(org.eclipse.jetty.ee9.websocket.api.Session session) {
-        this.connection = session;
-        this.connection.setIdleTimeout(Duration.ZERO);
+        super.onWebSocketConnect(session);
+        getSession().setIdleTimeout(Duration.ZERO);
         this.connectLatch.countDown();
     }
 }

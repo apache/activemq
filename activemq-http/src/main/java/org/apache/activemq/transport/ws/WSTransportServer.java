@@ -21,8 +21,6 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 
-import jakarta.servlet.Servlet;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.BrokerInfo;

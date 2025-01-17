@@ -145,12 +145,12 @@ public class WSSTransportNeedClientAuthTest {
         MQTTWSConnection wsMQTTConnection = new MQTTWSConnection();
 
         wsClient.connect(wsMQTTConnection, new URI("wss://localhost:61618"), request);
+
         if (!wsMQTTConnection.awaitConnection(30, TimeUnit.SECONDS)) {
             throw new IOException("Could not connect to MQTT WS endpoint");
         }
 
         wsMQTTConnection.connect();
-
         assertTrue("Client not connected", wsMQTTConnection.isConnected());
 
         wsMQTTConnection.disconnect();
