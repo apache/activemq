@@ -58,6 +58,18 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
     }
 
     @Test
+    public void testModAdvancedMessageStatistics() throws Exception {
+        final String brokerConfig = configurationSeed + "-policy-ml-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedMessageStatistics");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        verifyBooleanField("AMQ.8463", "advancedMessageStatisticsEnabled", false);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedMessageStatistics-mod", SLEEP);
+        verifyBooleanField("AMQ.8463", "advancedMessageStatisticsEnabled", true);
+    }
+
+    @Test
     public void testModAdvancedNetworkStatistics() throws Exception {
         final String brokerConfig = configurationSeed + "-policy-ml-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedNetworkStatistics");
@@ -133,6 +145,9 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
             session.createConsumer(session.createQueue(dest));
 
             switch(fieldName) {
+            case "advancedMessageStatisticsEnabled":
+                assertEquals(value, brokerService.getRegionBroker().getDestinationMap().get(new ActiveMQQueue(dest)).isAdvancedMessageStatisticsEnabled());
+                break;
             case "advancedNetworkStatisticsEnabled":
                 assertEquals(value, brokerService.getRegionBroker().getDestinationMap().get(new ActiveMQQueue(dest)).isAdvancedNetworkStatisticsEnabled());
                 break;
