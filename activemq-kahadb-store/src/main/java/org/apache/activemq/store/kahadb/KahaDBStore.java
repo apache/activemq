@@ -734,6 +734,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         @Override
         public void recoverNextMessages(final int offset, final int maxReturned, final MessageRecoveryListener listener) throws Exception {
+            recoverNextMessages(offset, maxReturned, listener, false);
+        }
+
+        @Override
+        public void recoverNextMessages(final int offset, final int maxReturned, final MessageRecoveryListener listener, final boolean revertOrderIndex) throws Exception {
             indexLock.writeLock().lock();
             try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
@@ -766,6 +771,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             }
                         }
                         sd.orderIndex.stoppedIterating();
+
+                        if(revertOrderIndex && position > 0) {
+                            sd.orderIndex.resetCursorPosition();
+                        }
                     }
                 });
             } finally {
