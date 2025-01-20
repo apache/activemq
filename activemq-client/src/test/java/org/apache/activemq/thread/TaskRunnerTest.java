@@ -91,6 +91,7 @@ public class TaskRunnerTest {
                         for (int i = 0; i < enqueueCount / workerCount; i++) {
                             queue.incrementAndGet();
                             runner.wakeup();
+                            yield();
                         }
                     } catch (BrokenBarrierException e) {
                     } catch (InterruptedException e) {
