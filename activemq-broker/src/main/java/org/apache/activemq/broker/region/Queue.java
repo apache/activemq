@@ -85,7 +85,6 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
-import org.apache.activemq.management.MessageFlowStats;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.IndexListener;

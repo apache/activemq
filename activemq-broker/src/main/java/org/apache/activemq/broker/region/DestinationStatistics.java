@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.PollCountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.management.*;
 
 /**
@@ -253,10 +252,15 @@ public class DestinationStatistics extends StatsImpl {
     public synchronized void setAdvancedMessageStatisticsEnabled(boolean enabled) {
         // we can just use the get() here on the reference as no other spot can
         // set the reference so there is no race condition
-        if(enabled && this.messageFlowStats.get() == null) {
-            this.messageFlowStats.set(new MessageFlowStatsImpl());
-        } else {
+        if(!enabled) {
             this.messageFlowStats.set(null);
+            return;
+        }
+
+        if(this.messageFlowStats.get() == null) {
+            MessageFlowStatsImpl tmpMessageFlowStatsImpl = new MessageFlowStatsImpl();
+            tmpMessageFlowStatsImpl.setEnabled(true);
+            this.messageFlowStats.set(tmpMessageFlowStatsImpl);
         }
     }
 
