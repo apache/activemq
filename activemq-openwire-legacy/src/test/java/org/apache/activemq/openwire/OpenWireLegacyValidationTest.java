@@ -21,13 +21,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import org.apache.activemq.util.ByteSequence;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * Test that Openwire marshalling for legacy versions will validate Throwable types during
- * unmarshalling commands that contain a Throwable
+ * Test that Openwire marshalling for legacy versions will validate certain commands correctly
  */
 @RunWith(Parameterized.class)
 public class OpenWireLegacyValidationTest extends OpenWireValidationTest {
@@ -123,6 +123,48 @@ public class OpenWireLegacyValidationTest extends OpenWireValidationTest {
                 };
             default:
                 throw new IllegalArgumentException("Unknown openwire version of " + version);
+        }
+    }
+
+    protected DataStreamMarshaller getWireFormatInfoMarshaller() {
+        switch (version) {
+            case 2:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v2.WireFormatInfoMarshaller());
+            case 3:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v3.WireFormatInfoMarshaller());
+            case 4:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v4.WireFormatInfoMarshaller());
+            case 5:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v5.WireFormatInfoMarshaller());
+            case 6:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v6.WireFormatInfoMarshaller());
+            case 7:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v7.WireFormatInfoMarshaller());
+            case 8:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v8.WireFormatInfoMarshaller());
+            default:
+                throw new IllegalArgumentException("Unknown OpenWire version of " + version);
+        }
+    }
+
+    protected DataStreamMarshaller getPartialCommandMarshaller() {
+        switch (version) {
+            case 2:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v2.PartialCommandMarshaller());
+            case 3:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v3.PartialCommandMarshaller());
+            case 4:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v4.PartialCommandMarshaller());
+            case 5:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v5.PartialCommandMarshaller());
+            case 6:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v6.PartialCommandMarshaller());
+            case 7:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v7.PartialCommandMarshaller());
+            case 8:
+                return proxyBadBufferCommand(new org.apache.activemq.openwire.v8.PartialCommandMarshaller());
+            default:
+                throw new IllegalArgumentException("Unknown OpenWire version of " + version);
         }
     }
 
