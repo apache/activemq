@@ -74,6 +74,7 @@
     <jetty-version>${jetty9-version}</jetty-version>
     <jmdns-version>3.4.1</jmdns-version>
     <tomcat-api-version>9.0.65</tomcat-api-version>
+    <javassist-version>3.30.2-GA</javassist-version>
     <jettison-version>1.5.4</jettison-version>
     <jmock-version>2.5.1</jmock-version>
     <jolokia-version>1.7.1</jolokia-version>
@@ -1039,6 +1040,11 @@
         <artifactId>jettison</artifactId>
         <version>${jettison-version}</version>
     </dependency>
+      <dependency>
+        <groupId>org.javassist</groupId>
+        <artifactId>javassist</artifactId>
+        <version>${javassist-version}</version>
+      </dependency>
 
       <dependency>
         <groupId>annogen</groupId>
