@@ -68,8 +68,8 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
 
         XATransactionId info = (XATransactionId)o;
         info.setFormatId(dataIn.readInt());
-        info.setGlobalTransactionId(tightUnmarshalByteArray(dataIn, bs));
-        info.setBranchQualifier(tightUnmarshalByteArray(dataIn, bs));
+        info.setGlobalTransactionId(tightUnmarshalByteArray(wireFormat, dataIn, bs));
+        info.setBranchQualifier(tightUnmarshalByteArray(wireFormat, dataIn, bs));
 
     }
 
@@ -117,8 +117,8 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
 
         XATransactionId info = (XATransactionId)o;
         info.setFormatId(dataIn.readInt());
-        info.setGlobalTransactionId(looseUnmarshalByteArray(dataIn));
-        info.setBranchQualifier(looseUnmarshalByteArray(dataIn));
+        info.setGlobalTransactionId(looseUnmarshalByteArray(wireFormat, dataIn));
+        info.setBranchQualifier(looseUnmarshalByteArray(wireFormat, dataIn));
 
     }
 
