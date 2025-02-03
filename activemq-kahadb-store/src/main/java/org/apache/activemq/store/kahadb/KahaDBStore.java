@@ -439,7 +439,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             try {
                 for (MessageAck ack : acks) {
                     final String key = recoveredTxStateMapKey(destination, ack);
-                    Set ackedAndPrepared = ackedAndPreparedMap.get(key);
+                    Set<String> ackedAndPrepared = ackedAndPreparedMap.get(key);
                     if (ackedAndPrepared == null) {
                         ackedAndPrepared = new LinkedHashSet<String>();
                         ackedAndPreparedMap.put(key, ackedAndPrepared);
@@ -458,7 +458,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     for (MessageAck ack : acks) {
                         final String id = ack.getLastMessageId().toProducerKey();
                         final String key = recoveredTxStateMapKey(destination, ack);
-                        Set ackedAndPrepared = ackedAndPreparedMap.get(key);
+                        Set<String> ackedAndPrepared = ackedAndPreparedMap.get(key);
                         if (ackedAndPrepared != null) {
                             ackedAndPrepared.remove(id);
                             if (ackedAndPreparedMap.isEmpty()) {
@@ -466,7 +466,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             }
                         }
                         if (rollback) {
-                            Set rolledBackAcks = rolledBackAcksMap.get(key);
+                            Set<String> rolledBackAcks = rolledBackAcksMap.get(key);
                             if (rolledBackAcks == null) {
                                 rolledBackAcks = new LinkedHashSet<String>();
                                 rolledBackAcksMap.put(key, rolledBackAcks);
@@ -686,7 +686,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); listener.hasSpace() && iterator
                                 .hasNext(); ) {
                             Entry<Long, MessageKeys> entry = iterator.next();
-                            Set ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
+                            Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
                             if (ackedAndPrepared != null && ackedAndPrepared.contains(entry.getValue().messageId)) {
                                 continue;
                             }
@@ -710,7 +710,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Entry<Long, MessageKeys> entry = null;
                         int counter = recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, maxReturned, listener);
-                        Set ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
+                        Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext(); ) {
                             entry = iterator.next();
                             if (ackedAndPrepared != null && ackedAndPrepared.contains(entry.getValue().messageId)) {
@@ -777,7 +777,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             int counter = 0;
             String id;
 
-            Set rolledBackAcks = rolledBackAcksMap.get(recoveredTxStateMapKey);
+            Set<String> rolledBackAcks = rolledBackAcksMap.get(recoveredTxStateMapKey);
             if (rolledBackAcks == null) {
                 return counter;
             }
@@ -916,7 +916,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             return statistics;
                         }
                     });
-                    Set ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
+                    Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
                     if (ackedAndPrepared != null) {
                         recoveredStatistics.getMessageCount().subtract(ackedAndPrepared.size());
                     }
@@ -1203,7 +1203,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             sd.orderIndex.setBatch(tx, cursorPos);
                         }
                         recoverRolledBackAcks(subscriptionKey, sd, tx, Integer.MAX_VALUE, listener);
-                        Set ackedAndPrepared = ackedAndPreparedMap.get(subscriptionKey);
+                        Set<String> ackedAndPrepared = ackedAndPreparedMap.get(subscriptionKey);
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
@@ -1263,7 +1263,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
                         Entry<Long, MessageKeys> entry = null;
                         int counter = recoverRolledBackAcks(subscriptionKey, sd, tx, maxReturned, listener);
-                        Set ackedAndPrepared = ackedAndPreparedMap.get(subscriptionKey);
+                        Set<String> ackedAndPrepared = ackedAndPreparedMap.get(subscriptionKey);
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, moc); iterator
                                 .hasNext();) {
                             entry = iterator.next();
