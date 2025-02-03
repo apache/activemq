@@ -19,7 +19,6 @@ package org.apache.activemq.store.kahadb.disk.journal;
 import java.io.IOException;
 import java.util.Map;
 
-import java.util.Objects;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.slf4j.Logger;
