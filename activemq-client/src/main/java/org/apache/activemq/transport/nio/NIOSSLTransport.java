@@ -215,11 +215,11 @@ public class NIOSSLTransport extends NIOTransport {
     }
 
     //Only used for the auto transport to abort the openwire init method early if already initialized
-    boolean openWireInititialized = false;
+    boolean openWireInitialized = false;
 
     protected void doOpenWireInit() throws Exception {
         //Do this later to let wire format negotiation happen
-        if (initBuffer != null && !openWireInititialized && this.wireFormat instanceof OpenWireFormat) {
+        if (initBuffer != null && !openWireInitialized && this.wireFormat instanceof OpenWireFormat) {
             initBuffer.buffer.flip();
             if (initBuffer.buffer.hasRemaining()) {
                 nextFrameSize = -1;
@@ -235,7 +235,7 @@ public class NIOSSLTransport extends NIOTransport {
                     processCommand(initBuffer.buffer);
                 } while (initBuffer.buffer.hasRemaining());
                 initBuffer.buffer.clear();
-                openWireInititialized = true;
+                openWireInitialized = true;
             }
         }
     }
