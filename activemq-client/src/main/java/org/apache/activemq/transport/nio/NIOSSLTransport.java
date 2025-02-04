@@ -223,9 +223,17 @@ public class NIOSSLTransport extends NIOTransport {
             initBuffer.buffer.flip();
             if (initBuffer.buffer.hasRemaining()) {
                 nextFrameSize = -1;
-                receiveCounter += initBuffer.readSize;
-                processCommand(initBuffer.buffer);
-                processCommand(initBuffer.buffer);
+                receiveCounter.addAndGet(initBuffer.readSize);
+                do {
+                    // This should almost always just be called 2 times, the first call reads
+                    // the size and allocates space for the frame. The second call reads
+                    // in the frame to process. This is enough to read in the initial WireFormatInfo
+                    // frame that will be sent. However, it's technically possible for
+                    // there to be extra data after that if more bytes came in during the initial
+                    // socket read if a client sends more, so keep calling until we process the
+                    // entire initial buffer before we continue so we do not miss any bytes.
+                    processCommand(initBuffer.buffer);
+                } while (initBuffer.buffer.hasRemaining());
                 initBuffer.buffer.clear();
                 openWireInititialized = true;
             }
@@ -277,7 +285,7 @@ public class NIOSSLTransport extends NIOTransport {
                         break;
                     }
 
-                    receiveCounter += readCount;
+                    receiveCounter.addAndGet(readCount);
                 }
 
                 if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
