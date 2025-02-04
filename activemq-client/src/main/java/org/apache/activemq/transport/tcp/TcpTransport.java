@@ -132,7 +132,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected int minmumWireFormatVersion;
     protected SocketFactory socketFactory;
     protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<>();
-    protected AtomicInteger receiveCounter = new AtomicInteger();
+    protected final AtomicInteger receiveCounter = new AtomicInteger();
 
     protected Map<String, Object> socketOptions;
     private int soLinger = Integer.MIN_VALUE;
