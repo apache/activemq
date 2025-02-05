@@ -70,7 +70,7 @@ public class MQTTNIOSSLTransport extends NIOSSLTransport {
     protected void doInit() throws Exception {
         if (initBuffer != null) {
             nextFrameSize = -1;
-            receiveCounter += initBuffer.readSize;
+            receiveCounter.addAndGet(initBuffer.readSize);
             initBuffer.buffer.flip();
             processCommand(initBuffer.buffer);
         }
