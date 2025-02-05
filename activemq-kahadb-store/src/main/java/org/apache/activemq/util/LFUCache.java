@@ -75,7 +75,7 @@ public class LFUCache<Key, Value> implements Map<Key, Value> {
                 doEviction();
             }
             LinkedHashSet<CacheNode<Key, Value>> nodes = frequencyList[0];
-            currentNode = new CacheNode(k, v, 0);
+            currentNode = new CacheNode<>(k, v, 0);
             nodes.add(currentNode);
             cache.put(k, currentNode);
             lowestFrequency = 0;
