@@ -131,7 +131,7 @@ public class MQTTNIOTransport extends TcpTransport {
         DataByteArrayInputStream dis = new DataByteArrayInputStream(buffer.array());
         codec.parse(dis, readSize);
 
-        receiveCounter += readSize;
+        receiveCounter.addAndGet(readSize);
 
         // clear the buffer
         buffer.clear();
