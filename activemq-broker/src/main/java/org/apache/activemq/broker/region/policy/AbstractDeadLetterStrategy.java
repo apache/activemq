@@ -17,9 +17,12 @@
 package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.ActiveMQMessageAudit;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /**
  * A strategy for choosing which destination is used for dead letter queue
@@ -30,6 +33,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDeadLetterStrategy.class);
     private boolean processNonPersistent = false;
     private boolean processExpired = true;
+    private boolean preserveDeliveryMode = false;
     private boolean enableAudit = true;
     private long expiration;
 
@@ -89,6 +93,16 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     @Override
     public void setProcessNonPersistent(boolean processNonPersistent) {
         this.processNonPersistent = processNonPersistent;
+    }
+
+    @Override
+    public boolean isPreserveDeliveryMode() {
+        return this.preserveDeliveryMode;
+    }
+
+    @Override
+    public void setPreserveDeliveryMode(boolean preserveDeliveryMode) {
+        this.preserveDeliveryMode = preserveDeliveryMode;
     }
 
     public boolean isEnableAudit() {
