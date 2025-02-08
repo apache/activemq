@@ -55,7 +55,7 @@
         <property name="constraint" ref="adminSecurityConstraint" />
         <property name="pathSpec" value="*.action" />
     </bean>
-    
+
     <bean id="rewriteHandler" class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
         <property name="rules">
             <list>
@@ -82,7 +82,7 @@
             </list>
         </property>
     </bean>
-    
+
     <bean id="secHandlerCollection" class="org.eclipse.jetty.server.handler.HandlerCollection">
         <property name="handlers">
             <list>
@@ -196,11 +196,11 @@
             </list>
         </property>
     </bean>
-    
+
     <bean id="invokeStart" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" 
         depends-on="configureJetty, invokeConnectors">
         <property name="targetObject" ref="Server" />
-        <property name="targetMethod" value="start" />      
+        <property name="targetMethod" value="start" />
     </bean>
     
     
