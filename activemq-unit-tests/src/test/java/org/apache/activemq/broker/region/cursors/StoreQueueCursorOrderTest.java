@@ -511,11 +511,6 @@ public class StoreQueueCursorOrderTest {
         }
 
         @Override
-        public void recoverNextMessages(int offset, int maxReturned, MessageRecoveryListener listener) throws Exception {
-
-        }
-
-        @Override
         public void setBatch(MessageId message) {
             batch.set((Long)message.getFutureOrSequenceLong());
             batch.incrementAndGet();
