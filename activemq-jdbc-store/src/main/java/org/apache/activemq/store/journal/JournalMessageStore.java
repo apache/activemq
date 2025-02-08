@@ -357,11 +357,6 @@ public class JournalMessageStore extends AbstractMessageStore {
         longTermStore.recover(listener);
     }
 
-    @Override
-    public void recoverNextMessages(int offset, int maxReturned, MessageRecoveryListener listener) throws Exception {
-        throw new UnsupportedOperationException("recoverNextMesage(offset,maxReturned,listener) is not supported.");
-    }
-
     public void start() throws Exception {
         if (this.memoryUsage != null) {
             this.memoryUsage.addUsageListener(peristenceAdapter);
