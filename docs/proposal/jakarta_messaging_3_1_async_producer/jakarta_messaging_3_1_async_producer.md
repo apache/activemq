@@ -1,8 +1,6 @@
 # Jakarta Messaging 3.1: asynchronous send design doc
 
-Date: Jan 5th 2025  
-\+1 on proposal: pending  
-\-1 on proposal: pending
+Date: Jan 5th 2025
 
 The purpose of this document is to discuss the design of implementing asynchronous send (with CompletionListener) that is JMS 2.0 / Jakarta Messaging 3.1 compliant.
 
@@ -96,7 +94,7 @@ Even though the OpenWire marshaller will ignore the field we just added, i.e on 
 
 If `CopyMessageOnSend` is false, then we don’t make a copy and set the message to be inaccessible and let the marshaller encode it (the field will be ignored anyway since we are not changing the marshaller logic).
 
-## **Messages ordering** {#messages-ordering}
+## **Messages ordering**
 
 This corresponds to [7.3.3](https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#message-order-2) and [7.3.8](https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#use-of-the-completionlistener-by-the-jakarta-messaging-provider). Basically it needs to meet two cases of messaging ordering requirements:
 
