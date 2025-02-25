@@ -58,6 +58,13 @@ public class QueueBrowseQuery extends DestinationFacade implements DisposableBea
 
     public Queue getQueue() throws JMSException {
         if (queue == null) {
+            try {
+                if (getBrokerFacade().getQueue(getValidDestination()) == null) {
+                    throw new IllegalArgumentException("Queue " + getValidDestination() + " doesn't exist");
+                }
+            } catch (Exception e) {
+                throw new JMSException(e.getMessage());
+            }
             queue = getSession().createQueue(getValidDestination());
         }
         return queue;
