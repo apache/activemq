@@ -55,15 +55,61 @@ At the same time, we are using a wrapper CompletionListener to do pre & post pro
 Here is sample code flow that illustrates the point:
 
 It wraps the user-provided CompletionListener (named `completionListener` in the screenshot below) into a `wrapperCompletionListener` which is later passed to the connection and the transport layer’s `asyncRequest` method.  
-![](./img/image_1.png)  
-![](./img/image_2.png)
+```java
+private ThreadLocal<Boolean> inCompletionListenerCallback = new ThreadLocal<>();
+```
+```java
+CompletionListener wrapperCompletionListener = new CompletionListener() {
+    @Override
+    public void onCompletion(Message message) {
+        try {
+            originalMessage.setMessageAccessible(true);
+            inCompletionListenerCallback.set(true);
+            producerInCompletionListenerCallback.set(true);
+            // Invoke application provided completionListener
+            completionListener.onCompletion(message);
+        } catch (Exception e) {
+            // invoke onException if the exception can't be thrown in the thread that calls the send
+            // per Jakarta Messaging 3.1 spec section 7.3.2
+            completionListener.onException(message, e);
+        } finally {
+            inCompletionListenerCallback.set(false);
+            producerInCompletionListenerCallback.set(false);
+            numIncompleteAsyncSend.doDecrement();
+            producerNumIncompleteSend.doDecrement();
+            isAsyncSendCompleted.countDown();
+        }
+    }
+
+    @Override
+    public void onException(Message message, Exception e) {
+        try {
+            originalMessage.setMessageAccessible(true);
+            inCompletionListenerCallback.set(true);
+            producerInCompletionListenerCallback.set(true);
+            completionListener.onException(message, e);
+        } finally {
+            inCompletionListenerCallback.set(false);
+            producerInCompletionListenerCallback.set(false);
+            numIncompleteAsyncSend.doDecrement();
+            producerNumIncompleteSend.doDecrement();
+            isAsyncSendCompleted.countDown();
+        }
+    }
+};
+```
 
 As you can see, before invoking the user-provided CompletionListener, it sets the `inCompletionListenerCallback` (an instance attribute ThreadLocal\<Boolean\> on the `Session` object) to true.
 
-Then in the `close` method of the session, check if the flag is set to true before closing.  
-![](./img/image_3.png)
+Then in the `close` method of the session, check if the flag is set to true before closing.
 
-## **![](./img/image_4.png)**
+```java
+    private void checkIsSessionUseAllowed(String errorMsg) {
+        if (inCompletionListenerCallback.get() != null && inCompletionListenerCallback.get()) {
+            throw new IllegalStateRuntimeException(errorMsg);
+        }
+    }
+```
 
 Hence if the user-provided CompletionListener tries to call close() on the session inside a CompletionListener, the `inCompletionListenerCallback` will be true in that transport thread and it will throw an exception. In contrast, in the application thread, since `inCompletionListenerCallback` is false, the application thread can still close the session even while the transport thread is processing the user-provided CompletionListener.
 
@@ -77,10 +123,28 @@ This corresponds to the behaviour outlined in [7.3.9](https://jakarta.ee/specifi
 
 We extend the idea of the wrapper CompletionListener stated above and add a flag in the ActiveMQMessage object, `messageAccessible` if the flag is true. The client application will not be able to read or modify message attributes.
 
-![](./img/image_5.png)
+```java
+public class ActiveMQMessage extends Message implements org.apache.activemq.Message, ScheduledMessage {
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_MESSAGE;
+    public static final String DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY = "dlqDeliveryFailureCause";
+    public static final String BROKER_PATH_PROPERTY = "JMSActiveMQBrokerPath";
+
+    private static final Map<String, PropertySetter> JMS_PROPERTY_SETERS = new HashMap<String, PropertySetter>();
+
+    protected transient Callback acknowledgeCallback;
+
+    private volatile boolean messageAccessible = true;
+```
 
 I.E at every setter and getter of the Message object  
-![](./img/image_6.png)
+```java
+    private void checkMessageAccessible() throws JMSException {
+        if (!messageAccessible) {
+            throw new JMSException(
+                    "Can not access and mutate message, the message is sent asynchronously and its completion listener has not been invoked");
+        }
+    }
+```
 
 When a message is sent, currently by default, the session is making a copy (`isCopyMessageOnSend` is default true). Hence we need to make sure we set the flag on the original message reference, and we set its `messageAccessible` to false right before it is sent asynchronously in a connection method. After the send is complete, the wrapper CompletionListener will set the `messageAccessible` attribute of the message reference back to true.
 
@@ -156,7 +220,39 @@ This corresponds to the behaviour outlined in [7.3.4](https://jakarta.ee/specifi
 **Approach 1: have a synchronized counter to keep track of the number of incomplete sends. The corresponding close(), commit() and rollback() method will block until that counter reaches 0\.**
 
 It will add a synchronized counter to keep track of the number of incomplete sends. This is similar to a CountDownLatch in which you can wait until it becomes 0 but it exposes an API to count up. A sample implementation of such synchronization data structure is outlined below:  
-![](./img/image_7.png)  
+```java
+public class CountdownLock {
+
+    final Object counterMonitor = new Object();
+    private final AtomicInteger counter = new AtomicInteger();
+
+    public void doWaitForZero() {
+        synchronized(counterMonitor){
+            try {
+                if (counter.get() > 0) {
+                    counterMonitor.wait();
+                }
+            } catch (InterruptedException e) {
+                return;
+            }
+        }
+    }
+
+    public void doDecrement() {
+        synchronized(counterMonitor){
+            if (counter.decrementAndGet() == 0) {
+                counterMonitor.notify();
+            }
+        }
+    }
+
+    public void doIncrement() {
+        synchronized(counterMonitor){
+            counter.incrementAndGet();
+        }
+    }
+}
+```
 Then before sending the async message, the application thread will increment the counter by `doIncrement` and in the wrapper CompletionListener, the transport thread will call `doDecrement` on the shared `CountdownLock`.
 
 Before the `close`, `rollback` and `commit` methods are called, the application thread will invoke `doWaitForZero` which blocks until the counter reaches zero.
@@ -200,10 +296,18 @@ We will follow up with removing the constraint that async messages need to be se
 1\. Both classic (JMS 1.1 style) and simplified APIs (JMS 2.0/Jakarta Messaging 3.1 style) need to support the use of CompletionListener.
 
 Classic APIs  
-![](./img/image_8.png)
+```java
+void send(Message var1, CompletionListener var2) throws JMSException;
+void send(Message var1, int var2, int var3, long var4, CompletionListener var6) throws JMSException;
+void send(Destination var1, Message var2, CompletionListener var3) throws JMSException;
+void send(Destination var1, Message var2, int var3, int var4, long var5, CompletionListener var7) throws JMSException;
+```
 
 Simplified API  
-![](./img/image_9.png)
+```java
+JMSProducer setAsync(CompletionListener var1);
+CompletionListener getAsync();
+```
 
 2\. The CompletionListener `onCompletion` must not be invoked before the server responds with the acknowledgement. Furthermore, exceptions that occur at the `send` method of the calling thread in client application will be thrown at that thread. If an exception is encountered which cannot be thrown in the thread that is calling the send method then the Jakarta Messaging provider must call the CompletionListener’s onException method.
 
