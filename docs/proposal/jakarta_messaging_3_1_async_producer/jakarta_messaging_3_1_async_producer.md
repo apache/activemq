@@ -1,6 +1,5 @@
 # Jakarta Messaging 3.1: asynchronous send design doc
 
-Date: Jan 5th 2025
 
 The purpose of this document is to discuss the design of implementing asynchronous send (with CompletionListener) that is JMS 2.0 / Jakarta Messaging 3.1 compliant.
 
