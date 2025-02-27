@@ -2712,15 +2712,23 @@ public class BrokerService implements Service {
                 @Override
                 public void run() {
                     try {
-                        LOG.info("Async start of {}", connector);
-                        connector.start();
+                        if(connector.isAutoStart()) {
+                            LOG.info("Async start of {}", connector);
+                            connector.start();
+                        } else {
+                            LOG.debug("Async start disabled for {}", connector);
+                        }
                     } catch(Exception e) {
                         LOG.error("Async start of network connector: {} failed", connector, e);
                     }
                 }
             });
         } else {
-            connector.start();
+            if(connector.isAutoStart()) {
+                connector.start();
+            } else {
+                LOG.debug("Auto start disabled for {}", connector);
+            }
         }
     }
 
@@ -2735,7 +2743,9 @@ public class BrokerService implements Service {
             connector = registerConnectorMBean(connector);
         }
         connector.getStatistics().setEnabled(enableStatistics);
-        connector.start();
+        if(connector.isAutoStart()) {
+            connector.start();
+        }
         return connector;
     }
 
