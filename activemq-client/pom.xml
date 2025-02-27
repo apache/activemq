@@ -220,18 +220,14 @@
           <reuseForks>false</reuseForks>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
-          <systemProperties>
-            <property>
-              <name>org.apache.activemq.default.directory.prefix</name>
-              <value>target/</value>
-            </property>
+          <systemPropertyVariables>
+            <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
             <!-- Uncomment the following if you want to configure custom logging
               (using src/test/resources/log4j.properties) while running mvn:test Note: if you want
               to see log messages on the console window remove "redirectTestOutputToFile" from
               the parent pom -->
-            <!-- <property> <name>log4j.configuration</name> <value>file:target/test-classes/log4j.properties</value>
-              </property> -->
-          </systemProperties>
+            <!-- <log4j.configuration>file:target/test-classes/log4j.properties</log4j.configuration> -->
+          </systemPropertyVariables>
           <includes>
             <include>**/*Test.*</include>
           </includes>
