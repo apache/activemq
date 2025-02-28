@@ -205,12 +205,9 @@
           <reuseForks>false</reuseForks>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
-           <systemProperties>
-            <property>
-              <name>org.apache.activemq.default.directory.prefix</name>
-              <value>target/</value>
-            </property>
-           </systemProperties>
+           <systemPropertyValues>
+              <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
+           </systemPropertyValues>
            <!-- includes>
              <include>**/*Test.*</include>
            </includes -->

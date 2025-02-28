@@ -143,6 +143,11 @@ public class ConnectorView implements ConnectorViewMBean {
     }
 
     @Override
+    public boolean isAutoStart() {
+        return this.connector.isAutoStart();
+    }
+
+    @Override
     public boolean isStarted() {
         return this.connector.isStarted();
     }
