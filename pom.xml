@@ -122,7 +122,7 @@
     <maven-surefire-plugin-version>3.5.2</maven-surefire-plugin-version>
     <maven-antrun-plugin-version>3.1.0</maven-antrun-plugin-version>
     <maven-assembly-plugin-version>3.7.1</maven-assembly-plugin-version>
-    <maven-clean-plugin-version>3.4.0</maven-clean-plugin-version>
+    <maven-clean-plugin-version>3.4.1</maven-clean-plugin-version>
     <maven-release-plugin-version>3.1.1</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
     <maven-enforcer-plugin-version>3.5.0</maven-enforcer-plugin-version>
