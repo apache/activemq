@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.ws;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -23,14 +24,16 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.util.Wait;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
+import org.eclipse.jetty.client.transport.HttpClientTransportDynamic;
 import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.fusesource.hawtbuf.UTF8Buffer;
@@ -85,7 +88,9 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
 
         wsMQTTConnection = new MQTTWSConnection().setWritePartialFrames(partialFrames);
 
-        wsClient.connect(wsMQTTConnection, wsConnectUri, request);
+        CompletableFuture<Session> webSocketFuture = wsClient.connect(wsMQTTConnection, wsConnectUri, request);
+        Session webSocketSession = webSocketFuture.get(30, TimeUnit.SECONDS);
+        assertNotNull(webSocketSession);
         if (!wsMQTTConnection.awaitConnection(30, TimeUnit.SECONDS)) {
             throw new IOException("Could not connect to MQTT WS endpoint");
         }
@@ -110,7 +115,8 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
 
             wsMQTTConnection = new MQTTWSConnection().setWritePartialFrames(partialFrames);
 
-            wsClient.connect(wsMQTTConnection, wsConnectUri, request);
+            CompletableFuture<Session> wsClientFuture = wsClient.connect(wsMQTTConnection, wsConnectUri, request);
+            wsClientFuture.get(30,  TimeUnit.SECONDS);
             if (!wsMQTTConnection.awaitConnection(30, TimeUnit.SECONDS)) {
                 throw new IOException("Could not connect to MQTT WS endpoint");
             }

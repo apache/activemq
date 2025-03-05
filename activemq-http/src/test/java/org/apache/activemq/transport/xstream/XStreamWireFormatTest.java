@@ -20,7 +20,6 @@ import java.io.IOException;
 
 import junit.framework.Test;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.Command;
 import org.apache.activemq.command.MessageTest;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
