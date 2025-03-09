@@ -1913,11 +1913,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private void dropMessage(ConnectionContext context, QueueMessageReference reference) {
         //use dropIfLive so we only process the statistics at most one time
         if (reference.dropIfLive()) {
-            getDestinationStatistics().getDequeues().increment();
-            getDestinationStatistics().getMessages().decrement();
+            destinationStatistics.getDequeues().increment();
+            destinationStatistics.getMessages().decrement();
+
+            final var tmpMessageFlowStats = destinationStatistics.getMessageFlowStats();
+            if(tmpMessageFlowStats != null) {
+                Message tmpMessage = reference.getMessage();
+                tmpMessageFlowStats.dequeueStats(context.getClientId(), tmpMessage.getMessageId().toString(), tmpMessage.getTimestamp(), tmpMessage.getBrokerInTime(), tmpMessage.getBrokerOutTime()); 
+            }
 
             if(isAdvancedNetworkStatisticsEnabled() && context.getConnection() != null && context.getConnection().isNetworkConnection()) {
-                getDestinationStatistics().getNetworkDequeues().increment();
+                destinationStatistics.getNetworkDequeues().increment();
             }
 
             pagedInMessagesLock.writeLock().lock();
@@ -1971,9 +1977,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     final void messageSent(final ConnectionContext context, final Message msg) throws Exception {
         pendingSends.decrementAndGet();
+
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         destinationStatistics.getMessageSize().addSize(msg.getSize());
+
+        final var tmpMessageFlowStats = destinationStatistics.getMessageFlowStats();
+        if(tmpMessageFlowStats != null) {
+            tmpMessageFlowStats.enqueueStats(context.getClientId(), msg.getMessageId().toString(), msg.getTimestamp(), msg.getBrokerInTime());
+        }
 
         if(isAdvancedNetworkStatisticsEnabled() && context.getConnection() != null && context.getConnection().isNetworkConnection()) {
             destinationStatistics.getNetworkEnqueues().increment();

@@ -22,7 +22,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -38,12 +41,15 @@ import org.apache.activemq.console.command.store.protobuf.MessagePB;
 import org.apache.activemq.console.command.store.protobuf.QueueEntryPB;
 import org.apache.activemq.console.command.store.protobuf.QueuePB;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.store.MessageRecoveryContext;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
-import org.fusesource.hawtbuf.DataByteArrayOutputStream;
+import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.activemq.protobuf.AsciiBuffer;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.protobuf.UTF8Buffer;
@@ -51,6 +57,8 @@ import org.apache.activemq.protobuf.UTF8Buffer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class StoreBackup {
+
+    private static final Logger logger = LoggerFactory.getLogger(StoreBackup.class);
 
     static final int OPENWIRE_VERSION = 11;
     static final boolean TIGHT_ENCODING = false;
@@ -61,7 +69,12 @@ public class StoreBackup {
 
     String queue;
     Integer offset;
-    Integer count;
+    Integer count = Integer.MAX_VALUE;
+    String indexes;
+    Collection<Integer> indexesList;
+
+    String startMsgId;
+    String endMsgId;
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final AsciiBuffer ds_kind = new AsciiBuffer("ds");
@@ -78,24 +91,38 @@ public class StoreBackup {
 
     public void execute() throws Exception {
         if (config == null) {
-            throw new Exception("required --config option missing");
+            throw new IllegalArgumentException("required --config option missing");
         }
         if (filename == null) {
-            throw new Exception("required --filename option missing");
+            throw new IllegalArgumentException("required --filename option missing");
         }
 
         if (offset != null && count == null) {
-            throw new Exception("optional --offset and --count must be specified together");
+            throw new IllegalArgumentException("optional --offset and --count must be specified together");
+        }
+
+        if ((startMsgId != null || endMsgId != null) && queue == null) {
+            throw new IllegalArgumentException("optional --queue must be specified when using startMsgId or endMsgId");
+        }
+
+        if (indexes != null && !indexes.isBlank()) {
+            indexesList = Stream.of(indexes.split(","))
+                .map(index -> Integer.parseInt(index.trim()))
+                .peek(num -> {
+                    if (num < 0) {
+                        throw new IllegalArgumentException("Index value cannot be negative: " + num);
+                    }
+                }).collect(Collectors.toList());
         }
 
         setFile(new File(filename));
-        System.out.println("Loading: " + config);
+        logger.info("Loading config file:{} ", config);
         BrokerFactory.setStartDefault(false); // to avoid the broker auto-starting..
         BrokerService broker = BrokerFactory.createBroker(config);
         BrokerFactory.resetStartDefault();
         PersistenceAdapter store = broker.getPersistenceAdapter();
 
-        System.out.println("Starting: " + store);
+        logger.info("Starting: " + store);
         store.start();
         try(BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(file))) {
             export(store, fos);
@@ -119,7 +146,7 @@ public class StoreBackup {
         });
 
         if (preparedTxs[0] > 0) {
-            throw new Exception("Cannot export a store with prepared XA transactions.  Please commit or rollback those transactions before attempting to backup.");
+            throw new IllegalStateException("Cannot export a store with prepared XA transactions.  Please commit or rollback those transactions before attempting to backup.");
         }
 
         for (ActiveMQDestination odest : store.getDestinations()) {
@@ -143,45 +170,58 @@ public class StoreBackup {
                 jsonMap.put("@class", "queue_destination");
                 jsonMap.put("name", dest.getQueueName());
                 String json = mapper.writeValueAsString(jsonMap);
-                System.out.println(json);
+                logger.info("Queue info:{}", json);
                 destRecord.setBindingData(new UTF8Buffer(json));
                 manager.store_queue(destRecord);
 
-                MessageRecoveryListener queueRecoveryListener = new MessageRecoveryListener() {
+                MessageRecoveryContext.Builder builder = 
+                        new MessageRecoveryContext.Builder()
+                            .maxMessageCountReturned(count)
+                            .messageRecoveryListener(new MessageRecoveryListener() {
 
-                    @Override
-                    public boolean hasSpace() {
-                        return true;
+                            @Override
+                            public boolean hasSpace() {
+                                return true;
+                            }
+
+                            @Override
+                            public boolean recoverMessageReference(MessageId ref) throws Exception {
+                                return true;
+                            }
+
+                            @Override
+                            public boolean isDuplicate(MessageId ref) {
+                                return false;
+                            }
+
+                            @Override
+                            public boolean recoverMessage(Message message) throws IOException {
+                                messageKeyCounter[0]++;
+                                seqKeyCounter[0]++;
+
+                                MessagePB messageRecord = createMessagePB(message, messageKeyCounter[0]);
+                                manager.store_message(messageRecord);
+
+                                QueueEntryPB entryRecord = createQueueEntryPB(message, containerKeyCounter[0], seqKeyCounter[0], messageKeyCounter[0]);
+                                manager.store_queue_entry(entryRecord);
+
+                                return true;
+                            }
+                        });
+
+                if(startMsgId != null || endMsgId != null) {
+                    logger.info("Backing up from startMsgId:{} to endMsgId:{} ", startMsgId, endMsgId);
+                    queue.recoverMessages(builder.endMessageId(endMsgId).startMessageId(startMsgId).build());
+                } else if(indexesList != null) {
+                    logger.info("Backing up using indexes count:{}", indexesList.size());
+                    for(int idx : indexesList) {
+                        queue.recoverMessages(builder.maxMessageCountReturned(1).offset(idx).build());
                     }
-
-                    @Override
-                    public boolean recoverMessageReference(MessageId ref) throws Exception {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean isDuplicate(MessageId ref) {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean recoverMessage(Message message) throws IOException {
-                        messageKeyCounter[0]++;
-                        seqKeyCounter[0]++;
-
-                        MessagePB messageRecord = createMessagePB(message, messageKeyCounter[0]);
-                        manager.store_message(messageRecord);
-
-                        QueueEntryPB entryRecord = createQueueEntryPB(message, containerKeyCounter[0], seqKeyCounter[0], messageKeyCounter[0]);
-                        manager.store_queue_entry(entryRecord);
-
-                        return true;
-                    }
-                };
-                if(offset != null) {
-                    queue.recoverNextMessages(offset, count, queueRecoveryListener);
+                } else if(offset != null) {
+                    logger.info("Backing up from offset:{} count:{} ", offset, count);
+                    queue.recoverMessages(builder.offset(offset).build());
                 } else {
-                    queue.recover(queueRecoveryListener);
+                    queue.recover(builder.build());
                 }
             } else if (odest instanceof ActiveMQTopic) {
                 ActiveMQTopic dest = (ActiveMQTopic) odest;
@@ -193,7 +233,6 @@ public class StoreBackup {
                     destRecord.setKey(containerKeyCounter[0]);
                     destRecord.setBindingKind(ds_kind);
 
-                    // TODO: use a real JSON encoder like jackson.
                     HashMap<String, Object> jsonMap = new HashMap<String, Object>();
                     jsonMap.put("@class", "dsub_destination");
                     jsonMap.put("name", sub.getClientId() + ":" + sub.getSubscriptionName());
@@ -205,7 +244,7 @@ public class StoreBackup {
                     }
                     jsonMap.put("noLocal", sub.isNoLocal());
                     String json = mapper.writeValueAsString(jsonMap);
-                    System.out.println(json);
+                    logger.info("Topic info:{}", json);
 
                     destRecord.setBindingData(new UTF8Buffer(json));
                     manager.store_queue(destRecord);
@@ -265,14 +304,14 @@ public class StoreBackup {
     private MessagePB createMessagePB(Message message, long messageKey) throws IOException {
         DataByteArrayOutputStream mos = new DataByteArrayOutputStream();
         mos.writeBoolean(TIGHT_ENCODING);
-        mos.writeVarInt(OPENWIRE_VERSION);
+        mos.writeInt(OPENWIRE_VERSION);
         wireformat.marshal(message, mos);
 
         MessagePB messageRecord = new MessagePB();
         messageRecord.setCodec(codec_id);
         messageRecord.setMessageKey(messageKey);
         messageRecord.setSize(message.getSize());
-        messageRecord.setValue(new Buffer(mos.toBuffer().getData()));
+        messageRecord.setValue(new Buffer(mos.getData()));
         return messageRecord;
     }
 
@@ -322,5 +361,29 @@ public class StoreBackup {
 
     public Integer getCount() {
         return count;
+    }
+
+    public void setIndexes(String indexes) {
+        this.indexes = indexes;
+    }
+
+    public String getIndexes() {
+        return indexes;
+    }
+
+    public String getStartMsgId() {
+        return startMsgId;
+    }
+
+    public void setStartMsgId(String startMsgId) {
+        this.startMsgId = startMsgId;
+    }
+
+    public String getEndMsgId() {
+        return endMsgId;
+    }
+
+    public void setEndMsgId(String endMsgId) {
+        this.endMsgId = endMsgId;
     }
 }

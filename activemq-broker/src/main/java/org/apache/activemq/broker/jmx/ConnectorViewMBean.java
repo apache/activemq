@@ -91,6 +91,12 @@ public interface ConnectorViewMBean extends Service {
     long getMaxConnectionExceededCount();
 
     /**
+     * @return true if transport connector auto start is enabled
+     */
+    @MBeanInfo("Auto-start enabled")
+    boolean isAutoStart();
+
+    /**
      * @return true if transport connector is started
      */
     @MBeanInfo("Connector started")

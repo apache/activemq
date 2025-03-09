@@ -65,8 +65,8 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         info.setReplyTo((org.apache.activemq.command.ActiveMQDestination)tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setTimestamp(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setType(tightUnmarshalString(dataIn, bs));
-        info.setContent(tightUnmarshalByteSequence(dataIn, bs));
-        info.setMarshalledProperties(tightUnmarshalByteSequence(dataIn, bs));
+        info.setContent(tightUnmarshalByteSequence(wireFormat, dataIn, bs));
+        info.setMarshalledProperties(tightUnmarshalByteSequence(wireFormat, dataIn, bs));
         info.setDataStructure((org.apache.activemq.command.DataStructure)tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setTargetConsumerId((org.apache.activemq.command.ConsumerId)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setCompressed(bs.readBoolean());
@@ -218,8 +218,8 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         info.setReplyTo((org.apache.activemq.command.ActiveMQDestination)looseUnmarsalNestedObject(wireFormat, dataIn));
         info.setTimestamp(looseUnmarshalLong(wireFormat, dataIn));
         info.setType(looseUnmarshalString(dataIn));
-        info.setContent(looseUnmarshalByteSequence(dataIn));
-        info.setMarshalledProperties(looseUnmarshalByteSequence(dataIn));
+        info.setContent(looseUnmarshalByteSequence(wireFormat, dataIn));
+        info.setMarshalledProperties(looseUnmarshalByteSequence(wireFormat, dataIn));
         info.setDataStructure((org.apache.activemq.command.DataStructure)looseUnmarsalNestedObject(wireFormat, dataIn));
         info.setTargetConsumerId((org.apache.activemq.command.ConsumerId)looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setCompressed(dataIn.readBoolean());

@@ -48,7 +48,7 @@ public class CommandLineSupport {
 	 * @return any arguments that are not valid options for the target
 	 */
 	static public String[] setOptions(Object target, String []args) {
-		ArrayList rc = new ArrayList();
+		ArrayList<String> rc = new ArrayList<>();
 		
 		for (int i = 0; i < args.length; i++) {
 			if( args[i] == null )

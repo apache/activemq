@@ -52,7 +52,13 @@ public final class IOExceptionSupport {
 
     public static IOException createFrameSizeException(int size, long maxSize) {
         return new MaxFrameSizeExceededException("Frame size of " + toHumanReadableSizeString(size) +
-            " larger than max allowed " + toHumanReadableSizeString(maxSize));
+            " is larger than max allowed " + toHumanReadableSizeString(maxSize));
+    }
+
+    public static IOException createFrameSizeBufferException(int bufferSize, long frameSize) {
+        return new IOException("Estimated allocated buffer size of "
+          + toHumanReadableSizeString(bufferSize) + " is larger than frame size of "
+          + toHumanReadableSizeString(frameSize));
     }
 
     private static String toHumanReadableSizeString(final int size) {

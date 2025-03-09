@@ -199,4 +199,8 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
         connector.setRemoteUserName(remoteUserName);
     }
 
+    @Override
+    public boolean isAutoStart() {
+        return connector.isAutoStart();
+    }
 }

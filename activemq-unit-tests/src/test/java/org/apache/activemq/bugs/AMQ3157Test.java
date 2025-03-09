@@ -122,7 +122,7 @@ public class AMQ3157Test extends EmbeddedBrokerTestSupport {
 
         PolicyEntry entry = new PolicyEntry();
         entry.setGcInactiveDestinations(true);
-        entry.setInactiveTimoutBeforeGC(5000);
+        entry.setInactiveTimeoutBeforeGC(5000);
         entry.setProducerFlowControl(true);
         PolicyMap map = new PolicyMap();
         map.setDefaultEntry(entry);

@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.SocketFactory;
@@ -130,8 +131,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected boolean useLocalHost = false;
     protected int minmumWireFormatVersion;
     protected SocketFactory socketFactory;
-    protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<CountDownLatch>();
-    protected volatile int receiveCounter;
+    protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<>();
+    protected final AtomicInteger receiveCounter = new AtomicInteger();
 
     protected Map<String, Object> socketOptions;
     private int soLinger = Integer.MIN_VALUE;
@@ -615,22 +616,22 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         TcpBufferedInputStream buffIn = new TcpBufferedInputStream(socket.getInputStream(), ioBufferSize) {
             @Override
             public int read() throws IOException {
-                receiveCounter++;
+                receiveCounter.incrementAndGet();
                 return super.read();
             }
             @Override
             public int read(byte[] b, int off, int len) throws IOException {
-                receiveCounter++;
+                receiveCounter.incrementAndGet();
                 return super.read(b, off, len);
             }
             @Override
             public long skip(long n) throws IOException {
-                receiveCounter++;
+                receiveCounter.incrementAndGet();
                 return super.skip(n);
             }
             @Override
             protected void fill() throws IOException {
-                receiveCounter++;
+                receiveCounter.incrementAndGet();
                 super.fill();
             }
         };
@@ -684,7 +685,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     @Override
     public int getReceiveCounter() {
-        return receiveCounter;
+        return receiveCounter.get();
     }
 
     public static class InitBuffer {

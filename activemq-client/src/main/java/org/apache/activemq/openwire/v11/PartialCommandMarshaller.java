@@ -67,7 +67,7 @@ public class PartialCommandMarshaller extends BaseDataStreamMarshaller {
 
         PartialCommand info = (PartialCommand)o;
         info.setCommandId(dataIn.readInt());
-        info.setData(tightUnmarshalByteArray(dataIn, bs));
+        info.setData(tightUnmarshalByteArray(wireFormat, dataIn, bs));
 
     }
 
@@ -113,7 +113,7 @@ public class PartialCommandMarshaller extends BaseDataStreamMarshaller {
 
         PartialCommand info = (PartialCommand)o;
         info.setCommandId(dataIn.readInt());
-        info.setData(looseUnmarshalByteArray(dataIn));
+        info.setData(looseUnmarshalByteArray(wireFormat, dataIn));
 
     }
 

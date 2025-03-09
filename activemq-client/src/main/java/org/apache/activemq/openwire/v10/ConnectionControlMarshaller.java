@@ -74,7 +74,7 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         info.setConnectedBrokers(tightUnmarshalString(dataIn, bs));
         info.setReconnectTo(tightUnmarshalString(dataIn, bs));
         info.setRebalanceConnection(bs.readBoolean());
-        info.setToken(tightUnmarshalByteArray(dataIn, bs));
+        info.setToken(tightUnmarshalByteArray(wireFormat, dataIn, bs));
 
     }
 
@@ -142,7 +142,7 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         info.setConnectedBrokers(looseUnmarshalString(dataIn));
         info.setReconnectTo(looseUnmarshalString(dataIn));
         info.setRebalanceConnection(dataIn.readBoolean());
-        info.setToken(looseUnmarshalByteArray(dataIn));
+        info.setToken(looseUnmarshalByteArray(wireFormat, dataIn));
 
     }
 

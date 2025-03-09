@@ -106,13 +106,13 @@ public class ProxyMessageStore implements MessageStore {
     }
 
     @Override
-    public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
+    public void recoverNextMessages(final int maxReturned, final MessageRecoveryListener listener) throws Exception {
         delegate.recoverNextMessages(maxReturned, listener);
     }
 
     @Override
-    public void recoverNextMessages(int offset, int maxReturned, MessageRecoveryListener listener) throws Exception {
-        delegate.recoverNextMessages(offset, maxReturned, listener);
+    public void recoverMessages(final MessageRecoveryContext messageRecoveryContext) throws Exception {
+        delegate.recoverMessages(messageRecoveryContext);
     }
 
     @Override

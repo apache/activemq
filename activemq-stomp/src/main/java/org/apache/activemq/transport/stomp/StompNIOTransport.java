@@ -128,7 +128,7 @@ public class StompNIOTransport extends TcpTransport {
     }
 
     protected void processBuffer(ByteBuffer buffer, int readSize) throws Exception {
-        receiveCounter += readSize;
+        receiveCounter.addAndGet(readSize);
 
         buffer.flip();
 

@@ -80,6 +80,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean allowLinkStealing = false;
     private boolean warnOnRemoteClose = false;
     private boolean displayStackTrace = false;
+    private boolean autoStart = true;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
     private AtomicBoolean started = new AtomicBoolean(false);
@@ -131,6 +132,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
         rc.setAllowLinkStealing(allowLinkStealing);
         rc.setWarnOnRemoteClose(isWarnOnRemoteClose());
+        rc.setAutoStart(isAutoStart());
         return rc;
     }
 
@@ -695,5 +697,14 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     @Override
     public boolean isStarted() {
         return started.get();
+    }
+
+    public void setAutoStart(boolean autoStart) {
+        this.autoStart = autoStart;
+    }
+
+    @Override
+    public boolean isAutoStart() {
+        return autoStart;
     }
 }

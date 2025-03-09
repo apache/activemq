@@ -79,6 +79,7 @@ public class NetworkBridgeConfiguration {
     private boolean gcDestinationViews = true;
     private long gcSweepTime = 60 * 1000;
     private boolean checkDuplicateMessagesOnDuplex = false;
+    private boolean autoStart = true;
 
     /**
      * Bridge factory implementation - by default backed by static factory, which is default implementation and will rely change.
@@ -597,5 +598,13 @@ public class NetworkBridgeConfiguration {
 
     public SslContext getSslContext() {
         return sslContext;
+    }
+
+    public void setAutoStart(boolean autoStart) {
+        this.autoStart = autoStart;
+    }
+
+    public boolean isAutoStart() {
+        return autoStart;
     }
 }

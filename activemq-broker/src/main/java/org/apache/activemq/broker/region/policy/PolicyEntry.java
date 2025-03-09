@@ -107,6 +107,8 @@ public class PolicyEntry extends DestinationMapEntry {
     private int maxDestinations = -1;
     private boolean useTopicSubscriptionInflightStats = true;
     private boolean advancedNetworkStatisticsEnabled = false; // [AMQ-9437]
+    private boolean advancedMessageStatisticsEnabled = false; // [AMQ-8463]
+
     /*
      * percentage of in-flight messages above which optimize message store is disabled
      */
@@ -308,6 +310,9 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         if (isUpdate("advancedNetworkStatisticsEnabled", includedProperties)) {
             destination.setAdvancedNetworkStatisticsEnabled(isAdvancedNetworkStatisticsEnabled());
+        }
+        if (isUpdate("advancedMessageStatisticsEnabled", includedProperties)) {
+            destination.setAdvancedMessageStatisticsEnabled(isAdvancedMessageStatisticsEnabled());
         }
     }
 
@@ -1040,7 +1045,7 @@ public class PolicyEntry extends DestinationMapEntry {
     /**
      * @return the amount of time spent inactive before GC of the destination kicks in.
      *
-     * @deprecated use getInactiveTimeoutBeforeGC instead.
+     * @deprecated use {@link #getInactiveTimeoutBeforeGC} instead.
      */
     @Deprecated
     public long getInactiveTimoutBeforeGC() {
@@ -1053,7 +1058,7 @@ public class PolicyEntry extends DestinationMapEntry {
      * @param inactiveTimoutBeforeGC
      *        time in milliseconds to configure as the inactive timeout.
      *
-     * @deprecated use getInactiveTimeoutBeforeGC instead.
+     * @deprecated use {@link #setInactiveTimeoutBeforeGC} instead.
      */
     @Deprecated
     public void setInactiveTimoutBeforeGC(long inactiveTimoutBeforeGC) {
@@ -1186,5 +1191,13 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setAdvancedNetworkStatisticsEnabled(boolean advancedNetworkStatisticsEnabled) {
         this.advancedNetworkStatisticsEnabled = advancedNetworkStatisticsEnabled;
+    }
+
+    public boolean isAdvancedMessageStatisticsEnabled() {
+        return this.advancedMessageStatisticsEnabled;
+    }
+
+    public void setAdvancedMessageStatisticsEnabled(boolean advancedMessageStatisticsEnabled) {
+        this.advancedMessageStatisticsEnabled = advancedMessageStatisticsEnabled;
     }
 }

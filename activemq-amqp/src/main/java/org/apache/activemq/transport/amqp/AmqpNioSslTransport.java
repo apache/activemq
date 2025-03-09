@@ -54,6 +54,22 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
     @Override
     protected void initializeStreams() throws IOException {
         super.initializeStreams();
+        if (initBuffer != null) {
+            initBuffer.buffer.flip();
+            // If we are processing the initial buffer from the auto transport,
+            // then process first. This generally should only have 8 bytes from
+            // the initial read
+            if (initBuffer.buffer.hasRemaining()) {
+                receiveCounter.addAndGet(initBuffer.readSize);
+                try {
+                    // one call is all that is needed to consume all data
+                    processCommand(initBuffer.buffer);
+                } catch (Exception e) {
+                    throw new IOException(e);
+                }
+                initBuffer.buffer.clear();
+            }
+        }
         if (inputBuffer.position() != 0 && inputBuffer.hasRemaining()) {
             serviceRead();
         }
@@ -75,24 +91,5 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
         }
         super.doInit();
     }
-
-    @Override
-    protected int secureRead(ByteBuffer plain) throws Exception {
-        if (initBuffer != null) {
-            initBuffer.buffer.flip();
-            if (initBuffer.buffer.hasRemaining()) {
-                plain.flip();
-                for (int i =0; i < 8; i++) {
-                    plain.put(initBuffer.buffer.get());
-                }
-                plain.flip();
-                processCommand(plain);
-                initBuffer.buffer.clear();
-                return 8;
-            }
-        }
-        return super.secureRead(plain);
-    }
-
 
 }

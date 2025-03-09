@@ -1,9 +1,7 @@
 Deploying the ActiveMQ-WebConsole
 =================================
 
-From ActiveMQ 5.9 onwards ActiveMQ ships with a web console which
-is accessible at its usual location at:
-  http://localhost:8161/admin/
+ActiveMQ Classic ships with a web console which is accessible at: http://localhost:8161/admin/
 
 In the default configuration ActiveMQ automatically starts the web console in the
 same VM as the broker. The console is accessibly under http://localhost:8161/admin/.
@@ -12,7 +10,7 @@ The broker may ask for credentials to login the web console the first time.
 The default username and password is admin/admin. 
 
 In the web console you can configure the default users, in the
-conf/jetty-real.properties file. And in the conf/jetty.xml file you can configure
+conf/users.properties file. And in the conf/jetty.xml file you can configure
 to disable login for the web consoles.
 
 However it's also possible to start the web console in a separate VM and connect it

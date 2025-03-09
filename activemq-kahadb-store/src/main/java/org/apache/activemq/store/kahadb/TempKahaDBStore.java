@@ -242,41 +242,9 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         }
 
         @Override
-        public void recoverNextMessages(final int offset, final int maxReturned, final MessageRecoveryListener listener) throws Exception {
-            synchronized(indexMutex) {
-                pageFile.tx().execute(new Transaction.Closure<Exception>(){
-                    @Override
-                    public void execute(Transaction tx) throws Exception {
-                        StoredDestination sd = getStoredDestination(dest, tx);
-                        Entry<Long, MessageRecord> entry=null;
-                        int counter = 0;
-                        int position = 0;
-                        for (Iterator<Entry<Long, MessageRecord>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator.hasNext();) {
-                            entry = iterator.next();
-                            if(offset > 0 && offset > position) {
-                                position++;
-                                continue;
-                            }
-                            listener.recoverMessage( (Message) wireFormat.unmarshal(entry.getValue().data ) );
-                            counter++;
-                            position++;
-                            if( counter >= maxReturned ) {
-                                break;
-                            }
-                        }
-                        if( entry!=null ) {
-                            cursorPos = entry.getKey()+1;
-                        }
-                    }
-                });
-            }
-        }
-
-        @Override
         public void resetBatching() {
             cursorPos=0;
         }
-
 
         @Override
         public void setBatch(MessageId identity) throws IOException {

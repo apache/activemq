@@ -145,20 +145,20 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
                     //to be told when bytes are ready
                     in.serviceRead();
                     attempts++;
-                } while(in.getReadSize().get() < 8 && !Thread.interrupted());
+                } while(in.getReceiveCounter() < 8 && !Thread.interrupted());
             }
         });
 
         try {
             //If this fails and throws an exception and the socket will be closed
-            waitForProtocolDetectionFinish(future, in.getReadSize());
+            waitForProtocolDetectionFinish(future, in.getReceiveCounter());
         } finally {
             //call cancel in case task didn't complete which will interrupt the task
             future.cancel(true);
         }
         in.stop();
 
-        InitBuffer initBuffer = new InitBuffer(in.getReadSize().get(), ByteBuffer.allocate(in.getReadData().length));
+        InitBuffer initBuffer = new InitBuffer(in.getReceiveCounter(), ByteBuffer.allocate(in.getReadData().length));
         initBuffer.buffer.put(in.getReadData());
 
         ProtocolInfo protocolInfo = detectProtocol(in.getReadData());

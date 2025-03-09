@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.management;
 
+import java.util.Set;
 
 /**
  * Statistics for a JCA connection
@@ -35,8 +36,7 @@ public class JCAConnectionStatsImpl extends StatsImpl {
         this.useTime = useTime;
 
         // lets add named stats
-        addStatistic("waitTime", waitTime);
-        addStatistic("useTime", useTime);
+        addStatistics(Set.of(waitTime, useTime));
     }
 
     public String getConnectionFactory() {

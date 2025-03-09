@@ -427,15 +427,16 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     }
 
     public JournalCommand<?> load(Location location) throws IOException {
-        DataByteArrayInputStream is = new DataByteArrayInputStream(journal.read(location));
-        byte readByte = is.readByte();
-        KahaEntryType type = KahaEntryType.valueOf(readByte);
-        if (type == null) {
-            throw new IOException("Could not load journal record. Invalid location: " + location);
+        try(DataByteArrayInputStream is = new DataByteArrayInputStream(journal.read(location))) {
+            byte readByte = is.readByte();
+            KahaEntryType type = KahaEntryType.valueOf(readByte);
+            if (type == null) {
+                throw new IOException("Could not load journal record. Invalid location: " + location);
+            }
+            JournalCommand<?> message = (JournalCommand<?>) type.createMessage();
+            message.mergeFramed(is);
+            return message;
         }
-        JournalCommand<?> message = (JournalCommand<?>) type.createMessage();
-        message.mergeFramed(is);
-        return message;
     }
 
     public void process(final Location location, JournalCommand<?> command) throws IOException {

@@ -80,6 +80,8 @@ public interface Connector extends Service {
 
     long getMaxConnectionExceededCount();
 
+    boolean isAutoStart();
+
     /**
      * @return true if connector is started
      */

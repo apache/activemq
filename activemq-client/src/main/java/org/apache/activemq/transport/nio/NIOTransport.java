@@ -124,7 +124,7 @@ public class NIOTransport extends TcpTransport {
                     break;
                 }
 
-                this.receiveCounter += readSize;
+                this.receiveCounter.addAndGet(readSize);
                 if (currentBuffer.hasRemaining()) {
                     continue;
                 }

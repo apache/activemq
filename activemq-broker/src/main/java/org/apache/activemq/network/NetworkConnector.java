@@ -37,7 +37,6 @@ import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
