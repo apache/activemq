@@ -36,6 +36,8 @@
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
     <staging.siteURL>scp://people.apache.org/x1/www/activemq.apache.org</staging.siteURL>
+  <sonar.organization>autocoderoversg</sonar.organization>
+  <sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
     <!-- JAR dependency versions -->
     <activemq-protobuf-version>1.1</activemq-protobuf-version>
