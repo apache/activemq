@@ -18,7 +18,11 @@ package org.apache.activemq.store.jdbc;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -27,14 +31,14 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Locker;
 import org.apache.activemq.broker.SuppressReplyException;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
-import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.ServiceStopper;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JDBCIOExceptionHandlerMockeryTest {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCIOExceptionHandlerMockeryTest.class);
-    private HashMap<Thread, Throwable> exceptions = new HashMap<Thread, Throwable>();
+    private final HashMap<Thread, Throwable> exceptions = new HashMap<Thread, Throwable>();
 
     @Test
     public void testShutdownWithoutTransportRestart() throws Exception {
@@ -52,8 +56,10 @@ public class JDBCIOExceptionHandlerMockeryTest {
         when(brokerService.isStarted()).thenReturn(true);
         when(brokerService.isRestartAllowed()).thenReturn(false);
         when(brokerService.getPersistenceAdapter()).thenReturn(jdbcPersistenceAdapter);
+        doNothing().when(brokerService).setSystemExitOnShutdown(false);
+        doNothing().when(brokerService).stopAllConnectors(any(ServiceStopper.class));
         when(jdbcPersistenceAdapter.getLocker()).thenReturn(locker);
-        when(locker.keepAlive()).thenReturn(true);  // Connection is down
+        when(locker.keepAlive()).thenReturn(true);
 
         LeaseLockerIOExceptionHandler underTest = new LeaseLockerIOExceptionHandler();
         underTest.setBrokerService(brokerService);
@@ -64,7 +70,7 @@ public class JDBCIOExceptionHandlerMockeryTest {
         } catch (SuppressReplyException expected) {
         }
 
-
+        verify(brokerService, timeout(5000).times(1)).stop();
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
     }
 }
