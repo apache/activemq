@@ -117,3 +117,59 @@ Similar to *`SharedDurableTopicSubscription`* the *`acknowledge(final Connection
 When a consumer invokes *`pullMessage`* on a *`SharedSubscription`* then the *`prefetchExtension`* of the subscription is set to the pull quantity. *`dispatchMatched`* is then triggered on the parent *`SharedNonDurableTopicSubscription`* doing a round robin on subscriptions that have space in their prefetch. This means that *`SharedSubscription`s* on other consumers may also receive the messages in pending. This is to maintain balanced message distribution across consumers.
 
 ![](img/img_10.png)
+
+### 4\. Shared durable subscription deletion
+
+When a *`TransportConnection`* stops, it invokes the *`removeConsumer`* method of *`TopicRegion`*. If the consumer matches belong to a shared subscription then it should be removed from the relevant *SharedDurableTopicSubscription*.
+
+![](img/img_11.png)
+
+A durable subscription will continue to accumulate messages until it is deleted using a *`RemoveSubscriptionInfo`* command. This will invoke *`removeSubscription`* on the *`TopicRegion`* which removes durable subscriptions from the *`durableSubscriptions`* map. If a durable subscription is still active then this will throw a *`JMSException`*. For a *`SharedDurableTopicSubscription`* it’s *`isActive`* method will check all contained *`SharedSubscription`s* to see if any of them are active. The *`SharedSubscriptions`* map should also be updated to remove the *`SharedTopicSubscription`*. The *`TopicRegion`* also calls *`deleteSubscription`* for every *`Topic`* in it’s *`destinations`* which deletes subscriptions from the *`TopicStore`*. Finally, *`removeConsumer`* is invoked on the superclass *`Abs`t`ractRegion`* which removes the consumer from the *`subscriptions`* map and calls *`removeSubscription`* on all destinations.
+
+![](img/img_12.png)
+
+### 5\. Shared non-durable subscription deletion
+
+A shared non-durable subscription will be deleted when the last consumer on the subscription is closed. When a *`TransportConnection`* stops, it invokes the *`removeConsumer`* method of *`TopicRegion`*. The *`SharedSubscriptions`* map should also be updated to remove the *`SharedTopicSubscription`* if it contains no more consumers. Otherwise it should just remove its consumer matching the *`consumerId`* from *`ConsumerInfo`*. *`removeConsumer`* of the superclass *`AbstractRegion`* is called which will remove the *`SharedNonDurableTopicSubscription`* from the *`subscriptions`* map and calls *`removeSubscription`* on all relevant destinations.
+
+![](img/img_13.png)
+
+### 6\. Client side methods changes
+
+New *`createSharedConsumer`* and *`createSharedDurableConsumer`* methods have been added to *`Session`*, *`TopicSession`* and *`JMSContext`*.
+
+*`Session`* has 6 implementations:
+
+* *`ActiveMQSession`* ← Will need to be updated with logic to create shared consumers.
+* *`ActiveMQQueueSession`* ← Should continue to throw exceptions as queues don’t support shared consumers.
+* *`ActiveMQTopicSession`* ← Currently doesn’t support creation of durable consumers. If durable consumers are not supported then it is unlikely that shared consumers would be too.
+* *`PooledSession`* ← Currently doesn’t support creation of durable consumers. If durable consumers are not supported then it is unlikely that shared consumers would be too.
+* *`InboundSessionProxy`* ← Currently doesn’t support creation of durable consumers. If durable consumers are not supported then it is unlikely that shared consumers would be too.
+* *`ManagedSessionProxy`* ← Currently doesn’t support creation of durable consumers. If durable consumers are not supported then it is unlikely that shared consumers would be too.
+
+*`TopicSession`* extends *`Session`* and has 2 implementations not covered above:
+
+* *`ActiveMQTopicSession`* ← Currently doesn’t support creation of durable consumers. If durable consumers are not supported then it is unlikely that shared consumers would be too. Note this API exists for compatibility with the earliest JMS spec JMS 1.0.
+* *`ActiveMQXASession`* ← Extends ActiveMQSession so will take advantage of the logic added there for shared consumers.
+
+*`JMSContext`* has 1 implementation not covered above:
+
+* *`ActiveMQContext`* ← Will need to be updated with logic to create shared consumers.
+
+There is little to no information in the spec about support for shared consumers in *`ConnectionConsumer`* but it is still a Jakarta Messaging 3.1 interface. New *`createSharedConnectionConsumer`* and *`createSharedDurableConnectionConsumer`* methods have been added to the jakarta *`Connection`* interface.
+
+*`Connection`* has 4 implementations:
+
+* *`ActiveMQConnection`* ← Will need to be updated with logic to create shared consumers.
+* *`ActiveMQXAConnection`* ← Extends *`ActiveMQConnection`* so will take advantage of the logic added there for shared consumers.
+* *`PooledConnection`* ← Will need to be updated with logic to create shared consumers.
+* *`InboundConnectionProxy`* ← Currently doesn’t support creation of durable consumers. If durable consumers are not supported then it is unlikely that shared consumers would be too.
+* *`ManagedConnectionProxy`* ← Currently doesn’t support creation of durable consumers. If durable consumers are not supported then it is unlikely that shared consumers would be too.
+
+### 7\. Openwire changes
+
+*`ConsumerInfo`* will need to be updated to include a new boolean *`shared`* property for determining if a consumer is shared. The current *`ConsumerInfo`* also determines durability based on *`return subscriptionName != null;`*. This will no longer hold true as the *`subscriptionName`* will now be set for non durable shared subscriptions. This means a new boolean *`durable`* property will also need to be added to *`ConsumerInfo`*.   
+It may be best to introduce a new v13 of openwire for Jakarta 3.1. This means users will need to use the latest version of the openwire to have the version of *`ConsumerInfoMarshaller`* which creates shared subscriptions. Older openwire marshellers will not be updated with any of the changes to populate the new fields on *`ConsumerInfo`* for shared subscriptions.   
+The *`isDurable`* method of *`ConsumerInfo`* will need to be updated to work with all versions of openwire. It will need the following evaluation:  
+*`return (!shared && subscriptionName != null) || (shared && durable);`*.   
+*`shared`* will default to false for openwire versions older than v13 and so *`isDurable`* will evaluate in the same way as previously, based on *`subscriptionName`*. For openwire v13 the *`shared`* and *`durable`* fields will be populated and so can be used to determine durability for shared subscriptions.
