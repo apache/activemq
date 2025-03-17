@@ -173,3 +173,12 @@ It may be best to introduce a new v13 of openwire for Jakarta 3.1. This means us
 The *`isDurable`* method of *`ConsumerInfo`* will need to be updated to work with all versions of openwire. It will need the following evaluation:  
 *`return (!shared && subscriptionName != null) || (shared && durable);`*.   
 *`shared`* will default to false for openwire versions older than v13 and so *`isDurable`* will evaluate in the same way as previously, based on *`subscriptionName`*. For openwire v13 the *`shared`* and *`durable`* fields will be populated and so can be used to determine durability for shared subscriptions.
+
+## Appendix
+
+Links to the official spec:
+
+* [https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1\#shared-non-durable-subscriptions](https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#shared-non-durable-subscriptions)
+* [https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1\#shared-durable-subscriptions](https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#shared-durable-subscriptions)
+* [https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1\#jakarta-messaging-application-server-facilities](https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#jakarta-messaging-application-server-facilities)
+* [https://www.oracle.com/technical-resources/articles/java/jms2messaging.html](https://www.oracle.com/technical-resources/articles/java/jms2messaging.html)
