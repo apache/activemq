@@ -22,25 +22,40 @@ import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
+import static org.junit.Assert.*;
 
 public class AMQ9685Test {
 
+    @Rule
+    public final TemporaryFolder temp = new TemporaryFolder();
     private BrokerService brokerService;
     private Connection connection;
+    private String dir;
+    private ActiveMQQueue destination = new ActiveMQQueue("Consumer.foo.");
 
     @Before
     public void init() throws Exception {
+        dir = temp.newFolder().getAbsolutePath();
         brokerService = createBroker();
         brokerService.start();
-        connection = createConnection();
+        connection = new ActiveMQConnectionFactory(
+            brokerService.getVmConnectorURI()).createConnection();
         connection.start();
     }
 
@@ -55,27 +70,51 @@ public class AMQ9685Test {
     }
 
     @Test
-    public void testBrokenWildcardQueueName() throws Exception {
+    public void testVirtualTopicMissingNameManual() throws Exception {
+        // Test manual creation
+        brokerService.getRegionBroker().addDestination(brokerService.getAdminConnectionContext(),
+            destination, false);
+
+        // Verify created
+        assertTrue(brokerService.getBroker().getDestinationMap().containsKey(destination));
+        assertTrue(brokerService.getPersistenceAdapter().getDestinations().contains(destination));
+
+        // Verify restart without issue
+        restart();
+    }
+
+    @Test
+    public void testVirtualTopicMissingNameConsumer() throws Exception {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = new ActiveMQQueue("Consumer.foo.");
+        // test consumer attempt dynamic creation
         session.createConsumer(destination, null);
+
+        // Verify created
+        assertTrue(brokerService.getBroker().getDestinationMap().containsKey(destination));
+        assertTrue(brokerService.getPersistenceAdapter().getDestinations().contains(destination));
+
+        // Verify restart without issue
+        restart();
     }
 
-    private Connection createConnection() throws Exception {
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(brokerService.getVmConnectorURI());
-        cf.setWatchTopicAdvisories(false);
-        return cf.createConnection();
-    }
-
-    private BrokerService createBroker() throws Exception {
+    private BrokerService createBroker() {
         BrokerService broker = new BrokerService();
         broker.setAdvisorySupport(false);
-        broker.setPersistent(false);
+        broker.setPersistent(true);
+        broker.setDataDirectory(dir);
 
         VirtualTopic virtualTopic = new VirtualTopic();
         VirtualDestinationInterceptor interceptor = new VirtualDestinationInterceptor();
         interceptor.setVirtualDestinations(new VirtualDestination[]{virtualTopic});
         broker.setDestinationInterceptors(new DestinationInterceptor[]{interceptor});
         return broker;
+    }
+
+    private void restart() throws Exception {
+        brokerService.stop();
+        brokerService.waitUntilStopped();
+        brokerService = createBroker();
+        brokerService.start();
+        brokerService.waitUntilStarted();
     }
 }
