@@ -17,17 +17,13 @@
 package org.apache.activemq.broker.virtual;
 
 import jakarta.jms.Connection;
-import jakarta.jms.Destination;
 import jakarta.jms.Session;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
@@ -35,10 +31,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 public class AMQ9685Test {
 
