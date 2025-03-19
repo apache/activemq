@@ -35,6 +35,7 @@ import jakarta.jms.MessageFormatRuntimeException;
 import jakarta.jms.ObjectMessage;
 import jakarta.jms.TextMessage;
 
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.TypeConversionSupport;
 
@@ -46,6 +47,7 @@ public class ActiveMQProducer implements JMSProducer {
     // QoS override of defaults on a per-JMSProducer instance basis
     private String correlationId = null;
     private byte[] correlationIdBytes = null;
+    private Long deliveryDelay = null;
     private Integer deliveryMode = null;
     private Boolean disableMessageID = false;
     private Boolean disableMessageTimestamp = false;
@@ -85,6 +87,13 @@ public class ActiveMQProducer implements JMSProducer {
                 for(Map.Entry<String, Object> propertyEntry : messageProperties.entrySet()) {
                     message.setObjectProperty(propertyEntry.getKey(), propertyEntry.getValue());
                 }
+            }
+
+            // [AMQ-8320] Producer setting for deliveryDelay will override user-specified ActiveMQ Scheduled Delay property
+            if(this.deliveryDelay != null) {
+                long deliveryTimeMillis = System.currentTimeMillis() + this.deliveryDelay;
+                message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, this.deliveryDelay);
+                message.setLongProperty(ActiveMQMessage.JMS_DELIVERY_TIME_PROPERTY, deliveryTimeMillis);
             }
 
             activemqMessageProducer.send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), getDisableMessageID(), getDisableMessageTimestamp(), null);
@@ -243,12 +252,13 @@ public class ActiveMQProducer implements JMSProducer {
 
     @Override
     public JMSProducer setDeliveryDelay(long deliveryDelay) {
-        throw new UnsupportedOperationException("setDeliveryDelay(long) is not supported");
+        this.deliveryDelay = deliveryDelay;
+        return this;
     }
 
     @Override
     public long getDeliveryDelay() {
-        throw new UnsupportedOperationException("getDeliveryDelay() is not supported");
+        return this.deliveryDelay;
     }
 
     @Override
