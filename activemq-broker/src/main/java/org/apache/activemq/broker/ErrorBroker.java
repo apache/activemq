@@ -410,4 +410,9 @@ public class ErrorBroker implements Broker {
     public void networkBridgeStopped(BrokerInfo brokerInfo) {
         throw new BrokerStoppedException(this.message);
     }
+
+    @Override
+    public void queuePurged(ConnectionContext context, ActiveMQDestination destination) {
+        throw new BrokerStoppedException(this.message);
+    }
 }
