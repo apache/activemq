@@ -19,14 +19,7 @@ package org.apache.activemq.network;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -113,7 +106,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class DemandForwardingBridgeSupport implements NetworkBridge, BrokerServiceAware {
     private static final Logger LOG = LoggerFactory.getLogger(DemandForwardingBridgeSupport.class);
-    protected static final String DURABLE_SUB_PREFIX = "NC-DS_";
+    protected static final String DURABLE_SUB_PREFIX = NetworkBridgeConfiguration.DURABLE_SUB_PREFIX;
     protected final Transport localBroker;
     protected final Transport remoteBroker;
     protected IdGenerator idGenerator = new IdGenerator();
@@ -664,23 +657,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
-    /**
-     * Checks whether or not this consumer is a direct bridge network subscription
-     * @param info
-     * @return
-     */
-    protected boolean isDirectBridgeConsumer(ConsumerInfo info) {
-        return (info.getSubscriptionName() != null && info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX)) &&
-                (info.getClientId() == null || info.getClientId().startsWith(configuration.getName()));
-    }
-
     protected boolean isProxyBridgeSubscription(String clientId, String subName) {
-        if (subName != null && clientId != null) {
-            if (subName.startsWith(DURABLE_SUB_PREFIX) && !clientId.startsWith(configuration.getName())) {
-                return true;
-            }
-        }
-        return false;
+        return NetworkBridgeUtils.isProxyBridgeSubscription(configuration, clientId, subName);
     }
 
     /**
@@ -750,49 +728,61 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 } else if (command instanceof BrokerSubscriptionInfo) {
                     final BrokerSubscriptionInfo brokerSubscriptionInfo = (BrokerSubscriptionInfo) command;
 
+                    // Skip the durable sync if any of the following are true:
+                    // 1) if the flag is set to false.
+                    // 2) If dynamicOnly is true, this means means to only activate when the real
+                    //    consumers come back so we need to skip. This mode is useful espeically when
+                    //    setting TTL > 1 as the TTL info is tied to consumers
+                    // 3) If conduit subscriptions is disable we also skip, for the same reason we
+                    //    skip when dynamicOnly is true, that we need to let consumers entirely drive
+                    //    the creation/removal of subscriptions as each consumer gets their own
+                    if (!configuration.isSyncDurableSubs() || !configuration.isConduitSubscriptions()
+                        || configuration.isDynamicOnly()) {
+                        return;
+                    }
+
                     //Start in a new thread so we don't block the transport waiting for staticDestinations
-                    syncExecutor.execute(new Runnable() {
+                    syncExecutor.execute(() -> {
+                        try {
+                            staticDestinationsLatch.await();
 
-                        @Override
-                        public void run() {
-                            try {
-                                staticDestinationsLatch.await();
-                                //Make sure after the countDown of staticDestinationsLatch we aren't stopping
-                                if (!disposed.get()) {
-                                    BrokerSubscriptionInfo subInfo = brokerSubscriptionInfo;
-                                    LOG.debug("Received Remote BrokerSubscriptionInfo on {} from {}",
-                                            brokerService.getBrokerName(), subInfo.getBrokerName());
+                            //Make sure after the countDown of staticDestinationsLatch we aren't stopping
+                            if (!disposed.get() && started.get()) {
+                                final BrokerSubscriptionInfo subInfo = brokerSubscriptionInfo;
+                                LOG.debug("Received Remote BrokerSubscriptionInfo on {} from {}",
+                                    brokerService.getBrokerName(), subInfo.getBrokerName());
 
-                                    if (configuration.isSyncDurableSubs() && configuration.isConduitSubscriptions()
-                                            && !configuration.isDynamicOnly()) {
-                                        if (started.get()) {
-                                            if (subInfo.getSubscriptionInfos() != null) {
-                                                for (ConsumerInfo info : subInfo.getSubscriptionInfos()) {
-                                                    //re-add any process any non-NC consumers that match the
-                                                    //dynamicallyIncludedDestinations list
-                                                    //Also re-add network consumers that are not part of this direct
-                                                    //bridge (proxy of proxy bridges)
-                                                    if((info.getSubscriptionName() == null || !isDirectBridgeConsumer(info)) &&
-                                                            NetworkBridgeUtils.matchesDestinations(dynamicallyIncludedDestinations, info.getDestination())) {
-                                                        serviceRemoteConsumerAdvisory(info);
-                                                    }
-                                                }
-                                            }
-
-                                            //After re-added, clean up any empty durables
-                                            for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
-                                                DemandSubscription ds = i.next();
-                                                if (NetworkBridgeUtils.matchesDestinations(dynamicallyIncludedDestinations, ds.getLocalInfo().getDestination())) {
-                                                    cleanupDurableSub(ds, i);
-                                                }
-                                            }
+                                // Go through and subs sent and see if we can add demand
+                                if (subInfo.getSubscriptionInfos() != null) {
+                                    // Re-add and process subscriptions on the remote broker to add demand
+                                    for (ConsumerInfo info : subInfo.getSubscriptionInfos()) {
+                                        // Brokers filter what is sent, but the filtering logic has changed between
+                                        // versions, plus some durables sent are only processed for removes so we
+                                        // need to filter what to process for adding demand
+                                        if (NetworkBridgeUtils.matchesConfigForDurableSync(configuration,
+                                            info.getClientId(), info.getSubscriptionName(), info.getDestination())) {
+                                            serviceRemoteConsumerAdvisory(info);
                                         }
                                     }
                                 }
-                            } catch (Exception e) {
-                                LOG.warn("Error processing BrokerSubscriptionInfo: {}", e.getMessage(), e);
-                                LOG.debug(e.getMessage(), e);
+
+                                //After processing demand to add, clean up any empty durables
+                                for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
+                                    DemandSubscription ds = i.next();
+                                    // This filters on destinations to see if we should process possible removal
+                                    // based on the bridge configuration (included dests, TTL, etc).
+                                    if (NetworkBridgeUtils.matchesDestinations(configuration.getDynamicallyIncludedDestinations(),
+                                        ds.getLocalInfo().getDestination())) {
+                                        // Note that this method will further check that there are no remote
+                                        // demand that was previously added or associated. If there are remote
+                                        // subscriptions tied to the DS, then it will not be removed.
+                                        cleanupDurableSub(ds, i);
+                                    }
+                                }
                             }
+                        } catch (Exception e) {
+                            LOG.warn("Error processing BrokerSubscriptionInfo: {}", e.getMessage(), e);
+                            LOG.debug(e.getMessage(), e);
                         }
                     });
 
@@ -1427,7 +1417,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (dests != null) {
             for (ActiveMQDestination dest : dests) {
                 if (isPermissableDestination(dest)) {
-                    DemandSubscription sub = createDemandSubscription(dest, null);
+                    DemandSubscription sub = createDemandSubscription(dest, null, null);
                     if (sub != null) {
                         sub.setStaticallyIncluded(true);
                         try {
@@ -1684,7 +1674,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return result;
     }
 
-    final protected DemandSubscription createDemandSubscription(ActiveMQDestination destination, final String subscriptionName) {
+    final protected DemandSubscription createDemandSubscription(ActiveMQDestination destination, final String subscriptionName,
+                                                                BrokerId[] brokerPath) {
         ConsumerInfo info = new ConsumerInfo();
         info.setNetworkSubscription(true);
         info.setDestination(destination);
@@ -1694,7 +1685,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
 
         // Indicate that this subscription is being made on behalf of the remote broker.
-        info.setBrokerPath(new BrokerId[]{remoteBrokerId});
+        // If we have existing brokerPath info then use it, this is important to
+        // preserve TTL information
+        if (brokerPath == null || brokerPath.length == 0) {
+            info.setBrokerPath(new BrokerId[]{remoteBrokerId});
+        } else {
+            info.setBrokerPath(brokerPath);
+            if (!contains(brokerPath, remoteBrokerId)) {
+                addRemoteBrokerToBrokerPath(info);
+            }
+        }
 
         // the remote info held by the DemandSubscription holds the original
         // consumerId, the local info get's overwritten
@@ -1778,7 +1778,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return filterFactory.create(info, getRemoteBrokerPath(), configuration.getMessageTTL(), configuration.getConsumerTTL());
     }
 
-    protected void addRemoteBrokerToBrokerPath(ConsumerInfo info) throws IOException {
+    protected void addRemoteBrokerToBrokerPath(ConsumerInfo info) {
         info.setBrokerPath(appendToBrokerPath(info.getBrokerPath(), getRemoteBrokerPath()));
     }
 

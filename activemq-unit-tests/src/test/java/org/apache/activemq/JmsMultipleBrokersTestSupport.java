@@ -105,7 +105,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
     // Overwrite this method to specify how you want to bridge the two brokers
     // By default, bridge them using add network connector of the local broker
-    // and the first connector of the remote broker
+    // and the first connector of the remote brokerz
     protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {
         List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
