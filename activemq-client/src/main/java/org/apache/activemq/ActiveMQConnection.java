@@ -154,7 +154,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean exclusiveConsumer;
     private boolean alwaysSyncSend;
     private int closeTimeout = 15000;
-    private boolean watchTopicAdvisories = true;
+    private boolean watchTopicAdvisories = false;
     private long warnAboutUnstartedConnectionTimeout = 500L;
     private int sendTimeout =0;
     private boolean sendAcksAsync=true;

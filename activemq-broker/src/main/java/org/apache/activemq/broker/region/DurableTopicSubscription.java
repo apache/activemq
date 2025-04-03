@@ -62,6 +62,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     private final AtomicBoolean active = new AtomicBoolean();
     private final AtomicLong offlineTimestamp = new AtomicLong(-1);
     private final HashSet<MessageId> ackedAndPrepared = new HashSet<MessageId>();
+    private boolean shared = false;
 
     public DurableTopicSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
             throws JMSException {
@@ -115,6 +116,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     public void add(ConnectionContext context, Destination destination) throws Exception {
+        System.out.println("[SUB_PATH] DurableTopicSubscription add: " + destination.toString());
         if (!destinations.contains(destination)) {
             super.add(context, destination);
         }
@@ -381,7 +383,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     public synchronized String toString() {
         return "DurableTopicSubscription-" + getSubscriptionKey() + ", id=" + info.getConsumerId() + ", active=" + isActive() + ", destinations="
                 + durableDestinations.size() + ", total=" + getSubscriptionStatistics().getEnqueues().getCount() + ", pending=" + getPendingQueueSize() + ", dispatched=" + getSubscriptionStatistics().getDispatched().getCount()
-                + ", inflight=" + dispatched.size() + ", prefetchExtension=" + getPrefetchExtension();
+                + ", inflight=" + dispatched.size() + ", prefetchExtension=" + getPrefetchExtension() + ", shared: " + isShared();
     }
 
     public SubscriptionKey getSubscriptionKey() {
@@ -437,5 +439,13 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     public boolean isEnableMessageExpirationOnActiveDurableSubs() {
     	return enableMessageExpirationOnActiveDurableSubs;
+    }
+
+    public boolean isShared() {
+        return shared;
+    }
+
+    public void setShared(boolean shared) {
+        this.shared = shared;
     }
 }

@@ -204,6 +204,7 @@ public class RegionBroker extends EmptyBroker {
     }
 
     protected Region createTopicRegion(SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        System.out.println("[PUB_SUB] create topic region");
         return new TopicRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
@@ -427,9 +428,12 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        System.out.println("[SUB_PATH] Add a consumer in RegionBroker");
         ActiveMQDestination destination = info.getDestination();
         if (destinationInterceptor != null) {
+            System.out.println("[SUB_PATH] RegionBroker creating destinaiton incerceptor for destination: " + destination.toString());
             destinationInterceptor.create(this, context, destination);
+            System.out.println("[SUB_PATH] RegionBroker done creating destinaiton incerceptor for destination: " + destination.toString());
         }
         inactiveDestinationsPurgeLock.readLock().lock();
         try {
@@ -462,8 +466,9 @@ public class RegionBroker extends EmptyBroker {
     }
 
     @Override
-    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception { // [PUB_PATH]
         ActiveMQDestination destination = message.getDestination();
+        System.out.println("[PUB_PATH] RegionBroker.send: " + destination.toString());
         message.setBrokerInTime(System.currentTimeMillis());
         if (producerExchange.isMutable() || producerExchange.getRegion() == null
             || (producerExchange.getRegionDestination() != null && producerExchange.getRegionDestination().isDisposed())) {

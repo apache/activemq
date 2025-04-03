@@ -33,6 +33,8 @@ public class SimpleDispatchPolicy implements DispatchPolicy {
     public boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List<Subscription> consumers)
             throws Exception {
 
+        // Round-robin dispatching
+        System.out.println("[PUB_PATH] In SimpleDispatchPolicy");
         int count = 0;
         for (Subscription sub : consumers) {
             // Don't deliver to browsers
@@ -44,7 +46,7 @@ public class SimpleDispatchPolicy implements DispatchPolicy {
                 sub.unmatched(node);
                 continue;
             }
-
+            System.out.println("[PUB_PATH] SimpleDispatchPolicy distribute message " + node.toString() + " to " + sub.toString());
             sub.add(node);
             count++;
         }

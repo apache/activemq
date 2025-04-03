@@ -36,6 +36,7 @@ import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.RetainedMessageSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.SharedSubscriptionDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.util.InsertionCountList;
@@ -79,8 +80,11 @@ public class Topic extends BaseDestination implements Task {
     protected final CopyOnWriteArrayList<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
     private final ReentrantReadWriteLock dispatchLock = new ReentrantReadWriteLock();
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
+    private SharedSubscriptionDispatchPolicy sharedSubscriptionDispatchPolicy = new SharedSubscriptionDispatchPolicy();
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private final ConcurrentMap<SubscriptionKey, DurableTopicSubscription> durableSubscribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
+    private final ConcurrentMap<SubscriptionKey, DurableTopicSubscription> sharedDurableSubscribers = new ConcurrentHashMap<>();
+    protected final ConcurrentMap<String, SharedDurableTopicSubscriptionMetadata> sharedDurableSubscriptionMetadataMap = new ConcurrentHashMap<String, SharedDurableTopicSubscriptionMetadata>();
     private final TaskRunner taskRunner;
     private final TaskRunnerFactory taskRunnerFactor;
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
@@ -133,8 +137,9 @@ public class Topic extends BaseDestination implements Task {
 
     @Override
     public void addSubscription(ConnectionContext context, final Subscription sub) throws Exception {
+        System.out.println("[SUB_PATH] Topic addSubscription");
         if (!sub.getConsumerInfo().isDurable()) {
-
+            // Non durable
             // Do a retroactive recovery if needed.
             if (sub.getConsumerInfo().isRetroactive() || isAlwaysRetroactive()) {
 
@@ -146,6 +151,7 @@ public class Topic extends BaseDestination implements Task {
                     synchronized (consumers) {
                         if (!consumers.contains(sub)){
                             sub.add(context, this);
+                            System.out.println("[SUB_PATH] Topc add to consumers: line 152");
                             consumers.add(sub);
                             applyRecovery=true;
                             super.addSubscription(context, sub);
@@ -162,39 +168,58 @@ public class Topic extends BaseDestination implements Task {
                 synchronized (consumers) {
                     if (!consumers.contains(sub)){
                         sub.add(context, this);
+                        System.out.println("[SUB_PATH] Topc add to consumers: line 169");
                         consumers.add(sub);
                         super.addSubscription(context, sub);
                     }
                 }
             }
         } else {
+            System.out.println("[SUB_PATH] Topic addSubscription: durable");
             DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
             super.addSubscription(context, sub);
             sub.add(context, this);
             if(dsub.isActive()) {
-                synchronized (consumers) {
-                    boolean hasSubscription = false;
-
-                    if (consumers.size() == 0) {
-                        hasSubscription = false;
+                if (dsub.isShared()) {
+                    System.out.println("[SUB_PATH] Topic addSubscription: adding shared durable subscription");
+                    sharedDurableSubscribers.put(dsub.getSubscriptionKey(), dsub);
+                    String subscriptionName = dsub.getConsumerInfo().getSubscriptionName();
+                    SharedDurableTopicSubscriptionMetadata sharedDurableTopicSubscriptionMetadata = null;
+                    if (sharedDurableSubscriptionMetadataMap.containsKey(subscriptionName)) {
+                        sharedDurableTopicSubscriptionMetadata = sharedDurableSubscriptionMetadataMap.get(subscriptionName);
                     } else {
-                        for (Subscription currentSub : consumers) {
-                            if (currentSub.getConsumerInfo().isDurable()) {
-                                DurableTopicSubscription dcurrentSub = (DurableTopicSubscription) currentSub;
-                                if (dcurrentSub.getSubscriptionKey().equals(dsub.getSubscriptionKey())) {
-                                    hasSubscription = true;
-                                    break;
+                        sharedDurableTopicSubscriptionMetadata = new SharedDurableTopicSubscriptionMetadata(subscriptionName);
+                        sharedDurableSubscriptionMetadataMap.put(subscriptionName, sharedDurableTopicSubscriptionMetadata);
+                    }
+                    sharedDurableTopicSubscriptionMetadata.addDurableTopicSubscription(dsub.getSubscriptionKey(), dsub);
+                    sharedDurableSubscribers.put(dsub.getSubscriptionKey(), dsub);
+                } else {
+                    System.out.println("[SUB_PATH] Topic addSubscription: adding non-shared durable subscription");
+                    synchronized (consumers) {
+                        boolean hasSubscription = false;
+
+                        if (consumers.size() == 0) {
+                            hasSubscription = false;
+                        } else {
+                            for (Subscription currentSub : consumers) {
+                                if (currentSub.getConsumerInfo().isDurable()) {
+                                    DurableTopicSubscription dcurrentSub = (DurableTopicSubscription) currentSub;
+                                    if (dcurrentSub.getSubscriptionKey().equals(dsub.getSubscriptionKey())) {
+                                        hasSubscription = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (!hasSubscription) {
-                        consumers.add(sub);
+                        if (!hasSubscription) {
+                            System.out.println("[SUB_PATH] Topc add to consumers: line 214");
+                            consumers.add(sub);
+                        }
                     }
+                    durableSubscribers.put(dsub.getSubscriptionKey(), dsub);
                 }
             }
-            durableSubscribers.put(dsub.getSubscriptionKey(), dsub);
         }
     }
 
@@ -258,12 +283,14 @@ public class Topic extends BaseDestination implements Task {
     }
 
     public void activate(ConnectionContext context, final DurableTopicSubscription subscription) throws Exception {
+        System.out.println("[PUB_PATH] Topic activate");
         // synchronize with dispatch method so that no new messages are sent
         // while we are recovering a subscription to avoid out of order messages.
         dispatchLock.writeLock().lock();
         try {
 
             if (topicStore == null) {
+                System.out.println("[PUB_PATH] Topic topicStore == null");
                 return;
             }
 
@@ -274,6 +301,7 @@ public class Topic extends BaseDestination implements Task {
             if (info != null) {
                 // Check to see if selector changed.
                 if (hasDurableSubChanged(info, subscription.getConsumerInfo())) {
+                    System.out.println("[SUB_PATH] Topic activate: hasDurableSubchanged true: adding stuff");
                     // Need to delete the subscription
                     topicStore.deleteSubscription(clientId, subscriptionName);
                     info = null;
@@ -285,9 +313,24 @@ public class Topic extends BaseDestination implements Task {
                         consumers.remove(subscription);
                     }
                 } else {
-                    synchronized (consumers) {
-                        if (!consumers.contains(subscription)) {
-                            consumers.add(subscription);
+                    if (subscription.isShared()) {
+                        System.out.println("[SUB_PATH] Topic activate: adding stuff: shared");
+                        SharedDurableTopicSubscriptionMetadata sharedDurableTopicSubscriptionMetadata = null;
+                        if (sharedDurableSubscriptionMetadataMap.containsKey(subscriptionName)) {
+                            sharedDurableTopicSubscriptionMetadata = sharedDurableSubscriptionMetadataMap.get(subscriptionName);
+                        } else {
+                            sharedDurableTopicSubscriptionMetadata = new SharedDurableTopicSubscriptionMetadata(subscriptionName);
+                            sharedDurableSubscriptionMetadataMap.put(subscriptionName, sharedDurableTopicSubscriptionMetadata);
+                        }
+                        sharedDurableTopicSubscriptionMetadata.addDurableTopicSubscription(subscription.getSubscriptionKey(), subscription);
+                        sharedDurableSubscribers.put(subscription.getSubscriptionKey(), subscription);
+                    } else {
+                        System.out.println("[SUB_PATH] Topic activate: adding stuff: non-shared");
+                        synchronized (consumers) {
+                            if (!consumers.contains(subscription)) {
+                                System.out.println("[SUB_PATH] Topc add to consumers: line 326");
+                                consumers.add(subscription);
+                            }
                         }
                     }
                 }
@@ -295,6 +338,8 @@ public class Topic extends BaseDestination implements Task {
 
             // Do we need to create the subscription?
             if (info == null) {
+                System.out.println("[SUB_PATH] Topic activate: we need to create the subscription");
+                System.out.println("[SUB_PATH] Topic activate: subscription: " + subscription.toString());
                 info = new SubscriptionInfo();
                 info.setClientId(clientId);
                 info.setSelector(subscription.getConsumerInfo().getSelector());
@@ -304,9 +349,23 @@ public class Topic extends BaseDestination implements Task {
                 // This destination is an actual destination id.
                 info.setSubscribedDestination(subscription.getConsumerInfo().getDestination());
                 // This destination might be a pattern
-                synchronized (consumers) {
-                    consumers.add(subscription);
-                    topicStore.addSubscription(info, subscription.getConsumerInfo().isRetroactive());
+                if (subscription.isShared()) {
+                    System.out.println("[SUB_PATH] Topc add to shared subscription metadata: line 351");
+                    SharedDurableTopicSubscriptionMetadata sharedDurableTopicSubscriptionMetadata = null;
+                    if (sharedDurableSubscriptionMetadataMap.containsKey(subscriptionName)) {
+                        sharedDurableTopicSubscriptionMetadata = sharedDurableSubscriptionMetadataMap.get(subscriptionName);
+                    } else {
+                        sharedDurableTopicSubscriptionMetadata = new SharedDurableTopicSubscriptionMetadata(subscriptionName);
+                        sharedDurableSubscriptionMetadataMap.put(subscriptionName, sharedDurableTopicSubscriptionMetadata);
+                    }
+                    sharedDurableTopicSubscriptionMetadata.addDurableTopicSubscription(subscription.getSubscriptionKey(), subscription);
+                    sharedDurableSubscribers.put(subscription.getSubscriptionKey(), subscription);
+                } else {
+                    synchronized (consumers) {
+                        System.out.println("[SUB_PATH] Topc add to consumers: line 347");
+                        consumers.add(subscription);
+                        topicStore.addSubscription(info, subscription.getConsumerInfo().isRetroactive());
+                    }
                 }
             }
 
@@ -364,6 +423,7 @@ public class Topic extends BaseDestination implements Task {
 
     @Override
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
+        System.out.println("[PUB_PATH] in Topic");
         final ConnectionContext context = producerExchange.getConnectionContext();
 
         final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
@@ -371,6 +431,7 @@ public class Topic extends BaseDestination implements Task {
         final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0
                 && !context.isInRecoveryMode();
 
+        System.out.println(destination.getPhysicalName());
         message.setRegionDestination(this);
 
         if(getMessageInterceptorStrategy() != null) {
@@ -527,6 +588,7 @@ public class Topic extends BaseDestination implements Task {
      */
     synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message)
             throws IOException, Exception {
+        System.out.println("[PUB_PATH] in Topic doMessageSend");
         final ConnectionContext context = producerExchange.getConnectionContext();
         message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
         Future<Object> result = null;
@@ -580,7 +642,7 @@ public class Topic extends BaseDestination implements Task {
 
         } else {
             try {
-                dispatch(context, message);
+                dispatch(context, message); // dispatching to the subscription
             } finally {
                 message.decrementReferenceCount();
             }
@@ -777,6 +839,7 @@ public class Topic extends BaseDestination implements Task {
         // AMQ-2586: Better to leave this stat at zero than to give the user
         // misleading metrics.
         // destinationStatistics.getMessages().increment();
+        System.out.println("[PUB_PATH] In topic dispatch");
         destinationStatistics.getEnqueues().increment();
 
         if(isAdvancedNetworkStatisticsEnabled() && context != null && context.isNetworkConnection()) {
@@ -792,7 +855,7 @@ public class Topic extends BaseDestination implements Task {
                 return;
             }
             synchronized (consumers) {
-                if (consumers.isEmpty()) {
+                if (consumers.isEmpty() && sharedDurableSubscriptionMetadataMap.isEmpty()) {
                     onMessageWithNoConsumers(context, message);
                     return;
                 }
@@ -807,7 +870,20 @@ public class Topic extends BaseDestination implements Task {
             msgContext = context.getMessageEvaluationContext();
             msgContext.setDestination(destination);
             msgContext.setMessageReference(message);
+            System.out.println("[PUB_PATH] Topic dispatching: dispatching");
+            for (Subscription c : consumers) {
+                System.out.println("[PUB_PATH] Topic dispatching: consumer: " + c.toString());
+            }
+            boolean no_consumers = false;
+            boolean no_shared_consumers = false;
             if (!dispatchPolicy.dispatch(message, msgContext, consumers)) {
+                no_consumers = true;
+            }
+            // Dispatch to shared
+            if (!sharedSubscriptionDispatchPolicy.dispatch(message, msgContext, sharedDurableSubscriptionMetadataMap)) {
+                no_shared_consumers = true;
+            }
+            if (no_consumers && no_shared_consumers) {
                 onMessageWithNoConsumers(context, message);
             }
 

@@ -622,6 +622,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     // made public so it can be used in MQTTProtocolConverter
     public void dispatchPending() throws IOException {
+        System.out.println("[PUB_PATH] PrefetchSubscription dispatch pending");
         List<Destination> slowConsumerTargets = null;
 
         synchronized(pendingLock) {
