@@ -17,6 +17,7 @@
 package org.apache.activemq.network;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -40,6 +41,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.management.MessageFlowStats;
+import org.apache.activemq.transport.discovery.simple.SimpleDiscoveryAgent;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
 import org.junit.Test;
@@ -87,12 +89,12 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(localURI);
         fac.setAlwaysSyncSend(true);
         fac.setDispatchAsync(false);
-        localConnection = fac.createConnection();
+        localConnection = fac.createConnection("localAdmin", "passwordA");
         localConnection.setClientID("localClientId");
 
         URI remoteURI = remoteBroker.getVmConnectorURI();
         fac = new ActiveMQConnectionFactory(remoteURI);
-        remoteConnection = fac.createConnection();
+        remoteConnection = fac.createConnection("remoteAdmin", "passwordB");
         remoteConnection.setClientID("remoteClientId");
 
         localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -109,8 +111,59 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         return "org/apache/activemq/network/localBroker-advancedNetworkStatistics.xml";
     }
 
-    //Added for AMQ-9437 test advancedStatistics for networkEnqueue and networkDequeue
+    //Added for AMQ-9687 test network bridge local/remote exception stats rolled up to the connector
     @Test(timeout = 120 * 1000)
+    public void testNetworkAdvancedStatisticsErrors() throws Exception {
+        final NetworkConnector localNetworkConnector = localBroker.getNetworkConnectorByName("local-to-remote");
+        assertNotNull(localNetworkConnector);
+
+        final String originalLocalPassword = localNetworkConnector.getPassword();
+        final String originalRemotePassword = localNetworkConnector.getRemotePassword();
+
+        assertTrue(localNetworkConnector.isAutoStart());
+        assertTrue(localNetworkConnector.isStarted());
+
+        // Use a non-retrying discovery agent so each induced fault produces a single,
+        // definitive exception count instead of an ever-growing series of reconnects.
+        ((SimpleDiscoveryAgent) ((DiscoveryNetworkConnector) localNetworkConnector).getDiscoveryAgent())
+                .setMaxReconnectAttempts(1);
+
+        // Healthy bridge: no exceptions rolled up to the connector.
+        assertNetworkStats(false, false, 0L, 0L, localNetworkConnector);
+
+        try {
+            // Remote error only: a bad remote password is rejected by the remote broker and
+            // surfaces as a remote exception on the bridge, rolled up to the connector.
+            restartConnector(localNetworkConnector, originalLocalPassword, "wrongRemotePassword");
+            assertNetworkStats(false, false, 0L, 1L, localNetworkConnector);
+
+            // Local error only: a bad local password is rejected by the local broker and
+            // surfaces as a local exception on the bridge, rolled up to the connector.
+            restartConnector(localNetworkConnector, "wrongLocalPassword", originalRemotePassword);
+            assertNetworkStats(false, false, 1L, 0L, localNetworkConnector);
+        } finally {
+            restartConnector(localNetworkConnector, originalLocalPassword, originalRemotePassword);
+        }
+    }
+
+    /**
+     * Stops the connector, applies the given local/remote credentials, and starts it again,
+     * waiting for each transition to complete. A stop/start cycle resets the connector's
+     * exception counters, so each scenario starts from a clean baseline.
+     */
+    private static void restartConnector(final NetworkConnector networkConnector, final String localPassword, final String remotePassword) throws Exception {
+        networkConnector.stop();
+        assertTrue(Wait.waitFor(networkConnector::isStopped));
+
+        networkConnector.setPassword(localPassword);
+        networkConnector.setRemotePassword(remotePassword);
+
+        networkConnector.start();
+        assertTrue(Wait.waitFor(networkConnector::isStarted));
+    }
+
+    //Added for AMQ-9437 test advancedStatistics for networkEnqueue and networkDequeue
+    @Test(timeout = 60 * 1000)
     public void testNetworkAdvancedStatistics() throws Exception {
 
         // create a remote durable consumer to create demand
@@ -207,7 +260,7 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         assertEquals(lastIncludedSentMessageID, localBrokerIncludedMessageFlowStats.getDequeuedMessageID().getValue());
         assertNotNull(localBrokerIncludedMessageFlowStats.getDequeuedMessageBrokerInTime().getValue());
         assertNotNull(localBrokerIncludedMessageFlowStats.getDequeuedMessageBrokerOutTime().getValue());
-        assertTrue(localBrokerIncludedMessageFlowStats.getDequeuedMessageClientID().getValue().startsWith("networkConnector"));
+        assertTrue(localBrokerIncludedMessageFlowStats.getDequeuedMessageClientID().getValue().startsWith("local-to-remote"));
         assertNotNull(localBrokerIncludedMessageFlowStats.getDequeuedMessageTimestamp().getValue());
 
         if(includedDestination.isTopic() && !durable) {
@@ -331,4 +384,35 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         }));
     }
 
+    protected static void assertNetworkStats(final boolean connectorStartTimestampZeroExpected, final boolean bridgeStartTimestampZeroExpected, final long localExceptionCount, final long remoteExceptionCount, final NetworkConnector networkConnector) throws Exception {
+        if(connectorStartTimestampZeroExpected) {
+            assertEquals(Long.valueOf(0L), Long.valueOf(networkConnector.getStartedTimestamp()));
+        } else {
+            assertNotEquals(Long.valueOf(0L), Long.valueOf(networkConnector.getStartedTimestamp()));
+        }
+
+        for(var networkBridge : networkConnector.activeBridges()) {
+            if(bridgeStartTimestampZeroExpected) {
+                assertEquals(Long.valueOf(0L), Long.valueOf(networkBridge.getStartedTimestamp()));
+            } else {
+                assertNotEquals(Long.valueOf(0L), Long.valueOf(networkBridge.getStartedTimestamp()));
+            }
+        }
+
+        // Bridges are ephemeral, so exception counts are asserted at the connector level where
+        // they are rolled up. Failures arrive asynchronously, so first wait for the counters to
+        // reach the expected values, then assert they are exact - the connector uses a
+        // non-retrying discovery agent, so each fault yields a single, definitive count.
+        assertTrue("Timed out waiting for connector exception counts local>=" + localExceptionCount
+                        + " remote>=" + remoteExceptionCount,
+                Wait.waitFor(new Wait.Condition() {
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        return networkConnector.getLocalExceptionCounter().getCount() >= localExceptionCount &&
+                               networkConnector.getRemoteExceptionCounter().getCount() >= remoteExceptionCount;
+                    }
+                }));
+        assertEquals(localExceptionCount, networkConnector.getLocalExceptionCounter().getCount());
+        assertEquals(remoteExceptionCount, networkConnector.getRemoteExceptionCounter().getCount());
+    }
 }
