@@ -90,4 +90,14 @@ public interface NetworkConnectorViewMBean extends Service {
     void setRemotePassword(String remotePassword);
 
     boolean isAutoStart();
+
+    long getStartedTimestamp();
+
+    long getStoppedTimestamp();
+
+    long getBridgeExceptionCount();
+
+    long getLocalExceptionCount();
+
+    long getRemoteExceptionCount();
 }

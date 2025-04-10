@@ -95,4 +95,10 @@ public interface NetworkBridge extends Service {
     ObjectName getMbeanObjectName();
 
     void resetStats();
+
+    long getStartedTimestamp();
+
+    long getLocalExceptionCount();
+
+    long getRemoteExceptionCount();
 }
