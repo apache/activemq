@@ -17,6 +17,7 @@
 package org.apache.activemq.network;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -87,12 +88,12 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(localURI);
         fac.setAlwaysSyncSend(true);
         fac.setDispatchAsync(false);
-        localConnection = fac.createConnection();
+        localConnection = fac.createConnection("localAdmin", "passwordA");
         localConnection.setClientID("localClientId");
 
         URI remoteURI = remoteBroker.getVmConnectorURI();
         fac = new ActiveMQConnectionFactory(remoteURI);
-        remoteConnection = fac.createConnection();
+        remoteConnection = fac.createConnection("remoteAdmin", "passwordB");
         remoteConnection.setClientID("remoteClientId");
 
         localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -111,6 +112,56 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
 
     //Added for AMQ-9437 test advancedStatistics for networkEnqueue and networkDequeue
     @Test(timeout = 120 * 1000)
+    public void testNetworkAdvancedStatisticsErrors() throws Exception {
+        NetworkConnector localNetworkConnector = localBroker.getNetworkConnectorByName("local-to-remote");
+        var originalLocalPassword = localNetworkConnector.getPassword();
+        var originalRemotePassword = localNetworkConnector.getRemotePassword();
+
+        assertNotNull(localNetworkConnector);
+        assertTrue(localNetworkConnector.isAutoStart());
+        assertTrue(localNetworkConnector.isStarted());
+
+        assertNetworkStats(false, false, 0L, 0L, localNetworkConnector);
+
+        try {
+            localNetworkConnector.stop();
+    
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return localNetworkConnector.isStopped();
+                }
+            });
+            assertNetworkStats(true, true, 0L, 0L, localNetworkConnector);
+
+            localNetworkConnector.setRemotePassword("foo");
+            localNetworkConnector.start();
+
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return localNetworkConnector.isStarted();
+                }
+            });
+
+            assertNetworkStats(false, false, 0L, 1L, localNetworkConnector);
+
+        } finally {
+            localNetworkConnector.setPassword(originalLocalPassword);
+            localNetworkConnector.setRemotePassword(originalRemotePassword);
+            localNetworkConnector.start();
+
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return localNetworkConnector.isStarted();
+                }
+            });
+        }
+    }
+
+    //Added for AMQ-9437 test advancedStatistics for networkEnqueue and networkDequeue
+    @Test(timeout = 60 * 1000)
     public void testNetworkAdvancedStatistics() throws Exception {
 
         // create a remote durable consumer to create demand
@@ -200,7 +251,7 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         assertEquals(lastIncludedSentMessageID, localBrokerIncludedMessageFlowStats.getDequeuedMessageID().getValue());
         assertNotNull(localBrokerIncludedMessageFlowStats.getDequeuedMessageBrokerInTime().getValue());
         assertNotNull(localBrokerIncludedMessageFlowStats.getDequeuedMessageBrokerOutTime().getValue());
-        assertTrue(localBrokerIncludedMessageFlowStats.getDequeuedMessageClientID().getValue().startsWith("networkConnector"));
+        assertTrue(localBrokerIncludedMessageFlowStats.getDequeuedMessageClientID().getValue().startsWith("local-to-remote"));
         assertNotNull(localBrokerIncludedMessageFlowStats.getDequeuedMessageTimestamp().getValue());
 
         if(includedDestination.isTopic() && !durable) {
@@ -324,4 +375,21 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         }));
     }
 
+    protected static void assertNetworkStats(final boolean connectorStartTimestampZeroExpected, final boolean bridgeStartTimestampZeroExpected, final long localExceptionCount, final long remoteExceptionCount, final NetworkConnector networkConnector) {
+        if(connectorStartTimestampZeroExpected) {
+            assertEquals(Long.valueOf(0L), Long.valueOf(networkConnector.getStartedTimestamp()));
+        } else {
+            assertNotEquals(Long.valueOf(0L), Long.valueOf(networkConnector.getStartedTimestamp()));
+        }
+
+        for(var networkBridge : networkConnector.activeBridges()) {
+            if(bridgeStartTimestampZeroExpected) {
+                assertEquals(Long.valueOf(0L), Long.valueOf(networkBridge.getStartedTimestamp()));
+            } else {
+                assertNotEquals(Long.valueOf(0L), Long.valueOf(networkBridge.getStartedTimestamp()));
+            }
+            assertEquals(Long.valueOf(localExceptionCount), Long.valueOf(networkBridge.getLocalExceptionCount()));
+            assertEquals(Long.valueOf(localExceptionCount), Long.valueOf(networkBridge.getRemoteExceptionCount()));
+        }
+    }
 }

@@ -330,6 +330,21 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
                     }
 
                     @Override
+                    public long getLocalExceptionCount() {
+                        return next.getLocalExceptionCount();
+                    }
+
+                    @Override
+                    public long getRemoteExceptionCount() {
+                        return next.getRemoteExceptionCount();
+                    }
+
+                    @Override
+                    public long getStartedTimestamp() {
+                        return next.getStartedTimestamp();
+                    }
+
+                    @Override
                     public NetworkBridgeStatistics getNetworkBridgeStatistics() {
                         return next.getNetworkBridgeStatistics();
                     }
@@ -348,6 +363,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
                     public void resetStats(){
                         next.resetStats();
                     }
+                    
                 };
             }
         };

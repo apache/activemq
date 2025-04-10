@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -36,6 +37,8 @@ import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.management.CountStatistic;
+import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
@@ -51,6 +54,11 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     protected URI localURI;
     protected ConnectionFilter connectionFilter;
     protected ConcurrentMap<URI, NetworkBridge> bridges = new ConcurrentHashMap<URI, NetworkBridge>();
+    protected final AtomicLong startedTimestamp = new AtomicLong(0l);
+    protected final AtomicLong stoppedTimestamp = new AtomicLong(0l);
+    protected final CountStatisticImpl bridgeExceptionCounter = new CountStatisticImpl("bridgeExceptionCount", "Count of exceptions when establishing network bridge.");
+    protected final CountStatisticImpl localExceptionCounter = new CountStatisticImpl("localExceptionCount", "Count of exceptions when connecting to local broker.");
+    protected final CountStatisticImpl remoteExceptionCounter = new CountStatisticImpl("remoteExceptionCount", "Count of exceptions when connecting to remote broker.");
 
     protected ServiceSupport serviceSupport = new ServiceSupport() {
 
@@ -162,11 +170,15 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     @Override
     public void start() throws Exception {
         serviceSupport.start();
+        startedTimestamp.set(System.currentTimeMillis());
+        stoppedTimestamp.set(0l);
     }
 
     @Override
     public void stop() throws Exception {
         serviceSupport.stop();
+        stoppedTimestamp.set(System.currentTimeMillis());
+        startedTimestamp.set(0l);
     }
 
     protected void handleStart() throws Exception {
@@ -174,10 +186,19 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
             throw new IllegalStateException("You must configure the 'localURI' property");
         }
         LOG.info("Network Connector {} started", this);
+        bridgeExceptionCounter.setEnabled(true);
+        localExceptionCounter.setEnabled(true);
+        remoteExceptionCounter.setEnabled(true);
+        bridgeExceptionCounter.setCount(0l);
+        localExceptionCounter.setCount(0l);
+        remoteExceptionCounter.setCount(0l);
     }
 
     protected void handleStop(ServiceStopper stopper) throws Exception {
         LOG.info("Network Connector {} stopped", this);
+        bridgeExceptionCounter.reset();
+        localExceptionCounter.reset();
+        remoteExceptionCounter.reset();
     }
 
     public boolean isStarted() {
@@ -254,5 +275,25 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
 
     public Collection<NetworkBridge> activeBridges() {
         return bridges.values();
+    }
+
+    public long getStartedTimestamp() {
+        return startedTimestamp.get();
+    }
+
+    public long getStoppedTimestamp() {
+        return stoppedTimestamp.get();
+    }
+
+    public CountStatistic getBridgeExceptionCounter() {
+        return bridgeExceptionCounter;
+    }
+
+    public CountStatistic getLocalExceptionCounter() {
+        return localExceptionCounter;
+    }
+
+    public CountStatistic getRemoteExceptionCounter() {
+        return remoteExceptionCounter;
     }
 }

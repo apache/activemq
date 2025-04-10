@@ -17,6 +17,8 @@
 
 package org.apache.activemq.network;
 
+import java.util.Set;
+
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
 
@@ -28,15 +30,17 @@ public class NetworkBridgeStatistics extends StatsImpl {
     protected CountStatisticImpl enqueues;
     protected CountStatisticImpl dequeues;
     protected CountStatisticImpl receivedCount;
+    protected CountStatisticImpl localExceptionCount;
+    protected CountStatisticImpl remoteExceptionCount;
 
     public NetworkBridgeStatistics() {
         enqueues = new CountStatisticImpl("enqueues", "The current number of enqueues this bridge has, which is the number of potential messages to be forwarded.");
         dequeues = new CountStatisticImpl("dequeues", "The current number of dequeues this bridge has, which is the number of messages received by the remote broker.");
         receivedCount = new CountStatisticImpl("receivedCount", "The number of messages that have been received by the NetworkBridge from the remote broker.  Only applies for Duplex bridges.");
+        localExceptionCount = new CountStatisticImpl("localExceptionCount", "The number of exceptions that have been received by the NetworkBridge from the local broker.");
+        remoteExceptionCount = new CountStatisticImpl("remoteExceptionCount", "The number of exceptions that have been received by the NetworkBridge from the remote broker.");
 
-        addStatistic("enqueues", enqueues);
-        addStatistic("dequeues", dequeues);
-        addStatistic("receivedCount", receivedCount);
+        addStatistics(Set.of(enqueues, dequeues, receivedCount, localExceptionCount, remoteExceptionCount));
     }
 
     /**
@@ -69,6 +73,26 @@ public class NetworkBridgeStatistics extends StatsImpl {
         return receivedCount;
     }
 
+    /**
+     * The current number of exceptions this bridge has, which is the number of
+     * exceptions received from the remote broker.
+     *
+     * @return
+     */
+    public CountStatisticImpl getLocalExceptionCount() {
+        return localExceptionCount;
+    }
+
+    /**
+     * The current number of exceptions this bridge has, which is the number of
+     * exceptions received from the remote broker.
+     *
+     * @return
+     */
+    public CountStatisticImpl getRemoteExceptionCount() {
+        return remoteExceptionCount;
+    }
+
     @Override
     public void reset() {
         if (this.isDoReset()) {
@@ -76,6 +100,8 @@ public class NetworkBridgeStatistics extends StatsImpl {
             enqueues.reset();
             dequeues.reset();
             receivedCount.reset();
+            localExceptionCount.reset();
+            remoteExceptionCount.reset();
         }
     }
 
@@ -85,6 +111,8 @@ public class NetworkBridgeStatistics extends StatsImpl {
         enqueues.setEnabled(enabled);
         dequeues.setEnabled(enabled);
         receivedCount.setEnabled(enabled);
+        localExceptionCount.setEnabled(enabled);
+        remoteExceptionCount.setEnabled(enabled);
     }
 
     public void setParent(NetworkBridgeStatistics parent) {
@@ -92,10 +120,14 @@ public class NetworkBridgeStatistics extends StatsImpl {
             enqueues.setParent(parent.enqueues);
             dequeues.setParent(parent.dequeues);
             receivedCount.setParent(parent.receivedCount);
+            localExceptionCount.setParent(parent.localExceptionCount);
+            remoteExceptionCount.setParent(parent.remoteExceptionCount);
         } else {
             enqueues.setParent(null);
             dequeues.setParent(null);
             receivedCount.setParent(null);
+            localExceptionCount.setParent(null);
+            remoteExceptionCount.setParent(null);
         }
     }
 

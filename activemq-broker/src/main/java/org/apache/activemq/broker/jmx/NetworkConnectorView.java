@@ -203,4 +203,29 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
     public boolean isAutoStart() {
         return connector.isAutoStart();
     }
+
+    @Override
+    public long getStartedTimestamp() {
+        return connector.getStartedTimestamp();
+    }
+
+    @Override
+    public long getStoppedTimestamp() {
+        return connector.getStoppedTimestamp();
+    }
+
+    @Override
+    public long getBridgeExceptionCount() {
+        return connector.getBridgeExceptionCounter().getCount();
+    }
+
+    @Override
+    public long getLocalExceptionCount() {
+        return connector.getLocalExceptionCounter().getCount();
+    }
+
+    @Override
+    public long getRemoteExceptionCount() {
+        return connector.getRemoteExceptionCounter().getCount();
+    }
 }
