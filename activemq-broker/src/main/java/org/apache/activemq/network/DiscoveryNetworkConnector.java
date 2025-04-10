@@ -131,6 +131,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 try {
                     remoteTransport = TransportFactory.connect(connectUri);
                 } catch (Exception e) {
+                    remoteExceptionCounter.increment();
                     LOG.warn("Could not connect to remote URI: {}: {}", connectUri, e.getMessage());
                     LOG.debug("Connection failure exception: ", e);
                     try {
@@ -143,6 +144,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 try {
                     localTransport = createLocalTransport();
                 } catch (Exception e) {
+                    localExceptionCounter.increment();
                     ServiceSupport.dispose(remoteTransport);
                     LOG.warn("Could not connect to local URI: {}: {}", localURI, e.getMessage());
                     LOG.debug("Connection failure exception: ", e);
@@ -164,6 +166,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 }
                 bridge.start();
             } catch (Exception e) {
+                bridgeExceptionCounter.increment();
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
                 LOG.warn("Could not start network bridge between: {} and: {} due to: {}", localURI, uri, e.getMessage());
