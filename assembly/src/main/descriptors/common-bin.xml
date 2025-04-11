@@ -265,7 +265,9 @@
         <include>org.springframework:spring-web</include>
         <include>org.springframework:spring-webmvc</include>
         <include>org.eclipse.jetty:jetty-annotations</include>
+        <include>org.eclipse.jetty:jetty-ee</include>
         <include>org.eclipse.jetty:jetty-server</include>
+        <include>org.eclipse.jetty:jetty-session</include>
         <include>org.eclipse.jetty:jetty-xml</include>
         <include>org.eclipse.jetty:jetty-webapp</include>
         <include>org.eclipse.jetty:jetty-util</include>
@@ -277,6 +279,11 @@
         <include>org.eclipse.jetty:jetty-servlet</include>
         <include>org.eclipse.jetty:jetty-security</include>
         <include>org.eclipse.jetty:jetty-rewrite</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-nested</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-security</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-servlet</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-webapp</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-apache-jsp</include>
         <include>org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api</include>
         <include>org.eclipse.jetty.websocket:websocket-core-common</include>
         <include>org.eclipse.jetty.websocket:websocket-core-server</include>
@@ -285,9 +292,9 @@
         <include>org.eclipse.jetty.websocket:websocket-jetty-server</include>
         <include>org.eclipse.jetty.websocket:websocket-servlet</include>
         <include>org.eclipse.jetty.orbit:javax.security.auth.message</include>
+        <include>org.eclipse.jetty.ee9.websocket:jetty-ee9-websocket-jetty-server</include>
         <!-- include>jakarta.servlet:jakarta.servlet-api</include -->
         <include>jakarta.websocket:jakarta.websocket-api</include>
-
         <!-- JSP support -->
         <!-- Jetty JSP api-->
         <include>org.eclipse.jetty:apache-jsp</include>
