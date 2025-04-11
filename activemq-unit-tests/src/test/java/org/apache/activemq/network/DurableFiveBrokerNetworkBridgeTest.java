@@ -25,6 +25,7 @@ import jakarta.jms.Connection;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
 
+import junit.framework.AssertionFailedError;
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
@@ -49,6 +50,11 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
     @Override
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName) throws Exception {
+        return bridgeBrokers(localBrokerName, remoteBrokerName, false, -1);
+    }
+
+    protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName,
+                                             boolean dynamicOnly, int networkTTL) throws Exception {
         NetworkConnector connector = super.bridgeBrokers(localBrokerName, remoteBrokerName);
         ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
         includedDestinations.add(new ActiveMQTopic("TEST.FOO?forceDurable=true"));
@@ -57,7 +63,8 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         connector.setDecreaseNetworkConsumerPriority(false);
         connector.setConduitSubscriptions(true);
         connector.setSyncDurableSubs(true);
-        connector.setNetworkTTL(-1);
+        connector.setDynamicOnly(dynamicOnly);
+        connector.setNetworkTTL(networkTTL);
         connector.setClientIdToken("|");
         return connector;
     }
@@ -604,6 +611,203 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest2, 0);
     }
 
+    /*
+     * The following tests should work for correct sync/propagation of durables even if
+     * TTL is missing on broker restart. This is for TTL: 0, -1, 1, or 4 (same number
+     * of network hops in the network)
+     */
+    public void testDurablePropagationSyncTtl0BrokerRestart() throws Exception {
+        testDurablePropagation(0, false, true, List.of(0, 0, 0, 0, 0));
+    }
+
+    public void testDurablePropagationSyncTtl1BrokerRestart() throws Exception {
+        testDurablePropagation(1, false, true, List.of(0, 1, 0, 1, 0));
+    }
+
+    public void testDurablePropagationSyncTtl4BrokerRestart() throws Exception {
+        testDurablePropagation(4, false, true, List.of(1, 2, 2, 2, 1));
+    }
+
+    // This test also tests the fix in NetworkBridgeUtils.getBrokerSubscriptionInfo()
+    // where the clientId was missing for the offline durable which could cause demand to be created
+    // by mistake and create a loop. Without the clientId the sync could not tell the
+    // network durable was for its direct bridge (was created because of a local consumer
+    // on its broker) so a loop could be created on restart if the sync happened before the
+    // real consumer connected first.
+    public void testDurablePropagationSyncTtlNotSetBrokerRestart() throws Exception {
+        testDurablePropagation(-1, false, true, List.of(1, 2, 2, 2, 1));
+    }
+
+    /*
+     * The following test demonstrates the problem with missing TTL and is only solved
+     * by making dynamicOnly true, on restart consumers have yet to come back online
+     * for offline durables so we end up missing TTL and create extra demand on sync.
+     * TTL is missing on broker restart. This is for TTL > 1 but less than same number
+     * of network hops in the network
+     */
+    public void testDurablePropagationDynamicFalseTtl2BrokerRestartFail() throws Exception {
+        try {
+            testDurablePropagation(2, false, true, List.of(0, 1, 2, 1, 0));
+            fail("Exepected to fail");
+        } catch (AssertionFailedError e) {
+            // expected
+        }
+    }
+
+    public void testDurablePropagationDynamicFalseTtl3BrokerRestartFail() throws Exception {
+        try {
+            testDurablePropagation(2, false, true, List.of(0, 2, 2, 2, 0));
+            fail("Exepected to fail");
+        } catch (AssertionFailedError e) {
+            // expected
+        }
+    }
+
+    /*
+     * The following tests make sure propagation works correctly with TTL set
+     * when dynamicOnly is false or true, and durable sync enabled.
+     * When false, durables get reactivated and a sync is done and TTL can be
+     * missing for offline durables so this works correctly ONLY if the consumers
+     * are online and have correct TTL info. When true, consumers drive reactivation
+     * entirely and the sync is skipped.
+     *
+     * For dynamicOnly being false, these tests for TTL > 1 demonstrate the improvement in
+     * createDemandSubscription() inside of DemandForwardingBridgeSupport
+     * where we now include the full broker path (all TTL info) if the
+     * consumer is already online that created the subscription. Before,
+     * we just included the remote broker.
+     *
+     * If brokers are restarted/consumers offline, TTL can be missing so it's recommended
+     * to set dynamicOnly to true if TTL is > 1 (TTL 1 and TTL -1 can still be handled)
+     * to prevent propagation of durables that shouldn't exist and let consumers drive
+     * the reactivation.
+     *
+     * The tests keep the consumers online and only restart the connectors and not
+     * the brokers so the consumer info and TTL are preserved for the tests.
+     */
+    public void testDurablePropagationDynamicFalseTtl0() throws Exception {
+        testDurablePropagation(0, false, List.of(0, 0, 0, 0, 0));
+    }
+
+    public void testDurablePropagationDynamicFalseTtl1() throws Exception {
+        testDurablePropagation(1, false, List.of(0, 1, 0, 1, 0));
+    }
+
+    public void testDurablePropagationDynamicFalseTtl2() throws Exception {
+        testDurablePropagation(2, false, List.of(0, 1, 2, 1, 0));
+    }
+
+    public void testDurablePropagationDynamicFalseTtl3() throws Exception {
+        testDurablePropagation(3, false, List.of(0, 2, 2, 2, 0));
+    }
+
+    public void testDurablePropagationDynamicFalseTtl4() throws Exception {
+        testDurablePropagation(4, false, List.of(1, 2, 2, 2, 1));
+    }
+
+    public void testDurablePropagationDynamicFalseTtlNotSet() throws Exception {
+        testDurablePropagation(-1, false, List.of(1, 2, 2, 2, 1));
+    }
+
+    public void testDurablePropagationDynamicTrueTtl0() throws Exception {
+        testDurablePropagation(0, true, List.of(0, 0, 0, 0, 0));
+    }
+
+    public void testDurablePropagationDynamicTrueTtl1() throws Exception {
+        testDurablePropagation(1, true, List.of(0, 1, 0, 1, 0));
+    }
+
+    public void testDurablePropagationDynamicTrueTtl2() throws Exception {
+        testDurablePropagation(2, true, List.of(0, 1, 2, 1, 0));
+    }
+
+    public void testDurablePropagationDynamicTrueTtl3() throws Exception {
+        testDurablePropagation(3, true, List.of(0, 2, 2, 2, 0));
+    }
+
+    public void testDurablePropagationDynamicTrueTtl4() throws Exception {
+        testDurablePropagation(4, true, List.of(1, 2, 2, 2, 1));
+    }
+
+    public void testDurablePropagationDynamicTrueTtlNotSet() throws Exception {
+        testDurablePropagation(-1, true, List.of(1, 2, 2, 2, 1));
+    }
+
+    private void testDurablePropagation(int ttl, boolean dynamicOnly,
+                                        List<Integer> expected) throws Exception {
+        testDurablePropagation(ttl, dynamicOnly, false, expected);
+    }
+
+    private void testDurablePropagation(int ttl, boolean dynamicOnly, boolean restartBrokers,
+                                         List<Integer> expected) throws Exception {
+        duplex = true;
+
+        // Setup broker networks
+        NetworkConnector nc1 = bridgeBrokers("Broker_A_A", "Broker_B_B", dynamicOnly, ttl);
+        NetworkConnector nc2 = bridgeBrokers("Broker_B_B", "Broker_C_C", dynamicOnly, ttl);
+        NetworkConnector nc3 = bridgeBrokers("Broker_C_C", "Broker_D_D", dynamicOnly, ttl);
+        NetworkConnector nc4 = bridgeBrokers("Broker_D_D", "Broker_E_E", dynamicOnly, ttl);
+
+        startAllBrokers();
+        stopNetworkConnectors(nc1, nc2, nc3, nc4);
+
+        // Setup destination
+        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+
+        // Setup consumers
+        Session ses = createSession("Broker_A_A");
+        Session ses2 = createSession("Broker_E_E");
+        MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
+        MessageConsumer clientE = ses2.createDurableSubscriber(dest, "subE");
+        Thread.sleep(1000);
+
+        assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
+        assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 0);
+        assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 0);
+        assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 0);
+        assertNCDurableSubsCount(brokers.get("Broker_E_E").broker, dest, 0);
+
+        startNetworkConnectors(nc1, nc2, nc3, nc4);
+        Thread.sleep(1000);
+
+        // Check that the correct network durables exist
+        assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, expected.get(0));
+        assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, expected.get(1));
+        assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, expected.get(2));
+        assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, expected.get(3));
+        assertNCDurableSubsCount(brokers.get("Broker_E_E").broker, dest, expected.get(4));
+
+        if (restartBrokers) {
+            // go offline and restart to make sure sync works to re-enable and doesn't
+            // propagate wrong demand
+            clientA.close();
+            clientE.close();
+            destroyAllBrokers();
+            setUp();
+            brokers.values().forEach(bi -> bi.broker.setDeleteAllMessagesOnStartup(false));
+            bridgeBrokers("Broker_A_A", "Broker_B_B", dynamicOnly, ttl);
+            bridgeBrokers("Broker_B_B", "Broker_C_C", dynamicOnly, ttl);
+            bridgeBrokers("Broker_C_C", "Broker_D_D", dynamicOnly, ttl);
+            bridgeBrokers("Broker_D_D", "Broker_E_E", dynamicOnly, ttl);
+            startAllBrokers();
+        } else {
+            // restart just the network connectors but leave the consumers online
+            // to test sync works ok. Things should work for all cases both dynamicOnly
+            // false and true because TTL info still exits and consumers are online
+            stopNetworkConnectors(nc1, nc2, nc3, nc4);
+            Thread.sleep(1000);
+            startNetworkConnectors(nc1, nc2, nc3, nc4);
+            Thread.sleep(1000);
+        }
+
+        // after restarting the bridges, check sync/demand are correct
+        assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, expected.get(0));
+        assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, expected.get(1));
+        assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, expected.get(2));
+        assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, expected.get(3));
+        assertNCDurableSubsCount(brokers.get("Broker_E_E").broker, dest, expected.get(4));
+    }
+
     protected void assertNCDurableSubsCount(final BrokerService brokerService, final ActiveMQTopic dest,
             final int count) throws Exception {
         assertTrue(Wait.waitFor(new Condition() {
@@ -628,7 +832,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         for (SubscriptionKey key : destination.getDurableTopicSubs().keySet()) {
             if (key.getSubscriptionName().startsWith(DemandForwardingBridge.DURABLE_SUB_PREFIX)) {
                 DurableTopicSubscription sub = destination.getDurableTopicSubs().get(key);
-                if (sub != null) {
+                if (sub != null && sub.isActive()) {
                     subs.add(sub);
                 }
             }
@@ -655,6 +859,18 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         broker.setBrokerId(broker.getBrokerName());
         broker.setDeleteAllMessagesOnStartup(deletePersistentMessagesOnStartup);
         broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "DurableFiveBrokerNetworkBridgeTest");
+    }
+
+    protected void startNetworkConnectors(NetworkConnector... connectors) throws Exception {
+        for (NetworkConnector connector : connectors) {
+            connector.start();
+        }
+    }
+
+    protected void stopNetworkConnectors(NetworkConnector... connectors) throws Exception {
+        for (NetworkConnector connector : connectors) {
+            connector.stop();
+        }
     }
 
     protected Session createSession(String broker) throws Exception {

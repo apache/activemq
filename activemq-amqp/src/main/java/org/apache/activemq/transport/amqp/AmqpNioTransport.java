@@ -140,7 +140,7 @@ public class AmqpNioTransport extends TcpTransport {
     }
 
     protected void processBuffer(ByteBuffer buffer, int readSize) throws Exception {
-        receiveCounter += readSize;
+        receiveCounter.addAndGet(readSize);
 
         buffer.flip();
         frameReader.parse(buffer);

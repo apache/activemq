@@ -180,13 +180,9 @@
           <reuseForks>false</reuseForks>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
-
-          <systemProperties>
-            <property>
-              <name>org.apache.activemq.default.directory.prefix</name>
-              <value>target/</value>
-            </property>
-          </systemProperties>
+          <systemPropertyVariables>
+            <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
+          </systemPropertyVariables>
           <includes>
             <include>**/*Test.*</include>
           </includes>

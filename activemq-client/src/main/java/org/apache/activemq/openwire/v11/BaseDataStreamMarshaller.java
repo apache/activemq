@@ -409,10 +409,11 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
         }
     }
 
-    protected byte[] tightUnmarshalByteArray(DataInput dataIn, BooleanStream bs) throws IOException {
+    protected byte[] tightUnmarshalByteArray(OpenWireFormat wireFormat, DataInput dataIn, BooleanStream bs) throws IOException {
         byte rc[] = null;
         if (bs.readBoolean()) {
             int size = dataIn.readInt();
+            OpenWireUtil.validateBufferSize(wireFormat, size);
             rc = new byte[size];
             dataIn.readFully(rc);
         }
@@ -436,10 +437,11 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
         }
     }
 
-    protected ByteSequence tightUnmarshalByteSequence(DataInput dataIn, BooleanStream bs) throws IOException {
+    protected ByteSequence tightUnmarshalByteSequence(OpenWireFormat wireFormat, DataInput dataIn, BooleanStream bs) throws IOException {
         ByteSequence rc = null;
         if (bs.readBoolean()) {
             int size = dataIn.readInt();
+            OpenWireUtil.validateBufferSize(wireFormat, size);
             byte[] t = new byte[size];
             dataIn.readFully(t);
             return new ByteSequence(t, 0, size);
@@ -616,10 +618,11 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
         }
     }
 
-    protected byte[] looseUnmarshalByteArray(DataInput dataIn) throws IOException {
+    protected byte[] looseUnmarshalByteArray(OpenWireFormat wireFormat, DataInput dataIn) throws IOException {
         byte rc[] = null;
         if (dataIn.readBoolean()) {
             int size = dataIn.readInt();
+            OpenWireUtil.validateBufferSize(wireFormat, size);
             rc = new byte[size];
             dataIn.readFully(rc);
         }
@@ -635,10 +638,11 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
         }
     }
 
-    protected ByteSequence looseUnmarshalByteSequence(DataInput dataIn) throws IOException {
+    protected ByteSequence looseUnmarshalByteSequence(OpenWireFormat wireFormat, DataInput dataIn) throws IOException {
         ByteSequence rc = null;
         if (dataIn.readBoolean()) {
             int size = dataIn.readInt();
+            OpenWireUtil.validateBufferSize(wireFormat, size);
             byte[] t = new byte[size];
             dataIn.readFully(t);
             rc = new ByteSequence(t, 0, size);

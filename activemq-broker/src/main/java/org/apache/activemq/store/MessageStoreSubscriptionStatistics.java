@@ -92,7 +92,7 @@ public class MessageStoreSubscriptionStatistics extends AbstractMessageStoreStat
     private class SubscriptionStatistics extends AbstractMessageStoreStatistics {
 
         public SubscriptionStatistics() {
-            this(MessageStoreSubscriptionStatistics.this.enabled);
+            this(MessageStoreSubscriptionStatistics.this.isEnabled());
         }
 
         /**

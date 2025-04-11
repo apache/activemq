@@ -139,4 +139,11 @@ public interface ConnectionViewMBean extends Service {
      */
     @MBeanInfo("Time in ms since epoch when connection was established.")
     long getConnectedTimestamp();
+
+    /**
+     * @return the WireFormatInfo information
+     */
+    @MBeanInfo("WireFormatInfo for the connection")
+    public String getWireFormatInfo();
+
 }

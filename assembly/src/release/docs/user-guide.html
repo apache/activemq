@@ -25,7 +25,7 @@
 </h1>
 
 <p>
-Welcome to Apache ActiveMQ. This document gives you a quick overview of how to get started trying out Apache ActiveMQ.
+Welcome to Apache ActiveMQ Classic. This document gives you a quick overview of how to get started trying out Apache ActiveMQ Classic.
 </p>
 
 <h2>Running the broker</h2>
@@ -89,7 +89,7 @@ On Unix-like systems, type
 In a web browser you can access the url <a href="http://0.0.0.0:8161/admin">http://0.0.0.0:8161/admin</a> to access the ActiveMQ web console.
 <br/>
 The broker may ask for credentials to login the web console the first time.
-The default username and password is admin/admin. You can configure this in the conf/jetty-real.properties file.
+The default username and password is admin/admin. You can configure this in the conf/user.properties file.
 
 <h2>Access the web demos</h2>
 
@@ -98,7 +98,7 @@ If you're using Windows, just type
 </p>
 <pre>
     cd bin
-    activemq.bat console xbean:examples/conf/activemq-demo.xml
+    activemq.bat start xbean:../examples/conf/activemq-demo.xml
 </pre>
 <p>
 On Unix-like systems, type
@@ -110,73 +110,13 @@ On Unix-like systems, type
 In a web browser you can access the url <a href="http://0.0.0.0:8161/demo">http://0.0.0.0:8161/demo</a> to access the ActiveMQ web demos.
 <br/>
 The broker may ask for credentials to login the web console the first time.
-The default username and password is admin/admin. You can configure this in the conf/jetty-real.properties file.
+The default username and password is admin/admin. You can configure this in the conf/user.properties file.
 
 
-<h2>Running the example programs</h2>
+<h2>Example programs</h2>
 
-<p>
-To run the demo producer/consumer tools, you need Java and Ant installed.
-</p>
-
-<h3>Installing Ant</h3>
-
-
-<p>
-The example programs depend on <a href="http://ant.apache.org/">Ant</a> being installed. There are more detailed
-instructions on the Ant website - but essentially you need to follow these steps.
-</p>
-<ul>
-<li>
-JAVA_HOME must point to your JDK installation, such that $JAVA_HOME/bin contains the java executable and $JAVA_HOME/lib contains some jar files.
-</li>
-<li>
-ANT_HOME must point to where you installed Apache Ant (http://ant.apache.org)
-</li>
-<li>
-then you need to add $JAVA_HOME/bin and $ANT_HOME/bin to your PATH variable.
-</li>
-</ul>
-
-<p>
-To test this is all working, try typing
-</p>
-
-<pre>
-    java -version
-    cd examples/openwire/swissarmy
-    ant -version
-</pre>
-
-<h3>Running the example producer and consumer</h3>
-
-<p>
-Once you've got Java and Ant installed correctly you should be able to run
-</p>
-
-<pre>
-    cd examples/openwire/swissarmy
-    ant consumer
-</pre>
-
-<p>
-and in another shell
-</p>
-
-<pre>
-    cd examples/openwire/swissarmy
-    ant producer
-</pre>
-
-<p>
-you can specify exact URLs to connect to via command like arguments. e.g.
-</p>
-
-<pre>
-    ant producer -Durl=tcp://somehost:port
-</pre>
-
-
+<p>Several runnable examples are in the examples directory, each with its own readme.md file containing instructions on how to run the example.</p>
+<p>Configuration examples are located in example/conf directory.</p>
 
 <h2>Further Readings</h2>
 
