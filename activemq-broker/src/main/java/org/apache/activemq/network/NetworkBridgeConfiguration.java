@@ -28,6 +28,7 @@ import org.apache.activemq.command.ConsumerInfo;
  * Configuration for a NetworkBridge
  */
 public class NetworkBridgeConfiguration {
+    public static final String DURABLE_SUB_PREFIX = "NC-DS_";
 
     private boolean conduitSubscriptions = true;
     /**

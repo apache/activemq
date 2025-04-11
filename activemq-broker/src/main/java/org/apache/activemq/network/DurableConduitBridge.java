@@ -74,10 +74,14 @@ public class DurableConduitBridge extends ConduitBridge {
 
                             String candidateSubName = getSubscriberName(dest);
                             for (Subscription subscription : topicRegion.getDurableSubscriptions().values()) {
-                                String subName = subscription.getConsumerInfo().getSubscriptionName();
+                                ConsumerInfo subInfo = subscription.getConsumerInfo();
+                                String subName = subInfo.getSubscriptionName();
                                 String clientId = subscription.getContext().getClientId();
                                 if (subName != null && subName.equals(candidateSubName) && clientId.startsWith(configuration.getName())) {
-                                    DemandSubscription sub = createDemandSubscription(dest, subName);
+                                    // Include the brokerPath if it exists so that we can handle TTL more correctly
+                                    // This only works if the consumers are online as offline consumers are missing TTL
+                                    // For TTL > 1 configurations setting dynamicOnly to true may make more sense
+                                    DemandSubscription sub = createDemandSubscription(dest, subName, subInfo.getBrokerPath());
                                     if (sub != null) {
                                         sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
                                         sub.setStaticallyIncluded(true);
