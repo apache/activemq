@@ -57,6 +57,8 @@ import org.slf4j.LoggerFactory;
 public class TopicRegion extends AbstractRegion {
     private static final Logger LOG = LoggerFactory.getLogger(TopicRegion.class);
     protected final ConcurrentMap<SubscriptionKey, DurableTopicSubscription> durableSubscriptions = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
+    protected final ConcurrentMap<SubscriptionKey, DurableTopicSubscription> sharedDurableSubscriptions = new ConcurrentHashMap<>();
+    protected final ConcurrentMap<String, SharedDurableTopicSubscriptionMetadata> sharedDurableSubscriptionMetadataMap = new ConcurrentHashMap<String, SharedDurableTopicSubscriptionMetadata>();
     private final LongSequenceGenerator recoveredDurableSubIdGenerator = new LongSequenceGenerator();
     private final SessionId recoveredDurableSubSessionId = new SessionId(new ConnectionId("OFFLINE"), recoveredDurableSubIdGenerator.getNextSequenceId());
     private boolean keepDurableSubsActive;
@@ -120,7 +122,32 @@ public class TopicRegion extends AbstractRegion {
             ActiveMQDestination destination = info.getDestination();
             if (!destination.isPattern()) {
                 // Make sure the destination is created.
-                lookup(context, destination,true);
+                System.out.println("[SUB_PATH] TopicRegion addConsumer: looking up destination");
+                lookup(context, destination, true);
+                System.out.println("[SUB_PATH] TopicRegion addConsumer: done looking up destination");
+            }
+            if (info.isShared()) {
+                System.out.println("[SUB_PATH] TopicRegion addConsumer shared durable");
+                String clientId = context.getClientId();
+                String subscriptionName = info.getSubscriptionName();
+                DurableTopicSubscription dsub = sharedDurableSubscriptions.get(new SubscriptionKey(clientId, subscriptionName));
+                if (dsub != null) {
+                    return dsub;
+                }
+                SharedDurableTopicSubscriptionMetadata sharedDurableTopicSubscriptionMetadata = sharedDurableSubscriptionMetadataMap.get(subscriptionName);
+                if (sharedDurableTopicSubscriptionMetadata == null) {
+                    sharedDurableTopicSubscriptionMetadata = new SharedDurableTopicSubscriptionMetadata(subscriptionName);
+                    sharedDurableSubscriptionMetadataMap.put(subscriptionName, sharedDurableTopicSubscriptionMetadata);
+                }
+                super.addConsumer(context, info);
+                SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
+                dsub = sharedDurableSubscriptions.get(key);
+                if (durableSubscriptions.get(key) != null) {
+                    throw new JMSException("Shared durable subscription is accidentally added to durableSubscriptions");
+                }
+                dsub.activate(usageManager, context, info, broker);
+                sharedDurableTopicSubscriptionMetadata.addDurableTopicSubscription(key, dsub);
+                return dsub;
             }
             String clientId = context.getClientId();
             String subscriptionName = info.getSubscriptionName();
@@ -185,6 +212,7 @@ public class TopicRegion extends AbstractRegion {
             sub.activate(usageManager, context, info, broker);
             return sub;
         } else {
+            System.out.println("[SUB_PATH] in TopicRegion adding non-durable consumer " + info.getSubscriptionName());
             return super.addConsumer(context, info);
         }
     }
@@ -256,6 +284,7 @@ public class TopicRegion extends AbstractRegion {
         Set<Subscription> dupChecker = new HashSet<Subscription>(rc);
 
         TopicMessageStore store = (TopicMessageStore)dest.getMessageStore();
+        System.out.println("[SUB_PATH] TopicRegion addSubscriptionsForDestination: " + dest.toString());
         // Eagerly recover the durable subscriptions
         if (store != null) {
             SubscriptionInfo[] infos = store.getAllSubscriptions();
@@ -336,43 +365,69 @@ public class TopicRegion extends AbstractRegion {
             if (AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
                 throw new JMSException("Cannot create a durable subscription for an advisory Topic");
             }
-            SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
-            DurableTopicSubscription sub = durableSubscriptions.get(key);
+            if (info.isShared()) {
+                System.out.println("[SUB_PATH] TopicRegion createSubscription: creating shared durable");
+                SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
+                DurableTopicSubscription sub = sharedDurableSubscriptions.get(key);
 
-            if (sub == null) {
+                if (sub == null) {
+                    sub = new DurableTopicSubscription(broker, usageManager, context, info, keepDurableSubsActive);
+                    sub.setShared(true);
+                    if (destination != null && broker.getDestinationPolicy() != null) {
+                        PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
+                        if (entry != null) {
+                            entry.configure(broker, usageManager, sub);
+                        }
+                    }
+                    sharedDurableSubscriptions.put(key, sub);
+                } else {
+                    throw new JMSException("Durable subscription is already active for clientID: " +
+                            context.getClientId() + " and subscriptionName: " +
+                            info.getSubscriptionName());
+                }
+                return sub;
+            } else {
+                SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
+                DurableTopicSubscription sub = durableSubscriptions.get(key);
 
-                sub = new DurableTopicSubscription(broker, usageManager, context, info, keepDurableSubsActive);
-
+                if (sub == null) {
+                    sub = new DurableTopicSubscription(broker, usageManager, context, info, keepDurableSubsActive);
+                    if (destination != null && broker.getDestinationPolicy() != null) {
+                        PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
+                        if (entry != null) {
+                            entry.configure(broker, usageManager, sub);
+                        }
+                    }
+                    durableSubscriptions.put(key, sub);
+                } else {
+                    throw new JMSException("Durable subscription is already active for clientID: " +
+                            context.getClientId() + " and subscriptionName: " +
+                            info.getSubscriptionName());
+                }
+                return sub;
+            }
+        }
+        // Non Durable path
+        if (info.isShared()){
+            throw new JMSException("Creating shared non-durable subscription not implemented");
+        } else {
+            try {
+                TopicSubscription answer = new TopicSubscription(broker, context, info, usageManager);
+                // lets configure the subscription depending on the destination
                 if (destination != null && broker.getDestinationPolicy() != null) {
                     PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
                     if (entry != null) {
-                        entry.configure(broker, usageManager, sub);
+                        entry.configure(broker, usageManager, answer);
                     }
                 }
-                durableSubscriptions.put(key, sub);
-            } else {
-                throw new JMSException("Durable subscription is already active for clientID: " +
-                                       context.getClientId() + " and subscriptionName: " +
-                                       info.getSubscriptionName());
+                answer.init();
+                return answer;
+            } catch (Exception e) {
+                LOG.debug("Failed to create TopicSubscription ", e);
+                JMSException jmsEx = new JMSException("Couldn't create TopicSubscription");
+                jmsEx.setLinkedException(e);
+                throw jmsEx;
             }
-            return sub;
-        }
-        try {
-            TopicSubscription answer = new TopicSubscription(broker, context, info, usageManager);
-            // lets configure the subscription depending on the destination
-            if (destination != null && broker.getDestinationPolicy() != null) {
-                PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
-                if (entry != null) {
-                    entry.configure(broker, usageManager, answer);
-                }
-            }
-            answer.init();
-            return answer;
-        } catch (Exception e) {
-            LOG.debug("Failed to create TopicSubscription ", e);
-            JMSException jmsEx = new JMSException("Couldn't create TopicSubscription");
-            jmsEx.setLinkedException(e);
-            throw jmsEx;
         }
     }
 
