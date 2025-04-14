@@ -69,7 +69,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
 
     /**
      * True if an error was detected that cause this session to be stale. When a
-     * session is stale, it should not be used again for proccessing.
+     * session is stale, it should not be used again for processing.
      */
     private boolean stale;
     /**
@@ -91,8 +91,6 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
         this.workManager = workManager;
         this.endpoint = endpoint;
         this.useRAManagedTx = useRAManagedTx;
-        this.session.setMessageListener((MessageListener)endpoint);
-        this.session.setDeliveryListener(this);
         this.batchSize = batchSize;
     }
 
@@ -106,6 +104,10 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
 
     protected boolean isStale() {
         return stale || !session.isRunning();
+    }
+
+    protected boolean isRunning() {
+        return running.get();
     }
 
     public MessageProducer getMessageProducer() throws JMSException {
@@ -124,6 +126,10 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
             log.debug("Start request ignored, already running.");
             return; // already running
         }
+
+        // only start dispatching messages to the listener when we actually start the worker
+        this.session.setMessageListener((MessageListener)endpoint);
+        this.session.setDeliveryListener(this);
 
         // We get here because we need to start a async worker.
         log.debug("Starting run.");
@@ -147,7 +153,9 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                 }
 
             });
-        } catch (WorkException e) {
+        } catch (final WorkException e) {
+            log.warn("Failed to schedule work for session {}, marking not running", this, e);
+            running.set(false); // make sure we don't leave the ServerSession in a running state (misleading)
             throw (JMSException)new JMSException("Start failed: " + e).initCause(e);
         }
     }
@@ -175,7 +183,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                 if ( log.isDebugEnabled() ) {
                     log.debug("Endpoint {} failed to process message.", this, e);
                 } else if ( log.isInfoEnabled() ) {
-                    log.info("Endpoint {} failed to process message. Reason: " + e.getMessage(), this);
+                    log.info("Endpoint {} failed to process message. Reason: {}", this, e.getMessage());
                 }
             } finally {
                 InboundContextSupport.unregister(this);
