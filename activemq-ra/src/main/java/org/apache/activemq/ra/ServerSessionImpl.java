@@ -17,6 +17,7 @@
 package org.apache.activemq.ra;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
@@ -64,8 +65,8 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     private MessageProducer messageProducer;
     private final ServerSessionPoolImpl pool;
 
-    private Object runControlMutex = new Object();
-    private boolean runningFlag;
+    private final AtomicBoolean running = new AtomicBoolean(false);
+
     /**
      * True if an error was detected that cause this session to be stale. When a
      * session is stale, it should not be used again for proccessing.
@@ -119,12 +120,9 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
      */
     public void start() throws JMSException {
 
-        synchronized (runControlMutex) {
-            if (runningFlag) {
-                log.debug("Start request ignored, already running.");
-                return;
-            }
-            runningFlag = true;
+        if (!running.compareAndSet(false, true)) {
+            log.debug("Start request ignored, already running.");
+            return; // already running
         }
 
         // We get here because we need to start a async worker.
@@ -182,22 +180,20 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
             } finally {
                 InboundContextSupport.unregister(this);
                 log.debug("run loop end");
-                synchronized (runControlMutex) {
-                    // This endpoint may have gone stale due to error
-                    if (stale) {
-                        log.debug("Session {} stale, removing from pool", this);
-                        runningFlag = false;
-                        pool.removeFromPool(this);
-                        break;
-                    }
-                    if (!session.hasUncomsumedMessages()) {
-                        runningFlag = false;
-                        log.debug("Session {} has no unconsumed message, returning to pool", this);
-                        pool.returnToPool(this);
-                        break;
-                    } else {
-                        log.debug("Session {} has more work to do b/c of unconsumed", this);
-                    }
+                // This endpoint may have gone stale due to error
+                if (stale) {
+                    log.debug("Session {} stale, removing from pool", this);
+                    running.set(false);
+                    pool.removeFromPool(this);
+                    break;
+                }
+                if (!session.hasUncomsumedMessages()) {
+                    log.debug("Session {} has no unconsumed message, returning to pool", this);
+                    running.set(false);
+                    pool.returnToPool(this);
+                    break;
+                } else {
+                    log.debug("Session {} has more work to do b/c of unconsumed", this);
                 }
             }
         }
