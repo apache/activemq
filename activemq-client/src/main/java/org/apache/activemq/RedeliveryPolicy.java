@@ -46,6 +46,7 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
     protected double backOffMultiplier = 5.0;
     protected long redeliveryDelay = initialRedeliveryDelay;
     protected boolean preDispatchCheck = true;
+    protected boolean queueBrowserIgnored = true;
 
     public RedeliveryPolicy() {
     }
@@ -164,5 +165,13 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
 
     public boolean isPreDispatchCheck() {
         return preDispatchCheck;
+    }
+
+    public void setQueueBrowserIgnored(boolean queueBrowserIgnored) {
+        this.queueBrowserIgnored = queueBrowserIgnored;
+    }
+
+    public boolean isQueueBrowserIgnored() {
+        return queueBrowserIgnored;
     }
 }
