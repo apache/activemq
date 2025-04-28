@@ -92,6 +92,11 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
         this.endpoint = endpoint;
         this.useRAManagedTx = useRAManagedTx;
         this.batchSize = batchSize;
+
+        // Ideally we would do that in the start() method, such as we don't stack messages in the session while it's not
+        // yet started.
+        this.session.setMessageListener((MessageListener)endpoint);
+        this.session.setDeliveryListener(this);
     }
 
     private static synchronized int getNextLogId() {
@@ -126,10 +131,6 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
             log.debug("Start request ignored, already running.");
             return; // already running
         }
-
-        // only start dispatching messages to the listener when we actually start the worker
-        this.session.setMessageListener((MessageListener)endpoint);
-        this.session.setDeliveryListener(this);
 
         // We get here because we need to start a async worker.
         log.debug("Starting run.");
