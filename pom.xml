@@ -31,9 +31,6 @@
   <inceptionYear>2005</inceptionYear>
 
   <properties>
-    <!-- for reproducible builds -->
-    <project.build.outputTimestamp>2024-04-29T15:51:45Z</project.build.outputTimestamp>
-
     <maven.compiler.target>17</maven.compiler.target>
 
     <!-- for reproducible builds -->	
