@@ -299,6 +299,16 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     @Override
+    protected void processExpiredAck(ConnectionContext context, Destination dest,
+        MessageReference node) {
+
+        // Each subscription needs to expire both on the store and
+        // decrement the reference count
+        super.processExpiredAck(context, dest, node);
+        node.decrementReferenceCount();
+    }
+
+    @Override
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
         synchronized (pending) {
             pending.addRecoveredMessage(message);

@@ -20,10 +20,15 @@ import java.io.IOException;
 
 import jakarta.jms.JMSException;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
+import org.apache.activemq.util.SubscriptionKey;
 
 /**
  * A MessageStore for durable topic subscriptions
@@ -154,4 +159,16 @@ public interface TopicMessageStore extends MessageStore {
      * @throws IOException
      */
     void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException;
+
+    /**
+     * Iterates over the pending messages in a topic and recovers any expired messages found for
+     * each of the subscriptions up to the maximum number of messages to search.
+     *
+     * @param subs
+     * @param max
+     * @return
+     * @throws Exception
+     */
+    Map<SubscriptionKey,List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max) throws Exception;
+
 }
