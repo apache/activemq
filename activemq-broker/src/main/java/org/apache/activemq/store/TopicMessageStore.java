@@ -162,11 +162,12 @@ public interface TopicMessageStore extends MessageStore {
 
     /**
      * Iterates over the pending messages in a topic and recovers any expired messages found for
-     * each of the subscriptions up to the maximum number of messages to search.
+     * each of the subscriptions up to the maximum number of messages to search. Only subscriptions
+     * that have at least 1 expired message will be returned in the map.
      *
      * @param subs
      * @param max
-     * @return
+     * @return Expired messages for each subscription
      * @throws Exception
      */
     Map<SubscriptionKey,List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max) throws Exception;
