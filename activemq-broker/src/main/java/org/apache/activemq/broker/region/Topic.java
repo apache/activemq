@@ -834,10 +834,20 @@ public class Topic extends BaseDestination implements Task {
         try {
             final TopicMessageStore store = Topic.this.topicStore;
             if (store != null && store.getType() == StoreType.KAHADB) {
+                if (store.getMessageCount() == 0) {
+                    LOG.debug("Skipping topic expiration check for {}, store size is 0", destination);
+                    return;
+                }
+
                 // get the sub keys that should be checked for expired messages
                 final var subs = durableSubscribers.entrySet().stream()
                     .filter(entry -> isEligibleForExpiration(entry.getValue()))
                     .map(Entry::getKey).collect(Collectors.toSet());
+
+                if (subs.isEmpty()) {
+                    LOG.debug("Skipping topic expiration check for {}, no eligible subscriptions to check", destination);
+                    return;
+                }
 
                 // For each eligible subscription, return the messages in the store that are expired
                 // The same message refs are shared between subs if duplicated so this is efficient
