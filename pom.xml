@@ -31,8 +31,7 @@
   <inceptionYear>2005</inceptionYear>
 
   <properties>
-    <!-- for reproducible builds -->	
-    <project.build.outputTimestamp>2025-03-06T13:15:08Z</project.build.outputTimestamp>
+    <maven.compiler.target>17</maven.compiler.target>
 
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
