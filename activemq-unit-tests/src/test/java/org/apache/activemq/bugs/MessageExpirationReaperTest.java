@@ -18,6 +18,7 @@ package org.apache.activemq.bugs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import jakarta.jms.*;
 import javax.management.ObjectName;
@@ -30,6 +31,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -164,11 +166,59 @@ public class MessageExpirationReaperTest {
         consumer.close();
 
         // Let the messages reach an expiry time
-        Thread.sleep(2000);
+        assertTrue("Incorrect queue size count", Wait.waitFor(() -> view.getQueueSize() == 0,
+            3000, 100));
+        assertTrue("Incorrect inflight count: " + view.getInFlightCount(),
+            Wait.waitFor(() -> view.getInFlightCount() == 0, 3000, 100));
+        assertTrue("Incorrect expired size count",  Wait.waitFor(() -> view.getEnqueueCount() == view.getExpiredCount(),
+            3000, 100));
 
-        assertEquals("Incorrect inflight count: " + view.getInFlightCount(), 0, view.getInFlightCount());
-        assertEquals("Incorrect queue size count", 0, view.getQueueSize());
-        assertEquals("Incorrect expired size count", view.getEnqueueCount(), view.getExpiredCount());
+        // Memory usage should be 0 after expiration
+        assertEquals(0, broker.getDestination(destination).getMemoryUsage().getUsage());
+    }
+
+    @Test
+    public void testExpiredMessagesOnTopic2Durables() throws Exception{
+        Session session = createSession();
+
+        // use a zero prefetch so messages don't go inflight
+        ActiveMQTopic destination = new ActiveMQTopic(destinationName + "?consumer.prefetchSize=0");
+
+        MessageProducer producer = session.createProducer(destination);
+        MessageConsumer consumer = session.createDurableSubscriber(destination, "test-durable");
+        MessageConsumer consumer2 = session.createDurableSubscriber(destination, "test-durable-2");
+
+        producer.setTimeToLive(500);
+
+        final int count = 3;
+        // Send some messages with an expiration
+        for (int i = 0; i < count; i++) {
+            TextMessage message = session.createTextMessage("" + i);
+            producer.send(message);
+        }
+
+        DestinationViewMBean view = createView(destination);
+        // not expired yet...
+        assertEquals("Incorrect enqueue count", 3, view.getEnqueueCount() );
+
+        // close consumer so topic thinks consumer is inactive
+        consumer.close();
+        consumer2.close();
+
+        // Let the messages reach an expiry time
+        assertTrue("Incorrect queue size count", Wait.waitFor(() -> view.getQueueSize() == 0,
+            3000, 100));
+        assertTrue("Incorrect inflight count: " + view.getInFlightCount(),
+            Wait.waitFor(() -> view.getInFlightCount() == 0, 3000, 100));
+
+        // should be 2x enqueued for 2 subs
+        assertTrue("Incorrect expired size count",  Wait.waitFor(() -> view.getEnqueueCount() * 2 == view.getExpiredCount(),
+            3000, 100));
+
+        // check store and memory usage
+        org.apache.activemq.broker.region.Destination brokerDest = broker.getDestination(destination);
+        assertEquals("Incorrect queue size count", 0, brokerDest.getMessageStore().getMessageCount());
+        assertEquals(0, brokerDest.getMemoryUsage().getUsage());
     }
 
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {

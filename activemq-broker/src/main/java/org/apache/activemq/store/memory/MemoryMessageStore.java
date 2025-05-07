@@ -177,6 +177,11 @@ public class MemoryMessageStore extends AbstractMessageStore {
         }
     }
 
+    @Override
+    public StoreType getType() {
+        return StoreType.MEMORY;
+    }
+
     protected static final void incMessageStoreStatistics(final MessageStoreStatistics stats, final Message message) {
         if (stats != null && message != null) {
             stats.getMessageCount().increment();

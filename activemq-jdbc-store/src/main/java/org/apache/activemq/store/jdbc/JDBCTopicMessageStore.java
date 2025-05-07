@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,6 +41,7 @@ import org.apache.activemq.store.MessageStoreSubscriptionStatistics;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.SubscriptionKey;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -358,6 +360,11 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         } finally {
             c.close();
         }
+    }
+
+    @Override
+    public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max) {
+        throw new UnsupportedOperationException("recoverExpired not supported");
     }
 
     /**
