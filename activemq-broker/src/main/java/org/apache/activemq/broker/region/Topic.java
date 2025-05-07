@@ -861,10 +861,9 @@ public class Topic extends BaseDestination implements Task {
 
                     // If the sub still exists and there are expired messages then process
                     if (sub != null && !expiredMessages.isEmpty()) {
-                        // double check still in active inside the pendingLock
-                        // and iterate over each message and expire. There's a small race condition
-                        // here if the sub comes online, but it's not a big deal as at worst there
-                        // maybe be duplicate acks for the expired message but the store can handle it
+                        // There's a small race condition here if the sub comes online,
+                        // but it's not a big deal as at worst there maybe be duplicate acks for
+                        // the expired message but the store can handle it
                         if (isEligibleForExpiration(sub)) {
                             expiredMessages.forEach(message -> {
                                 message.setRegionDestination(Topic.this);
