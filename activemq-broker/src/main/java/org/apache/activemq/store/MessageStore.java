@@ -215,4 +215,12 @@ public interface MessageStore extends Service {
 
     void registerIndexListener(IndexListener indexListener);
 
+    StoreType getType();
+
+    enum StoreType {
+        MEMORY, JDBC, KAHADB, TEMP_KAHADB,
+        // deprecated, removed in 6.x
+        JOURNAL
+    }
+
 }

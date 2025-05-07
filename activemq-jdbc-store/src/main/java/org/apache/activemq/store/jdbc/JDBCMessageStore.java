@@ -482,4 +482,10 @@ public class JDBCMessageStore extends AbstractMessageStore {
         return destination.getPhysicalName() + ",pendingSize:" + pendingAdditions.size();
     }
 
+
+    @Override
+    public StoreType getType() {
+        return StoreType.JDBC;
+    }
+
 }

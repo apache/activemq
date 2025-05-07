@@ -20,6 +20,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.apache.activeio.journal.RecordLocation;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -79,6 +82,11 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
     public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
         this.peristenceAdapter.checkpoint(true, true);
         longTermStore.addSubscription(subscriptionInfo, retroactive);
+    }
+
+    @Override
+    public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max) {
+        throw new UnsupportedOperationException("recoverExpired not supported");
     }
 
     @Override

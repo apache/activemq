@@ -76,7 +76,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     protected boolean enableSubscriptionStatistics;
 
     @Rule
-    public Timeout globalTimeout= new Timeout(60, TimeUnit.SECONDS);
+    public Timeout globalTimeout = new Timeout(60, TimeUnit.SECONDS);
 
     /**
      * @param prioritizedMessages

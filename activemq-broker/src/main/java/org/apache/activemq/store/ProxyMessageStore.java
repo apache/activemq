@@ -185,4 +185,8 @@ public class ProxyMessageStore implements MessageStore {
         return delegate.getMessageStoreStatistics();
     }
 
+    @Override
+    public StoreType getType() {
+        return delegate.getType();
+    }
 }

@@ -298,9 +298,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         inAckRange = true;
                     }
                     if (inAckRange) {
-                        Destination regionDestination = nodeDest;
                         if (broker.isExpired(node)) {
-                            regionDestination.messageExpired(context, this, node);
+                            processExpiredAck(context, nodeDest, node);
                         }
                         iter.remove();
                         decrementPrefetchCounter(node);
@@ -394,6 +393,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         } else {
             LOG.debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): {}", ack);
         }
+    }
+
+    protected void processExpiredAck(final ConnectionContext context, final Destination dest,
+        final MessageReference node) {
+        dest.messageExpired(context, this, node);
     }
 
     private void registerRemoveSync(ConnectionContext context, final MessageReference node) {

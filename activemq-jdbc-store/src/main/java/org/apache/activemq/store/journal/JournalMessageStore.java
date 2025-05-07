@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.store.journal;
 
+import static org.apache.activemq.store.MessageStore.StoreType.JOURNAL;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -424,6 +426,11 @@ public class JournalMessageStore extends AbstractMessageStore {
     public void setBatch(MessageId messageId) throws Exception {
         peristenceAdapter.checkpoint(true, true);
         longTermStore.setBatch(messageId);
+    }
+
+    @Override
+    public StoreType getType() {
+        return JOURNAL;
     }
 
 }
