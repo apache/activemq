@@ -97,6 +97,7 @@ You would need to start the broker with the demos included, which you do as foll
 If you're using Windows, just type
 </p>
 <pre>
+    copy .\conf\jetty.xml .\examples\conf\
     cd bin
     activemq.bat start xbean:../examples/conf/activemq-demo.xml
 </pre>
@@ -104,6 +105,7 @@ If you're using Windows, just type
 On Unix-like systems, type
 </p>
 <pre>
+    cp ./conf/jetty.xml ./examples/conf/
     ./bin/activemq console xbean:examples/conf/activemq-demo.xml
 </pre>
 
