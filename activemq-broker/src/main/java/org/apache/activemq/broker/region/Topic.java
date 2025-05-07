@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -29,6 +31,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import java.util.stream.Collectors;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -52,6 +55,7 @@ import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.store.MessageRecoveryListener;
+import org.apache.activemq.store.MessageStore.StoreType;
 import org.apache.activemq.store.NoLocalSubscriptionAware;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
@@ -805,14 +809,60 @@ public class Topic extends BaseDestination implements Task {
     }
 
     private final AtomicBoolean expiryTaskInProgress = new AtomicBoolean(false);
-    private final Runnable expireMessagesWork = new Runnable() {
-        @Override
-        public void run() {
-            List<Message> browsedMessages = new InsertionCountList<Message>();
-            doBrowse(browsedMessages, getMaxExpirePageSize());
+    private final Runnable expireMessagesWork = () -> {
+        try {
+            final TopicMessageStore store = Topic.this.topicStore;
+            if (store != null && store.getType() == StoreType.KAHADB) {
+                if (store.getMessageCount() == 0) {
+                    LOG.debug("Skipping topic expiration check for {}, store size is 0", destination);
+                    return;
+                }
+
+                // get the sub keys that should be checked for expired messages
+                final var subs = durableSubscribers.entrySet().stream()
+                    .filter(entry -> isEligibleForExpiration(entry.getValue()))
+                    .map(Entry::getKey).collect(Collectors.toSet());
+
+                if (subs.isEmpty()) {
+                    LOG.debug("Skipping topic expiration check for {}, no eligible subscriptions to check", destination);
+                    return;
+                }
+
+                // For each eligible subscription, return the messages in the store that are expired
+                // The same message refs are shared between subs if duplicated so this is efficient
+                var expired = store.recoverExpired(subs, getMaxExpirePageSize());
+
+                final ConnectionContext connectionContext = createConnectionContext();
+                // Go through any expired messages and remove for each sub
+                for (Entry<SubscriptionKey, List<Message>> entry : expired.entrySet()) {
+                    DurableTopicSubscription sub = durableSubscribers.get(entry.getKey());
+                    List<Message> expiredMessages = entry.getValue();
+
+                    // If the sub still exists and there are expired messages then process
+                    if (sub != null && !expiredMessages.isEmpty()) {
+                        // There's a small race condition here if the sub comes online,
+                        // but it's not a big deal as at worst there maybe be duplicate acks for
+                        // the expired message but the store can handle it
+                        if (isEligibleForExpiration(sub)) {
+                            expiredMessages.forEach(message -> {
+                                message.setRegionDestination(Topic.this);
+                                messageExpired(connectionContext, sub, message);
+                            });
+                        }
+                    }
+                }
+            } else {
+                // If not KahaDB, fall back to the legacy browse method because
+                // the recoverExpired() method is not supported
+                doBrowse(new InsertionCountList<>(), getMaxExpirePageSize());
+            }
+        } catch (Throwable e) {
+            LOG.warn("Failed to expire messages on Topic: {}", getActiveMQDestination().getPhysicalName(), e);
+        } finally {
             expiryTaskInProgress.set(false);
         }
     };
+
     private final Runnable expireMessagesTask = new Runnable() {
         @Override
         public void run() {
@@ -904,6 +954,10 @@ public class Topic extends BaseDestination implements Task {
                         exception);
             }
         }
+    }
+
+    private static boolean isEligibleForExpiration(DurableTopicSubscription sub) {
+        return sub.isEnableMessageExpirationOnActiveDurableSubs() || !sub.isActive();
     }
 
     public Map<SubscriptionKey, DurableTopicSubscription> getDurableTopicSubs() {

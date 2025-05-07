@@ -81,12 +81,14 @@ import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
 import org.apache.activemq.store.kahadb.data.KahaUpdateMessageCommand;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
+import org.apache.activemq.store.kahadb.disk.page.Transaction.CallableClosure;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.SubscriptionKey;
 import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
@@ -888,9 +890,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 unlockAsyncJobQueue();
             }
         }
+
+        @Override
+        public StoreType getType() {
+            return StoreType.KAHADB;
+        }
     }
 
-    class KahaDBTopicMessageStore extends KahaDBMessageStore implements TopicMessageStore {
+    class KahaDBTopicMessageStore extends KahaDBMessageStore implements TopicMessageStore{
         private final AtomicInteger subscriptionCount = new AtomicInteger();
         protected final MessageStoreSubscriptionStatistics messageStoreSubStats =
                 new MessageStoreSubscriptionStatistics(isEnableSubscriptionStatistics());
@@ -1248,6 +1255,58 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         }
                     }
                 });
+            } finally {
+                indexLock.writeLock().unlock();
+            }
+        }
+
+        @Override
+        public Map<SubscriptionKey,List<Message>> recoverExpired(Set<SubscriptionKey> subscriptions, int max) throws Exception {
+            indexLock.writeLock().lock();
+            try {
+                return pageFile.tx().execute(
+                    (CallableClosure<Map<SubscriptionKey,List<Message>>, Exception>) tx -> {
+                        StoredDestination sd = getStoredDestination(dest, tx);
+                        sd.orderIndex.resetCursorPosition();
+                        int count = 0;
+                        final Map<SubscriptionKey, List<Message>> expired = new HashMap<>();
+                        final Map<String, SubscriptionKey> subKeys = new HashMap<>();
+
+                        // Check each subscription and track the ones that exist
+                        for (SubscriptionKey sub : subscriptions) {
+                            final String subKeyString = subscriptionKey(sub.getClientId(), sub.getSubscriptionName());
+                            if (sd.subscriptionCache.contains(subKeyString)) {
+                                subKeys.put(subKeyString, sub);
+                            }
+                        }
+
+                        // Iterate one time through the topic and check each message, stopping if we run out
+                        // or reach the max
+                        for (Iterator<Entry<Long, MessageKeys>> iterator =
+                            sd.orderIndex.iterator(tx, new MessageOrderCursor()); count < max && iterator.hasNext(); ) {
+                            count++;
+                            Entry<Long, MessageKeys> entry = iterator.next();
+                            Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
+                            if (ackedAndPrepared != null && ackedAndPrepared.contains(entry.getValue().messageId)) {
+                                continue;
+                            }
+
+                            final Message msg = loadMessage(entry.getValue().location);
+                            if (msg.isExpired()) {
+                                // For every message that is expired, go through and check each subscription to see
+                                // if the message has already been acked. We don't want to return subs that have already
+                                // acked the message.
+                                for(Entry<String, SubscriptionKey> subKeyEntry : subKeys.entrySet()) {
+                                    SequenceSet sequence = sd.ackPositions.get(tx, subKeyEntry.getKey());
+                                    if (sequence != null && sequence.contains(entry.getKey())) {
+                                        List<Message> expMessages = expired.computeIfAbsent(subKeyEntry.getValue(), m -> new ArrayList<>());
+                                        expMessages.add(msg);
+                                    }
+                                }
+                            }
+                        }
+                        return expired;
+                    });
             } finally {
                 indexLock.writeLock().unlock();
             }

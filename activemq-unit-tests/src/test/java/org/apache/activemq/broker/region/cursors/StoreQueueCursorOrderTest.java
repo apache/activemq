@@ -517,6 +517,11 @@ public class StoreQueueCursorOrderTest {
         }
 
         @Override
+        public StoreType getType() {
+            return StoreType.MEMORY;
+        }
+
+        @Override
         public void recoverMessageStoreStatistics() throws IOException {
             this.getMessageStoreStatistics().reset();
         }
