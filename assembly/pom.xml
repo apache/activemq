@@ -600,6 +600,9 @@
              <environmentVariables>
                  <ACTIVEMQ_ENCRYPTION_PASSWORD>activemq</ACTIVEMQ_ENCRYPTION_PASSWORD>
              </environmentVariables>
+             <additionalClasspathElements>
+                 <additionalClasspathElement>${project.build.directory}/conf</additionalClasspathElement>
+             </additionalClasspathElements>
             </configuration>
           </execution>
         </executions>
