@@ -177,9 +177,21 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
      */
     private ServerSessionImpl getExistingActiveServerSession() {
         ServerSessionImpl ss = null;
+        // try to find a session that is not in use already (all message consumed and back to the pool or stale to be removed)
+        for (ServerSessionImpl activeSession : activeSessions) {
+            if (!activeSession.isRunning()) {
+                activeSessions.remove(activeSession);
+                activeSessions.add(activeSession);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Selected non-running active session: {}", activeSession);
+                }
+                return activeSession;
+            }
+        }
+        // if none, we'll have to pull a running active session
         if (!activeSessions.isEmpty()) {
             if (activeSessions.size() > 1) {
-                // round robin
+                // round-robin
                 ss = activeSessions.remove(0);
                 activeSessions.add(ss);
             } else {
@@ -187,7 +199,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
             }
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Reusing an active session: " + ss);
+            LOG.debug("Reusing a running active session: {}", ss);
         }
         return ss;
     }

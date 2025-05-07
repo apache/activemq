@@ -32,6 +32,7 @@
 
   <properties>
     <maven.compiler.target>17</maven.compiler.target>
+
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
