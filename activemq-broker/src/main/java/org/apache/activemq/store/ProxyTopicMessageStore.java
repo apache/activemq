@@ -241,7 +241,8 @@ public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMe
     }
 
     @Override
-    public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max) throws Exception {
-        return ((TopicMessageStore)delegate).recoverExpired(subs, max);
+    public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max,
+        MessageRecoveryListener listener) throws Exception {
+        return ((TopicMessageStore)delegate).recoverExpired(subs, max, listener);
     }
 }

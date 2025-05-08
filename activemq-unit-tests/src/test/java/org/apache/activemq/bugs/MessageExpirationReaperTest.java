@@ -221,6 +221,40 @@ public class MessageExpirationReaperTest {
         assertEquals(0, brokerDest.getMemoryUsage().getUsage());
     }
 
+    @Test
+    public void testExpiredMessagesOnTopicRecoveryListener() throws Exception{
+        Session session = createSession();
+
+        // use a zero prefetch so messages don't go inflight
+        ActiveMQTopic destination = new ActiveMQTopic(destinationName + "?consumer.prefetchSize=0");
+
+        MessageProducer producer = session.createProducer(destination);
+        MessageConsumer consumer = session.createDurableSubscriber(destination, "test-durable");
+        producer.setTimeToLive(1000);
+
+        final int count = 3;
+        // Send some messages with an expiration
+        for (int i = 0; i < count; i++) {
+            TextMessage message = session.createTextMessage("" + i);
+            producer.send(message);
+        }
+
+        // Set a very low memory usage so we will be > 100% which should prevent the expiry
+        // thread from continuing
+        broker.getSystemUsage().getMemoryUsage().setLimit(1024);
+        DestinationViewMBean view = createView(destination);
+
+        // not expired yet...
+        assertEquals("Incorrect enqueue count", 3, view.getEnqueueCount() );
+
+        // close consumer so topic thinks consumer is inactive
+        consumer.close();
+
+        // Memory is > 100% so we shouldn't expire
+        Thread.sleep(3000);
+        assertEquals(0,  view.getExpiredCount());
+    }
+
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
         String domain = "org.apache.activemq";
         ObjectName name;

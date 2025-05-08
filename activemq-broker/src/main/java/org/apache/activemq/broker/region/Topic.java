@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -808,6 +807,34 @@ public class Topic extends BaseDestination implements Task {
         }
     }
 
+
+    /**
+     * Simple recovery listener that will check if the topic memory usage is full
+     * when hasSpace() is called. This could be enhanced in the future if needed.
+     */
+    private final MessageRecoveryListener expiryListener =  new MessageRecoveryListener() {
+
+        @Override
+        public boolean recoverMessage(Message message) {
+            return true;
+        }
+
+        @Override
+        public boolean recoverMessageReference(MessageId ref)  {
+            return true;
+        }
+
+        @Override
+        public boolean hasSpace() {
+            return !Topic.this.memoryUsage.isFull();
+        }
+
+        @Override
+        public boolean isDuplicate(MessageId ref) {
+            return false;
+        }
+    };
+
     private final AtomicBoolean expiryTaskInProgress = new AtomicBoolean(false);
     private final Runnable expireMessagesWork = () -> {
         try {
@@ -830,7 +857,8 @@ public class Topic extends BaseDestination implements Task {
 
                 // For each eligible subscription, return the messages in the store that are expired
                 // The same message refs are shared between subs if duplicated so this is efficient
-                var expired = store.recoverExpired(subs, getMaxExpirePageSize());
+                var expired = store.recoverExpired(subs, getMaxExpirePageSize(),
+                    expiryListener);
 
                 final ConnectionContext connectionContext = createConnectionContext();
                 // Go through any expired messages and remove for each sub
