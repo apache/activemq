@@ -85,7 +85,7 @@ public class MultiKahaDBQueueDeletionTest extends AbstractMultiKahaDBDeletionTes
      */
     @Override
     protected WildcardFileFilter getStoreFileFilter() {
-        return new WildcardFileFilter("queue*");
+        return WildcardFileFilter.builder().setWildcards("queue*").get();
     }
 
 }
