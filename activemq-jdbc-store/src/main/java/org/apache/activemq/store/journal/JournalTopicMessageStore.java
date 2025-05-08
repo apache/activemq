@@ -85,7 +85,8 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
     }
 
     @Override
-    public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max) {
+    public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max,
+        MessageRecoveryListener listener) {
         throw new UnsupportedOperationException("recoverExpired not supported");
     }
 

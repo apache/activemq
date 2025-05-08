@@ -363,7 +363,8 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     }
 
     @Override
-    public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max) {
+    public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max,
+        MessageRecoveryListener listener) {
         throw new UnsupportedOperationException("recoverExpired not supported");
     }
 

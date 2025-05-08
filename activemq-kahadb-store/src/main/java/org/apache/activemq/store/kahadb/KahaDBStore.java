@@ -1331,11 +1331,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         }
 
         @Override
-        public Map<SubscriptionKey,List<Message>> recoverExpired(Set<SubscriptionKey> subscriptions, int max) throws Exception {
+        public Map<SubscriptionKey,List<Message>> recoverExpired(Set<SubscriptionKey> subscriptions, int maxBrowse,
+            MessageRecoveryListener listener) throws Exception {
             indexLock.writeLock().lock();
             try {
-                return pageFile.tx().execute(
-                    (CallableClosure<Map<SubscriptionKey,List<Message>>, Exception>) tx -> {
+                return pageFile.tx().execute(tx -> {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         sd.orderIndex.resetCursorPosition();
                         int count = 0;
@@ -1351,9 +1351,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         }
 
                         // Iterate one time through the topic and check each message, stopping if we run out
-                        // or reach the max
+                        // hit the max browse limit, or if the listener returns false for hasSpace()
+                        final Set<Long> uniqueExpired = new HashSet<>();
                         for (Iterator<Entry<Long, MessageKeys>> iterator =
-                            sd.orderIndex.iterator(tx, new MessageOrderCursor()); count < max && iterator.hasNext(); ) {
+                            sd.orderIndex.iterator(tx, new MessageOrderCursor()); count < maxBrowse && iterator.hasNext() && listener.hasSpace(); ) {
                             count++;
                             Entry<Long, MessageKeys> entry = iterator.next();
                             Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
@@ -1371,6 +1372,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                                     if (sequence != null && sequence.contains(entry.getKey())) {
                                         List<Message> expMessages = expired.computeIfAbsent(subKeyEntry.getValue(), m -> new ArrayList<>());
                                         expMessages.add(msg);
+                                        // pass unique messages to the listener so it can do any custom
+                                        // handling for the next call to listener.hasSpace()
+                                        if (uniqueExpired.add(entry.getKey())) {
+                                            listener.recoverMessage(msg);
+                                        }
                                     }
                                 }
                             }

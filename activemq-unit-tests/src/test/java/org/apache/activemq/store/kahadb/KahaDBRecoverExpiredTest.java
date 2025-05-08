@@ -27,17 +27,22 @@ import javax.jms.Session;
 import javax.jms.TopicSession;
 import java.io.File;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.util.SubscriptionKey;
 import org.junit.After;
@@ -48,7 +53,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Timeout;
 
 /**
- * Test for {@link TopicMessageStore#recoverExpired(Set, int)}
+ * Test for {@link TopicMessageStore#recoverExpired(Set, int, org.apache.activemq.store.MessageRecoveryListener)}
  */
 public class KahaDBRecoverExpiredTest {
 
@@ -110,7 +115,7 @@ public class KahaDBRecoverExpiredTest {
       TopicMessageStore store = (TopicMessageStore) dest.getMessageStore();
 
       // nothing should be expired yet, no messags
-      var expired = store.recoverExpired(Set.of(subKey1, subKey2), 100);
+      var expired = store.recoverExpired(Set.of(subKey1, subKey2), 100, listener);
       assertTrue(expired.isEmpty());
 
       // Sent 10 messages, alternating no expiration and 1 second ttl
@@ -124,7 +129,7 @@ public class KahaDBRecoverExpiredTest {
       // wait for the time to pass the point of needing expiration
       Thread.sleep(1500);
       // We should now find both durables have 5 expired messages
-      expired = store.recoverExpired(Set.of(subKey1, subKey2), 100);
+      expired = store.recoverExpired(Set.of(subKey1, subKey2), 100, listener);
       assertEquals(2, expired.size());
       assertEquals(5, expired.get(subKey1).size());
       assertEquals(5, expired.get(subKey2).size());
@@ -140,7 +145,7 @@ public class KahaDBRecoverExpiredTest {
       }
 
       // Now the first sub should only have 3 expired, but still 5 on the second
-      expired = store.recoverExpired(Set.of(subKey1, subKey2), 100);
+      expired = store.recoverExpired(Set.of(subKey1, subKey2), 100, listener);
       assertEquals(3, expired.get(subKey1).size());
       assertEquals(5, expired.get(subKey2).size());
 
@@ -157,7 +162,7 @@ public class KahaDBRecoverExpiredTest {
       }
 
       // should be empty again
-      expired = store.recoverExpired(Set.of(subKey1, subKey2), 100);
+      expired = store.recoverExpired(Set.of(subKey1, subKey2), 100, listener);
       assertTrue(expired.isEmpty());
     }
 
@@ -173,7 +178,7 @@ public class KahaDBRecoverExpiredTest {
       TopicMessageStore store = (TopicMessageStore) dest.getMessageStore();
 
       // nothing should be expired yet, no messags
-      var expired = store.recoverExpired(Set.of(subKey1, subKey2), 100);
+      var expired = store.recoverExpired(Set.of(subKey1, subKey2), 100, listener);
       assertTrue(expired.isEmpty());
 
       // Sent 50 messages with no ttl followed by 50 with ttl
@@ -188,18 +193,18 @@ public class KahaDBRecoverExpiredTest {
       Thread.sleep(1500);
 
       // We should now find both durables have 50 expired messages
-      expired = store.recoverExpired(Set.of(subKey1, subKey2), 100);
+      expired = store.recoverExpired(Set.of(subKey1, subKey2), 100, listener);
       assertEquals(2, expired.size());
       assertEquals(50, expired.get(subKey1).size());
       assertEquals(50, expired.get(subKey2).size());
 
       // Max is 50, should find none expired
-      expired = store.recoverExpired(Set.of(subKey1, subKey2), 50);
+      expired = store.recoverExpired(Set.of(subKey1, subKey2), 50, listener);
       assertTrue(expired.isEmpty());
 
       // We should now find both durables have 25 expired messages with
       // max at 75
-      expired = store.recoverExpired(Set.of(subKey1, subKey2), 75);
+      expired = store.recoverExpired(Set.of(subKey1, subKey2), 75, listener);
       assertEquals(2, expired.size());
       assertEquals(25, expired.get(subKey1).size());
       assertEquals(25, expired.get(subKey2).size());
@@ -215,7 +220,7 @@ public class KahaDBRecoverExpiredTest {
       }
 
       // We should now find 25 on sub1 and 50 on sub2 with a max of 100
-      expired = store.recoverExpired(Set.of(subKey1, subKey2), 100);
+      expired = store.recoverExpired(Set.of(subKey1, subKey2), 100, listener);
       assertEquals(2, expired.size());
       assertEquals(25, expired.get(subKey1).size());
       assertEquals(50, expired.get(subKey2).size());
@@ -234,7 +239,7 @@ public class KahaDBRecoverExpiredTest {
       TopicMessageStore store = (TopicMessageStore) dest.getMessageStore();
 
       // nothing should be expired yet, no messags
-      var expired = store.recoverExpired(Set.of(subKey1, subKey2), 100);
+      var expired = store.recoverExpired(Set.of(subKey1, subKey2), 100, listener);
       assertTrue(expired.isEmpty());
 
       // Send 10 expired
@@ -248,7 +253,7 @@ public class KahaDBRecoverExpiredTest {
       Thread.sleep(1500);
 
       // Test getting each sub individually, get sub2 first
-      expired = store.recoverExpired(Set.of(subKey2), 100);
+      expired = store.recoverExpired(Set.of(subKey2), 100, listener);
       assertEquals(1, expired.size());
       assertEquals(10, expired.get(subKey2).size());
 
@@ -261,26 +266,125 @@ public class KahaDBRecoverExpiredTest {
           ack.getLastMessageId(), ack);
 
       // check only sub2 has 9
-      expired = store.recoverExpired(Set.of(subKey2), 100);
+      expired = store.recoverExpired(Set.of(subKey2), 100, listener);
       assertEquals(1, expired.size());
       assertEquals(9, expired.get(subKey2).size());
 
       // check only sub1 still has 10
-      expired = store.recoverExpired(Set.of(subKey1), 100);
+      expired = store.recoverExpired(Set.of(subKey1), 100, listener);
       assertEquals(1, expired.size());
       assertEquals(10, expired.get(subKey1).size());
 
       // verify passing in unmatched sub leaves it out of the result set
       var unmatched = new SubscriptionKey("clientId", "sub3");
-      expired = store.recoverExpired(Set.of(unmatched), 100);
+      expired = store.recoverExpired(Set.of(unmatched), 100, listener);
       assertTrue(expired.isEmpty());
 
       // try 2 that exist and 1 that doesn't
-      expired = store.recoverExpired(Set.of(subKey1, subKey2, unmatched), 100);
+      expired = store.recoverExpired(Set.of(subKey1, subKey2, unmatched), 100, listener);
       assertEquals(2, expired.size());
 
     }
 
   }
+
+  // test recovery listener works with hasSpace()
+  @Test
+  public void testRecoverExpiredRecoveryListener() throws Exception {
+    try (Session session = initializeSubs()) {
+      MessageProducer prod = session.createProducer(topic);
+
+      Destination dest = broker.getDestination(topic);
+      TopicMessageStore store = (TopicMessageStore) dest.getMessageStore();
+
+      // Sent 50 messages with no ttl followed by 50 with ttl
+      ActiveMQTextMessage message = new ActiveMQTextMessage();
+      for (int i = 0; i < 10; i++) {
+        message.setText("message" + i);
+        prod.send(message, Message.DEFAULT_DELIVERY_MODE, Message.DEFAULT_PRIORITY, 1000);
+      }
+
+      // wait for the time to pass the point of needing expiration
+      Thread.sleep(1500);
+
+      // don't return any, has space is false
+      final AtomicBoolean hasSpaceCalled = new AtomicBoolean();
+      var expired = store.recoverExpired(Set.of(subKey1, subKey2), 100, new MessageRecoveryListener() {
+        @Override
+        public boolean recoverMessage(org.apache.activemq.command.Message message) {
+          return true;
+        }
+
+        @Override
+        public boolean recoverMessageReference(MessageId ref) {
+          return false;
+        }
+
+        @Override
+        public boolean hasSpace() {
+          hasSpaceCalled.set(true);
+          return false;
+        }
+
+        @Override
+        public boolean isDuplicate(MessageId ref) {
+          return false;
+        }
+      });
+
+      assertTrue(expired.isEmpty());
+      assertTrue(hasSpaceCalled.get());
+
+      // check we only call recoverMessage() once for each unique id\
+      Set<MessageId> ids = new HashSet<>();
+      store.recoverExpired(Set.of(subKey1, subKey2), 100, new MessageRecoveryListener() {
+        @Override
+        public boolean recoverMessage(org.apache.activemq.command.Message message) {
+          // assert unique
+          assertTrue("duplicate message passed to listener", ids.add(message.getMessageId()));
+          return true;
+        }
+
+        @Override
+        public boolean recoverMessageReference(MessageId ref) {
+          return false;
+        }
+
+        @Override
+        public boolean hasSpace() {
+          return true;
+        }
+
+        @Override
+        public boolean isDuplicate(MessageId ref) {
+          return false;
+        }
+      });
+    }
+
+  }
+
+  private final MessageRecoveryListener listener =  new MessageRecoveryListener() {
+
+    @Override
+    public boolean recoverMessage(org.apache.activemq.command.Message message) {
+      return true;
+    }
+
+    @Override
+    public boolean recoverMessageReference(MessageId ref)  {
+      return true;
+    }
+
+    @Override
+    public boolean hasSpace() {
+      return true;
+    }
+
+    @Override
+    public boolean isDuplicate(MessageId ref) {
+      return false;
+    }
+  };
 
 }
