@@ -371,20 +371,45 @@
       <optional>false</optional>
     </dependency>
     <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-oxm</artifactId>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-oxm</artifactId>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jettison</groupId>
       <artifactId>jettison</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-annotations</artifactId>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-webapp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-nested</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-servlet</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-jaas</artifactId>
+      <artifactId>jetty-ee</artifactId>
+      <version>${jetty-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-session</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -402,6 +427,56 @@
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-rewrite</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-core-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-core-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-core-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-jetty-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-jetty-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9.websocket</groupId>
+      <artifactId>jetty-ee9-websocket-jakarta-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9.websocket</groupId>
+      <artifactId>jetty-ee9-websocket-jetty-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9.websocket</groupId>
+      <artifactId>jetty-ee9-websocket-jetty-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9.websocket</groupId>
+      <artifactId>jetty-ee9-websocket-jetty-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9.websocket</groupId>
+      <artifactId>jetty-ee9-websocket-servlet</artifactId>
+    </dependency>
+<!--
+o  'org.eclipse.jetty.websocket:websocket-core-common'
+o  'org.eclipse.jetty.websocket:websocket-core-server'
+o  'org.eclipse.jetty.websocket:websocket-jetty-api'
+o  'org.eclipse.jetty.websocket:websocket-jetty-common'
+o  'org.eclipse.jetty.websocket:websocket-jetty-server'
+o  'org.eclipse.jetty.websocket:websocket-servlet'
+o  'org.eclipse.jetty.orbit:javax.security.auth.message'
+o  'org.eclipse.jetty:apache-jsp'
+-->
     <dependency>
       <groupId>org.eclipse.jdt</groupId>
       <artifactId>ecj</artifactId>
@@ -446,8 +521,8 @@
     </dependency>
 
     <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>apache-jsp</artifactId>
+        <groupId>org.eclipse.jetty.ee9</groupId>
+        <artifactId>jetty-ee9-apache-jsp</artifactId>
     </dependency>
     <dependency>
         <groupId>org.eclipse.jetty</groupId>
