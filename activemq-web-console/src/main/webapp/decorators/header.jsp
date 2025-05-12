@@ -33,9 +33,9 @@
                     <!-- Banner -->
                     <div id="asf_logo">
                         <div id="activemq_logo">
-                            <a style="float:left; width:280px;display:block;text-indent:-5000px;text-decoration:none;line-height:60px; margin-top:10px; margin-left:100px;"
+                            <a class="header-logo-active-mq"
                                 href="http://activemq.apache.org/" title="The most popular and powerful open source Message Broker">ActiveMQ</a> &trade;
-                            <a style="float:right; width:210px;display:block;text-indent:-5000px;text-decoration:none;line-height:60px; margin-top:15px; margin-right:10px;"
+                            <a class="header-logo-apache"
                                 href="http://www.apache.org/" title="The Apache Software Foundation">ASF</a>
                         </div>
                     </div>
@@ -71,5 +71,5 @@
                     <table border="0">
                         <tbody>
                             <tr>
-                                <td valign="top" width="100%" style="overflow:hidden;">
+                                <td valign="top" width="100%" class="body-container">
                                     <div class="body-content">
