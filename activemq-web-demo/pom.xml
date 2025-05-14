@@ -33,16 +33,15 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-maven-plugin</artifactId>
+        <groupId>org.eclipse.jetty.ee9</groupId>
+        <artifactId>jetty-ee9-maven-plugin</artifactId>
         <configuration>
-          <connectors>
-            <connector implementation="org.eclipse.jetty.server.ServerConnector">
-              <port>${jetty.port}</port>
-              <maxIdleTime>60000</maxIdleTime>
-            </connector>
-          </connectors>
-          <scanIntervalSeconds>10</scanIntervalSeconds>
+          <httpConnector>
+            <port>${jetty.port}</port>
+            <idleTimeout>60000</idleTimeout>
+          </httpConnector>
+          <scan>10</scan>
+          <useTestScope>true</useTestScope>
         </configuration>
       </plugin>
 
