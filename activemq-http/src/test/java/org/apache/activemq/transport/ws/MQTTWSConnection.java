@@ -27,9 +27,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.mqtt.MQTTWireFormat;
 import org.apache.activemq.util.ByteSequence;
-import org.eclipse.jetty.ee9.websocket.api.Session;
-import org.eclipse.jetty.ee9.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.api.Session.Listener.AutoDemanding;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.Session.Listener.AbstractAutoDemanding;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.codec.CONNACK;
 import org.fusesource.mqtt.codec.CONNECT;
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Implements a simple WebSocket based MQTT Client that can be used for unit testing.
  */
-public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding {
+public class MQTTWSConnection extends AbstractAutoDemanding implements Session.Listener.AutoDemanding {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTWSConnection.class);
 
@@ -64,7 +64,6 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
     private int closeCode = -1;
     private String closeMessage;
 
-    @Override
     public boolean isConnected() {
         return getSession() != null ? getSession().isOpen() : false;
     }
@@ -181,15 +180,15 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
     //----- WebSocket callback handlers --------------------------------------//
 
     @Override
-    public void onWebSocketBinary(byte[] data, int offset, int length) {
-        if (data ==null || length <= 0) {
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
+        if (payload == null || !payload.hasRemaining()) {
             return;
         }
 
         MQTTFrame frame = null;
 
         try {
-            frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(data, offset, length));
+            frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(payload.array()));
         } catch (IOException e) {
             LOG.error("Could not decode incoming MQTT Frame: {}", e.getMessage());
             getSession().close();
@@ -254,12 +253,12 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
 
     private void sendBytes(ByteSequence payload) throws IOException {
         if (!isWritePartialFrames()) {
-            getRemote().sendBytes(ByteBuffer.wrap(payload.data, payload.offset, payload.length));
+            getSession().sendBinary(ByteBuffer.wrap(payload.data, payload.offset, payload.length), null);
         } else {
-            getRemote().sendBytes(ByteBuffer.wrap(
-                payload.data, payload.offset, payload.length / 2));
-            getRemote().sendBytes(ByteBuffer.wrap(
-                payload.data, payload.offset + payload.length / 2, payload.length / 2));
+            getSession().sendBinary(ByteBuffer.wrap(
+                payload.data, payload.offset, payload.length / 2), null);
+            getSession().sendBinary(ByteBuffer.wrap(
+                payload.data, payload.offset + payload.length / 2, payload.length / 2), null);
         }
     }
 
@@ -272,17 +271,14 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
         LOG.trace("MQTT WS Connection closed, code:{} message:{}", statusCode, reason);
-
-        getSession().close(statusCode, reason);
         this.closeCode = statusCode;
         this.closeMessage = reason;
-
     }
 
     @Override
-    public void onWebSocketConnect(org.eclipse.jetty.ee9.websocket.api.Session session) {
-        super.onWebSocketConnect(session);
-        getSession().setIdleTimeout(Duration.ZERO);
+    public void onWebSocketOpen(Session session) {
+        super.onWebSocketOpen(session);
+        session.setIdleTimeout(Duration.ZERO);
         this.connectLatch.countDown();
     }
 }
