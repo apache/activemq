@@ -1,0 +1,192 @@
+<?xml version="1.0"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://www.eclipse.org/jetty/configure_10_0.dtd">
+
+<!-- Web applications and security headers configuration -->
+<Configure class="org.eclipse.jetty.server.handler.ContextHandlerCollection" id="Contexts">
+
+  <!-- Rewrite Handler for Security Headers -->
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">X-FRAME-OPTIONS</Set>
+              <Set name="headerValue">SAMEORIGIN</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">X-XSS-Protection</Set>
+              <Set name="headerValue">1; mode=block</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">X-Content-Type-Options</Set>
+              <Set name="headerValue">nosniff</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">Cache-Control</Set>
+              <Set name="headerValue">no-store</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">Content-Security-Policy</Set>
+              <Set name="headerValue">style-src-elem 'self'; style-src 'self'; img-src 'self'; script-src-elem 'self'; default-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none';</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">Referrer-Policy</Set>
+              <Set name="headerValue">no-referrer</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">Permissions-Policy</Set>
+              <Set name="headerValue">accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">Cross-Origin-Opener-Policy</Set>
+              <Set name="headerValue">same-origin</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">Cross-Origin-Resource-Policy</Set>
+              <Set name="headerValue">same-origin</Set>
+            </New>
+          </Arg>
+        </Call>
+        <!-- Relaxed CSP rules for XML admin pages -->
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">/admin/xml/*</Set>
+              <Set name="headerName">Content-Security-Policy</Set>
+              <Set name="headerValue">style-src-elem 'self' 'unsafe-inline'; style-src 'self'; img-src 'self' data:; script-src-elem 'self'; default-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none';</Set>
+            </New>
+          </Arg>
+        </Call>
+        <!-- Uncomment when serving the console over HTTPS only -->
+        <!--
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">Strict-Transport-Security</Set>
+              <Set name="headerValue">max-age=31536000; includeSubDomains</Set>
+            </New>
+          </Arg>
+        </Call>
+        -->
+      </New>
+    </Arg>
+  </Call>
+
+  <!-- Admin Web Application -->
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.ee9.webapp.WebAppContext">
+        <Set name="contextPath">/admin</Set>
+        <Set name="baseResourceAsString"><Property name="activemq.home" default="."/>/webapps/admin</Set>
+        <Set name="logUrlOnStart">true</Set>
+        <!-- Scan the container JSP/JSTL jars so the Jasper ServletContainerInitializer
+             runs and TLDs are discovered (otherwise JSP compilation fails with a null TldCache). -->
+        <Call name="setAttribute">
+          <Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
+          <Arg>.*/jetty-ee9-[^/]*\.jar$|.*/jetty-jakarta-servlet-api-[^/]*\.jar$|.*/jakarta\.servlet\.jsp\.jstl.*\.jar$</Arg>
+        </Call>
+      </New>
+    </Arg>
+  </Call>
+
+  <!-- API Web Application -->
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.ee9.webapp.WebAppContext">
+        <Set name="contextPath">/api</Set>
+        <Set name="baseResourceAsString"><Property name="activemq.home" default="."/>/webapps/api</Set>
+        <Set name="logUrlOnStart">true</Set>
+        <!-- Scan the container JSP/JSTL jars so the Jasper ServletContainerInitializer
+             runs and TLDs are discovered (otherwise JSP compilation fails with a null TldCache). -->
+        <Call name="setAttribute">
+          <Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
+          <Arg>.*/jetty-ee9-[^/]*\.jar$|.*/jetty-jakarta-servlet-api-[^/]*\.jar$|.*/jakarta\.servlet\.jsp\.jstl.*\.jar$</Arg>
+        </Call>
+      </New>
+    </Arg>
+  </Call>
+
+  <!-- Static Resource Handler -->
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.server.handler.ResourceHandler">
+        <!-- Set name="directoriesListed">false</Set -->
+        <Set name="welcomeFiles">
+          <Array type="java.lang.String">
+            <Item>index.html</Item>
+          </Array>
+        </Set>
+        <Set name="baseResourceAsString"><Property name="activemq.home" default="."/>/webapps/</Set>
+      </New>
+    </Arg>
+  </Call>
+
+  <!-- Default Handler -->
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.server.handler.DefaultHandler">
+        <Set name="serveFavIcon">false</Set>
+      </New>
+    </Arg>
+  </Call>
+
+</Configure>

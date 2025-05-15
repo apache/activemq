@@ -125,6 +125,6 @@
   </broker>
 
   <!-- Use Web applications and Camel in secured broker environment -->
-  <import resource="jetty-demo.xml"/>
+  <import resource="jetty-spring.xml"/>
 
 </beans>

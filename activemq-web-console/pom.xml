@@ -157,7 +157,7 @@
               org.slf4j.spi;version="[1.6,2)";resolution:=optional,
               org.apache.log4j;version="[2,3)";resolution:=optional,
               org.apache.log4j.spi;version="[2,3)";resolution:=optional,
-              org.eclipse.jetty*;resolution:=optional;version="[9.0,10)",
+              org.eclipse.jetty*;resolution:=optional;version="${jetty-version-range}",
               org.objectweb.asm*;version="[6,8)"
             </Import-Package>
             <_contract>!*</_contract>
@@ -203,10 +203,6 @@
               <groupId>${project.groupId}</groupId>
               <artifactId>activemq-all</artifactId>
           </exclusion>
-          <exclusion>
-              <groupId>org.eclipse.jetty.websocket</groupId>
-              <artifactId>websocket-server</artifactId>
-          </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -248,11 +244,16 @@
     <dependency>
       <groupId>org.eclipse.jetty.ee9</groupId>
       <artifactId>jetty-ee9-webapp</artifactId>
-      <scope>test</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-rewrite</artifactId>
       <scope>test</scope>
     </dependency>
      <dependency>
@@ -279,9 +280,8 @@
     <!-- JSTL support -->
     
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>apache-jstl</artifactId>
-      <version>11.0.0</version>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-glassfish-jstl</artifactId>
       <scope>provided</scope>
     </dependency>
     

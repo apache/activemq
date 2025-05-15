@@ -246,7 +246,9 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
         LOG.trace("WS Proxy sending string of size {} out", data.length());
         try {
             // FIXME: Convert to async API w/ tiemeout getDefaultSendTimeOut(), TimeUnit.SECONDS);
-            session.getRemote().sendBytes(ByteBuffer.wrap(data.getBytes()));
+            // Outbound text must be sent as a WebSocket TEXT frame (sendString), not a binary
+            // frame; sendString also encodes as UTF-8 per the WebSocket spec.
+            session.getRemote().sendString(data);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }

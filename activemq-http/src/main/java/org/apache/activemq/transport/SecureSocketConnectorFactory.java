@@ -38,6 +38,10 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
     private String trustStore = System.getProperty("javax.net.ssl.trustStore");
     private boolean needClientAuth;
     private boolean wantClientAuth;
+    // Nullable so we can distinguish "not configured on this connector" (fall back to the legacy
+    // jetty.ssl.* system property, else Jetty's default) from an explicit true/false.
+    private Boolean sniHostCheck;
+    private Boolean sniRequired;
     private String keyStoreType;
     private String secureRandomCertficateAlgorithm;
     private String trustCertificateAlgorithm;
@@ -84,10 +88,10 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
                 if (keyStorePassword != null) {
                     factory.setKeyStorePassword(keyStorePassword);
                 }
-                // if the keyPassword hasn't been set, default it to the
-                // key store password
-                if (keyPassword == null && keyStorePassword != null) {
-                    factory.setKeyStorePassword(keyStorePassword);
+                // Apply the key (key-manager) password when it differs from the keystore password.
+                // When not set, Jetty falls back to the keystore password automatically.
+                if (keyPassword != null) {
+                    factory.setKeyManagerPassword(keyPassword);
                 }
                 if (keyStoreType != null) {
                     factory.setKeyStoreType(keyStoreType);
@@ -117,18 +121,23 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
             factory = contextFactory;
         }
 
-        String sniRequiredPropValue = System.getProperty("jetty.ssl.sniRequired");
-        if(sniRequiredPropValue != null && !sniRequiredPropValue.isBlank()) {
-            boolean sniRequired = Boolean.valueOf(sniRequiredPropValue);
-            factory.setSniRequired(sniRequired);
+        // SNI required: the per-connector option (transport.sniRequired) takes precedence over the
+        // legacy jetty.ssl.sniRequired system property.
+        Boolean effectiveSniRequired = resolveSniOption(sniRequired, "jetty.ssl.sniRequired");
+        if (effectiveSniRequired != null) {
+            factory.setSniRequired(effectiveSniRequired);
         }
 
-        String sniHostCheckPropValue = System.getProperty("jetty.ssl.sniHostCheck");
+        // SNI host check: the per-connector option (transport.sniHostCheck) takes precedence over the
+        // legacy jetty.ssl.sniHostCheck system property. When neither is set the connector keeps its
+        // default behavior (no SecureRequestCustomizer override installed). The configured value is
+        // honored as-is (previously it was always forced to false when the property was present).
+        Boolean effectiveSniHostCheck = resolveSniOption(sniHostCheck, "jetty.ssl.sniHostCheck");
         HttpConnectionFactory httpConnectionFactory = null;
-        if(sniHostCheckPropValue != null && !sniHostCheckPropValue.isBlank()) {
+        if (effectiveSniHostCheck != null) {
             HttpConfiguration httpConfig = new HttpConfiguration();
             SecureRequestCustomizer customizer = new SecureRequestCustomizer();
-            customizer.setSniHostCheck(false);
+            customizer.setSniHostCheck(effectiveSniHostCheck);
             httpConfig.addCustomizer(customizer);
             httpConnectionFactory =  new HttpConnectionFactory(httpConfig);
         }
@@ -152,6 +161,22 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
     private void setTrustStore(SslContextFactory factory, String trustStore2) throws Exception {
         String mname = Server.getVersion().startsWith("8") ? "setTrustStore" : "setTrustStorePath";
         factory.getClass().getMethod(mname, String.class).invoke(factory, trustStore2);
+    }
+
+    /**
+     * Resolves an SNI option, preferring the per-connector value (set from a transport.* option)
+     * over the legacy JVM-wide system property. Returns {@code null} when neither is configured so
+     * the caller can leave the connector at its default behavior.
+     */
+    private static Boolean resolveSniOption(Boolean connectorValue, String systemProperty) {
+        if (connectorValue != null) {
+            return connectorValue;
+        }
+        String sysValue = System.getProperty(systemProperty);
+        if (sysValue != null && !sysValue.isBlank()) {
+            return Boolean.valueOf(sysValue);
+        }
+        return null;
     }
 
 
@@ -251,6 +276,32 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
 
     public void setNeedClientAuth(boolean needClientAuth) {
         this.needClientAuth = needClientAuth;
+    }
+
+    public Boolean getSniHostCheck() {
+        return sniHostCheck;
+    }
+
+    /**
+     * Per-connector override for TLS SNI host checking (transport.sniHostCheck). When unset the
+     * legacy jetty.ssl.sniHostCheck system property is consulted, otherwise the connector default
+     * applies. {@code true} enforces that the request host matches the served certificate;
+     * {@code false} disables the check for clients connecting by IP or with a non-matching cert.
+     */
+    public void setSniHostCheck(Boolean sniHostCheck) {
+        this.sniHostCheck = sniHostCheck;
+    }
+
+    public Boolean getSniRequired() {
+        return sniRequired;
+    }
+
+    /**
+     * Per-connector override for requiring TLS SNI (transport.sniRequired). When unset the legacy
+     * jetty.ssl.sniRequired system property is consulted, otherwise the connector default applies.
+     */
+    public void setSniRequired(Boolean sniRequired) {
+        this.sniRequired = sniRequired;
     }
 
     public String getTrustStore() {

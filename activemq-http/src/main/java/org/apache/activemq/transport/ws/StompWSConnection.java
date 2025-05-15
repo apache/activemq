@@ -49,6 +49,10 @@ public class StompWSConnection extends org.eclipse.jetty.websocket.api.Session.L
         return session != null && session.isOpen();
     }
 
+    public boolean isNotConnected() {
+        return !isConnected();
+    }
+
     public void close() {
         Session session = getSession();
         if (session != null) {

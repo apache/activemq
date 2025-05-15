@@ -261,7 +261,7 @@
       <includes>
         <include>org.springframework:spring-web</include>
         <include>org.springframework:spring-webmvc</include>
-        <include>org.eclipse.jetty:jetty-ee</include>
+        <include>org.eclipse.jetty.ee:jetty-ee-webapp</include>
         <include>org.eclipse.jetty:jetty-server</include>
         <include>org.eclipse.jetty:jetty-session</include>
         <include>org.eclipse.jetty:jetty-xml</include>
@@ -276,6 +276,10 @@
         <include>org.eclipse.jetty.ee9:jetty-ee9-security</include>
         <include>org.eclipse.jetty.ee9:jetty-ee9-servlet</include>
         <include>org.eclipse.jetty.ee9:jetty-ee9-webapp</include>
+        <!-- plus + annotations enable ServletContainerInitializer/TLD scanning (JSP/JSTL) -->
+        <include>org.eclipse.jetty.ee9:jetty-ee9-plus</include>
+        <include>org.eclipse.jetty:jetty-annotations</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-annotations</include>
         <include>org.eclipse.jetty.ee9:jetty-ee9-apache-jsp</include>
         <include>org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api</include>
         <include>org.eclipse.jetty.websocket:jetty-websocket-core-client</include>
@@ -283,8 +287,6 @@
         <include>org.eclipse.jetty.websocket:jetty-websocket-core-server</include>
         <include>org.eclipse.jetty.websocket:jetty-websocket-jetty-client</include>
         <include>org.eclipse.jetty.websocket:jetty-websocket-jetty-api</include>
-        <include>org.eclipse.jetty.websocket:websocket-jetty-common</include>
-        <include>org.eclipse.jetty.websocket:websocket-jetty-server</include>
         <include>org.eclipse.jetty.orbit:javax.security.auth.message</include>
         <include>org.eclipse.jetty.ee9.websocket:jetty-ee9-websocket-jakarta-client</include>
         <include>org.eclipse.jetty.ee9.websocket:jetty-ee9-websocket-jetty-api</include>
@@ -294,21 +296,20 @@
         <!-- include>jakarta.servlet:jakarta.servlet-api</include -->
         <include>jakarta.websocket:jakarta.websocket-api</include>
         <!-- JSP support -->
-        <!-- Jetty JSP api-->
-        <include>org.eclipse.jetty:apache-jsp</include>
-        <!-- Jetty JSP impl-->
-        <include>org.mortbay.jasper:apache-jsp</include>
+        <!-- Jetty JSP impl (pulled in via jetty-ee9-apache-jsp) -->
+        <include>org.mortbay.jasper:mortbay-apache-jsp</include>
         <!-- jstl and el api -->
-        <include>org.eclipse.jetty:apache-jstl</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-glassfish-jstl</include>
         <include>jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api</include>
         <include>org.glassfish.web:jakarta.servlet.jsp.jstl</include>
         <!-- include>org.apache.taglibs:taglibs-standard-spec</include -->
         <!-- jstl and el impl -->
-        <include>org.mortbay.jasper:apache-el</include>
+        <include>org.mortbay.jasper:mortbay-apache-el</include>
         <!-- include>org.apache.taglibs:taglibs-standard-impl</include -->
 
         <include>jakarta.annotation:jakarta.annotation-api</include>
         <include>org.ow2.asm:asm</include>
+        <include>org.ow2.asm:asm-commons</include>
         <include>org.eclipse.jdt:ecj</include>
 
         <!-- Atom/RSS support -->

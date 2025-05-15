@@ -356,7 +356,11 @@ public abstract class MessageServletSupport extends HttpServlet {
         String contentType = request.getContentType();
         long contentLengthLong = request.getContentLengthLong();
 
-        if (answer == null && contentType != null && contentLengthLong > -1l) {
+        // Read the request body when it was not supplied as the "body" parameter. The body is read
+        // whenever a content type is present; a chunked request reports Content-Length -1 but still
+        // carries a body, so we must not gate on a known length (the read loop below still enforces
+        // maxMessageSize). Gating on Content-Length > -1 silently dropped chunked POST bodies.
+        if (answer == null && contentType != null) {
             LOG.debug("Content-Type={} Content-Length={} maxMessageSize={}", contentType, contentLengthLong, maxMessageSize);
 
             if (maxMessageSize != -1 && contentLengthLong > maxMessageSize) {
@@ -369,9 +373,9 @@ public abstract class MessageServletSupport extends HttpServlet {
                 throw new IOException("Message body exceeds max supported size");
             }
 
-            // This is safe b/c we bounds checked above
-            int expectedBodySize = (int) contentLengthLong;
-            try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(expectedBodySize)) {
+            // Size the buffer from Content-Length when known; a chunked request (-1) starts small.
+            int initialSize = contentLengthLong > 0 ? (int) contentLengthLong : 2048;
+            try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(initialSize)) {
                 byte[] buffer = new byte[2048];
                 int length;
                 int totalRead = 0;
@@ -383,11 +387,15 @@ public abstract class MessageServletSupport extends HttpServlet {
                     }
 
                     totalRead += length;
-                    if(isMaxBodySizeExceeded(totalRead, expectedBodySize)) {
+                    if(isMaxBodySizeExceeded(totalRead, contentLengthLong)) {
                         LOG.warn("Message body exceeds max allowed size. Content-Type={} Content-Length={} maxMessageSize={}", contentType, contentLengthLong, maxMessageSize);
                         throw new IOException("Message body exceeds max allowed size");
                     }
                     byteArrayOutputStream.write(buffer, 0, length);
+                }
+                // A content type but no body bytes (e.g. a property-only POST): treat as no body.
+                if (totalRead == 0) {
+                    return answer;
                 }
                 return byteArrayOutputStream.toString(StandardCharsets.UTF_8);
             }
@@ -399,7 +407,10 @@ public abstract class MessageServletSupport extends HttpServlet {
         return request.getHeader(WebClient.selectorName);
     }
 
-    private boolean isMaxBodySizeExceeded(int totalRead, int expectedBodySize) {
-        return totalRead < 0 || totalRead == Integer.MAX_VALUE || (maxMessageSize != -1 && totalRead >= maxMessageSize) || totalRead > expectedBodySize;
+    private boolean isMaxBodySizeExceeded(int totalRead, long expectedBodySize) {
+        // expectedBodySize is -1 for chunked requests (unknown length); only enforce the
+        // "read more than declared" check when the length is actually known.
+        return totalRead < 0 || totalRead == Integer.MAX_VALUE || (maxMessageSize != -1 && totalRead >= maxMessageSize)
+                || (expectedBodySize > -1 && totalRead > expectedBodySize);
     }
 }

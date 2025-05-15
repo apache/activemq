@@ -121,6 +121,13 @@
       <artifactId>jetty-websocket-jetty-server</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- activemq-http's WSTransportServer uses the Jetty EE9 websocket ServletContainerInitializer;
+         activemq-http declares it provided+optional, so the ws transport needs it at test runtime here. -->
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9.websocket</groupId>
+      <artifactId>jetty-ee9-websocket-jetty-server</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>

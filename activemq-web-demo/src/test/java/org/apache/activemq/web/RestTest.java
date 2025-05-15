@@ -310,9 +310,10 @@ public class RestTest extends JettyTestSupport {
                     latch2.countDown();
                 }
                 });
+            // Await the async response before the try-with-resources closes (and aborts) the client.
+            latch2.await();
         }
 
-        latch2.await();
         assertTrue("success status", HttpStatus.isSuccess(status2.get()));
 
         HttpFields fields = responseFields;
