@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://jetty.org/configure_10_0.dtd">
+
+<!-- =============================================================== -->
+<!-- Configure the Jetty Request Log                                 -->
+<!-- =============================================================== -->
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+
+  <!-- =========================================================== -->
+  <!-- Configure Request Log for Server                            -->
+  <!-- (Use RequestLogHandler for a context specific RequestLog    -->
+  <!-- =========================================================== -->
+  <Set name="RequestLog">
+    <New id="RequestLog" class="org.eclipse.jetty.server.CustomRequestLog">
+      <!-- Writer -->
+      <Arg>
+        <New class="org.eclipse.jetty.server.AsyncRequestLogWriter">
+          <Arg>
+            <Call name="resolvePath" class="org.eclipse.jetty.xml.XmlConfiguration">
+              <Arg><Property name="jetty.base"/></Arg>
+              <Arg>
+                <Property name="jetty.requestlog.filePath">
+                  <Default>
+                    <Property name="jetty.requestlog.dir" default="logs"/>/yyyy_mm_dd.request.log
+                  </Default>
+                </Property>
+              </Arg>
+            </Call>
+          </Arg>
+
+          <Set name="filenameDateFormat"><Property name="jetty.requestlog.filenameDateFormat" default="yyyy_MM_dd"/></Set>
+          <Set name="retainDays"><Property name="jetty.requestlog.retainDays" default="90"/></Set>
+          <Set name="append"><Property name="jetty.requestlog.append" default="false"/></Set>
+          <Set name="timeZone"><Property name="jetty.requestlog.rollover.timezone" deprecated="jetty.requestlog.timezone" default="GMT"/></Set>
+        </New>
+      </Arg>
+
+      <!-- Format String -->
+      <Arg>
+        <Property name="jetty.requestlog.formatString" deprecated="jetty.customrequestlog.formatString">
+          <Default>
+            <Get class="org.eclipse.jetty.server.CustomRequestLog" name="EXTENDED_NCSA_FORMAT"/>
+          </Default>
+        </Property>
+      </Arg>
+    </New>
+  </Set>
+</Configure>

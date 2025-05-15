@@ -141,6 +141,7 @@
             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
             <Embed-Dependency>
               *;groupId=org.apache.activemq;inline=META-INF/services/*,
+              *;groupId=org.apache.activemq;inline=META-INF/versions/*,
               *;groupId=org.apache.qpid;inline=META-INF/services/*,
               *;groupId=org.apache.xbean;inline=true
             </Embed-Dependency>
@@ -150,6 +151,16 @@
               org.apache.activemq.web*;version=${project.version};-noimport:=true;-split-package:=merge-first
             </Export-Package>
             <Import-Package>
+              <!-- JDK packages referenced by Jetty 12 multi-release classes; provided
+                   by the JRE / system bundle, so must not be imported by this bundle. -->
+              !javax.management*,
+              !javax.naming*,
+              !javax.net*,
+              !javax.security*,
+              !javax.sql*,
+              !javax.xml*,
+              !org.w3c.dom,
+              !org.xml.sax,
               !org.apache.commons.daemon,
               !org.apache.maven*,
               !com.google.thirdparty.publicsuffix,
@@ -229,6 +240,8 @@
             </DynamicImport-Package>
             <_noee>true</_noee>
             <_contract>!*</_contract>
+            <!-- Jetty 12 (and other) jars are multi-release; emit a multi-release bundle. -->
+            <Multi-Release>true</Multi-Release>
           </instructions>
         </configuration>
       </plugin>

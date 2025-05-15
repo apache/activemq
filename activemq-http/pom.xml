@@ -177,7 +177,7 @@
               org.apache.activemq.transport.https*;version=${project.version};-noimport:=;-split-package:=merge-last
             </Export-Package>
             <Import-Package>
-              org.eclipse.jetty*;version="[9.0,10.0)";resolution:=optional,
+              org.eclipse.jetty*;version="${jetty-version-range}";resolution:=optional,
               !org.apache.activemq.transport.ws*;version=${project.version},
               !org.apache.activemq.transport.xstream;version=${project.version},
               !org.apache.activemq.transport.util;version=${project.version},

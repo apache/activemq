@@ -196,11 +196,12 @@
 
     <!--
         Enable web consoles, REST and Ajax APIs and demos
-        The web consoles requires by default login, you can disable this in the jetty.xml file
+        The web console requires login by default; authentication and IP access control are
+        configured in ${ACTIVEMQ_HOME}/conf/jetty/jetty-security.xml.
 
-        Take a look at ${ACTIVEMQ_HOME}/conf/jetty.xml for more details
+        Take a look at ${ACTIVEMQ_HOME}/conf/jetty-spring.xml and conf/jetty/ for more details
     -->
-    <import resource="jetty.xml"/>
+    <import resource="jetty-spring.xml"/>
 
 </beans>
 <!-- END SNIPPET: example -->
