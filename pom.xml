@@ -100,7 +100,7 @@
     <velocity-version>2.4.1</velocity-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.21</xstream-version>
-    <xbean-version>4.26</xbean-version>
+    <xbean-version>4.27</xbean-version>
     <xerces-version>2.12.2</xerces-version>
     <jaxb-tools-version>4.0.8</jaxb-tools-version>
     <stompjms-version>3.1.0</stompjms-version>
