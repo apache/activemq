@@ -18,6 +18,7 @@ package org.apache.activemq.util;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
+import com.thoughtworks.xstream.security.ArrayTypePermission;
 import com.thoughtworks.xstream.security.NoTypePermission;
 import com.thoughtworks.xstream.security.PrimitiveTypePermission;
 import org.apache.activemq.util.ClassLoadingAwareObjectInputStream;
@@ -31,6 +32,7 @@ public class XStreamSupport {
         XStream stream = new XStream();
         stream.addPermission(NoTypePermission.NONE);
         stream.addPermission(PrimitiveTypePermission.PRIMITIVES);
+        stream.addPermission(ArrayTypePermission.ARRAYS);
         stream.allowTypeHierarchy(Collection.class);
         stream.allowTypeHierarchy(Map.class);
         stream.allowTypes(new Class[]{String.class});
