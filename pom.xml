@@ -70,7 +70,7 @@
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-version>4.0.5</jaxb-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
-    <jetty-version>11.0.24</jetty-version>
+    <jetty-version>11.0.25</jetty-version>
     <jetty-version-range>[11,13)</jetty-version-range>
     <jmdns-version>3.6.0</jmdns-version>
     <javassist-version>3.30.2-GA</javassist-version>
