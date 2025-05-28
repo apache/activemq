@@ -358,7 +358,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         if (answer == null && contentType != null && contentLengthLong > -1l) {
             LOG.debug("Content-Type={} Content-Length={} maxMessageSize={}", contentType, contentLengthLong, maxMessageSize);
 
-            if (contentLengthLong > maxMessageSize) {
+            if (maxMessageSize != -1 && contentLengthLong > maxMessageSize) {
                 LOG.warn("Message body exceeds max allowed size. Content-Type={} Content-Length={} maxMessageSize={}", contentType, contentLengthLong, maxMessageSize);
                 throw new IOException("Message body exceeds max allowed size");
             }
@@ -397,6 +397,6 @@ public abstract class MessageServletSupport extends HttpServlet {
     }
 
     private boolean isMaxBodySizeExceeded(int totalRead, int expectedBodySize) {
-        return totalRead < 0 || totalRead >= Integer.MAX_VALUE || totalRead >= maxMessageSize || totalRead > expectedBodySize;
+        return totalRead < 0 || totalRead == Integer.MAX_VALUE || (maxMessageSize != -1 && totalRead >= maxMessageSize) || totalRead > expectedBodySize;
     }
 }
