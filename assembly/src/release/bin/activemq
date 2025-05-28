@@ -108,7 +108,7 @@ if [ -z "$ACTIVEMQ_USER_CLASSPATH" ] ; then
 fi
 
 # ActiveMQ Classpath configuration
-ACTIVEMQ_CLASSPATH="${ACTIVEMQ_BASE%/}/../lib/:$ACTIVEMQ_USER_CLASSPATH"
+ACTIVEMQ_CLASSPATH="$ACTIVEMQ_USER_CLASSPATH"
 
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
