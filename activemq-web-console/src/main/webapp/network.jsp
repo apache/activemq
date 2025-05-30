@@ -25,7 +25,7 @@
 
 <%@include file="decorators/header.jsp" %>
 
-<div style="margin-top: 5em">
+<div class="section-container">
 <h2>Network Bridges</h2>
 
 <table id="bridges" class="sortable autostripe">

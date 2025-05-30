@@ -29,7 +29,7 @@
 
 <c:choose>
 <c:when test="${requestContext.brokerQuery.jobSchedulerStarted}">
-<div style="margin-top: 5em">
+<div class="section-container">
 	<table id="Jobs" class="sortable autostripe">
 	<thead>
 		<tr>
@@ -63,7 +63,7 @@
 	</table>
 </c:when>
 <c:otherwise>
-<div style="margin-top: 5em">
+<div class="section-container">
 <p align="center">Scheduler not started!</p>
 </div>
 </c:otherwise>
