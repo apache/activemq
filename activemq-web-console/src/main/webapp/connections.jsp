@@ -55,7 +55,7 @@
 </table>
 
 </c:forEach>
-<div style="margin-top: 5em">
+<div class="section-container">
 <h2>Network Connectors</h2>
 
 <table id="connections" class="sortable autostripe">
