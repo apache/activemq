@@ -131,8 +131,16 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                     </tr>
                 </thead>
                 <tbody>
+                    <c:url value=".action" var="actionParams">
+                        <c:param name="JMSDestination" value="${requestContext.messageQuery.JMSDestination}" />
+                        <c:param name="messageId" value="${row.JMSMessageID}" />
+                        <c:param name="JMSDestinationType" value="queue" />
+                        <c:param name="secret" value='${sessionScope["secret"]}' />
+                    </c:url>
+                    <input type="hidden" id="actionParams" value="<c:out value='${actionParams}' />" />
+
                     <tr>
-                        <td colspan="2"><a href="<c:out value='deleteMessage.action?JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&secret=${sessionScope["secret"]}' />" onclick="return confirm('Are you sure you want to delete the message?')" >Delete</a></td>
+                        <td colspan="2"><a id="actionDelete" href="<c:out value='deleteMessage.action?JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&secret=${sessionScope["secret"]}' />">Delete</a></td>
                     </tr>
                     <c:if test="${requestContext.messageQuery.isDLQ() || requestContext.messageQuery.JMSDestination eq 'ActiveMQ.DLQ'}">
                     	<tr>
@@ -144,12 +152,12 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                                           <c:param name="secret" value='${sessionScope["secret"]}' />
                                       </c:url>"
                                       onclick="return confirm('Are you sure you want to retry this message?')"
-                                     title="Retry - attempt reprocessing on original destination">Retry</a>
+                                      title="Retry - attempt reprocessing on original destination">Retry</a>
                             </td>
                        </tr>
                     </c:if>
                     <tr class="odd">
-                    <td><a href="<c:out value="javascript:confirmAction('queue', 'copyMessage"/>')">Copy</a></td>
+                    <td><a id="actionCopy">Copy</a></td>
                         <td rowspan="2">
                             <select id="queue">
                                 <option value=""> -- Please select --</option>
@@ -160,11 +168,9 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                                 </c:forEach>
                             </select>
                         </td>
-
                     </tr>
                     <tr class="odd">
-                        <td><a href="<c:out value="javascript:confirmAction('queue', 'moveMessage"/>')"
-                            >Move</a></td>
+                        <td><a id="actionMove">Move</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -193,69 +199,9 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 </c:otherwise>
 </c:choose>
 
-<script type="text/javascript">
-function sortSelect(selElem) {
-        var tmpAry = new Array();
-        for (var i=0;i<selElem.options.length;i++) {
-            tmpAry[i] = new Array();
-            tmpAry[i][0] = selElem.options[i].text;
-            tmpAry[i][1] = selElem.options[i].value;
-        }
-        tmpAry.sort();
-        while (selElem.options.length > 0) {
-            selElem.options[0] = null;
-        }
-        for (var i=0;i<tmpAry.length;i++) {
-            var op = new Option(tmpAry[i][0], tmpAry[i][1]);
-            selElem.options[i] = op;
-        }
-        return;
-}
-
-function selectOptionByText (selElem, selText) {
-    var iter = 0;
-    while ( iter < selElem.options.length ) {
-        if ( selElem.options[iter].text === selText ) {
-            selElem.selectedIndex = iter;
-            break;
-        }
-        iter++;
-    }
-}
-
-function confirmAction(id, action) {
-	//TODO i18n messages
-	var select = document.getElementById(id);
-	var selectedIndex = select.selectedIndex; 
-	if (select.selectedIndex == 0) {
-		alert("Please select a value");
-		return;
-	}
-	var value = select.options[selectedIndex].value;
-	var url = action + ".action?destination=" + encodeURIComponent(value);
-
-	var url = action +
-		"<c:url value=".action">
-                     <c:param name="JMSDestination" value="${requestContext.messageQuery.JMSDestination}" />
-                     <c:param name="messageId" value="${row.JMSMessageID}" />
-                     <c:param name="JMSDestinationType" value="queue" />
-                     <c:param name="secret" value='${sessionScope["secret"]}' />
-                 </c:url>";
-	url = url + "&destination=" + encodeURIComponent(value);
-
-	if (confirm("Are you sure?"))
-	  location.href=url;
-}
-
-window.onload=function() {
-	sortSelect( document.getElementById('queue') );
-	selectOptionByText( document.getElementById('queue'), "-- Please select --" );
-}
-</script>
-
+<script type='text/javascript' src='${pageContext.request.contextPath}/js/message.js'></script>
 
 <%@include file="decorators/footer.jsp" %>
-
 
 </body>
 </html>
