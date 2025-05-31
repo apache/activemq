@@ -40,6 +40,7 @@ public class ConsumerThread extends Thread {
     boolean running = false;
     CountDownLatch finished;
     boolean bytesAsText;
+    boolean shared;
 
     public ConsumerThread(Session session, Destination destination) {
         this.destination = destination;
@@ -54,7 +55,9 @@ public class ConsumerThread extends Thread {
         LOG.info(threadName + " wait until " + messageCount + " messages are consumed");
         try {
             if (durable && destination instanceof Topic) {
-                consumer = session.createDurableSubscriber((Topic) destination, getName());
+                String subscriptionName = shared ? "test-shared-subscription" : getName();
+                System.out.println("In consumer thread, the new name is: " + subscriptionName);
+                consumer = session.createDurableSubscriber((Topic) destination, subscriptionName);
             } else {
                 consumer = session.createConsumer(destination);
             }
@@ -184,5 +187,9 @@ public class ConsumerThread extends Thread {
 
     public void setBytesAsText(boolean bytesAsText) {
         this.bytesAsText = bytesAsText;
+    }
+
+    public void setShared(boolean shared) {
+        this.shared = shared;
     }
 }
