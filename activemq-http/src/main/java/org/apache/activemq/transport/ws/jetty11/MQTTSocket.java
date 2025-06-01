@@ -95,7 +95,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
     }
 
     @Override
-    public void onWebSocketClose(int arg0, String arg1) {
+    public void doWebSocketClose(int arg0, String arg1) {
         try {
             if (protocolLock.tryLock() || protocolLock.tryLock(ORDERLY_CLOSE_TIMEOUT, TimeUnit.SECONDS)) {
                 LOG.debug("MQTT WebSocket closed: code[{}] message[{}]", arg0, arg1);
@@ -120,14 +120,6 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
         this.session.setIdleTimeout(Duration.ZERO);
     }
 
-    @Override
-    public void onWebSocketError(Throwable arg0) {
-
-    }
-
-    @Override
-    public void onWebSocketText(String arg0) {
-    }
 
     private static int getDefaultSendTimeOut() {
         return Integer.getInteger("org.apache.activemq.transport.ws.MQTTSocket.sendTimeout", 30);

@@ -20,6 +20,7 @@ package org.apache.activemq.transport.ws;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.servlet.Servlet;
 
@@ -52,6 +53,11 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
 
     private BrokerService brokerService;
     private WSServlet servlet;
+
+    /**
+     * The maximum number of sockets allowed for this server
+     */
+    protected int maximumConnections = Integer.MAX_VALUE;
 
     public WSTransportServer(URI location) {
         super(location);
@@ -122,6 +128,7 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
         servlet = new WSServlet();
         servlet.setTransportOptions(transportOptions);
         servlet.setBrokerService(brokerService);
+        servlet.setMaximumConnections(maximumConnections);
 
         return servlet;
     }
@@ -176,12 +183,35 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
 
     @Override
     public long getMaxConnectionExceededCount() {
-        // Max Connection Count not supported for ws
-        return -1l;
+        if (servlet != null) {
+            return servlet.getMaxConnectionExceededCount();
+        }
+        return 0;
     }
 
     @Override
     public void resetStatistics() {
-        // Statistics not implemented for ws
+        if(servlet != null) {
+            servlet.resetStatistics();
+        }
     }
+
+    public int getMaximumConnections() {
+        return maximumConnections;
+    }
+
+    public void setMaximumConnections(int maximumConnections) {
+        this.maximumConnections = maximumConnections;
+        if (servlet != null) {
+            servlet.setMaximumConnections(maximumConnections);
+        }
+    }
+
+    public AtomicInteger getCurrentTransportCount() {
+        if (servlet != null) {
+            return servlet.getCurrentTransportCount();
+        }
+        return new AtomicInteger(0);
+    }
+
 }
