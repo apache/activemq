@@ -548,13 +548,18 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     private boolean redeliveryExceeded(MessageDispatch md) {
         try {
-            return session.getTransacted()
-                    && redeliveryPolicy != null
-                    && redeliveryPolicy.isPreDispatchCheck()
-                    && redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
-                    && md.getRedeliveryCounter() > redeliveryPolicy.getMaximumRedeliveries()
-                    // redeliveryCounter > x expected after resend via brokerRedeliveryPlugin
-                    && md.getMessage().getProperty("redeliveryDelay") == null;
+            if(!session.getTransacted() || redeliveryPolicy == null || !redeliveryPolicy.isPreDispatchCheck()) {
+                return false;
+            }
+
+            if(info.isBrowser() && redeliveryPolicy.isQueueBrowserIgnored()) {
+                return false;
+            }
+
+            return redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
+                   && md.getRedeliveryCounter() > redeliveryPolicy.getMaximumRedeliveries()
+                   // redeliveryCounter > x expected after resend via brokerRedeliveryPlugin
+                   && md.getMessage().getProperty("redeliveryDelay") == null;
         } catch (Exception ignored) {
             return false;
         }
