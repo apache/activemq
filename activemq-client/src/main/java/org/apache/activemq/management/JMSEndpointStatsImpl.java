@@ -112,17 +112,15 @@ public class JMSEndpointStatsImpl extends StatsImpl {
     }
 
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append(messageCount);
-        buffer.append(" ");
-        buffer.append(messageRateTime);
-        buffer.append(" ");
-        buffer.append(pendingMessageCount);
-        buffer.append(" ");
-        buffer.append(expiredMessageCount);
-        buffer.append(" ");
-        buffer.append(messageWaitTime);
-        return buffer.toString();
+        return messageCount +
+                " " +
+                messageRateTime +
+                " " +
+                pendingMessageCount +
+                " " +
+                expiredMessageCount +
+                " " +
+                messageWaitTime;
     }
 
     public void onMessage() {

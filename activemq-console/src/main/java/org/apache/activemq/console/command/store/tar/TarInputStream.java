@@ -263,7 +263,7 @@ public class TarInputStream extends FilterInputStream {
 
         if (currEntry != null && currEntry.isGNULongNameEntry()) {
             // read in the name
-            StringBuffer longName = new StringBuffer();
+            StringBuilder longName = new StringBuilder();
             byte[] buf = new byte[SMALL_BUFFER_SIZE];
             int length = 0;
             while ((length = read(buf)) >= 0) {

@@ -121,7 +121,7 @@ public final class XPathExpression implements BooleanExpression {
             }
         }
         if (features.size() > 0) {
-            StringBuffer featureString = new StringBuffer();
+            StringBuilder featureString = new StringBuilder();
             // just log the configured feature
             for (String feature : features) {
                 if (featureString.length() != 0) {
