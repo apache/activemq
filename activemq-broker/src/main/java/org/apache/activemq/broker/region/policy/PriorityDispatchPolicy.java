@@ -46,12 +46,6 @@ public class PriorityDispatchPolicy extends SimpleDispatchPolicy {
         ArrayList<Subscription> ordered = new ArrayList<Subscription>(consumers);
         Collections.sort(ordered, orderedCompare);
 
-        StringBuffer stringBuffer = new StringBuffer();
-        for (Subscription sub: ordered) {
-            stringBuffer.append(sub.getConsumerInfo().getPriority());
-            stringBuffer.append(',');
-        }
-        //System.err.println("Priority:" + stringBuffer.toString() + ", msg: " + node.getMessage());
         return super.dispatch(node, msgContext, ordered);
     }
 
