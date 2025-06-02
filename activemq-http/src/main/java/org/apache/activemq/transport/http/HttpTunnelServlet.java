@@ -104,11 +104,6 @@ public class HttpTunnelServlet extends HttpServlet {
 
             packet = (Command)transportChannel.getQueue().poll(requestTimeout, TimeUnit.MILLISECONDS);
 
-            // If the packet is ShutDownInfo then we are shutting down so return.
-            if (packet instanceof ShutdownInfo) {
-                return;
-            }
-
             DataOutputStream stream = new DataOutputStream(response.getOutputStream());
             wireFormat.marshal(packet, stream);
             count++;
