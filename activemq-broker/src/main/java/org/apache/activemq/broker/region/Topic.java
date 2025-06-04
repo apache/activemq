@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -694,6 +695,11 @@ public class Topic extends BaseDestination implements Task {
                     for (DurableTopicSubscription sub : durableSubscribers.values()) {
                         if (!sub.isActive() || sub.isEnableMessageExpirationOnActiveDurableSubs()) {
                             message.setRegionDestination(this);
+                            // AMQ-9721 - Remove message from the cursor if it exists after
+                            // loading from the store.  Store recoverExpired() does not inc
+                            // the ref count so we don't need to decrement here, but if
+                            // the cursor finds its own copy in memory it will dec that ref.
+                            sub.removePending(message);
                             messageExpired(connectionContext, sub, message);
                         }
                     }
@@ -874,6 +880,15 @@ public class Topic extends BaseDestination implements Task {
                         if (isEligibleForExpiration(sub)) {
                             expiredMessages.forEach(message -> {
                                 message.setRegionDestination(Topic.this);
+                                try {
+                                    // AMQ-9721 - Remove message from the cursor if it exists after
+                                    // loading from the store.  Store recoverExpired() does not inc
+                                    // the ref count so we don't need to decrement here, but if
+                                    // the cursor finds its own copy in memory it will dec that ref.
+                                    sub.removePending(message);
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
                                 messageExpired(connectionContext, sub, message);
                             });
                         }
@@ -912,9 +927,6 @@ public class Topic extends BaseDestination implements Task {
         ack.setDestination(destination);
         ack.setMessageID(reference.getMessageId());
         try {
-            if (subs instanceof DurableTopicSubscription) {
-                ((DurableTopicSubscription)subs).removePending(reference);
-            }
             acknowledge(context, subs, ack, reference);
         } catch (Exception e) {
             LOG.error("Failed to remove expired Message from the store ", e);
