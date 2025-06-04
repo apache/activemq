@@ -29,6 +29,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -94,5 +96,86 @@ public class KahaDBFilePendingMessageCursorTest extends FilePendingMessageCursor
         assertEquals("expected page usage", initialPageCount -1, pageFile.getPageCount() - pageFile.getFreePageCount() );
     }
 
+    // Test for AMQ-9726
+    @Test
+    public void testClearCursor() throws Exception {
+        brokerService = new BrokerService();
+        brokerService.setUseJmx(false);
+        SystemUsage usage = brokerService.getSystemUsage();
+        usage.getMemoryUsage().setLimit(1024*150);
+        Destination dest = new Queue(brokerService, new ActiveMQQueue("Q"), null, new DestinationStatistics(), null);
+        dest.setMemoryUsage(usage.getMemoryUsage());
+        brokerService.start();
+
+        underTest = new FilePendingMessageCursor(brokerService.getBroker(), "test", false);
+        underTest.setSystemUsage(usage);
+
+        // Add 10 messages to the cursor in memory
+        addTestMessages(dest);
+
+        // Verify memory usage was increased and cache is enabled
+        assertTrue(dest.getMemoryUsage().getUsage() > 0);
+        assertEquals(10, underTest.size());
+        assertTrue(underTest.isCacheEnabled());
+        assertEquals(0, dest.getTempUsage().getUsage());
+
+        // Clear, this will verify memory usage is correctly decremented
+        // and the memory map is cleared as well. Memory was previously
+        // incorrectly not being cleared.
+        underTest.clear();
+        assertEquals(0, underTest.size());
+        assertEquals(0, dest.getMemoryUsage().getUsage());
+
+        // Now test the disk cursor
+        // set the memory usage limit very small so messages will go to
+        // the disk list and not memory and send 10 more messages
+        usage.getMemoryUsage().setLimit(1);
+        addTestMessages(dest);
+
+        // confirm the cache is false and the memory is 0 because
+        // the messages exist on disk and not in the memory map
+        // also very temp usage is greater than 0 now
+        assertFalse(underTest.isCacheEnabled());
+        assertEquals(0, dest.getMemoryUsage().getUsage());
+        assertTrue(dest.getTempUsage().getUsage() > 0);
+        assertEquals(10, underTest.size());
+
+        // Test clearing the disk list shows a size of 0
+        underTest.clear();
+        assertEquals(0, underTest.size());
+
+        // Send 10 more messages to verify that we can send again
+        // to the disk list after clear. Previously clear did not
+        // correctly destroy/reset the disk cursor so an exception
+        // was thrown when adding messages again after calling clear()
+        addTestMessages(dest);
+        assertFalse(underTest.isCacheEnabled());
+        assertEquals(0, dest.getMemoryUsage().getUsage());
+        assertTrue(dest.getTempUsage().getUsage() > 0);
+        assertEquals(10, underTest.size());
+
+        // one final clear() and reset limit to make sure we can send to
+        // memory again
+        underTest.clear();
+        usage.getMemoryUsage().setLimit(1024*150);
+        assertEquals(0, underTest.size());
+        assertEquals(0, dest.getMemoryUsage().getUsage());
+
+        // Verify memory usage was increased and cache is enabled
+        addTestMessages(dest);
+        assertTrue(dest.getMemoryUsage().getUsage() > 0);
+        assertEquals(10, underTest.size());
+        assertTrue(underTest.isCacheEnabled());
+    }
+
+    private void addTestMessages(Destination dest) throws Exception {
+        for (int i = 0; i< 10; i++) {
+            ActiveMQMessage mqMessage = new ActiveMQMessage();
+            mqMessage.setMessageId(new MessageId("1:2:3:" + i));
+            mqMessage.setMemoryUsage(dest.getMemoryUsage());
+            mqMessage.setRegionDestination(dest);
+            underTest.addMessageLast(new IndirectMessageReference(mqMessage));
+        }
+    }
 
 }
