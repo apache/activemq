@@ -135,8 +135,7 @@ public class QualityOfServiceUtils {
             throw new IllegalArgumentException("Setting Differentiated Services"
                 + " not supported: " + e);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new IllegalArgumentException("Failed to close the socket: " + e);
         }
-        return -1;
     }
 }
