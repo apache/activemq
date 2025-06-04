@@ -36,7 +36,6 @@
       sun.management*;resolution:=optional,
       org.josql*;resolution:=optional,
       org.apache.velocity*;resolution:=optional,
-      org.apache.commons.daemon*;resolution:=optional,
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
@@ -135,10 +134,6 @@
     <dependency>
       <groupId>org.jasypt</groupId>
       <artifactId>jasypt</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-daemon</groupId>
-      <artifactId>commons-daemon</artifactId>
     </dependency>
   </dependencies>
 
