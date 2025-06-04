@@ -188,6 +188,9 @@ public class TopicSubscription extends AbstractSubscription {
                                 messagesToEvict = oldMessages.length;
                                 for (int i = 0; i < messagesToEvict; i++) {
                                     MessageReference oldMessage = oldMessages[i];
+                                    // AMQ-9721 - discard no longer removes from matched so remove here
+                                    oldMessage.decrementReferenceCount();
+                                    matched.remove(oldMessage);
                                     //Expired here is false as we are discarding due to the messageEvictingStrategy
                                     discard(oldMessage, false);
                                 }
@@ -751,8 +754,6 @@ public class TopicSubscription extends AbstractSubscription {
     private void discard(MessageReference message, boolean expired) {
         discarding = true;
         try {
-            message.decrementReferenceCount();
-            matched.remove(message);
             if (destination != null) {
                 destination.getDestinationStatistics().getDequeues().increment();
                 if(destination.isAdvancedNetworkStatisticsEnabled() && getContext() != null && getContext().isNetworkConnection()) {
