@@ -311,7 +311,7 @@ public final class IntrospectionSupport {
             }
 
         }
-        StringBuffer buffer = new StringBuffer(simpleName(target.getClass()));
+        StringBuilder buffer = new StringBuilder(simpleName(target.getClass()));
         buffer.append(" {");
         Set<Entry<String, Object>> entrySet = map.entrySet();
         boolean first = true;
@@ -332,7 +332,7 @@ public final class IntrospectionSupport {
         return buffer.toString();
     }
 
-    protected static void appendToString(StringBuffer buffer, Object key, Object value) {
+    private static void appendToString(StringBuilder buffer, Object key, Object value) {
         if (value instanceof ActiveMQDestination) {
             ActiveMQDestination destination = (ActiveMQDestination)value;
             buffer.append(destination.getQualifiedName());

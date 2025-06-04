@@ -378,7 +378,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     private String toString(byte[] data) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append('[');
         for (int i = 0; i < data.length; i++) {
             if (i != 0) {

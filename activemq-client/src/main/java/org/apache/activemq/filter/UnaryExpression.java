@@ -89,7 +89,7 @@ public abstract class UnaryExpression implements Expression {
             }
 
             public String toString() {
-                StringBuffer answer = new StringBuffer();
+                StringBuilder answer = new StringBuilder();
                 answer.append(right);
                 answer.append(" ");
                 answer.append(getExpressionSymbol());
