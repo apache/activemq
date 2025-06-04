@@ -32,9 +32,9 @@ public class QualityOfServiceUtilsTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        Socket socket = new Socket();
-        ECN = socket.getTrafficClass() & Integer.parseInt("00000011", 2);
-        socket.close();
+        try (Socket socket = new Socket()) {
+            ECN = socket.getTrafficClass() & Integer.parseInt("00000011", 2);
+        }
     }
 
     @Override
