@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.tcp;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.HashMap;
@@ -135,7 +136,7 @@ public class QualityOfServiceUtils {
             throw new IllegalArgumentException("Setting Differentiated Services"
                 + " not supported: " + e);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to close the socket: " + e);
+            throw new UncheckedIOException(e);
         }
     }
 }
