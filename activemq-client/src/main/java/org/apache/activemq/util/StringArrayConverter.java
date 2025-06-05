@@ -55,7 +55,7 @@ public class StringArrayConverter {
             return null;
         }
 
-        StringBuffer result = new StringBuffer(String.valueOf(value[0]));
+        StringBuilder result = new StringBuilder(String.valueOf(value[0]));
         for (int i = 1; i < value.length; i++) {
             result.append(",").append(value[i]);
         }

@@ -48,7 +48,7 @@ public class ActiveMQConnectionFactoryFactoryBean implements FactoryBean {
     }
 
     public String getBrokerURL() {
-        StringBuffer buffer = new StringBuffer("failover:(");
+        StringBuilder buffer = new StringBuilder("failover:(");
         int counter = 0;
         for (String tcpHostAndPort : tcpHostAndPorts) {
             if (counter++ > 0) {
@@ -138,7 +138,7 @@ public class ActiveMQConnectionFactoryFactoryBean implements FactoryBean {
             return "";
         }
         else {
-            StringBuffer buffer = new StringBuffer("?");
+            StringBuilder buffer = new StringBuilder("?");
             buffer.append(parameters.get(0));
             for (int i = 1; i < size; i++) {
                 buffer.append("&");

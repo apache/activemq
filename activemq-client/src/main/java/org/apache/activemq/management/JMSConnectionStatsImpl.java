@@ -74,7 +74,7 @@ public class JMSConnectionStatsImpl extends StatsImpl {
     }
 
     public String toString() {
-        StringBuffer buffer = new StringBuffer("connection{ ");
+        StringBuilder buffer = new StringBuilder("connection{ ");
         JMSSessionStatsImpl[] array = getSessions();
         for (int i = 0; i < array.length; i++) {
             if (i > 0) {
