@@ -139,7 +139,7 @@ public class JMSSessionStatsImpl extends StatsImpl {
     }
 
     public String toString() {
-        StringBuffer buffer = new StringBuffer(" ");
+        StringBuilder buffer = new StringBuilder(" ");
         buffer.append(messageCount);
         buffer.append(" ");
         buffer.append(messageRateTime);

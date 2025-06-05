@@ -46,13 +46,11 @@ public class JMSProducerStatsImpl extends JMSEndpointStatsImpl {
     }
 
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append("producer ");
-        buffer.append(destination);
-        buffer.append(" { ");
-        buffer.append(super.toString());
-        buffer.append(" }");
-        return buffer.toString();
+        return "producer " +
+                destination +
+                " { " +
+                super.toString() +
+                " }";
     }
 
     public void dump(IndentPrinter out) {

@@ -162,8 +162,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     @Override
     public synchronized void destroy() throws Exception {
         stop();
-        for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext();) {
-            MessageReference node = i.next();
+        for (MessageReference node : memoryList) {
             node.decrementReferenceCount();
         }
         memoryList.clear();
@@ -365,11 +364,19 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     @Override
     public synchronized void clear() {
+        // AMQ-9726 - Iterate over all nodes to decrement the ref count
+        // to decrement the memory usage tracker
+        for (MessageReference node : memoryList) {
+            node.decrementReferenceCount();
+        }
         memoryList.clear();
         if (!isDiskListEmpty()) {
             try {
-                getDiskList().destroy();
-            } catch (IOException e) {
+                // AMQ-9726 - This method will destroy the list and
+                // set the reference to null so it will be reset
+                // for future writes
+                destroyDiskList();
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }

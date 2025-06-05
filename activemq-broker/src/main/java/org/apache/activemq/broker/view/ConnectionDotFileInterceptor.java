@@ -262,11 +262,11 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     }
 
     /**
-     * Lets strip out any non supported characters
+     * Let's strip out any non-supported characters
      */
     protected String asID(String name) {
-        StringBuffer buffer = new StringBuffer();
-        int size = name.length();
+        final int size = name.length();
+        StringBuilder buffer = new StringBuilder(size);
         for (int i = 0; i < size; i++) {
             char ch = name.charAt(i);
             if (Character.isLetterOrDigit(ch) || ch == '_') {
