@@ -122,13 +122,13 @@ public final class XPathExpression implements BooleanExpression {
             }
         }
 
-        if (LOG.isDebugEnabled() && features.size() > 0) {
+        if (LOG.isTraceEnabled() && !features.isEmpty()) {
             StringJoiner featureString = new StringJoiner(", ");
             // just log the configured feature
             for (String feature : features) {
                 featureString.add(feature);
             }
-            LOG.debug("Configured features {}", featureString);
+            LOG.trace("Configured features {}", featureString);
         }
 
     }

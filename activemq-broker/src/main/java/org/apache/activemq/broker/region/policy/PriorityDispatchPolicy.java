@@ -53,12 +53,12 @@ public class PriorityDispatchPolicy extends SimpleDispatchPolicy {
         ArrayList<Subscription> ordered = new ArrayList<Subscription>(consumers);
         Collections.sort(ordered, orderedCompare);
 
-        if (LOG.isDebugEnabled() && ordered.size() > 0) {
+        if (LOG.isTraceEnabled() && !ordered.isEmpty()) {
             StringJoiner stringJoiner = new StringJoiner(",");
             for (Subscription sub : ordered) {
                 stringJoiner.add(String.valueOf(sub.getConsumerInfo().getPriority()));
             }
-            LOG.debug("Ordered priorities: {}", stringJoiner);
+            LOG.trace("Ordered priorities: {}", stringJoiner);
         }
         return super.dispatch(node, msgContext, ordered);
     }
