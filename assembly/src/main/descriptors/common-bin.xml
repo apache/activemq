@@ -207,7 +207,6 @@
         <include>org.apache.commons:commons-dbcp2</include>
         <include>org.apache.commons:commons-pool2</include>
         <include>commons-codec:commons-codec</include>
-        <include>org.apache.commons:commons-lang3</include>
         <include>org.apache.logging.log4j:log4j-slf4j2-impl</include>
         <include>org.apache.logging.log4j:log4j-api</include>
         <include>org.apache.logging.log4j:log4j-core</include>
@@ -226,7 +225,6 @@
         <include>com.thoughtworks.xstream:xstream</include>
         <include>xpp3:xpp3</include>
         <include>org.codehaus.jettison:jettison</include>
-        <include>org.apache.velocity:velocity-engine-core</include>
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
         <include>org.jasypt:jasypt-spring4</include>

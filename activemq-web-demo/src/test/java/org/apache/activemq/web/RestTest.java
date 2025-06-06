@@ -20,16 +20,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import jakarta.jms.TextMessage;
 import javax.management.ObjectName;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Result;
 import org.eclipse.jetty.client.util.BufferingResponseListener;
@@ -163,7 +164,9 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
 
         for (int i = 0; i < 200; i++) {
-            String correlId = "RESTY" + RandomStringUtils.randomNumeric(10);
+            String correlId = "RESTY" + new Random().ints(10l, 0, 10)
+                                            .mapToObj(String::valueOf)
+                                            .collect(Collectors.joining());
 
             TextMessage message = session.createTextMessage(correlId);
             message.setStringProperty("correlationId", correlId);

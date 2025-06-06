@@ -50,7 +50,6 @@
     <commons-collections-version>3.2.2</commons-collections-version>
     <commons-dbcp2-version>2.13.0</commons-dbcp2-version>
     <commons-io-version>2.19.0</commons-io-version>
-    <commons-lang-version>3.14.0</commons-lang-version>
     <commons-logging-version>1.3.5</commons-logging-version>
     <commons-pool2-version>2.12.1</commons-pool2-version>
     <commons-primitives-version>1.0</commons-primitives-version>
@@ -96,7 +95,6 @@
     <spring-version>6.2.7</spring-version>
     <spring-version-range>[6,7)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
-    <velocity-version>2.4.1</velocity-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.21</xstream-version>
     <xbean-version>4.27</xbean-version>
@@ -954,11 +952,6 @@
         <classifier>jakarta</classifier>
       </dependency>
 
-      <dependency>
-        <groupId>org.apache.velocity</groupId>
-        <artifactId>velocity-engine-core</artifactId>
-        <version>${velocity-version}</version>
-      </dependency>
       <dependency>
         <groupId>org.apache.servicemix.bundles</groupId>
         <artifactId>org.apache.servicemix.bundles.josql</artifactId>
