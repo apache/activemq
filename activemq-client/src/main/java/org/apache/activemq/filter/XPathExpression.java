@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.StringJoiner;
 
 import jakarta.jms.JMSException;
 import javax.xml.XMLConstants;
@@ -120,15 +121,14 @@ public final class XPathExpression implements BooleanExpression {
                 }
             }
         }
-        if (features.size() > 0) {
-            StringBuilder featureString = new StringBuilder();
+
+        if (LOG.isDebugEnabled() && features.size() > 0) {
+            StringJoiner featureString = new StringJoiner(", ");
             // just log the configured feature
             for (String feature : features) {
-                if (featureString.length() != 0) {
-                    featureString.append(", ");
-                }
-                featureString.append(feature);
+                featureString.add(feature);
             }
+            LOG.debug("Configured features {}", featureString);
         }
 
     }
