@@ -121,8 +121,9 @@ public final class XPathExpression implements BooleanExpression {
                 }
             }
         }
-        StringJoiner featureString = new StringJoiner(", ");
+
         if (LOG.isDebugEnabled() && features.size() > 0) {
+            StringJoiner featureString = new StringJoiner(", ");
             // just log the configured feature
             for (String feature : features) {
                 featureString.add(feature);
