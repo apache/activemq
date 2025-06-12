@@ -96,7 +96,13 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
 
-        server.start();
+        ClassLoader original = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(WSTransportServer.class.getClassLoader());
+        try {
+            server.start();
+        } finally {
+            Thread.currentThread().setContextClassLoader(original);
+        }
 
         // Update the Connect To URI with our actual location in case the configured port
         // was set to zero so that we report the actual port we are listening on.
