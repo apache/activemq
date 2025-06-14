@@ -43,6 +43,7 @@ public class ConsumerCommand extends AbstractCommand {
     int ackMode = Session.AUTO_ACKNOWLEDGE;
     int parallelThreads = 1;
     boolean bytesAsText;
+    boolean shared;
 
     @Override
     protected void runTask(List<String> tokens) throws Exception {
@@ -54,11 +55,13 @@ public class ConsumerCommand extends AbstractCommand {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
         Connection conn = null;
         try {
+            System.out.println("[SUB_PATH] Connecting to " + brokerUrl);
             conn = factory.createConnection(user, password);
             if (durable && clientId != null && clientId.length() > 0 && !"null".equals(clientId)) {
                 conn.setClientID(clientId);
             }
             conn.start();
+            System.out.println("[SUB_PATH] Connected");
 
 
             CountDownLatch active = new CountDownLatch(parallelThreads);
@@ -79,6 +82,7 @@ public class ConsumerCommand extends AbstractCommand {
                 consumer.setBatchSize(batchSize);
                 consumer.setFinished(active);
                 consumer.setBytesAsText(bytesAsText);
+                consumer.setShared(shared);
                 consumer.start();
             }
 
@@ -215,5 +219,13 @@ public class ConsumerCommand extends AbstractCommand {
     @Override
     public String getOneLineDescription() {
         return "Receives messages from the broker";
+    }
+
+    public void setShared(boolean shared) {
+        this.shared = shared;
+    }
+
+    public boolean isShared() {
+        return shared;
     }
 }
