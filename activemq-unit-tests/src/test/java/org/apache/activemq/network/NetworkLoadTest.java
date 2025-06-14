@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * 
  * If the network bridges gets stuck at any point subsequent queues will not get messages.  This test 
  * samples the production and consumption stats every second and if the flow of messages
- * get stuck then this tast fails.  The test monitors the flow of messages for 1 min.
+ * get stuck then this test fails.  The test monitors the flow of messages for 1 min.
  *  
  * @author chirino
  */
@@ -126,7 +126,7 @@ public class NetworkLoadTest extends TestCase {
 	        groupId = "network-load-test-"+System.currentTimeMillis();
 		brokers = new BrokerService[BROKER_COUNT];
 		for (int i = 0; i < brokers.length; i++) {
-		    LOG.info("Starting broker: "+i);
+            LOG.info("Starting broker: {}", i);
 			brokers[i] = createBroker(i);
 			brokers[i].start();
 		}
@@ -137,7 +137,7 @@ public class NetworkLoadTest extends TestCase {
 		
 		forwardingClients = new ForwardingClient[BROKER_COUNT-1];		
 		for (int i = 0; i < forwardingClients.length; i++) {
-		    LOG.info("Starting fowarding client "+i);
+            LOG.info("Starting forwarding client {}", i);
 			forwardingClients[i] = new ForwardingClient(i, i+1);
 			forwardingClients[i].start();
 		}
@@ -145,11 +145,11 @@ public class NetworkLoadTest extends TestCase {
 
 	protected void tearDown() throws Exception {
 		for (int i = 0; i < forwardingClients.length; i++) {
-		    LOG.info("Stoping fowarding client "+i);
+            LOG.info("Stoping forwarding client {}", i);
 			forwardingClients[i].close();
 		}
 		for (int i = 0; i < brokers.length; i++) {
-		    LOG.info("Stoping broker "+i);
+            LOG.info("Stoping broker {}", i);
 			brokers[i].stop();
 		}
 	}
@@ -232,7 +232,7 @@ public class NetworkLoadTest extends TestCase {
 		final AtomicLong receivedMessages = new AtomicLong();
 		final AtomicBoolean done = new AtomicBoolean();
 
-		// Setup the consumer..
+		// Set up the consumer...
 		consumer.setMessageListener(new MessageListener() {
 			public void onMessage(Message msg) {
 				ActiveMQTextMessage m = (ActiveMQTextMessage) msg;
@@ -271,8 +271,8 @@ public class NetworkLoadTest extends TestCase {
 			}
 			
 		    private String createMessageText(int index) {
-				StringBuffer buffer = new StringBuffer(MESSAGE_SIZE);
-				buffer.append(index + " on " + new Date() + " ...");
+				StringBuilder buffer = new StringBuilder(MESSAGE_SIZE);
+				buffer.append(index).append(" on ").append(new Date()).append(" ...");
 				if (buffer.length() > MESSAGE_SIZE) {
 					return buffer.substring(0, MESSAGE_SIZE);
 				}
@@ -287,7 +287,7 @@ public class NetworkLoadTest extends TestCase {
 	
 		
 		// Give the forwarding clients a chance to get going and fill the down
-		// stream broker queues..
+		// stream broker queues...
 		Thread.sleep(BROKER_COUNT*200);
 		
         for (int i = 0; i < SAMPLES; i++) {
@@ -305,9 +305,9 @@ public class NetworkLoadTest extends TestCase {
             long r = receivedMessages.get();
             long p = producedMessages.get();
 
-            LOG.info("published: " + p + " msgs at " + (p * 1000f / (end - start)) + " msgs/sec, " + "consumed: " + r + " msgs at " + (r * 1000f / (end - start)) + " msgs/sec");
+            LOG.info("published: {} msgs at {} msgs/sec, consumed: {} msgs at {} msgs/sec", p, p * 1000f / (end - start), r, r * 1000f / (end - start));
             
-            StringBuffer fwdingmsg = new StringBuffer(500);
+            StringBuilder fwdingmsg = new StringBuilder(forwardingClients.length * 16);
             fwdingmsg.append("  forwarding counters: ");
             for (int j = 0; j < forwardingClients.length; j++) {
             	if( j!= 0 ) {
@@ -317,9 +317,9 @@ public class NetworkLoadTest extends TestCase {
     		}
             LOG.info(fwdingmsg.toString());
 
-            // The test is just checking to make sure thaat the producer and consumer does not hang
+            // The test is just checking to make sure that the producer and consumer does not hang
             // due to the network hops take to route the message form the producer to the consumer.
-            assertTrue("Recieved some messages since last sample", r>0);
+            assertTrue("Received some messages since last sample", r>0);
             assertTrue("Produced some messages since last sample", p>0);
             
         }
@@ -331,6 +331,5 @@ public class NetworkLoadTest extends TestCase {
         fromConnection.close();
         
 	}
-
 
 }
