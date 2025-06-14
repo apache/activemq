@@ -102,8 +102,9 @@ public class StoreBasedCursorTest extends TestCase {
     }
     
     protected String createMessageText(int index) {
-        StringBuffer buffer = new StringBuffer(messageSize);
-        buffer.append("Message: " + index + " sent at: " + new Date());
+        StringBuilder buffer = new StringBuilder(messageSize);
+        buffer.append("Message: ").append(index)
+                .append(" sent at: ").append(new Date());
         if (buffer.length() > messageSize) {
             return buffer.substring(0, messageSize);
         }

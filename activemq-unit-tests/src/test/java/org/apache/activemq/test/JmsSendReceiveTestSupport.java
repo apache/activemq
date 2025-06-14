@@ -77,7 +77,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
             }
         }
 
-        LOG.info("Message count for test case is: " + messageCount);
+        LOG.info("Message count for test case is: {}", messageCount);
         data = new String[messageCount];
         for (int i = 0; i < messageCount; i++) {
             data[i] = createMessageText(i);
@@ -93,11 +93,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
     }
 
     protected String createMessageBodyText() {
-        StringBuffer buffer = new StringBuffer();
-        for (int i = 0; i < largeMessageLoopSize; i++) {
-            buffer.append("0123456789");
-        }
-        return buffer.toString();
+        return "0123456789".repeat(Math.max(0, largeMessageLoopSize));
     }
 
     /**
@@ -111,7 +107,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
         sendMessages();
 
         assertMessagesAreReceived();
-        LOG.info("" + data.length + " messages(s) received, closing down connections");
+        LOG.info("{} messages(s) received, closing down connections", data.length);
     }
 
     protected void sendMessages() throws Exception {
@@ -119,7 +115,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
             Message message = createMessage(i);
             configureMessage(message);
             if (verbose) {
-                LOG.info("About to send a message: " + message + " with text: " + data[i]);
+                LOG.info("About to send a message: {} with text: {}", message, data[i]);
             }
             sendMessage(i, message);
         }
@@ -130,8 +126,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
     }
 
     protected Message createMessage(int index) throws JMSException {
-        Message message = session.createTextMessage(data[index]);
-        return message;
+        return session.createTextMessage(data[index]);
     }
 
     /**
@@ -166,7 +161,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
         if (data.length != copyOfMessages.size()) {
             for (Iterator<Object> iter = copyOfMessages.iterator(); iter.hasNext();) {
                 Object message = iter.next();
-                LOG.info("<== " + counter++ + " = " + message);
+                LOG.info("<== {} = {}", counter++, message);
             }
         }
 
@@ -191,7 +186,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
         String text = textMessage.getText();
 
         if (verbose) {
-            LOG.info("Received Text: " + text);
+            LOG.info("Received Text: {}", text);
         }
 
         assertEquals("Message: " + index, data[index], text);
@@ -238,7 +233,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
      */
     protected void consumeMessage(Message message, List<Message> messageList) {
         if (verbose) {
-            LOG.info("Received message: " + message);
+            LOG.info("Received message: {}", message);
         }
 
         messageList.add(message);

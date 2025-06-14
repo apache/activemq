@@ -132,12 +132,12 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
             e.printStackTrace();
         }
 
-        if (propsNotSet.size() > 0) {
-            StringBuffer b = new StringBuffer();
+        if (!propsNotSet.isEmpty()) {
+            StringBuilder b = new StringBuilder();
             b.append("Invalid settings:");
-            for (Iterator<String> iter = errorMessages.iterator(); iter.hasNext();) {
+            for (String errorMessage : errorMessages) {
                 b.append(" ");
-                b.append(iter.next());
+                b.append(errorMessage);
             }
             InvalidPropertyException e = new InvalidPropertyException(b.toString());
             final PropertyDescriptor[] descriptors = propsNotSet.toArray(new PropertyDescriptor[propsNotSet.size()]);
