@@ -53,15 +53,15 @@ public class AMQ4504Test {
 
         final int numDests = 20;
         final int numMessages = 200;
-        StringBuffer stringBuffer = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i=0; i<numDests; i++) {
-            if (stringBuffer.length() != 0) {
-                stringBuffer.append(',');
+            if (!sb.isEmpty()) {
+                sb.append(',');
             }
-            stringBuffer.append("ST." + i);
+            sb.append("ST.").append(i);
         }
-        stringBuffer.append("?consumer.prefetchSize=100");
-        ActiveMQQueue activeMQQueue = new ActiveMQQueue(stringBuffer.toString());
+        sb.append("?consumer.prefetchSize=100");
+        ActiveMQQueue activeMQQueue = new ActiveMQQueue(sb.toString());
         ConnectionFactory factory = new ActiveMQConnectionFactory(brokerService.getVmConnectorURI());
         Connection connection = factory.createConnection();
         connection.start();
@@ -73,7 +73,7 @@ public class AMQ4504Test {
         MessageConsumer consumer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(activeMQQueue);
         try {
             for (int i=0; i< numMessages * numDests; i++) {
-                assertNotNull("recieved:"  + i, consumer.receive(4000));
+                assertNotNull("received:"  + i, consumer.receive(4000));
             }
         } finally {
             connection.close();
