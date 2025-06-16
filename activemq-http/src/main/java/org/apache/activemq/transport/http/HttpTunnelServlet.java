@@ -40,6 +40,7 @@ import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceListener;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,44 +123,53 @@ public class HttpTunnelServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-        if (wireFormatOptions.get("maxFrameSize") != null && request.getContentLength() > Integer.parseInt(wireFormatOptions.get("maxFrameSize").toString())) {
-            response.setStatus(405);
-            response.setContentType("plain/text");
-            PrintWriter writer = response.getWriter();
-            writer.println("maxFrameSize exceeded");
-            writer.flush();
-            writer.close();
-            return;
-        }
-
-        InputStream stream = request.getInputStream();
-        String contentType = request.getContentType();
-        if (contentType != null && contentType.equals("application/x-gzip")) {
-            stream = new GZIPInputStream(stream);
-        }
-
-        // Read the command directly from the reader, assuming UTF8 encoding
-        Command command = (Command) wireFormat.unmarshalText(new InputStreamReader(stream, "UTF-8"));
-
-        if (command instanceof WireFormatInfo) {
-            WireFormatInfo info = (WireFormatInfo) command;
-            if (!canProcessWireFormatVersion(info.getVersion())) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Cannot process wire format of version: "
-                        + info.getVersion());
-            }
-
-        } else {
-
-            BlockingQueueTransport transport = getTransportChannel(request, response);
-            if (transport == null) {
+        try {
+            if (wireFormatOptions.get("maxFrameSize") != null && request.getContentLength() > Integer.parseInt(wireFormatOptions.get("maxFrameSize").toString())) {
+                response.setStatus(405);
+                response.setContentType("plain/text");
+                PrintWriter writer = response.getWriter();
+                writer.println("maxFrameSize exceeded");
+                writer.flush();
+                writer.close();
                 return;
             }
 
-            if (command instanceof ConnectionInfo) {
-                ((ConnectionInfo) command).setTransportContext(request.getAttribute("jakarta.servlet.request.X509Certificate"));
+            InputStream stream = request.getInputStream();
+            String contentType = request.getContentType();
+            if (contentType != null && contentType.equals("application/x-gzip")) {
+                stream = new GZIPInputStream(stream);
             }
-            transport.doConsume(command);
+
+            // Read the command directly from the reader, assuming UTF8 encoding
+            Command command = (Command) wireFormat.unmarshalText(new InputStreamReader(stream, "UTF-8"));
+
+            if (command instanceof WireFormatInfo) {
+                WireFormatInfo info = (WireFormatInfo) command;
+                if (!canProcessWireFormatVersion(info.getVersion())) {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Cannot process wire format of version: "
+                            + info.getVersion());
+                }
+
+            } else {
+
+                BlockingQueueTransport transport = getTransportChannel(request, response);
+                if (transport == null) {
+                    return;
+                }
+
+                if (command instanceof ConnectionInfo) {
+                    ((ConnectionInfo) command).setTransportContext(request.getAttribute("jakarta.servlet.request.X509Certificate"));
+                }
+                transport.doConsume(command);
+            }
+        } catch (Exception e) {
+            // no stack trace
+            if (wireFormatOptions.get("sendStackTrace") != null && Boolean.parseBoolean(wireFormatOptions.get("sendStackTrace").toString()) == false) {
+                LOG.warn(e.getMessage(), e);
+                response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+            } else {
+                throw e;
+            }
         }
     }
 
