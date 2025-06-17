@@ -1375,11 +1375,9 @@
             <link>${javaee-javadoc-url}</link>
             <link>https://commons.apache.org/proper/commons-collections/javadocs/api-${commons-collections-version}/</link>
             <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
-            <link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
             <link>https://javadoc.io/doc/org.apache.httpcomponents/httpclient/${httpclient-version}/</link>
             <link>http://jakarta.apache.org/commons/pool/apidocs/</link>
             <link>https://junit.org/junit4/javadoc/latest/</link>
-            <link>https://logging.apache.org/log4j/2.x/javadoc/log4j-api/</link>
           </links>
           <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
           <maxmemory>2048m</maxmemory>
