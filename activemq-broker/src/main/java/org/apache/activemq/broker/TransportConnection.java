@@ -192,6 +192,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             @Override
             public void onCommand(Object o) {
                 serviceLock.readLock().lock();
+                System.out.println("[PUB_PATH] onCommand " + o.getClass().getName());
                 try {
                     if (!(o instanceof Command)) {
                         throw new RuntimeException("Protocol violation - Command corrupted: " + o.toString());
@@ -332,6 +333,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         Response response = null;
         boolean responseRequired = command.isResponseRequired();
         int commandId = command.getCommandId();
+        System.out.println("[PUB_PATH] got commandId: " + commandId);
         try {
             if (status.get() != PENDING_STOP) {
                 response = command.visit(this);
@@ -576,6 +578,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public Response processMessage(Message messageSend) throws Exception {
+        // [PUB_PATH]
+        System.out.println("[PUB_PATH] in processMessage");
+        System.out.println(messageSend.toString());
         ProducerId producerId = messageSend.getProducerId();
         ProducerBrokerExchange producerExchange = getProducerBrokerExchange(producerId);
         if (producerExchange.canDispatch(messageSend)) {
@@ -628,6 +633,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public Response processAddProducer(ProducerInfo info) throws Exception {
+        System.out.println("[PUB_PATH] in processAddProducer]");
         SessionId sessionId = info.getProducerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
@@ -683,6 +689,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public Response processAddConsumer(ConsumerInfo info) throws Exception {
+        System.out.println("[SUB_PATH] in processAddConsumer]");
         SessionId sessionId = info.getConsumerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
