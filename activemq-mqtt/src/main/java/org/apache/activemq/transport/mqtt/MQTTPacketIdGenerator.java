@@ -19,6 +19,7 @@ package org.apache.activemq.transport.mqtt;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.jms.JMSException;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -67,7 +68,7 @@ public class MQTTPacketIdGenerator extends ServiceSupport {
         return clientIdMap.remove(clientId) != null;
     }
 
-    public short setPacketId(String clientId, MQTTSubscription subscription, ActiveMQMessage message, PUBLISH publish) {
+    public short setPacketId(String clientId, MQTTSubscription subscription, ActiveMQMessage message, PUBLISH publish) throws JMSException {
         final PacketIdMaps idMaps = clientIdMap.get(clientId);
         if (idMaps == null) {
             // maybe its a cleansession=true client id, use session less message id
@@ -125,7 +126,7 @@ public class MQTTPacketIdGenerator extends ServiceSupport {
         final Map<String, Short> activemqToPacketIds = new LRUCache<String, Short>(MQTTProtocolConverter.DEFAULT_CACHE_SIZE);
         final Map<Short, String> packetIdsToActivemq = new LRUCache<Short, String>(MQTTProtocolConverter.DEFAULT_CACHE_SIZE);
 
-        short setPacketId(MQTTSubscription subscription, ActiveMQMessage message, PUBLISH publish) {
+        short setPacketId(MQTTSubscription subscription, ActiveMQMessage message, PUBLISH publish) throws JMSException {
             // subscription key
             final StringBuilder subscriptionKey = new StringBuilder();
             subscriptionKey.append(subscription.getConsumerInfo().getDestination().getPhysicalName())
