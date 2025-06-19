@@ -179,8 +179,26 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("Topics (broadcasted 'queues'); generally system information.")
     ObjectName[] getTopics();
 
+    @MBeanInfo("Total number of topics")
+    int getTotalTopicsCount();
+
+    @MBeanInfo("Total number of non suppressed topics")
+    int getTotalNonSuppressedTopicsCount();
+
+    @MBeanInfo("Total number of temporary topics")
+    int getTotalTemporaryTopicsCount();
+
     @MBeanInfo("Standard Queues containing AIE messages.")
     ObjectName[] getQueues();
+
+    @MBeanInfo("Total number of queues")
+    int getTotalQueuesCount();
+
+    @MBeanInfo("Total number of non suppressed queues")
+    int getTotalNonSuppressedQueuesCount();
+
+    @MBeanInfo("Total number of temporary queues")
+    int getTotalTemporaryQueuesCount();
 
     /**
      * Queue Query API, take a look at {@link DestinationsViewFilter} for more information
