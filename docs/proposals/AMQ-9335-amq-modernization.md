@@ -75,24 +75,51 @@ Organizing the activemq modules will allow for reducing dependency leakage to cl
 
 *Common*
 activemq-boot: Light-weight boot service for starting brokers, or running cmoplex client-side scenarios (performance testing, etc)
-activemq-io: Buffer, Stream and common data handling classes used by clients and servers
+activemq-io: Buffer, Stream and common data handling classes used by clients and servers (aka self-host modern versions of hawt* classes)
 
 *Broker*
 activemq-broker-model: Data model classes, and utility classes for managing data model classes.
 activemq-broker-api: API, SPI and JMX MXBean interface definitions. Depends on activemq-broker-model, but provides no implementations
 activemq-broker-service: BrokerService classes and default implementations
-activemq-broker-amqp: AMQP-based server-side transport (may depend on activemq-client-amqp)
+activemq-broker-amqp: AMQP-based server-side transport 
 activemq-broker-http: HTTP-based server-side transport (may depend on activemq-client-jms)
 activemq-broker-jms: JMS-based server-side transport (may depend on activemq-client-jms)
 activemq-broker-mqtt: MQTT-based server-side transport (may depend on activemq-client-mqtt)
+activemq-broker-spring: Spring related classes for broker-side (map depend on activemq-client-spring)
 
 *Client*
-activemq-client-amqp: AMQP-based client support
 activemq-client-http: HTTP-based client support
 activemq-client-jms: JMS-based client support
+activemq-client-spring: Client-side Spring classes (ie ConnectionFactoryBean, PooledConnectionFactoryBean, etc)
 
 *Storage*
 activemq-store-kahadb: Pluggable storage backend KahaDB
 activemq-store-jdbc: Pluggable storage backend JDBC
 
+#### Phase 4 - Unit test modernization
 
+1. Provide improved junit5-extension that leverages activemq-boot to provide a fast (and spring-free) unit test harness to load complex configurations.
+
+2. Moderniaze the activemq-unit-tests Maven module
+
+!!NEEDS FEEDBACK!!
+
+The activemq-unit-tests module is massive and difficult to maintain.
+
+In an effort to help manage test transitive dependencies over time, unit tests will be organized by a folder and domain. This will provide better visibility to test dependency ownership.
+
+Problem: Many dependencies are needed at runtime and/or are defined externally or loaded outside of a Java language 'import' statement. Spring, SPI, etc.
+
+Example:
+
+tests/http 
+tests/amqp
+tests/spring
+tests/mqtt
+tests/jdbc/derby
+tests/jdbc/h2
+tests/jdbc/hsql
+tests/jdbc/mysql (using a test container?)
+tests/jdbc/postgresql (using a test container?)
+
+Additionally, this would open the door to leveraging maven profiles for grouping unit tests.
