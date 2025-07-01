@@ -263,7 +263,7 @@
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-xbean</id>
+            <id>copy-activemq-spring-resources</id>
             <phase>validate</phase>
             <goals>
               <goal>copy-resources</goal>
@@ -275,6 +275,7 @@
                   <directory>${basedir}/../activemq-spring/target/classes/</directory>
                   <includes>
                     <include>activemq.xsd*</include>
+                    <include>META-INF/spring.schemas</include>
                   </includes>
                 </resource>
               </resources>
