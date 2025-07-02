@@ -110,11 +110,17 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         assertTrue("broker alive", brokerService.isStarted());
         assertEquals("correct network connectors", 2, brokerService.getNetworkConnectors().size());
 
-        NetworkConnector two = brokerService.getNetworkConnectors().get(1);
+        NetworkConnector two = null;
+        for (NetworkConnector nc : brokerService.getNetworkConnectors()) {
+            if ("two".equals(nc.getName())) {
+                two = nc;
+                break;
+            }
+        }
 
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc", SLEEP);
 
-        assertTrue("expected mod on time", Wait.waitFor(new Wait.Condition() {
+        assertTrue("expected mod on time, but found " + brokerService.getNetworkConnectors().size() + " connectors", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return 1 == brokerService.getNetworkConnectors().size();

@@ -27,8 +27,8 @@
     </plugins>
 
     <networkConnectors>
-      <networkConnector uri="static:(tcp://localhost:5555)" networkTTL="1" name="one"/>
       <networkConnector uri="static:(tcp://localhost:5555)" networkTTL="1" name="two"/>
+      <networkConnector uri="static:(tcp://localhost:5555)" networkTTL="1" name="one"/>
     </networkConnectors>
   </broker>
 </beans>
