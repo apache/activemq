@@ -247,6 +247,12 @@
       <artifactId>spring-webmvc</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons-lang-version}</version>
+    </dependency>
+
     <!-- web container -->
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
