@@ -217,21 +217,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>commons-primitives</groupId>
-      <artifactId>commons-primitives</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>axion</groupId>
-      <artifactId>axion</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>jakarta-regexp</groupId>
-      <artifactId>jakarta-regexp</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-dbcp2</artifactId>
       <optional>true</optional>

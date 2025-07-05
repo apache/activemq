@@ -74,10 +74,6 @@
           <artifactId>geronimo-j2ee</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>axion</groupId>
-          <artifactId>axion</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>${project.groupId}</groupId>
           <artifactId>activemq-jaas</artifactId>
         </exclusion>
@@ -110,10 +106,6 @@
           <artifactId>junit</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>jakarta-regexp</groupId>
-          <artifactId>jakarta-regexp</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>org.jmdns</groupId>
           <artifactId>jmdns</artifactId>
         </exclusion>
@@ -144,10 +136,6 @@
         <exclusion>
           <groupId>commons-collections</groupId>
           <artifactId>commons-collections</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-primitives</groupId>
-          <artifactId>commons-primitives</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.commons</groupId>
@@ -196,10 +184,6 @@
           <artifactId>geronimo-j2ee</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>axion</groupId>
-          <artifactId>axion</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>${project.groupId}</groupId>
           <artifactId>activemq-jaas</artifactId>
         </exclusion>
@@ -240,10 +224,6 @@
           <artifactId>junit</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>regexp</groupId>
-          <artifactId>regexp</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>javax.jmdns</groupId>
           <artifactId>jmdns</artifactId>
         </exclusion>
@@ -274,10 +254,6 @@
         <exclusion>
           <groupId>commons-collections</groupId>
           <artifactId>commons-collections</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-primitives</groupId>
-          <artifactId>commons-primitives</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.commons</groupId>
