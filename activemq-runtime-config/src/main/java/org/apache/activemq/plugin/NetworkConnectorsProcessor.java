@@ -18,6 +18,7 @@ package org.apache.activemq.plugin;
 
 import org.apache.activemq.schema.core.DtoNetworkConnector;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class NetworkConnectorsProcessor extends DefaultConfigurationProcessor {
@@ -36,28 +37,28 @@ public class NetworkConnectorsProcessor extends DefaultConfigurationProcessor {
 
     @Override
     protected void applyModifications(List<Object> current, List<Object> modification) {
-        outer:
-        for (Object modObj : modification) {
-            ConfigurationProcessor processor = findProcessor(modObj);
-            for (Object currentObj : current) {
-                if (modObj.equals(currentObj)) {
-                    // If the object is already in the current list, we can skip it
-                    plugin.debug("Skipping unchanged network connector: " + modObj);
-                    continue outer; // Skip to the next modObj
+        // Remove items not in modification
+        for (Object currentObj : new ArrayList<>(current)) {
+            if (!modification.contains(currentObj)) {
+                ConfigurationProcessor processor = findProcessor(currentObj);
+                if (processor != null) {
+                    processor.remove(currentObj);
                 } else {
-                    // if the modObj doesn't match, remove it
-                    if (processor != null) {
-                        processor.remove(currentObj);
-                    } else {
-                        remove(currentObj);
-                    }
+                    remove(currentObj);
                 }
             }
-            // If we reach here, it means the modObj is not in the current list
-            if (processor != null) {
-                processor.addNew(modObj);
+        }
+        // Add new items from modification
+        for (Object modObj : modification) {
+            if (!current.contains(modObj)) {
+                ConfigurationProcessor processor = findProcessor(modObj);
+                if (processor != null) {
+                    processor.addNew(modObj);
+                } else {
+                    addNew(modObj);
+                }
             } else {
-                addNew(modObj);
+                plugin.debug("Skipping unchanged network connector: " + modObj);
             }
         }
     }
