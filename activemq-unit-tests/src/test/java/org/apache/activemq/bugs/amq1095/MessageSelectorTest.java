@@ -153,7 +153,7 @@ public class MessageSelectorTest extends ActiveMQTestCase {
             msg1 = (TextMessage) consumer1.receive(RECEIVE_TIMEOUT);
             if (msg1 != null)
             {
-                final StringBuffer msg = new StringBuffer("The consumer read a message that was left over from a former ActiveMQ broker run.");
+                final StringBuilder msg = new StringBuilder("The consumer read a message that was left over from a former ActiveMQ broker run.");
                 propertyValue = msg1.getIntProperty(PROPERTY_CONSUMER);
                 contents = msg1.getText();
                 if (propertyValue != 1) // Is the property value as expected?
@@ -167,7 +167,7 @@ public class MessageSelectorTest extends ActiveMQTestCase {
             msg2 = (TextMessage) consumer2.receive(RECEIVE_TIMEOUT);
             if (msg2 != null)
             {
-                final StringBuffer msg = new StringBuffer("The consumer read a message that was left over from a former ActiveMQ broker run.");
+                final StringBuilder msg = new StringBuilder("The consumer read a message that was left over from a former ActiveMQ broker run.");
                 propertyValue = msg2.getIntProperty(PROPERTY_CONSUMER);
                 contents = msg2.getText();
                 if (propertyValue != 2) // Is the property value as expected?

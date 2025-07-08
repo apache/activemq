@@ -140,12 +140,7 @@ public class ReduceMemoryFootprintTest {
     }
 
     private String createMessageText() {
-        StringBuffer buffer = new StringBuffer();
-        for (int i = 0; i < 50; i++) {
-            buffer.append("1234567890");
-        }
-
-        return buffer.toString();
+        return "1234567890".repeat(50);
     }
 
     private Message consumeMessages(Connection connection) {
