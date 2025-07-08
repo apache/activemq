@@ -143,7 +143,7 @@ public class Main {
             depth = printClassLoaderTree(cl.getParent()) + 1;
         }
 
-        StringBuffer indent = new StringBuffer();
+        StringBuilder indent = new StringBuilder(depth * 2);
         for (int i = 0; i < depth; i++) {
             indent.append("  ");
         }
@@ -270,7 +270,7 @@ public class Main {
     }
 
     public void addClassPathList(String fileList) {
-        if (fileList != null && fileList.length() > 0) {
+        if (fileList != null && !fileList.isEmpty()) {
             StringTokenizer tokenizer = new StringTokenizer(fileList, File.pathSeparator);
             while (tokenizer.hasMoreTokens()) {
                 addClassPath(new File(tokenizer.nextToken()));
@@ -335,7 +335,7 @@ public class Main {
                     }
                 }
 
-                URL u[] = new URL[urls.size()];
+                URL[] u = new URL[urls.size()];
                 urls.toArray(u);
                 classLoader = new URLClassLoader(u, classLoader);
             }
