@@ -102,7 +102,7 @@ public class AMQ4368Test {
         }
 
         public void start() {
-            LOG.info("Starting: " + name);
+            LOG.info("Starting: {}", name);
             new Thread(this, name).start();
         }
 
@@ -117,6 +117,7 @@ public class AMQ4368Test {
                     connection.close();
                     doneLatch.await();
                 } catch (Exception e) {
+                    LOG.warn("Exception occurred", e);
                 }
             }
         }
@@ -133,11 +134,12 @@ public class AMQ4368Test {
                     try {
                         connection.close();
                     } catch (JMSException ignore) {
+                        LOG.warn("exception ignored", ignore);
                     }
-                    LOG.info("Stopped: " + name);
+                    LOG.info("Stopped: {}", name);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.warn("exception occurred", e);
                 done.set(true);
             } finally {
                 doneLatch.countDown();
@@ -162,11 +164,11 @@ public class AMQ4368Test {
         }
 
         private String createMessage() {
-            StringBuffer stringBuffer = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (long i = 0; i < 1000000; i++) {
-                stringBuffer.append("1234567890");
+                sb.append("1234567890");
             }
-            return stringBuffer.toString();
+            return sb.toString();
         }
 
         @Override
@@ -178,7 +180,7 @@ public class AMQ4368Test {
                 producer.send(session.createTextMessage(data));
                 long i = size.incrementAndGet();
                 if ((i % 1000) == 0) {
-                    LOG.info("produced " + i + ".");
+                    LOG.info("produced {}.", i);
                 }
             }
         }
@@ -234,7 +236,7 @@ public class AMQ4368Test {
                     }
                 });
                 long size = listener1.size.get();
-                LOG.info("Listener 1: consumed: " + (size - lastSize.get()));
+                LOG.info("Listener 1: consumed: {}", size - lastSize.get());
                 assertTrue("No messages received on iteration: " + i, size > lastSize.get());
                 lastSize.set(size);
             }

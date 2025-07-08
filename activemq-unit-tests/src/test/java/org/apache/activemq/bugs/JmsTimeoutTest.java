@@ -146,7 +146,7 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
     }
 
     protected String createMessageText() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("<filler>");
         for (int i = buffer.length(); i < messageSize; i++) {
             buffer.append('X');
