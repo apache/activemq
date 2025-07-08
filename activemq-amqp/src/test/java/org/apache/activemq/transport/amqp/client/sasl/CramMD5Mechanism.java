@@ -16,13 +16,14 @@
  */
 package org.apache.activemq.transport.amqp.client.sasl;
 
-import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.sasl.SaslException;
+
+import static java.nio.charset.StandardCharsets.US_ASCII;
 
 /**
  * Implements the SASL PLAIN authentication Mechanism.
@@ -31,7 +32,6 @@ import javax.security.sasl.SaslException;
  */
 public class CramMD5Mechanism extends AbstractMechanism {
 
-    private static final String ASCII = "ASCII";
     private static final String HMACMD5 = "HMACMD5";
     private boolean sentResponse;
 
@@ -54,16 +54,17 @@ public class CramMD5Mechanism extends AbstractMechanism {
     public byte[] getChallengeResponse(byte[] challenge) throws SaslException {
         if (!sentResponse && challenge != null && challenge.length != 0) {
             try {
-                SecretKeySpec key = new SecretKeySpec(getPassword().getBytes(ASCII), HMACMD5);
+                SecretKeySpec key = new SecretKeySpec(getPassword().getBytes(US_ASCII), HMACMD5);
                 Mac mac = Mac.getInstance(HMACMD5);
                 mac.init(key);
 
                 byte[] bytes = mac.doFinal(challenge);
 
-                StringBuffer hash = new StringBuffer(getUsername());
+                StringBuilder hash = new StringBuilder((bytes.length * 2) + 64);
+                hash.append(getUsername());
                 hash.append(' ');
-                for (int i = 0; i < bytes.length; i++) {
-                    String hex = Integer.toHexString(0xFF & bytes[i]);
+                for (byte aByte : bytes) {
+                    String hex = Integer.toHexString(0xFF & aByte);
                     if (hex.length() == 1) {
                         hash.append('0');
                     }
@@ -71,9 +72,7 @@ public class CramMD5Mechanism extends AbstractMechanism {
                 }
 
                 sentResponse = true;
-                return hash.toString().getBytes(ASCII);
-            } catch (UnsupportedEncodingException e) {
-                throw new SaslException("Unable to utilise required encoding", e);
+                return hash.toString().getBytes(US_ASCII);
             } catch (InvalidKeyException e) {
                 throw new SaslException("Unable to utilise key", e);
             } catch (NoSuchAlgorithmException e) {
@@ -86,6 +85,6 @@ public class CramMD5Mechanism extends AbstractMechanism {
 
     @Override
     public boolean isApplicable(String username, String password) {
-        return username != null && username.length() > 0 && password != null && password.length() > 0;
+        return username != null && !username.isEmpty() && password != null && !password.isEmpty();
     }
 }
