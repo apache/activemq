@@ -74,7 +74,7 @@ public class CHeadersGenerator extends SingleSourceGenerator {
     }
 
     String changeCase(String value) {
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         char[] cs = value.toCharArray();
         for (int i = 0; i < cs.length; i++) {
             char c = cs[i];
