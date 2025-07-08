@@ -118,7 +118,7 @@ public class Producer extends BenchmarkSupport {
     }
 
     protected String getMessage() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder(messageSize);
         for (int i = 0; i < messageSize; i++) {
             char ch = 'X';
             buffer.append(ch);
@@ -164,7 +164,7 @@ public class Producer extends BenchmarkSupport {
     protected String loadFile(String file) throws IOException {
         System.out.println("Loading file: " + file);
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         BufferedReader in = new BufferedReader(new FileReader(file));
         while (true) {
             String line = in.readLine();
