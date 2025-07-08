@@ -91,18 +91,9 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         try {
             getConnection().start();
             if (client.getMsgFileName() != null) {
-                LOG.info("Starting to publish " +
-                    messageCount +
-                    " messages from file " +
-                    client.getMsgFileName()
-                );
+                LOG.info("Starting to publish {} messages from file {}", messageCount, client.getMsgFileName());
             } else {
-                LOG.info("Starting to publish " +
-                    messageCount +
-                    " messages of size " +
-                    client.getMessageSize() +
-                    " byte(s)."
-                );
+                LOG.info("Starting to publish {} messages of size {} byte(s).", messageCount, client.getMessageSize());
             }
 
             // Send one type of message only, avoiding the creation of different messages on sending
@@ -180,17 +171,9 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         try {
             getConnection().start();
             if (client.getMsgFileName() != null) {
-                LOG.info("Starting to publish messages from file " +
-                        client.getMsgFileName() +
-                        " for " +
-                        duration +
-                        " ms");
+                LOG.info("Starting to publish messages from file {} for {} ms", client.getMsgFileName(), duration);
             } else {
-                LOG.info("Starting to publish " +
-                        client.getMessageSize() +
-                        " byte(s) messages for " +
-                        duration +
-                        " ms");
+                LOG.info("Starting to publish {} byte(s) messages for {} ms", client.getMessageSize(), duration);
             }
             // Send one type of message only, avoiding the creation of different messages on sending
             if (!client.isCreateNewMsg()) {
@@ -268,10 +251,10 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     public MessageProducer createJmsProducer(Destination dest) throws JMSException {
         jmsProducer = getSession().createProducer(dest);
         if (client.getDeliveryMode().equalsIgnoreCase(JmsProducerProperties.DELIVERY_MODE_PERSISTENT)) {
-            LOG.info("Creating producer to: " + dest.toString() + " with persistent delivery.");
+            LOG.info("Creating producer to: {} with persistent delivery.", dest.toString());
             jmsProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
         } else if (client.getDeliveryMode().equalsIgnoreCase(JmsProducerProperties.DELIVERY_MODE_NON_PERSISTENT)) {
-            LOG.info("Creating  producer to: " + dest.toString() + " with non-persistent delivery.");
+            LOG.info("Creating  producer to: {} with non-persistent delivery.", dest.toString());
             jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         } else {
             LOG.warn("Unknown deliveryMode value. Defaulting to non-persistent.");
@@ -350,7 +333,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     protected void sleep() {
         if (client.getSendDelay() > 0) {
             try {
-                LOG.trace("Sleeping for " + client.getSendDelay() + " milliseconds");
+                LOG.trace("Sleeping for {} milliseconds", client.getSendDelay());
                 Thread.sleep(client.getSendDelay());
             } catch (java.lang.InterruptedException ex) {
                 LOG.warn(ex.getMessage());
@@ -376,7 +359,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
             }
 
             // try to load file
-            StringBuffer payload = new StringBuffer();
+            StringBuilder payload = new StringBuilder();
             try(FileReader fr = new FileReader(f);
                 BufferedReader br = new BufferedReader(fr)) {
                 String tmp = null;
