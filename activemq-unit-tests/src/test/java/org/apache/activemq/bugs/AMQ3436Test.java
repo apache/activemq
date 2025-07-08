@@ -131,12 +131,12 @@ public class AMQ3436Test {
         producer.close();
 
         // ***************************************************
-        // If we create the consumer here instead of above, the
+        // If we create the consumer here instead of above,
         // the messages will be consumed in priority order
         // ***************************************************
         //consumer = (ActiveMQMessageConsumer) consumerSession.createConsumer(dest);
 
-        // Consume all of the messages we produce using a listener.
+        // Consume all the messages we produce using a listener.
         // Don't exit until we get all the messages.
         final CountDownLatch latch = new CountDownLatch(messageCount);
         final StringBuffer failureMessage = new StringBuffer();
@@ -150,11 +150,11 @@ public class AMQ3436Test {
                 try {
 
                     int currentPriority = msg.getJMSPriority();
-                    LOG.debug(currentPriority + "<=" + lowestPrioritySeen);
+                    LOG.debug("{}<={}", currentPriority, lowestPrioritySeen);
 
                     // Ignore the first message priority since it is prefetched
                     // and is out of order by design
-                    if (firstMessage == true) {
+                    if (firstMessage) {
                         firstMessage = false;
                         LOG.debug("Ignoring first message since it was prefetched");
 
@@ -167,9 +167,12 @@ public class AMQ3436Test {
                             lowestPrioritySeen = currentPriority;
                         }
                         if (lowestPrioritySeen < currentPriority) {
-                            failureMessage.append("Incorrect priority seen (Lowest Priority = " + lowestPrioritySeen
-                                    + " Current Priority = " + currentPriority + ")"
-                                    + System.getProperty("line.separator"));
+                            failureMessage.append("Incorrect priority seen (Lowest Priority = ")
+                                    .append(lowestPrioritySeen)
+                                    .append(" Current Priority = ")
+                                    .append(currentPriority)
+                                    .append(")")
+                                    .append(System.lineSeparator());
                         }
                     }
 
@@ -177,7 +180,7 @@ public class AMQ3436Test {
                     e.printStackTrace();
                 } finally {
                     latch.countDown();
-                    LOG.debug("Messages remaining = " + latch.getCount());
+                    LOG.debug("Messages remaining = {}", latch.getCount());
                 }
             }
         });
@@ -196,7 +199,7 @@ public class AMQ3436Test {
         consumerConnection.close();
 
         // Report the failure if found
-        if (failureMessage.length() > 0) {
+        if (!failureMessage.isEmpty()) {
             Assert.fail(failureMessage.toString());
         }
     }
