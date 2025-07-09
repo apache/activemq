@@ -135,8 +135,8 @@ public class PfcTimeoutTest {
             long memoryUsage = queueView.getCursorMemoryUsage();
 
 
-            LOG.info("queueSize after test = " + queueSize);
-            LOG.info("memoryUsage after test = " + memoryUsage);
+            LOG.info("queueSize after test = {}", queueSize);
+            LOG.info("memoryUsage after test = {}", memoryUsage);
 
             assertEquals("queue size after test ", 0, queueSize);
             assertEquals("memory size after test ", 0, memoryUsage);
@@ -174,13 +174,13 @@ public class PfcTimeoutTest {
 
             }
 
-            LOG.info(" Finished after producing : " + numberOfMessageSent);
+            LOG.info(" Finished after producing : {}", numberOfMessageSent);
             return numberOfMessageSent;
 
         } catch (Exception ex) {
 
             LOG.info("Exception received producing ", ex);
-            LOG.info("finishing after exception :" + numberOfMessageSent);
+            LOG.info("finishing after exception :{}", numberOfMessageSent);
             LOG.info("rolling back current transaction ");
 
             gotTimeoutException.countDown();
@@ -196,13 +196,7 @@ public class PfcTimeoutTest {
     }
 
     private String createTextMessage(int size) {
-        StringBuffer buffer = new StringBuffer();
-
-        for (int i = 0; i < size; i++) {
-            buffer.append("9");
-        }
-
-        return buffer.toString();
+        return "9".repeat(Math.max(0, size));
     }
 
 
@@ -233,13 +227,13 @@ public class PfcTimeoutTest {
                 numberOfMessageConsumed++;
             }
 
-            LOG.info(" Finished after consuming  : " + numberOfMessageConsumed);
+            LOG.info(" Finished after consuming  : {}", numberOfMessageConsumed);
             return numberOfMessageConsumed;
 
         } catch (Exception ex) {
 
             LOG.info("Exception received producing ", ex);
-            LOG.info("finishing after exception :" + numberOfMessageConsumed);
+            LOG.info("finishing after exception :{}", numberOfMessageConsumed);
 
 
             return numberOfMessageConsumed;
