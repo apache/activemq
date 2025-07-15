@@ -143,7 +143,7 @@ public abstract class AbstractRegion implements Region {
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,
             boolean createIfTemporary) throws Exception {
-
+        System.out.println("[SUB_PATH] AbstractRegion addDesitnation: " + destination.toString());
         destinationsLock.writeLock().lock();
         try {
             Destination dest = destinations.get(destination);
@@ -154,6 +154,7 @@ public abstract class AbstractRegion implements Region {
                     validateMaxDestinations(destination);
 
                     LOG.debug("{} adding destination: {}", broker.getBrokerName(), destination);
+                    System.out.println("[SUB_PATH] AbstractRegion addDestination: creating destination: " + destination.toString());
                     dest = createDestination(context, destination);
                     // intercept if there is a valid interceptor defined
                     DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
@@ -238,6 +239,7 @@ public abstract class AbstractRegion implements Region {
     protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest) throws Exception {
         List<Subscription> rc = new ArrayList<Subscription>();
         // Add all consumers that are interested in the destination.
+        System.out.println("[SUB_PATH] AbstractRegion addSubscriptionsForDestination: " + dest.toString());
         for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
             Subscription sub = iter.next();
             if (sub.matches(dest.getActiveMQDestination())) {
@@ -342,10 +344,11 @@ public abstract class AbstractRegion implements Region {
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         LOG.debug("{} adding consumer: {} for destination: {}",
                 broker.getBrokerName(), info.getConsumerId(), info.getDestination());
+        System.out.println("[SUB_PATH] in AbstractRegion addConsumer " + info.getSubscriptionName() + " " + info.getDestination());
         ActiveMQDestination destination = info.getDestination();
         if (destination != null && !destination.isPattern() && !destination.isComposite()) {
             // lets auto-create the destination
-            lookup(context, destination,true);
+            lookup(context, destination, true);
         }
 
         Object addGuard;
@@ -379,7 +382,9 @@ public abstract class AbstractRegion implements Region {
             //
             DestinationFilter.parseFilter(info.getDestination());
 
+            System.out.println("[SUB_PATH] AbstractRegion addConsumer creating subscription");
             Subscription sub = createSubscription(context, info);
+            System.out.println("[SUB_PATH] created subscription: " + sub.toString());
 
             // At this point we're done directly manipulating subscriptions,
             // but we need to retain the synchronized block here. Consider
@@ -404,8 +409,9 @@ public abstract class AbstractRegion implements Region {
 
             List<Destination> removeList = new ArrayList<Destination>();
             for (Destination dest : addList) {
+                System.out.println("[SUB_PATH] adding subscription to destination: " + dest.toString());
                 try {
-                    dest.addSubscription(context, sub);
+                    dest.addSubscription(context, sub); // This is logic that added the subscription
                     removeList.add(dest);
                 } catch (SecurityException e){
                     if (sub.isWildcard()) {
@@ -503,13 +509,14 @@ public abstract class AbstractRegion implements Region {
 
     @Override
     public void send(final ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
+        System.out.println("[PUB_PATH] AbstractRegion send");
         final ConnectionContext context = producerExchange.getConnectionContext();
 
         if (producerExchange.isMutable() || producerExchange.getRegionDestination() == null) {
             final Destination regionDestination = lookup(context, messageSend.getDestination(),false);
             producerExchange.setRegionDestination(regionDestination);
         }
-
+        System.out.println("[PUB_PATH] AbstractRegion send destination: " + producerExchange.getRegionDestination().toString());
         producerExchange.getRegionDestination().send(producerExchange, messageSend);
 
         if (producerExchange.getProducerState() != null && producerExchange.getProducerState().getInfo() != null){
@@ -551,7 +558,7 @@ public abstract class AbstractRegion implements Region {
 
     protected Destination lookup(ConnectionContext context, ActiveMQDestination destination, boolean createTemporary, boolean autoCreate) throws Exception {
         Destination dest = null;
-
+        System.out.println("[SUB_PATH] AbstractRegion in lookup for desitination: " + destination.toString());
         destinationsLock.readLock().lock();
         try {
             dest = destinations.get(destination);
@@ -564,7 +571,9 @@ public abstract class AbstractRegion implements Region {
                 // Try to auto create the destination... re-invoke broker
                 // from the
                 // top so that the proper security checks are performed.
+                System.out.println("[SUB_PATH] AbstractRegion lookup: creating destination");
                 dest = context.getBroker().addDestination(context, destination, createTemporary);
+                System.out.println("[SUB_PATH] AbstractRegion lookup: done create destination");
             }
 
             if (dest == null) {
