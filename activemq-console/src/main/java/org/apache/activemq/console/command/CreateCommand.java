@@ -233,7 +233,7 @@ public class CreateCommand extends AbstractCommand {
 
     private void copyConfDirectory(File from, File dest) throws IOException {
         if (from.isDirectory()) {
-            String files[] = from.list();
+            String[] files = from.list();
 
             for (String file : files) {
                 File srcFile = new File(from, file);
@@ -271,36 +271,34 @@ public class CreateCommand extends AbstractCommand {
 
 
    private String getUnixActivemqData() {
-       StringBuffer res = new StringBuffer();
-       res.append("#!/bin/sh\n\n");
-       res.append("## Figure out the ACTIVEMQ_BASE from the directory this script was run from\n");
-       res.append("PRG=\"$0\"\n");
-       res.append("progname=`basename \"$0\"`\n");
-       res.append("saveddir=`pwd`\n");
-       res.append("# need this for relative symlinks\n");
-       res.append("dirname_prg=`dirname \"$PRG\"`\n");
-       res.append("cd \"$dirname_prg\"\n");
-       res.append("while [ -h \"$PRG\" ] ; do\n");
-       res.append("  ls=`ls -ld \"$PRG\"`\n");
-       res.append("  link=`expr \"$ls\" : '.*-> \\(.*\\)$'`\n");
-       res.append("  if expr \"$link\" : '.*/.*' > /dev/null; then\n");
-       res.append("    PRG=\"$link\"\n");
-       res.append("  else\n");
-       res.append("    PRG=`dirname \"$PRG\"`\"/$link\"\n");
-       res.append("  fi\n");
-       res.append("done\n");
-       res.append("ACTIVEMQ_BASE=`dirname \"$PRG\"`/..\n");
-       res.append("cd \"$saveddir\"\n\n");
-       res.append("ACTIVEMQ_BASE=`cd \"$ACTIVEMQ_BASE\" && pwd`\n\n");
-       res.append("## Enable remote debugging\n");
-       res.append("#export ACTIVEMQ_DEBUG_OPTS=\"-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005\"\n\n");
-       res.append("## Add system properties for this instance here (if needed), e.g\n");
-       res.append("#export ACTIVEMQ_OPTS_MEMORY=\"-Xms256M -Xmx1G\"\n");
-       res.append("#export ACTIVEMQ_OPTS=\"$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties\"\n\n");
-       res.append("export ACTIVEMQ_HOME=${activemq.home}\n");
-       res.append("export ACTIVEMQ_BASE=$ACTIVEMQ_BASE\n\n");
-       res.append("${ACTIVEMQ_HOME}/bin/activemq \"$@\"");
-       return res.toString();
+       return "#!/bin/sh\n\n" +
+               "## Figure out the ACTIVEMQ_BASE from the directory this script was run from\n" +
+               "PRG=\"$0\"\n" +
+               "progname=`basename \"$0\"`\n" +
+               "saveddir=`pwd`\n" +
+               "# need this for relative symlinks\n" +
+               "dirname_prg=`dirname \"$PRG\"`\n" +
+               "cd \"$dirname_prg\"\n" +
+               "while [ -h \"$PRG\" ] ; do\n" +
+               "  ls=`ls -ld \"$PRG\"`\n" +
+               "  link=`expr \"$ls\" : '.*-> \\(.*\\)$'`\n" +
+               "  if expr \"$link\" : '.*/.*' > /dev/null; then\n" +
+               "    PRG=\"$link\"\n" +
+               "  else\n" +
+               "    PRG=`dirname \"$PRG\"`\"/$link\"\n" +
+               "  fi\n" +
+               "done\n" +
+               "ACTIVEMQ_BASE=`dirname \"$PRG\"`/..\n" +
+               "cd \"$saveddir\"\n\n" +
+               "ACTIVEMQ_BASE=`cd \"$ACTIVEMQ_BASE\" && pwd`\n\n" +
+               "## Enable remote debugging\n" +
+               "#export ACTIVEMQ_DEBUG_OPTS=\"-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005\"\n\n" +
+               "## Add system properties for this instance here (if needed), e.g\n" +
+               "#export ACTIVEMQ_OPTS_MEMORY=\"-Xms256M -Xmx1G\"\n" +
+               "#export ACTIVEMQ_OPTS=\"$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties\"\n\n" +
+               "export ACTIVEMQ_HOME=${activemq.home}\n" +
+               "export ACTIVEMQ_BASE=$ACTIVEMQ_BASE\n\n" +
+               "${ACTIVEMQ_HOME}/bin/activemq \"$@\"";
    }
 
 }
