@@ -135,7 +135,7 @@ public class AMQ5450Test {
         ArrayList<FilteredKahaDBPersistenceAdapter> adapters = new ArrayList<FilteredKahaDBPersistenceAdapter>();
 
         if (compositeMatch) {
-            StringBuffer compositeDestBuf = new StringBuffer();
+            StringBuilder compositeDestBuf = new StringBuilder(DESTS.length * 3);
             for (int i=1; i<=DESTS.length;i++) {
                 for (int j=0;j<i;j++) {
                     compositeDestBuf.append("*");
