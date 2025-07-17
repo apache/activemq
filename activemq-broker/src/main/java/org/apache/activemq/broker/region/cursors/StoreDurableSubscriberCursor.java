@@ -28,6 +28,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.NullMessageReference;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.usage.SystemUsage;
@@ -274,8 +275,27 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized void remove(MessageReference node) {
-        for (PendingMessageCursor tsp : storePrefetches) {
-            tsp.remove(node);
+        // AMQ-9721 - Check if message is persistent or non-persistent.
+        // Removing from the non-persistent cursor requires searching the
+        // entire list if it's paged onto disk which is quite slow,
+        // so it doesn't make sense to try and remove as it will never
+        // exist if it's persistent.
+
+        // MessageReference can be a null reference if called from DurableSubscriptionView
+        // so we do not know if it's persistent and just need to search everything.
+        if (node instanceof NullMessageReference) {
+            for (PendingMessageCursor tsp : storePrefetches) {
+                tsp.remove(node);
+            }
+        } else if (node.isPersistent()) {
+            for (PendingMessageCursor tsp : storePrefetches) {
+                if (tsp.equals(nonPersistent)) {
+                    continue;
+                }
+                tsp.remove(node);
+            }
+        } else {
+            nonPersistent.remove(node);
         }
     }
 

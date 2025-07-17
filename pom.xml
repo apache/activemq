@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>33</version>
+    <version>34</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -32,6 +32,7 @@
 
   <properties>
     <maven.compiler.target>17</maven.compiler.target>
+
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
@@ -43,17 +44,13 @@
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.10.15</ant-version>
     <aries-version>1.1.0</aries-version>
-    <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>4.8.3</camel-version>
-    <commons-beanutils-version>1.10.1</commons-beanutils-version>
+    <camel-version>4.10.5</camel-version>
+    <commons-beanutils-version>1.11.0</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
-    <commons-daemon-version>1.4.1</commons-daemon-version>
     <commons-dbcp2-version>2.13.0</commons-dbcp2-version>
-    <commons-io-version>2.18.0</commons-io-version>
-    <commons-lang-version>3.14.0</commons-lang-version>
+    <commons-io-version>2.19.0</commons-io-version>
     <commons-logging-version>1.3.5</commons-logging-version>
     <commons-pool2-version>2.12.1</commons-pool2-version>
-    <commons-primitives-version>1.0</commons-primitives-version>
     <directory-version>2.0.0.AM25</directory-version>
     <ecj.version>3.17.0</ecj.version>
     <ftpserver-version>1.1.1</ftpserver-version>
@@ -63,14 +60,14 @@
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
-    <jackson-version>2.18.3</jackson-version>
+    <jackson-version>2.19.1</jackson-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-version>4.0.5</jaxb-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
-    <jetty-version>11.0.24</jetty-version>
+    <jetty-version>11.0.25</jetty-version>
     <jetty-version-range>[11,13)</jetty-version-range>
-    <jmdns-version>3.6.0</jmdns-version>
+    <jmdns-version>3.6.1</jmdns-version>
     <javassist-version>3.30.2-GA</javassist-version>
     <jettison-version>1.5.4</jettison-version>
     <jmock-version>2.13.1</jmock-version>
@@ -81,25 +78,23 @@
     <karaf-version>4.3.7</karaf-version>
     <log4j-version>2.24.3</log4j-version>
     <mockito-version>4.8.1</mockito-version>
-    <owasp-dependency-check-version>12.1.0</owasp-dependency-check-version>
+    <owasp-dependency-check-version>12.1.1</owasp-dependency-check-version>
     <mqtt-client-version>1.16</mqtt-client-version>
     <org-apache-derby-version>10.16.1.1</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
     <qpid-proton-version>0.34.1</qpid-proton-version>
     <qpid-jms-version>2.4.0</qpid-jms-version>
     <netty-version>4.1.94.Final</netty-version>
-    <regexp-version>1.4</regexp-version>
     <rome-version>2.1.0</rome-version>
     <shiro-version>1.13.0</shiro-version>
     <slf4j-version>2.0.16</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
-    <spring-version>6.2.3</spring-version>
+    <spring-version>6.2.8</spring-version>
     <spring-version-range>[6,7)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
-    <velocity-version>2.4.1</velocity-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.21</xstream-version>
-    <xbean-version>4.26</xbean-version>
+    <xbean-version>4.27</xbean-version>
     <xerces-version>2.12.2</xerces-version>
     <jaxb-tools-version>4.0.8</jaxb-tools-version>
     <stompjms-version>3.1.0</stompjms-version>
@@ -116,12 +111,12 @@
     <javaee-javadoc-url>http://download.oracle.com/javaee/6/api/</javaee-javadoc-url>
 
     <!-- Maven Plugin Version for this Project -->
-    <maven-bundle-plugin-version>5.1.9</maven-bundle-plugin-version>
+    <maven-bundle-plugin-version>6.0.0</maven-bundle-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
     <maven-rar-plugin-version>3.0.0</maven-rar-plugin-version>
     <exec-maven-plugin-version>3.1.0</exec-maven-plugin-version>
-    <flatten-maven-plugin-version>1.6.0</flatten-maven-plugin-version>
-    <javacc-maven-plugin-version>3.1.0</javacc-maven-plugin-version>
+    <flatten-maven-plugin-version>1.7.0</flatten-maven-plugin-version>
+    <javacc-maven-plugin-version>3.1.1</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>3.2.1</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>3.6.0</build-helper-maven-plugin-version>
@@ -129,7 +124,7 @@
     <sonar-maven-plugin-version>4.0.0.4121</sonar-maven-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.5.0</depends-maven-plugin-version>
-    <maven-project-info-reports-plugin-version>3.8.0</maven-project-info-reports-plugin-version>
+    <maven-project-info-reports-plugin-version>3.9.0</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
     <maven-core-version>3.8.6</maven-core-version>
     <!-- OSGi bundles properties -->
@@ -448,7 +443,7 @@
       <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm</artifactId>
-        <version>9.7.1</version>
+        <version>9.8</version>
       </dependency>
 
      <!-- Servlet 5.0 and JSP -->
@@ -542,13 +537,6 @@
         <groupId>org.jmdns</groupId>
         <artifactId>jmdns</artifactId>
         <version>${jmdns-version}</version>
-      </dependency>
-
-      <!-- For jsvc support -->
-      <dependency>
-        <groupId>commons-daemon</groupId>
-        <artifactId>commons-daemon</artifactId>
-        <version>${commons-daemon-version}</version>
       </dependency>
 
       <!-- camel testing -->
@@ -777,25 +765,6 @@
         <version>${org-apache-derby-version}</version>
       </dependency>
 
-      <!-- Optional Axion support -->
-      <dependency>
-        <groupId>axion</groupId>
-        <artifactId>axion</artifactId>
-        <version>${axion-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>commons-primitives</groupId>
-        <artifactId>commons-primitives</artifactId>
-        <version>${commons-primitives-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>jakarta-regexp</groupId>
-        <artifactId>jakarta-regexp</artifactId>
-        <version>${regexp-version}</version>
-      </dependency>
-
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-dbcp2</artifactId>
@@ -961,11 +930,6 @@
         <classifier>jakarta</classifier>
       </dependency>
 
-      <dependency>
-        <groupId>org.apache.velocity</groupId>
-        <artifactId>velocity-engine-core</artifactId>
-        <version>${velocity-version}</version>
-      </dependency>
       <dependency>
         <groupId>org.apache.servicemix.bundles</groupId>
         <artifactId>org.apache.servicemix.bundles.josql</artifactId>
@@ -1278,11 +1242,9 @@
             <link>${javaee-javadoc-url}</link>
             <link>https://commons.apache.org/proper/commons-collections/javadocs/api-${commons-collections-version}/</link>
             <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
-            <link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
             <link>https://javadoc.io/doc/org.apache.httpcomponents/httpclient/${httpclient-version}/</link>
             <link>http://jakarta.apache.org/commons/pool/apidocs/</link>
             <link>https://junit.org/junit4/javadoc/latest/</link>
-            <link>https://logging.apache.org/log4j/2.x/javadoc/log4j-api/</link>
           </links>
           <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
           <maxmemory>2048m</maxmemory>

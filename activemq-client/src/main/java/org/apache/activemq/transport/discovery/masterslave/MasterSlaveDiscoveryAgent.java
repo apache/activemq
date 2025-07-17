@@ -64,7 +64,7 @@ public class MasterSlaveDiscoveryAgent extends SimpleDiscoveryAgent {
             throw new IllegalArgumentException("Expecting at least 2 arguments");
         }
 
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         buf.append("failover:(");
 

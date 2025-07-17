@@ -53,7 +53,7 @@ public final class HexSupport {
      * @return array of bytes
      */
     public static byte[] toBytesFromHex(String hex) {
-        byte rc[] = new byte[hex.length() / 2];
+        byte[] rc = new byte[hex.length() / 2];
         for (int i = 0; i < rc.length; i++) {
             String h = hex.substring(i * 2, i * 2 + 2);
             int x = Integer.parseInt(h, 16);
@@ -67,9 +67,9 @@ public final class HexSupport {
      * @return string hex value
      */
     public static String toHexFromBytes(byte[] bytes) {
-        StringBuffer rc = new StringBuffer(bytes.length * 2);
-        for (int i = 0; i < bytes.length; i++) {
-            rc.append(HEX_TABLE[0xFF & bytes[i]]);
+        StringBuilder rc = new StringBuilder(bytes.length * 2);
+        for (byte aByte : bytes) {
+            rc.append(HEX_TABLE[0xFF & aByte]);
         }
         return rc.toString();
     }
@@ -81,7 +81,7 @@ public final class HexSupport {
      * @return string hex value
      */
     public static String toHexFromInt(int value, boolean trim) {
-        StringBuffer rc = new StringBuffer(INT_OFFSETS.length*2);
+        StringBuilder rc = new StringBuilder(INT_OFFSETS.length*2);
         for (int i = 0; i < INT_OFFSETS.length; i++) {
             int b = 0xFF & (value>>INT_OFFSETS[i]);
             if( !(trim && b == 0) ) {

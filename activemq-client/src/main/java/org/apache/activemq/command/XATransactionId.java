@@ -101,19 +101,18 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
 
     public synchronized String getTransactionKey() {
         if (transactionKey == null) {
-            StringBuffer s = new StringBuffer();
-            s.append("XID:[" + formatId + ",globalId=");
-            s.append(stringForm(formatId, globalTransactionId));
-            s.append(",branchId=");
-            s.append(stringForm(formatId, branchQualifier));
-            s.append("]");
-            transactionKey = s.toString();
+            String s = "XID:[" + formatId + ",globalId=" +
+                    stringForm(formatId, globalTransactionId) +
+                    ",branchId=" +
+                    stringForm(formatId, branchQualifier) +
+                    "]";
+            transactionKey = s;
         }
         return transactionKey;
     }
 
     private String stringForm(int format, byte[] uid) {
-        StringBuffer s = new StringBuffer();
+        StringBuilder s = new StringBuilder();
         switch (format) {
             case 131077:  // arjuna
                 stringFormArj(s, uid);
@@ -124,13 +123,13 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
         return s.toString();
     }
 
-    private void stringFormDefault(StringBuffer s, byte[] uid) {
-        for (int i = 0; i < uid.length; i++) {
-            s.append(Integer.toHexString(uid[i]));
+    private void stringFormDefault(StringBuilder s, byte[] uid) {
+        for (byte b : uid) {
+            s.append(Integer.toHexString(b));
         }
     }
 
-    private void stringFormArj(StringBuffer s, byte[] uid) {
+    private void stringFormArj(StringBuilder s, byte[] uid) {
         try {
             DataByteArrayInputStream byteArrayInputStream = new DataByteArrayInputStream(uid);
             s.append(Long.toString(byteArrayInputStream.readLong(), 16));

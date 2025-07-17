@@ -84,7 +84,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
         public LikeExpression(Expression right, String like, int escape) {
             super(right);
 
-            StringBuffer regexp = new StringBuffer(like.length() * 2);
+            StringBuilder regexp = new StringBuilder(like.length() * 2);
             regexp.append("\\A"); // The beginning of the input
             for (int i = 0; i < like.length(); i++) {
                 char c = like.charAt(i);
@@ -111,7 +111,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
             return false;
         }
 
-        private void append(StringBuffer regexp, char c) {
+        private void append(StringBuilder regexp, char c) {
             if (c == '%') {
                 regexp.append(".*?"); // Do a non-greedy match
             } else if (c == '_') {

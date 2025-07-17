@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport.tcp;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.HashMap;
@@ -125,8 +127,7 @@ public class QualityOfServiceUtils {
         // The only way to see if there are any values set for the ECN is to
         // read the traffic class automatically set by the system and isolate
         // the ECN bits.
-        Socket socket = new Socket();
-        try {
+        try (Socket socket = new Socket()) {
             int systemTrafficClass = socket.getTrafficClass();
             // The 1st and 2nd bits of the system traffic class are the ECN
             // bits.
@@ -134,6 +135,8 @@ public class QualityOfServiceUtils {
         } catch (SocketException e) {
             throw new IllegalArgumentException("Setting Differentiated Services"
                 + " not supported: " + e);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 }

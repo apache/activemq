@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.Set;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -178,6 +179,12 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         if (sub != null) {
             sub.resetBatching();
         }
+    }
+
+    @Override
+    public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max,
+        MessageRecoveryListener listener) {
+        throw new UnsupportedOperationException("recoverExpired not supported");
     }
 
     // Disabled for the memory store, can be enabled later if necessary

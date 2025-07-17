@@ -114,7 +114,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 }
             }
             message.incrementReferenceCount();
-            batchList.addMessageLast(message);
+            batchList.addMessageLast(createBatchListRef(message));
             clearIterator(true);
             recovered = true;
         } else if (!cached) {
@@ -134,6 +134,10 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             }
         }
         return recovered;
+    }
+
+    protected MessageReference createBatchListRef(Message message) {
+        return message;
     }
 
     protected boolean duplicateFromStoreExcepted(Message message) {
@@ -448,12 +452,14 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public final synchronized void remove(MessageReference node) {
-        if (batchList.remove(node) != null) {
+        final PendingNode message = batchList.remove(node);
+        if (message != null) {
             size--;
             setCacheEnabled(false);
+            // decrement reference count if removed from batchList
+            message.getMessage().decrementReferenceCount();
         }
     }
-
 
     @Override
     public final synchronized void clear() {

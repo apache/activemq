@@ -46,13 +46,11 @@ public class JMSConsumerStatsImpl extends JMSEndpointStatsImpl {
     }
 
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append("consumer ");
-        buffer.append(origin);
-        buffer.append(" { ");
-        buffer.append(super.toString());
-        buffer.append(" }");
-        return buffer.toString();
+        return "consumer " +
+                origin +
+                " { " +
+                super.toString() +
+                " }";
     }
 
     public void dump(IndentPrinter out) {

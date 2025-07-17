@@ -79,7 +79,7 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
                 jmdns.addServiceListener(type, this);
             }
         } catch (IOException e) {
-            JMSExceptionSupport.create("Failed to start JmDNS service: " + e, e);
+            throw JMSExceptionSupport.create("Failed to start JmDNS service: " + e, e);
         }
     }
 
