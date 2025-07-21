@@ -34,7 +34,6 @@
       org.apache.activemq*;resolution:=optional,
       org.springframework*;resolution:=optional,
       sun.management*;resolution:=optional,
-      org.josql*;resolution:=optional,
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
@@ -116,10 +115,6 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.josql</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jasypt</groupId>
