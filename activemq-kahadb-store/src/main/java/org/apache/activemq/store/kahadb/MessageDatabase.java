@@ -448,10 +448,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             } catch (IOException ioe) {
                 LOG.error("Checkpoint failed", ioe);
-                brokerService.handleIOException(ioe);
+                handleIOException("CheckpointRunner", ioe);
             } catch (Throwable e) {
                 LOG.error("Checkpoint failed", e);
-                brokerService.handleIOException(IOExceptionSupport.create(e));
+                handleIOException("CheckpointRunner", IOExceptionSupport.create(e));
             }
         }
     }
@@ -2120,10 +2120,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     forwarded = true;
                 } catch (IOException ioe) {
                     LOG.error("Forwarding of acks failed", ioe);
-                    brokerService.handleIOException(ioe);
+                    handleIOException("AckCompactionRunner", ioe);
                 } catch (Throwable e) {
                     LOG.error("Forwarding of acks failed", e);
-                    brokerService.handleIOException(IOExceptionSupport.create(e));
+                    handleIOException("AckCompactionRunner", IOExceptionSupport.create(e));
                 }
             } finally {
                 checkpointLock.readLock().unlock();
@@ -2136,10 +2136,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             } catch (IOException ioe) {
                 LOG.error("Checkpoint failed", ioe);
-                brokerService.handleIOException(ioe);
+                handleIOException("AckCompactionRunner", ioe);
             } catch (Throwable e) {
                 LOG.error("Checkpoint failed", e);
-                brokerService.handleIOException(IOExceptionSupport.create(e));
+                handleIOException("AckCompactionRunner", IOExceptionSupport.create(e));
             }
         }
     }
@@ -4273,5 +4273,28 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             return super.resolveClass(desc);
         }
 
+    }
+
+    /*
+     * Execute the configured IOExceptionHandler when an IOException is thrown during
+     * task execution and handle any runtime exceptions that the handler itself might throw.
+     *
+     * By default, the DefaultIOExceptionHandler will stop the broker when handling an IOException,
+     * however, if DefaultIOExceptionHandler is configured with startStopConnectors to be true
+     * it will throw a SuppressReplyException and not stop the broker. It's also possible another
+     * custom implementation of IOExceptionHandler could throw a runtime exception.
+     *
+     * This method will now handle and log those runtime exceptions so that the task will not
+     * die and will continue to execute future iterations if the broker is not shut down.
+     */
+    private void handleIOException(String taskName, IOException ioe) {
+        try {
+            brokerService.handleIOException(ioe);
+        } catch (RuntimeException e) {
+            LOG.warn("IOException handler threw exception in task {} with "
+                    + "error: {}, continuing.", taskName,
+                e.getMessage());
+            LOG.debug(e.getMessage(), e);
+        }
     }
 }
