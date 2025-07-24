@@ -153,25 +153,25 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
 
     @Override
     public void removeAllJobs() throws Exception {
-        this.jobScheduler.removeAllJobs();
+        this.jobScheduler.removeAllJobs(null);
     }
 
     @Override
     public void removeAllJobs(String startTime, String finishTime) throws Exception {
         long start = JobSupport.getDataTime(startTime);
         long finish = JobSupport.getDataTime(finishTime);
-        this.jobScheduler.removeAllJobs(start, finish);
+        this.jobScheduler.removeAllJobs(start, finish, null);
     }
 
     @Override
     public void removeAllJobsAtScheduledTime(String time) throws Exception {
         long removeAtTime = JobSupport.getDataTime(time);
-        this.jobScheduler.remove(removeAtTime);
+        this.jobScheduler.remove(removeAtTime, null);
     }
 
     @Override
     public void removeJob(String jobId) throws Exception {
-        this.jobScheduler.remove(jobId);
+        this.jobScheduler.remove(jobId, null);
     }
 
     @Override
