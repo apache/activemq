@@ -19,7 +19,6 @@ package org.apache.activemq.transaction;
 import java.io.IOException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
-import org.apache.activemq.TransactionContext;
 import org.apache.activemq.broker.TransactionBroker;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.TransactionId;
@@ -109,14 +108,12 @@ public class XATransaction extends Transaction {
     }
 
     private void illegalStateTransition(String callName) throws XAException {
-        XAException xae = newXAException("Cannot call " + callName + " now.", XAException.XAER_PROTO);
-        throw xae;
+        throw newXAException("Cannot call " + callName + " now.", XAException.XAER_PROTO);
     }
 
     private void checkForPreparedState(boolean onePhase) throws XAException {
         if (!onePhase) {
-            XAException xae = newXAException("Cannot do 2 phase commit if the transaction has not been prepared", XAException.XAER_PROTO);
-            throw xae;
+            throw newXAException("Cannot do 2 phase commit if the transaction has not been prepared", XAException.XAER_PROTO);
         }
     }
 
