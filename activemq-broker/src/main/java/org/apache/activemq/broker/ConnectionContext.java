@@ -245,7 +245,7 @@ public class ConnectionContext {
         return userName;
     }
 
-    protected void setUserName(String userName) {
+    public void setUserName(String userName) {
         this.userName = userName;
     }
 
