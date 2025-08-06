@@ -28,16 +28,16 @@ public class MessageStoreStatistics extends StatsImpl {
 
     protected CountStatisticImpl messageCount;
     protected SizeStatisticImpl messageSize;
-
+    protected long createdTimestamp;
 
     public MessageStoreStatistics() {
         this(true);
     }
 
     public MessageStoreStatistics(boolean enabled) {
-
         messageCount = new CountStatisticImpl("messageCount", "The number of messages in the store passing through the destination");
         messageSize = new SizeStatisticImpl("messageSize","Size of messages in the store passing through the destination");
+        createdTimestamp = System.currentTimeMillis();
 
         addStatistic("messageCount", messageCount);
         addStatistic("messageSize", messageSize);
@@ -45,13 +45,16 @@ public class MessageStoreStatistics extends StatsImpl {
         this.setEnabled(enabled);
     }
 
-
     public CountStatisticImpl getMessageCount() {
         return messageCount;
     }
 
     public SizeStatisticImpl getMessageSize() {
         return messageSize;
+    }
+
+    public long getCreatedTimestamp() {
+        return createdTimestamp;
     }
 
     public void reset() {
