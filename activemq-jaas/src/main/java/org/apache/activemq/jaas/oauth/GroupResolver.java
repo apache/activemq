@@ -14,16 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-activemq {
-    org.apache.activemq.jaas.PropertiesLoginModule required
-        org.apache.activemq.jaas.properties.user="users.properties"
-        org.apache.activemq.jaas.properties.group="groups.properties";
-};
+package org.apache.activemq.jaas.oauth;
 
-OAuthConfiguration {
-    org.apache.activemq.jaas.oauth.OAuthLoginModule required
-    issuer="https://cognito-idp.us-west-2.amazonaws.com/us-west-2_iz1VrIxct"
-    jwks_uri="https://cognito-idp.us-west-2.amazonaws.com/us-west-2_iz1VrIxct/.well-known/jwks.json"
-    group_resolver_class="org.apache.activemq.jaas.oauth.NoOpGroupResolver"
-    ;
-};
+import org.apache.activemq.jaas.GroupPrincipal;
+
+import java.util.Set;
+
+/**
+ * A GroupResolver implementation is responsible for the authorization logic after an OAuth Access Token has been
+ * successfully authenticated. It maps the Authentication Result (and possible other pieces of information) to a set of
+ * Groups.
+ */
+public interface GroupResolver {
+    Set<GroupPrincipal> getGroups(AuthenticationResult authentication);
+}
