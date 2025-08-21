@@ -240,10 +240,10 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         final Object delayValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
 
         String physicalName = messageSend.getDestination().getPhysicalName();
-        boolean schedularManage = physicalName.regionMatches(true, 0, ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION, 0,
+        boolean schedulerManage = physicalName.regionMatches(true, 0, ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION, 0,
             ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION.length());
 
-        if (schedularManage == true) {
+        if (schedulerManage == true) {
 
             JobScheduler scheduler = getInternalScheduler();
             ActiveMQDestination replyTo = messageSend.getReplyTo();
