@@ -59,17 +59,15 @@ public class AMQ3352Test
         producer.setDisableMessageID(true);
         producer.setDisableMessageTimestamp(true);
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (int i=0;i<1024;i++)
         {
-            buffer.append(String.valueOf(Math.random()));
+            buffer.append(Math.random());
         }
         String payload = buffer.toString();
 
        for (int i=0; i<10000; i++) {
-            StringBuffer buff = new StringBuffer("x");
-            buff.append(payload);
-            producer.send(session.createTextMessage(buff.toString()));
+           producer.send(session.createTextMessage("x" + payload));
         }
     }
 }

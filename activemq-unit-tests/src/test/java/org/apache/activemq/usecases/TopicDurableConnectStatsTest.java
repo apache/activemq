@@ -129,12 +129,12 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
     protected ObjectName assertRegisteredObjectName(String name) throws MalformedObjectNameException, NullPointerException {
         ObjectName objectName = new ObjectName(name);
 
-        LOG.info("** Looking for " + name);
+        LOG.info("** Looking for {}", name);
         try {
             if (mbeanServer.isRegistered(objectName)) {
-                LOG.info("Bean Registered: " + objectName);
+                LOG.info("Bean Registered: {}", objectName);
             } else {
-                LOG.info("Couldn't find Mbean! " + objectName);
+                LOG.info("Couldn't find Mbean! {}", objectName);
 
             }
         } catch (IOException e) {
@@ -159,8 +159,8 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
         ObjectName subscriberObjName1 = set.iterator().next();
         subscriber1 = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, subscriberObjName1, DurableSubscriptionViewMBean.class, true);
 
-        LOG.info("Beginning Pending Queue Size count: " + subscriber1.getPendingQueueSize());
-        LOG.info("Prefetch Limit: " + subscriber1.getPrefetchSize());
+        LOG.info("Beginning Pending Queue Size count: {}", subscriber1.getPendingQueueSize());
+        LOG.info("Prefetch Limit: {}", subscriber1.getPrefetchSize());
 
         assertEquals("no pending", 0, subscriber1.getPendingQueueSize());
         assertEquals("Prefetch Limit ", 10, subscriber1.getPrefetchSize());
@@ -191,10 +191,10 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
             producerSessions.commit();
 
         }
-        LOG.info("Sent " + i + " messages in total");
+        LOG.info("Sent {} messages in total", i);
         producerCon.close();
 
-        LOG.info("Pending Queue Size count: " + subscriber1.getPendingQueueSize());
+        LOG.info("Pending Queue Size count: {}", subscriber1.getPendingQueueSize());
         assertEquals("pending as expected", 20, subscriber1.getPendingQueueSize());
 
         LOG.info("Re-connect client and consume messages");
@@ -213,21 +213,21 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
             }
         }));
 
-        LOG.info("Received: " + listener.count);
+        LOG.info("Received: {}", listener.count);
 
         int pq = subscriber1.getPendingQueueSize();
-        LOG.info("Pending Queue Size count: " + pq);
+        LOG.info("Pending Queue Size count: {}", pq);
         assertEquals("Pending queue after consumed", 0, pq);
 
         session2.close();
         con2.close();
-        LOG.info("FINAL Pending Queue Size count (after consumer close): " + subscriber1.getPendingQueueSize());
+        LOG.info("FINAL Pending Queue Size count (after consumer close): {}", subscriber1.getPendingQueueSize());
     }
 
 
     private String createMessageText(int index) {
-        StringBuffer buffer = new StringBuffer(messageSize);
-        buffer.append("Message: " + index + " sent at: " + new Date());
+        StringBuilder buffer = new StringBuilder(messageSize);
+        buffer.append("Message: ").append(index).append(" sent at: ").append(new Date());
         if (buffer.length() > messageSize) {
             return buffer.substring(0, messageSize);
         }
