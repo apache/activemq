@@ -14,16 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-activemq {
-    org.apache.activemq.jaas.PropertiesLoginModule required
-        org.apache.activemq.jaas.properties.user="users.properties"
-        org.apache.activemq.jaas.properties.group="groups.properties";
-};
+package org.apache.activemq.jaas.oauth;
 
-OAuthConfiguration {
-    org.apache.activemq.jaas.oauth.OAuthLoginModule required
-    issuer="https://cognito-idp.us-west-2.amazonaws.com/us-west-2_iz1VrIxct"
-    jwks_uri="https://cognito-idp.us-west-2.amazonaws.com/us-west-2_iz1VrIxct/.well-known/jwks.json"
-    group_resolver_class="org.apache.activemq.jaas.oauth.NoOpGroupResolver"
-    ;
-};
+import java.security.PublicKey;
+import java.util.Optional;
+
+/**
+ * A JWKProvider implementation is responsible to provide Public Keys used to validate an OAuth JWT Access Token's
+ * signature.
+ */
+public interface JWKProvider {
+    Optional<PublicKey> getKey(final String kid);
+}

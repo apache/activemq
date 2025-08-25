@@ -154,6 +154,7 @@
         <include>com.fasterxml.jackson.core:jackson-core</include>
         <include>com.fasterxml.jackson.core:jackson-annotations</include>
         <include>com.fasterxml.jackson.core:jackson-databind</include>
+        <include>com.nimbusds:nimbus-jose-jwt</include>
       </includes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
