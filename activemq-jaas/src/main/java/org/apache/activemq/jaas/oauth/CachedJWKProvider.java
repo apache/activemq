@@ -69,7 +69,7 @@ public class CachedJWKProvider implements JWKProvider {
         // request.
         publicKey = knownKeys.get(kid);
         if (publicKey == null) {
-            // No, the key was no populated and has to be downloaded.
+            // No, the key was not populated and has to be downloaded.
             loadKeys();
             publicKey = knownKeys.get(kid);
         } else {

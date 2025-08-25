@@ -57,14 +57,7 @@ public class OAuthLoginModule implements LoginModule {
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
-
-        try {
-            throw new RuntimeException("Test");
-        } catch (Exception ex) {
-            Arrays.stream(ex.getStackTrace())
-                    .forEach(st -> LOG.info(st.toString()));
-        }
-
+        
         // Setup configurations
 
         final String issuer = (String) options.get("issuer");
