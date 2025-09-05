@@ -425,6 +425,12 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <classifier>config</classifier>
+      <version>${jetty-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-rewrite</artifactId>
     </dependency>
     <dependency>
@@ -644,6 +650,22 @@ o  'org.eclipse.jetty:apache-jsp'
               <outputDirectory>target/classes</outputDirectory>
               <overWriteReleases>false</overWriteReleases>
               <overWriteSnapshots>true</overWriteSnapshots>
+            </configuration>
+          </execution>
+          <execution>
+            <id>unpack-jetty-config</id>
+            <phase>package</phase>
+            <goals>
+              <goal>unpack-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeGroupIds>org.eclipse.jetty</includeGroupIds>
+              <includeArtifactIds>jetty-server</includeArtifactIds>
+              <includeClassifiers>config</includeClassifiers>
+              <outputDirectory>${project.build.outputDirectory}/jetty-server-config</outputDirectory>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>true</overWriteSnapshots>
+              <includes>**/jetty.xml,**/jetty-bytebufferpool.xml,**/jetty-http.xml,**/jetty-requestlog.xml,**/jetty-threadpool.xml</includes>
             </configuration>
           </execution>
         </executions>
