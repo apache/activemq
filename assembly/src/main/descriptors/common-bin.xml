@@ -272,11 +272,14 @@
         <include>org.eclipse.jetty:jetty-plus</include>
         <include>org.eclipse.jetty:jetty-security</include>
         <include>org.eclipse.jetty:jetty-rewrite</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-annotations</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-apache-jsp</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-jndi</include>
         <include>org.eclipse.jetty.ee9:jetty-ee9-nested</include>
+        <include>org.eclipse.jetty.ee9:jetty-ee9-plus</include>
         <include>org.eclipse.jetty.ee9:jetty-ee9-security</include>
         <include>org.eclipse.jetty.ee9:jetty-ee9-servlet</include>
         <include>org.eclipse.jetty.ee9:jetty-ee9-webapp</include>
-        <include>org.eclipse.jetty.ee9:jetty-ee9-apache-jsp</include>
         <include>org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api</include>
         <include>org.eclipse.jetty.websocket:jetty-websocket-core-client</include>
         <include>org.eclipse.jetty.websocket:jetty-websocket-core-common</include>
