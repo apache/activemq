@@ -124,7 +124,7 @@
 
         Take a look at ${ACTIVEMQ_HOME}/conf/jetty.xml for more details
     -->
-    <import resource="jetty.xml"/>
+    <import resource="jetty-spring.xml"/>
 
 </beans>
 <!-- END SNIPPET: example -->
