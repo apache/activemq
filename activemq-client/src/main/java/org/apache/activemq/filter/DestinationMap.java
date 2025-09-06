@@ -100,7 +100,7 @@ public class DestinationMap {
             return;
         }
         String[] paths = key.getDestinationPaths();
-        getRootNode(key).add(paths, 0, value);
+        getRootNode(key).add(paths, value);
     }
 
 
@@ -123,7 +123,7 @@ public class DestinationMap {
             return;
         }
         String[] paths = key.getDestinationPaths();
-        getRootNode(key).remove(paths, 0, value);
+        getRootNode(key).remove(paths, value);
 
     }
 
