@@ -61,6 +61,16 @@ public interface DeadLetterStrategy {
     public void setProcessNonPersistent(boolean processNonPersistent);
 
     /**
+     * @return the preserveDeliveryMode
+     */
+    public boolean isPreserveDeliveryMode();
+
+    /**
+     * @param preserveDeliveryMode the preserveDeliveryMode to set
+     */
+    public void setPreserveDeliveryMode(boolean preserveDeliveryMode);
+
+    /**
      * Allows for a Message that was already processed by a DLQ to be rolled back in case
      * of a move or a retry of that message, otherwise the Message would be considered a
      * duplicate if this strategy is doing Message Auditing.
