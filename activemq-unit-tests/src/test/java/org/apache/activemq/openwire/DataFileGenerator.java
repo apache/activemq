@@ -59,7 +59,7 @@ public abstract class DataFileGenerator extends org.junit.Assert {
                 String cn = file.getName();
                 cn = cn.substring(0, cn.length() - ".java".length());
                 Class<?> clazz = DataFileGenerator.class.getClassLoader().loadClass("org.apache.activemq.openwire." + cn);
-                l.add((DataFileGenerator)clazz.newInstance());
+                l.add((DataFileGenerator)clazz.getDeclaredConstructor().newInstance());
             }
         }
         return l;
