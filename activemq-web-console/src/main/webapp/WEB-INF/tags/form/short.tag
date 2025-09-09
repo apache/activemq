@@ -14,16 +14,15 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ attribute name="text" type="java.lang.String" required="true"  %>
 <%@ attribute name="length" type="java.lang.Integer" required="false" %>
 <%
- text = org.apache.commons.lang3.StringEscapeUtils.escapeHtml4(text);
- text = org.apache.commons.lang3.StringEscapeUtils.escapeEcmaScript(text);
- if (length == null || length < 20)
-    length = 20;
- if (text.length() <= length) {
-     out.print(text);
- } else {
-     out.println(text.substring(0, (length-10)) + "..." + text.substring(text.length() - 5));
+ if (length == null || length < 20) {
+     length = 20;
+ }
+ if (text.length() > length) {
+     text = text.substring(0, (length-10)) + "..." + text.substring(text.length() - 5);
  }
 %>
+<c:out value="<%= text %>" />
