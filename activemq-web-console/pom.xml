@@ -304,11 +304,16 @@
 <!--      <scope>provided</scope>-->
     </dependency>
     <dependency>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-glassfish-jstl</artifactId>
+    </dependency>
+    <!--
+    <dependency>
       <groupId>org.glassfish.web</groupId>
       <artifactId>jakarta.servlet.jsp.jstl</artifactId>
       <version>3.0.1</version>
-<!--      <scope>provided</scope>-->
     </dependency>
+    -->
     <!--
     <dependency>
       <groupId>org.apache.taglibs</groupId>
