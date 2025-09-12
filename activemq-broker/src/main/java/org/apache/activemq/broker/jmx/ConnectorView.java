@@ -151,4 +151,9 @@ public class ConnectorView implements ConnectorViewMBean {
     public boolean isStarted() {
         return this.connector.isStarted();
     }
+
+    @Override
+    public String getName() {
+        return this.connector.getName();
+    }
 }
