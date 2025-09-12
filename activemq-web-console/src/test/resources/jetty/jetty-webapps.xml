@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://www.eclipse.org/jetty/configure_10_0.dtd">
+
+<!-- Web applications and security headers configuration -->
+<Configure class="org.eclipse.jetty.server.handler.ContextHandlerCollection" id="Contexts">
+
+  <!-- Rewrite Handler for Security Headers -->
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">X-FRAME-OPTIONS</Set>
+              <Set name="headerValue">SAMEORIGIN</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">X-XSS-Protection</Set>
+              <Set name="headerValue">1; mode=block</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">X-Content-Type-Options</Set>
+              <Set name="headerValue">nosniff</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">Cache-Control</Set>
+              <Set name="headerValue">no-store</Set>
+            </New>
+          </Arg>
+        </Call>
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">*</Set>
+              <Set name="headerName">Content-Security-Policy</Set>
+              <Set name="headerValue">style-src-elem 'self'; style-src 'self'; img-src 'self'; script-src-elem 'self'; default-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none';</Set>
+            </New>
+          </Arg>
+        </Call>
+        <!-- Relaxed CSP rules for XML admin pages -->
+        <Call name="addRule">
+          <Arg>
+            <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+              <Set name="pattern">/admin/xml/*</Set>
+              <Set name="headerName">Content-Security-Policy</Set>
+              <Set name="headerValue">style-src-elem 'self' 'unsafe-inline'; style-src 'self'; img-src 'self' data:; script-src-elem 'self'; default-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none';</Set>
+            </New>
+          </Arg>
+        </Call>
+      </New>
+    </Arg>
+  </Call>
+
+  <!-- Admin Web Application -->
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.ee9.webapp.WebAppContext">
+        <Set name="contextPath">/admin</Set>
+        <Set name="baseResourceAsString">webapps/admin</Set>
+        <Set name="logUrlOnStart">true</Set>
+      </New>
+    </Arg>
+  </Call>
+
+  <!-- API Web Application -->
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.ee9.webapp.WebAppContext">
+        <Set name="contextPath">/api</Set>
+        <Set name="baseResourceAsString">webapps/api</Set>
+        <Set name="logUrlOnStart">true</Set>
+      </New>
+    </Arg>
+  </Call>
+
+  <!-- Static Resource Handler -->
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.server.handler.ResourceHandler">
+        <!-- Set name="directoriesListed">false</Set -->
+        <Set name="welcomeFiles">
+          <Array type="java.lang.String">
+            <Item>index.html</Item>
+          </Array>
+        </Set>
+        <Set name="baseResourceAsString">webapps/</Set>
+      </New>
+    </Arg>
+  </Call>
+
+  <!-- Default Handler -->
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.server.handler.DefaultHandler">
+        <Set name="serveFavIcon">false</Set>
+      </New>
+    </Arg>
+  </Call>
+
+</Configure>

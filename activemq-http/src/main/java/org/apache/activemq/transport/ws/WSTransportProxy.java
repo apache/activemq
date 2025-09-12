@@ -34,8 +34,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.ee9.websocket.api.Session;
+import org.eclipse.jetty.ee9.websocket.api.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -222,8 +222,8 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
         this.session.setIdleTimeout(Duration.ZERO);
 
         if (wsTransport.getMaxFrameSize() > 0) {
-            this.session.getPolicy().setMaxBinaryMessageSize(wsTransport.getMaxFrameSize());
-            this.session.getPolicy().setMaxTextMessageSize(wsTransport.getMaxFrameSize());
+            this.session.setMaxBinaryMessageSize(wsTransport.getMaxFrameSize());
+            this.session.setMaxTextMessageSize(wsTransport.getMaxFrameSize());
         }
     }
 
