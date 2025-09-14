@@ -23,9 +23,8 @@
 <%
 	Iterator it = broker.getConnections(connectorName).iterator();
 	while (it.hasNext()) {
-		String conName = (String) it.next();
-		ConnectionViewMBean con = broker.getConnection(conName);
-		request.setAttribute(connectionName, conName);
+		ConnectionViewMBean con = (ConnectionViewMBean) it.next();
+		request.setAttribute(connectionName, con.getClientId());
 		request.setAttribute(connection, con);
 %>
 <jsp:doBody/>
