@@ -230,4 +230,8 @@ public class ConnectorView implements ConnectorViewMBean {
         return this.connector.connectionCount();
     }
 
+    @Override
+    public String getName() {
+        return this.connector.getName();
+    }
 }

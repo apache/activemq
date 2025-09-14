@@ -145,4 +145,7 @@ public interface ConnectorViewMBean extends Service {
 
     @MBeanInfo("Connection count")
     public int getConnectionCount();
+
+    @MBeanInfo("Connector name")
+    String getName();
 }

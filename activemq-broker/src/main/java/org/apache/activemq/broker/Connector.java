@@ -111,4 +111,8 @@ public interface Connector extends Service {
 
     public int getConnectionCount();
 
+    /**
+     * @return connector name
+     */
+    public String getName();
 }
