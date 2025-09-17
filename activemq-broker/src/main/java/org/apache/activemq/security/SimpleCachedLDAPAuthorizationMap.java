@@ -936,7 +936,11 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
 
     // Init / Destroy
     public void afterPropertiesSet() throws Exception {
-        query();
+        try {
+            query();
+        } catch (Exception e) {
+            LOG.error("Error updating authorization map.  Partial policy may be applied until the next successful update.", e);
+        }
     }
 
     public void destroy() throws Exception {
