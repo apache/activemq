@@ -228,8 +228,9 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
     private Schema getSchema() throws SAXException, IOException {
         if (schema == null) {
-            SchemaFactory schemaFactory = SchemaFactory.newInstance(
-                    XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            schemaFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            schemaFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 
             ArrayList<StreamSource> schemas = new ArrayList<StreamSource>();
             schemas.add(new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()));
