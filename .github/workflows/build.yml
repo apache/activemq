@@ -21,9 +21,9 @@ name: Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "activemq-6.1.x", "activemq-5.19.x" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "activemq-6.1.x", "activemq-5.19.x" ]
 
 jobs:
   build:
