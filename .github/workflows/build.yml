@@ -44,6 +44,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java-version }}
+          distribution: temurin
       - name: Build
         run: mvn -U -B -e clean install -DskipTests
       - name: Verify
