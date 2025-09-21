@@ -50,4 +50,4 @@ jobs:
       - name: Verify
         run: mvn apache-rat:check
       - name: Test
-        run: mvn -B -e -fae test -Dsurefire.rerunFailingTestsCount=3
+        run: mvn -B -e -fae test
