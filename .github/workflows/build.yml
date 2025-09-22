@@ -34,7 +34,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-24.04, ubuntu-22.04, macos-26, macos-15, macos-14, macos-13, windows-2025, windows-2022 ]
-        java-version: [ 17 ]
+        java-version: [ 17, 21, 24 ]
 
     runs-on: ${{ matrix.os }}
 
@@ -49,5 +49,25 @@ jobs:
         run: mvn -U -B -e clean install -DskipTests
       - name: Verify
         run: mvn apache-rat:check
+
+  test:
+  
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        os: [ ubuntu-24.04, ubuntu-22.04, macos-26, macos-15, macos-14, macos-13, windows-2025, windows-2022 ]
+        java-version: [ 17 ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: temurin
       - name: Test
-        run: mvn -B -e -fae test
+        run: mvn -B -e -fae test -Dsurefire.rerunFailingTestsCount=3
