@@ -47,6 +47,7 @@ github:
         strict: false
         contexts:
           - build
+          - test
 
   features:
     wiki: false
