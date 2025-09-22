@@ -70,4 +70,4 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
       - name: Test
-        run: mvn -B -e -fae test -Dsurefire.rerunFailingTestsCount=3
+        run: mvn -B -e -fae test "-Dsurefire.rerunFailingTestsCount=3"
