@@ -754,6 +754,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
 
+                        /*
+                         The endSequenceOffset is used when only endMessageId is requested
+                         there is a disconnect between iterator offset and a destination's
+                         sequence key.
+
+                         If a destination has already processed messages, then the sequence key
+                         value is the number of total messages processed through the queue all-time.
+                         */
                         Long startSequenceOffset = null;
                         Long endSequenceOffset = null;
 
@@ -766,16 +774,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         if(messageRecoveryContext.getEndMessageId() != null && !messageRecoveryContext.getEndMessageId().isBlank()) {
                             endSequenceOffset = Optional.ofNullable(sd.messageIdIndex.get(tx, messageRecoveryContext.getEndMessageId()))
                                                         .orElse(startSequenceOffset + Long.valueOf(messageRecoveryContext.getMaxMessageCountReturned()));
-                        } else {
-                            endSequenceOffset = startSequenceOffset + Long.valueOf(messageRecoveryContext.getMaxMessageCountReturned());
+                            messageRecoveryContext.setEndSequenceId(endSequenceOffset);
                         }
 
-                        if(endSequenceOffset < startSequenceOffset) {
+                        if(endSequenceOffset != null &&
+                            endSequenceOffset < startSequenceOffset) {
                             LOG.warn("Invalid offset parameters start:{} end:{}", startSequenceOffset, endSequenceOffset);
                             throw new IllegalStateException("Invalid offset parameters start:" + startSequenceOffset + " end:" + endSequenceOffset);
                         }
 
-                        messageRecoveryContext.setEndSequenceId(endSequenceOffset);
                         Entry<Long, MessageKeys> entry = null;
                         recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, messageRecoveryContext.getMaxMessageCountReturned(), messageRecoveryContext);
                         Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
@@ -796,7 +803,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                                 break;
                             }
                         }
-                        sd.orderIndex.stoppedIterating();
+
+                        // The sd.orderIndex uses the destination's cursor
+                        if(!messageRecoveryContext.isUseDedicatedCursor()) {
+                            sd.orderIndex.stoppedIterating();
+                        }
                     }
                 });
             } finally {
