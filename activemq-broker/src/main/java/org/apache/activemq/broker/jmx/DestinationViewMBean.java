@@ -418,6 +418,13 @@ public interface DestinationViewMBean {
     public void setMaxPageSize(@MBeanInfo("pageSize") int pageSize);
 
     /**
+     * @return the maximum number of message to be paged into the
+     * destination for browsing
+     */
+    @MBeanInfo("Maximum number of messages to be paged in for browsing")
+    public int getMaxBrowsePageSize();
+
+    /**
      * @return true if caching is allowed of for the destination
      */
     @MBeanInfo("Caching is allowed")
