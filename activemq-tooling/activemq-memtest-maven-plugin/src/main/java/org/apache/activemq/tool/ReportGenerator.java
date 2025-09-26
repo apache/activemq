@@ -114,14 +114,8 @@ public class ReportGenerator {
     }
 
     protected void writeWithIndent(int indent, String result) {
-        StringBuffer buffer = new StringBuffer();
-
-        for (int i = 0; i < indent; ++i) {
-            buffer.append(" ");
-        }
-
-        buffer.append(result);
-        writer.println(buffer.toString());
+        String buffer = " ".repeat(Math.max(0, indent)) + result;
+        writer.println(buffer);
     }
 
     public PrintWriter getWriter() {

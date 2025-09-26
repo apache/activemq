@@ -90,7 +90,7 @@ public abstract class AbstractJmsClient {
         if (jmsConnection == null) {
             jmsConnection = factory.createConnection();
             jmsConnection.setClientID(getClientName());
-            LOG.info("Creating JMS Connection: Provider=" + getClient().getJmsProvider() + ", JMS Spec=" + getClient().getJmsVersion());
+            LOG.info("Creating JMS Connection: Provider={}, JMS Spec={}", getClient().getJmsProvider(), getClient().getJmsVersion());
         }
         return jmsConnection;
     }
@@ -142,7 +142,7 @@ public abstract class AbstractJmsClient {
     }
 
     private String join(String[] stings, String separator) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < stings.length; i++) {
             if (i > 0) {
                 sb.append(separator);
@@ -174,21 +174,21 @@ public abstract class AbstractJmsClient {
     protected Destination createCompositeDestination(byte destinationType, String destName, int destCount) throws JMSException {
         String simpleName = getSimpleName(destName);
 
-        String compDestName = "";
+        StringBuilder compDestName = new StringBuilder(destCount * (simpleName.length() + 4));
         for (int i = 0; i < destCount; i++) {
             if (i > 0) {
-                compDestName += ",";
+                compDestName.append(",");
             }
-            compDestName += withDestinationSuffix(simpleName, i, destCount);
+            compDestName.append(withDestinationSuffix(simpleName, i, destCount));
         }
 
         LOG.info("Creating composite destination: {}", compDestName);
         Destination destination;
         Session session = getSession();
         if (destinationType == ActiveMQDestination.TOPIC_TYPE) {
-            destination = session.createTopic(compDestName);
+            destination = session.createTopic(compDestName.toString());
         } else if (destinationType == ActiveMQDestination.QUEUE_TYPE) {
-            destination = session.createQueue(compDestName);
+            destination = session.createQueue(compDestName.toString());
         } else {
             throw new UnsupportedOperationException(
                     "Cannot create composite destinations using temporary queues or topics.");
