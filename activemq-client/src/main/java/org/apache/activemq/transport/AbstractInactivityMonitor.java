@@ -437,6 +437,17 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             synchronized (AbstractInactivityMonitor.class) {
                 READ_CHECK_TIMER.purge();
                 CHECKER_COUNTER--;
+                if (CHECKER_COUNTER == 0) {
+                    if (READ_CHECK_TIMER != null) {
+                        READ_CHECK_TIMER.cancel();
+                        READ_CHECK_TIMER = null;
+                    }
+                    try {
+                        ThreadPoolUtils.shutdownGraceful(ASYNC_TASKS, 0);
+                    } finally {
+                        ASYNC_TASKS = null;
+                    }
+                }
             }
         }
     }
@@ -497,10 +508,14 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                 READ_CHECK_TIMER.purge();
                 CHECKER_COUNTER--;
                 if (CHECKER_COUNTER == 0) {
-                    WRITE_CHECK_TIMER.cancel();
-                    READ_CHECK_TIMER.cancel();
-                    WRITE_CHECK_TIMER = null;
-                    READ_CHECK_TIMER = null;
+                    if (WRITE_CHECK_TIMER != null) {
+                        WRITE_CHECK_TIMER.cancel();
+                        WRITE_CHECK_TIMER = null;
+                    }
+                    if (READ_CHECK_TIMER != null) {
+                        READ_CHECK_TIMER.cancel();
+                        READ_CHECK_TIMER = null;
+                    }
                     try {
                         ThreadPoolUtils.shutdownGraceful(ASYNC_TASKS, 0);
                     } finally {
