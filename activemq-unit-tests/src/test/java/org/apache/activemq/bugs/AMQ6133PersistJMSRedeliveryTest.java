@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.jms.BytesMessage;
@@ -118,7 +118,7 @@ public class AMQ6133PersistJMSRedeliveryTest {
         broker.waitUntilStopped();
 
         // delete the index so that it needs to be rebuilt from replay
-        for (File index : FileUtils.listFiles(persistenceDir, new WildcardFileFilter("db.*"), TrueFileFilter.INSTANCE)) {
+        for (File index : listFiles(persistenceDir, "db.*")) {
             FileUtils.deleteQuietly(index);
         }
 
@@ -201,13 +201,16 @@ public class AMQ6133PersistJMSRedeliveryTest {
     }
 
     private int getLogFileCount() throws Exception {
-        return new ArrayList<File>(
-                FileUtils.listFiles(getPersistentDir(),
-                    new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size();
+        return listFiles(getPersistentDir(), "*.log").size();
     }
 
     private File getPersistentDir() throws IOException {
         return broker.getPersistenceAdapter().getDirectory();
+    }
+
+    private Collection<File> listFiles(File directory, String filterPattern) {
+        WildcardFileFilter filter = WildcardFileFilter.builder().setWildcards(filterPattern).get();
+        return FileUtils.listFiles(directory, filter, TrueFileFilter.INSTANCE);
     }
 
     protected QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
