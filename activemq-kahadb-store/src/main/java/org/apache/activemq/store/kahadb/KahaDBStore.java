@@ -754,13 +754,24 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
 
-                        /*
-                         The endSequenceOffset is used when only endMessageId is requested
-                         there is a disconnect between iterator offset and a destination's
-                         sequence key.
-
-                         If a destination has already processed messages, then the sequence key
-                         value is the number of total messages processed through the queue all-time.
+                        /**
+                         * [AMQ-9773]
+                         *
+                         * The order index sequence key value increases for every message since the beginning of the
+                         * creation of the index, so the first message available won't be at sequence key value:0 in
+                         * the index when there were older messages acknowledged.
+                         *
+                         * The MessageOrderCursor _position_ value is relative to the index, so there is a disconnect
+                         * between queue _position_ and index sequence value over time.
+                         *
+                         * The MessageRecoveryContext determines the recovery start position based off the provided
+                         * offset, or the position of the requested startMessageId. If a startMessageId is specified,
+                         * but not found in the index, then the value of 0 is used as a fallback.
+                         *
+                         * The MessageRecoveryContext determines the recovery end position based off of the provided
+                         * endMessageId (if provided), or the maximum recovered message count, or if the
+                         * MessageRecoveryListener signals that no more messages should be recovered
+                         * (ie memory is full).
                          */
                         Long startSequenceOffset = null;
                         Long endSequenceOffset = null;
@@ -804,7 +815,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             }
                         }
 
-                        // The sd.orderIndex uses the destination's cursor
+                        // [AMQ-9773] The sd.orderIndex uses the destination's cursor
                         if(!messageRecoveryContext.isUseDedicatedCursor()) {
                             sd.orderIndex.stoppedIterating();
                         }
