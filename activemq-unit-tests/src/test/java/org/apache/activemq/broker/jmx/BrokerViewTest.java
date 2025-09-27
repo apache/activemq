@@ -36,7 +36,7 @@ public class BrokerViewTest {
         // Create and configure ManagementContext with suppressed destinations
         ManagementContext managementContext = new ManagementContext();
         managementContext.setCreateConnector(false);
-        managementContext.setSuppressMBean("destinationType=Queue,destinationType=Topic");
+        managementContext.setSuppressMBean("endpoint=dynamicProducer,destinationName=suppressedQueue,destinationName=suppressedTopic");
         brokerService.setManagementContext(managementContext);
         brokerService.start();
 
@@ -48,6 +48,10 @@ public class BrokerViewTest {
         Queue queue = producerSession.createQueue("testQueue");
         MessageProducer producer = producerSession.createProducer(queue);
         producer.send(producerSession.createTextMessage("testMessage"));
+        // Create suppressed queue
+        Queue suppressedQueue = producerSession.createQueue("suppressedQueue");
+        MessageProducer suppressedProducer = producerSession.createProducer(suppressedQueue);
+        suppressedProducer.send(producerSession.createTextMessage("testMessage"));
         // Create temporary queue
         Session tempProducerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue tempQueue = tempProducerSession.createTemporaryQueue();
@@ -62,6 +66,11 @@ public class BrokerViewTest {
         Topic topic = topicProducerSession.createTopic("testTopic");
         MessageProducer topicProducer = topicProducerSession.createProducer(topic);
         topicProducer.send(topicProducerSession.createTextMessage("testMessage"));
+        // Create suppressed topic
+        Session suppressedTopicProducerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic suppressedTopic = suppressedTopicProducerSession.createTopic("suppressedTopic");
+        MessageProducer suppressedTopicProducer = topicProducerSession.createProducer(suppressedTopic);
+        topicProducer.send(suppressedTopicProducerSession.createTextMessage("testMessage"));
         // Create temporary topic
         Session tempTopicProducerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic tempTopic = tempTopicProducerSession.createTemporaryTopic();
@@ -70,11 +79,12 @@ public class BrokerViewTest {
 
         assertTrue(Wait.waitFor(() -> (brokerService.getAdminView()) != null));
         final BrokerView view = brokerService.getAdminView();
-        assertEquals(view.getTotalTopicsCount(), 12);
-        assertEquals(view.getTotalManagedTopicsCount(), 12);
-        assertEquals(view.getTotalTemporaryTopicsCount(), 1);
-        assertEquals(view.getTotalQueuesCount(), 1);
-        assertEquals(view.getTotalManagedQueuesCount(), 1);
+        assertEquals(15, view.getTotalTopicsCount());
+        assertEquals(14, view.getTotalManagedTopicsCount());
+        assertEquals(1, view.getTotalTemporaryTopicsCount());
+        assertEquals(1, view.getQueues().length);
+        assertEquals(2, view.getTotalQueuesCount());
+        assertEquals(1, view.getTotalManagedQueuesCount());
         assertEquals(view.getTotalTemporaryQueuesCount(), 2);
     }
 }
