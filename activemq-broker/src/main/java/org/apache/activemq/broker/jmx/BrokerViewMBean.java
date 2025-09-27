@@ -183,7 +183,7 @@ public interface BrokerViewMBean extends Service {
     int getTotalTopicsCount();
 
     @MBeanInfo("Total number of non suppressed topics")
-    int getTotalNonSuppressedTopicsCount();
+    int getTotalManagedTopicsCount();
 
     @MBeanInfo("Total number of temporary topics")
     int getTotalTemporaryTopicsCount();
@@ -195,7 +195,7 @@ public interface BrokerViewMBean extends Service {
     int getTotalQueuesCount();
 
     @MBeanInfo("Total number of non suppressed queues")
-    int getTotalNonSuppressedQueuesCount();
+    int getTotalManagedQueuesCount();
 
     @MBeanInfo("Total number of temporary queues")
     int getTotalTemporaryQueuesCount();

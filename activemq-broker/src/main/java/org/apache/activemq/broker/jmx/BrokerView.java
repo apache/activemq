@@ -286,7 +286,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
-    public int getTotalNonSuppressedTopicsCount() {
+    public int getTotalManagedTopicsCount() {
         return safeGetBroker().getTopicViews().size();
     }
 
@@ -306,7 +306,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
-    public int getTotalNonSuppressedQueuesCount() {
+    public int getTotalManagedQueuesCount() {
         return safeGetBroker().getQueueViews().size();
     }
 

@@ -32,6 +32,12 @@ public class BrokerViewTest {
     public void testBrokerViewRetrieveQueuesAndTopicsCount() throws Exception {
         BrokerService brokerService = new BrokerService();
         brokerService.setPersistent(false);
+
+        // Create and configure ManagementContext with suppressed destinations
+        ManagementContext managementContext = new ManagementContext();
+        managementContext.setCreateConnector(false);
+        managementContext.setSuppressMBean("destinationType=Queue,destinationType=Topic");
+        brokerService.setManagementContext(managementContext);
         brokerService.start();
 
         ActiveMQConnectionFactory factory =  new ActiveMQConnectionFactory(BrokerRegistry.getInstance().findFirst().getVmConnectorURI());
@@ -65,10 +71,10 @@ public class BrokerViewTest {
         assertTrue(Wait.waitFor(() -> (brokerService.getAdminView()) != null));
         final BrokerView view = brokerService.getAdminView();
         assertEquals(view.getTotalTopicsCount(), 12);
-        assertEquals(view.getTotalNonSuppressedTopicsCount(), 12);
+        assertEquals(view.getTotalManagedTopicsCount(), 12);
         assertEquals(view.getTotalTemporaryTopicsCount(), 1);
         assertEquals(view.getTotalQueuesCount(), 1);
-        assertEquals(view.getTotalNonSuppressedQueuesCount(), 1);
+        assertEquals(view.getTotalManagedQueuesCount(), 1);
         assertEquals(view.getTotalTemporaryQueuesCount(), 2);
     }
 }
