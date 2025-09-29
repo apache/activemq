@@ -128,11 +128,9 @@ public abstract class PListTestSupport {
     }
 
     protected void doTestRemove(final int COUNT) throws IOException {
-        Map<String, ByteSequence> map = new LinkedHashMap<String, ByteSequence>();
         for (int i = 0; i < COUNT; i++) {
             String test = new String("test" + i);
             ByteSequence bs = new ByteSequence(test.getBytes());
-            map.put(test, bs);
             plist.addLast(test, bs);
         }
         assertEquals(plist.size(), COUNT);
