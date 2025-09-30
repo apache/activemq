@@ -18,6 +18,9 @@ package org.apache.activemq.plugin;
 
 import org.apache.activemq.schema.core.DtoNetworkConnector;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NetworkConnectorsProcessor extends DefaultConfigurationProcessor {
 
     public NetworkConnectorsProcessor(RuntimeConfigurationBroker plugin, Class configurationClass) {
@@ -30,5 +33,33 @@ public class NetworkConnectorsProcessor extends DefaultConfigurationProcessor {
             return new NetworkConnectorProcessor(plugin, o.getClass());
         }
         return super.findProcessor(o);
+    }
+
+    @Override
+    protected void applyModifications(List<Object> current, List<Object> modification) {
+        // Remove items not in modification
+        for (Object currentObj : new ArrayList<>(current)) {
+            if (!modification.contains(currentObj)) {
+                ConfigurationProcessor processor = findProcessor(currentObj);
+                if (processor != null) {
+                    processor.remove(currentObj);
+                } else {
+                    remove(currentObj);
+                }
+            }
+        }
+        // Add new items from modification
+        for (Object modObj : modification) {
+            if (!current.contains(modObj)) {
+                ConfigurationProcessor processor = findProcessor(modObj);
+                if (processor != null) {
+                    processor.addNew(modObj);
+                } else {
+                    addNew(modObj);
+                }
+            } else {
+                plugin.debug("Skipping unchanged network connector: " + modObj);
+            }
+        }
     }
 }
