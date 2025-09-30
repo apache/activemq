@@ -69,6 +69,14 @@ public interface ConnectionViewMBean extends Service {
     String getClientId();
 
     /**
+     * Returns the identifier for this connection
+     *
+     * @return the identifier for this connection
+     */
+    @MBeanInfo("ID for this connection")
+    String getConnectionId();
+
+    /**
      * Returns the number of messages to be dispatched to this connection
      * @return the  number of messages pending dispatch
      */
