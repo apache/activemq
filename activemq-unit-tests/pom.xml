@@ -1145,5 +1145,33 @@
               </plugins>
           </build>
       </profile>
+      <profile>
+        <id>jdk21-plus</id>
+        <activation>
+          <jdk>[21,)</jdk>
+        </activation>
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>build-helper-maven-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>add-jdk21-test-source</id>
+                  <phase>generate-test-sources</phase>
+                  <goals>
+                    <goal>add-test-source</goal>
+                  </goals>
+                  <configuration>
+                    <sources>
+                      <source>src/test/java21</source>
+                    </sources>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
   </profiles>
 </project>
