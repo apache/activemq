@@ -193,6 +193,23 @@
 
     <plugins>
       <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>java21-compile</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <release>21</release> <!-- Specific Java version for alternative classes -->
+                  <compileSourceRoots>${project.basedir}/src/main/java21</compileSourceRoots>
+                  <multiReleaseOutput>true</multiReleaseOutput>
+                </configuration>
+            </execution>
+          </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
@@ -200,9 +217,14 @@
         <configuration>
           <instructions>
             <Import-Package>
+              !java.*,
+              !javax.naming*,
+              !javax.net*,
+              !org.apache.activemq*,
               !com.google.errorprone.annotations,
               !com.google.errorprone.annotations.concurrent,
               com.thoughtworks.xstream.*;resolution:="optional",
+              javax.jmdns.*;resolution:="optional",
               *
             </Import-Package>
             <Private-Package>
@@ -233,7 +255,6 @@
           </includes>
         </configuration>
       </plugin>
-
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javacc-maven-plugin</artifactId>

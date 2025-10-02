@@ -277,11 +277,6 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-client-jdk21</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-client</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
@@ -1465,8 +1460,6 @@
      <modules>
        <module>activemq-openwire-generator</module>
        <module>activemq-client</module>
-       <module>activemq-client-jdk21</module>
-       <module>activemq-client-jdk21-test</module>
        <module>activemq-openwire-legacy</module>
        <module>activemq-broker</module>
        <module>activemq-stomp</module>
