@@ -69,7 +69,8 @@
     <insight-version>1.2.0.Beta4</insight-version>
     <jakarta-jms-api-version>2.0.3</jakarta-jms-api-version>
     <jakarta-jms-api-v3-version>3.1.0</jakarta-jms-api-v3-version>
-    <jackson-version>2.18.3</jackson-version>
+    <jackson-version>2.20.0</jackson-version>
+    <jackson-annotations-version>2.20</jackson-annotations-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty9-version>9.4.57.v20241219</jetty9-version>
@@ -718,7 +719,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>${jackson-version}</version>
+        <version>${jackson-annotations-version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
