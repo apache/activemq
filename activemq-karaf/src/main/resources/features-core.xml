@@ -67,7 +67,7 @@
       <bundle dependency="true">mvn:org.codehaus.jettison/jettison/${jettison-version}</bundle>
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${jackson-version}</bundle>
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${jackson-version}</bundle>
-      <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson-version}</bundle>
+      <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson-annotations-version}</bundle>
     </feature>
 
     <!-- JMS1.1 and JMS2.0 support via the same Geronimo JMS 2 bundle  -->
