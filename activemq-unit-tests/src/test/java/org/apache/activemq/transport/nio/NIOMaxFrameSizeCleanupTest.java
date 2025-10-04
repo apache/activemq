@@ -120,7 +120,7 @@ public class NIOMaxFrameSizeCleanupTest {
         }
 
         //Generate a body that is too large
-        StringBuffer body = new StringBuffer();
+        StringBuilder body = new StringBuilder();
         Random r = new Random();
         for (int i = 0; i < 10000; i++) {
             body.append(r.nextInt());
