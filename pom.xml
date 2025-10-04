@@ -75,7 +75,7 @@
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty9-version>9.4.57.v20241219</jetty9-version>
     <jetty-version>${jetty9-version}</jetty-version>
-    <jmdns-version>3.6.0</jmdns-version>
+    <jmdns-version>3.6.2</jmdns-version>
     <tomcat-api-version>9.0.100</tomcat-api-version>
     <javassist-version>3.30.2-GA</javassist-version>
     <jettison-version>1.5.4</jettison-version>
