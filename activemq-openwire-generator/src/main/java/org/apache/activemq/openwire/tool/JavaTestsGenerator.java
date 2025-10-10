@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.codehaus.jam.JAnnotation;
 import org.codehaus.jam.JClass;
@@ -180,7 +181,7 @@ public class JavaTestsGenerator extends MultiSourceGenerator {
                     if (size == null) {
                         size = "2";
                     }
-                    if (arrayType == jclass.getSimpleName()) {
+                    if (Objects.equals(arrayType, jclass.getSimpleName())) {
                         size = "0";
                     }
                     out.println("        {");
