@@ -180,7 +180,7 @@ public class RestTest extends JettyTestSupport {
                     asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", buf);
 
             assertEquals(HttpStatus.OK_200, result.get().getResponse().getStatus());
-            LOG.info("Received: " +  buf);
+            LOG.info("Received: {}", buf);
             assertEquals(correlId,  buf.toString());
         }
         httpClient.stop();
@@ -199,9 +199,9 @@ public class RestTest extends JettyTestSupport {
                 asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", buf);
 
         assertEquals(HttpStatus.OK_200, result.get().getResponse().getStatus());
-        LOG.info("Received: " + buf);
+        LOG.info("Received: {}", buf);
 
-        final StringBuffer buf2 = new StringBuffer();
+        final StringBuilder buf2 = new StringBuilder();
         final CountDownLatch latch2 = new CountDownLatch(1);
         httpClient.newRequest("http://localhost:" + port + "/message/test?clientId=test&action=unsubscribe")
             .method(HttpMethod.POST).send(new BufferingResponseListener() {

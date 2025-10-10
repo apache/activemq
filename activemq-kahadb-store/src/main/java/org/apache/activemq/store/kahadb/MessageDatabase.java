@@ -191,7 +191,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 openwireVersion = OpenWireFormat.DEFAULT_LEGACY_VERSION;
             }
 
-            LOG.info("KahaDB is version " + version);
+            LOG.info("KahaDB is version {}", version);
         }
 
         public void write(DataOutput os) throws IOException {
@@ -381,7 +381,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     private void startCheckpoint() {
         if (checkpointInterval == 0 && cleanupInterval == 0) {
-            LOG.info("periodic checkpoint/cleanup disabled, will occur on clean " + (getCleanupOnStop() ? "shutdown/" : "") + "restart");
+            LOG.info("periodic checkpoint/cleanup disabled, will occur on clean {}restart", getCleanupOnStop() ? "shutdown/" : "");
             return;
         }
         synchronized (schedulerLock) {
@@ -463,7 +463,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             try {
                 loadPageFile();
             } catch (Throwable t) {
-                LOG.warn("Index corrupted. Recovering the index through journal replay. Cause:" + t);
+                LOG.warn("Index corrupted. Recovering the index through journal replay. Cause", t);
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Index load failure", t);
                 }
@@ -631,7 +631,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         @Override
         public String toString() {
-           StringBuffer buffer = new StringBuffer();
+           StringBuilder buffer = new StringBuilder();
            buffer.append(location).append(";").append(id).append(";\n");
            for (Entry<KahaDestination, opCount> op : destinationOpCount.entrySet()) {
                buffer.append(op.getKey()).append('+').append(op.getValue().add).append(',').append('-').append(op.getValue().remove).append(';');

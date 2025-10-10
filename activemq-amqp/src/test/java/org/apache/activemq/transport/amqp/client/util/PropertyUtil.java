@@ -19,13 +19,13 @@ package org.apache.activemq.transport.amqp.client.util;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -85,7 +85,7 @@ public class PropertyUtil {
         if (questionMark > 0) {
             schemeSpecificPart = schemeSpecificPart.substring(0, questionMark);
         }
-        if (query != null && query.length() > 0) {
+        if (query != null && !query.isEmpty()) {
             schemeSpecificPart += "?" + query;
         }
         return new URI(uri.getScheme(), schemeSpecificPart, uri.getFragment());
@@ -116,27 +116,23 @@ public class PropertyUtil {
      *
      * @throws URISyntaxException if the given URI is invalid.
      */
-    public static String createQueryString(Map<String, ? extends Object> options) throws URISyntaxException {
-        try {
-            if (options.size() > 0) {
-                StringBuffer rc = new StringBuffer();
-                boolean first = true;
-                for (Entry<String, ? extends Object> entry : options.entrySet()) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        rc.append("&");
-                    }
-                    rc.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
-                    rc.append("=");
-                    rc.append(URLEncoder.encode((String) entry.getValue(), "UTF-8"));
+    public static String createQueryString(Map<String, ? extends Object> options) {
+        if (!options.isEmpty()) {
+            StringBuilder rc = new StringBuilder();
+            boolean first = true;
+            for (Entry<String, ? extends Object> entry : options.entrySet()) {
+                if (first) {
+                    first = false;
+                } else {
+                    rc.append("&");
                 }
-                return rc.toString();
-            } else {
-                return "";
+                rc.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8));
+                rc.append("=");
+                rc.append(URLEncoder.encode((String) entry.getValue(), StandardCharsets.UTF_8));
             }
-        } catch (UnsupportedEncodingException e) {
-            throw (URISyntaxException) new URISyntaxException(e.toString(), "Invalid encoding").initCause(e);
+            return rc.toString();
+        } else {
+            return "";
         }
     }
 
@@ -196,8 +192,8 @@ public class PropertyUtil {
             for (int i = 0; i < parameters.length; i++) {
                 int p = parameters[i].indexOf("=");
                 if (p >= 0) {
-                    String name = URLDecoder.decode(parameters[i].substring(0, p), "UTF-8");
-                    String value = URLDecoder.decode(parameters[i].substring(p + 1), "UTF-8");
+                    String name = URLDecoder.decode(parameters[i].substring(0, p), StandardCharsets.UTF_8);
+                    String value = URLDecoder.decode(parameters[i].substring(p + 1), StandardCharsets.UTF_8);
                     rc.put(name, value);
                 } else {
                     rc.put(parameters[i], null);

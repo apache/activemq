@@ -77,7 +77,7 @@ public class RestPersistentTest extends JettyTestSupport {
     private void postMessage(HttpClient httpClient, String url, String properties, String message) throws Exception
     {
         final CountDownLatch latch = new CountDownLatch(1);
-        final StringBuffer buf = new StringBuffer();
+        final StringBuilder buf = new StringBuilder();
         final AtomicInteger status = new AtomicInteger();
         httpClient.newRequest(url+"&"+properties)
             .header("Content-Type","text/xml")
@@ -99,7 +99,7 @@ public class RestPersistentTest extends JettyTestSupport {
     {
 
         final CountDownLatch latch = new CountDownLatch(1);
-        final StringBuffer buf = new StringBuffer();
+        final StringBuilder buf = new StringBuilder();
         final AtomicInteger status = new AtomicInteger();
         Request request = httpClient.newRequest(url)
             .header("accept", "text/xml")
