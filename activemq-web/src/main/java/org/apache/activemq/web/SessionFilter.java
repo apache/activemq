@@ -36,12 +36,14 @@ import jakarta.servlet.http.HttpSession;
  */
 public class SessionFilter implements Filter {
 
+    public static final String SESSION_SECRET_ATTRIBUTE = "secret";
+
     public void init(FilterConfig filterConfig) throws ServletException {
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
     	// set secret to prevent CSRF attacks
-        ((HttpServletRequest)request).getSession(true).setAttribute("secret", UUID.randomUUID().toString());;
+        ((HttpServletRequest)request).getSession(true).setAttribute(SESSION_SECRET_ATTRIBUTE, UUID.randomUUID().toString());;
         chain.doFilter(request, response);
     }
 

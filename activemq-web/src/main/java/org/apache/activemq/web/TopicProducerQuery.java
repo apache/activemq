@@ -21,12 +21,16 @@ import java.util.Collection;
 import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.jmx.ProducerViewMBean;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Query for Topic producers.
  * 
  * 
  */
+@Component("topicProducerQuery")
+@RequestScope
 public class TopicProducerQuery extends DestinationFacade {
 
 	public TopicProducerQuery(BrokerFacade brokerFacade) throws JMSException {
