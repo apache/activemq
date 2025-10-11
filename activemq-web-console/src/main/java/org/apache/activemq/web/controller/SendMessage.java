@@ -26,12 +26,14 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
 import org.apache.activemq.web.WebClient;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Sends a message
  */
+@Component
+@RequestScope
 public class SendMessage extends DestinationFacade implements Controller {
 
     private String jmsText;
@@ -43,32 +45,26 @@ public class SendMessage extends DestinationFacade implements Controller {
     private String jmsType;
     private int jmsMessageCount = 1;
     private String jmsMessageCountHeader = "JMSXMessageNumber";
-    private boolean redirectToBrowse;
 
-    public SendMessage(BrokerFacade brokerFacade) {
+    public SendMessage(final BrokerFacade brokerFacade) {
         super(brokerFacade);
     }
 
-    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws Exception {
         WebClient client = WebClient.getWebClient(request);
         ActiveMQDestination dest = createDestination();
 
         sendMessages(request, client, dest);
-        if (redirectToBrowse) {
-            if (isQueue()) {
-                return new ModelAndView("redirect:browse.jsp?destination=" + getJMSDestination());
-            }
-        }
-        return redirectToBrowseView();
+        response.sendRedirect(isQueue() ? "queues.jsp" : "topics.jsp");
     }
 
-    protected void sendMessages(HttpServletRequest request, WebClient client, ActiveMQDestination dest)
+    protected void sendMessages(final HttpServletRequest request, final WebClient client, final ActiveMQDestination dest)
             throws JMSException {
         if (jmsMessageCount <= 1) {
             jmsMessageCount = 1;
         }
         for (int i = 0; i < jmsMessageCount; i++) {
-            Message message = createMessage(client, request);
+            Message message = createMessage(client);
             appendHeaders(message, request);
             if (jmsMessageCount > 1) {
                 message.setIntProperty(jmsMessageCountHeader, i + 1);
@@ -118,7 +114,7 @@ public class SendMessage extends DestinationFacade implements Controller {
         return jmsPersistent;
     }
 
-    public void setJMSPersistent(boolean persistent) {
+    public void setJMSPersistent(final boolean persistent) {
         this.jmsPersistent = persistent;
     }
 
@@ -126,7 +122,7 @@ public class SendMessage extends DestinationFacade implements Controller {
         return jmsPriority;
     }
 
-    public void setJMSPriority(int priority) {
+    public void setJMSPriority(final int priority) {
         this.jmsPriority = priority;
     }
 
@@ -134,7 +130,7 @@ public class SendMessage extends DestinationFacade implements Controller {
         return jmsText;
     }
 
-    public void setJMSText(String text) {
+    public void setJMSText(final String text) {
         this.jmsText = text;
     }
 
@@ -142,7 +138,7 @@ public class SendMessage extends DestinationFacade implements Controller {
         return jmsTimeToLive;
     }
 
-    public void setJMSTimeToLive(int timeToLive) {
+    public void setJMSTimeToLive(final int timeToLive) {
         this.jmsTimeToLive = timeToLive;
     }
 
@@ -150,7 +146,7 @@ public class SendMessage extends DestinationFacade implements Controller {
         return jmsMessageCount;
     }
 
-    public void setJMSMessageCount(int copies) {
+    public void setJMSMessageCount(final int copies) {
         jmsMessageCount = copies;
     }
 
@@ -167,7 +163,7 @@ public class SendMessage extends DestinationFacade implements Controller {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected Message createMessage(WebClient client, HttpServletRequest request) throws JMSException {
+    protected Message createMessage(final WebClient client) throws JMSException {
         if (jmsText != null) {
             return client.getSession().createTextMessage(jmsText);
         }
@@ -176,14 +172,14 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     @SuppressWarnings("rawtypes")
-    protected void appendHeaders(Message message, HttpServletRequest request) throws JMSException {
+    protected void appendHeaders(final Message message, final HttpServletRequest request) throws JMSException {
         message.setJMSCorrelationID(jmsCorrelationID);
-        if (jmsReplyTo != null && jmsReplyTo.trim().length() > 0) {
+        if (jmsReplyTo != null && !jmsReplyTo.trim().isEmpty()) {
             message.setJMSReplyTo(ActiveMQDestination.createDestination(jmsReplyTo, ActiveMQDestination.QUEUE_TYPE));
         }
         message.setJMSType(jmsType);
 
-        // now lets add all of the parameters
+        // now lets add all the parameters
         Map map = request.getParameterMap();
         if (map != null) {
             for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
@@ -205,28 +201,28 @@ public class SendMessage extends DestinationFacade implements Controller {
                     if ((name.equals("AMQ_SCHEDULED_DELAY") || name.equals("AMQ_SCHEDULED_PERIOD"))) {
                         if (value != null) {
                             String str = value.toString().trim();
-                            if (str.length() > 0) {
+                            if (!str.isEmpty()) {
                                 message.setLongProperty(name, Long.parseLong(str));
                             }
                         }
                     } else if (name.equals("AMQ_SCHEDULED_REPEAT")) {
                         if (value != null) {
                             String str = value.toString().trim();
-                            if (str.length() > 0) {
+                            if (!str.isEmpty()) {
                                 message.setIntProperty(name, Integer.parseInt(str));
                             }
                         }
                     } else if (name.equals("AMQ_SCHEDULED_CRON")) {
                         if (value != null) {
                             String str = value.toString().trim();
-                            if (str.length() > 0) {
+                            if (!str.isEmpty()) {
                                 message.setStringProperty(name, str);
                             }
                         }
                     } else {
                         if (value instanceof String) {
                             String text = value.toString().trim();
-                            if (text.length() == 0) {
+                            if (text.isEmpty()) {
                                 value = null;
                             } else {
                                 value = text;
@@ -240,7 +236,7 @@ public class SendMessage extends DestinationFacade implements Controller {
             }
         }
     }
-    protected boolean isValidPropertyName(String name) {
+    protected boolean isValidPropertyName(final String name) {
         // allow JMSX extensions or non JMS properties
         return name.startsWith("JMSX") || !name.startsWith("JMS");
     }

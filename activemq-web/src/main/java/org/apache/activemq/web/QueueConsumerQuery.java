@@ -21,12 +21,16 @@ import java.util.Collection;
 import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Query for Queue consumers.
- * 
+ *
  * 
  */
+@Component("queueConsumerQuery")
+@RequestScope
 public class QueueConsumerQuery extends DestinationFacade {
 
 	public QueueConsumerQuery(BrokerFacade brokerFacade) throws JMSException {

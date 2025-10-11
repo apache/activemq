@@ -21,28 +21,23 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
-/**
- * 
- * 
- */
+@Component
+@RequestScope
 public class CreateDestination extends DestinationFacade implements Controller {
 
     public CreateDestination(BrokerFacade brokerFacade) {
         super(brokerFacade);
     }
 
-    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws Exception {
         addDestination();
-        return redirectToBrowseView();
+        response.sendRedirect(isQueue() ? "queues.jsp" : "topics.jsp");
     }
 
 	public String[] getSupportedHttpMethods() {
 		return new String[]{"POST"};
 	}
-    
-    
-
 }
