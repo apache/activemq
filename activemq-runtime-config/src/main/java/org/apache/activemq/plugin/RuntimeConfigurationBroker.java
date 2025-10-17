@@ -42,6 +42,7 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.plugin.jmx.RuntimeConfigurationView;
 import org.apache.activemq.schema.core.DtoBroker;
 import org.apache.activemq.spring.Utils;
+import org.apache.activemq.util.XmlFactories;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -178,10 +179,8 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
                 unMarshaller.setSchema(getSchema());
 
                 // skip beans and pull out the broker node to validate
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                DocumentBuilderFactory dbf = XmlFactories.getSafeDocumentBuilderFactory();
                 dbf.setNamespaceAware(true);
-                dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
-                dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
                 DocumentBuilder db = dbf.newDocumentBuilder();
                 Document doc = db.parse(configToMonitor.getInputStream());
