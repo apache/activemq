@@ -64,7 +64,7 @@
     <jackson-annotations-version>2.20</jackson-annotations-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
     <jasypt-version>1.9.3</jasypt-version>
-    <jaxb-version>4.0.5</jaxb-version>
+    <jaxb-version>4.0.6</jaxb-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty-version>11.0.26</jetty-version>
     <jetty-version-range>[11,13)</jetty-version-range>
