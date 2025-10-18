@@ -27,6 +27,10 @@ pipeline {
         }
     }
 
+    triggers {
+      cron('0 0 * * *')
+    }
+
     tools {
         // ... tell Jenkins what java version, maven version or other tools are required ...
         maven 'maven_3_latest'
@@ -42,10 +46,9 @@ pipeline {
     }
 
     parameters {
-        choice(name: 'nodeLabel', choices: ['ubuntu', 's390x', 'arm', 'Windows']) 
+        choice(name: 'nodeLabel', choices: [ 's390x']) 
         choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest', 'jdk_24_latest', 'jdk_17_latest_windows', 'jdk_21_latest_windows', 'jdk_24_latest_windows'])
-        booleanParam(name: 'deployEnabled', defaultValue: false)
-        booleanParam(name: 'sonarEnabled', defaultValue: false)
+        booleanParam(name: 'sonarEnabled', defaultValue: true)
         booleanParam(name: 'testsEnabled', defaultValue: true)
     }
 
@@ -138,23 +141,6 @@ pipeline {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
                 }
-            }
-        }
-
-        stage('Deploy') {
-            tools {
-                jdk params.jdkVersion
-            }
-            when {
-                expression {
-                    params.deployEnabled && env.BRANCH_NAME ==~ /(activemq-5.19.x|activemq-6.1.x|main)/
-                }
-            }
-            steps {
-                echo 'Deploying'
-                sh 'java -version'
-                sh 'mvn -version'
-                sh 'mvn -B -e deploy -Pdeploy -DskipTests'
             }
         }
 
