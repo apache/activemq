@@ -103,7 +103,7 @@
     <shiro-version>1.13.0</shiro-version>
     <slf4j-version>2.0.16</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
-    <spring-version>5.3.39</spring-version>
+    <spring-version>5.3.41</spring-version>
     <taglibs-version>1.2.5</taglibs-version>
     <velocity-version>2.4.1</velocity-version>
     <xpp3-version>1.1.4c</xpp3-version>
