@@ -185,7 +185,7 @@ public class BrokerService implements Service {
     private JmsConnector[] jmsBridgeConnectors; // these are Jms to Jms bridges
     // to other jms messaging systems
     private boolean deleteAllMessagesOnStartup;
-    private boolean advisorySupport = true;
+    private boolean advisorySupport = false;
     private boolean anonymousProducerAdvisorySupport = false;
     private URI vmConnectorURI;
     private String defaultSocketURIString;
