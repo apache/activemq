@@ -107,7 +107,7 @@ public class CursorMemoryHighWaterMarkTest {
         systemUsage = broker1.getSystemUsage().getMemoryUsage().getPercentUsage();
         assertTrue("System Usage on broker1 before test", 60 < systemUsage);
 
-        LOG.info("Broker System Mem Usage: " + broker1.getSystemUsage().getMemoryUsage());
+        LOG.info("Broker System Mem Usage: {}", broker1.getSystemUsage().getMemoryUsage());
 
         //send a mesage to myqueue.2
         produceMesssages(MY_QUEUE_2, 1);
@@ -139,17 +139,15 @@ public class CursorMemoryHighWaterMarkTest {
 
     }
 
-
     private String getTextForMessage() {
-        StringBuffer stringBuffer = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i > 10000; i++) {
-            stringBuffer.append("0123456789");
+            sb.append("0123456789");
         }
 
-        return stringBuffer.toString();
+        return sb.toString();
     }
-
 
     private void consume(String queue, int messageCount) throws Exception {
 
