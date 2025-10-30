@@ -158,9 +158,13 @@ Edit the `docker-compose.yml` file to edit port settings.
 
 | Environment Variable | Description |
 |----------------------|-------------|
-| `ACTIVEMQ_CONNECTION_USER` | Username to access transport connector on the broker (JMS, ...). If not set, no user and password are required |
+| `ACTIVEMQ_CONNECTION_USER` | Username to access transport connector on the broker (JMS, ...). If not set, no user and password are required. |
 | `ACTIVEMQ_CONNECTION_PASSWORD` | Password to access transport connector on the broker (JMS, ...). It should be used with `ACTIVEMQ_CONNECTION_USER`. |
+| `ACTIVEMQ_CONNECTION_GROUPS` | Comma-separated list of groups to which the user belongs. |
 | `ACTIVEMQ_JMX_USER` | Username to access the JMX MBean server of the broker. If set, ActiveMQ accepts remote JMX connection, else, only local connection are allowed. |
-| `ACTIVEMQ_JMX_PASSWORD` | Password to access the JMX MBean server of the broker. It should be used with `ACTIVEMQ_JMX_USER`/  |
+| `ACTIVEMQ_JMX_PASSWORD` | Password to access the JMX MBean server of the broker. It should be used with `ACTIVEMQ_JMX_USER`.  |
+| `ACTIVEMQ_JMX_ENABLED` | Toggle ActiveMQ's JMX connector (without authentication). |
+| `ACTIVEMQ_WEB_DEFAULT_USER` | Default username to access the ActiveMQ WebConsole (used at build time). |
+| `ACTIVEMQ_WEB_DEFAULT_PASSWORD` | Default password to access the ActiveMQ WebConsole (used at build time). |
 | `ACTIVEMQ_WEB_USER` | Username to access the ActiveMQ WebConsole. |
 | `ACTIVEMQ_WEB_PASSWORD` | Password to access the ActiveMQ WebConsole. |
