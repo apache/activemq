@@ -15,13 +15,9 @@
  * limitations under the License.
  */
 
-/* ===================================================== */
-/* Single place to import all css files used in head.jsp */
-/* ===================================================== */
-
-@import url('sorttable.css');
-@import url('type-settings.css');
-@import url('site.css');
-@import url('prettify.css');
-@import url('dark-mode.css');
-@import url('header.css');
+@media (prefers-color-scheme: dark) {
+  html {
+    -webkit-filter: invert() sepia() contrast(75%) !important;
+    filter: invert() sepia() contrast(75%) !important;
+  }
+}
