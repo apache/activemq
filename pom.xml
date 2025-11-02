@@ -44,7 +44,7 @@
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.10.15</ant-version>
     <aries-version>1.1.0</aries-version>
-    <camel-version>4.14.1</camel-version>
+    <camel-version>4.14.2</camel-version>
     <commons-beanutils-version>1.11.0</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
     <commons-dbcp2-version>2.13.0</commons-dbcp2-version>
