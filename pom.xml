@@ -86,7 +86,7 @@
     <qpid-jms-version>2.4.0</qpid-jms-version>
     <netty-version>4.1.94.Final</netty-version>
     <rome-version>2.1.0</rome-version>
-    <shiro-version>1.13.0</shiro-version>
+    <shiro-version>2.0.5</shiro-version>
     <slf4j-version>2.0.17</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
     <spring-version>6.2.12</spring-version>
