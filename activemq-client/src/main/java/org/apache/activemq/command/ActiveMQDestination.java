@@ -211,7 +211,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         this.hashValue = 0;
         this.isPattern = false;
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < destinations.length; i++) {
             if (i != 0) {
                 sb.append(COMPOSITE_SEPERATOR);

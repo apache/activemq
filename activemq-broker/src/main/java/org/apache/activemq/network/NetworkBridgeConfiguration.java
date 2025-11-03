@@ -28,6 +28,7 @@ import org.apache.activemq.command.ConsumerInfo;
  * Configuration for a NetworkBridge
  */
 public class NetworkBridgeConfiguration {
+    public static final String DURABLE_SUB_PREFIX = "NC-DS_";
 
     private boolean conduitSubscriptions = true;
     /**
@@ -337,7 +338,7 @@ public class NetworkBridgeConfiguration {
     public String getDestinationFilter() {
         if (this.destinationFilter == null) {
             if (dynamicallyIncludedDestinations != null && !dynamicallyIncludedDestinations.isEmpty()) {
-                StringBuffer filter = new StringBuffer();
+                StringBuilder filter = new StringBuilder();
                 String delimiter = "";
                 for (ActiveMQDestination destination : dynamicallyIncludedDestinations) {
                     if (!destination.isTemporary()) {
@@ -359,7 +360,7 @@ public class NetworkBridgeConfiguration {
                 }
                 return filter.toString();
             }   else {
-                StringBuffer filter = new StringBuffer();
+                StringBuilder filter = new StringBuilder();
                 filter.append(AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX);
                 filter.append(">");
                 if (useVirtualDestSubs) {

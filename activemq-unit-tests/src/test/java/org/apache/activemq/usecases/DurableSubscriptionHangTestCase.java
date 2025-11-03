@@ -30,6 +30,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -39,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class DurableSubscriptionHangTestCase {
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionHangTestCase.class);
@@ -55,7 +58,7 @@ public class DurableSubscriptionHangTestCase {
         brokerService.setBrokerName(brokerName);
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
-        defaultEntry.setExpireMessagesPeriod(5000);
+        defaultEntry.setExpireMessagesPeriod(1000);
         policyMap.setDefaultEntry(defaultEntry);
         brokerService.setDestinationPolicy(policyMap);
         brokerService.start();
@@ -67,12 +70,13 @@ public class DurableSubscriptionHangTestCase {
     }
 
 	@Test
-	public void testHanging() throws Exception
-	{
+	public void testHanging() throws Exception {
 		registerDurableSubscription();
 		produceExpiredAndOneNonExpiredMessages();
-		TimeUnit.SECONDS.sleep(10);		// make sure messages are expired
-        Message message = collectMessagesFromDurableSubscriptionForOneMinute();
+		assertTrue(Wait.waitFor(() -> brokerService.getDestination(new ActiveMQTopic(topicName))
+				.getDestinationStatistics().getExpired().getCount() == 1000, 30000, 500));
+
+        Message message = getUnexpiredMessageFromDurableSubscription();
         LOG.info("got message:" + message);
         assertNotNull("Unable to read unexpired message", message);
 	}
@@ -84,8 +88,7 @@ public class DurableSubscriptionHangTestCase {
         Topic topic = session.createTopic(topicName);
         MessageProducer producer = session.createProducer(topic);
         producer.setTimeToLive(TimeUnit.SECONDS.toMillis(1));
-        for(int i=0; i<40000; i++)
-        {
+        for(int i = 0; i < 1000; i++) {
         	sendRandomMessage(session, producer);
         }
         producer.setTimeToLive(TimeUnit.DAYS.toMillis(1));
@@ -108,8 +111,7 @@ public class DurableSubscriptionHangTestCase {
 		LOG.info("Durable Sub Registered");
 	}
 
-	private Message collectMessagesFromDurableSubscriptionForOneMinute() throws Exception
-	{
+	private Message getUnexpiredMessageFromDurableSubscription() throws Exception {
 		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://" + brokerName);
 		TopicConnection connection = connectionFactory.createTopicConnection();
 
@@ -119,7 +121,7 @@ public class DurableSubscriptionHangTestCase {
 		connection.start();
 		TopicSubscriber subscriber = topicSession.createDurableSubscriber(topic, durableSubName);
 		LOG.info("About to receive messages");
-		Message message = subscriber.receive(120000);
+		Message message = subscriber.receive(1000);
 		subscriber.close();
 		connection.close();
 		LOG.info("collectMessagesFromDurableSubscriptionForOneMinute done");

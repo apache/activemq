@@ -289,7 +289,6 @@ public class TopicRegion extends AbstractRegion {
 
             // Now perhaps there other durable subscriptions (via wild card)
             // that would match this destination..
-            durableSubscriptions.values();
             for (DurableTopicSubscription sub : durableSubscriptions.values()) {
                 // Skip over subscriptions that we already added..
                 if (dupChecker.contains(sub)) {

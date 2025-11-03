@@ -20,9 +20,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.StringJoiner;
+
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.filter.XPathExpression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Priority dispatch policy that sends a message to every subscription that
@@ -32,6 +37,8 @@ import org.apache.activemq.filter.MessageEvaluationContext;
  * 
  */
 public class PriorityDispatchPolicy extends SimpleDispatchPolicy {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PriorityDispatchPolicy.class);
 
     private final Comparator<? super Subscription> orderedCompare = new Comparator<Subscription>() {
         @Override
@@ -46,12 +53,13 @@ public class PriorityDispatchPolicy extends SimpleDispatchPolicy {
         ArrayList<Subscription> ordered = new ArrayList<Subscription>(consumers);
         Collections.sort(ordered, orderedCompare);
 
-        StringBuffer stringBuffer = new StringBuffer();
-        for (Subscription sub: ordered) {
-            stringBuffer.append(sub.getConsumerInfo().getPriority());
-            stringBuffer.append(',');
+        if (LOG.isTraceEnabled() && !ordered.isEmpty()) {
+            StringJoiner stringJoiner = new StringJoiner(",");
+            for (Subscription sub : ordered) {
+                stringJoiner.add(String.valueOf(sub.getConsumerInfo().getPriority()));
+            }
+            LOG.trace("Ordered priorities: {}", stringJoiner);
         }
-        //System.err.println("Priority:" + stringBuffer.toString() + ", msg: " + node.getMessage());
         return super.dispatch(node, msgContext, ordered);
     }
 

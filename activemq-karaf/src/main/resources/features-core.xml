@@ -55,9 +55,7 @@
       <feature>connector</feature>
       <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
-      <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang-version}</bundle>
       <bundle dependency="true">mvn:commons-codec/commons-codec/1.15</bundle>
-      <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_6</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.2_1</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt-spring31/1.9.2_1</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/${servicemix.specs.version}</bundle>
@@ -67,7 +65,7 @@
       <bundle dependency="true">mvn:org.codehaus.jettison/jettison/${jettison-version}</bundle>
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${jackson-version}</bundle>
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${jackson-version}</bundle>
-      <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson-version}</bundle>
+      <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson-annotations-version}</bundle>
     </feature>
 
     <!-- JMS1.1 and JMS2.0 support via the same Geronimo JMS 2 bundle  -->

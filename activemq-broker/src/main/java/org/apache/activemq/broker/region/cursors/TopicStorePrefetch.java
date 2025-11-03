@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.activemq.broker.region.IndirectMessageReference;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
@@ -151,6 +153,11 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         }
     }
 
+    @Override
+    protected MessageReference createBatchListRef(Message message) {
+        return new TopicStoreMessageReference(message);
+    }
+
     public byte getLastRecoveredPriority() {
         return lastRecoveredPriority;
     }
@@ -167,5 +174,25 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     @Override
     public String toString() {
         return "TopicStorePrefetch(" + clientId + "," + subscriberName + ",storeHasMessages=" + this.storeHasMessages +") " + this.subscription.getConsumerInfo().getConsumerId() + " - " + super.toString();
+    }
+
+    // This extends IndirectMessageReference to allow expiring messages for multiple
+    // durable subscriptions. Each durable subscription needs to ack the message in the store so
+    // each durable sub will now get their own reference so that the subscription can expire
+    // correctly and not just the first subscription.
+    static class TopicStoreMessageReference extends IndirectMessageReference {
+        private final AtomicBoolean processAsExpired = new AtomicBoolean(false);
+
+        public TopicStoreMessageReference(Message message) {
+            super(message);
+        }
+
+        @Override
+        public boolean canProcessAsExpired() {
+            // mark original message ref as expired, this won't be used
+            // by this class but someone may get the original message and check it
+            super.canProcessAsExpired();
+            return processAsExpired.compareAndSet(false, true);
+        }
     }
 }

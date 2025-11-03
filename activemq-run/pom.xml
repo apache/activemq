@@ -98,7 +98,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>${maven-source-plugin-version}</version>
             <configuration>
               <attach>false</attach>
             </configuration>

@@ -43,7 +43,7 @@ pipeline {
 
     parameters {
         choice(name: 'nodeLabel', choices: ['ubuntu', 's390x', 'arm', 'Windows']) 
-        choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest', 'jdk_23_latest', 'jdk_17_latest_windows', 'jdk_21_latest_windows', 'jdk_23_latest_windows']) 
+        choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest', 'jdk_24_latest', 'jdk_17_latest_windows', 'jdk_21_latest_windows', 'jdk_24_latest_windows'])
         booleanParam(name: 'deployEnabled', defaultValue: false)
         booleanParam(name: 'sonarEnabled', defaultValue: false)
         booleanParam(name: 'testsEnabled', defaultValue: true)
@@ -72,12 +72,12 @@ pipeline {
             }
         }
 
-        stage('Build JDK 23') {
+        stage('Build JDK 24') {
             tools {
-                jdk "jdk_23_latest"
+                jdk "jdk_24_latest"
             }
             steps {
-                echo 'Building JDK 23'
+                echo 'Building JDK 24'
                 sh 'java -version'
                 sh 'mvn -version'
                 sh 'mvn -U -B -e clean install -DskipTests'

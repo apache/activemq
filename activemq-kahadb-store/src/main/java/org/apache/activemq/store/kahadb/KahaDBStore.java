@@ -83,12 +83,14 @@ import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
 import org.apache.activemq.store.kahadb.data.KahaUpdateMessageCommand;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
+import org.apache.activemq.store.kahadb.disk.page.Transaction.CallableClosure;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.SubscriptionKey;
 import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
@@ -752,6 +754,25 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
 
+                        /**
+                         * [AMQ-9773]
+                         *
+                         * The order index sequence key value increases for every message since the beginning of the
+                         * creation of the index, so the first message available won't be at sequence key value:0 in
+                         * the index when there were older messages acknowledged.
+                         *
+                         * The MessageOrderCursor _position_ value is relative to the index, so there is a disconnect
+                         * between queue _position_ and index sequence value over time.
+                         *
+                         * The MessageRecoveryContext determines the recovery start position based off the provided
+                         * offset, or the position of the requested startMessageId. If a startMessageId is specified,
+                         * but not found in the index, then the value of 0 is used as a fallback.
+                         *
+                         * The MessageRecoveryContext determines the recovery end position based off of the provided
+                         * endMessageId (if provided), or the maximum recovered message count, or if the
+                         * MessageRecoveryListener signals that no more messages should be recovered
+                         * (ie memory is full).
+                         */
                         Long startSequenceOffset = null;
                         Long endSequenceOffset = null;
 
@@ -764,16 +785,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         if(messageRecoveryContext.getEndMessageId() != null && !messageRecoveryContext.getEndMessageId().isBlank()) {
                             endSequenceOffset = Optional.ofNullable(sd.messageIdIndex.get(tx, messageRecoveryContext.getEndMessageId()))
                                                         .orElse(startSequenceOffset + Long.valueOf(messageRecoveryContext.getMaxMessageCountReturned()));
-                        } else {
-                            endSequenceOffset = startSequenceOffset + Long.valueOf(messageRecoveryContext.getMaxMessageCountReturned());
+                            messageRecoveryContext.setEndSequenceId(endSequenceOffset);
                         }
 
-                        if(endSequenceOffset < startSequenceOffset) {
+                        if(endSequenceOffset != null &&
+                            endSequenceOffset < startSequenceOffset) {
                             LOG.warn("Invalid offset parameters start:{} end:{}", startSequenceOffset, endSequenceOffset);
                             throw new IllegalStateException("Invalid offset parameters start:" + startSequenceOffset + " end:" + endSequenceOffset);
                         }
 
-                        messageRecoveryContext.setEndSequenceId(endSequenceOffset);
                         Entry<Long, MessageKeys> entry = null;
                         recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, messageRecoveryContext.getMaxMessageCountReturned(), messageRecoveryContext);
                         Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
@@ -794,7 +814,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                                 break;
                             }
                         }
-                        sd.orderIndex.stoppedIterating();
+
+                        // [AMQ-9773] The sd.orderIndex uses the destination's cursor
+                        if(!messageRecoveryContext.isUseDedicatedCursor()) {
+                            sd.orderIndex.stoppedIterating();
+                        }
                     }
                 });
             } finally {
@@ -958,9 +982,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 unlockAsyncJobQueue();
             }
         }
+
+        @Override
+        public StoreType getType() {
+            return StoreType.KAHADB;
+        }
     }
 
-    class KahaDBTopicMessageStore extends KahaDBMessageStore implements TopicMessageStore {
+    class KahaDBTopicMessageStore extends KahaDBMessageStore implements TopicMessageStore{
         private final AtomicInteger subscriptionCount = new AtomicInteger();
         protected final MessageStoreSubscriptionStatistics messageStoreSubStats =
                 new MessageStoreSubscriptionStatistics(isEnableSubscriptionStatistics());
@@ -1318,6 +1347,64 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         }
                     }
                 });
+            } finally {
+                indexLock.writeLock().unlock();
+            }
+        }
+
+        @Override
+        public Map<SubscriptionKey,List<Message>> recoverExpired(Set<SubscriptionKey> subscriptions, int maxBrowse,
+            MessageRecoveryListener listener) throws Exception {
+            indexLock.writeLock().lock();
+            try {
+                return pageFile.tx().execute(tx -> {
+                        StoredDestination sd = getStoredDestination(dest, tx);
+                        sd.orderIndex.resetCursorPosition();
+                        int count = 0;
+                        final Map<SubscriptionKey, List<Message>> expired = new HashMap<>();
+                        final Map<String, SubscriptionKey> subKeys = new HashMap<>();
+
+                        // Check each subscription and track the ones that exist
+                        for (SubscriptionKey sub : subscriptions) {
+                            final String subKeyString = subscriptionKey(sub.getClientId(), sub.getSubscriptionName());
+                            if (sd.subscriptionCache.contains(subKeyString)) {
+                                subKeys.put(subKeyString, sub);
+                            }
+                        }
+
+                        // Iterate one time through the topic and check each message, stopping if we run out
+                        // hit the max browse limit, or if the listener returns false for hasSpace()
+                        final Set<Long> uniqueExpired = new HashSet<>();
+                        for (Iterator<Entry<Long, MessageKeys>> iterator =
+                            sd.orderIndex.iterator(tx, new MessageOrderCursor()); count < maxBrowse && iterator.hasNext() && listener.hasSpace(); ) {
+                            count++;
+                            Entry<Long, MessageKeys> entry = iterator.next();
+                            Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
+                            if (ackedAndPrepared != null && ackedAndPrepared.contains(entry.getValue().messageId)) {
+                                continue;
+                            }
+
+                            final Message msg = loadMessage(entry.getValue().location);
+                            if (msg.isExpired()) {
+                                // For every message that is expired, go through and check each subscription to see
+                                // if the message has already been acked. We don't want to return subs that have already
+                                // acked the message.
+                                for(Entry<String, SubscriptionKey> subKeyEntry : subKeys.entrySet()) {
+                                    SequenceSet sequence = sd.ackPositions.get(tx, subKeyEntry.getKey());
+                                    if (sequence != null && sequence.contains(entry.getKey())) {
+                                        List<Message> expMessages = expired.computeIfAbsent(subKeyEntry.getValue(), m -> new ArrayList<>());
+                                        expMessages.add(msg);
+                                        // pass unique messages to the listener so it can do any custom
+                                        // handling for the next call to listener.hasSpace()
+                                        if (uniqueExpired.add(entry.getKey())) {
+                                            listener.recoverMessage(msg);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return expired;
+                    });
             } finally {
                 indexLock.writeLock().unlock();
             }

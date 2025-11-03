@@ -17,10 +17,11 @@
 package org.apache.activemq.broker.policy;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import jakarta.jms.Connection;
@@ -42,19 +43,59 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * This unit test is to test that setting the property "sendDuplicateFromStoreToDLQ" on
- * PolicyEntry works correctly.
+ * PolicyEntry works correctly with and without cache enabled.
  *
  */
+@RunWith(value = Parameterized.class)
 public class SendDuplicateFromStoreToDLQTest {
+
+    @Parameterized.Parameters(name="sendDupToDLQ={1},cacheEnable={2},auditEnabled={3},optimizedDispatch={4}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {"dup+cache+aud+opt", true, true, true, true},
+                {"dup+cache+aud+!opt", true, true, true, false},
+                {"dup+cache+!aud+opt", true, true, false, true},
+                {"dup+cache+!aud+!opt", true, true, false, false},
+                {"dup+!cache+aud+opt", true, false, true, true},
+                {"dup+!cache+aud+!opt", true, false, true, false},
+                {"dup+!cache+!aud+opt", true, false, false, true},
+                {"dup+!cache+!aud+!opt", true, false, false, false},
+                {"!dup+cache+aud+opt", false, true, true, true},
+                {"!dup+cache+aud+!opt", false, true, true, false},
+                {"!dup+cache+!aud+opt", false, true, false, true},
+                {"!dup+cache+!aud+!opt", false, true, false, false},
+                {"!dup+!cache+aud+opt", false, false, true, true},
+                {"!dup+!cache+aud+!opt", false, false, true, false},
+                {"!dup+!cache+!aud+opt", false, false, false, true},
+                {"!dup+!cache+!aud+!opt", false, false, false, false},
+                {"default", null, null, null, null},
+        });
+    }
+
     BrokerService broker;
     ConnectionFactory factory;
     Connection connection;
     Session session;
     MessageProducer producer;
+
+    private final String testName;
+    private final Boolean sendDuplicateFromStoreToDLQEnabled;
+    private final Boolean useCacheEnabled;
+    private final Boolean auditEnabled;
+    private final Boolean optimizedDispatch;
+
+    public SendDuplicateFromStoreToDLQTest(String testName, Boolean sendDuplicateFromStoreToDLQEnabled, Boolean useCacheEnabled, Boolean auditEnabled, Boolean optimizedDispatch) {
+        this.testName = testName;
+        this.sendDuplicateFromStoreToDLQEnabled = sendDuplicateFromStoreToDLQEnabled;
+        this.useCacheEnabled = useCacheEnabled;
+        this.auditEnabled = auditEnabled;
+        this.optimizedDispatch = optimizedDispatch;
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -87,26 +128,13 @@ public class SendDuplicateFromStoreToDLQTest {
     }
 
     @Test
-    public void testSendDuplicateFromStoreToDLQTrue() throws Exception {
-        applySendDuplicateFromStoreToDLQPolicy(true);
-        doProcessSendDuplicateFromStoreToDLQ(true);
+    public void testSendDuplicateFromStoreToDLQScenario() throws Exception {
+        applyPolicy(sendDuplicateFromStoreToDLQEnabled, useCacheEnabled, auditEnabled, optimizedDispatch);
+        boolean sendExpected = (sendDuplicateFromStoreToDLQEnabled != null ? sendDuplicateFromStoreToDLQEnabled : new PolicyEntry().isSendDuplicateFromStoreToDLQ());
+        doProcessSendDuplicateFromStoreToDLQ(sendExpected);
     }
 
-    @Test
-    public void testSendDuplicateFromStoreToDLQFalse() throws Exception {
-        applySendDuplicateFromStoreToDLQPolicy(false);
-        doProcessSendDuplicateFromStoreToDLQ(false);
-    }
-    
-    @Test
-    public void testSendDuplicateFromStoreToDLQDefaultValue() throws Exception {
-        PolicyMap policyMap = applySendDuplicateFromStoreToDLQPolicy(null);
-        assertFalse(policyMap.getDefaultEntry().isSendDuplicateFromStoreToDLQ());
-        org.apache.activemq.broker.region.Queue queue = (org.apache.activemq.broker.region.Queue)broker.getDestination(new ActiveMQQueue("AMQ.8440"));
-        assertFalse(queue.isSendDuplicateFromStoreToDLQ());
-    }
-
-    protected void doProcessSendDuplicateFromStoreToDLQ(boolean enabled) throws Exception {
+    protected void doProcessSendDuplicateFromStoreToDLQ(boolean sendExpected) throws Exception {
         createQueue("AMQ.8397");
         org.apache.activemq.broker.region.Queue queue = (org.apache.activemq.broker.region.Queue)broker.getDestination(new ActiveMQQueue("AMQ.8397"));
         assertEquals(Long.valueOf(0l), Long.valueOf(queue.getDestinationStatistics().getMessages().getCount()));
@@ -114,7 +142,7 @@ public class SendDuplicateFromStoreToDLQTest {
 
         MessageConsumer messageConsumer = session.createConsumer(session.createQueue("AMQ.8397"));
         producer.send(session.createTextMessage("Hello world!"));
-        
+
         int loopCount=0;
         int maxLoops=50;
         boolean found=false;
@@ -134,8 +162,8 @@ public class SendDuplicateFromStoreToDLQTest {
         queue.duplicateFromStore((org.apache.activemq.command.Message) recvMessage, queueSubscriptions.get(0));
 
         org.apache.activemq.broker.region.Queue dlq = (org.apache.activemq.broker.region.Queue)broker.getDestination(new ActiveMQQueue("ActiveMQ.DLQ.Queue.AMQ.8397"));
-        
-        if(enabled) {
+
+        if(sendExpected) {
             assertEquals(Long.valueOf(0l), Long.valueOf(queue.getDestinationStatistics().getMessages().getCount()));
             assertEquals(Long.valueOf(1l), Long.valueOf(queue.getDestinationStatistics().getDuplicateFromStore().getCount()));
             assertEquals(Long.valueOf(1l), Long.valueOf(dlq.getDestinationStatistics().getMessages().getCount()));
@@ -148,12 +176,21 @@ public class SendDuplicateFromStoreToDLQTest {
         }
     }
 
-    private PolicyMap applySendDuplicateFromStoreToDLQPolicy(Boolean enabled) {
+    private PolicyMap applyPolicy(Boolean sendDuplicateFromStoreToDLQEnabled, Boolean useCacheEnabled, Boolean auditEnabled, Boolean optimizedDispatch) {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
-        
-        if(enabled != null) {
-            defaultEntry.setSendDuplicateFromStoreToDLQ(enabled);
+
+        if(sendDuplicateFromStoreToDLQEnabled != null) {
+            defaultEntry.setSendDuplicateFromStoreToDLQ(sendDuplicateFromStoreToDLQEnabled);
+        }
+        if(useCacheEnabled != null) {
+            defaultEntry.setUseCache(useCacheEnabled);
+        }
+        if(auditEnabled != null) {
+            defaultEntry.setEnableAudit(auditEnabled);
+        }
+        if(optimizedDispatch != null) {
+            defaultEntry.setOptimizedDispatch(optimizedDispatch);
         }
 
         defaultEntry.setDeadLetterStrategy(new IndividualDeadLetterStrategy());
