@@ -46,6 +46,9 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractInactivityMonitor.class);
 
+    public static final String READ_CHECK_THREAD_NAME = "ActiveMQ InactivityMonitor ReadCheckTimer";
+    public static final String WRITE_CHECK_THREAD_NAME = "ActiveMQ InactivityMonitor WriteCheckTimer";
+
     private static final long DEFAULT_CHECK_TIME_MILLS = 30000;
 
     private static ThreadPoolExecutor ASYNC_TASKS;
@@ -419,7 +422,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                         ASYNC_TASKS = createExecutor();
                     }
                     if (READ_CHECK_TIMER == null) {
-                        READ_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor ReadCheckTimer", true);
+                        READ_CHECK_TIMER = new Timer(READ_CHECK_THREAD_NAME, true);
                     }
                 }
                 CHECKER_COUNTER++;
@@ -474,10 +477,10 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     ASYNC_TASKS = createExecutor();
                 }
                 if (READ_CHECK_TIMER == null) {
-                    READ_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor ReadCheckTimer", true);
+                    READ_CHECK_TIMER = new Timer(READ_CHECK_THREAD_NAME, true);
                 }
                 if (WRITE_CHECK_TIMER == null) {
-                    WRITE_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor WriteCheckTimer", true);
+                    WRITE_CHECK_TIMER = new Timer(WRITE_CHECK_THREAD_NAME, true);
                 }
 
                 CHECKER_COUNTER++;
