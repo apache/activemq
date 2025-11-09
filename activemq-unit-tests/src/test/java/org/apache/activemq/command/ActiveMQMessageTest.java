@@ -193,7 +193,7 @@ public class ActiveMQMessageTest extends TestCase {
         assertEquals(msg.getJMSMessageID(), this.jmsMessageID);
     }
 
-    public void testGetAndSetJMSTimestamp() {
+    public void testGetAndSetJMSTimestamp() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSTimestamp(this.jmsTimestamp);
         assertTrue(msg.getJMSTimestamp() == this.jmsTimestamp);
@@ -216,7 +216,7 @@ public class ActiveMQMessageTest extends TestCase {
         assertTrue(this.jmsCorrelationID.equals(str2));
     }
 
-    public void testGetAndSetJMSCorrelationID() {
+    public void testGetAndSetJMSCorrelationID() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSCorrelationID(this.jmsCorrelationID);
         assertTrue(msg.getJMSCorrelationID().equals(this.jmsCorrelationID));
@@ -234,31 +234,31 @@ public class ActiveMQMessageTest extends TestCase {
         assertTrue(msg.getJMSDestination().equals(this.jmsDestination));
     }
 
-    public void testGetAndSetJMSDeliveryMode() {
+    public void testGetAndSetJMSDeliveryMode() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSDeliveryMode(this.jmsDeliveryMode);
         assertTrue(msg.getJMSDeliveryMode() == this.jmsDeliveryMode);
     }
 
-    public void testGetAndSetMSRedelivered() {
+    public void testGetAndSetMSRedelivered()throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSRedelivered(this.jmsRedelivered);
         assertTrue(msg.getJMSRedelivered() == this.jmsRedelivered);
     }
 
-    public void testGetAndSetJMSType() {
+    public void testGetAndSetJMSType()throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSType(this.jmsType);
         assertTrue(msg.getJMSType().equals(this.jmsType));
     }
 
-    public void testGetAndSetJMSExpiration() {
+    public void testGetAndSetJMSExpiration()throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSExpiration(this.jmsExpiration);
         assertTrue(msg.getJMSExpiration() == this.jmsExpiration);
     }
 
-    public void testGetAndSetJMSPriority() {
+    public void testGetAndSetJMSPriority() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSPriority(this.jmsPriority);
         assertTrue(msg.getJMSPriority() == this.jmsPriority);
@@ -982,11 +982,261 @@ public class ActiveMQMessageTest extends TestCase {
         }
     }
 
-    public void testIsExpired() {
+    public void testIsExpired() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSExpiration(System.currentTimeMillis() - 1);
         assertTrue(msg.isExpired());
         msg.setJMSExpiration(System.currentTimeMillis() + 10000);
         assertFalse(msg.isExpired());
+    }
+
+    public void testMessageGetterInaccessible() throws JMSException {
+        ActiveMQMessage msg = new ActiveMQMessage();
+        msg.setMessageAccessible(false);
+        try {
+            msg.getJMSMessageID();
+            fail("getJMSMessageID Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getJMSTimestamp();
+            fail("getJMSTimestamp Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getJMSCorrelationIDAsBytes();
+            fail("getJMSCorrelationIDAsBytes Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getJMSCorrelationID();
+            fail("getJMSCorrelationID Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getJMSReplyTo();
+            fail("getJMSReplyTo Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getJMSDestination();
+            fail("getJMSDestination Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getJMSDeliveryMode();
+            fail("getJMSDeliveryMode Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getJMSRedelivered();
+            fail("getJMSRedelivered Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getJMSType();
+            fail("getJMSType Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getJMSExpiration();
+            fail("getJMSExpiration Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getJMSPriority();
+            fail("getJMSPriority Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getBody(String.class);
+            fail("getBody Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getBooleanProperty("");
+            fail("getBooleanProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getShortProperty("");
+            fail("getShortProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getIntProperty("");
+            fail("getIntProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getLongProperty("");
+            fail("getLongProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getFloatProperty("");
+            fail("getFloatProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getDoubleProperty("");
+            fail("getDoubleProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getStringProperty("");
+            fail("getStringProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.getObjectProperty("");
+            fail("getObjectProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+    }
+
+    public void testMessageSetterInaccessible() throws JMSException {
+        ActiveMQMessage msg = new ActiveMQMessage();
+        msg.setMessageAccessible(false);
+        try {
+            msg.setJMSMessageID("");
+            fail("getJMSMessageID Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setJMSTimestamp(0L);
+            fail("setJMSTimestamp Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setJMSCorrelationIDAsBytes(new byte[]{});
+            fail("setJMSCorrelationIDAsBytes Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setJMSCorrelationID("");
+            fail("setJMSCorrelationID Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setJMSReplyTo(null);
+            fail("setJMSReplyTo Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setJMSDestination(null);
+            fail("setJMSDestination Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setJMSDeliveryMode(0);
+            fail("setJMSDeliveryMode Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setJMSRedelivered(false);
+            fail("setJMSRedelivered Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setJMSType("");
+            fail("setJMSType Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setJMSExpiration(0L);
+            fail("setJMSExpiration Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setJMSPriority(0);
+            fail("setJMSPriority Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setBooleanProperty("proporty", false);
+            fail("setBooleanProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setShortProperty("proporty", (short)0);
+            fail("setShortProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setIntProperty("proporty", 0);
+            fail("setIntProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setLongProperty("proporty", 0L);
+            fail("setLongProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setFloatProperty("proporty", 0.0f);
+            fail("setFloatProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setDoubleProperty("proporty", 0.0);
+            fail("setDoubleProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setStringProperty("proporty", "");
+            fail("setStringProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+        try {
+            msg.setObjectProperty("proporty", null);
+            fail("setObjectProperty Should have thrown exception");
+        } catch (JMSException e) {
+            checkIfMessageInaccessibleJMSExcaptionMessageMatch(e);
+        }
+    }
+
+    private void checkIfMessageInaccessibleJMSExcaptionMessageMatch(JMSException e) throws JMSException {
+        if (!e.getMessage().equals("Can not access and mutate message, the message is sent asynchronously and its completion listener has not been invoked")) {
+            throw new JMSException("JMSException error don't match");
+        }
     }
 }
