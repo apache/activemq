@@ -24,32 +24,35 @@ import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Copies a message from one to another queue
  */
+@Component
+@RequestScope
 public class CopyMessage extends DestinationFacade implements Controller {
     private String messageId;
     private String destination;
     private static final Logger log = LoggerFactory.getLogger(CopyMessage.class);
 
-    public CopyMessage(BrokerFacade brokerFacade) {
+    public CopyMessage(final BrokerFacade brokerFacade) {
         super(brokerFacade);
     }
 
-    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    @Override
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws Exception {
         if (messageId != null) {
             QueueViewMBean queueView = getQueueView();
             if (queueView != null) {
-            	log.info(getJMSDestination() + "(" + messageId + ")" + " copy to " + destination);
+            	log.info("{} ({}) copy to {}", getJMSDestination(), messageId, destination);
                 queueView.copyMessageTo(messageId, destination);
             } else {
-            	log.warn("No queue named: " + getPhysicalDestinationName());
+            	log.warn("No queue named: {}", getPhysicalDestinationName());
             }
         }
-        return redirectToDestinationView();
+        response.sendRedirect("browse.jsp?JMSDestination=" + getJMSDestination());
     }
 
     public String getMessageId() {
@@ -59,8 +62,6 @@ public class CopyMessage extends DestinationFacade implements Controller {
     public void setMessageId(String messageId) {
         this.messageId = messageId;
     }
-    
-    
 
     public String getDestination() {
 		return destination;
@@ -69,5 +70,4 @@ public class CopyMessage extends DestinationFacade implements Controller {
 	public void setDestination(String destination) {
 		this.destination = destination;
 	}
-
 }
