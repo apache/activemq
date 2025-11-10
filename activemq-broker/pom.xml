@@ -66,6 +66,18 @@
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>com.nimbusds</groupId>
+      <artifactId>nimbus-jose-jwt</artifactId>
+      <version>9.22</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.bitbucket.b_c</groupId>
+      <artifactId>jose4j</artifactId>
+      <version>0.7.9</version>
+      <optional>true</optional>
+    </dependency>
 
     <!-- =============================== -->
     <!-- Testing Dependencies -->
