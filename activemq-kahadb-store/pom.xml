@@ -30,6 +30,10 @@
   <name>ActiveMQ :: KahaDB Store</name>
   <description>The ActiveMQ KahaDB Store Implementation</description>
 
+  <properties>
+    <surefire.argLine>-Xmx512M</surefire.argLine>
+  </properties>
+
   <dependencies>
 
     <!-- =============================== -->
