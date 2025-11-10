@@ -169,18 +169,14 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Collection<String> getConnections(String connectorName) throws Exception {
+    public Collection<ConnectionViewMBean> getConnections(String connectorName) throws Exception {
         String brokerName = getBrokerName();
         connectorName = JMXSupport.encodeObjectNamePart(connectorName);
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
             + ",connector=clientConnectors,connectorName=" + connectorName + ",connectionViewType=clientId,connectionName=*");
         Set<ObjectName> queryResult = queryNames(query, null);
-        Collection<ConnectionViewMBean> connections = getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
+        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
                 ConnectionViewMBean.class);
-        Collection<String> result = new ArrayList<String>(queryResult.size());
-        for (ConnectionViewMBean connection : connections)
-            result.add(connection.getClientId());
-        return result;
     }
 
     @Override
@@ -200,14 +196,13 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Collection<String> getConnectors() throws Exception {
+    public Collection<ConnectorViewMBean> getConnectors() throws Exception {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=clientConnectors,connectorName=*");
         Set<ObjectName> queryResult = queryNames(query, null);
         Collection<String> result = new ArrayList<String>(queryResult.size());
-        for (ObjectName on : queryResult)
-            result.add(on.getKeyProperty("connectorName"));
-        return result;
+        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
+                ConnectorViewMBean.class);
     }
 
     @Override
