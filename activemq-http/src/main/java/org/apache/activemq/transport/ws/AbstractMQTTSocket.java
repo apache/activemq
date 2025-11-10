@@ -35,7 +35,7 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.fusesource.mqtt.codec.MQTTFrame;
 
-public abstract class AbstractMQTTSocket extends TransportSupport implements MQTTTransport, BrokerServiceAware {
+public abstract class AbstractMQTTSocket extends AbstractWsSocket implements MQTTTransport, BrokerServiceAware {
 
     protected ReentrantLock protocolLock = new ReentrantLock();
     protected volatile MQTTProtocolConverter protocolConverter = null;
