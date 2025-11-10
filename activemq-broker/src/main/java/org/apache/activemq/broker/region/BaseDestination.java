@@ -105,7 +105,8 @@ public abstract class BaseDestination implements Destination {
     private long inactiveTimeoutBeforeGC = DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean gcIfInactive;
     private boolean gcWithNetworkConsumers;
-    private long lastActiveTime=0l;
+    private boolean gcWithOnlyWildcardConsumers;
+    private long lastActiveTime = 0L;
     private boolean reduceMemoryFootprint = false;
     protected final Scheduler scheduler;
     private boolean disposed = false;
@@ -311,12 +312,24 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public boolean isActive() {
-        boolean isActive = destinationStatistics.getConsumers().getCount() > 0 ||
-                           destinationStatistics.getProducers().getCount() > 0;
-        if (isActive && isGcWithNetworkConsumers() && destinationStatistics.getConsumers().getCount() > 0) {
-            isActive = hasRegularConsumers(getConsumers());
+        if (destinationStatistics.getProducers().getCount() > 0) {
+            return true;
         }
-        return isActive;
+
+        var destinationActive = true;
+        if (destinationStatistics.getConsumers().getCount() > 0) {
+            if (isGcWithNetworkConsumers()) {
+                destinationActive = hasRegularConsumers(getConsumers());
+            }
+
+            if (destinationActive &&
+                isGcWithOnlyWildcardConsumers()) {
+                destinationActive = !getConsumers().stream().allMatch(Subscription::isWildcard);
+            }
+        } else {
+            destinationActive = false;
+        }
+        return destinationActive;
     }
 
     @Override
@@ -824,19 +837,37 @@ public abstract class BaseDestination implements Destination {
         return gcWithNetworkConsumers;
     }
 
+    /**
+     * Indicate if it is ok to gc destinations that have only wildcard consumers
+     * @param gcWithOnlyWildcardConsumers
+     */
+    public void setGcWithOnlyWildcardConsumers(boolean gcWithOnlyWildcardConsumers) {
+        this.gcWithOnlyWildcardConsumers = gcWithOnlyWildcardConsumers;
+    }
+
+    public boolean isGcWithOnlyWildcardConsumers() {
+        return gcWithOnlyWildcardConsumers;
+    }
+
     @Override
     public void markForGC(long timeStamp) {
-        if (isGcIfInactive() && this.lastActiveTime == 0 && isActive() == false
-                && destinationStatistics.getMessages().getCount() == 0 && getInactiveTimeoutBeforeGC() > 0l) {
+        if (isGcIfInactive()
+            && this.lastActiveTime == 0
+            && destinationStatistics.getMessages().getCount() == 0
+            && getInactiveTimeoutBeforeGC() > 0L
+            && !isActive()) {
             this.lastActiveTime = timeStamp;
         }
     }
 
     @Override
     public boolean canGC() {
-        boolean result = false;
-        final long currentLastActiveTime = this.lastActiveTime;
-        if (isGcIfInactive() && currentLastActiveTime != 0l && destinationStatistics.getMessages().getCount() == 0L ) {
+        var result = false;
+        final var currentLastActiveTime = this.lastActiveTime;
+        if (isGcIfInactive()
+            && currentLastActiveTime != 0L
+            && destinationStatistics.getMessages().getCount() == 0L
+            && !isActive()) {
             if ((System.currentTimeMillis() - currentLastActiveTime) >= getInactiveTimeoutBeforeGC()) {
                 result = true;
             }

@@ -47,6 +47,8 @@ public class DestinationGCTest {
 
     private final ActiveMQQueue queue = new ActiveMQQueue("TEST");
     private final ActiveMQQueue otherQueue = new ActiveMQQueue("TEST-OTHER");
+    private final ActiveMQQueue wildcardQueueA = new ActiveMQQueue("TEST.FOO.A");
+    private final ActiveMQQueue wildcardQueueB = new ActiveMQQueue("TEST.FOO.B");
 
     private BrokerService brokerService;
 
@@ -68,6 +70,7 @@ public class DestinationGCTest {
     protected BrokerService createBroker() throws Exception {
         PolicyEntry entry = new PolicyEntry();
         entry.setGcInactiveDestinations(true);
+        entry.setGcWithOnlyWildcardConsumers(true);
         entry.setInactiveTimeoutBeforeGC(3000);
         PolicyMap map = new PolicyMap();
         map.setDefaultEntry(entry);
@@ -109,6 +112,35 @@ public class DestinationGCTest {
         }));
 
         connection.close();
+    }
+
+    @Test //(timeout = 60000)
+    public void testDestinationGCWithOnlyWildcardConsumers() throws Exception {
+        assertEquals(1, brokerService.getAdminView().getQueues().length);
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+
+        try(Connection connection = factory.createConnection()) {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session.createProducer(wildcardQueueA).close();
+            session.createProducer(wildcardQueueB).close();
+            MessageConsumer consumer = session.createConsumer(session.createQueue("TEST.FOO.*"));
+            consumer.setMessageListener(new MessageListener() {
+
+                @Override
+                public void onMessage(Message message) {
+                }
+            });
+
+            connection.start();
+
+            assertTrue("After GC runs there should be one Queue (count=" + brokerService.getAdminView().getQueues().length + ")", Wait.waitFor(new Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return brokerService.getAdminView().getQueues().length == 1;
+                }
+            }));
+        }
     }
 
     @Test(timeout = 60000)
