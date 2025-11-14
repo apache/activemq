@@ -16,6 +16,11 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -27,22 +32,21 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.jms.Connection;
-import jakarta.jms.Destination;
-import jakarta.jms.Message;
-import jakarta.jms.MessageProducer;
-import jakarta.jms.Session;
 import java.io.File;
 import java.io.IOException;
-import java.security.Permission;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.apache.activemq.store.kahadb.JournalCorruptionEofIndexRecoveryTest.drain;
-import static org.apache.activemq.store.kahadb.disk.journal.Journal.DEFAULT_ARCHIVE_DIRECTORY;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class JournalArchiveTest {
 
@@ -117,63 +121,94 @@ public class JournalArchiveTest {
 
     @Test
     public void testRecoveryOnArchiveFailure() throws Exception {
-        final AtomicInteger atomicInteger = new AtomicInteger();
-
-        System.setSecurityManager(new SecurityManager() {
-            public void checkPermission(Permission perm) {}
-            public void checkPermission(Permission perm, Object context) {}
-
-            public void checkWrite(String file) {
-                if (file.contains(DEFAULT_ARCHIVE_DIRECTORY) && atomicInteger.incrementAndGet() > 4) {
-                    throw new SecurityException("No Perms to write to archive times:" + atomicInteger.get());
-                }
-            }
-        });
         startBroker();
+        final Path archivePath = prepareArchivePath();
 
-        int sent = produceMessagesToConsumeMultipleDataFiles(50);
-
-        int numFilesAfterSend = getNumberOfJournalFiles();
-        LOG.info("Num journal files: " + numFilesAfterSend);
-
-        assertTrue("more than x files: " + numFilesAfterSend, numFilesAfterSend > 4);
-
+        // configure a shutdown hook to detect broker shutdown on archive failure
         final CountDownLatch gotShutdown = new CountDownLatch(1);
         broker.addShutdownHook(new Runnable() {
             @Override
             public void run() {
+                LOG.info("Broker shutdown hook called");
                 gotShutdown.countDown();
             }
         });
 
-        int received = tryConsume(destination, sent);
-        assertEquals("all message received", sent, received);
-        assertTrue("broker got shutdown on page in error", gotShutdown.await(10, TimeUnit.SECONDS));
-
-        // no restrictions
-        System.setSecurityManager(null);
-
-        int numFilesAfterRestart = 0;
+        /*
+         * It used to be using a fake security manager to simulate the failure but that approach is no longer viable
+         * with modern JVMs. Instead, we will produce some messages to create multiple data files, then change the
+         * archive directory permissions to read-only, to simulate the failure to archive. Then produce some more
+         * messages to trigger the archive attempts.
+         */
+        final AtomicBoolean permissionsLocked = new AtomicBoolean();
         try {
-            // ensure we can restart after failure to archive
-            doStartBroker(false);
-            numFilesAfterRestart = getNumberOfJournalFiles();
-            LOG.info("Num journal files before gc: " + numFilesAfterRestart);
+            LOG.info("Producing messages to create multiple data files");
+            int sent = produceMessagesToConsumeMultipleDataFiles(25);
 
-            // force gc
-            ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().checkpoint(true);
+            LOG.info("Number of journal files before archive failure: {}", getNumberOfJournalFiles());
+            if (permissionsLocked.compareAndSet(false, true)) {
+                try {
+                    LOG.info("Making archive directory read-only to simulate archive failure: {}", archivePath);
+                    makeReadOnly(archivePath);
+                } catch (IOException e) {
+                    permissionsLocked.set(false);
+                    LOG.warn("Unable to lock archive directory {}", archivePath, e);
+                }
+            }
 
-        } catch (Exception error) {
-            LOG.error("Failed to restart!", error);
-            fail("Failed to restart after failure to archive");
+            LOG.info("Producing messages to trigger archive attempts");
+            sent += produceMessagesToConsumeMultipleDataFiles(25);
+
+            int numFilesAfterSend = getNumberOfJournalFiles();
+            LOG.info("Num journal files: {}", numFilesAfterSend);
+
+            assertTrue("more than x files: " + numFilesAfterSend, numFilesAfterSend > 4);
+
+            int received = tryConsume(destination, sent);
+            assertEquals("all message received", sent, received);
+            assertTrue("broker got shutdown on page in error", gotShutdown.await(10, TimeUnit.SECONDS));
+
+            // remove restrictions to see if it catches up again
+            if (permissionsLocked.get()) {
+                try {
+                    makeWritable(archivePath);
+                } catch (IOException e) {
+                    LOG.warn("Unable to restore archive directory permissions: {}", archivePath, e);
+                }
+            }
+
+            int numFilesAfterRestart = 0;
+            try {
+                // ensure we can restart after failure to archive
+                doStartBroker(false);
+                numFilesAfterRestart = getNumberOfJournalFiles();
+                LOG.info("Num journal files before gc: {}", numFilesAfterRestart);
+
+                // force gc
+                ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().checkpoint(true);
+
+            } catch (Exception error) {
+                LOG.error("Failed to restart!", error);
+                fail("Failed to restart after failure to archive");
+            }
+            int numFilesAfterGC = getNumberOfJournalFiles();
+            LOG.info("Num journal files after restart nd gc: {}", numFilesAfterGC);
+            assertTrue("Gc has happened", numFilesAfterGC < numFilesAfterRestart);
+            assertTrue("Gc has worked", numFilesAfterGC < 4);
+
+            File archiveDirectory = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore()
+                                                                                               .getJournal()
+                                                                                               .getDirectoryArchive();
+            assertEquals("verify files in archive dir", numFilesAfterSend, archiveDirectory.listFiles().length);
+        } finally {
+            if (permissionsLocked.get()) {
+                try {
+                    makeWritable(archivePath);
+                } catch (IOException e) {
+                    LOG.warn("Unable to restore archive directory permissions: {}", archivePath, e);
+                }
+            }
         }
-        int numFilesAfterGC = getNumberOfJournalFiles();
-        LOG.info("Num journal files after restart nd gc: " + numFilesAfterGC);
-        assertTrue("Gc has happened", numFilesAfterGC < numFilesAfterRestart);
-        assertTrue("Gc has worked", numFilesAfterGC < 4);
-
-        File archiveDirectory = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getDirectoryArchive();
-        assertEquals("verify files in archive dir", numFilesAfterSend, archiveDirectory.listFiles().length);
     }
 
 
@@ -217,5 +252,32 @@ public class JournalArchiveTest {
 
     private Message createMessage(Session session, int i) throws Exception {
         return session.createTextMessage(payload + "::" + i);
+    }
+
+    private Path prepareArchivePath() throws IOException {
+        File archiveDirectory = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getDirectoryArchive();
+        Files.createDirectories(archiveDirectory.toPath());
+        return archiveDirectory.toPath();
+    }
+
+    private void makeReadOnly(Path path) throws IOException {
+        try {
+            Files.setPosixFilePermissions(path, EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE));
+        } catch (UnsupportedOperationException ex) {
+            if (!path.toFile().setWritable(false, false)) {
+                throw new IOException("Unable to mark directory as read-only: " + path);
+            }
+        }
+    }
+
+    private void makeWritable(Path path) throws IOException {
+        try {
+            Files.setPosixFilePermissions(path, EnumSet.of(PosixFilePermission.OWNER_READ,
+                    PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_EXECUTE));
+        } catch (UnsupportedOperationException ex) {
+            if (!path.toFile().setWritable(true, false)) {
+                throw new IOException("Unable to restore write permissions to directory: " + path);
+            }
+        }
     }
 }
