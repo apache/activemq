@@ -133,7 +133,7 @@
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
           <systemPropertyVariables>
-            <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
+            <org.apache.activemq.default.directory.prefix>target/</org.apache.activemq.default.directory.prefix>
             <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j2-test.properties)
               while running mvn:test Note: if you want to see log messages on the console window remove "redirectTestOutputToFile"
               from the parent pom -->

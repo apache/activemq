@@ -206,7 +206,7 @@
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
            <systemPropertyValues>
-              <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
+              <org.apache.activemq.default.directory.prefix>target/</org.apache.activemq.default.directory.prefix>
            </systemPropertyValues>
            <!-- includes>
              <include>**/*Test.*</include>
