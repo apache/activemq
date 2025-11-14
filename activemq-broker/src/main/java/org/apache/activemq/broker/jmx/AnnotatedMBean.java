@@ -16,13 +16,12 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.Principal;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import org.apache.activemq.broker.util.AuditLogEntry;
+import org.apache.activemq.broker.util.AuditLogService;
+import org.apache.activemq.broker.util.JMXAuditLogEntry;
+import org.apache.activemq.compat.sm.SecurityManagerShim;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanException;
@@ -33,12 +32,12 @@ import javax.management.ObjectName;
 import javax.management.ReflectionException;
 import javax.management.StandardMBean;
 import javax.security.auth.Subject;
-
-import org.apache.activemq.broker.util.AuditLogEntry;
-import org.apache.activemq.broker.util.AuditLogService;
-import org.apache.activemq.broker.util.JMXAuditLogEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * MBean that looks for method/parameter descriptions in the Info annotation.
@@ -205,8 +204,7 @@ public class AnnotatedMBean extends StandardMBean {
         objects = (objects == null) ? new Object[]{} : objects;
         JMXAuditLogEntry entry = null;
         if (audit != OFF) {
-            // [AMQ-9563] TODO: JDK 21 use Subject.current() instead
-            Subject subject = Subject.getSubject(AccessController.getContext());
+            Subject subject = SecurityManagerShim.currentSubject();
             String caller = "anonymous";
             if (subject != null) {
                 caller = "";
