@@ -205,8 +205,15 @@ public class AnnotatedMBean extends StandardMBean {
         objects = (objects == null) ? new Object[]{} : objects;
         JMXAuditLogEntry entry = null;
         if (audit != OFF) {
-            // [AMQ-9563] TODO: JDK 21 use Subject.current() instead
-            Subject subject = Subject.getSubject(AccessController.getContext());
+            /**
+             * [AMQ-9563] JDK JAAS API conversion assistance
+             *
+             * Use a shim along with multi-release jar to
+             * support JDK 17 and JDK 24+ in one build.
+             *
+             * see: src/main/java24 folder
+             */
+            Subject subject = SubjectShim.lookupSubject();
             String caller = "anonymous";
             if (subject != null) {
                 caller = "";
