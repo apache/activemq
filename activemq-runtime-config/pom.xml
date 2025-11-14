@@ -151,7 +151,7 @@
           <reuseForks>false</reuseForks>
           <argLine>-Xmx512M -Djava.awt.headless=true</argLine>
           <systemPropertyVariables>
-            <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
+            <org.apache.activemq.default.directory.prefix>target/</org.apache.activemq.default.directory.prefix>
             <property>
               <name>log4j.configuration</name>
               <value>file:target/test-classes/log4j.properties</value>

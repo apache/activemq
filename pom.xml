@@ -182,6 +182,7 @@
     <module>bom</module>
     <module>activemq-openwire-generator</module>
     <module>activemq-client</module>
+    <module>activemq-compat</module>
     <module>activemq-openwire-legacy</module>
     <module>activemq-broker</module>
     <module>activemq-stomp</module>
@@ -270,6 +271,11 @@
         <version>${project.version}</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-compat</artifactId>
+        <version>${project.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-client</artifactId>

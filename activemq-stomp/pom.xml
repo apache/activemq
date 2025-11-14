@@ -133,7 +133,7 @@
           <runOrder>alphabetical</runOrder>
           <failIfNoTests>false</failIfNoTests>
           <systemPropertyVariables>
-            <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
+            <org.apache.activemq.default.directory.prefix>target/</org.apache.activemq.default.directory.prefix>
           </systemPropertyVariables>
           <includes>
             <include>**/*Test.*</include>

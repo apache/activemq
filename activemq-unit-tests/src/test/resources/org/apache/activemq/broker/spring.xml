@@ -46,9 +46,7 @@
       <!-- lets wrap in a pool to avoid creating a connection per send -->
       <bean
         class="org.springframework.jms.connection.SingleConnectionFactory">
-        <property name="targetConnectionFactory">
-          <ref local="jmsFactory" />
-        </property>
+        <property name="targetConnectionFactory" ref="jmsFactory"/>
       </bean>
     </property>
   </bean>
