@@ -134,30 +134,24 @@ public class JournalArchiveTest {
             }
         });
 
+        broker.getTaskRunnerFactory().execute(() -> {
+            try {
+                LOG.info("Making archive directory read-only to simulate archive failure: {}", archivePath);
+                makeReadOnly(archivePath);
+            } catch (IOException e) {
+                LOG.warn("Unable to lock archive directory {}", archivePath, e);
+            }
+        });
+
         /*
          * It used to be using a fake security manager to simulate the failure but that approach is no longer viable
          * with modern JVMs. Instead, we will produce some messages to create multiple data files, then change the
          * archive directory permissions to read-only, to simulate the failure to archive. Then produce some more
          * messages to trigger the archive attempts.
          */
-        final AtomicBoolean permissionsLocked = new AtomicBoolean();
         try {
             LOG.info("Producing messages to create multiple data files");
-            int sent = produceMessagesToConsumeMultipleDataFiles(25);
-
-            LOG.info("Number of journal files before archive failure: {}", getNumberOfJournalFiles());
-            if (permissionsLocked.compareAndSet(false, true)) {
-                try {
-                    LOG.info("Making archive directory read-only to simulate archive failure: {}", archivePath);
-                    makeReadOnly(archivePath);
-                } catch (IOException e) {
-                    permissionsLocked.set(false);
-                    LOG.warn("Unable to lock archive directory {}", archivePath, e);
-                }
-            }
-
-            LOG.info("Producing messages to trigger archive attempts");
-            sent += produceMessagesToConsumeMultipleDataFiles(25);
+            int sent = produceMessagesToConsumeMultipleDataFiles(50);
 
             int numFilesAfterSend = getNumberOfJournalFiles();
             LOG.info("Num journal files: {}", numFilesAfterSend);
@@ -169,12 +163,10 @@ public class JournalArchiveTest {
             assertTrue("broker got shutdown on page in error", gotShutdown.await(10, TimeUnit.SECONDS));
 
             // remove restrictions to see if it catches up again
-            if (permissionsLocked.get()) {
-                try {
-                    makeWritable(archivePath);
-                } catch (IOException e) {
-                    LOG.warn("Unable to restore archive directory permissions: {}", archivePath, e);
-                }
+            try {
+                makeWritable(archivePath);
+            } catch (IOException e) {
+                LOG.warn("Unable to restore archive directory permissions: {}", archivePath, e);
             }
 
             int numFilesAfterRestart = 0;
@@ -201,12 +193,10 @@ public class JournalArchiveTest {
                                                                                                .getDirectoryArchive();
             assertEquals("verify files in archive dir", numFilesAfterSend, archiveDirectory.listFiles().length);
         } finally {
-            if (permissionsLocked.get()) {
-                try {
-                    makeWritable(archivePath);
-                } catch (IOException e) {
-                    LOG.warn("Unable to restore archive directory permissions: {}", archivePath, e);
-                }
+            try {
+                makeWritable(archivePath);
+            } catch (IOException e) {
+                LOG.warn("Unable to restore archive directory permissions: {}", archivePath, e);
             }
         }
     }
