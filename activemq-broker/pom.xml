@@ -242,7 +242,7 @@
         </plugins>
       </build>
     </profile>
-	<profile>
+    <profile>
       <id>activemq.tests-autoTransport</id>
       <activation>
         <property>
@@ -259,6 +259,33 @@
                 <exclude>**</exclude>
               </excludes>
             </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+      <profile>
+      <id>jdk24-plus</id>
+      <activation>
+        <jdk>[24,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>java24-compile</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <release>24</release> <!-- Specific Java version for alternative classes -->
+                  <compileSourceRoots>${project.basedir}/src/main/java24</compileSourceRoots>
+                  <multiReleaseOutput>true</multiReleaseOutput>
+                </configuration>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
