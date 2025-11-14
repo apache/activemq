@@ -92,11 +92,8 @@ import org.apache.activemq.store.kahadb.data.KahaUpdateMessageCommand;
 import org.apache.activemq.store.kahadb.disk.index.BTreeIndex;
 import org.apache.activemq.store.kahadb.disk.index.BTreeVisitor;
 import org.apache.activemq.store.kahadb.disk.index.ListIndex;
-import org.apache.activemq.store.kahadb.disk.journal.DataFile;
-import org.apache.activemq.store.kahadb.disk.journal.Journal;
+import org.apache.activemq.store.kahadb.disk.journal.*;
 import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
-import org.apache.activemq.store.kahadb.disk.journal.Location;
-import org.apache.activemq.store.kahadb.disk.journal.TargetedDataFileAppender;
 import org.apache.activemq.store.kahadb.disk.page.Page;
 import org.apache.activemq.store.kahadb.disk.page.PageFile;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
@@ -266,6 +263,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     protected JournalDiskSyncStrategy journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS;
     protected boolean archiveDataLogs;
+    protected DataFileFactory dataFileFactory;
     protected File directoryArchive;
     protected AtomicLong journalSize = new AtomicLong(0);
     long journalDiskSyncInterval = 1000;
@@ -3421,6 +3419,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             IOHelper.mkdirs(getDirectoryArchive());
             manager.setDirectoryArchive(getDirectoryArchive());
         }
+        if (getDataFileFactory() != null) {
+            manager.setDataFileFactory(getDataFileFactory());
+        }
         return manager;
     }
 
@@ -4296,5 +4297,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 e.getMessage());
             LOG.debug(e.getMessage(), e);
         }
+    }
+
+    public DataFileFactory getDataFileFactory() {
+        return this.dataFileFactory;
+    }
+
+    public void  setDataFileFactory(DataFileFactory dataFileFactory) {
+        this.dataFileFactory = dataFileFactory;
     }
 }

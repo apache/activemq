@@ -241,6 +241,7 @@ public class Journal {
     private long cleanupInterval = DEFAULT_CLEANUP_INTERVAL;
 
     protected JournalDiskSyncStrategy journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS;
+    protected DataFileFactory dataFileFactory = new DefaultDataFileFactory();
 
     public interface DataFileRemovedListener {
         void fileRemoved(DataFile datafile);
@@ -272,7 +273,7 @@ public class Journal {
                     String n = file.getName();
                     String numStr = n.substring(filePrefix.length(), n.length()-fileSuffix.length());
                     int num = Integer.parseInt(numStr);
-                    DataFile dataFile = new DataFile(file, num);
+                    DataFile dataFile = dataFileFactory.create(file, num);
                     fileMap.put(dataFile.getDataFileId(), dataFile);
                     totalLength.addAndGet(dataFile.getLength());
                 } catch (NumberFormatException e) {
@@ -687,7 +688,7 @@ public class Journal {
     private DataFile newDataFile() throws IOException {
         int nextNum = nextDataFileId++;
         File file = getFile(nextNum);
-        DataFile nextWriteFile = new DataFile(file, nextNum);
+        DataFile nextWriteFile = dataFileFactory.create(file, nextNum);
         preallocateEntireJournalDataFile(nextWriteFile.appendRandomAccessFile());
         return nextWriteFile;
     }
@@ -697,7 +698,7 @@ public class Journal {
         synchronized (dataFileIdLock) {
             int nextNum = nextDataFileId++;
             File file = getFile(nextNum);
-            DataFile reservedDataFile = new DataFile(file, nextNum);
+            DataFile reservedDataFile = dataFileFactory.create(file, nextNum);
             synchronized (currentDataFile) {
                 fileMap.put(reservedDataFile.getDataFileId(), reservedDataFile);
                 fileByFileMap.put(file, reservedDataFile);
@@ -1162,6 +1163,14 @@ public class Journal {
 
     public void setDataFileRemovedListener(DataFileRemovedListener dataFileRemovedListener) {
         this.dataFileRemovedListener = dataFileRemovedListener;
+    }
+
+    public void setDataFileFactory(DataFileFactory dataFileFactory) {
+        this.dataFileFactory = dataFileFactory;
+    }
+
+    public DataFileFactory getDataFileFactory() {
+        return  this.dataFileFactory;
     }
 
     public static class WriteCommand extends LinkedNode<WriteCommand> {
