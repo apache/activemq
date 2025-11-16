@@ -34,7 +34,7 @@
     <javaVersion>17</javaVersion>
 
     <surefire.argLine></surefire.argLine>
-    <maven.surefire.allow.securitymanager>-Djava.security.manager=allow</maven.surefire.allow.securitymanager>
+    <maven.surefire.allow.securitymanager></maven.surefire.allow.securitymanager>
 
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
@@ -1449,5 +1449,15 @@
         <javadoc.options>-Xdoclint:none</javadoc.options>
      </properties>
    </profile>
+
+    <profile>
+      <id>allow-securitymanager</id>
+      <activation>
+        <jdk>[18,23]</jdk>
+      </activation>
+      <properties>
+        <maven.surefire.allow.securitymanager>-Djava.security.manager=allow</maven.surefire.allow.securitymanager>
+      </properties>
+    </profile>
   </profiles>
 </project>
