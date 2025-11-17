@@ -727,6 +727,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 // needed before firing the job event.
                 List<Closure> toRemove = new ArrayList<>();
                 List<Closure> toReschedule = new ArrayList<>();
+                List<Runnable> toSchedule = new ArrayList<>();
                 try {
                     this.store.readLockIndex();
 
@@ -777,11 +778,17 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                                                 // so the cron job is used to set of a separate schedule
                                                 // hence we won't fire the original cron job to the
                                                 // listeners but we do need to start a separate schedule
-                                                String jobId = ID_GENERATOR.generateId();
-                                                ByteSequence payload = getPayload(job.getLocation());
-                                                schedule(jobId, payload, "", job.getDelay(), job.getPeriod(), job.getRepeat());
-                                                waitTime = job.getDelay() != 0 ? job.getDelay() : job.getPeriod();
-                                                this.scheduleTime.setWaitTime(waitTime);
+                                                toSchedule.add(() -> {
+                                                    try {
+                                                        String jobId = ID_GENERATOR.generateId();
+                                                        ByteSequence payload = getPayload(job.getLocation());
+                                                        schedule(jobId, payload, "", job.getDelay(), job.getPeriod(), job.getRepeat());
+                                                    } catch (Exception e) {
+                                                        LOG.warn("Failed to schedule cron follow-up job", e);
+                                                    }
+                                                });
+                                                long wait = job.getDelay() != 0 ? job.getDelay() : job.getPeriod();
+                                                this.scheduleTime.setWaitTime(wait);
                                             }
                                         } else {
                                             toRemove.add(() -> doRemove(executionTime, job.getJobId()));
@@ -797,6 +804,12 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 } finally {
                     this.store.readUnlockIndex();
 
+                    // deferred execution of all jobs to be scheduled to avoid deadlock with indexLock
+                    for (Runnable command : toSchedule) {
+                        command.run();
+                    }
+
+                    // now reschedule all jobs that need rescheduling
                     doReschedule(toReschedule);
 
                     // now remove all jobs that have not been rescheduled,
