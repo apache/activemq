@@ -268,6 +268,16 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         this.store.store(update);
     }
 
+    private void doSchedule(final List<Closure> toSchedule) {
+        for (Closure closure : toSchedule) {
+            try {
+                closure.run();
+            } catch (final Exception e) {
+                LOG.warn("Failed to schedule job", e);
+            }
+        }
+    }
+
     private void doRemove(final List<Closure> toRemove) throws IOException {
         for (Closure closure : toRemove) {
             closure.run();
@@ -727,7 +737,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 // needed before firing the job event.
                 List<Closure> toRemove = new ArrayList<>();
                 List<Closure> toReschedule = new ArrayList<>();
-                List<Runnable> toSchedule = new ArrayList<>();
+                List<Closure> toSchedule = new ArrayList<>();
                 try {
                     this.store.readLockIndex();
 
@@ -777,7 +787,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                                                 // we have a separate schedule to run at this time
                                                 // so the cron job is used to set of a separate schedule
                                                 // hence we won't fire the original cron job to the
-                                                // listeners but we do need to start a separate schedule
+                                                // listeners, but we do need to start a separate schedule
                                                 toSchedule.add(() -> {
                                                     try {
                                                         String jobId = ID_GENERATOR.generateId();
@@ -805,9 +815,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                     this.store.readUnlockIndex();
 
                     // deferred execution of all jobs to be scheduled to avoid deadlock with indexLock
-                    for (Runnable command : toSchedule) {
-                        command.run();
-                    }
+                    doSchedule(toSchedule);
 
                     // now reschedule all jobs that need rescheduling
                     doReschedule(toReschedule);
@@ -818,6 +826,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 }
 
                 this.scheduleTime.pause();
+
             } catch (Exception ioe) {
                 LOG.error("{} Failed to schedule job", this.name, ioe);
                 try {
