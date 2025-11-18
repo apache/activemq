@@ -28,6 +28,11 @@
   <artifactId>activemq-mqtt</artifactId>
   <packaging>jar</packaging>
   <name>ActiveMQ :: MQTT Protocol</name>
+
+  <properties>
+    <surefire.version>3.5.3</surefire.version>
+  </properties>
+
   <description>The ActiveMQ MQTT Protocol Implementation</description>
 
   <dependencies>
@@ -199,24 +204,6 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <forkCount>1</forkCount>
-          <reuseForks>false</reuseForks>
-          <argLine>${surefire.argLine}</argLine>
-          <runOrder>alphabetical</runOrder>
-           <systemPropertyValues>
-              <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
-           </systemPropertyValues>
-           <!-- includes>
-             <include>**/*Test.*</include>
-           </includes -->
-           <excludes>
-             <exclude>**/PahoMQTNioTTest.java</exclude>
-           </excludes>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.apache.activemq.protobuf</groupId>
         <artifactId>activemq-protobuf</artifactId>
          <executions>
@@ -289,6 +276,81 @@
                 <include>**/auto/*Test.java</include>
               </includes>
             </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>all-parallel</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>activemq.tests</name>
+          <value>parallel</value>
+        </property>
+      </activation>
+      <properties>
+        <parallel.tests.fork.count>2C</parallel.tests.fork.count>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${surefire.version}</version>
+            <configuration>
+              <skipTests>true</skipTests>
+            </configuration>
+            <executions>
+              <execution>
+                <id>parallel</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <configuration combine.self="override">
+                  <skipTests>false</skipTests>
+                  <forkCount>${parallel.tests.fork.count}</forkCount>
+                  <reuseForks>false</reuseForks>
+                  <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+                  <runOrder>balanced</runOrder>
+                  <failIfNoTests>false</failIfNoTests>
+                  <groups>org.apache.activemq.transport.mqtt.ParallelTest</groups>
+                  <systemPropertyVariables>
+                    <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+                    <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
+                    <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+                    <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
+                  </systemPropertyVariables>
+                </configuration>
+              </execution>
+              <execution>
+                <id>serial</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <configuration combine.self="override">
+                  <skipTests>false</skipTests>
+                  <runOrder>balanced</runOrder>
+                  <failIfNoTests>false</failIfNoTests>
+                  <excludedGroups>org.apache.activemq.transport.mqtt.ParallelTest</excludedGroups>
+                  <systemPropertyVariables>
+                    <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+                    <org.apache.activemq.default.directory.prefix>${project.build.directory}/</org.apache.activemq.default.directory.prefix>
+                    <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+                    <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
+                  </systemPropertyVariables>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.maven.surefire</groupId>
+                <artifactId>surefire-junit47</artifactId>
+                <version>${surefire.version}</version>
+              </dependency>
+            </dependencies>
           </plugin>
         </plugins>
       </build>

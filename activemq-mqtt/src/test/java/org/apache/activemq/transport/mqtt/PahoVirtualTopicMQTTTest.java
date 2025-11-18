@@ -22,12 +22,14 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
 
 import static org.junit.Assert.assertEquals;
 
+@Category(ParallelTest.class)
 public class PahoVirtualTopicMQTTTest extends PahoMQTTTest {
 
     @Override

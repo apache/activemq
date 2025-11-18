@@ -29,7 +29,9 @@ import org.fusesource.mqtt.client.Topic;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class MQTTOverlapedSubscriptionsTest {
 
     private BrokerService brokerService;

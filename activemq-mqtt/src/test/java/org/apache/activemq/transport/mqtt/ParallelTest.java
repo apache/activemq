@@ -14,25 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.mqtt.auto;
+package org.apache.activemq.transport.mqtt;
 
-import org.apache.activemq.transport.mqtt.MQTTTest;
-import org.apache.activemq.transport.mqtt.ParallelTest;
-import org.junit.experimental.categories.Category;
 
 /**
- * Run the basic tests with the NIO Transport.
+ * Marker interface used with {@code @Category(ParallelTest.class)} to opt a
+ * test class or method into the {@code all-parallel} Maven profile. Only tests
+ * explicitly tagged with this category execute when the profile is enabled,
+ * which allows a gradual migration toward full parallelism.
  */
-@Category(ParallelTest.class)
-public class MQTTAutoSslTest extends MQTTTest {
-
-    @Override
-    public String getProtocolScheme() {
-        return "auto+ssl";
-    }
-
-    @Override
-    public boolean isUseSSL() {
-        return true;
-    }
+public interface ParallelTest {
 }

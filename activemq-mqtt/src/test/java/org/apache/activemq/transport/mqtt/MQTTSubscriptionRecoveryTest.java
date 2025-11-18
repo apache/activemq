@@ -34,9 +34,11 @@ import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.junit.experimental.categories.Category;
 /**
  * Test that all previous QoS 2 subscriptions are recovered on Broker restart.
  */
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class MQTTSubscriptionRecoveryTest extends MQTTTestSupport {
 
