@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.ShutdownInfo;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for ShutdownInfo
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.ShutdownInfo;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class ShutdownInfoTest extends BaseCommandTestSupport {
 
     public static final ShutdownInfoTest SINGLETON = new ShutdownInfoTest();

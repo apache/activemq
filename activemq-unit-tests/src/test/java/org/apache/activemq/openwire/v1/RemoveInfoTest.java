@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.RemoveInfo;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for RemoveInfo
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.RemoveInfo;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class RemoveInfoTest extends BaseCommandTestSupport {
 
     public static final RemoveInfoTest SINGLETON = new RemoveInfoTest();

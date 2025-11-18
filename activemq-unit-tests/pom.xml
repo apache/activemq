@@ -29,6 +29,10 @@
   <name>ActiveMQ :: Unit Tests</name>
   <description>The ActiveMQ Message Broker and Client Unit Tests</description>
 
+  <properties>
+    <surefire.version>3.5.3</surefire.version>
+  </properties>
+
   <dependencies>
 
     <!-- =============================== -->
@@ -392,6 +396,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.version}</version>
         <configuration>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
@@ -429,6 +434,13 @@
             <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
           </systemPropertyVariables>
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit47</artifactId>
+            <version>${surefire.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -492,6 +504,69 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>all-parallel</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>parallel</value>
+        </property>
+      </activation>
+      <properties>
+        <parallel.tests.fork.count>2C</parallel.tests.fork.count>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${surefire.version}</version>
+            <executions>
+              <execution>
+                <id>parallel</id>
+                <goals><goal>test</goal></goals>
+                <configuration combine.self="override">
+                  <forkCount>${parallel.tests.fork.count}</forkCount>
+                  <reuseForks>false</reuseForks>
+                  <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+                  <runOrder>balanced</runOrder>
+                  <failIfNoTests>false</failIfNoTests>
+                  <groups>org.apache.activemq.test.annotations.ParallelTest</groups>
+                  <systemPropertyVariables>
+                    <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+                    <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
+                    <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+                    <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
+                  </systemPropertyVariables>
+                </configuration>
+              </execution>
+              <execution>
+                <id>serial</id>
+                <goals><goal>test</goal></goals>
+                <configuration combine.self="override">
+                  <runOrder>balanced</runOrder>
+                  <failIfNoTests>false</failIfNoTests>
+                  <excludedGroups>org.apache.activemq.test.annotations.ParallelTest</excludedGroups>
+                  <systemPropertyVariables>
+                    <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+                    <org.apache.activemq.default.directory.prefix>${project.build.directory}/</org.apache.activemq.default.directory.prefix>
+                    <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+                    <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
+                  </systemPropertyVariables>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.maven.surefire</groupId>
+                <artifactId>surefire-junit47</artifactId>
+                <version>${surefire.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>activemq.tests-all</id>
       <activation>

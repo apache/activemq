@@ -54,6 +54,8 @@ import org.apache.activemq.transport.failover.FailoverTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+
 public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQXAConnectionFactoryTest.class);
     long txGenerator = System.currentTimeMillis();

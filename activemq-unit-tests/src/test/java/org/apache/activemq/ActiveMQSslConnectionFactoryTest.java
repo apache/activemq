@@ -43,6 +43,8 @@ import org.apache.commons.logging.LogFactory;
 
 import static org.junit.Assert.assertArrayEquals;
 
+
+
 public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory.getLog(ActiveMQSslConnectionFactoryTest.class);
 

@@ -47,15 +47,16 @@ import org.fusesource.mqtt.client.Tracer;
 import org.fusesource.mqtt.codec.CONNACK;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 /**
  * Tests various use cases that require authentication or authorization over MQTT
  */
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class MQTTAuthTest extends MQTTAuthTestSupport {
 

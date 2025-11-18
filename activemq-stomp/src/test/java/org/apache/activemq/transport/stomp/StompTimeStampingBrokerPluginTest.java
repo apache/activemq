@@ -39,6 +39,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.junit.experimental.categories.Category;
+
+@Category(ParallelTest.class)
 public class StompTimeStampingBrokerPluginTest extends StompTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(StompTimeStampingBrokerPluginTest.class);

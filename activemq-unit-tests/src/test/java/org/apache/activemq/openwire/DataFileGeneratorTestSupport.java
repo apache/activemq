@@ -59,7 +59,6 @@ import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.util.ByteSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 public abstract class DataFileGeneratorTestSupport extends TestSupport {
 
     protected static final Object[] EMPTY_ARGUMENTS = {};

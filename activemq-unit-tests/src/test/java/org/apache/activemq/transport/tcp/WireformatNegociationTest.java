@@ -35,6 +35,8 @@ import org.apache.activemq.transport.TransportServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+
 public class WireformatNegociationTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(WireformatNegociationTest.class);
 

@@ -36,6 +36,8 @@ import org.apache.activemq.broker.TransportConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+
 public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQConnectionFactoryTest.class);
 

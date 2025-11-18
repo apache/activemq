@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.activemq.transport.auto.AutoTcpTransportServer;
+import org.apache.activemq.transport.stomp.ParallelTest;
 import org.apache.activemq.transport.stomp.StompTestSupport;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
@@ -36,10 +37,12 @@ import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.junit.experimental.categories.Category;
 /**
  * Test that connection attempts that don't send the connect get cleaned by
  * by the protocolDetectionTimeOut property
  */
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class AutoStompConnectTimeoutTest extends StompTestSupport {
 
