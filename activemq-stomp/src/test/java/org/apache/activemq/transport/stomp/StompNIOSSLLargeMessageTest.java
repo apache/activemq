@@ -35,12 +35,15 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.activemq.util.DefaultTestAppender;
 
+import org.junit.experimental.categories.Category;
+
 /**
  * Testcase for AMQ-6526.
  * Checks if the \<Unknown\> in the Stomp ProtocolException is replaced
  * with the proper Stomp operation.
  *
  */
+@Category(ParallelTest.class)
 public class StompNIOSSLLargeMessageTest extends StompTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(StompNIOSSLLargeMessageTest.class);

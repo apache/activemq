@@ -29,6 +29,9 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.junit.Test;
 
+import org.junit.experimental.categories.Category;
+
+@Category(ParallelTest.class)
 public class StompMaxDataSizeTest extends StompTestSupport {
 
     private static final int TEST_MAX_DATA_SIZE = 64 * 1024;
