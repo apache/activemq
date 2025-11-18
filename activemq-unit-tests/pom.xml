@@ -507,6 +507,7 @@
     <profile>
       <id>all-parallel</id>
       <activation>
+        <activeByDefault>true</activeByDefault>
         <property>
           <name>activemq.tests</name>
           <value>parallel</value>
