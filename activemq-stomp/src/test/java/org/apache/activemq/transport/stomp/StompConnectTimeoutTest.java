@@ -34,10 +34,13 @@ import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.junit.experimental.categories.Category;
+
 /**
  * Test that connection attempts that don't send the connect performative
  * get cleaned up by the inactivity monitor.
  */
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class StompConnectTimeoutTest extends StompTestSupport {
 
