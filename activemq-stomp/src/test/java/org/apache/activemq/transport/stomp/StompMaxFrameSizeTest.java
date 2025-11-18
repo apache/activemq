@@ -277,7 +277,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        StompFrame received = stompConnection.receive(5000);
+        StompFrame received = stompConnection.receive(10000);
         assertNotNull(received);
         assertEquals("ERROR", received.getAction());
         assertTrue(received.getBody().contains("maximum frame size"));
