@@ -37,12 +37,14 @@ import org.fusesource.mqtt.codec.CONNECT;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 /**
  * Tests for various usage scenarios of the protocol converter
  */
+@Category(ParallelTest.class)
 public class MQTTProtocolConverterTest {
 
     private MQTTTransport transport;
