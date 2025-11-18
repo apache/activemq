@@ -128,6 +128,7 @@
     <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
     <maven-core-version>3.8.6</maven-core-version>
     <maven-surefire-plugin-version>3.5.3</maven-surefire-plugin-version>
+    <maven-surefire-junit5-tree-reporter-version>1.5.1</maven-surefire-junit5-tree-reporter-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
@@ -965,6 +966,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven-surefire-plugin-version}</version>
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <forkCount>1</forkCount>
@@ -977,6 +979,18 @@
             </systemPropertyVariables>
             <argLine>-Xmx512m</argLine>
           </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.surefire</groupId>
+              <artifactId>surefire-junit47</artifactId>
+              <version>${maven-surefire-plugin-version}</version>
+            </dependency>
+            <dependency>
+              <groupId>me.fabriciorby</groupId>
+              <artifactId>maven-surefire-junit5-tree-reporter</artifactId>
+              <version>${maven-surefire-junit5-tree-reporter-version}</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.felix</groupId>
