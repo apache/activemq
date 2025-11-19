@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.TransactionInfo;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for TransactionInfo
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.TransactionInfo;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class TransactionInfoTest extends BaseCommandTestSupport {
 
     public static final TransactionInfoTest SINGLETON = new TransactionInfoTest();

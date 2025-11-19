@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v2;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for WireFormatInfo NOTE!: This file is
  * auto generated - do not modify! if you need to make a change, please see the
@@ -27,6 +29,8 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  * 
  * 
  */
+@Category(ParallelTest.class)
+
 public class WireFormatInfoTest extends DataFileGeneratorTestSupport {
 
     public static final WireFormatInfoTest SINGLETON = new WireFormatInfoTest();
