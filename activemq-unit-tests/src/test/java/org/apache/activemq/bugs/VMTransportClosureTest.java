@@ -31,7 +31,10 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class VMTransportClosureTest extends EmbeddedBrokerTestSupport {
 	private static final Log LOG = LogFactory
 			.getLog(VMTransportClosureTest.class);

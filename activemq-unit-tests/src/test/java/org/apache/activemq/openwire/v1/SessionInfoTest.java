@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.SessionInfo;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for SessionInfo
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.SessionInfo;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class SessionInfoTest extends BaseCommandTestSupport {
 
     public static final SessionInfoTest SINGLETON = new SessionInfoTest();

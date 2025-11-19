@@ -24,10 +24,12 @@ import java.util.concurrent.CountDownLatch;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +37,7 @@ import org.slf4j.LoggerFactory;
  * Used to verify that the BrokerView accessed while the BrokerSerivce is waiting
  * for a Slow Store startup to complete doesn't throw unexpected NullPointerExceptions.
  */
+@Category(ParallelTest.class)
 public class BrokerViewSlowStoreStartupTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerViewSlowStoreStartupTest.class);

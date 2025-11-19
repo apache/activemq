@@ -34,6 +34,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.cursors.AbstractStoreCursor;
 import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
@@ -43,6 +44,7 @@ import org.apache.logging.log4j.core.filter.AbstractFilter;
 import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +52,7 @@ import org.slf4j.LoggerFactory;
  * @author Claudio Corsi
  *
  */
+@Category(ParallelTest.class)
 public class AMQ3567Test {
 
     private static Logger logger = LoggerFactory.getLogger(AMQ3567Test.class);
@@ -116,7 +119,6 @@ public class AMQ3567Test {
 
     private void startBroker() throws Exception {
         broker = new BrokerService();
-        broker.setDataDirectory("target/data");
         connectionUri = broker.addConnector("tcp://localhost:0?wireFormat.maxInactivityDuration=30000&transport.closeAsync=false&transport.threadName&soTimeout=60000&transport.keepAlive=false&transport.useInactivityMonitor=false").getPublishableConnectString();
         broker.start(true);
         broker.waitUntilStarted();

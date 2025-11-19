@@ -394,7 +394,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     private void corruptBatchCheckSumSplash(int id) throws Exception{
         Collection<DataFile> files =
-                ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
+            ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
         DataFile dataFile = (DataFile) files.toArray()[0];
         RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
 
@@ -425,7 +425,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     private void corruptBatchEndEof(int id) throws Exception{
         Collection<DataFile> files =
-                ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
+            ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
         DataFile dataFile = (DataFile) files.toArray()[id];
         RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
 
@@ -449,7 +449,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
                 @Override
                 public void execute(Transaction tx) throws IOException {
                     StoredDestination sd = kahaDbStore.getStoredDestination(kahaDbStore.convert(
-                            (ActiveMQQueue)destination), tx);
+                        (ActiveMQQueue)destination), tx);
                     int i = 1;
                     for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext();) {
                         Entry<Long, MessageKeys> entry = iterator.next();

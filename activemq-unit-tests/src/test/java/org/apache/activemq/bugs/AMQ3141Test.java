@@ -33,11 +33,14 @@ import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AMQ3141Test {
 
     private static final int MAX_MESSAGES = 100;
@@ -58,7 +61,6 @@ public class AMQ3141Test {
         broker = new BrokerService();
         broker.setPersistent(true);
         broker.setSchedulerSupport(true);
-        broker.setDataDirectory("target");
         broker.setUseJmx(false);
         broker.addConnector("vm://localhost");
 

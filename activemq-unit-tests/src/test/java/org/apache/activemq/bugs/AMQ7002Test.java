@@ -31,6 +31,8 @@ import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.jms.*;
@@ -39,6 +41,7 @@ import java.util.List;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
 
+@Category(ParallelTest.class)
 public class AMQ7002Test {
     static final Logger LOG = LoggerFactory.getLogger(AMQ7002Test.class);
     protected ActiveMQConnection connection;

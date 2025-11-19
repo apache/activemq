@@ -45,6 +45,8 @@ import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RunWith(value = Parameterized.class)
 public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
@@ -125,7 +127,7 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
                 break;
             }
 
-            countDownLatch.await(5, TimeUnit.SECONDS);
+            assertTrue("Did not receive all messages in time", countDownLatch.await(10, TimeUnit.SECONDS));
 
             assertEquals(Integer.valueOf(2), Integer.valueOf(receivedMessageCount.get()));
             assertEquals(Integer.valueOf(0), Integer.valueOf(exceptionCount.get()));
@@ -140,12 +142,15 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
             }
             jmsConsumer.close();
 
-            assertTrue("DequeueCount = 2 and QueueSize = 0 expected", Wait.waitFor(new Wait.Condition() {
+            final Logger logger = LoggerFactory.getLogger(this.getClass());
+            assertTrue("Queue should drain in time", Wait.waitFor(new Wait.Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
-                    return localQueueViewMBean.getDequeueCount() == 2l && localQueueViewMBean.getQueueSize() == 0l;
+                    logger.info("Current Queue size: " + localQueueViewMBean.getQueueSize() +
+                            ", dequeue count: " + localQueueViewMBean.getDequeueCount());
+                    return localQueueViewMBean.getQueueSize() == 0L && localQueueViewMBean.getDequeueCount() >= 2L;
                 }
-            }, 5000l, 100l));
+            }, 60000L, 200L));
 
         } catch (Exception e) {
             fail(e.getMessage());

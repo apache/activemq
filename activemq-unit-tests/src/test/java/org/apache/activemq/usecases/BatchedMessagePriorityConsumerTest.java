@@ -25,6 +25,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+
 public class BatchedMessagePriorityConsumerTest extends JmsTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(BatchedMessagePriorityConsumerTest.class);

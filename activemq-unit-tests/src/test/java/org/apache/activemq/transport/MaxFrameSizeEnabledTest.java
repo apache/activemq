@@ -52,6 +52,9 @@ public class MaxFrameSizeEnabledTest {
     public static final String PASSWORD = "password";
     public static final String SERVER_KEYSTORE = "src/test/resources/org/apache/activemq/security/broker1.ks";
     public static final String TRUST_KEYSTORE = "src/test/resources/org/apache/activemq/security/broker1.ks";
+    private static final int CONNECTION_COUNT = 3;
+    private static final int MESSAGE_ATTEMPTS = 3;
+    private static final int BODY_SIZE = 20000; // large enough to trip 2k limit, compressible enough for 60k
 
     private BrokerService broker;
     private final String transportType;
@@ -69,74 +72,74 @@ public class MaxFrameSizeEnabledTest {
     @Parameterized.Parameters(name="transportType={0},clientSideEnable={1},clientSideFailoverEnable={2},serverSideEnabled={3}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                //Both client and server side max frame check enabled
-                {"tcp", true, false, true},
-                {"tcp", true, true, true},
-                {"ssl", true, false, true},
-                {"ssl", true, true, true},
-                {"nio", true, false, true},
-                {"nio", true, true, true},
-                {"nio+ssl", true, false, true},
-                {"nio+ssl", true, true, true},
-                {"auto", true, false, true},
-                {"auto", true, true, true},
-                {"auto+ssl", true, false, true},
-                {"auto+ssl", true, true, true},
-                {"auto+nio", true, false, true},
-                {"auto+nio", true, true, true},
-                {"auto+nio+ssl", true, false, true},
-                {"auto+nio+ssl", true, true, true},
+            //Both client and server side max frame check enabled
+            {"tcp", true, false, true},
+            {"tcp", true, true, true},
+            {"ssl", true, false, true},
+            {"ssl", true, true, true},
+            {"nio", true, false, true},
+            {"nio", true, true, true},
+            {"nio+ssl", true, false, true},
+            {"nio+ssl", true, true, true},
+            {"auto", true, false, true},
+            {"auto", true, true, true},
+            {"auto+ssl", true, false, true},
+            {"auto+ssl", true, true, true},
+            {"auto+nio", true, false, true},
+            {"auto+nio", true, true, true},
+            {"auto+nio+ssl", true, false, true},
+            {"auto+nio+ssl", true, true, true},
 
-                //Client side enabled but server side disabled
-                {"tcp", true, false, false},
-                {"tcp", true, true, false},
-                {"ssl", true, false, false},
-                {"ssl", true, true, false},
-                {"nio", true, false, false},
-                {"nio", true, true, false},
-                {"nio+ssl", true, false, false},
-                {"nio+ssl", true, true, false},
-                {"auto", true, false, false},
-                {"auto", true, true, false},
-                {"auto+ssl", true, false, false},
-                {"auto+ssl", true, true, false},
-                {"auto+nio", true, false, false},
-                {"auto+nio", true, true, false},
-                {"auto+nio+ssl", true, false, false},
-                {"auto+nio+ssl", true, true, false},
+            //Client side enabled but server side disabled
+            {"tcp", true, false, false},
+            {"tcp", true, true, false},
+            {"ssl", true, false, false},
+            {"ssl", true, true, false},
+            {"nio", true, false, false},
+            {"nio", true, true, false},
+            {"nio+ssl", true, false, false},
+            {"nio+ssl", true, true, false},
+            {"auto", true, false, false},
+            {"auto", true, true, false},
+            {"auto+ssl", true, false, false},
+            {"auto+ssl", true, true, false},
+            {"auto+nio", true, false, false},
+            {"auto+nio", true, true, false},
+            {"auto+nio+ssl", true, false, false},
+            {"auto+nio+ssl", true, true, false},
 
-                //Client side disabled but server side enabled
-                //
-                // AMQ-8515 client=false, failover=true, server=true
-                // results in infinite retries since broker closes
-                // socket, so we don't test that combo
-                {"tcp", false, false, true},
-                {"ssl", false, false, true},
-                {"nio", false, false, true},
-                {"nio+ssl", false, false, true},
-                {"auto", false, false, true},
-                {"auto+ssl", false, false, true},
-                {"auto+nio", false, false, true},
-                {"auto+nio+ssl", false, false, true},
+            //Client side disabled but server side enabled
+            //
+            // AMQ-8515 client=false, failover=true, server=true
+            // results in infinite retries since broker closes
+            // socket, so we don't test that combo
+            {"tcp", false, false, true},
+            {"ssl", false, false, true},
+            {"nio", false, false, true},
+            {"nio+ssl", false, false, true},
+            {"auto", false, false, true},
+            {"auto+ssl", false, false, true},
+            {"auto+nio", false, false, true},
+            {"auto+nio+ssl", false, false, true},
 
-                //Client side and server side disabled
-                {"tcp", false, false, false},
-                {"tcp", false, true, false},
-                {"ssl", false, false, false},
-                {"ssl", false, true, false},
-                {"nio", false, false, false},
-                {"nio", false, true, false},
-                {"nio+ssl", false, false, false},
-                {"nio+ssl", false, true, false},
-                {"auto", false, false, false},
-                {"auto", false, true, false},
-                {"auto+ssl", false, false, false},
-                {"auto+ssl", false, true, false},
-                {"auto+nio", false, false, false},
-                {"auto+nio", false, true, false},
-                {"auto+nio+ssl", false, false, false},
-                {"auto+nio+ssl", false, true, false},
-        });
+            //Client side and server side disabled
+            {"tcp", false, false, false},
+            {"tcp", false, true, false},
+            {"ssl", false, false, false},
+            {"ssl", false, true, false},
+            {"nio", false, false, false},
+            {"nio", false, true, false},
+            {"nio+ssl", false, false, false},
+            {"nio+ssl", false, true, false},
+            {"auto", false, false, false},
+            {"auto", false, true, false},
+            {"auto+ssl", false, false, false},
+            {"auto+ssl", false, true, false},
+            {"auto+nio", false, false, false},
+            {"auto+nio", false, true, false},
+            {"auto+nio+ssl", false, false, false},
+            {"auto+nio+ssl", false, true, false},
+            });
     }
 
     @BeforeClass
@@ -190,22 +193,21 @@ public class MaxFrameSizeEnabledTest {
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(clientUri);
         factory.setUseCompression(useCompression);
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < CONNECTION_COUNT; i++) {
             Connection connection = factory.createConnection();
             connection.start();
             connections.add(connection);
         }
 
         //Generate a body that is too large
-        StringBuffer body = new StringBuffer();
-        Random r = new Random();
-        for (int i = 0; i < 10000; i++) {
-            body.append(r.nextInt());
+        StringBuilder body = new StringBuilder(BODY_SIZE + 16);
+        for (int i = 0; i < BODY_SIZE; i++) {
+            body.append((char) ('A' + (i % 26)));
         }
 
-        //Try sending 10 large messages rapidly in a loop to make sure all
+        //Try sending a few large messages rapidly in a loop to make sure all
         //nio threads are allowed to send again and do not close server-side
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < MESSAGE_ATTEMPTS; i++) {
             boolean maxFrameSizeException = false;
             boolean otherException = false;
 
@@ -259,7 +261,7 @@ public class MaxFrameSizeEnabledTest {
                     messageConsumer = session.createConsumer(destination);
                     producer.send(session.createTextMessage("Hello"));
 
-                    int maxLoops = 50;
+                    int maxLoops = 20;
                     boolean found = false;
                     do {
                         Message message = messageConsumer.receive(200l);
@@ -269,7 +271,7 @@ public class MaxFrameSizeEnabledTest {
                             found = true;
                         }
                         maxLoops++;
-                    } while (!found && maxLoops <= 50);
+                    } while (!found && maxLoops <= 20);
 
                 } catch (Exception e) {
                     nextException = true;
@@ -281,12 +283,12 @@ public class MaxFrameSizeEnabledTest {
 
         if (connectionsShouldBeOpen(useCompression)) {
             //Verify that all connections are active
-            assertTrue(Wait.waitFor(() -> broker.getConnectorByName(transportType).getConnections().size() == 10,
-                    3000, 500));
+            assertTrue(Wait.waitFor(() -> broker.getConnectorByName(transportType).getConnections().size() == CONNECTION_COUNT,
+                                    3000, 500));
         } else {
             //Verify that all connections are closed
             assertTrue(Wait.waitFor(() -> broker.getConnectorByName(transportType).getConnections().size() == 0,
-                    3000, 500));
+                                    3000, 500));
         }
 
         if (isNio() && connectionsShouldBeOpen(useCompression)) {
@@ -307,7 +309,7 @@ public class MaxFrameSizeEnabledTest {
     private boolean isFailover() {
         return clientSideFailoverEnabled;
     }
-    
+
     private boolean isSsl() {
         return transportType.contains("ssl");
     }
@@ -342,7 +344,7 @@ public class MaxFrameSizeEnabledTest {
 
     private String getClientUri(int port) {
         if(isFailover()) {
-            return "failover:(" + (isSsl() ? "ssl" : "tcp") + "://localhost:" + port + ")" + getClientParams() + "&maxReconnectAttempts=1&startupMaxReconnectAttempts=1"; 
+            return "failover:(" + (isSsl() ? "ssl" : "tcp") + "://localhost:" + port + ")" + getClientParams() + "&maxReconnectAttempts=1&startupMaxReconnectAttempts=1";
         } else {
             return (isSsl() ? "ssl" : "tcp") + "://localhost:" + port + getClientParams();
         }

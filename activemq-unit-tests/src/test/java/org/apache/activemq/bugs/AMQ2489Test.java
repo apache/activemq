@@ -36,6 +36,8 @@ import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * In CLIENT_ACKNOWLEDGE and INDIVIDUAL_ACKNOWLEDGE modes following exception
@@ -49,6 +51,7 @@ import org.apache.activemq.command.ActiveMQQueue;
  * 
  * @author daroo
  */
+@Category(ParallelTest.class)
 public class AMQ2489Test extends TestSupport {
     private final static String SEQ_NUM_PROPERTY = "seqNum";
 
@@ -147,6 +150,7 @@ public class AMQ2489Test extends TestSupport {
         return getClass().getName() + "." + getName();
     }
 
+@Category(ParallelTest.class)
     public final class Consumer implements MessageListener {
         final Session session;
 

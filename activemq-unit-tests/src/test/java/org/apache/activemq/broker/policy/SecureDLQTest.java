@@ -26,7 +26,10 @@ import org.apache.activemq.security.*;
 import jakarta.jms.*;
 
 import static org.apache.activemq.security.SimpleSecurityBrokerSystemTest.*;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class SecureDLQTest extends DeadLetterTestSupport {
 
     Connection dlqConnection;

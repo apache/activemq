@@ -28,13 +28,16 @@ import jakarta.jms.MessageNotWriteableException;
 import junit.framework.TestCase;
 import junit.textui.TestRunner;
 
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.MarshallingSupport;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class ActiveMQTextMessageTest extends TestCase {
 
     public static void main(String[] args) {

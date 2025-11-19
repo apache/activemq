@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v2;
 
 import org.apache.activemq.command.ActiveMQQueue;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for ActiveMQQueue
  * 
@@ -28,6 +30,8 @@ import org.apache.activemq.command.ActiveMQQueue;
  * 
  * 
  */
+@Category(ParallelTest.class)
+
 public class ActiveMQQueueTest extends ActiveMQDestinationTestSupport {
 
     public static final ActiveMQQueueTest SINGLETON = new ActiveMQQueueTest();
