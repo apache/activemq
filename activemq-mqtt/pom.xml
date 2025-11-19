@@ -321,6 +321,8 @@
                     <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
                     <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
                     <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
+                    <!-- when running MQTT tests in parallel in the CI (quite slow) we need to bump the wireformat negotiation timeout (5s by default) -->
+                    <org.apache.activemq.transport.wireFormatNegotiationTimeout>20000</org.apache.activemq.transport.wireFormatNegotiationTimeout>
                   </systemPropertyVariables>
                 </configuration>
               </execution>
