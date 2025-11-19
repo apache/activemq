@@ -33,6 +33,7 @@ import org.junit.experimental.categories.Category;
  * 
  */
 @Category(ParallelTest.class)
+
 public class MessageDispatchTest extends BaseCommandTestSupport {
 
 
