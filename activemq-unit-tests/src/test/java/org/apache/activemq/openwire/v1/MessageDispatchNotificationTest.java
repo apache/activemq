@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.MessageDispatchNotification;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for MessageDispatchNotification
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.MessageDispatchNotification;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class MessageDispatchNotificationTest extends BaseCommandTestSupport {
 
     public static final MessageDispatchNotificationTest SINGLETON = new MessageDispatchNotificationTest();

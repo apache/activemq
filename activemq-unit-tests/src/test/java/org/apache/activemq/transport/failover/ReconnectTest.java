@@ -40,7 +40,10 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class ReconnectTest extends TestCase {
 
     public static final int MESSAGES_PER_ITTERATION = 10;

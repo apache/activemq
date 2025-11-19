@@ -51,6 +51,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test case support used to test multiple message comsumers and message
@@ -58,6 +60,7 @@ import static org.junit.Assert.*;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class JmsMultipleClientsTestSupport {
 
     @Rule

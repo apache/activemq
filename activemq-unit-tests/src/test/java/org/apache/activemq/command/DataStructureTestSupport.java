@@ -28,6 +28,8 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
 
+
+
 public abstract class DataStructureTestSupport extends CombinationTestSupport {
     public boolean cacheEnabled;
     public WireFormat wireFormat;

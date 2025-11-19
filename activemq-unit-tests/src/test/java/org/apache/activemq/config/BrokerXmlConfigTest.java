@@ -18,10 +18,13 @@ package org.apache.activemq.config;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class BrokerXmlConfigTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         // START SNIPPET: bean

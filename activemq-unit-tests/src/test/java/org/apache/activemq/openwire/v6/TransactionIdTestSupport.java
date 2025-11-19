@@ -23,8 +23,6 @@ import java.io.IOException;
 
 import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
-
-
 /**
  * Test case for the OpenWire marshalling for TransactionId
  *
@@ -36,6 +34,8 @@ import org.apache.activemq.command.*;
  *
  * 
  */
+
+
 public abstract class TransactionIdTestSupport extends DataFileGeneratorTestSupport {
 
 

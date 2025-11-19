@@ -20,10 +20,13 @@ import java.io.IOException;
 
 import junit.framework.Test;
 
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.ByteSequence;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class MessageSendTest extends DataStructureTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MessageSendTest.class);
 

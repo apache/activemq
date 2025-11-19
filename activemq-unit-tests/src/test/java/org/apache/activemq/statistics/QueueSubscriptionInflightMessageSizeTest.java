@@ -24,6 +24,8 @@ import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -31,6 +33,7 @@ import org.junit.runners.Parameterized;
  * This test shows Inflight Message sizes are correct for various acknowledgement modes
  * using a QueueSubscription
  */
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class QueueSubscriptionInflightMessageSizeTest extends AbstractInflightMessageSizeTest {
 

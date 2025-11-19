@@ -35,9 +35,11 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the loss of messages detected during testing with ActiveMQ 5.4.1 and 5.4.2.
@@ -52,7 +54,7 @@ import org.junit.Test;
  * (probably because memory limits not reached). - Producers sending a number of messages before consumers come online
  * increases rate of occurrence.
  */
-
+@Category(ParallelTest.class)
 public class AMQ3167Test {
     protected BrokerService embeddedBroker;
 
@@ -119,7 +121,6 @@ public class AMQ3167Test {
 
         broker_svc.setUseJmx(false);
         broker_svc.setPersistent(true);
-        broker_svc.setDataDirectory("target/AMQ3167Test");
         configureDestinationPolicy(broker_svc);
     }
 

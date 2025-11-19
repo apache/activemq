@@ -25,11 +25,14 @@ import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class Log4JConfigTest extends EmbeddedBrokerTestSupport {
 
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Log4JConfigTest.class);

@@ -24,7 +24,10 @@ import jakarta.jms.Topic;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompConnection;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class BrokerDurableRejectedTest extends TestSupport {
 
     protected Connection connection;

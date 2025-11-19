@@ -30,6 +30,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -38,6 +40,7 @@ import static org.hamcrest.Matchers.*;
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class DestinationListenerTest extends EmbeddedBrokerTestSupport implements DestinationListener {
     private static final transient Logger LOG = LoggerFactory.getLogger(DestinationListenerTest.class);
     protected ActiveMQConnection connection;

@@ -30,14 +30,17 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+@Category(ParallelTest.class)
 public class MBeanOperationTimeoutTest {
     private static final Logger LOG = LoggerFactory.getLogger(MBeanOperationTimeoutTest.class);
 
