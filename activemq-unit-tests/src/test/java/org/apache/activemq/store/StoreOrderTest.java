@@ -44,8 +44,11 @@ import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 //  https://issues.apache.org/activemq/browse/AMQ-2594
+@Category(ParallelTest.class)
 public abstract class StoreOrderTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(StoreOrderTest.class);

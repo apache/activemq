@@ -26,7 +26,10 @@ import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class TcpTransportBindTest extends EmbeddedBrokerTestSupport {
     String addr = "tcp://localhost:0";
 

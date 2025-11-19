@@ -31,6 +31,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import junit.framework.TestCase;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /*
  * Test plan:
@@ -41,6 +43,7 @@ import junit.framework.TestCase;
  * All three groups are handled by to consumer1, so consumer2 should not get any messages.
  * See bug AMQ-2016: Message grouping fails when consumers are added
  */
+@Category(ParallelTest.class)
 public class MessageGroupNewConsumerTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(MessageGroupNewConsumerTest.class);
     private Connection connection;

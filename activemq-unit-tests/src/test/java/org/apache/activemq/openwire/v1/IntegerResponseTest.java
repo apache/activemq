@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.IntegerResponse;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for IntegerResponse
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.IntegerResponse;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class IntegerResponseTest extends ResponseTest {
 
     public static final IntegerResponseTest SINGLETON = new IntegerResponseTest();

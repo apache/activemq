@@ -18,7 +18,6 @@ package org.apache.activemq.bugs;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -40,13 +39,16 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class MemoryUsageCleanupTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(MemoryUsageCleanupTest.class);
@@ -65,7 +67,6 @@ public class MemoryUsageCleanupTest {
     public void setUp() throws Exception {
 
         broker = new BrokerService();
-        broker.setDataDirectory("target" + File.separator + "activemq-data");
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.setDedicatedTaskRunner(false);

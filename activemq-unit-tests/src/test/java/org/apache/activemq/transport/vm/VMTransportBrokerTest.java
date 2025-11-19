@@ -18,7 +18,10 @@ package org.apache.activemq.transport.vm;
 
 import junit.framework.Test;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class VMTransportBrokerTest extends TransportBrokerTestSupport {
 
     protected String getBindLocation() {

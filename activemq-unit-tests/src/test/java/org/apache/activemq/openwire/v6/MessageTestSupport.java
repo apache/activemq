@@ -18,8 +18,6 @@
 package org.apache.activemq.openwire.v6;
 
 import org.apache.activemq.command.*;
-
-
 /**
  * Test case for the OpenWire marshalling for Message
  *
@@ -31,6 +29,8 @@ import org.apache.activemq.command.*;
  *
  * 
  */
+
+
 public abstract class MessageTestSupport extends BaseCommandTestSupport {
 
 

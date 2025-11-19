@@ -50,7 +50,10 @@ import org.slf4j.LoggerFactory;
 
 
 import static org.junit.Assert.*;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class ActiveMQXAConnectionTxInterruptTest {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQXAConnectionTxInterruptTest.class);
     long txGenerator = System.currentTimeMillis();

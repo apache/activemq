@@ -45,9 +45,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 // see: https://issues.apache.org/activemq/browse/AMQ-2651
 @RunWith(BlockJUnit4ClassRunner.class)
+@Category(ParallelTest.class)
 public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(OnePrefetchAsyncConsumerTest.class);
 

@@ -33,7 +33,10 @@ import java.util.concurrent.*;
 import org.apache.activemq.broker.BrokerService;
 import javax.management.JMException;
 import javax.management.ObjectName;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class TcpTransportCloseConnectionTest {
 
     static boolean transportConnectionFailed = false;

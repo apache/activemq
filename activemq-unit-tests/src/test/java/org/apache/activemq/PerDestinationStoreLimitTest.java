@@ -40,8 +40,11 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 // see: https://issues.apache.org/activemq/browse/AMQ-2668
+@Category(ParallelTest.class)
 public class PerDestinationStoreLimitTest extends JmsTestSupport {
     static final Logger LOG = LoggerFactory.getLogger(PerDestinationStoreLimitTest.class);
     final String oneKb = new String(new byte[1024]);

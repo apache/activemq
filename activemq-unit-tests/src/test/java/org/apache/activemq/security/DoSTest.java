@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
  * the transport was adequately destroyed on the broker side.
  */
 
+
 public class DoSTest extends JmsTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(DoSTest.class);

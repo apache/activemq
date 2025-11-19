@@ -20,6 +20,8 @@ import org.apache.activemq.command.NetworkBridgeFilter;
 import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for NetworkBridgeFilter
  *
@@ -31,6 +33,8 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  *
  * 
  */
+@Category(ParallelTest.class)
+
 public class NetworkBridgeFilterTest extends DataFileGeneratorTestSupport {
 
 

@@ -37,7 +37,10 @@ import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class DurableConsumerCloseAndReconnectTcpTest extends DurableConsumerCloseAndReconnectTest
 implements ExceptionListener, TransportListener {
     private static final Logger LOG = LoggerFactory.getLogger(DurableConsumerCloseAndReconnectTcpTest.class);

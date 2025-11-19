@@ -18,7 +18,10 @@ package org.apache.activemq.broker.policy;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class NoRetryDeadLetterTest extends DeadLetterTest {
 
     @Override

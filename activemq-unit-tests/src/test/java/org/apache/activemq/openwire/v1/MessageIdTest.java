@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v1;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for MessageId
  * 
@@ -29,6 +31,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class MessageIdTest extends DataFileGeneratorTestSupport {
 
     public static final MessageIdTest SINGLETON = new MessageIdTest();
