@@ -86,4 +86,9 @@ public interface Connector extends Service {
      * @return true if connector is started
      */
     public boolean isStarted();
+
+    /**
+     * @return connector name
+     */
+    public String getName();
 }

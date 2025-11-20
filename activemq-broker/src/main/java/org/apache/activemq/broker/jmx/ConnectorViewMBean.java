@@ -101,4 +101,7 @@ public interface ConnectorViewMBean extends Service {
      */
     @MBeanInfo("Connector started")
     boolean isStarted();
+
+    @MBeanInfo("Connector name")
+    String getName();
 }
