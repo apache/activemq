@@ -15,12 +15,11 @@
 # limitations under the License.
 #
 github:
-  description: "Apache ActiveMQ Classic"
-  homepage: https://activemq.apache.org/components/classic/
+  description: "Apache ActiveMQ"
+  homepage: https://activemq.apache.org/
   labels:
     - apache
     - activemq
-    - activemq-classic
     - messaging
     - broker
     - amqp
