@@ -29,15 +29,18 @@ import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpConnectionListener;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.activemq.util.SocketProxy;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test for idle timeout processing using SocketProxy to interrupt coms.
  */
+@Category(ParallelTest.class)
 public class AmqpSocketProxyIdleTimeoutTests extends AmqpClientTestSupport {
 
     private final int TEST_IDLE_TIMEOUT = 3000;
