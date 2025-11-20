@@ -16,7 +16,7 @@
 #
 github:
   description: "Apache ActiveMQ"
-  homepage: https://activemq.apache.org/
+  homepage: https://activemq.apache.org
   labels:
     - apache
     - activemq
