@@ -522,11 +522,18 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <version>${surefire.version}</version>
+            <configuration>
+              <skipTests>true</skipTests>
+            </configuration>
             <executions>
               <execution>
                 <id>parallel</id>
-                <goals><goal>test</goal></goals>
+                <phase>test</phase>
+                <goals>
+                  <goal>test</goal>
+                </goals>
                 <configuration combine.self="override">
+                  <skipTests>false</skipTests>
                   <forkCount>${parallel.tests.fork.count}</forkCount>
                   <reuseForks>false</reuseForks>
                   <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
@@ -543,8 +550,12 @@
               </execution>
               <execution>
                 <id>serial</id>
-                <goals><goal>test</goal></goals>
+                <phase>test</phase>
+                <goals>
+                  <goal>test</goal>
+                </goals>
                 <configuration combine.self="override">
+                  <skipTests>false</skipTests>
                   <runOrder>balanced</runOrder>
                   <failIfNoTests>false</failIfNoTests>
                   <excludedGroups>org.apache.activemq.test.annotations.ParallelTest</excludedGroups>
