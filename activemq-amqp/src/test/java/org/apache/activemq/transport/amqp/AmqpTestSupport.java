@@ -51,6 +51,7 @@ import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.transport.amqp.protocol.AmqpConnection;
+import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,7 +62,6 @@ import org.slf4j.LoggerFactory;
 public class AmqpTestSupport {
 
     public static final String MESSAGE_NUMBER = "MessageNumber";
-    public static final String KAHADB_DIRECTORY = "target/activemq-data/";
 
     @Rule public TestName name = new TestName();
 
@@ -120,7 +120,7 @@ public class AmqpTestSupport {
         brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
         if (isPersistent()) {
             KahaDBStore kaha = new KahaDBStore();
-            kaha.setDirectory(new File(KAHADB_DIRECTORY + getTestName()));
+            kaha.setDirectory(new File(IOHelper.getDefaultDataDirectory() + getTestName()));
             brokerService.setPersistenceAdapter(kaha);
         }
         brokerService.setSchedulerSupport(isSchedulerEnabled());

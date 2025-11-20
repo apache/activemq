@@ -16,9 +16,12 @@
  */
 package org.apache.activemq.store.kahadb.disk.index;
 
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.apache.activemq.store.kahadb.disk.util.LongMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class HashIndexTest extends IndexTestSupport {
 
     @Override

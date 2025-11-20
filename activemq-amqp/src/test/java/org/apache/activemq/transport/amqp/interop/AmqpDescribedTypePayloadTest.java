@@ -42,16 +42,19 @@ import org.apache.activemq.transport.amqp.client.AmqpNoLocalFilter;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test that the broker can pass through an AMQP message with a described type
  * in the message body regardless of transformer in use.
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AmqpDescribedTypePayloadTest extends AmqpClientTestSupport {
 
     private final String transformer;

@@ -145,4 +145,37 @@ public class JMSClientTestSupport extends AmqpTestSupport {
         connection.start();
         return connection;
     }
+
+    /**
+     * Some SSL/NIO test combinations can occasionally fail the initial frame negotiation
+     * when brokers are started in parallel forks. Retry once on the specific framing error
+     * to smooth out that transient race without hiding other issues.
+     */
+    protected Connection createConnectionWithRetry(String clientId, boolean syncPublish) throws JMSException, InterruptedException {
+        JMSException lastException = null;
+        for (int attempt = 0; attempt < 2; attempt++) {
+            try {
+                return createConnection(clientId, syncPublish);
+            } catch (JMSException ex) {
+                lastException = ex;
+                if (!containsAmqpHeaderMismatch(ex)) {
+                    throw ex;
+                }
+                LOG.warn("AMQP header mismatch on connection attempt {} for {}, retrying once", attempt + 1, getBrokerURI());
+                Thread.sleep(500);
+            }
+        }
+        throw lastException;
+    }
+
+    private boolean containsAmqpHeaderMismatch(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current.getMessage() != null && current.getMessage().contains("AMQP header mismatch")) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
 }
