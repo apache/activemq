@@ -21,8 +21,11 @@ import static org.junit.Assert.*;
 
 import java.util.Iterator;
 
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class SequenceSetTest {
 
     @Test

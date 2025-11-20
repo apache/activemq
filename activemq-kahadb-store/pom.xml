@@ -174,21 +174,6 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <forkCount>1</forkCount>
-          <reuseForks>false</reuseForks>
-          <argLine>${surefire.argLine}</argLine>
-          <runOrder>alphabetical</runOrder>
-          <systemPropertyVariables>
-            <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
-          </systemPropertyVariables>
-          <includes>
-            <include>**/*Test.*</include>
-          </includes>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.apache.activemq.protobuf</groupId>
         <artifactId>activemq-protobuf</artifactId>
         <executions>
@@ -220,6 +205,80 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>all-parallel</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>activemq.tests</name>
+          <value>parallel</value>
+        </property>
+      </activation>
+      <properties>
+        <parallel.tests.fork.count>2C</parallel.tests.fork.count>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven-surefire-plugin-version}</version>
+            <configuration>
+              <skipTests>true</skipTests>
+            </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.maven.surefire</groupId>
+                <artifactId>surefire-junit47</artifactId>
+                <version>${maven-surefire-plugin-version}</version>
+              </dependency>
+            </dependencies>
+            <executions>
+              <execution>
+                <id>parallel</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <configuration combine.self="override">
+                  <skipTests>false</skipTests>
+                  <forkCount>${parallel.tests.fork.count}</forkCount>
+                  <reuseForks>false</reuseForks>
+                  <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+                  <runOrder>balanced</runOrder>
+                  <failIfNoTests>false</failIfNoTests>
+                  <groups>org.apache.activemq.store.kahadb.ParallelTest</groups>
+                  <systemPropertyVariables>
+                    <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+                    <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
+                    <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+                    <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
+                  </systemPropertyVariables>
+                </configuration>
+              </execution>
+              <execution>
+                <id>serial</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <configuration combine.self="override">
+                  <skipTests>false</skipTests>
+                  <runOrder>balanced</runOrder>
+                  <failIfNoTests>false</failIfNoTests>
+                  <excludedGroups>org.apache.activemq.store.kahadb.ParallelTest</excludedGroups>
+                  <systemPropertyVariables>
+                    <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+                    <org.apache.activemq.default.directory.prefix>${project.build.directory}/</org.apache.activemq.default.directory.prefix>
+                    <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+                    <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
+                  </systemPropertyVariables>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>activemq.tests-sanity</id>
       <activation>

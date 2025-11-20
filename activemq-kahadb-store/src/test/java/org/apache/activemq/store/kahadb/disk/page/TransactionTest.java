@@ -18,7 +18,9 @@ package org.apache.activemq.store.kahadb.disk.page;
  */
 
 import junit.framework.TestCase;
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.apache.activemq.store.kahadb.disk.util.Marshaller;
+import org.junit.experimental.categories.Category;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -27,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Category(ParallelTest.class)
 public class TransactionTest  extends TestCase {
 
     private static long NUMBER_OF_BYTES = 10485760L;
