@@ -268,6 +268,16 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         this.store.store(update);
     }
 
+    private void doSchedule(final List<Closure> toSchedule) {
+        for (Closure closure : toSchedule) {
+            try {
+                closure.run();
+            } catch (final Exception e) {
+                LOG.warn("Failed to schedule job", e);
+            }
+        }
+    }
+
     private void doRemove(final List<Closure> toRemove) throws IOException {
         for (Closure closure : toRemove) {
             closure.run();
@@ -727,6 +737,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 // needed before firing the job event.
                 List<Closure> toRemove = new ArrayList<>();
                 List<Closure> toReschedule = new ArrayList<>();
+                List<Closure> toSchedule = new ArrayList<>();
                 try {
                     this.store.readLockIndex();
 
@@ -776,12 +787,18 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                                                 // we have a separate schedule to run at this time
                                                 // so the cron job is used to set of a separate schedule
                                                 // hence we won't fire the original cron job to the
-                                                // listeners but we do need to start a separate schedule
-                                                String jobId = ID_GENERATOR.generateId();
-                                                ByteSequence payload = getPayload(job.getLocation());
-                                                schedule(jobId, payload, "", job.getDelay(), job.getPeriod(), job.getRepeat());
-                                                waitTime = job.getDelay() != 0 ? job.getDelay() : job.getPeriod();
-                                                this.scheduleTime.setWaitTime(waitTime);
+                                                // listeners, but we do need to start a separate schedule
+                                                toSchedule.add(() -> {
+                                                    try {
+                                                        String jobId = ID_GENERATOR.generateId();
+                                                        ByteSequence payload = getPayload(job.getLocation());
+                                                        schedule(jobId, payload, "", job.getDelay(), job.getPeriod(), job.getRepeat());
+                                                    } catch (Exception e) {
+                                                        LOG.warn("Failed to schedule cron follow-up job", e);
+                                                    }
+                                                });
+                                                long wait = job.getDelay() != 0 ? job.getDelay() : job.getPeriod();
+                                                this.scheduleTime.setWaitTime(wait);
                                             }
                                         } else {
                                             toRemove.add(() -> doRemove(executionTime, job.getJobId()));
@@ -797,6 +814,10 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 } finally {
                     this.store.readUnlockIndex();
 
+                    // deferred execution of all jobs to be scheduled to avoid deadlock with indexLock
+                    doSchedule(toSchedule);
+
+                    // now reschedule all jobs that need rescheduling
                     doReschedule(toReschedule);
 
                     // now remove all jobs that have not been rescheduled,
@@ -805,6 +826,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 }
 
                 this.scheduleTime.pause();
+
             } catch (Exception ioe) {
                 LOG.error("{} Failed to schedule job", this.name, ioe);
                 try {
