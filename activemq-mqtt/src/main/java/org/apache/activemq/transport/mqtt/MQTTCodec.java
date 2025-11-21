@@ -25,7 +25,7 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 
 public class MQTTCodec {
 
-    private static final int MAX_MULTIPLIER = (int) Math.pow(2, 21);
+    static final int MAX_MULTIPLIER = (int) Math.pow(2, 21);
 
     private final MQTTFrameSink frameSink;
     private final MQTTWireFormat wireFormat;
