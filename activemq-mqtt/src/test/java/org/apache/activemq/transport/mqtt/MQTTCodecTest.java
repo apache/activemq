@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.activemq.util.ByteSequence;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.DataByteArrayInputStream;
 import org.fusesource.hawtbuf.DataByteArrayOutputStream;
@@ -316,7 +317,6 @@ public class MQTTCodecTest {
         LOG.info("Total time to process: {}", TimeUnit.MILLISECONDS.toSeconds(duration));
     }
 
-
     @Test
     public void testParseInvalidRemainingLengthField() throws Exception {
         try {
@@ -330,6 +330,7 @@ public class MQTTCodecTest {
             fail("Parsing should have failed invalid remaining length field");
         } catch (IOException e) {
             // expected
+            assertEquals("Remaining length exceeds 4 bytes", e.getMessage());
         }
     }
 
@@ -344,6 +345,20 @@ public class MQTTCodecTest {
             fail("Parsing should have failed invalid remaining length field");
         } catch (IOException e) {
             // expected
+            assertEquals("Remaining length exceeds 4 bytes", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testUnmarshalInvalidRemainingLengthField() {
+        try {
+            // Test Invalid remaining field checking using the marshaller
+            wireFormat.unmarshal(new ByteSequence(new byte[]{CONNECT.TYPE, (byte) 0x81, (byte) 0x81,
+                    (byte) 0x81, (byte) 0x81}));
+            fail("Parsing should have failed invalid remaining length field");
+        } catch (IOException e) {
+            // expected
+            assertEquals("Remaining length exceeds 4 bytes", e.getMessage());
         }
     }
 
