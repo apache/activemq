@@ -309,7 +309,6 @@
                   <goal>test</goal>
                 </goals>
                 <configuration combine.self="override">
-                  <skipTests>false</skipTests>
                   <forkCount>${parallel.tests.fork.count}</forkCount>
                   <reuseForks>false</reuseForks>
                   <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
@@ -333,7 +332,6 @@
                   <goal>test</goal>
                 </goals>
                 <configuration combine.self="override">
-                  <skipTests>false</skipTests>
                   <runOrder>balanced</runOrder>
                   <failIfNoTests>false</failIfNoTests>
                   <excludedGroups>org.apache.activemq.transport.mqtt.ParallelTest</excludedGroups>
