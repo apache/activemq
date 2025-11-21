@@ -29,6 +29,8 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.mqtt.codec.MQTTFrame;
 
+import static org.apache.activemq.transport.mqtt.MQTTCodec.MAX_MULTIPLIER;
+
 /**
  * Implements marshalling and unmarsalling the <a
  * href="http://mqtt.org/">MQTT</a> protocol.
@@ -92,6 +94,10 @@ public class MQTTWireFormat implements WireFormat {
             digit = dataIn.readByte();
             length += (digit & 0x7F) * multiplier;
             multiplier <<= 7;
+            // MQTT protocol limits Remaining Length to 4 bytes
+            if (multiplier == MAX_MULTIPLIER && (digit & 128) != 0) {
+                throw new IOException("Remaining length exceeds 4 bytes");
+            }
         }
         while ((digit & 0x80) != 0);
 
