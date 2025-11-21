@@ -25,6 +25,8 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 
 public class MQTTCodec {
 
+    private static final int MAX_MULTIPLIER = (int) Math.pow(2, 21);
+
     private final MQTTFrameSink frameSink;
     private final MQTTWireFormat wireFormat;
 
@@ -159,6 +161,10 @@ public class MQTTCodec {
             int i = 0;
             while (i++ < readSize) {
                 digit = data.readByte();
+                // MQTT protocol limits Remaining Length to 4 bytes
+                if (multiplier == MAX_MULTIPLIER && (digit & 128) != 0) {
+                    throw new IOException("Remaining length exceeds 4 bytes");
+                }
                 length += (digit & 0x7F) * multiplier;
                 multiplier <<= 7;
                 if ((digit & 0x80) == 0) {
