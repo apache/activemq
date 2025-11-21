@@ -56,6 +56,7 @@ public class ActiveMQProducer implements JMSProducer {
 
     // Properties applied to all messages on a per-JMS producer instance basis
     private Map<String, Object> messageProperties = null;
+    private CompletionListener completionListener = null;
 
     ActiveMQProducer(ActiveMQContext activemqContext, ActiveMQMessageProducer activemqMessageProducer) {
         this.activemqContext = activemqContext;
@@ -86,8 +87,7 @@ public class ActiveMQProducer implements JMSProducer {
                     message.setObjectProperty(propertyEntry.getKey(), propertyEntry.getValue());
                 }
             }
-
-            activemqMessageProducer.send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), getDisableMessageID(), getDisableMessageTimestamp(), null);
+            activemqMessageProducer.send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), getDisableMessageID(), getDisableMessageTimestamp(), getAsync());
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -253,12 +253,13 @@ public class ActiveMQProducer implements JMSProducer {
 
     @Override
     public JMSProducer setAsync(CompletionListener completionListener) {
-        throw new UnsupportedOperationException("setAsync(CompletionListener) is not supported");
+        this.completionListener = completionListener;
+        return this;
     }
 
     @Override
     public CompletionListener getAsync() {
-        throw new UnsupportedOperationException("getAsync() is not supported");
+        return this.completionListener;
     }
 
     @Override
