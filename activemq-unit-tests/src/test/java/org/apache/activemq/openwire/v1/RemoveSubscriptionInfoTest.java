@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for RemoveSubscriptionInfo
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class RemoveSubscriptionInfoTest extends BaseCommandTestSupport {
 
     public static final RemoveSubscriptionInfoTest SINGLETON = new RemoveSubscriptionInfoTest();

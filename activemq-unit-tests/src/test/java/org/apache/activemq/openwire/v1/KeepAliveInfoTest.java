@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.KeepAliveInfo;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for KeepAliveInfo
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.KeepAliveInfo;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class KeepAliveInfoTest extends BaseCommandTestSupport {
 
     public static final KeepAliveInfoTest SINGLETON = new KeepAliveInfoTest();

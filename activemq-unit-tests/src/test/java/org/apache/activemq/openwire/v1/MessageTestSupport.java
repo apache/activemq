@@ -24,7 +24,6 @@ import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.MarshallingSupport;
-
 /**
  * Test case for the OpenWire marshalling for Message NOTE!: This file is auto
  * generated - do not modify! if you need to make a change, please see the
@@ -33,6 +32,8 @@ import org.apache.activemq.util.MarshallingSupport;
  * 
  * 
  */
+
+
 public abstract class MessageTestSupport extends BaseCommandTestSupport {
 
     protected void populateObject(Object object) throws Exception {

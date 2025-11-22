@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v3;
 import org.apache.activemq.command.ProducerAck;
 
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for ProducerAck
  *
@@ -30,6 +32,8 @@ import org.apache.activemq.command.ProducerAck;
  *
  * 
  */
+@Category(ParallelTest.class)
+
 public class ProducerAckTest extends BaseCommandTestSupport {
 
 

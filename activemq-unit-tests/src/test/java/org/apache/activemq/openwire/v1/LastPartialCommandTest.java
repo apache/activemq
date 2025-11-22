@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.LastPartialCommand;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for LastPartialCommand
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.LastPartialCommand;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class LastPartialCommandTest extends PartialCommandTest {
 
     public static final LastPartialCommandTest SINGLETON = new LastPartialCommandTest();
