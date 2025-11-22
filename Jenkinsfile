@@ -147,7 +147,7 @@ pipeline {
             }
             when {
                 expression {
-                    params.deployEnabled && env.BRANCH_NAME ==~ /(activemq-5.19.x|activemq-6.1.x|main)/
+                    params.deployEnabled && env.BRANCH_NAME ==~ /(activemq-5.19.x|main)/
                 }
             }
             steps {
@@ -176,7 +176,7 @@ pipeline {
         // If this build failed, send an email to the list.
         failure {
             script {
-                if(env.BRANCH_NAME == "activemq-5.19.x" || env.BRANCH_NAME == "activemq-6.1.x" || env.BRANCH_NAME == "main") {
+                if(env.BRANCH_NAME == "activemq-5.19.x" || env.BRANCH_NAME == "main") {
                     emailext(
                             subject: "[BUILD-FAILURE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
@@ -193,7 +193,7 @@ Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BRANC
         // If this build didn't fail, but there were failing tests, send an email to the list.
         unstable {
             script {
-                if(env.BRANCH_NAME == "activemq-5.19.x" || env.BRANCH_NAME == "activemq-6.1.x" || env.BRANCH_NAME == "main") {
+                if(env.BRANCH_NAME == "activemq-5.19.x" || env.BRANCH_NAME == "main") {
                     emailext(
                             subject: "[BUILD-UNSTABLE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
@@ -213,7 +213,7 @@ Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BRANC
             // (in this cae we probably don't have to do any post-build analysis)
             deleteDir()
             script {
-                if ((env.BRANCH_NAME == "activemq-5.19.x" || env.BRANCH_NAME == "activemq-6.1.x" || env.BRANCH_NAME == "main") && (currentBuild.previousBuild != null) && (currentBuild.previousBuild.result != 'SUCCESS')) {
+                if ((env.BRANCH_NAME == "activemq-5.19.x" || env.BRANCH_NAME == "main") && (currentBuild.previousBuild != null) && (currentBuild.previousBuild.result != 'SUCCESS')) {
                     emailext (
                             subject: "[BUILD-STABLE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
