@@ -72,6 +72,9 @@ import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
 import com.thoughtworks.xstream.io.xml.XppReader;
 import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
 
+import org.junit.experimental.categories.Category;
+
+@Category(ParallelTest.class)
 public class StompTest extends StompTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(StompTest.class);
 

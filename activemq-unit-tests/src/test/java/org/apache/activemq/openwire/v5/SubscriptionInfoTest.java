@@ -25,6 +25,8 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for SubscriptionInfo
  *
@@ -36,6 +38,8 @@ import org.apache.activemq.command.*;
  *
  * 
  */
+@Category(ParallelTest.class)
+
 public class SubscriptionInfoTest extends DataFileGeneratorTestSupport {
 
 

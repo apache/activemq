@@ -51,6 +51,8 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+
 public class AMQ2413Test extends CombinationTestSupport implements MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2413Test.class);
     BrokerService broker;

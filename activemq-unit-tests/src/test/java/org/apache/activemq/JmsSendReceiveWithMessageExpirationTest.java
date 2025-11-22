@@ -16,7 +16,6 @@
  */
 package org.apache.activemq;
 
-import static org.junit.Assert.assertEquals;
 
 import java.util.Date;
 import java.util.Vector;
@@ -35,7 +34,6 @@ import jakarta.jms.Topic;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.DestinationStatistics;
-import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.store.TopicMessageStore;

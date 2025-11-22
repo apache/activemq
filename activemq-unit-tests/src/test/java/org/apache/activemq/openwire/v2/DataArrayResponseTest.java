@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v2;
 import org.apache.activemq.command.DataArrayResponse;
 import org.apache.activemq.command.DataStructure;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for DataArrayResponse NOTE!: This file
  * is auto generated - do not modify! if you need to make a change, please see
@@ -27,6 +29,8 @@ import org.apache.activemq.command.DataStructure;
  * 
  * 
  */
+@Category(ParallelTest.class)
+
 public class DataArrayResponseTest extends ResponseTest {
 
     public static final DataArrayResponseTest SINGLETON = new DataArrayResponseTest();

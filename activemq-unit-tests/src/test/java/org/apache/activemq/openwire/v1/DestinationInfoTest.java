@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v1;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.DestinationInfo;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for DestinationInfo NOTE!: This file
  * is auto generated - do not modify! if you need to make a change, please see
@@ -27,6 +29,7 @@ import org.apache.activemq.command.DestinationInfo;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class DestinationInfoTest extends BaseCommandTestSupport {
 
     public static final DestinationInfoTest SINGLETON = new DestinationInfoTest();

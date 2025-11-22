@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v2;
 
 import org.apache.activemq.command.ActiveMQTempTopic;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for ActiveMQTempTopic
  * 
@@ -28,6 +30,8 @@ import org.apache.activemq.command.ActiveMQTempTopic;
  * 
  * 
  */
+@Category(ParallelTest.class)
+
 public class ActiveMQTempTopicTest extends ActiveMQTempDestinationTestSupport {
 
     public static final ActiveMQTempTopicTest SINGLETON = new ActiveMQTempTopicTest();

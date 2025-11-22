@@ -34,6 +34,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import org.junit.experimental.categories.Category;
+
+
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class StompMaxFrameSizeTest extends StompTestSupport {
 
@@ -273,7 +277,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        StompFrame received = stompConnection.receive(5000);
+        StompFrame received = stompConnection.receive(10000);
         assertNotNull(received);
         assertEquals("ERROR", received.getAction());
         assertTrue(received.getBody().contains("maximum frame size"));

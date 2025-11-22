@@ -17,7 +17,6 @@
 package org.apache.activemq.openwire.v2;
 
 import org.apache.activemq.command.ActiveMQTempDestination;
-
 /**
  * Test case for the OpenWire marshalling for ActiveMQTempDestination
  * 
@@ -28,6 +27,8 @@ import org.apache.activemq.command.ActiveMQTempDestination;
  * 
  * 
  */
+
+
 public abstract class ActiveMQTempDestinationTestSupport extends ActiveMQDestinationTestSupport {
 
     protected void populateObject(Object object) throws Exception {
