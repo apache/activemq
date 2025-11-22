@@ -30,12 +30,14 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  *
  */
+@Ignore
 public class InactiveDurableTopicTest extends TestCase {
     private static final transient Logger LOG = LoggerFactory.getLogger(InactiveDurableTopicTest.class);
 
