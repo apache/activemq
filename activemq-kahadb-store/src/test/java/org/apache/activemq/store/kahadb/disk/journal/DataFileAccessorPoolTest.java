@@ -23,10 +23,13 @@ import static org.mockito.Mockito.verify;
 
 import java.io.File;
 
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
+@Category(ParallelTest.class)
 public class DataFileAccessorPoolTest {
 
     @Rule

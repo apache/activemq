@@ -32,15 +32,18 @@ import org.apache.activemq.transport.amqp.client.AmqpConnectionListener;
 import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test that the maxFrameSize setting prevents large frames from being processed.
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
 
     private final int TEST_IDLE_TIMEOUT = 500;

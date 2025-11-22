@@ -28,14 +28,17 @@ import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class JournalMaxFileLengthChangeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JournalMaxFileLengthChangeTest.class);
