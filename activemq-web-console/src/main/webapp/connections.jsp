@@ -28,8 +28,8 @@
 
 <h2>Connections</h2>
 
-<c:forEach items="${requestContext.brokerQuery.connectors}" var="connectorName">
-<h3>Connector <c:out value="${connectorName}" /></h3>
+<c:forEach items="${requestContext.brokerQuery.connectors}" var="connector">
+<h3>Connector <c:out value="${connector.name}" /></h3>
 
 <table id="connections" class="sortable autostripe">
 <thead>
@@ -41,7 +41,7 @@
 </tr>
 </thead>
 <tbody>
-<jms:forEachConnection broker="${requestContext.brokerQuery}" connectorName="${connectorName}"
+<jms:forEachConnection broker="${requestContext.brokerQuery}" connectorName="${connector.name}"
 	connection="con" connectionName="conName">
 <tr>
 
