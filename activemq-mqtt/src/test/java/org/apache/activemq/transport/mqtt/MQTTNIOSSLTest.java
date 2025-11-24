@@ -21,6 +21,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Run the basic tests with the NIO Transport.
  */
+@Category(ParallelTest.class)
 public class MQTTNIOSSLTest extends MQTTTest {
 
     @Override
