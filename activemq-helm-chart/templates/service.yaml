@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "activemq.fullname" . }}
+  labels:
+    {{- include "activemq.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - name: openwire
+    port: {{ .Values.service.port }}
+    targetPort: openwire
+    protocol: TCP
+  - name: webconsole
+    port: {{ .Values.service.webConsolePort }}
+    targetPort: webconsole
+    protocol: TCP
+  selector:
+    {{- include "activemq.selectorLabels" . | nindent 4 }}
