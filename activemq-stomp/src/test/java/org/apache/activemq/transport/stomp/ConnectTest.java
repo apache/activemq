@@ -34,10 +34,12 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // https://issues.apache.org/jira/browse/AMQ-3393
+@Category(ParallelTest.class)
 public class ConnectTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConnectTest.class);

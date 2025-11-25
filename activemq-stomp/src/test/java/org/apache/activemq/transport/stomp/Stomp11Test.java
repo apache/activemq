@@ -40,6 +40,9 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
+import org.junit.experimental.categories.Category;
+
+@Category(ParallelTest.class)
 public class Stomp11Test extends StompTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(Stomp11Test.class);
