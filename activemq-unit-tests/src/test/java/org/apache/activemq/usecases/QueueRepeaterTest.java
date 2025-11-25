@@ -37,11 +37,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author pragmasoft
  * 
  */
+@Category(ParallelTest.class)
 public final class QueueRepeaterTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(QueueRepeaterTest.class);

@@ -30,10 +30,13 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import jakarta.jms.Topic;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class JmsConnectionStartStopTest extends TestSupport {
 
     private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
