@@ -201,82 +201,79 @@
                   </configuration>
               </execution>
           </executions>
-      </plugin>      
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.version}</version>
+        <configuration>
+          <argLine>${surefire.argLine}</argLine>
+          <runOrder>alphabetical</runOrder>
+          <reportFormat>plain</reportFormat>
+          <failIfNoTests>false</failIfNoTests>
+          <excludedGroups>org.apache.activemq.store.kahadb.ParallelTest</excludedGroups>
+          <systemPropertyVariables>
+            <org.apache.activemq.default.directory.prefix>${project.build.directory}/</org.apache.activemq.default.directory.prefix>
+          </systemPropertyVariables>
+          <consoleOutputReporter>
+            <disable>true</disable>
+          </consoleOutputReporter>
+          <statelessTestsetInfoReporter
+            implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter">
+            <printStacktraceOnError>true</printStacktraceOnError>
+            <printStacktraceOnFailure>true</printStacktraceOnFailure>
+            <printStdoutOnError>true</printStdoutOnError>
+            <printStdoutOnFailure>true</printStdoutOnFailure>
+            <printStderrOnError>true</printStderrOnError>
+            <printStderrOnFailure>true</printStderrOnFailure>
+          </statelessTestsetInfoReporter>
+          <includes>
+            <include>**/*Test.*</include>
+          </includes>
+          <excludes>
+            <exclude>**/*LoadTest.java</exclude>
+            <exclude>**/*StressTest.java</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>parallel</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <!-- drop the default excludedGroups -->
+              <excludedGroups combine.self="override"/>
+              <groups>org.apache.activemq.store.kahadb.ParallelTest</groups>
+              <forkCount>2C</forkCount>
+              <reuseForks>false</reuseForks>
+              <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+              <failIfNoTests>false</failIfNoTests>
+              <systemPropertyVariables>
+                <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
+                <!-- when running tests in parallel in the CI (quite slow) we need to bump the wireformat negotiation timeout (5s by default) -->
+                <org.apache.activemq.transport.wireFormatNegotiationTimeout>30000</org.apache.activemq.transport.wireFormatNegotiationTimeout>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit47</artifactId>
+            <version>${surefire.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>me.fabriciorby</groupId>
+            <artifactId>maven-surefire-junit5-tree-reporter</artifactId>
+            <version>1.5.1</version>
+          </dependency>
+        </dependencies>
+      </plugin>
     </plugins>
   </build>
   <profiles>
-    <profile>
-      <id>all-parallel</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-        <property>
-          <name>activemq.tests</name>
-          <value>parallel</value>
-        </property>
-      </activation>
-      <properties>
-        <parallel.tests.fork.count>2C</parallel.tests.fork.count>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>${maven-surefire-plugin-version}</version>
-            <configuration>
-              <skipTests>true</skipTests>
-            </configuration>
-            <dependencies>
-              <dependency>
-                <groupId>org.apache.maven.surefire</groupId>
-                <artifactId>surefire-junit47</artifactId>
-                <version>${maven-surefire-plugin-version}</version>
-              </dependency>
-            </dependencies>
-            <executions>
-              <execution>
-                <id>parallel</id>
-                <phase>test</phase>
-                <goals>
-                  <goal>test</goal>
-                </goals>
-                <configuration combine.self="override">
-                  <forkCount>${parallel.tests.fork.count}</forkCount>
-                  <reuseForks>false</reuseForks>
-                  <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
-                  <runOrder>balanced</runOrder>
-                  <failIfNoTests>false</failIfNoTests>
-                  <groups>org.apache.activemq.store.kahadb.ParallelTest</groups>
-                  <systemPropertyVariables>
-                    <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
-                    <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
-                    <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
-                    <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
-                  </systemPropertyVariables>
-                </configuration>
-              </execution>
-              <execution>
-                <id>serial</id>
-                <phase>test</phase>
-                <goals>
-                  <goal>test</goal>
-                </goals>
-                <configuration combine.self="override">
-                  <runOrder>balanced</runOrder>
-                  <failIfNoTests>false</failIfNoTests>
-                  <excludedGroups>org.apache.activemq.store.kahadb.ParallelTest</excludedGroups>
-                  <systemPropertyVariables>
-                    <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
-                    <org.apache.activemq.default.directory.prefix>${project.build.directory}/</org.apache.activemq.default.directory.prefix>
-                    <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
-                    <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
-                  </systemPropertyVariables>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
     <profile>
       <id>activemq.tests-sanity</id>
       <activation>
