@@ -30,13 +30,11 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryContext;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +48,6 @@ import jakarta.jms.TextMessage;
 
 import static org.junit.Assert.assertEquals;
 
-@Category(ParallelTest.class)
 public class KahaDBOffsetRecoveryListenerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(KahaDBOffsetRecoveryListenerTest.class);
