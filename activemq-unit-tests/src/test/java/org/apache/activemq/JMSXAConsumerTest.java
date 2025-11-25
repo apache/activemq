@@ -20,11 +20,14 @@ import jakarta.jms.ConnectionFactory;
 import jakarta.jms.Session;
 
 import junit.framework.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /*
  * allow an XA session to be used as an auto ack session when no XA transaction
  * https://issues.apache.org/activemq/browse/AMQ-2659
  */
+@Category(ParallelTest.class)
 public class JMSXAConsumerTest extends JMSConsumerTest {
 
     public static Test suite() {

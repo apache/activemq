@@ -43,10 +43,13 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
 import org.apache.logging.log4j.core.layout.MessageLayout;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * @author chirino
  */
+@Category(ParallelTest.class)
 public class KahaDBTest extends TestCase {
 
     protected BrokerService createBroker(KahaDBStore kaha) throws Exception {

@@ -38,12 +38,15 @@ import jakarta.jms.TextMessage;
 import junit.framework.Test;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test cases used to test the JMS message consumer.
  *
  *
  */
+@Category(ParallelTest.class)
 public class JMSMessageTest extends JmsTestSupport {
 
     public ActiveMQDestination destination;

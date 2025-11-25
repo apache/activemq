@@ -27,7 +27,10 @@ import org.apache.activemq.transaction.Synchronization;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class TransactionContextTest {
     
     TransactionContext underTest;

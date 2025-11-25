@@ -36,12 +36,15 @@ import jakarta.jms.Session;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test cases used to test the JMS message consumer.
  *
  *
  */
+@Category(ParallelTest.class)
 public class JmsTestSupport extends CombinationTestSupport {
 
     static final private AtomicLong TEST_COUNTER = new AtomicLong();

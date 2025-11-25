@@ -44,8 +44,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class MemoryLimitTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MemoryLimitTest.class);
     final byte[] payload = new byte[10 * 1024]; //10KB

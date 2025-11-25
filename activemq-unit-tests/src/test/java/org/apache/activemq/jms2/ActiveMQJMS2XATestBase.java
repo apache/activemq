@@ -23,7 +23,10 @@ import jakarta.jms.XAConnection;
 import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public abstract class ActiveMQJMS2XATestBase extends ActiveMQJMS2TestBase {
 
     protected ActiveMQXAConnectionFactory activemqXAConnectionFactory = null;

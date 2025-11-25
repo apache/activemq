@@ -45,9 +45,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 
 @RunWith(JMock.class)
+@Category(ParallelTest.class)
 public class DiscoveryNetworkReconnectTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscoveryNetworkReconnectTest.class);

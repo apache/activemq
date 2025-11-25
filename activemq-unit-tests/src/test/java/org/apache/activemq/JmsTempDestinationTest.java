@@ -46,10 +46,13 @@ import org.apache.activemq.transport.vm.VMTransport;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * @version
  */
+@Category(ParallelTest.class)
 public class JmsTempDestinationTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(JmsTempDestinationTest.class);

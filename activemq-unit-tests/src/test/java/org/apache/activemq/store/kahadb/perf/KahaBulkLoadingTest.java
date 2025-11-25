@@ -38,12 +38,15 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * This tests bulk loading and unloading of messages to a Queue.s
  *
  *
  */
+@Category(ParallelTest.class)
 public class KahaBulkLoadingTest extends JmsTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(KahaBulkLoadingTest.class);
