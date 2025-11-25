@@ -22,7 +22,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class StompFrameTest {
     StompFrame underTest = new StompFrame();
 

@@ -202,6 +202,11 @@
                 <artifactId>surefire-junit47</artifactId>
                 <version>${surefire.version}</version>
               </dependency>
+              <dependency>
+                <groupId>me.fabriciorby</groupId>
+                <artifactId>maven-surefire-junit5-tree-reporter</artifactId>
+                <version>1.5.1</version>
+              </dependency>
             </dependencies>
             <executions>
               <execution>
@@ -223,6 +228,19 @@
                     <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
                     <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
                   </systemPropertyVariables>
+                  <reportFormat>plain</reportFormat>
+                  <consoleOutputReporter>
+                    <disable>true</disable>
+                  </consoleOutputReporter>
+                  <statelessTestsetInfoReporter
+                    implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter">
+                    <printStacktraceOnError>true</printStacktraceOnError>
+                    <printStacktraceOnFailure>true</printStacktraceOnFailure>
+                    <printStdoutOnError>true</printStdoutOnError>
+                    <printStdoutOnFailure>true</printStdoutOnFailure>
+                    <printStderrOnError>true</printStderrOnError>
+                    <printStderrOnFailure>true</printStderrOnFailure>
+                  </statelessTestsetInfoReporter>
                 </configuration>
               </execution>
               <execution>
@@ -241,6 +259,19 @@
                     <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
                     <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
                   </systemPropertyVariables>
+                  <reportFormat>plain</reportFormat>
+                  <consoleOutputReporter>
+                    <disable>true</disable>
+                  </consoleOutputReporter>
+                  <statelessTestsetInfoReporter
+                    implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter">
+                    <printStacktraceOnError>true</printStacktraceOnError>
+                    <printStacktraceOnFailure>true</printStacktraceOnFailure>
+                    <printStdoutOnError>true</printStdoutOnError>
+                    <printStdoutOnFailure>true</printStdoutOnFailure>
+                    <printStderrOnError>true</printStderrOnError>
+                    <printStderrOnFailure>true</printStderrOnFailure>
+                  </statelessTestsetInfoReporter>
                 </configuration>
               </execution>
             </executions>
