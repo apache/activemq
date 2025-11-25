@@ -24,16 +24,25 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
+        {{- if not .Values.tls.enabled }}
         - name: openwire
           containerPort: 61616
           protocol: TCP
         - name: webconsole
           containerPort: 8161
           protocol: TCP
+        {{- else }}
+        - name: openwire-ssl
+          containerPort: {{ .Values.tls.sslPort }}
+          protocol: TCP
+        - name: webconsole-ssl
+          containerPort: {{ .Values.tls.webConsoleSslPort }}
+          protocol: TCP
+        {{- end }}
         {{- if .Values.livenessProbe.enabled }}
         livenessProbe:
           tcpSocket:
-            port: openwire
+            port: {{ if .Values.tls.enabled }}openwire-ssl{{ else }}openwire{{ end }}
           initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
           periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
           timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
@@ -43,7 +52,7 @@ spec:
         {{- if .Values.readinessProbe.enabled }}
         readinessProbe:
           tcpSocket:
-            port: openwire
+            port: {{ if .Values.tls.enabled }}openwire-ssl{{ else }}openwire{{ end }}
           initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
           periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
           timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
@@ -63,6 +72,16 @@ spec:
         - name: config
           mountPath: /opt/apache-activemq/conf/activemq.xml
           subPath: activemq.xml
+        {{- end }}
+        {{- if .Values.tls.enabled }}
+        - name: keystore
+          mountPath: /opt/apache-activemq/conf/broker.ks
+          subPath: broker.ks
+          readOnly: true
+        - name: truststore
+          mountPath: /opt/apache-activemq/conf/broker.ts
+          subPath: broker.ts
+          readOnly: true
         {{- end }}
         {{- with .Values.resources }}
         resources:
@@ -84,6 +103,14 @@ spec:
       - name: config
         configMap:
           name: {{ include "activemq.fullname" . }}-config
+      {{- if .Values.tls.enabled }}
+      - name: keystore
+        secret:
+          secretName: {{ .Values.tls.keystoreSecret }}
+      - name: truststore
+        secret:
+          secretName: {{ .Values.tls.truststoreSecret }}
+      {{- end }}
   {{- if not .Values.persistence.enabled }}
       - name: data
         emptyDir: {}

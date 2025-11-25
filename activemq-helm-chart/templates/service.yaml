@@ -7,6 +7,7 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
+  {{- if not .Values.tls.enabled }}
   - name: openwire
     port: {{ .Values.service.port }}
     targetPort: openwire
@@ -15,5 +16,15 @@ spec:
     port: {{ .Values.service.webConsolePort }}
     targetPort: webconsole
     protocol: TCP
+  {{- else }}
+  - name: openwire-ssl
+    port: {{ .Values.tls.sslPort }}
+    targetPort: openwire-ssl
+    protocol: TCP
+  - name: webconsole-ssl
+    port: {{ .Values.tls.webConsoleSslPort }}
+    targetPort: webconsole-ssl
+    protocol: TCP
+  {{- end }}
   selector:
     {{- include "activemq.selectorLabels" . | nindent 4 }}

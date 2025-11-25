@@ -27,3 +27,12 @@
 
 3. To connect to ActiveMQ from applications:
    Connection URL: tcp://{{ include "activemq.fullname" . }}:{{ .Values.service.port }}
+{{- if .Values.tls.enabled }}
+   SSL Connection URL: ssl://{{ include "activemq.fullname" . }}:{{ .Values.tls.sslPort }}
+{{- end }}
+
+{{- if .Values.tls.enabled }}
+4. TLS is enabled. Ensure you have created the required secrets:
+   - Keystore secret: {{ .Values.tls.keystoreSecret }}
+   - Truststore secret: {{ .Values.tls.truststoreSecret }}
+{{- end }}

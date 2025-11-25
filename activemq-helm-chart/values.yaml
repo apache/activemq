@@ -68,3 +68,10 @@ ingress:
         - path: /
           pathType: Prefix
   tls: []
+
+tls:
+  enabled: false
+  keystoreSecret: "activemq-keystore"  # kubectl create secret generic activemq-keystore --from-file=broker.ks=<path>
+  truststoreSecret: "activemq-truststore"  # kubectl create secret generic activemq-truststore --from-file=broker.ts=<path>
+  sslPort: 61617
+  webConsoleSslPort: 8162

@@ -94,3 +94,17 @@ config:
 The ActiveMQ image stores data at the `/opt/apache-activemq/data` path of the container.
 
 By default, the chart mounts a Persistent Volume at this location. The volume is created using dynamic volume provisioning.
+
+## TLS Configuration
+
+To enable TLS, create secrets with your keystore and truststore files:
+
+```bash
+kubectl create secret generic activemq-keystore --from-file=broker.ks=/path/to/broker.ks
+kubectl create secret generic activemq-truststore --from-file=broker.ts=/path/to/broker.ts
+
+helm install my-activemq . \
+  --set tls.enabled=true \
+  --set tls.keystoreSecret=activemq-keystore \
+  --set tls.truststoreSecret=activemq-truststore
+```
