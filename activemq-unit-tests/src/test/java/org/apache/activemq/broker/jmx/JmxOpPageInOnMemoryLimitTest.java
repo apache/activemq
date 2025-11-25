@@ -22,11 +22,14 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import jakarta.jms.*;
+import org.junit.experimental.categories.Category;
+
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
@@ -35,6 +38,7 @@ import javax.management.ObjectName;
 import static org.junit.Assert.*;
 
 // https://issues.apache.org/jira/browse/AMQ-7302
+@Category(ParallelTest.class)
 public class JmxOpPageInOnMemoryLimitTest {
 
     BrokerService broker;

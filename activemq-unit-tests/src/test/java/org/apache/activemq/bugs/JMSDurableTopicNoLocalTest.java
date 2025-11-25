@@ -28,10 +28,13 @@ import jakarta.jms.Topic;
 import jakarta.jms.TopicSubscriber;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class JMSDurableTopicNoLocalTest extends EmbeddedBrokerTestSupport {
     protected String bindAddress;
 

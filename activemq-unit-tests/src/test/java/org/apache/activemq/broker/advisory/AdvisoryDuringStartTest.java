@@ -22,6 +22,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.ServiceStopper;
 import org.junit.After;
 import org.junit.Test;
@@ -29,12 +30,15 @@ import org.junit.Test;
 import jakarta.jms.Connection;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
+import org.junit.experimental.categories.Category;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
+@Category(ParallelTest.class)
 public class AdvisoryDuringStartTest {
 
     BrokerService brokerService;

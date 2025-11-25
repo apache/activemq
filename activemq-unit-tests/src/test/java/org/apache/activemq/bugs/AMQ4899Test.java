@@ -44,9 +44,12 @@ import org.apache.activemq.plugin.SubQueueSelectorCacheBrokerPlugin;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class AMQ4899Test {
     protected static final Logger LOG = LoggerFactory.getLogger(AMQ4899Test.class);
     private static final String QUEUE_NAME="AMQ4899TestQueue";

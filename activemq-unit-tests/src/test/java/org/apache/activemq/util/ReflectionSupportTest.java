@@ -28,7 +28,10 @@ import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class ReflectionSupportTest extends TestCase {
 	
     List<ActiveMQDestination> favorites = new ArrayList<ActiveMQDestination>();

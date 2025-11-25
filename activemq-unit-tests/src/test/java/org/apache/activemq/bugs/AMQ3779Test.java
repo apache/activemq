@@ -38,10 +38,13 @@ import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@Category(ParallelTest.class)
 public class AMQ3779Test {
     private static final Logger LOG = org.apache.logging.log4j.core.Logger.class.cast(LogManager.getLogger(AMQ3779Test.class));
     private static final String qName = "QNameToFind";

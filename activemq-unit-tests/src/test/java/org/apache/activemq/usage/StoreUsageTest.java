@@ -30,7 +30,10 @@ import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.Session;
 import java.util.concurrent.TimeUnit;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class StoreUsageTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(StoreUsageTest.class);
 

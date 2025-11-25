@@ -33,9 +33,12 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test for ticket AMQ-6058, shouldDispatch prefix check
  */
+@Category(ParallelTest.class)
 public class CustomVirtualTopicInterceptorTest extends EmbeddedBrokerTestSupport{
 
 	private static final Logger LOG = LoggerFactory.getLogger(CustomVirtualTopicInterceptorTest.class);

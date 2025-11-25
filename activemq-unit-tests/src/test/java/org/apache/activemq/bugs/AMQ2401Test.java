@@ -39,12 +39,15 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * An AMQ-2401 Test
  */
+@Category(ParallelTest.class)
 public class AMQ2401Test extends TestCase implements MessageListener {
     private BrokerService broker;
     private ActiveMQConnectionFactory factory;
@@ -62,7 +65,6 @@ public class AMQ2401Test extends TestCase implements MessageListener {
     @Override
     protected void setUp() throws Exception {
         broker = new BrokerService();
-        broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "AMQ2401Test");
         broker.setDeleteAllMessagesOnStartup(true);
         String connectionUri = broker.addConnector("tcp://0.0.0.0:0").getPublishableConnectString();
         PolicyMap policies = new PolicyMap();

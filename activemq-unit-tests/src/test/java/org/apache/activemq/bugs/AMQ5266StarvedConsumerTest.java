@@ -51,6 +51,8 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
@@ -63,6 +65,7 @@ import static org.junit.Assert.assertEquals;
  * pause producers if consumers stall and verify broker drained before resume
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AMQ5266StarvedConsumerTest {
     static Logger LOG = LoggerFactory.getLogger(AMQ5266StarvedConsumerTest.class);
     String activemqURL;
