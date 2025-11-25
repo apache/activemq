@@ -41,12 +41,14 @@ import org.fusesource.mqtt.codec.SUBSCRIBE;
 import org.fusesource.mqtt.codec.UNSUBSCRIBE;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Tests the functionality of the MQTTCodec class.
  */
+@Category(ParallelTest.class)
 public class MQTTCodecTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTCodecTest.class);

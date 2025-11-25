@@ -42,6 +42,7 @@ import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Run the basic tests with the NIO Transport.
  */
+@Category(ParallelTest.class)
 public class MQTTVirtualTopicSubscriptionsTest extends MQTTTest {
     private static final Logger LOG = LoggerFactory.getLogger(MQTTVirtualTopicSubscriptionsTest.class);
 
