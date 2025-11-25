@@ -61,10 +61,12 @@ import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class JMSClientTest extends JMSClientTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(JMSClientTest.class);

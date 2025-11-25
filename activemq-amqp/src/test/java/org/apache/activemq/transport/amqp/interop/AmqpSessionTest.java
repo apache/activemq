@@ -26,15 +26,18 @@ import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.activemq.transport.amqp.client.AmqpValidator;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Session;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Test for creation and configuration of AMQP sessions.
  */
+@Category(ParallelTest.class)
 public class AmqpSessionTest extends AmqpClientTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(AmqpSessionTest.class);
