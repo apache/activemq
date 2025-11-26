@@ -13,3 +13,7 @@ data:
   activemq.xml: |
 {{ .Files.Get .Values.config.activemqXmlPath | indent 4 }}
   {{- end }}
+  {{- if .Values.config.jettyXmlPath }}
+  jetty.xml: |
+{{ .Files.Get .Values.config.jettyXmlPath | indent 4 }}
+  {{- end }}

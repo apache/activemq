@@ -55,6 +55,7 @@ The following table lists the configurable parameters of the ActiveMQ chart and 
 | `readinessProbe.enabled` | Enable readiness probe | `true` |
 | `ingress.enabled` | Enable ingress | `false` |
 | `config.activemqXmlPath` | Path to custom activemq.xml file | `""` |
+| `config.jettyXmlPath` | Path to custom jetty.xml file | `""` |
 | `tls.enabled` | Enable TLS/SSL | `false` |
 | `tls.keystoreSecret` | Kubernetes secret containing broker.ks | `""` |
 | `tls.truststoreSecret` | Kubernetes secret containing broker.ts | `""` |
@@ -83,15 +84,12 @@ tcp://my-activemq:61616
 
 ## Custom Configuration
 
-To use a custom `activemq.xml` configuration file, place your file in the chart directory and specify the path:
-
-```bash
-cp activemq_sample.xml mq-activemq.xml
-```
+To use custom configuration files, place your files in the chart directory and specify the paths:
 
 ```yaml
 config:
   activemqXmlPath: "my-activemq.xml"
+  jettyXmlPath: "my-jetty.xml"
 ```
 
 ## Persistence
@@ -118,7 +116,7 @@ keytool -export -alias broker -keystore broker.ks \
 
 # Create truststore
 keytool -import -alias broker -keystore broker.ts \
-  -file broker.cert -storepass changeit -noreply
+  -file broker.cert -storepass changeit
 ```
 
 ### Create Kubernetes Secrets

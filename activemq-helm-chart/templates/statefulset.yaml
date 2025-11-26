@@ -73,6 +73,11 @@ spec:
           mountPath: /opt/apache-activemq/conf/activemq.xml
           subPath: activemq.xml
         {{- end }}
+        {{- if .Values.config.jettyXmlPath }}
+        - name: config
+          mountPath: /opt/apache-activemq/conf/jetty.xml
+          subPath: jetty.xml
+        {{- end }}
         {{- if .Values.tls.enabled }}
         - name: keystore
           mountPath: /opt/apache-activemq/conf/broker.ks
