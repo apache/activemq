@@ -206,7 +206,19 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * @throws Exception
      */
     @Override
-    public synchronized boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
+    public boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
+        // Discarding expired message should be done outside of synchronized section (deadlock, see AMQ-5785)
+        List<MessageReference> expiredMessages = new ArrayList<>();
+        boolean isExpiration = tryAddMessageLastInternal(node, maxWaitTime, expiredMessages);
+        for (MessageReference expiredMessage : expiredMessages) {
+            discardExpiredMessage(expiredMessage);
+        }
+        return isExpiration;
+    }
+
+    private synchronized boolean tryAddMessageLastInternal(
+      MessageReference node, long maxWaitTime, List<MessageReference> expiredMessages
+    ) {
         if (!node.isExpired()) {
             try {
                 regionDestination = (Destination) node.getMessage().getRegionDestination();
@@ -220,7 +232,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 }
                 if (!hasSpace()) {
                     if (isDiskListEmpty()) {
-                        expireOldMessages();
+                        expiredMessages.addAll(expireOldMessages());
                         if (hasSpace()) {
                             memoryList.addMessageLast(node);
                             node.incrementReferenceCount();
@@ -242,7 +254,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 throw new RuntimeException(e);
             }
         } else {
-            discardExpiredMessage(node);
+            expiredMessages.add(node);
         }
         //message expired
         return true;
@@ -254,7 +266,16 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * @param node
      */
     @Override
-    public synchronized void addMessageFirst(MessageReference node) {
+    public void addMessageFirst(MessageReference node) {
+        // Discarding expired message should be done outside of synchronized section (deadlock, see AMQ-5785)
+        List<MessageReference> expiredMessages = addMessageFirstInternal(node);
+        for (MessageReference expiredMessage : expiredMessages) {
+            discardExpiredMessage(expiredMessage);
+        }
+    }
+
+    private synchronized List<MessageReference> addMessageFirstInternal(MessageReference node) {
+        List<MessageReference> expiredMessages = new ArrayList<>();
         if (!node.isExpired()) {
             try {
                 regionDestination = (Destination) node.getMessage().getRegionDestination();
@@ -263,16 +284,16 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                         memoryList.addMessageFirst(node);
                         node.incrementReferenceCount();
                         setCacheEnabled(true);
-                        return;
+                        return expiredMessages;
                     }
                 }
                 if (!hasSpace()) {
                     if (isDiskListEmpty()) {
-                        expireOldMessages();
+                        expiredMessages = expireOldMessages();
                         if (hasSpace()) {
                             memoryList.addMessageFirst(node);
                             node.incrementReferenceCount();
-                            return;
+                            return expiredMessages;
                         } else {
                             flushToDisk();
                         }
@@ -289,8 +310,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 throw new RuntimeException(e);
             }
         } else {
-            discardExpiredMessage(node);
+            expiredMessages.add(node);
         }
+        return expiredMessages;
     }
 
     /**
