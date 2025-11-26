@@ -43,7 +43,7 @@ The following table lists the configurable parameters of the ActiveMQ chart and 
 | `service.type` | Kubernetes service type | `ClusterIP` |
 | `service.port` | OpenWire service port | `61616` |
 | `service.webConsolePort` | Web Console port | `8161` |
-| `persistence.enabled` | Enable persistence using PVC | `true` |
+| `persistence.enabled` | Enable persistence using PVC | `false` |
 | `persistence.storageClass` | PVC Storage Class | `""` |
 | `persistence.accessMode` | PVC Access Mode | `ReadWriteOnce` |
 | `persistence.size` | PVC Storage Request | `8Gi` |
@@ -55,6 +55,11 @@ The following table lists the configurable parameters of the ActiveMQ chart and 
 | `readinessProbe.enabled` | Enable readiness probe | `true` |
 | `ingress.enabled` | Enable ingress | `false` |
 | `config.activemqXmlPath` | Path to custom activemq.xml file | `""` |
+| `tls.enabled` | Enable TLS/SSL | `false` |
+| `tls.keystoreSecret` | Kubernetes secret containing broker.ks | `""` |
+| `tls.truststoreSecret` | Kubernetes secret containing broker.ts | `""` |
+| `tls.sslPort` | OpenWire SSL port | `61617` |
+| `tls.webConsoleSslPort` | Web Console SSL port | `8162` |
 
 ## Accessing ActiveMQ
 
@@ -97,14 +102,39 @@ By default, the chart mounts a Persistent Volume at this location. The volume is
 
 ## TLS Configuration
 
-To enable TLS, create secrets with your keystore and truststore files:
+To enable TLS/SSL connections, you need to create Kubernetes secrets containing your keystore and truststore files.
+
+### Generate Test Certificates (for development)
 
 ```bash
-kubectl create secret generic activemq-keystore --from-file=broker.ks=/path/to/broker.ks
-kubectl create secret generic activemq-truststore --from-file=broker.ts=/path/to/broker.ts
+# Generate keystore
+keytool -genkey -alias broker -keyalg RSA -keystore broker.ks \
+  -storepass changeit -keypass changeit \
+  -dname "CN=localhost, OU=Test, O=Test, L=Test, ST=Test, C=US"
 
+# Export certificate
+keytool -export -alias broker -keystore broker.ks \
+  -file broker.cert -storepass changeit
+
+# Create truststore
+keytool -import -alias broker -keystore broker.ts \
+  -file broker.cert -storepass changeit -noreply
+```
+
+### Create Kubernetes Secrets
+
+```bash
+kubectl create secret generic activemq-keystore --from-file=broker.ks
+kubectl create secret generic activemq-truststore --from-file=broker.ts
+```
+
+### Install with TLS Enabled
+
+```bash
 helm install my-activemq . \
   --set tls.enabled=true \
   --set tls.keystoreSecret=activemq-keystore \
   --set tls.truststoreSecret=activemq-truststore
 ```
+
+**Note:** When TLS is enabled, only SSL/TLS ports are exposed. Non-TLS ports are not available.
