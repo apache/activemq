@@ -17,13 +17,10 @@
 
 package org.apache.activemq.usage;
 
-import java.io.File;
-
 import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.Message;
 import jakarta.jms.Session;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.ScheduledMessage;
@@ -34,11 +31,10 @@ import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertNotEquals;
-import org.apache.activemq.test.annotations.ParallelTest;
-import org.junit.experimental.categories.Category;
+import java.io.File;
 
-@Category(ParallelTest.class)
+import static org.junit.Assert.assertNotEquals;
+
 public class JobSchedulerStoreUsageTest extends EmbeddedBrokerTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(JobSchedulerStoreUsageTest.class);

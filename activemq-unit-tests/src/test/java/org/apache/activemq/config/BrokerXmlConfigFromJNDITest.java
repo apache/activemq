@@ -16,21 +16,17 @@
  */
 package org.apache.activemq.config;
 
-import java.io.File;
-import java.util.Hashtable;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
-import org.apache.activemq.test.annotations.ParallelTest;
-import org.junit.experimental.categories.Category;
+import java.io.File;
+import java.util.Hashtable;
 
 /**
  *
  */
-@Category(ParallelTest.class)
 public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {

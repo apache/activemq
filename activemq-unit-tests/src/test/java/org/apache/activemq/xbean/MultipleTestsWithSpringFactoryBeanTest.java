@@ -18,24 +18,19 @@ package org.apache.activemq.xbean;
 
 import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.apache.activemq.test.annotations.ParallelTest;
-import org.junit.experimental.categories.Category;
 
 /**
  * 
  * @author Neil Clayton
  * 
  */
-@Category(ParallelTest.class)
 public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
     
     private static final Logger LOG = LoggerFactory.getLogger(MultipleTestsWithSpringFactoryBeanTest.class);

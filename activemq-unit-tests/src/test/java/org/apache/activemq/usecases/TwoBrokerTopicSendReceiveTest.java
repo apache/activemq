@@ -16,12 +16,8 @@
  */
 package org.apache.activemq.usecases;
 
-import java.util.HashMap;
-import java.util.Iterator;
-
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
@@ -30,13 +26,13 @@ import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
-import org.apache.activemq.test.annotations.ParallelTest;
-import org.junit.experimental.categories.Category;
+
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  *
  */
-@Category(ParallelTest.class)
 public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     private static final Logger LOG = LoggerFactory.getLogger(TwoBrokerTopicSendReceiveTest.class);
 

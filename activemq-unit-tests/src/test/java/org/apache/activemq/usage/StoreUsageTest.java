@@ -17,6 +17,9 @@
 
 package org.apache.activemq.usage;
 
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -26,14 +29,8 @@ import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.jms.Connection;
-import jakarta.jms.Destination;
-import jakarta.jms.Session;
 import java.util.concurrent.TimeUnit;
-import org.apache.activemq.test.annotations.ParallelTest;
-import org.junit.experimental.categories.Category;
 
-@Category(ParallelTest.class)
 public class StoreUsageTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(StoreUsageTest.class);
 

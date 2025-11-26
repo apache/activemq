@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.broker.advisory;
 
+import jakarta.jms.Connection;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.Session;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.AdvisorySupport;
@@ -24,15 +27,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.BrokerInfo;
 
-import jakarta.jms.Connection;
-import jakarta.jms.MessageConsumer;
-import jakarta.jms.Session;
-import org.apache.activemq.test.annotations.ParallelTest;
-import org.junit.experimental.categories.Category;
-
 import java.net.URI;
 
-@Category(ParallelTest.class)
 public class AdvisoryNetworkBridgeTest extends TestCase {
 
     BrokerService broker1;

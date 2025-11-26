@@ -16,15 +16,12 @@
  */
 package org.apache.activemq.usecases;
 
-import java.util.Arrays;
-
 import jakarta.jms.BytesMessage;
 import jakarta.jms.Connection;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Queue;
 import jakarta.jms.Session;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -44,11 +41,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.activemq.test.annotations.ParallelTest;
-import org.junit.experimental.categories.Category;
+
+import java.util.Arrays;
 
 @RunWith(value = Parameterized.class)
-@Category(ParallelTest.class)
 public class MemoryLimitTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MemoryLimitTest.class);
     final byte[] payload = new byte[10 * 1024]; //10KB

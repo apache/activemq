@@ -16,15 +16,6 @@
  */
 package org.apache.activemq.transport.discovery;
 
-import static org.junit.Assert.assertTrue;
-
-import java.net.URI;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.transport.discovery.multicast.MulticastDiscoveryAgentFactory;
@@ -45,12 +36,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.activemq.test.annotations.ParallelTest;
-import org.junit.experimental.categories.Category;
+
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+import java.net.URI;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertTrue;
 
 
 @RunWith(JMock.class)
-@Category(ParallelTest.class)
 public class DiscoveryNetworkReconnectTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscoveryNetworkReconnectTest.class);
