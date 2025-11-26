@@ -469,12 +469,13 @@
               <reuseForks>false</reuseForks>
               <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
               <failIfNoTests>false</failIfNoTests>
-              <skipTests>false</skipTests>
+              <skipTests>${skipTests}</skipTests>
               <systemPropertyVariables>
                 <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
                 <!-- when running tests in parallel in the CI (quite slow) we need to bump the wireformat negotiation timeout (5s by default) -->
                 <org.apache.activemq.transport.wireFormatNegotiationTimeout>30000</org.apache.activemq.transport.wireFormatNegotiationTimeout>
               </systemPropertyVariables>
+              <excludes combine.children="append"/>
             </configuration>
           </execution>
         </executions>
