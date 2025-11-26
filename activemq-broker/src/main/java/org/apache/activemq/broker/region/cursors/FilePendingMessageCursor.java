@@ -208,17 +208,16 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     @Override
     public boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
         // Discarding expired message should be done outside of synchronized section (deadlock, see AMQ-5785)
-        List<MessageReference> expiredMessages = new ArrayList<>();
-        boolean isExpiration = tryAddMessageLastInternal(node, maxWaitTime, expiredMessages);
+        final List<MessageReference> expiredMessages = new ArrayList<>();
+        final boolean added = tryAddMessageLastInternal(node, maxWaitTime, expiredMessages);
         for (MessageReference expiredMessage : expiredMessages) {
             discardExpiredMessage(expiredMessage);
         }
-        return isExpiration;
+        return added;
     }
 
-    private synchronized boolean tryAddMessageLastInternal(
-      MessageReference node, long maxWaitTime, List<MessageReference> expiredMessages
-    ) {
+    private synchronized boolean tryAddMessageLastInternal(MessageReference node, long maxWaitTime,
+                                                           List<MessageReference> expiredMessages) {
         if (!node.isExpired()) {
             try {
                 regionDestination = (Destination) node.getMessage().getRegionDestination();
@@ -232,7 +231,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 }
                 if (!hasSpace()) {
                     if (isDiskListEmpty()) {
-                        expiredMessages.addAll(expireOldMessages());
+                        expireOldMessages(expiredMessages);
                         if (hasSpace()) {
                             memoryList.addMessageLast(node);
                             node.incrementReferenceCount();
@@ -268,14 +267,15 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     @Override
     public void addMessageFirst(MessageReference node) {
         // Discarding expired message should be done outside of synchronized section (deadlock, see AMQ-5785)
-        List<MessageReference> expiredMessages = addMessageFirstInternal(node);
-        for (MessageReference expiredMessage : expiredMessages) {
-            discardExpiredMessage(expiredMessage);
+        final List<MessageReference> expiredMessages = addMessageFirstInternal(node);
+        if (expiredMessages != null) {
+            for (MessageReference expiredMessage : expiredMessages) {
+                discardExpiredMessage(expiredMessage);
+            }
         }
     }
 
     private synchronized List<MessageReference> addMessageFirstInternal(MessageReference node) {
-        List<MessageReference> expiredMessages = new ArrayList<>();
         if (!node.isExpired()) {
             try {
                 regionDestination = (Destination) node.getMessage().getRegionDestination();
@@ -284,12 +284,12 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                         memoryList.addMessageFirst(node);
                         node.incrementReferenceCount();
                         setCacheEnabled(true);
-                        return expiredMessages;
+                        return List.of();
                     }
                 }
                 if (!hasSpace()) {
                     if (isDiskListEmpty()) {
-                        expiredMessages = expireOldMessages();
+                        List<MessageReference> expiredMessages = expireOldMessages();
                         if (hasSpace()) {
                             memoryList.addMessageFirst(node);
                             node.incrementReferenceCount();
@@ -310,9 +310,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 throw new RuntimeException(e);
             }
         } else {
-            expiredMessages.add(node);
+            return List.of(node);
         }
-        return expiredMessages;
+        return null;
     }
 
     /**
@@ -451,7 +451,12 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     private synchronized List<MessageReference> expireOldMessages() {
-        List<MessageReference> expired = new ArrayList<MessageReference>();
+        final List<MessageReference> expired = new ArrayList<>();
+        expireOldMessages(expired);
+        return expired;
+    }
+
+    private synchronized void expireOldMessages(List<MessageReference> expired) {
         if (!memoryList.isEmpty()) {
             for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
                 MessageReference node = iterator.next();
@@ -462,8 +467,6 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 }
             }
         }
-
-        return expired;
     }
 
     protected synchronized void flushToDisk() {
