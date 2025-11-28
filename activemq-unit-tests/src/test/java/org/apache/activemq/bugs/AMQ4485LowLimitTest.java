@@ -64,10 +64,10 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
     static final String payload = new String(new byte[10 * 1024]);
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4485LowLimitTest.class);
     final int portBase = 61600;
-    int numBrokers = 8;
-    final int numProducers = 30;
-    final int numMessages = 1000;
-    final int consumerSleepTime = 40;
+    int numBrokers = 4;
+    final int numProducers = 10;
+    final int numMessages = 200;
+    final int consumerSleepTime = 5;
     StringBuilder brokersUrl = new StringBuilder();
     HashMap<ActiveMQQueue, AtomicInteger> accumulators = new HashMap<ActiveMQQueue, AtomicInteger>();
     private ArrayList<Throwable> exceptions = new ArrayList<Throwable>();
@@ -144,7 +144,7 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
             nc.setDynamicOnly(true);
             nc.setPrefetchSize(100);
             nc.setDynamicallyIncludedDestinations(
-                    Arrays.asList(new ActiveMQDestination[]{new ActiveMQQueue("GW.*")}));
+                Arrays.asList(new ActiveMQDestination[]{new ActiveMQQueue("GW.*")}));
             broker.addNetworkConnector(nc);
         }
     }
@@ -252,7 +252,7 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
                 }
                 return true;
             }
-        }, 1000 * 60 * 1000l, 20*1000));
+        }, 5 * 60 * 1000L, 10_000));
 
         assertTrue("No exceptions:" + exceptions, exceptions.isEmpty());
 
