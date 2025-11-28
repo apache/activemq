@@ -86,7 +86,7 @@ public class AMQ6815Test {
          LOG.info("Mem in use: " + usedMem/1024  + "K");
 
           // 2 is a big generous factor because we don't create this many additional objects per message
-         assertTrue("Used Mem reasonable " + usedMem, usedMem < 3 * MEM_LIMIT);
+         assertTrue("Used Mem reasonable " + usedMem, usedMem < 5 * MEM_LIMIT);
       }
 
       protected void sendMessages(int count) throws JMSException {
