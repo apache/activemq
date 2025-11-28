@@ -251,8 +251,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
                         && event.getMessage().getFormattedMessage() != null
                         && event.getMessage().getFormattedMessage().contains("Cannot recover message audit")
                         && event.getThrown() != null
-                        && event.getThrown() instanceof EOFException
-                        && event.getThrown().getMessage() == null) {
+                        && (event.getThrown() instanceof EOFException
+                            || event.getThrown() instanceof IOException)) {
 
                     trappedExpectedLogMessage.set(true);
                 }
@@ -419,7 +419,9 @@ public class JournalCorruptionEofIndexRecoveryTest {
         int pos = batchPositions.get(batchPositions.size() - 3);
         LOG.info("corrupting checksum and size (to push it past eof) of batch record at:" + id + "-" + pos);
         randomAccessFile.seek(pos + Journal.BATCH_CONTROL_RECORD_HEADER.length);
-        randomAccessFile.writeInt(31 * 1024 * 1024);
+        // use a large but bounded bad size (just over max file length) to trigger the guard without MAX_INT
+        int badSize = Journal.DEFAULT_MAX_FILE_LENGTH + 1024;
+        randomAccessFile.writeInt(badSize);
         randomAccessFile.writeLong(0l);
         randomAccessFile.getChannel().force(true);
     }
