@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.ControlCommand;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for ControlCommand
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.ControlCommand;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class ControlCommandTest extends BaseCommandTestSupport {
 
     public static final ControlCommandTest SINGLETON = new ControlCommandTest();

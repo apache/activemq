@@ -49,6 +49,8 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+
 public class QueuePurgeTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(QueuePurgeTest.class);
     private static final int NUM_TO_SEND = 20000;

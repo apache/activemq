@@ -35,10 +35,13 @@ import junit.framework.TestSuite;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.transport.vm.VMTransport;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class JmsRedeliveredTest extends TestCase {
 
     private Connection connection;

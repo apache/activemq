@@ -29,7 +29,10 @@ import junit.framework.Test;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class DurableSubscriptionReactivationTest extends EmbeddedBrokerTestSupport {
 
     public boolean keepDurableSubsActive;

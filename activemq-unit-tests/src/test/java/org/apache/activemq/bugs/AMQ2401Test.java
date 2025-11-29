@@ -16,12 +16,6 @@
  */
 package org.apache.activemq.bugs;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import jakarta.jms.BytesMessage;
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
@@ -30,9 +24,7 @@ import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageListener;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -41,6 +33,11 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * An AMQ-2401 Test
@@ -62,7 +59,6 @@ public class AMQ2401Test extends TestCase implements MessageListener {
     @Override
     protected void setUp() throws Exception {
         broker = new BrokerService();
-        broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "AMQ2401Test");
         broker.setDeleteAllMessagesOnStartup(true);
         String connectionUri = broker.addConnector("tcp://0.0.0.0:0").getPublishableConnectString();
         PolicyMap policies = new PolicyMap();

@@ -28,11 +28,14 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * This test shows that the countBeforeFull statistic that is part of a Subscription is correct
  * for TopicSubscriptions.
  */
+@Category(ParallelTest.class)
 public class TopicSubscriptionCountBeforeFullTest extends TestSupport {
 
     protected BrokerService brokerService;

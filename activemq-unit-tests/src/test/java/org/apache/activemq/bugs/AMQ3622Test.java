@@ -18,7 +18,6 @@ package org.apache.activemq.bugs;
 
 import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,6 +27,7 @@ import org.apache.activemq.broker.region.policy.FilePendingSubscriberMessageStor
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.logging.log4j.Level;
@@ -42,7 +42,9 @@ import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AMQ3622Test {
 
     protected static final Appender appender;
@@ -73,7 +75,6 @@ public class AMQ3622Test {
         logger.get().addAppender(appender, Level.DEBUG, new AbstractFilter() {});
 
         broker = new BrokerService();
-        broker.setDataDirectory("target" + File.separator + "activemq-data");
         broker.setPersistent(true);
         broker.setDeleteAllMessagesOnStartup(true);
         PolicyEntry policy = new PolicyEntry();

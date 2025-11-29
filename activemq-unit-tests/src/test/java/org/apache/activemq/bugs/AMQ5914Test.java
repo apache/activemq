@@ -35,8 +35,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestName;
 
+@Category(ParallelTest.class)
 public class AMQ5914Test {
 
     private ActiveMQConnection connection;

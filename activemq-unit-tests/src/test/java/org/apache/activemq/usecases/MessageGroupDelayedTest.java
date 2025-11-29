@@ -39,7 +39,12 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+
+
+@Category(ParallelTest.class)
 public class MessageGroupDelayedTest extends JmsTestSupport {
     public static final Logger log = LoggerFactory.getLogger(MessageGroupDelayedTest.class);
     protected Connection connection;

@@ -41,12 +41,15 @@ import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * A BrokerStatisticsPluginTest
  * A testcase for https://issues.apache.org/activemq/browse/AMQ-2379
  *
  */
+@Category(ParallelTest.class)
 public class BrokerStatisticsPluginTest extends TestCase{
     private static final Logger LOG = LoggerFactory.getLogger(BrokerStatisticsPluginTest.class);
 

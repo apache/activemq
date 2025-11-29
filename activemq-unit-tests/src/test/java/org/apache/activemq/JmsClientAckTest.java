@@ -32,10 +32,13 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test for client ACK support
  */
+@Category(ParallelTest.class)
 public class JmsClientAckTest {
 
     @Rule

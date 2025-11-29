@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v2;
 import org.apache.activemq.command.MessageDispatchNotification;
 
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for MessageDispatchNotification
  *
@@ -30,6 +32,8 @@ import org.apache.activemq.command.MessageDispatchNotification;
  *
  * 
  */
+@Category(ParallelTest.class)
+
 public class MessageDispatchNotificationTest extends BaseCommandTestSupport {
 
 

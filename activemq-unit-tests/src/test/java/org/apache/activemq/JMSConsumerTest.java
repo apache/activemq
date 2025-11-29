@@ -53,10 +53,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.activemq.TestSupport.getDestinationConsumers;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test cases used to test the JMS message consumer.
  */
+@Category(ParallelTest.class)
 public class JMSConsumerTest extends JmsTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(JMSConsumerTest.class);

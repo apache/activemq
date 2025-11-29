@@ -17,10 +17,13 @@
 package org.apache.activemq;
 
 import java.net.URI;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the against the VM transport
  */
+@Category(ParallelTest.class)
 public class ActiveMQXASslConnectionFactoryVmTest extends ActiveMQXAConnectionFactoryTest {
 
     @Override

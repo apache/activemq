@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v3;
 import org.apache.activemq.command.Response;
 
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for Response
  *
@@ -30,6 +32,8 @@ import org.apache.activemq.command.Response;
  *
  * 
  */
+@Category(ParallelTest.class)
+
 public class ResponseTest extends BaseCommandTestSupport {
 
 

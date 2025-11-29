@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.XATransactionId;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for XATransactionId
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.XATransactionId;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class XATransactionIdTest extends TransactionIdTestSupport {
 
     public static final XATransactionIdTest SINGLETON = new XATransactionIdTest();

@@ -31,7 +31,10 @@ import jakarta.jms.TemporaryTopic;
 import jakarta.jms.Topic;
 
 import junit.framework.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class ActiveMQDestinationTest extends DataStructureTestSupport {
 
     public ActiveMQDestination destination;

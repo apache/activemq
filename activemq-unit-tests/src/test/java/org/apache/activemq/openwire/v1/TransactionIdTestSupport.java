@@ -18,7 +18,6 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
-
 /**
  * Test case for the OpenWire marshalling for TransactionId
  * 
@@ -29,6 +28,8 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  * 
  * 
  */
+
+
 public abstract class TransactionIdTestSupport extends DataFileGeneratorTestSupport {
 
     protected void populateObject(Object object) throws Exception {

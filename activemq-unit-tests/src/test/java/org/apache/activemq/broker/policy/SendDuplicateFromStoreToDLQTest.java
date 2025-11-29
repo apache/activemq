@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -40,6 +42,9 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.IOHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,6 +58,7 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(value = Parameterized.class)
 public class SendDuplicateFromStoreToDLQTest {
+    private static final Logger LOG = LoggerFactory.getLogger(SendDuplicateFromStoreToDLQTest.class);
 
     @Parameterized.Parameters(name="sendDupToDLQ={1},cacheEnable={2},auditEnabled={3},optimizedDispatch={4}")
     public static Collection<Object[]> data() {
@@ -101,7 +107,8 @@ public class SendDuplicateFromStoreToDLQTest {
     public void setUp() throws Exception {
         broker = new BrokerService();
 
-        File testDataDir = new File("target/activemq-data/AMQ-8397");
+        File testDataDir = Files.createTempDirectory(new File(IOHelper.getDefaultDataDirectory()).toPath(), "AMQ-8397-").toFile();
+        testDataDir.deleteOnExit();
         broker.setDataDirectoryFile(testDataDir);
         broker.setUseJmx(true);
         broker.setDeleteAllMessagesOnStartup(true);
@@ -162,6 +169,14 @@ public class SendDuplicateFromStoreToDLQTest {
         queue.duplicateFromStore((org.apache.activemq.command.Message) recvMessage, queueSubscriptions.get(0));
 
         org.apache.activemq.broker.region.Queue dlq = (org.apache.activemq.broker.region.Queue)broker.getDestination(new ActiveMQQueue("ActiveMQ.DLQ.Queue.AMQ.8397"));
+
+        LOG.info("sendExpected={}, queue.sendDupToDLQ={}, queueMsgCount={}, queueDupFromStoreCount={}, dlqMsgCount={}, dlqDupFromStoreCount={}",
+                sendExpected,
+                queue.isSendDuplicateFromStoreToDLQ(),
+                queue.getDestinationStatistics().getMessages().getCount(),
+                queue.getDestinationStatistics().getDuplicateFromStore().getCount(),
+                dlq.getDestinationStatistics().getMessages().getCount(),
+                dlq.getDestinationStatistics().getDuplicateFromStore().getCount());
 
         if(sendExpected) {
             assertEquals(Long.valueOf(0l), Long.valueOf(queue.getDestinationStatistics().getMessages().getCount()));

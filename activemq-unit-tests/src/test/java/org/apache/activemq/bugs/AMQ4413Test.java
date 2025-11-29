@@ -38,11 +38,14 @@ import jakarta.jms.TopicSubscriber;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  */
+@Category(ParallelTest.class)
 public class AMQ4413Test {
 
     static final Logger LOG = LoggerFactory.getLogger(AMQ4413Test.class);

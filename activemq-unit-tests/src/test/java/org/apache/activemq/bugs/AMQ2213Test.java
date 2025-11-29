@@ -32,10 +32,13 @@ import jakarta.jms.TopicSession;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AMQ2213Test
 {
     BrokerService broker;
@@ -48,7 +51,6 @@ public class AMQ2213Test
     public void createBroker(boolean deleteAll) throws Exception {
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(deleteAll);
-        broker.setDataDirectory("target/AMQ3145Test");
         broker.setUseJmx(true);
         broker.getManagementContext().setCreateConnector(false);
         broker.addConnector("tcp://localhost:0");

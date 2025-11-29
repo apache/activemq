@@ -28,8 +28,10 @@ import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * AMQ-6142
@@ -38,6 +40,7 @@ import org.junit.Test;
  * are several consumers
  *
  */
+@Category(ParallelTest.class)
 public class ActiveMQConcurrentDecompressionTest {
     private volatile AssertionError assertionError;
 

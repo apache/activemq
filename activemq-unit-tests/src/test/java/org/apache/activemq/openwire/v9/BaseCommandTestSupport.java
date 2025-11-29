@@ -18,7 +18,6 @@ package org.apache.activemq.openwire.v9;
 
 import org.apache.activemq.command.BaseCommand;
 import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
-
 /**
  * Test case for the OpenWire marshalling for BaseCommand NOTE!: This file is
  * auto generated - do not modify! if you need to make a change, please see the
@@ -26,6 +25,8 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  * openwire:generate to regenerate this file.
  * 
  */
+
+
 public abstract class BaseCommandTestSupport extends DataFileGeneratorTestSupport {
 
     protected void populateObject(Object object) throws Exception {

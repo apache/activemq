@@ -20,6 +20,9 @@ import java.io.IOException;
 
 import org.apache.activemq.command.WireFormatInfo;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;@Category(ParallelTest.class)
+
 public class WireFormatInfoData extends DataFileGenerator {
 
     protected Object createObject() throws IOException {
