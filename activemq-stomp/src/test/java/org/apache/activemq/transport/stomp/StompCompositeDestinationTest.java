@@ -39,9 +39,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.junit.experimental.categories.Category;
+
 /**
  * Tests for support of composite destination support over STOMP
  */
+@Category(ParallelTest.class)
 public class StompCompositeDestinationTest extends StompTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(StompCompositeDestinationTest.class);
