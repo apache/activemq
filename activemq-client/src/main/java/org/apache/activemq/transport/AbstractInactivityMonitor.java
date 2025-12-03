@@ -46,6 +46,9 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractInactivityMonitor.class);
 
+    public static final String READ_CHECK_THREAD_NAME = "ActiveMQ InactivityMonitor ReadCheckTimer";
+    public static final String WRITE_CHECK_THREAD_NAME = "ActiveMQ InactivityMonitor WriteCheckTimer";
+
     private static final long DEFAULT_CHECK_TIME_MILLS = 30000;
 
     private static ThreadPoolExecutor ASYNC_TASKS;
@@ -419,7 +422,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                         ASYNC_TASKS = createExecutor();
                     }
                     if (READ_CHECK_TIMER == null) {
-                        READ_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor ReadCheckTimer", true);
+                        READ_CHECK_TIMER = new Timer(READ_CHECK_THREAD_NAME, true);
                     }
                 }
                 CHECKER_COUNTER++;
@@ -428,17 +431,26 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         }
     }
 
-    public synchronized void stopConnectCheckTask() {
+    /**
+     * Stops the Connect checker task is if it is running.
+     * If the task was already stopped this method
+     * will return false.
+     *
+     * @return true if the task was stopped, else false
+     */
+    public synchronized boolean stopConnectCheckTask() {
         if (connectCheckerTask != null) {
             LOG.trace("Stopping connection check task for: {}", this);
             connectCheckerTask.cancel();
             connectCheckerTask = null;
 
             synchronized (AbstractInactivityMonitor.class) {
-                READ_CHECK_TIMER.purge();
+                purgeTimers(READ_CHECK_TIMER);
                 CHECKER_COUNTER--;
             }
+            return true;
         }
+        return false;
     }
 
     protected synchronized void startMonitorThreads() throws IOException {
@@ -465,10 +477,10 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     ASYNC_TASKS = createExecutor();
                 }
                 if (READ_CHECK_TIMER == null) {
-                    READ_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor ReadCheckTimer", true);
+                    READ_CHECK_TIMER = new Timer(READ_CHECK_THREAD_NAME, true);
                 }
                 if (WRITE_CHECK_TIMER == null) {
-                    WRITE_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor WriteCheckTimer", true);
+                    WRITE_CHECK_TIMER = new Timer(WRITE_CHECK_THREAD_NAME, true);
                 }
 
                 CHECKER_COUNTER++;
@@ -483,22 +495,31 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     }
 
     protected synchronized void stopMonitorThreads() {
-        stopConnectCheckTask();
-        if (monitorStarted.compareAndSet(true, false)) {
-            if (readCheckerTask != null) {
-                readCheckerTask.cancel();
-            }
-            if (writeCheckerTask != null) {
-                writeCheckerTask.cancel();
-            }
+        final boolean stoppedConnectTask = stopConnectCheckTask();
+        final boolean stoppingMonitor = monitorStarted.compareAndSet(true, false);
 
+        // If the monitor threads are stopping then cancel the tasks
+        if (stoppingMonitor) {
+            cancelTasks(readCheckerTask, writeCheckerTask);
+        }
+
+        // If either the connect task was stopped or the monitor
+        // threads were stopped then the CHECKER_COUNTER static variable
+        // needs to be checked to see if it is 0. If it is 0 then
+        // the timer threads and thread pool should also be shut down.
+        if (stoppedConnectTask || stoppingMonitor) {
             synchronized (AbstractInactivityMonitor.class) {
-                WRITE_CHECK_TIMER.purge();
-                READ_CHECK_TIMER.purge();
-                CHECKER_COUNTER--;
+                // If we are stopping the monitor threads then purge
+                // the timers and decrement the counter.
+                if (stoppingMonitor) {
+                    purgeTimers(WRITE_CHECK_TIMER, READ_CHECK_TIMER, null);
+                    CHECKER_COUNTER--;
+                }
+
+                // There are no active checker tasks so cancel any active
+                // timer threads and shutdown the executor
                 if (CHECKER_COUNTER == 0) {
-                    WRITE_CHECK_TIMER.cancel();
-                    READ_CHECK_TIMER.cancel();
+                    cancelTimers(WRITE_CHECK_TIMER, READ_CHECK_TIMER);
                     WRITE_CHECK_TIMER = null;
                     READ_CHECK_TIMER = null;
                     try {
@@ -507,6 +528,30 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                         ASYNC_TASKS = null;
                     }
                 }
+            }
+        }
+    }
+
+    private static void purgeTimers(Timer... timers) {
+        for (Timer timer : timers) {
+            if (timer != null) {
+                timer.purge();
+            }
+        }
+    }
+
+    private static void cancelTimers(Timer... timers) {
+        for (Timer timer : timers) {
+            if (timer != null) {
+                timer.cancel();
+            }
+        }
+    }
+
+    private static void cancelTasks(SchedulerTimerTask... tasks) {
+        for (SchedulerTimerTask task : tasks) {
+            if (task != null) {
+                task.cancel();
             }
         }
     }

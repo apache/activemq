@@ -754,6 +754,25 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
 
+                        /**
+                         * [AMQ-9773]
+                         *
+                         * The order index sequence key value increases for every message since the beginning of the
+                         * creation of the index, so the first message available won't be at sequence key value:0 in
+                         * the index when there were older messages acknowledged.
+                         *
+                         * The MessageOrderCursor _position_ value is relative to the index, so there is a disconnect
+                         * between queue _position_ and index sequence value over time.
+                         *
+                         * The MessageRecoveryContext determines the recovery start position based off the provided
+                         * offset, or the position of the requested startMessageId. If a startMessageId is specified,
+                         * but not found in the index, then the value of 0 is used as a fallback.
+                         *
+                         * The MessageRecoveryContext determines the recovery end position based off of the provided
+                         * endMessageId (if provided), or the maximum recovered message count, or if the
+                         * MessageRecoveryListener signals that no more messages should be recovered
+                         * (ie memory is full).
+                         */
                         Long startSequenceOffset = null;
                         Long endSequenceOffset = null;
 
@@ -766,16 +785,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         if(messageRecoveryContext.getEndMessageId() != null && !messageRecoveryContext.getEndMessageId().isBlank()) {
                             endSequenceOffset = Optional.ofNullable(sd.messageIdIndex.get(tx, messageRecoveryContext.getEndMessageId()))
                                                         .orElse(startSequenceOffset + Long.valueOf(messageRecoveryContext.getMaxMessageCountReturned()));
-                        } else {
-                            endSequenceOffset = startSequenceOffset + Long.valueOf(messageRecoveryContext.getMaxMessageCountReturned());
+                            messageRecoveryContext.setEndSequenceId(endSequenceOffset);
                         }
 
-                        if(endSequenceOffset < startSequenceOffset) {
+                        if(endSequenceOffset != null &&
+                            endSequenceOffset < startSequenceOffset) {
                             LOG.warn("Invalid offset parameters start:{} end:{}", startSequenceOffset, endSequenceOffset);
                             throw new IllegalStateException("Invalid offset parameters start:" + startSequenceOffset + " end:" + endSequenceOffset);
                         }
 
-                        messageRecoveryContext.setEndSequenceId(endSequenceOffset);
                         Entry<Long, MessageKeys> entry = null;
                         recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, messageRecoveryContext.getMaxMessageCountReturned(), messageRecoveryContext);
                         Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
@@ -796,7 +814,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                                 break;
                             }
                         }
-                        sd.orderIndex.stoppedIterating();
+
+                        // [AMQ-9773] The sd.orderIndex uses the destination's cursor
+                        if(!messageRecoveryContext.isUseDedicatedCursor()) {
+                            sd.orderIndex.stoppedIterating();
+                        }
                     }
                 });
             } finally {

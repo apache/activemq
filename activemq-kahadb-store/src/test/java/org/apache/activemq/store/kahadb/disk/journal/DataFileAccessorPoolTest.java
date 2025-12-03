@@ -17,40 +17,27 @@
 package org.apache.activemq.store.kahadb.disk.journal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.io.File;
 
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.imposters.ByteBuddyClassImposteriser;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class DataFileAccessorPoolTest {
-    private Mockery context;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @Before
-    public void setUp() throws Exception {
-        context = new Mockery() {
-            {
-                setImposteriser(ByteBuddyClassImposteriser.INSTANCE);
-            }
-        };
-    }
-
     @Test
     public void disposeUnused() throws Exception {
 
-        final Journal journal = context.mock(Journal.class);
+        Journal journal = mock(Journal.class);
 
         DataFileAccessorPool underTest = new DataFileAccessorPool(journal);
-
-        context.checking(new Expectations(){{exactly(1).of(journal).getInflightWrites();}});
 
         DataFile dataFile = new DataFile(new File(temporaryFolder.getRoot(), "aa"), 1);
         underTest.closeDataFileAccessor(underTest.openDataFileAccessor(dataFile));
@@ -60,7 +47,7 @@ public class DataFileAccessorPoolTest {
 
         assertEquals("0 in the pool", 0, underTest.size());
 
-        context.assertIsSatisfied();
+        verify(journal, times(1)).getInflightWrites();
     }
 
 }

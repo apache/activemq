@@ -1967,7 +1967,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             final StoredDestination destination = entry.getValue();
                             final String subscriptionKey = subscription.getKey();
                             final SequenceSet pendingAcks = destination.ackPositions.get(tx, subscriptionKey);
-                            LOG.trace("sub {} on {} in dataFile {} has pendingCount {}", subscriptionKey, entry.getKey(), dataFileId, pendingAcks.rangeSize()-1);
+                            LOG.trace("sub {} on {} in dataFile {} has pendingCount {}", subscriptionKey, entry.getKey(), dataFileId, (pendingAcks != null ? pendingAcks.rangeSize()-1 : 0));
                         }
                         gcCandidateSet.remove(dataFileId);
                     }

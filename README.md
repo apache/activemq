@@ -18,11 +18,13 @@ Getting Started
 To help you get started, try the following links:
 
 Getting Started
-- https://activemq.apache.org/version-5-getting-started.html
+- You need JDK17+ to run Apache ActiveMQ
+- After having extracted ActiveMQ binary distribution, you can start ActiveMQ with `./bin/activemq console` (foreground) or `./bin/activemq start`
+- Docker images are also available on Docker Hub (https://hub.docker.com/r/apache/activemq-classic)
 
 Building
-- [Windows](https://activemq.apache.org/version-5-getting-started.html#installation-procedure-for-windows)
-- [Unix](https://activemq.apache.org/version-5-getting-started.html#installation-procedure-for-unix)
+- You can build (fast) using Apache Maven: `mvn clean install -DskipTests`
+- You can build (including all tests) using Apache Maven: `mvn clean install`
 
 Examples
 - https://activemq.apache.org/examples.html
