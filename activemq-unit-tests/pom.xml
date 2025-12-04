@@ -401,7 +401,9 @@
         <configuration>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
-          <forkedProcessTimeoutInSeconds>3600</forkedProcessTimeoutInSeconds>
+          <enableProcessChecker>all</enableProcessChecker>
+          <forkedProcessTimeoutInSeconds>900</forkedProcessTimeoutInSeconds>     <!-- max time tests may run -->
+          <forkedProcessExitTimeoutInSeconds>30</forkedProcessExitTimeoutInSeconds> <!-- max time JVM may hang after tests -->
           <runOrder>alphabetical</runOrder>
           <reportFormat>plain</reportFormat>
           <failIfNoTests>false</failIfNoTests>
@@ -466,7 +468,9 @@
               <groups>org.apache.activemq.test.annotations.ParallelTest</groups>
               <forkCount>2C</forkCount>
               <reuseForks>false</reuseForks>
-              <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+              <enableProcessChecker>all</enableProcessChecker>
+              <forkedProcessTimeoutInSeconds>900</forkedProcessTimeoutInSeconds>     <!-- max time tests may run -->
+              <forkedProcessExitTimeoutInSeconds>30</forkedProcessExitTimeoutInSeconds> <!-- max time JVM may hang after tests -->
               <failIfNoTests>false</failIfNoTests>
               <systemPropertyVariables>
                 <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
