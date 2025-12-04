@@ -33,12 +33,14 @@ import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +48,7 @@ import org.slf4j.LoggerFactory;
  * Tests that the AMQP MessageID value and type are preserved.
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AmqpMessageIdPreservationTest extends AmqpClientTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(JMSInteroperabilityTest.class);

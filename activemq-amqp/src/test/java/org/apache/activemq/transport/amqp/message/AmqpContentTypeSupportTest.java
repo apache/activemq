@@ -22,8 +22,11 @@ import static org.junit.Assert.assertNull;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AmqpContentTypeSupportTest {
 
     @Test (expected = InvalidContentTypeException.class)

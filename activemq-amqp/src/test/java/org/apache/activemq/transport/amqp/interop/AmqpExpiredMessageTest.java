@@ -30,8 +30,11 @@ import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AmqpExpiredMessageTest extends AmqpClientTestSupport {
 
    @Test(timeout = 60000)

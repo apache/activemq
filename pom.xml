@@ -127,6 +127,7 @@
     <maven-project-info-reports-plugin-version>3.9.0</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
     <maven-core-version>3.8.6</maven-core-version>
+    <maven-surefire-plugin-version>3.5.3</maven-surefire-plugin-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
