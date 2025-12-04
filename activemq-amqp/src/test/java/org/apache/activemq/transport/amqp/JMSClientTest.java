@@ -633,7 +633,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     @Test(timeout=30 * 1000)
     public void testProduceAndConsumeLargeNumbersOfMessages() throws Exception {
         int count = 1000;
-        connection = createConnection();
+        connection = createConnectionWithRetry(name.toString(), false);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(getDestinationName());
         connection.start();
