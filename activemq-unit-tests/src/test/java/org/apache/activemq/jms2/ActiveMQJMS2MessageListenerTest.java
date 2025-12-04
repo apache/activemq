@@ -125,7 +125,7 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
                 break;
             }
 
-            countDownLatch.await(5, TimeUnit.SECONDS);
+            assertTrue("Did not receive all messages in time", countDownLatch.await(10, TimeUnit.SECONDS));
 
             assertEquals(Integer.valueOf(2), Integer.valueOf(receivedMessageCount.get()));
             assertEquals(Integer.valueOf(0), Integer.valueOf(exceptionCount.get()));
