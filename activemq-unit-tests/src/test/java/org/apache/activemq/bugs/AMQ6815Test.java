@@ -52,6 +52,8 @@ public class AMQ6815Test {
          brokerService = new BrokerService();
          PolicyEntry policy = new PolicyEntry();
          policy.setMemoryLimit(MEM_LIMIT);
+         // otherwise, with no consumer present producer flow control can block indefinitely.
+         policy.setUseCache(false);
          PolicyMap pMap = new PolicyMap();
          pMap.setDefaultEntry(policy);
          brokerService.setDestinationPolicy(pMap);
