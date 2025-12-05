@@ -29,12 +29,15 @@ import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * This unit test creates a fixed size queue and moves the last message in the
  * queue to another queue. The test is used to very the performance of
  * {@link org.apache.activemq.broker.region.Queue#moveMatchingMessagesTo(org.apache.activemq.broker.ConnectionContext, String, org.apache.activemq.command.ActiveMQDestination)}.
  */
+@Category(ParallelTest.class)
 public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(LargeQueueSparseDeleteTest.class);
 

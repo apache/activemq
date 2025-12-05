@@ -36,6 +36,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.xbean.XBeanBrokerFactory;
 
+
+
 public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
 
     public static final int MESSAGE_COUNT = 100;

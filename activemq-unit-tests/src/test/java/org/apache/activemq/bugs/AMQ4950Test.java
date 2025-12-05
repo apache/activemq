@@ -52,6 +52,9 @@ import org.slf4j.LoggerFactory;
  * Test for AMQ-4950.
  * Simulates an error during XA prepare call.
  */
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
+@Category(ParallelTest.class)
 public class AMQ4950Test extends BrokerRestartTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(AMQ4950Test.class);

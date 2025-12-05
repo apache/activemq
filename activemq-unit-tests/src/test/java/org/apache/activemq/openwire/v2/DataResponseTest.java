@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v2;
 import org.apache.activemq.command.DataResponse;
 
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for DataResponse
  *
@@ -30,6 +32,8 @@ import org.apache.activemq.command.DataResponse;
  *
  * 
  */
+@Category(ParallelTest.class)
+
 public class DataResponseTest extends ResponseTest {
 
 

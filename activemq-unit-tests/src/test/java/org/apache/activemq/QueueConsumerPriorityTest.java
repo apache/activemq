@@ -27,7 +27,10 @@ import jakarta.jms.Session;
 import junit.framework.TestCase;
 
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class QueueConsumerPriorityTest extends TestCase {
 
     private static final String VM_BROKER_URL = "vm://localhost?broker.persistent=false&broker.useJmx=true";

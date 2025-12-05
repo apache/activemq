@@ -42,7 +42,10 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class ClientTestSupport extends TestCase {
 
     protected BrokerService broker;

@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v2;
 import org.apache.activemq.command.FlushCommand;
 
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for FlushCommand
  *
@@ -30,6 +32,8 @@ import org.apache.activemq.command.FlushCommand;
  *
  * 
  */
+@Category(ParallelTest.class)
+
 public class FlushCommandTest extends BaseCommandTestSupport {
 
 

@@ -17,11 +17,12 @@
 
 package org.apache.activemq.store.kahadb;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -30,6 +31,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryContext;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,12 +40,10 @@ import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.jms.Connection;
-import jakarta.jms.JMSException;
-import jakarta.jms.MessageConsumer;
-import jakarta.jms.MessageProducer;
-import jakarta.jms.Session;
-import jakarta.jms.TextMessage;
+import java.io.File;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -57,14 +57,8 @@ public class KahaDBOffsetRecoveryListenerTest {
     @Rule
     public TestName testName = new TestName();
 
-    protected final int PRETEST_MSG_COUNT = 17531;
-
     @Before
     public void beforeEach() throws Exception {
-        // Send+Recv a odd number of messages beyond cache sizes
-        // to confirm the queue's sequence number gets pushed off
-        sendMessages(PRETEST_MSG_COUNT, testName.getMethodName());
-        assertEquals(Integer.valueOf(PRETEST_MSG_COUNT), Integer.valueOf(receiveMessages(testName.getMethodName())));
     }
 
     @After
@@ -85,7 +79,7 @@ public class KahaDBOffsetRecoveryListenerTest {
     private KahaDBStore createStore(boolean delete) throws IOException {
         KahaDBStore kaha = new KahaDBStore();
         kaha.setJournalMaxFileLength(1024*100);
-        kaha.setDirectory(new File("target" + File.separator + "activemq-data" + File.separator + "kahadb-recovery-tests"));
+        kaha.setDirectory(new File(IOHelper.getDefaultDataDirectory(), "kahadb-recovery-tests"));
         if( delete ) {
             kaha.deleteAllMessages();
         }

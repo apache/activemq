@@ -23,13 +23,15 @@ import junit.framework.Test;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTest;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Once the wire format is completed we can test against real persistence storage.
  * 
  * 
  */
-public class DefaultStoreBrokerTest extends BrokerTest {
+@Category(ParallelTest.class)public class DefaultStoreBrokerTest extends BrokerTest {
 
     protected BrokerService createBroker() throws Exception {
         return BrokerFactory.createBroker(new URI("broker://()/localhost?deleteAllMessagesOnStartup=true"));

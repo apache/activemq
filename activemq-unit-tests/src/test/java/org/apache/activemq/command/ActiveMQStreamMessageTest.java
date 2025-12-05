@@ -27,11 +27,14 @@ import jakarta.jms.MessageFormatException;
 import jakarta.jms.MessageNotReadableException;
 import jakarta.jms.MessageNotWriteableException;
 
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for the ActiveMQ StreamMessage implementation
  */
+@Category(ParallelTest.class)
 public class ActiveMQStreamMessageTest {
 
     @Test

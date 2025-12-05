@@ -36,10 +36,13 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.IOHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * @author chirino
  */
+@Category(ParallelTest.class)
 public class KahaDBVersionTest extends TestCase {
     static String basedir;
     static {

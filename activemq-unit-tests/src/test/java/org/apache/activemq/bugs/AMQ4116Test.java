@@ -31,7 +31,10 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.Assert;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AMQ4116Test extends EmbeddedBrokerTestSupport {
 
     private final String tcpAddr = "tcp://localhost:0";

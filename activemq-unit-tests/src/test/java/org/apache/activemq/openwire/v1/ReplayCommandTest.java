@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.ReplayCommand;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for ReplayCommand
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.ReplayCommand;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class ReplayCommandTest extends BaseCommandTestSupport {
 
     public static final ReplayCommandTest SINGLETON = new ReplayCommandTest();

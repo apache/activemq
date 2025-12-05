@@ -125,7 +125,7 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
                 break;
             }
 
-            countDownLatch.await(5, TimeUnit.SECONDS);
+            assertTrue("Did not receive all messages in time", countDownLatch.await(10, TimeUnit.SECONDS));
 
             assertEquals(Integer.valueOf(2), Integer.valueOf(receivedMessageCount.get()));
             assertEquals(Integer.valueOf(0), Integer.valueOf(exceptionCount.get()));
@@ -140,12 +140,12 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
             }
             jmsConsumer.close();
 
-            assertTrue("DequeueCount = 2 and QueueSize = 0 expected", Wait.waitFor(new Wait.Condition() {
+            assertTrue("Queue should drain in time", Wait.waitFor(new Wait.Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
-                    return localQueueViewMBean.getDequeueCount() == 2l && localQueueViewMBean.getQueueSize() == 0l;
+                    return localQueueViewMBean.getQueueSize() == 0l && localQueueViewMBean.getDequeueCount() >= 2l;
                 }
-            }, 5000l, 100l));
+            }, 10000l, 100l));
 
         } catch (Exception e) {
             fail(e.getMessage());

@@ -22,7 +22,10 @@ import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.security.AuthorizationPlugin;
 import org.apache.activemq.security.SimpleAuthorizationMap;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AuthorizationFromAdminViewTest extends org.apache.activemq.TestSupport {
 
     private BrokerService broker;

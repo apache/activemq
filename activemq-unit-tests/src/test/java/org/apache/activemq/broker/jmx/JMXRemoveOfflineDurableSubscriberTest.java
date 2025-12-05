@@ -17,12 +17,15 @@
 package org.apache.activemq.broker.jmx;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertTrue;
 
+@Category(ParallelTest.class)
 public class JMXRemoveOfflineDurableSubscriberTest {
 
     private BrokerService broker;

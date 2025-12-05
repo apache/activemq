@@ -29,7 +29,10 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.junit.Assert;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class DoubleExpireTest extends EmbeddedBrokerTestSupport {
 
 	private static final long MESSAGE_TTL_MILLIS = 1000;

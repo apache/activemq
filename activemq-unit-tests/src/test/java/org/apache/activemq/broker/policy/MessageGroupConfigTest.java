@@ -26,10 +26,13 @@ import org.apache.activemq.broker.region.group.SimpleMessageGroupMap;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class MessageGroupConfigTest extends TestSupport {
     protected BrokerService broker;
 

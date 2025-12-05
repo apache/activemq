@@ -31,11 +31,14 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.objectweb.jtests.jms.admin.Admin;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
+@Category(ParallelTest.class)
 public class ActiveMQAdmin implements Admin {
 
     Context context;

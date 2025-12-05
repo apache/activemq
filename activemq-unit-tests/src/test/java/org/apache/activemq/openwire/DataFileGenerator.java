@@ -25,7 +25,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-
 public abstract class DataFileGenerator extends org.junit.Assert {
 
     static final File MODULE_BASE_DIR;

@@ -20,7 +20,6 @@ import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageProducer;
-
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

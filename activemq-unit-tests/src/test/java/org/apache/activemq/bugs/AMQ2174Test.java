@@ -33,11 +33,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestName;
 
 /**
  * Test cases to investigate subscription problems
  */
+@Category(ParallelTest.class)
 public class AMQ2174Test {
 
     @Rule

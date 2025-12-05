@@ -26,6 +26,8 @@ import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,7 @@ import jakarta.jms.Session;
 
 import static org.junit.Assert.assertNotNull;
 
+@Category(ParallelTest.class)
 public class AMQ6522Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ6522Test.class);

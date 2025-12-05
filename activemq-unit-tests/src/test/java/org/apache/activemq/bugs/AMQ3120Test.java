@@ -28,6 +28,8 @@ import org.apache.activemq.util.ProducerThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 import jakarta.jms.*;
 
@@ -36,6 +38,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
+@Category(ParallelTest.class)
 public class AMQ3120Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ3120Test.class);

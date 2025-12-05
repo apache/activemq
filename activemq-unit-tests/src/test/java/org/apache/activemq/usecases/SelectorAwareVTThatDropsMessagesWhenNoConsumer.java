@@ -42,7 +42,10 @@ import jakarta.jms.TextMessage;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class SelectorAwareVTThatDropsMessagesWhenNoConsumer {
     protected static final Logger LOG = LoggerFactory.getLogger(SelectorAwareVTThatDropsMessagesWhenNoConsumer.class);
     private static final String QUEUE_NAME="TestQ";
