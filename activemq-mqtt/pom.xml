@@ -29,10 +29,6 @@
   <packaging>jar</packaging>
   <name>ActiveMQ :: MQTT Protocol</name>
 
-  <properties>
-    <surefire.version>3.5.3</surefire.version>
-  </properties>
-
   <description>The ActiveMQ MQTT Protocol Implementation</description>
 
   <dependencies>
@@ -204,14 +200,11 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${surefire.version}</version>
         <configuration>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
           <reportFormat>plain</reportFormat>
-          <failIfNoTests>false</failIfNoTests>
           <excludedGroups>org.apache.activemq.transport.mqtt.ParallelTest</excludedGroups>
           <systemPropertyVariables>
             <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
@@ -249,7 +242,6 @@
               <forkCount>2C</forkCount>
               <reuseForks>false</reuseForks>
               <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
-              <failIfNoTests>false</failIfNoTests>
               <systemPropertyVariables>
                 <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
                 <!-- when running MQTT tests in parallel in the CI (quite slow) we need to bump the wireformat negotiation timeout (5s by default) -->
@@ -258,18 +250,6 @@
             </configuration>
           </execution>
         </executions>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.maven.surefire</groupId>
-            <artifactId>surefire-junit47</artifactId>
-            <version>${surefire.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>me.fabriciorby</groupId>
-            <artifactId>maven-surefire-junit5-tree-reporter</artifactId>
-            <version>1.5.1</version>
-          </dependency>
-        </dependencies>
       </plugin>
 
       <plugin>
