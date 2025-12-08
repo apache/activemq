@@ -100,17 +100,44 @@ public class ActiveMQConsumer implements JMSConsumer {
 
     @Override
     public <T> T receiveBody(Class<T> c) {
-        throw new UnsupportedOperationException("receiveBody(Class<T>) is not supported");
+        Message message = receive();
+        if (message == null) {
+            return null;
+        }
+        try {
+            Object body = message.getBody(c);
+            return c.cast(body);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     @Override
     public <T> T receiveBody(Class<T> c, long timeout) {
-        throw new UnsupportedOperationException("receiveBody(Class<T>, long) is not supported");
+        Message message = receive(timeout);
+        if (message == null) {
+            return null;
+        }
+        try {
+            Object body = message.getBody(c);
+            return c.cast(body);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     @Override
     public <T> T receiveBodyNoWait(Class<T> c) {
-        throw new UnsupportedOperationException("receiveBodyNoWait(Class<T>) is not supported");
+        Message message = receiveNoWait();
+        if (message == null) {
+            return null;
+        }
+        try {
+            Object body = message.getBody(c);
+            return c.cast(body);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
 }
