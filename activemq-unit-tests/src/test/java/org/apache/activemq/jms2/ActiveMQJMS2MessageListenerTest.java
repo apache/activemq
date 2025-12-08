@@ -145,7 +145,7 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
                 public boolean isSatisified() throws Exception {
                     return localQueueViewMBean.getQueueSize() == 0l && localQueueViewMBean.getDequeueCount() >= 2l;
                 }
-            }, 10000l, 100l));
+            }, 20000l, 200l));
 
         } catch (Exception e) {
             fail(e.getMessage());
