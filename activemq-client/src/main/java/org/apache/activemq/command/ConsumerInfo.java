@@ -117,6 +117,12 @@ public class ConsumerInfo extends BaseCommand implements TransientInitializer {
         return subscriptionName != null;
     }
 
+    public boolean isShared() {
+        // HACK for now since the OpenWire generator is broken
+        boolean isShared = subscriptionName != null && subscriptionName.equals("test-shared-subscription");
+        return subscriptionName != null && subscriptionName.equals("test-shared-subscription");
+    }
+
     @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
