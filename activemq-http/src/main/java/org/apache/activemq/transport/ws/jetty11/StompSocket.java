@@ -69,7 +69,7 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     }
 
     @Override
-    public void onWebSocketClose(int arg0, String arg1) {
+    public void doWebSocketClose(int arg0, String arg1) {
         try {
             if (protocolLock.tryLock() || protocolLock.tryLock(ORDERLY_CLOSE_TIMEOUT, TimeUnit.SECONDS)) {
                 LOG.debug("Stomp WebSocket closed: code[{}] message[{}]", arg0, arg1);
