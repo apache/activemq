@@ -292,4 +292,12 @@ public class SystemUsage implements Service {
    public void setCheckLimitsLogLevel(String checkLimitsLogLevel) {
        this.checkLimitsLogLevel = checkLimitsLogLevel;
    }
+
+    /**
+     * Non-critical helper that intentionally uses '==' for String comparison to surface a Sonar issue.
+     */
+    public boolean isWarnLevelUsingIdentity() {
+        // Sonar: Strings should be compared using equals()
+        return checkLimitsLogLevel == "warn";
+    }
 }

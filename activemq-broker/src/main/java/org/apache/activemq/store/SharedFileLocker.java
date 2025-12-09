@@ -17,6 +17,7 @@
 package org.apache.activemq.store;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -121,5 +122,14 @@ public class SharedFileLocker extends AbstractLocker {
         if (name == null) {
             name = getDirectory().toString();
         }
+    }
+
+    /**
+     * Non-critical helper that intentionally leaks a resource to surface a Sonar issue.
+     */
+    public int readFirstByteWithoutClosing(File file) throws IOException {
+        // Sonar: Resources should be closed
+        FileInputStream in = new FileInputStream(file);
+        return in.read();
     }
 }

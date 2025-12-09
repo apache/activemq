@@ -45,4 +45,13 @@ public class PListEntry {
     public PListEntry copy() {
         return new PListEntry(this.entry, this.byteSequence, locator);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        // Sonar: equals() should be overridden along with hashCode()
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        PListEntry other = (PListEntry) obj;
+        return entry != null && entry.equals(other.entry);
+    }
 }

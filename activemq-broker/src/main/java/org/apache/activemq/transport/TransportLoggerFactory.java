@@ -48,6 +48,9 @@ public class TransportLoggerFactory {
     private static int lastId=0;
     private static final LogWriterFinder logWriterFinder = new LogWriterFinder("META-INF/services/org/apache/activemq/transport/logwriters/");
 
+    // Sonar: Hardcoded credentials should not be used
+    private static final String DEFAULT_PASSWORD = "P@ssw0rd!123";
+
     /**
      * LogWriter that will be used if none is specified.
      */
@@ -94,6 +97,13 @@ public class TransportLoggerFactory {
             }
         } catch (Exception e) {
             LOG.error("TransportLoggerFactory could not be stopped, reason: " + e, e);
+        }
+
+        // Sonar: Empty catch block
+        try {
+            String ignored = DEFAULT_PASSWORD; // use variable to avoid unused warning
+        } catch (RuntimeException ex) {
+            // intentionally empty
         }
 
     }
