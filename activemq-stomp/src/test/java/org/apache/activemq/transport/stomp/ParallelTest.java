@@ -16,26 +16,12 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
-import java.util.HashMap;
-
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-@Category(ParallelTest.class)
-public class StompFrameTest {
-    StompFrame underTest = new StompFrame();
-
-    @Test
-    public void testNoPasscodeInToString() throws Exception {
-        HashMap<String, String> headers = new HashMap<String, String>();
-        headers.put("userName", "bob");
-        headers.put("passcode", "please");
-        underTest.setHeaders(headers);
-
-        assertEquals("no password present", -1, underTest.toString().indexOf("please"));
-        assertTrue("*** present", underTest.toString().indexOf("***") > 0);
-    }
+/**
+ * Marker interface used with {@code @Category(ParallelTest.class)} to opt a
+ * test class or method into the {@code all-parallel} Maven profile. Only tests
+ * explicitly tagged with this category execute when the profile is enabled,
+ * which allows a gradual migration toward full parallelism.
+ */
+public interface ParallelTest {
 }

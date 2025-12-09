@@ -26,6 +26,7 @@ import java.util.UUID;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -33,6 +34,7 @@ import org.mockito.stubbing.Answer;
 /**
  * Tests for conversion capabilities of LegacyFrameTranslator
  */
+@Category(ParallelTest.class)
 public class LegacyFrameTranslatorTest {
 
     private ProtocolConverter converter;

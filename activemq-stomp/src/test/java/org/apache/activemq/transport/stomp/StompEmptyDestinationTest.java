@@ -16,12 +16,14 @@
  */
 package org.apache.activemq.transport.stomp;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class StompEmptyDestinationTest extends  StompTestSupport{
+@Category(ParallelTest.class)
+public class StompEmptyDestinationTest extends StompTestSupport{
     private static final Logger LOG = LoggerFactory.getLogger(StompEmptyDestinationTest.class);
 
     @Test(timeout = 60000)
