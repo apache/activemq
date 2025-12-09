@@ -31,11 +31,14 @@ import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests various behaviors of broker side drain support.
  */
+@Category(ParallelTest.class)
 public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)

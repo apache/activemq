@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,16 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp.interop;
+package org.apache.activemq.store.kahadb;
 
-import org.apache.activemq.transport.amqp.ParallelTest;
-import org.junit.experimental.categories.Category;
 
-@Category(ParallelTest.class)
-public class AmqpSendReceiveNativeTest extends AmqpSendReceiveTest {
-
-    @Override
-    protected String getAmqpTransformer() {
-        return "native";
-    }
+/**
+ * Marker interface used with {@code @Category(ParallelTest.class)} to opt a
+ * test class or method into the {@code all-parallel} Maven profile. Only tests
+ * explicitly tagged with this category execute when the profile is enabled,
+ * which allows a gradual migration toward full parallelism.
+ */
+public interface ParallelTest {
 }

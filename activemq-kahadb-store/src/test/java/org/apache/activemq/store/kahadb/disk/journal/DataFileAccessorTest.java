@@ -24,11 +24,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
 
+@Category(ParallelTest.class)
 public class DataFileAccessorTest {
 
     @Rule

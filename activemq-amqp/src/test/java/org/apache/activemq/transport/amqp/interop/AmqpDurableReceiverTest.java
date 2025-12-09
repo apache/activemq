@@ -32,6 +32,7 @@ import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpFrameValidator;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -40,10 +41,12 @@ import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.amqp.transport.Detach;
 import org.apache.qpid.proton.engine.Receiver;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for broker side support of the Durable Subscription mapping for JMS.
  */
+@Category(ParallelTest.class)
 public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
 
     private final String SELECTOR_STRING = "color = red";

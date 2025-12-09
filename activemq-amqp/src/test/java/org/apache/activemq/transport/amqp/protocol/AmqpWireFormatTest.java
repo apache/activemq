@@ -24,8 +24,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.transport.amqp.AmqpHeader;
 import org.apache.activemq.transport.amqp.AmqpWireFormat;
 import org.apache.activemq.transport.amqp.AmqpWireFormat.ResetListener;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AmqpWireFormatTest {
 
     private final AmqpWireFormat wireFormat = new AmqpWireFormat();

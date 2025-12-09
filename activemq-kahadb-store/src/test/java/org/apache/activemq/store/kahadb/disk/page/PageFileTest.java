@@ -17,6 +17,7 @@
 package org.apache.activemq.store.kahadb.disk.page;
 
 import junit.framework.TestCase;
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.apache.activemq.util.Wait;
 import org.apache.logging.log4j.Level;
@@ -26,6 +27,7 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
 import org.apache.logging.log4j.core.layout.MessageLayout;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("rawtypes")
+@Category(ParallelTest.class)
 public class PageFileTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(PageFileTest.class);
