@@ -18,6 +18,9 @@ package org.apache.activemq.openwire;
 
 import junit.framework.TestCase;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;@Category(ParallelTest.class)
+
 public class ItStillMarshallsTheSameTest extends TestCase {
 
     public void testAll() throws Exception {

@@ -22,11 +22,14 @@ import jakarta.jms.MessageConsumer;
 import jakarta.jms.Topic;
 
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class JmsQueueTopicCompositeSendReceiveTest extends JmsTopicSendReceiveTest {
     private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
             .getLog(JmsQueueTopicCompositeSendReceiveTest.class);

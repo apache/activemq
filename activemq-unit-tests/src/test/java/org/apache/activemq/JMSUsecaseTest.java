@@ -31,7 +31,10 @@ import junit.framework.Test;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class JMSUsecaseTest extends JmsTestSupport {
 
     public ActiveMQDestination destination;

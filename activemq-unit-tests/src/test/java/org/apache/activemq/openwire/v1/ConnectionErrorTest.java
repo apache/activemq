@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.ConnectionError;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for ConnectionError
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.ConnectionError;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class ConnectionErrorTest extends BaseCommandTestSupport {
 
     public static final ConnectionErrorTest SINGLETON = new ConnectionErrorTest();

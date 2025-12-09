@@ -20,13 +20,16 @@ import jakarta.jms.*;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
+@Category(ParallelTest.class)
 public class BrokerViewTest {
     @Test(timeout=120000)
     public void testBrokerViewRetrieveQueuesAndTopicsCount() throws Exception {

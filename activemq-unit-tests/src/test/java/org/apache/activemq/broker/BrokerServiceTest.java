@@ -30,12 +30,15 @@ import org.mockito.Mockito;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for the BrokerService class
  * 
  * @author chirino
  */
+@Category(ParallelTest.class)
 public class BrokerServiceTest extends TestCase {
     public void testAddRemoveTransportsWithJMX() throws Exception {
         BrokerService service = new BrokerService();

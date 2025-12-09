@@ -47,6 +47,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 
 /**
@@ -60,6 +62,7 @@ import org.slf4j.LoggerFactory;
  * Now only messages tied to the MessageAck are expired which fixes this problem.
  *
  */
+@Category(ParallelTest.class)
 public class ExpiredAckAsyncConsumerTest {
     private static final Logger LOG = LoggerFactory.getLogger(ExpiredAckAsyncConsumerTest.class);
 

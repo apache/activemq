@@ -50,7 +50,10 @@ import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class DurableSubscriberNonPersistentMessageTest extends TestCase {
 
     private final Logger LOG = LoggerFactory.getLogger(DurableSubscriberNonPersistentMessageTest.class);

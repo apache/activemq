@@ -30,12 +30,15 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.util.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * ActiveMQMessageAuditTest
  *
  *
  */
+@Category(ParallelTest.class)
 public class ActiveMQMessageAuditTest extends TestCase {
 
     static final Logger LOG = LoggerFactory.getLogger(ActiveMQMessageAuditTest.class);

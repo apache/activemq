@@ -30,10 +30,13 @@ import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.TopicSubscriptionViewMBean;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AMQ2200Test {
 
     private static final String bindAddress = "tcp://0.0.0.0:0";
@@ -43,7 +46,6 @@ public class AMQ2200Test {
     @Before
     public void setUp() throws Exception {
         broker = new BrokerService();
-        broker.setDataDirectory("target" + File.separator + "activemq-data");
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.setAdvisorySupport(false);

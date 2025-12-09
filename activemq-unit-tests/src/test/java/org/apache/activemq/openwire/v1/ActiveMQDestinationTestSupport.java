@@ -18,7 +18,6 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
-
 /**
  * Test case for the OpenWire marshalling for ActiveMQDestination
  * 
@@ -29,6 +28,8 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  * 
  * 
  */
+
+
 public abstract class ActiveMQDestinationTestSupport extends DataFileGeneratorTestSupport {
 
     protected void populateObject(Object object) throws Exception {

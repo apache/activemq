@@ -16,6 +16,10 @@
  */
 package org.apache.activemq;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
+
+@Category(ParallelTest.class)
 public class ActiveMQXASslConnectionFactoryTest extends ActiveMQSslConnectionFactoryTest {
 
     @Override

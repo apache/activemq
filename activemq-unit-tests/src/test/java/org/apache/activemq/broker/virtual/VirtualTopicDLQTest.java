@@ -46,12 +46,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import junit.framework.TestCase;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Unit test for virtual topics and DLQ messaging. See individual test for more
  * detail
  *
  */
+@Category(ParallelTest.class)
 public class VirtualTopicDLQTest extends TestCase {
     private static BrokerService broker;
 

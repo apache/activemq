@@ -33,6 +33,7 @@ import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.util.IOHelper;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -55,6 +56,10 @@ public class KahaDBOffsetRecoveryListenerTest {
 
     @Rule
     public TestName testName = new TestName();
+
+    @Before
+    public void beforeEach() throws Exception {
+    }
 
     @After
     public void afterEach() {

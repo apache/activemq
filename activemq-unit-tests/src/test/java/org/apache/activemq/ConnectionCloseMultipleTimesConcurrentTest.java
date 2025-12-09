@@ -24,10 +24,13 @@ import jakarta.jms.JMSException;
 import jakarta.jms.Session;
 
 import junit.framework.TestCase;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class ConnectionCloseMultipleTimesConcurrentTest extends TestCase {
 
     private ActiveMQConnection connection;

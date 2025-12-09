@@ -34,10 +34,14 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.Wait;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+@Category(ParallelTest.class)
 public class AMQ2314Test extends CombinationTestSupport {
 
     public boolean consumeAll = false;
@@ -152,7 +156,6 @@ public class AMQ2314Test extends CombinationTestSupport {
         super.setAutoFail(true);
         super.setUp();
         broker = new BrokerService();
-        broker.setDataDirectory("target" + File.separator + "activemq-data");
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.setAdvisorySupport(false);

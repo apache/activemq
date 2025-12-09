@@ -52,6 +52,8 @@ import org.apache.activemq.usage.TempUsage;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Modified CursorSupport Unit test to reproduce the negative queue issue.
@@ -76,6 +78,7 @@ import org.slf4j.LoggerFactory;
  * 2) transacted
  *
  */
+@Category(ParallelTest.class)
 public class NegativeQueueTest extends AutoFailTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(NegativeQueueTest.class);
 

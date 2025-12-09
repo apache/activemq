@@ -33,7 +33,9 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
 import org.apache.activemq.broker.util.RedeliveryPlugin;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,7 @@ import org.slf4j.LoggerFactory;
  * message previously.
  */
 
+@Category(ParallelTest.class)
 public class RedeliveryPluginHeaderTest extends TestCase {
 
     private static final String TEST_QUEUE_ONE = "TEST_QUEUE_ONE";
@@ -140,7 +143,6 @@ public class RedeliveryPluginHeaderTest extends TestCase {
 
         BrokerService answer = new BrokerService();
         answer.setAdvisorySupport(false);
-        answer.setDataDirectory("target");
         answer.setSchedulerDirectoryFile(schedulerDirectory);
         answer.setSchedulerSupport(true);
         answer.setPersistent(true);

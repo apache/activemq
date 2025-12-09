@@ -17,10 +17,13 @@
 package org.apache.activemq;
 
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class JmsQueueSendReceiveTwoConnectionsTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 
     /**

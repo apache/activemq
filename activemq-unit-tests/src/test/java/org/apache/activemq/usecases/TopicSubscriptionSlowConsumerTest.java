@@ -30,6 +30,8 @@ import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 
 /**
@@ -39,6 +41,7 @@ import jakarta.jms.Session;
  * 
  */
 
+@Category(ParallelTest.class)
 public class TopicSubscriptionSlowConsumerTest extends TestCase {
 
 	private static final String TOPIC_NAME = "slow.consumer";

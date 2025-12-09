@@ -20,6 +20,8 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +29,7 @@ import java.io.InputStream;
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class BlobTransferPolicyUriTest extends TestCase {
     public void testBlobTransferPolicyIsConfiguredViaUri() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?jms.blobTransferPolicy.defaultUploadUrl=http://foo.com");

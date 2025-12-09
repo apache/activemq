@@ -29,8 +29,11 @@ import jakarta.jms.*;
 import java.net.URI;
 
 import static org.junit.Assert.assertEquals;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 @RunWith(BlockJUnit4ClassRunner.class)
+@Category(ParallelTest.class)
 public class ClientIdFilterDispatchPolicyTest {
 
     @Test

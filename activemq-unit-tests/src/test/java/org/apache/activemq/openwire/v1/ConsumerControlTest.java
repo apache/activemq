@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.ConsumerControl;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for ConsumerControl
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.ConsumerControl;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class ConsumerControlTest extends BaseCommandTestSupport {
 
     public static final ConsumerControlTest SINGLETON = new ConsumerControlTest();

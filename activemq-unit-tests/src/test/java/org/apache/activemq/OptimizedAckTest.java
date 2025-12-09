@@ -28,7 +28,10 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class OptimizedAckTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(OptimizedAckTest.class);
     private ActiveMQConnection connection;

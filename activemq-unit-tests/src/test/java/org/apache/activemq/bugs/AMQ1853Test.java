@@ -47,6 +47,8 @@ import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +57,7 @@ import org.slf4j.LoggerFactory;
  * through all redeliveries, until the message is either successfully consumed
  * or sent to the DLQ.
  */
+@Category(ParallelTest.class)
 public class AMQ1853Test {
     private static BrokerService broker;
 

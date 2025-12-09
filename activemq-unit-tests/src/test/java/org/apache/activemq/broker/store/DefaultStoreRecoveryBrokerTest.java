@@ -23,12 +23,15 @@ import junit.framework.Test;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.RecoveryBrokerTest;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Used to verify that recovery works correctly against 
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class DefaultStoreRecoveryBrokerTest extends RecoveryBrokerTest {
 
     protected BrokerService createBroker() throws Exception {

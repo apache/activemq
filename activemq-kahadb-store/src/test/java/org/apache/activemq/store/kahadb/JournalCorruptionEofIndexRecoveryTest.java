@@ -222,7 +222,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
         DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(Integer.valueOf(location.getDataFileId()));
         RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
         randomAccessFile.seek(location.getOffset());
-        randomAccessFile.writeInt(Integer.MAX_VALUE);
+        // Use a bounded bogus size to trigger corruption handling without blowing the heap.
+        randomAccessFile.writeInt(512 * 1024);
         randomAccessFile.getChannel().force(true);
 
         ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().close();
@@ -419,7 +420,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
         int pos = batchPositions.get(batchPositions.size() - 3);
         LOG.info("corrupting checksum and size (to push it past eof) of batch record at:" + id + "-" + pos);
         randomAccessFile.seek(pos + Journal.BATCH_CONTROL_RECORD_HEADER.length);
-        randomAccessFile.writeInt(31 * 1024 * 1024);
+        // Use a bounded bogus size to trigger the corruption path without exhausting heap on read.
+        randomAccessFile.writeInt(4 * 1024 * 1024);
         randomAccessFile.writeLong(0l);
         randomAccessFile.getChannel().force(true);
     }
