@@ -222,7 +222,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
         DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(Integer.valueOf(location.getDataFileId()));
         RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
         randomAccessFile.seek(location.getOffset());
-        randomAccessFile.writeInt(Integer.MAX_VALUE);
+        // Use a bounded bogus size to trigger corruption handling without blowing the heap.
+        randomAccessFile.writeInt(512 * 1024);
         randomAccessFile.getChannel().force(true);
 
         ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().close();

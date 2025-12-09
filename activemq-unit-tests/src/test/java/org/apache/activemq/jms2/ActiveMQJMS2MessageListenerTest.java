@@ -143,9 +143,9 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
             assertTrue("Queue should drain in time", Wait.waitFor(new Wait.Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
-                    return localQueueViewMBean.getQueueSize() == 0l && localQueueViewMBean.getDequeueCount() >= 2l;
+                    return localQueueViewMBean.getQueueSize() == 0L && localQueueViewMBean.getDequeueCount() >= 2L;
                 }
-            }, 20000l, 200l));
+            }, 20000L, 200L));
 
         } catch (Exception e) {
             fail(e.getMessage());
