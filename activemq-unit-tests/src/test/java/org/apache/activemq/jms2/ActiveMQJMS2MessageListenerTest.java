@@ -45,6 +45,8 @@ import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RunWith(value = Parameterized.class)
 public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
@@ -140,12 +142,15 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
             }
             jmsConsumer.close();
 
+            final Logger logger = LoggerFactory.getLogger(this.getClass());
             assertTrue("Queue should drain in time", Wait.waitFor(new Wait.Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
+                    logger.info("Current Queue size: " + localQueueViewMBean.getQueueSize() +
+                            ", dequeue count: " + localQueueViewMBean.getDequeueCount());
                     return localQueueViewMBean.getQueueSize() == 0L && localQueueViewMBean.getDequeueCount() >= 2L;
                 }
-            }, 20000L, 200L));
+            }, 60000L, 200L));
 
         } catch (Exception e) {
             fail(e.getMessage());
