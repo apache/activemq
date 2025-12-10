@@ -31,15 +31,18 @@ import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test around the handling of Deliver Annotations in messages sent and received.
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AmqpDeliveryAnnotationsTest extends AmqpClientTestSupport {
 
     private final String DELIVERY_ANNOTATION_NAME = "TEST-DELIVERY-ANNOTATION";

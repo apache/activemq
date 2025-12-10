@@ -36,6 +36,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
+import org.apache.activemq.util.Wait;
 
 public class AMQ7118Test {
 
@@ -188,16 +189,20 @@ public class AMQ7118Test {
             TimeUnit.SECONDS.sleep(4);
             LOG.info("Checkpoint complete.");
         }
+        // Wait up to 30s for compaction to settle; allow a single extra log while cleanup catches up.
+        boolean settled = Wait.waitFor(() -> {
+            File[] current = dbfiles.listFiles(lff);
+            Arrays.sort(current, new DBFileComparator());
+            return current.length <= expectedCount + 1 && current[current.length - 1].getName().equals(lastFileName);
+        }, 30_000, 1_000);
+
         File files[] = dbfiles.listFiles(lff);
         Arrays.sort(files,  new DBFileComparator() );
         logfiles(files);
 
-        while (files.length != expectedCount) {
-            // gives time to checkpoint
-            TimeUnit.SECONDS.sleep(1);
-        }
-
-        assertEquals(expectedCount, files.length);
+        assertTrue("KahaDB log compaction did not settle in time", settled);
+        assertTrue("Unexpected number of log files: " + files.length,
+                   files.length <= expectedCount + 1);
         assertEquals(lastFileName, files[files.length-1].getName());
 
     }

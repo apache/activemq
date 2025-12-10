@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v3;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.ConnectionInfo;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for ConnectionInfo NOTE!: This file is
  * auto generated - do not modify! if you need to make a change, please see the
@@ -27,6 +29,8 @@ import org.apache.activemq.command.ConnectionInfo;
  * 
  * 
  */
+@Category(ParallelTest.class)
+
 public class ConnectionInfoTest extends BaseCommandTestSupport {
 
     public static final ConnectionInfoTest SINGLETON = new ConnectionInfoTest();

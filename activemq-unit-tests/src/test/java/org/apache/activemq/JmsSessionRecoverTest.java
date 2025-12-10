@@ -33,12 +33,15 @@ import jakarta.jms.TextMessage;
 import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Testcases to see if Session.recover() work.
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class JmsSessionRecoverTest extends TestCase {
 
     private Connection connection;

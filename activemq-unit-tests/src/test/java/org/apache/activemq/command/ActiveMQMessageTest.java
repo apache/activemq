@@ -30,11 +30,14 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.state.CommandVisitor;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class ActiveMQMessageTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMessageTest.class);

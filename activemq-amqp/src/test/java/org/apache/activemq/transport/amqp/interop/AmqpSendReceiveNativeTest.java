@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.transport.amqp.interop;
 
+import org.apache.activemq.transport.amqp.ParallelTest;
+import org.junit.experimental.categories.Category;
+
+@Category(ParallelTest.class)
 public class AmqpSendReceiveNativeTest extends AmqpSendReceiveTest {
 
     @Override

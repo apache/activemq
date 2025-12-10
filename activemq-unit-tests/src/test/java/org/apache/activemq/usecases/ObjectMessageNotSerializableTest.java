@@ -37,8 +37,13 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 
+
+
+@Category(ParallelTest.class)
 public class ObjectMessageNotSerializableTest extends CombinationTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(ObjectMessageNotSerializableTest.class);

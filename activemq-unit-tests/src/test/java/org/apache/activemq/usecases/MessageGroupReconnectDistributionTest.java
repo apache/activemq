@@ -48,8 +48,11 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class MessageGroupReconnectDistributionTest {
     public static final Logger LOG = LoggerFactory.getLogger(MessageGroupReconnectDistributionTest.class);
     final Random random = new Random();

@@ -35,6 +35,9 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test case for AMQ-268
@@ -42,6 +45,7 @@ import org.slf4j.LoggerFactory;
  * @author Paul Smith
  * 
  */
+@Category(ParallelTest.class)
 public final class TransactionRollbackOrderTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionRollbackOrderTest.class);
 

@@ -29,10 +29,13 @@ import jakarta.jms.Session;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class JmsSendWithAsyncCallbackTest extends TestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(JmsSendWithAsyncCallbackTest.class);

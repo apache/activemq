@@ -48,9 +48,13 @@ import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePoli
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+@Category(ParallelTest.class)
 public class AMQ2413Test extends CombinationTestSupport implements MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2413Test.class);
     BrokerService broker;
@@ -83,7 +87,6 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     @Override
     protected void setUp() throws Exception {
         broker = new BrokerService();
-        broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "AMQ2401Test");
         broker.setDeleteAllMessagesOnStartup(true);
 
         KahaDBPersistenceAdapter kahaDb = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();

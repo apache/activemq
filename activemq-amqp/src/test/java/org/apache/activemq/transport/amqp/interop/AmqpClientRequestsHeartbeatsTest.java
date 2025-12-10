@@ -31,17 +31,20 @@ import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpConnectionListener;
 import org.apache.activemq.transport.amqp.client.AmqpValidator;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.activemq.util.Wait;
 import org.apache.qpid.proton.engine.Connection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests that cover broker behavior when the client requests heartbeats
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AmqpClientRequestsHeartbeatsTest extends AmqpClientTestSupport {
 
     private final int TEST_IDLE_TIMEOUT = 1000;

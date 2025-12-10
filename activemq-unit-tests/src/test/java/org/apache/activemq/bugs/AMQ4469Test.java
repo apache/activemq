@@ -35,8 +35,11 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.springframework.jms.support.JmsUtils;
 
+@Category(ParallelTest.class)
 public class AMQ4469Test {
 
     private static final int maxConnections = 100;

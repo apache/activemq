@@ -23,6 +23,8 @@ import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 
+
+
 public class ObjectFactoryTest extends CombinationTestSupport {
     public void testConnectionFactory() throws Exception {
         // Create sample connection factory

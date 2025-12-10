@@ -28,10 +28,13 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Useful base class for unit test cases
  */
+@Category(ParallelTest.class)
 public abstract class TestSupport extends TestCase {
 
     protected ActiveMQConnectionFactory connectionFactory;

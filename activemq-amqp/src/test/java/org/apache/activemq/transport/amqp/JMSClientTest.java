@@ -61,10 +61,12 @@ import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class JMSClientTest extends JMSClientTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(JMSClientTest.class);
@@ -631,7 +633,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     @Test(timeout=30 * 1000)
     public void testProduceAndConsumeLargeNumbersOfMessages() throws Exception {
         int count = 1000;
-        connection = createConnection();
+        connection = createConnectionWithRetry(name.toString(), false);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(getDestinationName());
         connection.start();

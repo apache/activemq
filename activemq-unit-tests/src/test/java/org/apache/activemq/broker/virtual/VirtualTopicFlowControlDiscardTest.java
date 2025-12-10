@@ -45,8 +45,11 @@ import jakarta.jms.Session;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertTrue;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class VirtualTopicFlowControlDiscardTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(VirtualTopicFlowControlDiscardTest.class);

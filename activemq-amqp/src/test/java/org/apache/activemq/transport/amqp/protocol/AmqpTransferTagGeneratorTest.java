@@ -29,12 +29,15 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for the AMQP Transfer Tag Generator
  */
+@Category(ParallelTest.class)
 public class AmqpTransferTagGeneratorTest {
 
     @Test

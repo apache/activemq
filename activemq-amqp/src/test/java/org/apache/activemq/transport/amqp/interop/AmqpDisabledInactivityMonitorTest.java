@@ -24,12 +24,15 @@ import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpValidator;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.qpid.proton.engine.Connection;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test broker behaviors around Idle timeout when the inactivity monitor is disabled.
  */
+@Category(ParallelTest.class)
 public class AmqpDisabledInactivityMonitorTest extends AmqpClientTestSupport {
 
     private final int TEST_IDLE_TIMEOUT = 3000;

@@ -19,6 +19,9 @@ package org.apache.activemq.openwire;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;@Category(ParallelTest.class)
+
 public class BrokerInfoData extends DataFileGenerator {
 
     protected Object createObject() {
