@@ -18,10 +18,13 @@
 package org.apache.activemq;
 
 import jakarta.jms.*;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class JmsQueueSelectorTest extends JmsTopicSelectorTest {
     public void setUp() throws Exception {
         topic = false;

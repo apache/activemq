@@ -36,6 +36,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * This test involves the creation of a local and remote broker, both of which
@@ -43,6 +45,7 @@ import org.junit.Test;
  * remote broker for the purposes of verifying that broker info is only
  * transfered once the local broker's ID is known to the bridge support.
  */
+@Category(ParallelTest.class)
 public class AMQ3014Test {
     // Change this URL to be an unused port.
     private static final String BROKER_URL = "tcp://localhost:0";

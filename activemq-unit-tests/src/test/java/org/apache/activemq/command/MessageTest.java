@@ -20,7 +20,10 @@ import java.io.IOException;
 
 import junit.framework.Test;
 import junit.textui.TestRunner;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class MessageTest extends DataStructureTestSupport {
 
     public boolean cacheEnabled;

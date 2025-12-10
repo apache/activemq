@@ -33,9 +33,12 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test for ticket AMQ-6310, leading wildcards no longer match after AMQ-6058
  */
+@Category(ParallelTest.class)
 public class CustomVirtualTopicInterceptorWithLeadingWildcardTest extends EmbeddedBrokerTestSupport{
 
 	private static final Logger LOG = LoggerFactory.getLogger(CustomVirtualTopicInterceptorWithLeadingWildcardTest.class);

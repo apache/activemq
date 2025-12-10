@@ -53,9 +53,11 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -63,6 +65,7 @@ import org.junit.runners.Parameterized.Parameters;
 /**
  * Test for advisory messages sent under the right circumstances.
  */
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class AdvisoryTests {
 

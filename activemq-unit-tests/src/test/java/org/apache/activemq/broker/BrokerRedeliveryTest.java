@@ -36,7 +36,10 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
     static final Logger LOG = LoggerFactory.getLogger(BrokerRedeliveryTest.class);

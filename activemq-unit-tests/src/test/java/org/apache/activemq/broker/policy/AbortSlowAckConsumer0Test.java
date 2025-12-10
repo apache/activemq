@@ -37,8 +37,11 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
 
     protected long maxTimeSinceLastAck = 5 * 1000;

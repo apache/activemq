@@ -18,7 +18,6 @@ package org.apache.activemq.bugs;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.Connection;
@@ -39,9 +38,11 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.plist.PListStoreImpl;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,7 @@ import org.slf4j.LoggerFactory;
  * be smaller than the configured limit, but will still send a ResourceAllocationException
  * if its not when sendFailIfNoSpace is enabled.
  */
+@Category(ParallelTest.class)
 public class TempStorageConfigBrokerTest {
 
     public int deliveryMode = DeliveryMode.PERSISTENT;
@@ -155,7 +157,6 @@ public class TempStorageConfigBrokerTest {
 
     private void createBrokerWithValidTempStoreConfig() throws Exception {
         broker = new BrokerService();
-        broker.setDataDirectory("target" + File.separator + "activemq-data");
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.setAdvisorySupport(false);
@@ -184,7 +185,6 @@ public class TempStorageConfigBrokerTest {
 
     private void createBrokerWithInvalidTempStoreConfig() throws Exception {
         broker = new BrokerService();
-        broker.setDataDirectory("target" + File.separator + "activemq-data");
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.setAdvisorySupport(false);

@@ -46,6 +46,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
@@ -58,6 +60,7 @@ import static org.junit.Assert.assertEquals;
  Non transactional concurrent producer/consumer to single dest
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AMQ5266SingleDestTest {
     static Logger LOG = LoggerFactory.getLogger(AMQ5266SingleDestTest.class);
     String activemqURL;

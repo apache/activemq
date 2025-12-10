@@ -34,6 +34,7 @@ import jakarta.jms.*;
 
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -114,7 +115,7 @@ public class AMQ2149Test {
     @Before
     public void setUp() throws Exception {
         LOG.debug("Starting test {}", testName.getMethodName());
-        dataDirFile = new File("target/"+ testName.getMethodName());
+        dataDirFile = new File(IOHelper.getDefaultDataDirectory() + testName.getMethodName());
         numtoSend = DEFAULT_NUM_TO_SEND;
         brokerStopPeriod = DEFAULT_BROKER_STOP_PERIOD;
         sleepBetweenSend = SLEEP_BETWEEN_SEND_MS;

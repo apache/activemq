@@ -33,12 +33,15 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.MultiKahaDBPersistenceAdapter;
 import org.junit.After;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 import static org.junit.Assert.*;
 
+@Category(ParallelTest.class)
 public class AMQ5450Test {
 
     static final Logger LOG = LoggerFactory.getLogger(AMQ5450Test.class);

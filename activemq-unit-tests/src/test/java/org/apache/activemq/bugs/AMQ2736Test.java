@@ -27,11 +27,14 @@ import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.junit.After;
 import org.junit.Test;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+@Category(ParallelTest.class)
 public class AMQ2736Test {
     BrokerService broker;
 

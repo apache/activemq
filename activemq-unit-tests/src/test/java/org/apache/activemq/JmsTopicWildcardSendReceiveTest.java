@@ -26,10 +26,13 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
 
     private String destination1String = "TEST.ONE.ONE";

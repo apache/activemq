@@ -24,10 +24,13 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.Queue;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class JMSIndividualAckTest extends TestSupport {
 
     private Connection connection;
