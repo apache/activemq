@@ -24,13 +24,16 @@ import java.util.Random;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test that broker closes connection and allows a new one when the transport
  * receives a bad chunk of data after a successful connect.
  */
+@Category(ParallelTest.class)
 public class AmqpCorruptedFrameHandlingTest extends AmqpClientTestSupport {
 
     @Override

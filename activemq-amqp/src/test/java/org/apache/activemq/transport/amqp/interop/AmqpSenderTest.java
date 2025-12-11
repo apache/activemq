@@ -35,6 +35,7 @@ import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.activemq.transport.amqp.client.AmqpSupport;
 import org.apache.activemq.transport.amqp.client.AmqpValidator;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.activemq.util.Wait;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
@@ -42,10 +43,12 @@ import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test broker behavior when creating AMQP senders
  */
+@Category(ParallelTest.class)
 public class AmqpSenderTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
