@@ -23,39 +23,37 @@ import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
-/**
- * 
- */
+@Component
+@RequestScope
 public class DeleteJob extends DestinationFacade implements Controller {
     private String jobId;
     private static final Logger LOG = LoggerFactory.getLogger(DeleteJob.class);
 
-    public DeleteJob(BrokerFacade brokerFacade) {
+    public DeleteJob(final BrokerFacade brokerFacade) {
         super(brokerFacade);
     }
 
-    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws Exception {
         if (jobId != null) {
             JobSchedulerViewMBean jobScheduler = getBrokerFacade().getJobScheduler();
             if (jobScheduler != null) {
                 jobScheduler.removeJob(jobId);
-                LOG.info("Removed scheduled Job " + jobId);
+                LOG.info("Removed scheduled Job {}", jobId);
             } else {
             	LOG.warn("Scheduler not configured");
             }
         }
-        return new ModelAndView("redirect:scheduled.jsp");
+        response.sendRedirect("scheduled.jsp");
     }
 
     public String getJobId() {
         return jobId;
     }
 
-    public void setJobId(String id) {
-        this.jobId=id;
+    public void setJobId(final String id) {
+        this.jobId = id;
     }
-
 }
