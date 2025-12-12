@@ -31,7 +31,8 @@
     </transportConnectors>
  
     <persistenceAdapter>
-      <amqPersistenceAdapter directory="target/Broker1-data/activemq-data" syncOnWrite="true"  indexPageSize="16kb" indexBinSize="100" maxReferenceFileLength="8192"/>
+      <kahaDB directory="target/Broker1-data/activemq-data" journalMaxFileLength="32mb" indexCacheSize="10000"/>
+      <!-- amqPersistenceAdapter directory="" syncOnWrite="true"  indexPageSize="16kb" indexBinSize="100" maxReferenceFileLength="8192"/ -->
     </persistenceAdapter>
   </broker>
  
@@ -42,7 +43,8 @@
       <transportConnector uri="tcp://localhost:62616" />
     </transportConnectors>
      <persistenceAdapter>
-      <amqPersistenceAdapter directory="target/Broker2-data/activemq-data" syncOnWrite="true"  indexPageSize="16kb" indexBinSize="100" maxReferenceFileLength="8192"/>
+       <kahaDB directory="target/Broker2-data/activemq-data" journalMaxFileLength="32mb" indexCacheSize="10000"/>
+       <!-- amqPersistenceAdapter directory="target/Broker2-data/activemq-data" syncOnWrite="true"  indexPageSize="16kb" indexBinSize="100" maxReferenceFileLength="8192"/ -->
     </persistenceAdapter>
   </broker>
 </beans>
