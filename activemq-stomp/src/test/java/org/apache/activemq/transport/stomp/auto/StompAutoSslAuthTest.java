@@ -34,6 +34,7 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.transport.stomp.ParallelTest;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompTestSupport;
 import org.junit.Test;
@@ -41,6 +42,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import org.junit.experimental.categories.Category;
+
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class StompAutoSslAuthTest extends StompTestSupport {
 
