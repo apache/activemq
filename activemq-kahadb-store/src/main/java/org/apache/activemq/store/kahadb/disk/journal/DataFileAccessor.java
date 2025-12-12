@@ -34,6 +34,7 @@ final class DataFileAccessor {
     private final DataFile dataFile;
     private final Map<Journal.WriteKey, Journal.WriteCommand> inflightWrites;
     private final RecoverableRandomAccessFile file;
+    private final int maxAllowedRecordSize;
     private boolean disposed;
 
     /**
@@ -45,6 +46,8 @@ final class DataFileAccessor {
         this.dataFile = dataFile;
         this.inflightWrites = dataManager.getInflightWrites();
         this.file = dataFile.openRandomAccessFile();
+        // Avoid allocating absurd buffers on corrupted records; use configured max file length as cap.
+        this.maxAllowedRecordSize = dataManager.getMaxFileLength();
     }
 
     public DataFile getDataFile() {
@@ -83,6 +86,10 @@ final class DataFileAccessor {
                 file.seek(location.getOffset() + Journal.RECORD_HEAD_SPACE);
             }
             validateFileLength(location);
+            if (location.getSize() <= Journal.RECORD_HEAD_SPACE
+                    || location.getSize() > maxAllowedRecordSize) {
+                throw new IOException("Invalid location size: " + location + ", size: " + location.getSize());
+            }
             byte[] data = new byte[location.getSize() - Journal.RECORD_HEAD_SPACE];
             file.readFully(data);
             return new ByteSequence(data, 0, data.length);
