@@ -974,7 +974,7 @@
                 <java.awt.headless>true</java.awt.headless>
                 <org.apache.activemq.kahaDB.files.skipMetadataUpdate>true</org.apache.activemq.kahaDB.files.skipMetadataUpdate>
             </systemPropertyVariables>
-            <argLine>-enableassertions -Xmx1G</argLine>
+            <argLine>-enableassertions</argLine>
           </configuration>
         </plugin>
         <plugin>
