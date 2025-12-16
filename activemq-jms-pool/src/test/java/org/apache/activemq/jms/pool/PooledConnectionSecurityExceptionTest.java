@@ -111,6 +111,7 @@ public class PooledConnectionSecurityExceptionTest {
     @Test
     public void testFailureGetsNewConnectionOnRetryLooped() throws Exception {
         for (int i = 0; i < 10; ++i) {
+            LOG.info("Iteration: {}", i);
             testFailureGetsNewConnectionOnRetry();
         }
     }
