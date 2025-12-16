@@ -26,9 +26,12 @@ import javax.management.ObjectName;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.xbean.XBeanBrokerService;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class JMXMasterSlaveSharedStoreTest extends TestSupport {
     protected XBeanBrokerService master;
     protected XBeanBrokerService slave;

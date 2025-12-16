@@ -35,8 +35,11 @@ import org.junit.Assert;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 
+@Category(ParallelTest.class)
 public class DestinationWildcardTest {
     protected final static String DESTNAME="DomainA.DomainB.TestMeA.TestMeB.Prioritised.Queue";
     protected final static int QUEUE_LIMIT = 5000000;

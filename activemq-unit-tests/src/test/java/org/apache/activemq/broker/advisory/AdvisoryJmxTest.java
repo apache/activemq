@@ -30,7 +30,10 @@ import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AdvisoryJmxTest extends EmbeddedBrokerTestSupport {
 
     @Override

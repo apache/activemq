@@ -39,7 +39,10 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.spring.ConsumerBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AMQ3157Test extends EmbeddedBrokerTestSupport {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(AMQ3157Test.class);

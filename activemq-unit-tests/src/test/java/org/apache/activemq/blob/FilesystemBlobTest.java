@@ -31,11 +31,13 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.BlobMessage;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQBlobMessage;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+@Category(ParallelTest.class)
 public class FilesystemBlobTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(FilesystemBlobTest.class);
 

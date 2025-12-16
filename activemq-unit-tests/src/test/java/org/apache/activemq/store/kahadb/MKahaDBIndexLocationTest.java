@@ -36,7 +36,10 @@ import java.util.List;
 
 import static org.apache.activemq.store.kahadb.MultiKahaDBPersistenceAdapter.nameFromDestinationFilter;
 import static org.junit.Assert.*;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class MKahaDBIndexLocationTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(MKahaDBIndexLocationTest.class);

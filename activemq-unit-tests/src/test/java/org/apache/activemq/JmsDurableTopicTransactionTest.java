@@ -19,10 +19,13 @@ package org.apache.activemq;
 import jakarta.jms.DeliveryMode;
 
 import org.apache.activemq.test.JmsResourceProvider;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class JmsDurableTopicTransactionTest extends JmsTopicTransactionTest {
 
     /**

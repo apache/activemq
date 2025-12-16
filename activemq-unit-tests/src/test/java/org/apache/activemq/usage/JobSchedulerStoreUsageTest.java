@@ -17,13 +17,10 @@
 
 package org.apache.activemq.usage;
 
-import java.io.File;
-
 import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.Message;
 import jakarta.jms.Session;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.ScheduledMessage;
@@ -33,6 +30,8 @@ import org.apache.activemq.util.ProducerThread;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
 
 import static org.junit.Assert.assertNotEquals;
 

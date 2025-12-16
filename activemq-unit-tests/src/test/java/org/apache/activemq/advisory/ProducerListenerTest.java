@@ -26,6 +26,8 @@ import jakarta.jms.JMSException;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,7 @@ import org.slf4j.LoggerFactory;
  *
  *
  */
+@Category(ParallelTest.class)
 public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements ProducerListener {
     private static final Logger LOG = LoggerFactory.getLogger(ProducerListenerTest.class);
 

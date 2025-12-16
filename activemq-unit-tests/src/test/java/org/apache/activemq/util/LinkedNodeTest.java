@@ -17,10 +17,13 @@
 package org.apache.activemq.util;
 
 import junit.framework.TestCase;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * @author chirino
  */
+@Category(ParallelTest.class)
 public class LinkedNodeTest extends TestCase {
 
     static class IntLinkedNode extends LinkedNode {

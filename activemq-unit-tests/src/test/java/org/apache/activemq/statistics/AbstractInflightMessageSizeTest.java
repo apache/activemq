@@ -49,10 +49,13 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * This test shows Inflight Message sizes are correct for various acknowledgement modes.
  */
+@Category(ParallelTest.class)
 public abstract class AbstractInflightMessageSizeTest {
 
     protected BrokerService brokerService;

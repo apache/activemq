@@ -29,6 +29,10 @@
   <name>ActiveMQ :: Unit Tests</name>
   <description>The ActiveMQ Message Broker and Client Unit Tests</description>
 
+  <properties>
+    <surefire.version>3.5.3</surefire.version>
+  </properties>
+
   <dependencies>
 
     <!-- =============================== -->
@@ -391,12 +395,40 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.version}</version>
         <configuration>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
-          <forkedProcessTimeoutInSeconds>3600</forkedProcessTimeoutInSeconds>
+          <enableProcessChecker>all</enableProcessChecker>
+          <forkedProcessTimeoutInSeconds>900</forkedProcessTimeoutInSeconds>     <!-- max time tests may run -->
+          <forkedProcessExitTimeoutInSeconds>30</forkedProcessExitTimeoutInSeconds> <!-- max time JVM may hang after tests -->
           <runOrder>alphabetical</runOrder>
+          <reportFormat>plain</reportFormat>
+          <failIfNoTests>false</failIfNoTests>
+          <excludedGroups>org.apache.activemq.test.annotations.ParallelTest</excludedGroups>
+          <systemPropertyVariables>
+            <org.apache.activemq.default.directory.prefix>${project.build.directory}/</org.apache.activemq.default.directory.prefix>
+            <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+            <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+            <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
+          </systemPropertyVariables>
+          <consoleOutputReporter>
+            <disable>true</disable>
+          </consoleOutputReporter>
+          <statelessTestsetInfoReporter
+            implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter">
+            <printStacktraceOnError>true</printStacktraceOnError>
+            <printStacktraceOnFailure>true</printStacktraceOnFailure>
+            <printStdoutOnError>true</printStdoutOnError>
+            <printStdoutOnFailure>true</printStdoutOnFailure>
+            <printStderrOnError>true</printStderrOnError>
+            <printStderrOnFailure>true</printStderrOnFailure>
+          </statelessTestsetInfoReporter>
+          <includes>
+            <include>**/*Test.*</include>
+          </includes>
           <excludes>
             <!-- temporarily exclude failing tests so that CI works; fix asap and reenable -->
             <exclude>**/AMQ4092Test.java</exclude>
@@ -422,14 +454,47 @@
             <exclude>**/StartAndConcurrentStopBrokerTest.java</exclude>
             <exclude>**/BlobTransferPolicyUriTest.java</exclude>
           </excludes>
-          <systemPropertyVariables>
-            <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
-            <org.apache.activemq.default.directory.prefix>target/</org.apache.activemq.default.directory.prefix>
-            <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
-            <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
-          </systemPropertyVariables>
         </configuration>
+        <executions>
+          <execution>
+            <id>parallel</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <!-- drop the default excludedGroups -->
+              <excludedGroups combine.self="override"/>
+              <groups>org.apache.activemq.test.annotations.ParallelTest</groups>
+              <forkCount>2C</forkCount>
+              <reuseForks>false</reuseForks>
+              <enableProcessChecker>all</enableProcessChecker>
+              <forkedProcessTimeoutInSeconds>900</forkedProcessTimeoutInSeconds>     <!-- max time tests may run -->
+              <forkedProcessExitTimeoutInSeconds>30</forkedProcessExitTimeoutInSeconds> <!-- max time JVM may hang after tests -->
+              <failIfNoTests>false</failIfNoTests>
+              <systemPropertyVariables>
+                <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
+                <!-- when running tests in parallel in the CI (quite slow) we need to bump the wireformat negotiation timeout (5s by default) -->
+                <org.apache.activemq.transport.wireFormatNegotiationTimeout>30000</org.apache.activemq.transport.wireFormatNegotiationTimeout>
+              </systemPropertyVariables>
+              <excludes combine.children="append"/>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit47</artifactId>
+            <version>${surefire.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>me.fabriciorby</groupId>
+            <artifactId>maven-surefire-junit5-tree-reporter</artifactId>
+            <version>1.5.1</version>
+          </dependency>
+        </dependencies>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
