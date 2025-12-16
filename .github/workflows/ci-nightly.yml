@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,15 +14,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-name: Build
+name: CI Nightly
 
 on:
-  push:
-    branches: [ "main", "activemq-6.1.x", "activemq-5.19.x" ]
-  pull_request:
-    branches: [ "main", "activemq-6.1.x", "activemq-5.19.x" ]
+  schedule:
+    - cron: '0 3 * * *'
 
 jobs:
   build:
@@ -33,14 +29,14 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-24.04, ubuntu-22.04, macos-26, macos-15, macos-14, macos-13, windows-2025, windows-2022 ]
+        os: [ ubuntu-latest, ubuntu-22.04, macos-latest, macos-14, windows-latest, windows-2022 ]
         java-version: [ 17, 21, 24 ]
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java-version }}
@@ -51,23 +47,23 @@ jobs:
         run: mvn apache-rat:check
 
   test:
-  
+
     permissions:
       contents: read
 
     strategy:
       matrix:
-        os: [ ubuntu-24.04, ubuntu-22.04, macos-26, macos-15, macos-14, macos-13, windows-2025, windows-2022 ]
-        java-version: [ 17 ]
+        os: [ ubuntu-latest, ubuntu-22.04, macos-latest, macos-14, windows-latest, windows-2022 ]
+        java-version: [ 17, 21, 24 ]
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
       - name: Test
-        run: mvn -B -e -fae test "-Dsurefire.rerunFailingTestsCount=3"
+        run: mvn -B -e -fae test
