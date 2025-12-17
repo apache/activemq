@@ -129,7 +129,12 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
                     @Override
                     public boolean validateObject(ConnectionKey connectionKey, PooledObject<ConnectionPool> pooledObject) {
                         ConnectionPool connection = pooledObject.getObject();
-                        if (connection != null && connection.expiredCheck()) {
+                        if (connection == null || connection.getConnection() == null) {
+                            LOG.trace("Connection has been closed and will be destroyed: {}", connection);
+                            return false;
+                        }
+
+                        if (connection.expiredCheck()) {
                             LOG.trace("Connection has expired: {} and will be destroyed", connection);
                             return false;
                         }
