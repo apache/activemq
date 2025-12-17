@@ -16,13 +16,6 @@
  */
 package org.apache.activemq.jms.pool;
 
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import jakarta.jms.Connection;
 import jakarta.jms.ExceptionListener;
 import jakarta.jms.JMSException;
@@ -30,7 +23,6 @@ import jakarta.jms.JMSSecurityException;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Queue;
 import jakarta.jms.Session;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
@@ -49,6 +41,13 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test Pooled connections ability to handle security exceptions
@@ -112,7 +111,6 @@ public class PooledConnectionSecurityExceptionTest {
     @Test
     public void testFailureGetsNewConnectionOnRetryLooped() throws Exception {
         for (int i = 0; i < 10; ++i) {
-            LOG.info("Iteration: {}", i);
             testFailureGetsNewConnectionOnRetry();
         }
     }
@@ -136,13 +134,15 @@ public class PooledConnectionSecurityExceptionTest {
             @Override
             public boolean isSatisified() throws Exception {
                 try (final PooledConnection newConnection = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials")) {
-                    return connection1.getConnection() != newConnection.getConnection();
+                    return connection1.pool != ((PooledConnection)newConnection).pool;
+                } catch (Exception e) {
+                    return false;
                 }
             }
         }));
 
         final PooledConnection connection2 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials");
-        assertNotSame(connection1.getConnection(), connection2.getConnection());
+        assertNotSame(connection1.pool, connection2.pool);
 
         try {
             connection2.start();
@@ -235,13 +235,15 @@ public class PooledConnectionSecurityExceptionTest {
             @Override
             public boolean isSatisified() throws Exception {
                 try (final PooledConnection newConnection = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials")) {
-                    return connection1.getConnection() != newConnection.getConnection();
+                    return connection1.pool != ((PooledConnection)newConnection).pool;
+                } catch (Exception e) {
+                    return false;
                 }
             }
         }));
 
         final PooledConnection connection2 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials");
-        assertNotSame(connection1.getConnection(), connection2.getConnection());
+        assertNotSame(connection1.pool, connection2.pool);
 
         try {
             connection2.start();
