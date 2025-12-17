@@ -30,7 +30,7 @@ public class ThreadExplorer
     {
 
         int nThreads = Thread.activeCount();
-        Thread ret[] = new Thread[nThreads];
+        Thread[] ret = new Thread[nThreads];
 
         Thread.enumerate(ret);
 
@@ -70,7 +70,7 @@ public class ThreadExplorer
         String me = "ThreadExplorer.kill: ";
         if (logger.isDebugEnabled())
         {
-            logger.debug("Entering " + me + " with " + threadName + " isStarred: " + isStarredExp);
+            logger.debug("Entering {} with {} isStarred: {}", me, threadName, isStarredExp);
         }
         int ret = 0;
         Pattern mypattern = null;
@@ -101,7 +101,7 @@ public class ThreadExplorer
             if (matches && (Thread.currentThread() != thread) && !thread.getName().equals("main"))
             {
                 if (logger.isInfoEnabled())
-                    logger.info("Killing thread named [" + thread.getName() + "]"); // , removing its uncaught
+                    logger.info("Killing thread named [{}]", thread.getName()); // , removing its uncaught
                 // exception handler to
                 // avoid ThreadDeath
                 // exception tracing
@@ -128,22 +128,24 @@ public class ThreadExplorer
 
     public static String show(String title)
     {
-        StringBuffer out = new StringBuffer();
+        StringBuilder out = new StringBuilder();
         Thread[] threadArray = ThreadExplorer.listThreads();
 
-        out.append(title + "\n");
+        out.append(title).append("\n");
         for (int i = 0; i < threadArray.length; i++)
         {
             Thread thread = threadArray[i];
 
             if (thread != null)
             {
-                out.append("* [" + thread.getName() + "] " + (thread.isDaemon() ? "(Daemon)" : "")
-                        + " Group: " + (thread.getThreadGroup() != null ? thread.getThreadGroup().getName() : "") + "\n");
+                out.append("* [").append(thread.getName()).append("] ")
+                        .append(thread.isDaemon() ? "(Daemon)" : "").append(" Group: ")
+                        .append(thread.getThreadGroup() != null ? thread.getThreadGroup().getName() : "")
+                        .append("\n");
             }
             else
             {
-                out.append("* ThreadDeath: " + thread + "\n");
+                out.append("* ThreadDeath: ").append(thread).append("\n");
             }
 
         }
