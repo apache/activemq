@@ -164,6 +164,8 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         assertTrue(receivedExceptions.isEmpty());
         assertEquals(Integer.valueOf(MESSAGE_COUNT), Integer.valueOf(receivedMessages.size()));
 
+        waitForIncludedStatsToUpdate();
+
         //Make sure stats are correct for local -> remote
         assertEquals(MESSAGE_COUNT, localBroker.getDestination(includedDestination).getDestinationStatistics().getEnqueues().getCount());
         assertEquals(MESSAGE_COUNT, localBroker.getDestination(includedDestination).getDestinationStatistics().getDequeues().getCount());
@@ -247,6 +249,24 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
             }, 10000, 500));
         }
         remoteConsumer.close();
+    }
+
+    private void waitForIncludedStatsToUpdate() throws Exception {
+        assertTrue("Included destination stats did not reach expected counts",
+            Wait.waitFor(new Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return MESSAGE_COUNT == localBroker.getDestination(includedDestination).getDestinationStatistics().getEnqueues().getCount()
+                        && MESSAGE_COUNT == localBroker.getDestination(includedDestination).getDestinationStatistics().getDequeues().getCount()
+                        && MESSAGE_COUNT == localBroker.getDestination(includedDestination).getDestinationStatistics().getForwards().getCount()
+                        && MESSAGE_COUNT == localBroker.getDestination(includedDestination).getDestinationStatistics().getNetworkDequeues().getCount()
+                        && 0 == localBroker.getDestination(includedDestination).getDestinationStatistics().getNetworkEnqueues().getCount()
+                        && MESSAGE_COUNT == remoteBroker.getDestination(includedDestination).getDestinationStatistics().getEnqueues().getCount()
+                        && 0 == remoteBroker.getDestination(includedDestination).getDestinationStatistics().getForwards().getCount()
+                        && MESSAGE_COUNT == remoteBroker.getDestination(includedDestination).getDestinationStatistics().getNetworkEnqueues().getCount()
+                        && 0 == remoteBroker.getDestination(includedDestination).getDestinationStatistics().getNetworkDequeues().getCount();
+                }
+            }, 20000, 500));
     }
 
     protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {
