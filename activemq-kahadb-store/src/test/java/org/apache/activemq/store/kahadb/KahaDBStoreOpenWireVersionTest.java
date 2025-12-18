@@ -164,22 +164,19 @@ public class KahaDBStoreOpenWireVersionTest {
 
         //blow up the index
         try {
-            store.indexLock.writeLock().lock();
-            pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                @Override
-                public void execute(Transaction tx) throws IOException {
-                    for (Iterator<Entry<String, StoredDestination>> iterator = metadata.destinations.iterator(tx); iterator
-                            .hasNext();) {
-                        Entry<String, StoredDestination> entry = iterator.next();
-                        entry.getValue().orderIndex.nextMessageId = -100;
-                        entry.getValue().orderIndex.defaultPriorityIndex.clear(tx);
-                        entry.getValue().orderIndex.lowPriorityIndex.clear(tx);
-                        entry.getValue().orderIndex.highPriorityIndex.clear(tx);
-                    }
+            store.indexLock.lock();
+            pageFile.tx().execute(tx -> {
+                for (Iterator<Entry<String, StoredDestination>> iterator = metadata.destinations.iterator(tx); iterator
+                        .hasNext();) {
+                    Entry<String, StoredDestination> entry = iterator.next();
+                    entry.getValue().orderIndex.nextMessageId = -100;
+                    entry.getValue().orderIndex.defaultPriorityIndex.clear(tx);
+                    entry.getValue().orderIndex.lowPriorityIndex.clear(tx);
+                    entry.getValue().orderIndex.highPriorityIndex.clear(tx);
                 }
             });
         } finally {
-            store.indexLock.writeLock().unlock();
+            store.indexLock.unlock();
         }
     }
 

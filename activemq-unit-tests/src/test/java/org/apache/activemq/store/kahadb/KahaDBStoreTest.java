@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import java.util.ArrayList;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class KahaDBStoreTest {
@@ -105,5 +107,36 @@ public class KahaDBStoreTest {
         executor2.awaitTermination(60, TimeUnit.SECONDS);
 
         assertTrue("no exceptions " + exceptions, exceptions.isEmpty());
+    }
+
+    @Test
+    public void testTrackAndForgetRecoveredAcks() throws Exception {
+        final ArrayList<MessageAck> acks = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            MessageAck ack = new MessageAck();
+            ack.setLastMessageId(new MessageId(producerId, i));
+            acks.add(ack);
+        }
+
+        // Add track 10 recovered acks and verify they are in the
+        // ackedAndPreparedMap. There should be 1 entry for the dest
+        // that contains a set of the ids
+        underTest.trackRecoveredAcks(acks);
+        assertEquals(1, underTest.ackedAndPreparedMap.size());
+        assertEquals(10, underTest.ackedAndPreparedMap.get(
+                underTest.getDestination().getPhysicalName()).size());
+
+        // forget 5 of the recovered acks
+        // there should now only be 5 remaining that are tracked
+        underTest.forgetRecoveredAcks(new ArrayList<>(acks.subList(0, 5)), false);
+        assertEquals(5, underTest.ackedAndPreparedMap.get(
+                underTest.getDestination().getPhysicalName()).size());
+
+        // forget the rest, the ackedAndPreparedMap should now be empty
+        // because any entries that contain a set of size 0 should be removed
+        // from the map entirely. Before AMQ-9823 this was keeping an empty set
+        // in the map leading to a possible small memory leak
+        underTest.forgetRecoveredAcks(new ArrayList<>(acks.subList(5, 10)), false);
+        assertTrue(underTest.ackedAndPreparedMap.isEmpty());
     }
 }
