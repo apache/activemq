@@ -91,8 +91,8 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
             jmsConsumer.setMessageListener(new MessageListener() {
                 @Override
                 public void onMessage(Message message) {
-                    countDownLatch.countDown();
                     receivedMessageCount.incrementAndGet();
+                    countDownLatch.countDown();
                     try {
                         switch(ackMode) {
                         case Session.CLIENT_ACKNOWLEDGE: message.acknowledge(); break;
