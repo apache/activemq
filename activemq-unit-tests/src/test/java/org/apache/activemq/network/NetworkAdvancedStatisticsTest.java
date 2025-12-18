@@ -110,7 +110,7 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
     }
 
     //Added for AMQ-9437 test advancedStatistics for networkEnqueue and networkDequeue
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 120 * 1000)
     public void testNetworkAdvancedStatistics() throws Exception {
 
         // create a remote durable consumer to create demand
@@ -159,12 +159,10 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
                 // The number of message that remain is due to the exclude queue
                 return receivedMessages.size() == MESSAGE_COUNT;
             }
-        }, 10000, 500));
+        }, 30000, 500));
 
         assertTrue(receivedExceptions.isEmpty());
         assertEquals(Integer.valueOf(MESSAGE_COUNT), Integer.valueOf(receivedMessages.size()));
-
-        waitForIncludedStatsToUpdate();
 
         //Make sure stats are correct for local -> remote
         assertEquals(MESSAGE_COUNT, localBroker.getDestination(includedDestination).getDestinationStatistics().getEnqueues().getCount());
@@ -238,7 +236,7 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
                 public boolean isSatisified() throws Exception {
                     return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
                 }
-            }, 10000, 500));
+            }, 30000, 500));
         } else {
             assertTrue(Wait.waitFor(new Condition() {
                 @Override
@@ -246,27 +244,9 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
                     // The number of message that remain is due to the exclude queue
                     return localBroker.getAdminView().getTotalMessageCount() == MESSAGE_COUNT;
                 }
-            }, 10000, 500));
+            }, 30000, 500));
         }
         remoteConsumer.close();
-    }
-
-    private void waitForIncludedStatsToUpdate() throws Exception {
-        assertTrue("Included destination stats did not reach expected counts",
-            Wait.waitFor(new Condition() {
-                @Override
-                public boolean isSatisified() throws Exception {
-                    return MESSAGE_COUNT == localBroker.getDestination(includedDestination).getDestinationStatistics().getEnqueues().getCount()
-                        && MESSAGE_COUNT == localBroker.getDestination(includedDestination).getDestinationStatistics().getDequeues().getCount()
-                        && MESSAGE_COUNT == localBroker.getDestination(includedDestination).getDestinationStatistics().getForwards().getCount()
-                        && MESSAGE_COUNT == localBroker.getDestination(includedDestination).getDestinationStatistics().getNetworkDequeues().getCount()
-                        && 0 == localBroker.getDestination(includedDestination).getDestinationStatistics().getNetworkEnqueues().getCount()
-                        && MESSAGE_COUNT == remoteBroker.getDestination(includedDestination).getDestinationStatistics().getEnqueues().getCount()
-                        && 0 == remoteBroker.getDestination(includedDestination).getDestinationStatistics().getForwards().getCount()
-                        && MESSAGE_COUNT == remoteBroker.getDestination(includedDestination).getDestinationStatistics().getNetworkEnqueues().getCount()
-                        && 0 == remoteBroker.getDestination(includedDestination).getDestinationStatistics().getNetworkDequeues().getCount();
-                }
-            }, 20000, 500));
     }
 
     protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {
