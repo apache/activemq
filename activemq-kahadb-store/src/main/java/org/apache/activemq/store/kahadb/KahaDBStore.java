@@ -465,7 +465,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         Set<String> ackedAndPrepared = ackedAndPreparedMap.get(key);
                         if (ackedAndPrepared != null) {
                             ackedAndPrepared.remove(id);
-                            if (ackedAndPreparedMap.isEmpty()) {
+                            if (ackedAndPrepared.isEmpty()) {
                                 ackedAndPreparedMap.remove(key);
                             }
                         }
