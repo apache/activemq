@@ -704,7 +704,6 @@
     <profile>
       <id>activemq.tests-quick</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
         <property>
           <name>activemq.tests</name>
           <value>quick</value>

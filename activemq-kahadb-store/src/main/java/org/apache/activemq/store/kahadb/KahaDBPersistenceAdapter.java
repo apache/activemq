@@ -44,6 +44,7 @@ import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
+import org.apache.activemq.store.kahadb.disk.journal.DataFileFactory;
 import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ServiceStopper;
@@ -839,5 +840,9 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
 
     public boolean getCleanupOnStop() {
         return this.letter.getCleanupOnStop();
+    }
+
+    public void setDataFileFactory(DataFileFactory dataFileFactory) {
+        this.letter.setDataFileFactory(dataFileFactory);
     }
 }
