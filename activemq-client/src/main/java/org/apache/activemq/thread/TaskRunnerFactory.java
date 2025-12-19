@@ -240,10 +240,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     protected ExecutorService createVirtualThreadExecutor() {
-        if(!(Runtime.version().feature() >= 21)) {
-            LOG.error("Virtual Thread support requires JDK 21 or higher");
-            throw new IllegalStateException("Virtual Thread support requires JDK 21 or higher");
-        }
+        assertJDK21VirtualThreadSupport();
 
         try {
             Class<?> virtualThreadExecutorClass = Class.forName("org.apache.activemq.thread.VirtualThreadExecutor", false, threadClassLoader);
@@ -253,7 +250,7 @@ public class TaskRunnerFactory implements Executor {
                 throw new IllegalStateException("VirtualThreadExecutor not returned");
             }
             LOG.info("VirtualThreadExecutor initialized name:{}", name);
-            return ExecutorService.class.cast(result);
+            return (ExecutorService) result;
         } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException | InvocationTargetException e) {
             LOG.error("VirtualThreadExecutor class failed to load", e);
             throw new IllegalStateException(e);
@@ -261,10 +258,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     protected TaskRunner createVirtualThreadTaskRunner(Executor executor, Task task, int maxIterations) {
-        if(!(Runtime.version().feature() >= 21)) {
-            LOG.error("Virtual Thread support requires JDK 21 or higher");
-            throw new IllegalStateException("Virtual Thread support requires JDK 21 or higher");
-        }
+        assertJDK21VirtualThreadSupport();
 
         try {
             Class<?> virtualThreadTaskRunnerClass = Class.forName("org.apache.activemq.thread.VirtualThreadTaskRunner", false, threadClassLoader);
@@ -273,10 +267,17 @@ public class TaskRunnerFactory implements Executor {
             if(!TaskRunner.class.isAssignableFrom(result.getClass())) {
                 throw new IllegalStateException("VirtualThreadTaskRunner not returned");
             }
-            return TaskRunner.class.cast(result);
+            return (TaskRunner) result;
         } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException | InvocationTargetException | InstantiationException | IllegalArgumentException e) {
             LOG.error("VirtualThreadTaskRunner class failed to load", e);
             throw new IllegalStateException(e);
+        }
+    }
+
+    private void assertJDK21VirtualThreadSupport() {
+        if(!(Runtime.version().feature() >= 21)) {
+            LOG.error("Virtual Thread support requires JDK 21 or higher");
+            throw new IllegalStateException("Virtual Thread support requires JDK 21 or higher");
         }
     }
 

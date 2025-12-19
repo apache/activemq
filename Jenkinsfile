@@ -49,7 +49,6 @@ pipeline {
         choice(name: 'nodeLabel', choices: [ 'ubuntu', 's390x', 'arm', 'Windows' ])
         choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest', 'jdk_25_latest', 'jdk_17_latest_windows', 'jdk_21_latest_windows', 'jdk_25_latest_windows'])
         booleanParam(name: 'deployEnabled', defaultValue: false)
-        booleanParam(name: 'parallelTestsEnabled', defaultValue: true)
         booleanParam(name: 'sonarEnabled', defaultValue: false)
         booleanParam(name: 'testsEnabled', defaultValue: true)
     }
@@ -137,13 +136,8 @@ pipeline {
                 // all tests is very very long (10 hours on Apache Jenkins)
                 // sh 'mvn -B -e test -pl activemq-unit-tests -Dactivemq.tests=all'
                 script {
-                    if (params.parallelTestsEnabled == 'true') {
-                        sh 'echo "Running parallel-tests ..."'
-                        sh 'mvn -B -e -fae -Pparallel-tests test -Dsurefire.rerunFailingTestsCount=3'
-                    } else {
-                        sh 'echo "Running tests ..."'
-                        sh 'mvn -B -e -fae test -Dsurefire.rerunFailingTestsCount=3'
-                    }
+                    sh 'echo "Running tests ..."'
+                    sh 'mvn -B -e -fae verify -Pactivemq.tests-quick'
                 }
             }
             post {
