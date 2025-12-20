@@ -29,12 +29,34 @@ github:
     - stomp
     - java
     - jms
+
   enabled_merge_buttons:
     squash: true
-    merge: true
-    rebase: true
+    merge: false
+    rebase: false
+
+  del_branch_on_merge: true
+
+  protected_branches:
+    main:
+      required_pull_request_reviews:
+        require_code_owner_reviews: false
+        required_approving_review_count: 0
+      required_linear_history: true
+      required_status_checks:
+        strict: false
+        contexts:
+          - build
+          - test
+
+  features:
+    wiki: false
+    issues: false
+    projects: false
+
   autolink_jira:
     - AMQ
+
 notifications:
   commits: commits@activemq.apache.org
   issues: gitbox@activemq.apache.org
