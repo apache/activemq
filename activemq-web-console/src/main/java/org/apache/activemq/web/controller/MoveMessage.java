@@ -24,12 +24,14 @@ import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Moves a message from one to another queue
  */
+@Component
+@RequestScope
 public class MoveMessage extends DestinationFacade implements Controller {
     private String messageId;
     private String destination;
@@ -39,17 +41,17 @@ public class MoveMessage extends DestinationFacade implements Controller {
         super(brokerFacade);
     }
 
-    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws Exception {
         if (messageId != null) {
-            QueueViewMBean queueView = getQueueView();
+            final QueueViewMBean queueView = getQueueView();
             if (queueView != null) {
-            	log.info("Moving message " + getJMSDestination() + "(" + messageId + ")" + " to " + destination);
+            	log.info("Moving message {} ({}) to {}", getJMSDestination(), messageId, destination);
                 queueView.moveMessageTo(messageId, destination);
             } else {
-            	log.warn("No queue named: " + getPhysicalDestinationName());
+            	log.warn("No queue named: {}", getPhysicalDestinationName());
             }
         }
-        return redirectToDestinationView();
+        response.sendRedirect("browse.jsp?JMSDestination=" + getJMSDestination());
     }
 
     public String getMessageId() {
@@ -67,5 +69,4 @@ public class MoveMessage extends DestinationFacade implements Controller {
 	public void setDestination(String destination) {
 		this.destination = destination;
 	}
-
 }
