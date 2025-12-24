@@ -61,6 +61,9 @@ import org.junit.runners.Parameterized;
 public class SendDuplicateFromStoreToDLQTest {
     private static final Logger LOG = LoggerFactory.getLogger(SendDuplicateFromStoreToDLQTest.class);
 
+    // [AMQ-9811] Async ack can lead to test instability
+    private static final Boolean FORCE_CONCURRENTSTOREANDDISPATCHQUEUES = Boolean.FALSE;
+
     @Parameterized.Parameters(name="sendDupToDLQ={1},cacheEnable={2},auditEnabled={3},optimizedDispatch={4}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
@@ -116,6 +119,9 @@ public class SendDuplicateFromStoreToDLQTest {
         broker.getSystemUsage().getMemoryUsage().setLimit(1024l * 1024 * 64);
         KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
         persistenceAdapter.setDirectory(new File(testDataDir, "kahadb"));
+        if(FORCE_CONCURRENTSTOREANDDISPATCHQUEUES != null) {
+            persistenceAdapter.setConcurrentStoreAndDispatchQueues(FORCE_CONCURRENTSTOREANDDISPATCHQUEUES);
+        }
         broker.setPersistenceAdapter(persistenceAdapter);
         broker.addConnector("tcp://localhost:0");
         broker.start();
@@ -135,7 +141,7 @@ public class SendDuplicateFromStoreToDLQTest {
         broker.stop();
     }
 
-    @Test
+    @Test(timeout = 15000)
     public void testSendDuplicateFromStoreToDLQScenario() throws Exception {
         applyPolicy(sendDuplicateFromStoreToDLQEnabled, useCacheEnabled, auditEnabled, optimizedDispatch);
         boolean sendExpected = (sendDuplicateFromStoreToDLQEnabled != null ? sendDuplicateFromStoreToDLQEnabled : new PolicyEntry().isSendDuplicateFromStoreToDLQ());
@@ -145,8 +151,8 @@ public class SendDuplicateFromStoreToDLQTest {
     protected void doProcessSendDuplicateFromStoreToDLQ(boolean sendExpected) throws Exception {
         createQueue("AMQ.8397");
         org.apache.activemq.broker.region.Queue queue = (org.apache.activemq.broker.region.Queue)broker.getDestination(new ActiveMQQueue("AMQ.8397"));
-        assertEquals(Long.valueOf(0l), Long.valueOf(queue.getDestinationStatistics().getMessages().getCount()));
-        assertEquals(Long.valueOf(0l), Long.valueOf(queue.getDestinationStatistics().getDuplicateFromStore().getCount()));
+        assertEquals(Long.valueOf(0L), Long.valueOf(queue.getDestinationStatistics().getMessages().getCount()));
+        assertEquals(Long.valueOf(0L), Long.valueOf(queue.getDestinationStatistics().getDuplicateFromStore().getCount()));
 
         MessageConsumer messageConsumer = session.createConsumer(session.createQueue("AMQ.8397"));
         producer.send(session.createTextMessage("Hello world!"));
@@ -156,7 +162,7 @@ public class SendDuplicateFromStoreToDLQTest {
         boolean found=false;
         Message recvMessage = null;
         do {
-            recvMessage = messageConsumer.receive(200l);
+            recvMessage = messageConsumer.receive(200L);
             if(recvMessage != null) {
                 found = true;
             }
@@ -190,19 +196,27 @@ public class SendDuplicateFromStoreToDLQTest {
                 dlq.getDestinationStatistics().getDuplicateFromStore().getCount());
 
         if(sendExpected) {
-            assertEquals(Long.valueOf(0l), Long.valueOf(queue.getDestinationStatistics().getMessages().getCount()));
-            assertEquals(Long.valueOf(1l), Long.valueOf(queue.getDestinationStatistics().getDuplicateFromStore().getCount()));
-            assertEquals(Long.valueOf(1l), Long.valueOf(dlq.getDestinationStatistics().getMessages().getCount()));
-            assertEquals(Long.valueOf(0l), Long.valueOf(dlq.getDestinationStatistics().getDuplicateFromStore().getCount()));
+            assertEquals(Long.valueOf(0L), Long.valueOf(queue.getDestinationStatistics().getMessages().getCount()));
+            assertEquals(Long.valueOf(1L), Long.valueOf(queue.getDestinationStatistics().getDuplicateFromStore().getCount()));
+            assertEquals(Long.valueOf(1L), Long.valueOf(dlq.getDestinationStatistics().getMessages().getCount()));
+            assertEquals(Long.valueOf(0L), Long.valueOf(dlq.getDestinationStatistics().getDuplicateFromStore().getCount()));
         } else {
-            assertEquals(Long.valueOf(0l), Long.valueOf(queue.getDestinationStatistics().getMessages().getCount()));
-            assertEquals(Long.valueOf(1l), Long.valueOf(queue.getDestinationStatistics().getDuplicateFromStore().getCount()));
-            assertEquals(Long.valueOf(0l), Long.valueOf(dlq.getDestinationStatistics().getMessages().getCount()));
-            assertEquals(Long.valueOf(0l), Long.valueOf(dlq.getDestinationStatistics().getDuplicateFromStore().getCount()));
+            // [AMQ-9811] Retry and delay a bit to allow value to be reflected
+            int maxRetries = 200;
+            int retryCount = 0;
+
+            while(queue.getDestinationStatistics().getMessages().getCount() != 0L && retryCount < maxRetries) {
+                retryCount++;
+                Thread.sleep(50L);
+            }
+            assertEquals(Long.valueOf(0L), Long.valueOf(queue.getDestinationStatistics().getMessages().getCount()));
+            assertEquals(Long.valueOf(1L), Long.valueOf(queue.getDestinationStatistics().getDuplicateFromStore().getCount()));
+            assertEquals(Long.valueOf(0L), Long.valueOf(dlq.getDestinationStatistics().getMessages().getCount()));
+            assertEquals(Long.valueOf(0L), Long.valueOf(dlq.getDestinationStatistics().getDuplicateFromStore().getCount()));
         }
     }
 
-    private PolicyMap applyPolicy(Boolean sendDuplicateFromStoreToDLQEnabled, Boolean useCacheEnabled, Boolean auditEnabled, Boolean optimizedDispatch) {
+    private void applyPolicy(Boolean sendDuplicateFromStoreToDLQEnabled, Boolean useCacheEnabled, Boolean auditEnabled, Boolean optimizedDispatch) {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
 
@@ -222,7 +236,6 @@ public class SendDuplicateFromStoreToDLQTest {
         defaultEntry.setDeadLetterStrategy(new IndividualDeadLetterStrategy());
         policyMap.setDefaultEntry(defaultEntry);
         broker.setDestinationPolicy(policyMap);
-        return policyMap;
     }
 
     private void createQueue(String queueName) throws Exception {
