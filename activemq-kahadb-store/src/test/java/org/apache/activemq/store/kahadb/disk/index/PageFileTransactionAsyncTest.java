@@ -16,15 +16,18 @@
  */
 package org.apache.activemq.store.kahadb.disk.index;
 
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.apache.activemq.store.kahadb.disk.page.PageFile;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.store.kahadb.disk.util.LongMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.util.LinkedList;
 
+@Category(ParallelTest.class)
 public class PageFileTransactionAsyncTest {
 
     @Test(timeout=60000)

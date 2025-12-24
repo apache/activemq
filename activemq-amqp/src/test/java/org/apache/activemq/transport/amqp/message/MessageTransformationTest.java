@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.transport.amqp.JMSInteroperabilityTest;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -43,6 +44,7 @@ import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.message.ProtonJMessage;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -53,6 +55,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Tests some basic encode / decode functionality on the transformers.
  */
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class MessageTransformationTest {
 

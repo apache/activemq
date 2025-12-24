@@ -41,12 +41,15 @@ import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the handling of consumer abort when the AbortSlowAckConsumerStrategy is used.
  */
+@Category(ParallelTest.class)
 public class AmqpSlowReceiverTest extends AmqpClientTestSupport {
 
     private final long DEFAULT_CHECK_PERIOD = 1000;

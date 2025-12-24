@@ -45,9 +45,11 @@ import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class AmqpTransformerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpTransformerTest.class);

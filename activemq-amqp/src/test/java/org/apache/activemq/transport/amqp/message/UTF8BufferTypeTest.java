@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.qpid.proton.codec.AMQPDefinedTypes;
 import org.apache.qpid.proton.codec.DecoderImpl;
 import org.apache.qpid.proton.codec.EncoderImpl;
@@ -33,10 +34,12 @@ import org.apache.qpid.proton.codec.ReadableBuffer;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the UTF8Buffer type encoder
  */
+@Category(ParallelTest.class)
 public class UTF8BufferTypeTest {
 
     private final UTF8BufferType utf8BufferEncoding;
