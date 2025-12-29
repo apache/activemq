@@ -27,9 +27,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.mqtt.MQTTWireFormat;
 import org.apache.activemq.util.ByteSequence;
-import org.eclipse.jetty.websocket.api.Callback;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.Session.Listener.AbstractAutoDemanding;
+import org.eclipse.jetty.ee9.websocket.api.Session;
+import org.eclipse.jetty.ee9.websocket.api.WebSocketAdapter;
+import org.eclipse.jetty.websocket.api.Session.Listener.AutoDemanding;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.codec.CONNACK;
 import org.fusesource.mqtt.codec.CONNECT;
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Implements a simple WebSocket based MQTT Client that can be used for unit testing.
  */
-public class MQTTWSConnection extends AbstractAutoDemanding implements Session.Listener.AutoDemanding {
+public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTWSConnection.class);
 
@@ -253,12 +253,12 @@ public class MQTTWSConnection extends AbstractAutoDemanding implements Session.L
 
     private void sendBytes(ByteSequence payload) throws IOException {
         if (!isWritePartialFrames()) {
-            getSession().sendBinary(ByteBuffer.wrap(payload.data, payload.offset, payload.length), null);
+            getRemote().sendBytes(ByteBuffer.wrap(payload.data, payload.offset, payload.length));
         } else {
-            getSession().sendBinary(ByteBuffer.wrap(
-                payload.data, payload.offset, payload.length / 2), null);
-            getSession().sendBinary(ByteBuffer.wrap(
-                payload.data, payload.offset + payload.length / 2, payload.length / 2), null);
+            getRemote().sendBytes(ByteBuffer.wrap(
+                payload.data, payload.offset, payload.length / 2));
+            getRemote().sendBytes(ByteBuffer.wrap(
+                payload.data, payload.offset + payload.length / 2, payload.length / 2));
         }
     }
 
@@ -276,9 +276,9 @@ public class MQTTWSConnection extends AbstractAutoDemanding implements Session.L
     }
 
     @Override
-    public void onWebSocketOpen(Session session) {
-        super.onWebSocketOpen(session);
-        session.setIdleTimeout(Duration.ZERO);
+    public void onWebSocketConnect(org.eclipse.jetty.ee9.websocket.api.Session session) {
+        super.onWebSocketConnect(session);
+        getSession().setIdleTimeout(Duration.ZERO);
         this.connectLatch.countDown();
     }
 }

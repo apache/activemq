@@ -25,7 +25,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.transport.stomp.StompWireFormat;
-import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.ee9.websocket.api.Session;
+import org.eclipse.jetty.ee9.websocket.api.WebSocketAdapter;
+import org.eclipse.jetty.ee9.websocket.api.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,9 +141,9 @@ public class StompWSConnection extends org.eclipse.jetty.websocket.api.Session.L
     }
 
     @Override
-    public void onWebSocketOpen(Session session) {
-        super.onWebSocketOpen(session);
-        session.setIdleTimeout(Duration.ZERO);
+    public void onWebSocketConnect(org.eclipse.jetty.ee9.websocket.api.Session session) {
+        this.connection = session;
+        this.connection.setIdleTimeout(Duration.ZERO);
         this.connectLatch.countDown();
     }
 
