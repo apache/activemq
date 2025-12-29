@@ -21,13 +21,13 @@
 
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 
-    <link rel="stylesheet" media="screen" href="${pageContext.request.contextPath}/styles/head.css" />
+    <link rel="stylesheet" media="screen" href="#{pageContext.request.contextPath}/styles/head.css" />
 
     <c:if test="${!disableJavaScript}">
-        <script type='text/javascript' src='${pageContext.request.contextPath}/js/common.js'></script>
-        <script type='text/javascript' src='${pageContext.request.contextPath}/js/css.js'></script>
-        <script type='text/javascript' src='${pageContext.request.contextPath}/js/standardista-table-sorting.js'></script>
-        <script type='text/javascript' src='${pageContext.request.contextPath}/js/prettify.js'></script>
-        <script type='text/javascript' src='${pageContext.request.contextPath}/js/head.js'></script>
+        <script type='text/javascript' src='#{pageContext.request.contextPath}/js/common.js'></script>
+        <script type='text/javascript' src='#{pageContext.request.contextPath}/js/css.js'></script>
+        <script type='text/javascript' src='#{pageContext.request.contextPath}/js/standardista-table-sorting.js'></script>
+        <script type='text/javascript' src='#{pageContext.request.contextPath}/js/prettify.js'></script>
+        <script type='text/javascript' src='#{pageContext.request.contextPath}/js/head.js'></script>
     </c:if>
 

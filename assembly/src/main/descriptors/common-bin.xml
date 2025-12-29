@@ -305,7 +305,7 @@
         <include>org.eclipse.jetty:apache-jstl</include>
         <include>jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api</include>
         <include>org.eclipse.jetty.ee9:jetty-ee9-glassfish-jstl</include>
-        <!-- include>org.glassfish.web:jakarta.servlet.jsp.jstl</include -->
+        <include>org.glassfish.web:jakarta.servlet.jsp.jstl</include>
         <!-- include>org.apache.taglibs:taglibs-standard-spec</include -->
         <!-- jstl and el impl -->
         <include>org.mortbay.jasper:apache-el</include>

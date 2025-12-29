@@ -129,6 +129,18 @@
       <url-pattern>*.jsp</url-pattern>
       <include-prelude>/WEB-INF/jspf/headertags.jspf</include-prelude>
     </jsp-property-group>
+    <taglib>
+        <taglib-uri>jakarta.tags.core</taglib-uri>
+        <taglib-location>/META-INF/c.tld</taglib-location>
+    </taglib>
+    <taglib>
+        <taglib-uri>jakarta.tags.fmt</taglib-uri>
+        <taglib-location>/META-INF/fmt.tld</taglib-location>
+    </taglib>
+    <taglib>
+        <taglib-uri>jakarta.tags.functions</taglib-uri>
+        <taglib-location>/META-INF/fn.tld</taglib-location>
+    </taglib>
   </jsp-config>
   
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~ -->
