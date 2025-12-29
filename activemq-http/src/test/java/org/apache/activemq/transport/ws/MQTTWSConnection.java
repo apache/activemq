@@ -27,9 +27,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.mqtt.MQTTWireFormat;
 import org.apache.activemq.util.ByteSequence;
-import org.eclipse.jetty.ee9.websocket.api.Session;
-import org.eclipse.jetty.ee9.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.api.Session.Listener.AutoDemanding;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.codec.CONNACK;
 import org.fusesource.mqtt.codec.CONNECT;
@@ -49,7 +48,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Implements a simple WebSocket based MQTT Client that can be used for unit testing.
  */
-public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding {
+public class MQTTWSConnection extends Session.Listener.AbstractAutoDemanding implements Session.Listener.AutoDemanding {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTWSConnection.class);
 
@@ -253,12 +252,12 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
 
     private void sendBytes(ByteSequence payload) throws IOException {
         if (!isWritePartialFrames()) {
-            getRemote().sendBytes(ByteBuffer.wrap(payload.data, payload.offset, payload.length));
+            getSession().sendBinary(ByteBuffer.wrap(payload.data, payload.offset, payload.length), null);
         } else {
-            getRemote().sendBytes(ByteBuffer.wrap(
-                payload.data, payload.offset, payload.length / 2));
-            getRemote().sendBytes(ByteBuffer.wrap(
-                payload.data, payload.offset + payload.length / 2, payload.length / 2));
+            getSession().sendBinary(ByteBuffer.wrap(
+                    payload.data, payload.offset, payload.length / 2), null);
+            getSession().sendBinary(ByteBuffer.wrap(
+                    payload.data, payload.offset + payload.length / 2, payload.length / 2), null);
         }
     }
 
@@ -275,10 +274,9 @@ public class MQTTWSConnection extends WebSocketAdapter implements AutoDemanding 
         this.closeMessage = reason;
     }
 
-    @Override
-    public void onWebSocketConnect(org.eclipse.jetty.ee9.websocket.api.Session session) {
-        super.onWebSocketConnect(session);
-        getSession().setIdleTimeout(Duration.ZERO);
+    public void onWebSocketOpen(Session session) {
+        super.onWebSocketOpen(session);
+        session.setIdleTimeout(Duration.ZERO);
         this.connectLatch.countDown();
     }
 }

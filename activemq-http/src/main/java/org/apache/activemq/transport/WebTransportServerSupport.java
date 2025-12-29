@@ -26,6 +26,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.ee9.nested.ServletConstraint;
 import org.eclipse.jetty.ee9.security.ConstraintMapping;
 import org.eclipse.jetty.ee9.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.Constraint;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.resource.ResourceFactory;
@@ -125,8 +126,9 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
         mapping.setPathSpec("/");
         securityHandler.addConstraintMapping(mapping);
 
-        constraint = new Constraint();
+        var constraint = new ServletConstraint();
         constraint.setName("allow");
+
         mapping = new ConstraintMapping();
         mapping.setConstraint(constraint);
         mapping.setMethodOmissions(new String[]{ "TRACE" });
