@@ -26,19 +26,16 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.transport.stomp.StompWireFormat;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * STOMP over WS based Connection class
  */
-public class StompWSConnection extends WebSocketAdapter implements WebSocketListener {
+public class StompWSConnection extends org.eclipse.jetty.websocket.api.Session.Listener.AbstractAutoDemanding implements Session.Listener.AutoDemanding {
 
     private static final Logger LOG = LoggerFactory.getLogger(StompWSConnection.class);
 
-    private Session connection;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
 
     private final BlockingQueue<String> prefetch = new LinkedBlockingDeque<String>();
@@ -47,36 +44,37 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
     private int closeCode = -1;
     private String closeMessage;
 
-    @Override
     public boolean isConnected() {
-        return connection != null ? connection.isOpen() : false;
+        Session session = getSession();
+        return session != null && session.isOpen();
     }
 
     public void close() {
-        if (connection != null) {
-            connection.close();
+        Session session = getSession();
+        if (session != null) {
+            session.close();
         }
     }
 
     protected Session getConnection() {
-        return connection;
+        return getSession();
     }
 
     //---- Send methods ------------------------------------------------------//
 
     public synchronized void sendRawFrame(String rawFrame) throws Exception {
         checkConnected();
-        connection.getRemote().sendString(rawFrame);
+        getSession().sendText(rawFrame, null);
     }
 
     public synchronized void sendFrame(StompFrame frame) throws Exception {
         checkConnected();
-        connection.getRemote().sendString(wireFormat.marshalToString(frame));
+        getSession().sendText(wireFormat.marshalToString(frame), null);
     }
 
     public synchronized void keepAlive() throws Exception {
         checkConnected();
-        connection.getRemote().sendString("\n");
+        getSession().sendText("\n", null);
     }
 
     //----- Receive methods --------------------------------------------------//
@@ -136,22 +134,20 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
     public void onWebSocketClose(int statusCode, String reason) {
         LOG.trace("STOMP WS Connection closed, code:{} message:{}", statusCode, reason);
 
-        this.connection = null;
         this.closeCode = statusCode;
         this.closeMessage = reason;
     }
 
-    @Override
-    public void onWebSocketConnect(org.eclipse.jetty.websocket.api.Session session) {
-        this.connection = session;
-        this.connection.setIdleTimeout(Duration.ZERO);
+    public void onWebSocketOpen(Session session) {
+        super.onWebSocketOpen(session);
+        session.setIdleTimeout(Duration.ZERO);
         this.connectLatch.countDown();
     }
 
     //----- Internal implementation ------------------------------------------//
 
     private void checkConnected() throws IOException {
-        if (!isConnected()) {
+        if (!isOpen()) {
             throw new IOException("STOMP WS Connection is closed.");
         }
     }

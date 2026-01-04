@@ -36,7 +36,8 @@ import org.apache.activemq.util.Wait;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.util.resource.ResourceFactory;
+import org.eclipse.jetty.ee9.webapp.WebAppContext;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -77,8 +78,9 @@ public class JettyTestSupport {
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(port);
         WebAppContext context = new WebAppContext();
+        ResourceFactory resourceFactory = ResourceFactory.of(context);
 
-        context.setResourceBase("src/main/webapp");
+        context.setBaseResource(resourceFactory.newResource("src/main/webapp"));
         context.setContextPath("/");
         context.setServer(server);
         server.setHandler(context);

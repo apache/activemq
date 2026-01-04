@@ -52,20 +52,18 @@
         </configuration>
       </plugin>
       <plugin>
-          <groupId>${jetty.maven.groupid}</groupId>
-        <artifactId>jetty-maven-plugin</artifactId>
+        <groupId>org.eclipse.jetty.ee9</groupId>
+        <artifactId>jetty-ee9-maven-plugin</artifactId>
         <version>${jetty-version}</version>
         <configuration>
-          <connectors>
-            <connector implementation="org.eclipse.jetty.server.ServerConnector">
-              <port>${jetty.port}</port>
-              <maxIdleTime>60000</maxIdleTime>
-            </connector>
-          </connectors>
-
-          <webAppConfig>
+          <httpConnector>
+            <port>${jetty.port}</port>
+            <idleTimeout>60000</idleTimeout>
+          </httpConnector>
+          <scan>10</scan>
+          <webApp>
             <contextPath>/</contextPath>
-          </webAppConfig>
+          </webApp>
 
           <systemProperties>
             <!-- enable easy connection to JConsole -->
@@ -100,7 +98,6 @@
                         </systemProperty>
             -->
           </systemProperties>
-          <scanIntervalSeconds>10</scanIntervalSeconds>
         </configuration>
       </plugin>
       <plugin>
@@ -249,8 +246,18 @@
 
     <!-- web container -->
     <dependency>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-webapp</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-rewrite</artifactId>
       <scope>test</scope>
     </dependency>
      <dependency>
@@ -283,18 +290,27 @@
       <scope>provided</scope>
     </dependency>
     
-     <!-- Tag Libs -->
+    <!-- Tag Libs -->
+    <!--
+      These two should be available either in the WAR itself or from the container. We can't configure
+      jetty-ee9-maven-plugin with <useProvidedScope>true</useProvidedScope> because we don't need ALL provided
+      dependencies. But we shouldn't build the WAR with these two included either, because _full_ web container
+      may provide own taglibs... Not me to decide ;)
+    -->
     <dependency>
       <groupId>jakarta.servlet.jsp.jstl</groupId>
       <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
       <version>3.0.0</version>
-      <scope>provided</scope>
+<!--      <scope>provided</scope>-->
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-glassfish-jstl</artifactId>
     </dependency>
     <dependency>
       <groupId>org.glassfish.web</groupId>
       <artifactId>jakarta.servlet.jsp.jstl</artifactId>
       <version>3.0.1</version>
-      <scope>provided</scope>
     </dependency>
     <!--
     <dependency>
@@ -330,8 +346,8 @@
     </dependency>
     
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>apache-jsp</artifactId>
+      <groupId>org.eclipse.jetty.ee9</groupId>
+      <artifactId>jetty-ee9-apache-jsp</artifactId>
       <scope>provided</scope>
       <exclusions>
           <exclusion>
