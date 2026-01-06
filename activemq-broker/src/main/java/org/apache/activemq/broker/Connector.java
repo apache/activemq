@@ -20,6 +20,10 @@ import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.ConnectorStatistics;
 import org.apache.activemq.command.BrokerInfo;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 /**
  * A connector creates and manages client connections that talk to the Broker.
  * 
@@ -62,18 +66,20 @@ public interface Connector extends Service {
      * @return true if clients should be updated when
      * a broker is removed from a broker
      */
-    public boolean  isUpdateClusterClientsOnRemove();
+    public boolean isUpdateClusterClientsOnRemove();
 
+    @Deprecated(forRemoval = true)
     int connectionCount();
 
     /**
      * If enabled, older connections with the same clientID are stopped
+     *
      * @return true/false if link stealing is enabled
      */
     boolean isAllowLinkStealing();
 
     /**
-     * @return The comma separated string of regex patterns to match 
+     * @return The comma separated string of regex patterns to match
      * broker names for cluster client updates
      */
     String getUpdateClusterFilter();
@@ -86,4 +92,23 @@ public interface Connector extends Service {
      * @return true if connector is started
      */
     public boolean isStarted();
+
+    public URI getConnectUri() throws IOException, URISyntaxException;
+
+    public URI getPublishableConnectURI() throws Exception;
+
+    public boolean isEnableStatusMonitor();
+
+    public URI getUri();
+
+    public URI getDiscoveryUri();
+
+    public boolean isAuditNetworkProducers();
+
+    public int getMaximumProducersAllowedPerConnection();
+
+    public int getMaximumConsumersAllowedPerConnection();
+
+    public int getConnectionCount();
+
 }
