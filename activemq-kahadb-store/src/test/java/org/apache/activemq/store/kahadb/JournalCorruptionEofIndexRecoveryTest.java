@@ -427,31 +427,28 @@ public class JournalCorruptionEofIndexRecoveryTest {
     private void corruptOrderIndex(final int num, final int size) throws Exception {
         //This is because of AMQ-6097, now that the MessageOrderIndex stores the size in the Location,
         //we need to corrupt that value as well
-        final KahaDBStore kahaDbStore = (KahaDBStore) ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore();
-        kahaDbStore.indexLock.writeLock().lock();
+        final KahaDBStore kahaDbStore = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore();
+        kahaDbStore.indexLock.lock();
         try {
-            kahaDbStore.pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                @Override
-                public void execute(Transaction tx) throws IOException {
-                    StoredDestination sd = kahaDbStore.getStoredDestination(kahaDbStore.convert(
-                            (ActiveMQQueue)destination), tx);
-                    int i = 1;
-                    for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext();) {
-                        Entry<Long, MessageKeys> entry = iterator.next();
-                        if (i == num) {
-                            //change the size value to the wrong size
-                            sd.orderIndex.get(tx, entry.getKey());
-                            MessageKeys messageKeys = entry.getValue();
-                            messageKeys.location.setSize(size);
-                            sd.orderIndex.put(tx, sd.orderIndex.lastGetPriority(), entry.getKey(), messageKeys);
-                            break;
-                        }
-                        i++;
+            kahaDbStore.pageFile.tx().execute(tx -> {
+                StoredDestination sd = kahaDbStore.getStoredDestination(kahaDbStore.convert(
+                    (ActiveMQQueue)destination), tx);
+                int i = 1;
+                for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext();) {
+                    Entry<Long, MessageKeys> entry = iterator.next();
+                    if (i == num) {
+                        //change the size value to the wrong size
+                        sd.orderIndex.get(tx, entry.getKey());
+                        MessageKeys messageKeys = entry.getValue();
+                        messageKeys.location.setSize(size);
+                        sd.orderIndex.put(tx, sd.orderIndex.lastGetPriority(), entry.getKey(), messageKeys);
+                        break;
                     }
+                    i++;
                 }
             });
         } finally {
-            kahaDbStore.indexLock.writeLock().unlock();
+            kahaDbStore.indexLock.unlock();
         }
     }
 
