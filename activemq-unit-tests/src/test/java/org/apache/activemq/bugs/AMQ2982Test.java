@@ -62,11 +62,11 @@ public class AMQ2982Test {
 
         public int getFileMapSize() throws IOException {
             // ensure save memory publishing, use the right lock
-            indexLock.readLock().lock();
+            indexLock.lock();
             try {
                 return getJournal().getFileMap().size();
             } finally {
-                indexLock.readLock().unlock();
+                indexLock.unlock();
             }
         }
     }
