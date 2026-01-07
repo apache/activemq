@@ -42,17 +42,19 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class JournalCorruptionIndexRecoveryTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JournalCorruptionIndexRecoveryTest.class);
 
-    private final String KAHADB_DIRECTORY = "target/activemq-data/";
     private final String payload = new String(new byte[1024]);
 
     private ActiveMQConnectionFactory cf = null;
@@ -92,7 +94,6 @@ public class JournalCorruptionIndexRecoveryTest {
         broker.setDeleteAllMessagesOnStartup(delete);
         broker.setPersistent(true);
         broker.setUseJmx(true);
-        broker.setDataDirectory(KAHADB_DIRECTORY);
         broker.addConnector("tcp://localhost:0");
 
         configurePersistence(broker);

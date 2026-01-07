@@ -23,15 +23,18 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the single threaded DataFileAppender class.
  */
+@Category(ParallelTest.class)
 public class TargetedDataFileAppenderTest {
 
     private Journal dataManager;

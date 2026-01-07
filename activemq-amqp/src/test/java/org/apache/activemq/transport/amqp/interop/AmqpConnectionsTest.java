@@ -40,6 +40,7 @@ import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.activemq.transport.amqp.client.AmqpValidator;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
@@ -48,11 +49,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test broker handling of AMQP connections with various configurations.
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AmqpConnectionsTest extends AmqpClientTestSupport {
 
     private static final Symbol QUEUE_PREFIX = Symbol.valueOf("queue-prefix");

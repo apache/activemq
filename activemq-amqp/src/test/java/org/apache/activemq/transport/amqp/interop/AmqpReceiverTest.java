@@ -41,6 +41,7 @@ import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.activemq.transport.amqp.client.AmqpUnknownFilterType;
 import org.apache.activemq.transport.amqp.client.AmqpValidator;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.activemq.util.Wait;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -54,11 +55,13 @@ import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test various behaviors of AMQP receivers with the broker.
  */
 @RunWith(ActiveMQTestRunner.class)
+@Category(ParallelTest.class)
 public class AmqpReceiverTest extends AmqpClientTestSupport {
 
     @Override

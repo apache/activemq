@@ -41,12 +41,15 @@ import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test for scheduled message support using AMQP message annotations.
  */
+@Category(ParallelTest.class)
 public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
 
     @Override
