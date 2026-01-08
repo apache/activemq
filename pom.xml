@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>35</version>
+    <version>37</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -31,7 +31,7 @@
   <inceptionYear>2005</inceptionYear>
 
   <properties>
-    <maven.compiler.target>17</maven.compiler.target>
+    <javaVersion>17</javaVersion>
 
     <surefire.argLine></surefire.argLine>
     <maven.surefire.allow.securitymanager>-Djava.security.manager=allow</maven.surefire.allow.securitymanager>
