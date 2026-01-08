@@ -34,8 +34,8 @@ import jakarta.jms.TextMessage;
 import javax.management.ObjectName;
 
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.BufferingResponseListener;
+import org.eclipse.jetty.client.Result;
+import org.eclipse.jetty.client.BufferingResponseListener;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
@@ -149,23 +149,25 @@ public class RestTest extends JettyTestSupport {
         producer.send(msg2);
         LOG.info("message 2 sent");
 
-        HttpClient httpClient = new HttpClient();
-        httpClient.start();
-
         final StringBuffer buf = new StringBuffer();
         final CountDownLatch latch = new CountDownLatch(1);
-        httpClient.newRequest("http://localhost:" + port + "/message/test?readTimeout=1000&type=queue")
-            .header("selector", "test=2").send(new BufferingResponseListener() {
-            @Override
-            public void onComplete(Result result) {
-                buf.append(getContentAsString());
-                latch.countDown();
-            }
-        });
-        latch.await();
+
+        try(HttpClient httpClient = new HttpClient()) {
+            httpClient.start();
+            httpClient.newRequest("http://localhost:" + port + "/message/test?readTimeout=1000&type=queue")
+                .headers(headers -> headers
+                        .put("selector", "test=2"))
+                .send(new BufferingResponseListener() {
+                @Override
+                public void onComplete(Result result) {
+                    buf.append(getContentAsString());
+                    latch.countDown();
+                }
+            });
+            latch.await();
+        }
         assertEquals("test2", buf.toString());
     }
-
 
     // test for https://issues.apache.org/activemq/browse/AMQ-2827
     @Test(timeout = 15 * 1000)
@@ -270,23 +272,25 @@ public class RestTest extends JettyTestSupport {
     public void testProperties() throws Exception {
         int port = getPort();
 
-        HttpClient httpClient = new HttpClient();
-        httpClient.start();
-
         final CountDownLatch latch = new CountDownLatch(1);
         final StringBuffer buf = new StringBuffer();
         final AtomicInteger status = new AtomicInteger();
-        httpClient.newRequest("http://localhost:" + port + "/message/testPost?type=queue&property=value")
-           .method(HttpMethod.POST).send(new BufferingResponseListener() {
-            @Override
-            public void onComplete(Result result) {
-                status.getAndSet(result.getResponse().getStatus());
-                buf.append(getContentAsString());
-                latch.countDown();
-            }
-        });
 
-        latch.await();
+        try(HttpClient httpClient = new HttpClient()) {
+            httpClient.start();
+
+            httpClient.newRequest("http://localhost:" + port + "/message/testPost?type=queue&property=value")
+               .method(HttpMethod.POST).send(new BufferingResponseListener() {
+                @Override
+                public void onComplete(Result result) {
+                    status.getAndSet(result.getResponse().getStatus());
+                    buf.append(getContentAsString());
+                    latch.countDown();
+                }
+            });
+            latch.await();
+        }
+
         assertTrue("success status", HttpStatus.isSuccess(status.get()));
 
         final CountDownLatch latch2 = new CountDownLatch(1);
@@ -294,16 +298,19 @@ public class RestTest extends JettyTestSupport {
         final AtomicInteger status2 = new AtomicInteger();
 
         final HttpFields.Mutable responseFields = HttpFields.build();
-        httpClient.newRequest("http://localhost:" + port + "/message/testPost?readTimeout=1000&type=Queue")
-           .method(HttpMethod.GET).send(new BufferingResponseListener() {
-            @Override
-            public void onComplete(Result result) {
-                responseFields.add(result.getResponse().getHeaders());
-                status2.getAndSet(result.getResponse().getStatus());
-                buf2.append(getContentAsString());
-                latch2.countDown();
-            }
-        });
+        try(HttpClient httpClient = new HttpClient()) {
+            httpClient.start();
+            httpClient.newRequest("http://localhost:" + port + "/message/testPost?readTimeout=1000&type=Queue")
+                .method(HttpMethod.GET).send(new BufferingResponseListener() {
+                @Override
+                public void onComplete(Result result) {
+                    responseFields.add(result.getResponse().getHeaders());
+                    status2.getAndSet(result.getResponse().getStatus());
+                    buf2.append(getContentAsString());
+                    latch2.countDown();
+                }
+                });
+        }
 
         latch2.await();
         assertTrue("success status", HttpStatus.isSuccess(status2.get()));
@@ -318,25 +325,25 @@ public class RestTest extends JettyTestSupport {
     public void testAuth() throws Exception {
         int port = getPort();
 
-        HttpClient httpClient = new HttpClient();
-        httpClient.start();
-
         final CountDownLatch latch = new CountDownLatch(1);
         final StringBuffer buf = new StringBuffer();
         final AtomicInteger status = new AtomicInteger();
-        httpClient.newRequest("http://localhost:" + port + "/message/testPost?type=queue")
-            .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-           .method(HttpMethod.POST).send(new BufferingResponseListener() {
-            @Override
-            public void onComplete(Result result) {
-                status.getAndSet(result.getResponse().getStatus());
-                buf.append(getContentAsString());
-                latch.countDown();
-            }
-        });
 
-
-        latch.await();
+        try(HttpClient httpClient = new HttpClient()) {
+            httpClient.start();
+            httpClient.newRequest("http://localhost:" + port + "/message/testPost?type=queue")
+               .headers(headers -> headers
+                    .put("Authorization", "Basic YWRtaW46YWRtaW4="))
+               .method(HttpMethod.POST).send(new BufferingResponseListener() {
+                @Override
+                public void onComplete(Result result) {
+                    status.getAndSet(result.getResponse().getStatus());
+                    buf.append(getContentAsString());
+                    latch.countDown();
+                }
+            });
+            latch.await();
+        }
         assertTrue("success status", HttpStatus.isSuccess(status.get()));
     }
 

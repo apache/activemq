@@ -15,11 +15,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-
 <web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
-         version="5.0">
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         metadata-complete="false"
+         version="6.0">
 
   <description>
     Apache ActiveMQ Web Console
@@ -129,6 +129,18 @@
       <url-pattern>*.jsp</url-pattern>
       <include-prelude>/WEB-INF/jspf/headertags.jspf</include-prelude>
     </jsp-property-group>
+    <taglib>
+        <taglib-uri>jakarta.tags.core</taglib-uri>
+        <taglib-location>/META-INF/c.tld</taglib-location>
+    </taglib>
+    <taglib>
+        <taglib-uri>jakarta.tags.fmt</taglib-uri>
+        <taglib-location>/META-INF/fmt.tld</taglib-location>
+    </taglib>
+    <taglib>
+        <taglib-uri>jakarta.tags.functions</taglib-uri>
+        <taglib-location>/META-INF/fn.tld</taglib-location>
+    </taglib>
   </jsp-config>
   
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~ -->
