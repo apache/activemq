@@ -199,11 +199,22 @@
     </pluginManagement>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
-          <argLine>${surefire.argLine}</argLine>
+          <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
           <runOrder>alphabetical</runOrder>
            <systemPropertyValues>
               <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>

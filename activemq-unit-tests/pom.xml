@@ -279,7 +279,7 @@
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-inline</artifactId>
+      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -396,6 +396,17 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${surefire.version}</version>
         <configuration>
@@ -407,6 +418,7 @@
           <runOrder>alphabetical</runOrder>
           <reportFormat>plain</reportFormat>
           <failIfNoTests>false</failIfNoTests>
+          <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
           <excludedGroups>org.apache.activemq.test.annotations.ParallelTest</excludedGroups>
           <systemPropertyVariables>
             <org.apache.activemq.default.directory.prefix>${project.build.directory}/</org.apache.activemq.default.directory.prefix>
@@ -472,6 +484,7 @@
               <forkedProcessTimeoutInSeconds>900</forkedProcessTimeoutInSeconds>     <!-- max time tests may run -->
               <forkedProcessExitTimeoutInSeconds>30</forkedProcessExitTimeoutInSeconds> <!-- max time JVM may hang after tests -->
               <failIfNoTests>false</failIfNoTests>
+              <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
               <systemPropertyVariables>
                 <org.apache.activemq.default.directory.prefix>${project.build.directory}/parallel-tests-${surefire.forkNumber}/</org.apache.activemq.default.directory.prefix>
                 <!-- when running tests in parallel in the CI (quite slow) we need to bump the wireformat negotiation timeout (5s by default) -->
