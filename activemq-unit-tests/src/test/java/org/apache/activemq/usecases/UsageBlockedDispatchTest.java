@@ -26,6 +26,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.activemq.util.Wait;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
@@ -153,6 +154,8 @@ public class UsageBlockedDispatchTest extends TestSupport {
         logger.addAppender(appender);
 
         try {
+
+            assertTrue("Timed out waiting for cursor to block", Wait.waitFor(() -> gotExpectedLogEvent.get()));
 
             MessageConsumer noDispatchConsumer = consumerSession.createConsumer(shouldBeStuckForDispatch);
 

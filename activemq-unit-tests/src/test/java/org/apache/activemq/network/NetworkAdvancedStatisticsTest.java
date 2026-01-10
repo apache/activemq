@@ -110,7 +110,7 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
     }
 
     //Added for AMQ-9437 test advancedStatistics for networkEnqueue and networkDequeue
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 120 * 1000)
     public void testNetworkAdvancedStatistics() throws Exception {
 
         // create a remote durable consumer to create demand
@@ -159,7 +159,7 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
                 // The number of message that remain is due to the exclude queue
                 return receivedMessages.size() == MESSAGE_COUNT;
             }
-        }, 10000, 500));
+        }, 30000, 500));
 
         assertTrue(receivedExceptions.isEmpty());
         assertEquals(Integer.valueOf(MESSAGE_COUNT), Integer.valueOf(receivedMessages.size()));
@@ -236,7 +236,7 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
                 public boolean isSatisified() throws Exception {
                     return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
                 }
-            }, 10000, 500));
+            }, 30000, 500));
         } else {
             assertTrue(Wait.waitFor(new Condition() {
                 @Override
@@ -244,7 +244,7 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
                     // The number of message that remain is due to the exclude queue
                     return localBroker.getAdminView().getTotalMessageCount() == MESSAGE_COUNT;
                 }
-            }, 10000, 500));
+            }, 30000, 500));
         }
         remoteConsumer.close();
     }

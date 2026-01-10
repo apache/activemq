@@ -125,6 +125,7 @@ public class ConnectionPool implements ExceptionListener {
                 connection.start();
             } catch (JMSException e) {
                 started.set(false);
+                setHasExpired(true);
                 if (isReconnectOnException()) {
                     close();
                 }
@@ -377,6 +378,7 @@ public class ConnectionPool implements ExceptionListener {
 
     @Override
     public void onException(JMSException exception) {
+        setHasExpired(true);
         if (isReconnectOnException()) {
             close();
         }
