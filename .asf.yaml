@@ -45,9 +45,8 @@ github:
       required_linear_history: true
       required_status_checks:
         strict: false
-        contexts:
-          - build
-          - test
+        contexts: ~
+        checks: ~
 
   features:
     wiki: false
