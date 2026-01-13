@@ -74,7 +74,7 @@ public class NIOSSLLoadTest {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
-        connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=TLS_RSA_WITH_AES_256_CBC_SHA256");
+        connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256");
         broker.start();
         broker.waitUntilStarted();
 
