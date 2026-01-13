@@ -225,14 +225,22 @@ public class StompCompositeDestinationTest extends StompTestSupport {
             }
         }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(150)));
 
-        QueueViewMBean viewOfA = getProxyToQueue(destinationA);
-        QueueViewMBean viewOfB = getProxyToQueue(destinationB);
+        final QueueViewMBean viewOfA = getProxyToQueue(destinationA);
+        final QueueViewMBean viewOfB = getProxyToQueue(destinationB);
 
         assertNotNull(viewOfA);
         assertNotNull(viewOfB);
 
-        assertEquals(1, viewOfA.getQueueSize());
-        assertEquals(1, viewOfB.getQueueSize());
+        assertTrue("Queues should each have 1 message", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                try {
+                    return viewOfA.getQueueSize() == 1 && viewOfB.getQueueSize() == 1;
+                } catch (Exception ignored) {
+                    return false;
+                }
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(150)));
 
         stompConnection.disconnect();
     }
