@@ -348,22 +348,37 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
     public void testBrokerZeroPrefetchConfigWithConsumerControl() throws Exception {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(brokerZeroQueue);
+        final ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(brokerZeroQueue);
+
+        // Wait for broker subscription to be created and policy applied
+        final ActiveMQDestination transformedDest = ActiveMQDestination.transform(brokerZeroQueue);
+        org.apache.activemq.util.Wait.waitFor(new org.apache.activemq.util.Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getRegionBroker().getDestinationMap().get(transformedDest) != null
+                    && !broker.getRegionBroker().getDestinationMap().get(transformedDest).getConsumers().isEmpty();
+            }
+        }, 5000, 100);
+
         assertEquals("broker config prefetch in effect", 0, consumer.info.getCurrentPrefetchSize());
 
         // verify sub view broker
         Subscription sub =
-                broker.getRegionBroker().getDestinationMap().get(ActiveMQDestination.transform(brokerZeroQueue)).getConsumers().get(0);
+                broker.getRegionBroker().getDestinationMap().get(transformedDest).getConsumers().get(0);
         assertEquals("broker sub prefetch is correct", 0, sub.getConsumerInfo().getCurrentPrefetchSize());
 
         // manipulate Prefetch (like failover and stomp)
         ConsumerControl consumerControl = new ConsumerControl();
         consumerControl.setConsumerId(consumer.info.getConsumerId());
-        consumerControl.setDestination(ActiveMQDestination.transform(brokerZeroQueue));
+        consumerControl.setDestination(transformedDest);
         consumerControl.setPrefetch(1000); // default for a q
 
         Object reply = ((ActiveMQConnection) connection).getTransport().request(consumerControl);
         assertTrue("good request", !(reply instanceof ExceptionResponse));
+
+        // Wait for the ConsumerControl to be processed
+        Thread.sleep(500);
+
         assertEquals("broker config prefetch in effect", 0, consumer.info.getCurrentPrefetchSize());
         assertEquals("broker sub prefetch is correct", 0, sub.getConsumerInfo().getCurrentPrefetchSize());
     }

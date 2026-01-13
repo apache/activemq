@@ -42,12 +42,21 @@ public class NIOJmsSendAndReceiveTest extends JmsTopicSendReceiveWithTwoConnecti
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() {
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(getBrokerURL());
+        // Use the actual bound URI instead of the bind URI with port 0
+        String connectUrl = getBrokerURL();
+        try {
+            if (broker != null && !broker.getTransportConnectors().isEmpty()) {
+                connectUrl = broker.getTransportConnectors().get(0).getPublishableConnectString();
+            }
+        } catch (Exception e) {
+            // Fall back to bind URL if we can't get the actual URL
+        }
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(connectUrl);
         return connectionFactory;
     }
 
     protected String getBrokerURL() {
-        return "nio://localhost:61616";
+        return "nio://localhost:0";
     }
 
     protected BrokerService createBroker() throws Exception {

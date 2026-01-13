@@ -104,7 +104,6 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
                     }
                 }
             });
-            jmsContext.start();
 
             Message message = ActiveMQJMS2TestSupport.generateMessage(jmsContext, "text", messagePayload);
 
@@ -126,6 +125,9 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
                 assertEquals(Long.valueOf(2), Long.valueOf(localQueueViewMBean.getEnqueueCount()));
                 break;
             }
+
+            // Start consuming after sends to avoid concurrent producer/consumer use of the same JMSContext.
+            jmsContext.start();
 
             assertTrue("Did not receive all messages in time", countDownLatch.await(10, TimeUnit.SECONDS));
 

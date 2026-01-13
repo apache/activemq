@@ -22,6 +22,6 @@ public class AutoNIOPersistentSendAndReceiveTest extends NIOPersistentSendAndRec
 
     @Override
     protected String getBrokerURL() {
-        return "auto+nio://localhost:61616";
+        return "auto+nio://localhost:0";
     }
 }
