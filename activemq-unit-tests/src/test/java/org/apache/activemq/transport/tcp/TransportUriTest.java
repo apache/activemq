@@ -24,6 +24,7 @@ import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,7 +174,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
 
     @Override
     protected void setUp() throws Exception {
-        bindAddress = "tcp://localhost:61616";
+        bindAddress = "tcp://localhost:0";
         super.setUp();
     }
 
@@ -196,6 +197,15 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         answer.setPersistent(isPersistent());
         answer.addConnector(bindAddress);
         return answer;
+    }
+
+    @Override
+    protected void startBroker() throws Exception {
+        super.startBroker();
+        if (broker != null && !broker.getTransportConnectors().isEmpty()) {
+            TransportConnector connector = broker.getTransportConnectors().get(0);
+            bindAddress = connector.getConnectUri().toString();
+        }
     }
 
     public static Test suite() {

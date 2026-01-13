@@ -110,11 +110,17 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
         return bridge;
     }
 
-    public TransportConnection getDuplexBridgeConnectionFromRemote() {
-        TransportConnector transportConnector = remoteBroker.getTransportConnectorByScheme("tcp");
+    public TransportConnection getDuplexBridgeConnectionFromRemote() throws Exception {
+        final TransportConnector transportConnector = remoteBroker.getTransportConnectorByScheme("tcp");
+        assertTrue("Timed out waiting for duplex bridge connection",
+                Wait.waitFor(new Wait.Condition() {
+                    @Override
+                    public boolean isSatisified() {
+                        return !transportConnector.getConnections().isEmpty();
+                    }
+                }));
         CopyOnWriteArrayList<TransportConnection> transportConnections = transportConnector.getConnections();
-        TransportConnection duplexBridgeConnectionFromRemote = transportConnections.get(0);
-        return duplexBridgeConnectionFromRemote;
+        return transportConnections.get(0);
     }
 
     @Override
