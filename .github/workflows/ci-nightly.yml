@@ -66,4 +66,4 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
       - name: Test
-        run: mvn -B -e -fae test
+        run: mvn -B -e -fae verify
