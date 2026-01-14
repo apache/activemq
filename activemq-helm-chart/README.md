@@ -1,0 +1,138 @@
+# ActiveMQ Helm Chart
+
+A Helm chart for deploying Apache ActiveMQ on Kubernetes.
+
+## Introduction
+
+This chart bootstraps an ActiveMQ deployment on a Kubernetes cluster using the Helm package manager.
+
+## Prerequisites
+
+- Kubernetes 1.19+
+- Helm 3.0+
+- PV provisioner support in the underlying infrastructure (if persistence is enabled)
+
+## Installing the Chart
+
+To install the chart with the release name `my-activemq`:
+
+```bash
+helm install my-activemq .
+```
+
+## Uninstalling the Chart
+
+To uninstall/delete the `my-activemq` deployment:
+
+```bash
+helm uninstall my-activemq
+```
+
+## Configuration
+
+The following table lists the configurable parameters of the ActiveMQ chart and their default values.
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `replicaCount` | Number of replicas | `1` |
+| `image.repository` | ActiveMQ image repository | `apache/activemq-classic` |
+| `image.tag` | ActiveMQ image tag | `latest` |
+| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
+| `auth.username` | ActiveMQ admin username | `admin` |
+| `auth.password` | ActiveMQ admin password | `changeme` |
+| `service.type` | Kubernetes service type | `ClusterIP` |
+| `service.port` | OpenWire service port | `61616` |
+| `service.webConsolePort` | Web Console port | `8161` |
+| `persistence.enabled` | Enable persistence using PVC | `false` |
+| `persistence.storageClass` | PVC Storage Class | `""` |
+| `persistence.accessMode` | PVC Access Mode | `ReadWriteOnce` |
+| `persistence.size` | PVC Storage Request | `8Gi` |
+| `resources.limits.cpu` | CPU limit | `1000m` |
+| `resources.limits.memory` | Memory limit | `2Gi` |
+| `resources.requests.cpu` | CPU request | `500m` |
+| `resources.requests.memory` | Memory request | `1Gi` |
+| `livenessProbe.enabled` | Enable liveness probe | `true` |
+| `readinessProbe.enabled` | Enable readiness probe | `true` |
+| `ingress.enabled` | Enable ingress | `false` |
+| `config.activemqXmlPath` | Path to custom activemq.xml file | `""` |
+| `config.jettyXmlPath` | Path to custom jetty.xml file | `""` |
+| `tls.enabled` | Enable TLS/SSL | `false` |
+| `tls.keystoreSecret` | Kubernetes secret containing broker.ks | `""` |
+| `tls.truststoreSecret` | Kubernetes secret containing broker.ts | `""` |
+| `tls.sslPort` | OpenWire SSL port | `61617` |
+| `tls.webConsoleSslPort` | Web Console SSL port | `8162` |
+
+## Accessing ActiveMQ
+
+### Web Console
+
+The ActiveMQ Web Console is accessible on port 8161. To access it locally:
+
+```bash
+kubectl port-forward svc/my-activemq 8161:8161
+```
+
+Then open http://localhost:8161 in your browser and login with the configured credentials.
+
+### OpenWire Connection
+
+Applications can connect to ActiveMQ on port 61616 using the service name:
+
+```
+tcp://my-activemq:61616
+```
+
+## Custom Configuration
+
+To use custom configuration files, place your files in the chart directory and specify the paths:
+
+```yaml
+config:
+  activemqXmlPath: "my-activemq.xml"
+  jettyXmlPath: "my-jetty.xml"
+```
+
+## Persistence
+
+The ActiveMQ image stores data at the `/opt/apache-activemq/data` path of the container.
+
+By default, the chart mounts a Persistent Volume at this location. The volume is created using dynamic volume provisioning.
+
+## TLS Configuration
+
+To enable TLS/SSL connections, you need to create Kubernetes secrets containing your keystore and truststore files.
+
+### Generate Test Certificates (for development)
+
+```bash
+# Generate keystore
+keytool -genkey -alias broker -keyalg RSA -keystore broker.ks \
+  -storepass changeit -keypass changeit \
+  -dname "CN=localhost, OU=Test, O=Test, L=Test, ST=Test, C=US"
+
+# Export certificate
+keytool -export -alias broker -keystore broker.ks \
+  -file broker.cert -storepass changeit
+
+# Create truststore
+keytool -import -alias broker -keystore broker.ts \
+  -file broker.cert -storepass changeit
+```
+
+### Create Kubernetes Secrets
+
+```bash
+kubectl create secret generic activemq-keystore --from-file=broker.ks
+kubectl create secret generic activemq-truststore --from-file=broker.ts
+```
+
+### Install with TLS Enabled
+
+```bash
+helm install my-activemq . \
+  --set tls.enabled=true \
+  --set tls.keystoreSecret=activemq-keystore \
+  --set tls.truststoreSecret=activemq-truststore
+```
+
+**Note:** When TLS is enabled, only SSL/TLS ports are exposed. Non-TLS ports are not available.
