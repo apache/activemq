@@ -137,15 +137,6 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         localConnection.start();
         remoteConnection.start();
 
-        // Wait for network bridge to be established before sending messages
-        waitForBridgeFormation();
-
-        // For topics, wait for consumer demand to be propagated to local broker
-        // This is critical for non-durable topics to avoid message loss
-        if (includedDestination.isTopic()) {
-            waitForConsumerDemandPropagation();
-        }
-
         MessageProducer producer = localSession.createProducer(includedDestination);
         String lastIncludedSentMessageID = null;
         for (int i = 0; i < MESSAGE_COUNT; i++) {
@@ -256,56 +247,6 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
             }, 30000, 500));
         }
         remoteConsumer.close();
-    }
-
-    /**
-     * Waits for the network bridge to be fully established between brokers.
-     * This prevents race conditions where messages are sent before the bridge is ready.
-     */
-    protected void waitForBridgeFormation() throws Exception {
-        // Wait for local broker's network connector to have active bridges
-        assertTrue("Local broker bridge not formed in time", Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return !localBroker.getNetworkConnectors().isEmpty()
-                    && !localBroker.getNetworkConnectors().get(0).activeBridges().isEmpty();
-            }
-        }, 10000, 100));
-
-        // Wait for remote broker's network connector to have active bridges
-        assertTrue("Remote broker bridge not formed in time", Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return !remoteBroker.getNetworkConnectors().isEmpty()
-                    && !remoteBroker.getNetworkConnectors().get(0).activeBridges().isEmpty();
-            }
-        }, 10000, 100));
-    }
-
-    /**
-     * Waits for consumer demand to be propagated from remote broker to local broker.
-     * This is critical for topics (especially non-durable) to ensure messages aren't lost.
-     */
-    protected void waitForConsumerDemandPropagation() throws Exception {
-        assertTrue("Consumer demand not propagated in time", Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                try {
-                    // Check if local broker has network consumers for the included destination
-                    // This indicates demand has been propagated from remote broker
-                    return localBroker.getDestination(includedDestination).getConsumers().size() > 0;
-                } catch (Exception e) {
-                    return false;
-                }
-            }
-        }, 10000, 100));
-
-        // For durable subscriptions, wait additional time to ensure the durable subscriber
-        // is fully registered and recognized by the network bridge. This prevents the first
-        // message from being sent before the subscription is completely established.
-        if (durable && includedDestination.isTopic()) {
-            Thread.sleep(2000);
-        }
     }
 
     protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {

@@ -29,14 +29,11 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 
@@ -86,18 +83,12 @@ public class AMQ6815Test {
 
          sendMessages(5000); // 5k of 1k messages = 5MB and limit is 1MB so some will be paged to disk
 
-         final long maxUsedMemory = 5L * MEM_LIMIT;
-         final long[] usedMem = new long[1];
-         boolean withinLimit = Wait.waitFor(() -> {
-            Runtime.getRuntime().gc();
-            usedMem[0] = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - initUsedMemory;
-            return usedMem[0] < maxUsedMemory;
-         }, TimeUnit.SECONDS.toMillis(30), TimeUnit.SECONDS.toMillis(1));
+         Runtime.getRuntime().gc();
+         long usedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - initUsedMemory;
+         LOG.info("Mem in use: " + usedMem/1024  + "K");
 
-         LOG.info("Mem in use: " + usedMem[0] / 1024 + "K");
-
-         // 5 is a generous factor because we don't create this many additional objects per message
-         assertTrue("Used Mem reasonable " + usedMem[0], withinLimit);
+          // 2 is a big generous factor because we don't create this many additional objects per message
+         assertTrue("Used Mem reasonable " + usedMem, usedMem < 5 * MEM_LIMIT);
       }
 
       protected void sendMessages(int count) throws JMSException {

@@ -136,7 +136,7 @@ public class ActiveMQConnectionFactoryTest {
         try {
             final TransportConnector transportConnector = brokerService.getTransportConnectors().get(0);
 
-            String failoverUrl = String.format("failover:(%s)?maxReconnectAttempts=10&initialReconnectDelay=100", transportConnector.getConnectUri());
+            String failoverUrl = String.format("failover:(%s)?maxReconnectAttempts=1", transportConnector.getConnectUri());
 
             ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
             ra.start(null);
@@ -164,22 +164,6 @@ public class ActiveMQConnectionFactoryTest {
             }
 
             transportConnector.start();
-
-            // Wait for failover to reconnect and recover() to succeed
-            // The ReconnectingXAResource should handle reconnection transparently
-            final XAResource resource = resources[0];
-            assertTrue("connection re-established and can recover", Wait.waitFor(new Wait.Condition() {
-                @Override
-                public boolean isSatisified() throws Exception {
-                    try {
-                        resource.recover(100);
-                        return true;
-                    } catch (Exception e) {
-                        // Still reconnecting
-                        return false;
-                    }
-                }
-            }, 30000, 500));
 
             // should recover ok
             assertEquals("no pending transactions", 0, resources[0].recover(100).length);

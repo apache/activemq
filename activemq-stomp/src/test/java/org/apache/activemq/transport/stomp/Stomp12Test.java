@@ -17,7 +17,6 @@
 package org.apache.activemq.transport.stomp;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -159,32 +158,9 @@ public class Stomp12Test extends StompTestSupport {
         String frame = "ACK\n" + "message-id:" + ackId + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        // Unsubscribe immediately to prevent message redelivery while waiting for ERROR
-        String unsubscribe = "UNSUBSCRIBE\n" + "id:1\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(unsubscribe);
-
-        // Receive frames until we get the ERROR frame, ignoring any MESSAGE frames
-        // that arrive due to redelivery (especially relevant for SSL transport)
-        StompFrame error = null;
-        for (int i = 0; i < 5; i++) {
-            error = stompConnection.receive();
-            LOG.info("Broker sent: " + error);
-            if (error.getAction().equals("ERROR")) {
-                break;
-            }
-            // If we get a MESSAGE, it's a redelivery - keep trying for ERROR
-        }
-        assertNotNull("Did not receive any frame", error);
-        assertTrue("Expected ERROR but got: " + error.getAction(), error.getAction().equals("ERROR"));
-
-        // Re-subscribe to receive the message again and test correct ACK
-        stompConnection.sendFrame(subscribe);
-        receipt = stompConnection.receive();
-        assertTrue(receipt.getAction().startsWith("RECEIPT"));
-
         received = stompConnection.receive();
-        assertTrue(received.getAction().equals("MESSAGE"));
-        ackId = received.getHeaders().get(Stomp.Headers.Message.ACK_ID);
+        assertTrue(received.getAction().equals("ERROR"));
+        LOG.info("Broker sent: " + received);
 
         // Now place it in the correct location and check it still works.
         frame = "ACK\n" + "id:" + ackId + "\n" + "receipt:2\n\n" + Stomp.NULL;

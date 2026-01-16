@@ -23,7 +23,7 @@ import org.apache.activemq.transport.TransportBrokerTestSupport;
 public class NIOTransportBrokerTest extends TransportBrokerTestSupport {
 
     protected String getBindLocation() {
-        return "nio://localhost:0";
+        return "nio://localhost:61616";
     }
 
     public static Test suite() {
