@@ -52,10 +52,12 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.junit.experimental.categories.Category;
 /**
  * Test to show that a PINGRESP will only be sent for a PINGREQ
  * packet after a CONNECT packet has been received.
  */
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class MQTTPingReqTest extends MQTTTestSupport {
 
