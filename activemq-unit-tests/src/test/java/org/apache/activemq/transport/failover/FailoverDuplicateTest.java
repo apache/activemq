@@ -65,11 +65,15 @@ public class FailoverDuplicateTest extends TestSupport {
     public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
         broker = createBroker(deleteAllMessagesOnStartup);
         broker.start();
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     public void startBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
         broker = createBroker(deleteAllMessagesOnStartup, bindAddress);
         broker.start();
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
@@ -83,7 +87,7 @@ public class FailoverDuplicateTest extends TestSupport {
         broker.addConnector(bindAddress);
         broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
 
-        url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        // Do not set url here - need to get it after broker starts when using ephemeral ports
 
         return broker;
     }
@@ -131,6 +135,9 @@ public class FailoverDuplicateTest extends TestSupport {
                 }
         });
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?jms.watchTopicAdvisories=false");
         configureConnectionFactory(cf);
@@ -222,6 +229,9 @@ public class FailoverDuplicateTest extends TestSupport {
         broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");

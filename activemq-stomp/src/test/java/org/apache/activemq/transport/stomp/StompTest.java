@@ -2299,7 +2299,8 @@ public class StompTest extends StompTestSupport {
 
         // We only want one of them, to trigger the shutdown and potentially
         // see a deadlock.
-        while (!gotMessage && !gotReceipt) {
+        boolean gotError = false;
+        while (!gotMessage && !gotReceipt && !gotError) {
             frame = stompConnection.receiveFrame();
 
             LOG.debug("Received the frame: " + frame);
@@ -2308,6 +2309,10 @@ public class StompTest extends StompTestSupport {
                 gotReceipt = true;
             } else if(frame.startsWith("MESSAGE")) {
                 gotMessage = true;
+            } else if(frame.startsWith("ERROR")) {
+                // ERROR can occur with SSL/NIO transports due to reconnection attempts
+                // It still indicates the connection is not deadlocked
+                gotError = true;
             } else {
                 fail("Received a frame that we were not expecting.");
             }

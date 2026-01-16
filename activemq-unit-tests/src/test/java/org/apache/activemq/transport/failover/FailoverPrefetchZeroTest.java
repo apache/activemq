@@ -63,6 +63,8 @@ public class FailoverPrefetchZeroTest {
     public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
         broker = createBroker(deleteAllMessagesOnStartup);
         broker.start();
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
@@ -74,7 +76,7 @@ public class FailoverPrefetchZeroTest {
         broker.addConnector(bindAddress);
         broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
 
-        url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        // Do not set url here - need to get it after broker starts when using ephemeral ports
 
         return broker;
     }
@@ -106,6 +108,9 @@ public class FailoverPrefetchZeroTest {
                 }
         });
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setWatchTopicAdvisories(false);
@@ -142,6 +147,9 @@ public class FailoverPrefetchZeroTest {
         broker.waitUntilStopped();
         broker = createBroker(false, url);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         assertTrue("receive completed through failover", receiveDone.await(30, TimeUnit.SECONDS));
 
