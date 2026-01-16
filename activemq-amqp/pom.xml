@@ -31,6 +31,10 @@
   <name>ActiveMQ :: AMQP</name>
   <description>ActiveMQ implementaiton of AMQP messaging protocol</description>
 
+  <properties>
+    <surefire.argLine>-Xmx512M -Djava.awt.headless=true</surefire.argLine>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.activemq</groupId>
@@ -303,7 +307,6 @@
                 <configuration>
                     <forkCount>1</forkCount>
                     <reuseForks>false</reuseForks>
-                    <surefire.argLine>-Xmx512M -Djava.awt.headless=true</surefire.argLine>
                     <runOrder>alphabetical</runOrder>
                     <forkedProcessTimeoutInSeconds>120</forkedProcessTimeoutInSeconds>
                     <includes>
