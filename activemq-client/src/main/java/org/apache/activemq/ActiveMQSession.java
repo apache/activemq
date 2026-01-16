@@ -26,13 +26,19 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.BytesMessage;
+import jakarta.jms.CompletionListener;
+import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.IllegalStateException;
+import jakarta.jms.IllegalStateRuntimeException;
 import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.InvalidSelectorException;
 import jakarta.jms.JMSException;
@@ -57,7 +63,6 @@ import jakarta.jms.TopicPublisher;
 import jakarta.jms.TopicSession;
 import jakarta.jms.TopicSubscriber;
 import jakarta.jms.TransactionRolledBackException;
-
 import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.blob.BlobUploader;
@@ -93,6 +98,7 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.Callback;
+import org.apache.activemq.util.CountdownLock;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -234,6 +240,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     private MessageTransformer transformer;
     private BlobTransferPolicy blobTransferPolicy;
     private long lastDeliveredSequenceId = -2;
+    private CountdownLock numIncompleteAsyncSend = new CountdownLock();
+    private ThreadLocal<Boolean> inCompletionListenerCallback = new ThreadLocal<>();
+    private ExecutorService asyncSendExecutor;
 
     /**
      * Construct the Session
@@ -253,6 +262,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         this.asyncDispatch = asyncDispatch;
         this.sessionAsyncDispatch = sessionAsyncDispatch;
         this.info = new SessionInfo(connection.getConnectionInfo(), sessionId.getValue());
+        inCompletionListenerCallback.set(false);
         setTransactionContext(new TransactionContext(connection));
         stats = new JMSSessionStatsImpl(producers, consumers);
         this.connection.asyncSendPacket(info);
@@ -260,6 +270,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         setBlobTransferPolicy(connection.getBlobTransferPolicy());
         this.connectionExecutor=connection.getExecutor();
         this.executor = new ActiveMQSessionExecutor(this);
+        asyncSendExecutor = Executors.newSingleThreadExecutor();
         connection.addSession(this);
         if (connection.isStarted()) {
             start();
@@ -576,12 +587,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void commit() throws JMSException {
         checkClosed();
+        checkIsSessionUseAllowed("Can't commit transacted session within CompletionListener");
         if (!getTransacted()) {
             throw new jakarta.jms.IllegalStateException("Not a transacted session");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug(getSessionId() + " Transaction Commit :" + transactionContext.getTransactionId());
         }
+        waitForAsyncSendToFinish();
         transactionContext.commit();
     }
 
@@ -597,12 +610,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void rollback() throws JMSException {
         checkClosed();
+        checkIsSessionUseAllowed("Can't rollback transacted session within CompletionListener");
         if (!getTransacted()) {
             throw new jakarta.jms.IllegalStateException("Not a transacted session");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug(getSessionId() + " Transaction Rollback, txid:"  + transactionContext.getTransactionId());
         }
+        waitForAsyncSendToFinish();
         transactionContext.rollback();
     }
 
@@ -637,6 +652,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void close() throws JMSException {
         if (!closed) {
+            checkIsSessionUseAllowed("Can't close session within CompletionListener");
             if (getTransactionContext().isInXATransaction()) {
                 if (!synchronizationRegistered) {
                     synchronizationRegistered = true;
@@ -722,7 +738,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     public synchronized void dispose() throws JMSException {
         if (!closed) {
-
+            // Wait for Incompleted async send to finish per Jakarta Messaging 3.1 section 3.7.4
+            waitForAsyncSendToFinish();
             try {
                 executor.close();
 
@@ -2050,6 +2067,179 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
+     * Sends the message for dispatch by the broker.
+     *
+     * @param producer - message producer.
+     * @param destination - message destination.
+     * @param message - message to be sent.
+     * @param deliveryMode - JMS message delivery mode.
+     * @param priority - message priority.
+     * @param timeToLive - message expiration.
+     * @param disableTimestamp - disable timestamp.
+     * @param disableMessageID - optionally, disable messageID.
+     * @param producerWindow
+     * @param completionListener
+     * @param producerInCompletionListenerCallback
+     * @param producerNumIncompleteSend
+     * @throws JMSException
+     */
+    protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
+            boolean disableMessageID, boolean disableMessageTimestamp, MemoryUsage producerWindow, int sendTimeout, CompletionListener completionListener,
+            ThreadLocal<Boolean> producerInCompletionListenerCallback, CountdownLock producerNumIncompleteSend) throws JMSException {
+
+        checkClosed();
+        if (destination.isTemporary() && connection.isDeleted(destination)) {
+            throw new InvalidDestinationException("Cannot publish to a deleted Destination: " + destination);
+        }
+        synchronized (sendMutex) {
+            // tell the Broker we are about to start a new transaction
+            doStartTransaction();
+            if (transactionContext.isRollbackOnly()) {
+                throw new IllegalStateException("transaction marked rollback only");
+            }
+            TransactionId txid = transactionContext.getTransactionId();
+            long sequenceNumber = producer.getMessageSequence();
+
+            //Set the "JMS" header fields on the original message, see 1.1 spec section 3.4.11
+            message.setJMSDeliveryMode(deliveryMode);
+            long expiration = 0L;
+            long timeStamp = System.currentTimeMillis();
+            if (timeToLive > 0) {
+                expiration = timeToLive + timeStamp;
+            }
+
+            if(!(message instanceof ActiveMQMessage)) {
+                setForeignMessageDeliveryTime(message, timeStamp);
+            } else {
+                message.setJMSDeliveryTime(timeStamp);
+            }
+            if (!disableMessageTimestamp && !producer.getDisableMessageTimestamp()) {
+                message.setJMSTimestamp(timeStamp);
+            } else {
+                message.setJMSTimestamp(0l);
+            }
+            message.setJMSExpiration(expiration);
+            message.setJMSPriority(priority);
+            message.setJMSRedelivered(false);
+
+            // transform to our own message format here
+            ActiveMQMessage msg = ActiveMQMessageTransformation.transformMessage(message, connection);
+            msg.setDestination(destination);
+            msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
+
+            // Set the message id.
+            if (msg != message) {
+                message.setJMSMessageID(msg.getMessageId().toString());
+                // Make sure the JMS destination is set on the foreign messages too.
+                message.setJMSDestination(destination);
+            }
+            //clear the brokerPath in case we are re-sending this message
+            msg.setBrokerPath(null);
+
+            msg.setTransactionId(txid);
+            final ActiveMQMessage originalMessage = msg;
+            if (connection.isCopyMessageOnSend() || completionListener != null) {
+                // We need to make the message inaccessible per Jakarta Messaging 3.1 - 7.3.6 & 7.3.9
+                // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#restrictions-on-the-use-of-the-message-object
+                // To do that, we need to set a flag in the message referenced in sender thread. To avoid making
+                // the message inaccessible once received on the server side (even tho the WireFormat marshaller doesn't marshal that field, so it shouldn't matter)
+                msg = (ActiveMQMessage)msg.copy();
+            }
+            msg.setConnection(connection);
+            msg.onSend();
+            msg.setProducerId(msg.getMessageId().getProducerId());
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(getSessionId() + " sending message: " + msg);
+            }
+            if (completionListener==null && sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
+                this.connection.asyncSendPacket(msg);
+                if (producerWindow != null) {
+                    // Since we defer lots of the marshaling till we hit the
+                    // wire, this might not
+                    // provide and accurate size. We may change over to doing
+                    // more aggressive marshaling,
+                    // to get more accurate sizes.. this is more important once
+                    // users start using producer window
+                    // flow control.
+                    int size = msg.getSize();
+                    producerWindow.increaseUsage(size);
+                }
+            } else {
+                if (sendTimeout > 0 && completionListener==null) {
+                    this.connection.syncSendPacket(msg, sendTimeout);
+                }else {
+                    if (completionListener != null) {
+                        final ActiveMQMessage finalMsgRef = msg;
+                        // Make the Message object unaccessible and unmutable
+                        // per Jakarta Messaging 3.1 spec section 7.3.9 and 7.3.6
+                        numIncompleteAsyncSend.doIncrement();
+                        producerNumIncompleteSend.doIncrement();
+                        originalMessage.setMessageAccessible(false);
+                        // Submit to a another async thread for sending the message asynchronously
+                        // The reason is we want to execute async send and invoke its CompletionListner one at a time
+                        // https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1#use-of-the-completionlistener-by-the-jakarta-messaging-provider
+                        asyncSendExecutor.submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                CountDownLatch isAsyncSendCompleted = new CountDownLatch(1);
+                                CompletionListener wrapperCompletionListener = new CompletionListener() {
+                                    @Override
+                                    public void onCompletion(Message message) {
+                                        try {
+                                            originalMessage.setMessageAccessible(true);
+                                            inCompletionListenerCallback.set(true);
+                                            producerInCompletionListenerCallback.set(true);
+                                            // Invoke application provided completionListener
+                                            completionListener.onCompletion(message);
+                                        } catch (Exception e) {
+                                            // invoke onException if the exception can't be thrown in the thread that calls the send
+                                            // per Jakarta Messaging 3.1 spec section 7.3.2
+                                            completionListener.onException(message, e);
+                                        } finally {
+                                            inCompletionListenerCallback.set(false);
+                                            producerInCompletionListenerCallback.set(false);
+                                            numIncompleteAsyncSend.doDecrement();
+                                            producerNumIncompleteSend.doDecrement();
+                                            isAsyncSendCompleted.countDown();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onException(Message message, Exception e) {
+                                        try {
+                                            originalMessage.setMessageAccessible(true);
+                                            inCompletionListenerCallback.set(true);
+                                            producerInCompletionListenerCallback.set(true);
+                                            completionListener.onException(message, e);
+                                        } finally {
+                                            inCompletionListenerCallback.set(false);
+                                            producerInCompletionListenerCallback.set(false);
+                                            numIncompleteAsyncSend.doDecrement();
+                                            producerNumIncompleteSend.doDecrement();
+                                            isAsyncSendCompleted.countDown();
+                                        }
+                                    }
+                                };
+                                try {
+                                    connection.syncSendPacket(finalMsgRef, wrapperCompletionListener);
+                                    isAsyncSendCompleted.await();
+                                } catch (JMSException e) {
+                                    completionListener.onException(finalMsgRef, e);
+                                } catch (InterruptedException e) {
+                                    completionListener.onException(finalMsgRef, e);
+                                }
+                            }
+                        });
+                    } else {
+                        this.connection.syncSendPacket(msg, (CompletionListener) null);
+                    }
+                }
+            }
+
+        }
+    }
+
+    /**
      * Send TransactionInfo to indicate transaction has started
      *
      * @throws JMSException if some internal error occurs
@@ -2337,6 +2527,16 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
         if (deliveryTimeMethod != null) {
             foreignMessage.setJMSDeliveryTime(deliveryTime);
+        }
+    }
+
+    private void waitForAsyncSendToFinish() {
+        numIncompleteAsyncSend.doWaitForZero();
+    }
+
+    private void checkIsSessionUseAllowed(String errorMsg) {
+        if (inCompletionListenerCallback.get() != null && inCompletionListenerCallback.get()) {
+            throw new IllegalStateRuntimeException(errorMsg);
         }
     }
 }
