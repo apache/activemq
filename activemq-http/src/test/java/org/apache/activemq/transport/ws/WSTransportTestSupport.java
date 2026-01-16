@@ -19,6 +19,7 @@ package org.apache.activemq.transport.ws;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
+import java.util.Set;
 
 import jakarta.jms.JMSException;
 import javax.management.MalformedObjectNameException;
@@ -27,6 +28,7 @@ import javax.net.ServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.spring.SpringSslContext;
@@ -171,6 +173,22 @@ public class WSTransportTestSupport {
         ObjectName topicViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Topic,destinationName="+name);
         TopicViewMBean proxy = (TopicViewMBean) broker.getManagementContext()
                 .newProxyInstance(topicViewMBeanName, TopicViewMBean.class, true);
+        return proxy;
+    }
+
+
+    protected ConnectorViewMBean getProxyToConnectionView(String connectionType) throws Exception {
+        ObjectName connectorQuery = new ObjectName(
+                "org.apache.activemq:type=Broker,brokerName=localhost,connector=clientConnectors,connectorName="+connectionType+"_//*");
+
+        Set<ObjectName> results = broker.getManagementContext().queryNames(connectorQuery, null);
+
+        if (results == null || results.size() != 1) {
+            throw new Exception("Unable to find the exact Connector instance.");
+        }
+
+        ConnectorViewMBean proxy = (ConnectorViewMBean) broker.getManagementContext()
+                .newProxyInstance(results.iterator().next(), ConnectorViewMBean.class, true);
         return proxy;
     }
 }
