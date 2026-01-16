@@ -113,7 +113,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     class PreviouslyDelivered {
         org.apache.activemq.command.Message message;
         boolean redelivered;
-        boolean prefetchedOnly;
 
         PreviouslyDelivered(MessageDispatch messageDispatch) {
             message = messageDispatch.getMessage();
@@ -122,12 +121,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         PreviouslyDelivered(MessageDispatch messageDispatch, boolean redelivered) {
             message = messageDispatch.getMessage();
             this.redelivered = redelivered;
-        }
-
-        PreviouslyDelivered(MessageDispatch messageDispatch, boolean redelivered, boolean prefetchedOnly) {
-            message = messageDispatch.getMessage();
-            this.redelivered = redelivered;
-            this.prefetchedOnly = prefetchedOnly;
         }
     }
 
@@ -778,9 +771,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     // ensure unconsumed are rolledback up front as they may get redelivered to another consumer
                     List<MessageDispatch> list = unconsumedMessages.removeAll();
                     if (!this.info.isBrowser()) {
-                        if (session.isTransacted()) {
-                            capturePrefetchedMessagesForDuplicateSuppression(list);
-                        }
                         for (MessageDispatch old : list) {
                             session.connection.rollbackDuplicate(this, old.getMessage());
                         }
@@ -943,16 +933,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (!isAutoAcknowledgeBatch()) {
             synchronized(deliveredMessages) {
                 deliveredMessages.addFirst(md);
-                if (session.isTransacted()) {
-                    PreviouslyDelivered entry = null;
-                    if (previouslyDeliveredMessages != null) {
-                        entry = previouslyDeliveredMessages.get(md.getMessage().getMessageId());
-                    }
-                    if (entry != null && entry.prefetchedOnly) {
-                        entry.prefetchedOnly = false;
-                        entry.redelivered = true;
-                    }
-                }
             }
             if (session.getTransacted()) {
                 if (transactedIndividualAck) {
@@ -1440,8 +1420,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             synchronized (unconsumedMessages.getMutex()) {
                 if (!unconsumedMessages.isClosed()) {
                     // deliverySequenceId non zero means previously queued dispatch
-                    if (this.info.isBrowser() || md.getDeliverySequenceId() != 0l || isPrefetchedRedelivery(md)
-                        || !session.connection.isDuplicate(this, md.getMessage())) {
+                    if (this.info.isBrowser() || md.getDeliverySequenceId() != 0l || !session.connection.isDuplicate(this, md.getMessage())) {
                         if (listener != null && unconsumedMessages.isRunning()) {
                             if (redeliveryExceeded(md)) {
                                 poisonAck(md, "listener dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
@@ -1589,37 +1568,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             previouslyDeliveredMessages.put(delivered.getMessage().getMessageId(), new PreviouslyDelivered(delivered, !requireRedelivery));
         }
         LOG.trace("{} tracking existing transacted {} delivered list({})", getConsumerId(), previouslyDeliveredMessages.transactionId, deliveredMessages.size());
-    }
-
-    private void capturePrefetchedMessagesForDuplicateSuppression(final List<MessageDispatch> list) {
-        if (list.isEmpty()) {
-            return;
-        }
-        if (previouslyDeliveredMessages == null) {
-            previouslyDeliveredMessages = new PreviouslyDeliveredMap<MessageId, PreviouslyDelivered>(session.getTransactionContext().getTransactionId());
-        }
-        for (MessageDispatch pending : list) {
-            if (pending.getMessage() != null) {
-                previouslyDeliveredMessages.put(pending.getMessage().getMessageId(), new PreviouslyDelivered(pending, false, true));
-            }
-        }
-        LOG.trace("{} tracking existing transacted {} prefetched list({})", getConsumerId(), previouslyDeliveredMessages.transactionId, list.size());
-    }
-
-    private boolean isPrefetchedRedelivery(final MessageDispatch md) {
-        if (!session.isTransacted()) {
-            return false;
-        }
-        if (md.getMessage() == null) {
-            return false;
-        }
-        synchronized (deliveredMessages) {
-            if (previouslyDeliveredMessages != null) {
-                PreviouslyDelivered entry = previouslyDeliveredMessages.get(md.getMessage().getMessageId());
-                return entry != null && entry.prefetchedOnly;
-            }
-        }
-        return false;
     }
 
     public int getMessageSize() {

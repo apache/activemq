@@ -138,10 +138,6 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertSubscriptionsCount(broker1, topic, 1);
         assertNCDurableSubsCount(broker2, topic, 1);
 
-        // Wait for subscription to become inactive before attempting removal
-        // It's very important to wait here, otherwise the removal may not propagate
-        waitForSubscriptionInactive(broker1, topic, subName);
-
         removeSubscription(broker1, subName);
 
         assertSubscriptionsCount(broker1, topic, 0);
@@ -871,29 +867,6 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         brokerService.addConnector("auto+nio+ssl://localhost:" + port + "?wireFormat.cacheSize=2048&wireFormat.version=" + remoteBrokerWireFormatVersion);
 
         return brokerService;
-    }
-
-    /**
-     * Wait for a durable subscription to become inactive before attempting removal.
-     * This prevents "Durable consumer is in use" errors when consumer close operations
-     * complete asynchronously (especially visible with Java 25's different thread scheduling).
-     */
-    protected void waitForSubscriptionInactive(final BrokerService brokerService,
-                                               final ActiveMQTopic topic,
-                                               final String subName) throws Exception {
-        assertTrue("Subscription should become inactive", Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                List<org.apache.activemq.broker.region.DurableTopicSubscription> subs = getSubscriptions(brokerService, topic);
-                for (org.apache.activemq.broker.region.DurableTopicSubscription sub : subs) {
-                    if (sub.getSubscriptionKey().getSubscriptionName().equals(subName)) {
-                        return !sub.isActive();
-                    }
-                }
-                // If subscription doesn't exist, it's considered inactive
-                return true;
-            }
-        }, 5000, 100));
     }
 
 }

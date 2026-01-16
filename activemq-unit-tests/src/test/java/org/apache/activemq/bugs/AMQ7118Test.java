@@ -133,14 +133,12 @@ public class AMQ7118Test {
         }
         LOG.info("All messages Consumed.");
 
-        // Clean up the log files and verify compaction reduces file count
-        // Note: Don't check exact file names as they vary due to async preallocation and timing
-        // The nextDataFileId (in org.apache.activemq.store.kahadb.disk.journal.Journal.newDataFile) counter never decreases,
-        // so file numbers depend on how many files were created during the run, not just how many currently exist
-        checkFiles(true, 5, null);  // After consumption, should compact to <= 5 files
-        checkFiles(true, 5, null);  // Verify it stabilizes
-        checkFiles(true, 5, null);  // And stays stable
-        checkFiles(true, 5, null);  // One more check
+        //Clean up the log files and be sure its stable
+        checkFiles(true, 2, "db-30.log");
+        checkFiles(true, 3, "db-31.log");
+        checkFiles(true, 2, "db-31.log");
+        checkFiles(true, 2, "db-31.log");
+        checkFiles(true, 2, "db-31.log");
 
         broker.stop();
         broker.waitUntilStopped();
@@ -195,8 +193,7 @@ public class AMQ7118Test {
         boolean settled = Wait.waitFor(() -> {
             File[] current = dbfiles.listFiles(lff);
             Arrays.sort(current, new DBFileComparator());
-            // If lastFileName is null, only check file count (for cases where exact file name is non-deterministic)
-            return current.length <= expectedCount + 1 && (lastFileName == null || current[current.length - 1].getName().equals(lastFileName));
+            return current.length <= expectedCount + 1 && current[current.length - 1].getName().equals(lastFileName);
         }, 30_000, 1_000);
 
         File files[] = dbfiles.listFiles(lff);
@@ -206,9 +203,7 @@ public class AMQ7118Test {
         assertTrue("KahaDB log compaction did not settle in time", settled);
         assertTrue("Unexpected number of log files: " + files.length,
                    files.length <= expectedCount + 1);
-        if (lastFileName != null) {
-            assertEquals(lastFileName, files[files.length-1].getName());
-        }
+        assertEquals(lastFileName, files[files.length-1].getName());
 
     }
 

@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import jakarta.jms.BytesMessage;
 import jakarta.jms.Connection;
@@ -85,7 +84,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
             Thread.sleep(1000);
 
             // consume messages
-            ArrayList<Message> consumeList = consumeMessages("TestQ", 5, TimeUnit.SECONDS.toMillis(30));
+            ArrayList<Message> consumeList = consumeMessages("TestQ");
             LOG.info("Consumed list " + consumeList.size());
 
             // compare lists
@@ -269,37 +268,6 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
                     finished = true;
                 }
 
-                if (message != null) {
-                    returnedMessages.add(message);
-                }
-            }
-
-            consumer.close();
-            return returnedMessages;
-        } finally {
-            if (connection != null) {
-                connection.close();
-            }
-        }
-    }
-
-    private ArrayList<Message> consumeMessages(String queueName, int expectedCount, long timeoutMs) throws Exception {
-        ArrayList<Message> returnedMessages = new ArrayList<Message>();
-
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(broker.getTransportConnectorByScheme("tcp").getPublishableConnectString());
-        Connection connection = connectionFactory.createConnection();
-        try {
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            MessageConsumer consumer = session.createConsumer(new ActiveMQQueue(queueName));
-            connection.start();
-
-            long deadline = System.currentTimeMillis() + timeoutMs;
-            while (returnedMessages.size() < expectedCount) {
-                long remaining = deadline - System.currentTimeMillis();
-                if (remaining <= 0) {
-                    break;
-                }
-                Message message = consumer.receive(Math.min(1000, remaining));
                 if (message != null) {
                     returnedMessages.add(message);
                 }

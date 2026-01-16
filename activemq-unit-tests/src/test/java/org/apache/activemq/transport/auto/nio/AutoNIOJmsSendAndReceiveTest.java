@@ -25,7 +25,7 @@ public class AutoNIOJmsSendAndReceiveTest extends NIOJmsSendAndReceiveTest {
 
     @Override
     protected String getBrokerURL() {
-        return "auto+nio://localhost:0";
+        return "auto+nio://localhost:61616";
     }
 
 

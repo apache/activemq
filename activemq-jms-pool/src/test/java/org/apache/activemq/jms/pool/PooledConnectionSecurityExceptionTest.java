@@ -69,7 +69,7 @@ public class PooledConnectionSecurityExceptionTest {
     @Test
     public void testFailedConnectThenSucceeds() throws JMSException {
         try (final Connection connection1 = pooledConnFact.createConnection("invalid", "credentials")) {
-            assertSecurityExceptionOnStart(connection1);
+            assertThrows(JMSSecurityException.class, connection1::start);
 
             try (final Connection connection2 = pooledConnFact.createConnection("system", "manager")) {
                 connection2.start();
@@ -93,7 +93,7 @@ public class PooledConnectionSecurityExceptionTest {
                     onExceptionCalled.countDown();
                 }
             });
-            assertSecurityExceptionOnStart(connection1);
+            assertThrows(JMSSecurityException.class, connection1::start);
 
             try (final Connection connection2 = pooledConnFact.createConnection("system", "manager")) {
                 connection2.start();
@@ -118,7 +118,7 @@ public class PooledConnectionSecurityExceptionTest {
         pooledConnFact.setMaxConnections(1);
 
         try (final Connection connection1 = pooledConnFact.createConnection("invalid", "credentials")) {
-            assertSecurityExceptionOnStart(connection1);
+            assertThrows(JMSSecurityException.class, connection1::start);
 
             // The pool should process the async error
             // we should eventually get a different connection instance from the pool regardless of the underlying connection
@@ -145,9 +145,9 @@ public class PooledConnectionSecurityExceptionTest {
         pooledConnFact.setMaxConnections(10);
 
         try (final Connection connection1 = pooledConnFact.createConnection("invalid", "credentials")) {
-            assertSecurityExceptionOnStart(connection1);
+            assertThrows(JMSSecurityException.class, connection1::start);
             try (final Connection connection2 = pooledConnFact.createConnection("invalid", "credentials")) {
-                assertSecurityExceptionOnStart(connection2);
+                assertThrows(JMSSecurityException.class, connection2::start);
                 assertNotSame(connection1, connection2);
             }
         }
@@ -165,7 +165,7 @@ public class PooledConnectionSecurityExceptionTest {
         pooledConnFact.setMaxConnections(1);
 
         try (final Connection connection = pooledConnFact.createConnection("invalid", "credentials")) {
-            assertSecurityExceptionOnStart(connection);
+            assertThrows(JMSSecurityException.class, connection::start);
 
             try (final Connection connection2 = pooledConnFact.createConnection("system", "manager")) {
                 connection2.start();
@@ -185,7 +185,7 @@ public class PooledConnectionSecurityExceptionTest {
         pooledConnFact.setMaxConnections(1);
 
         try (final PooledConnection connection1 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials")) {
-            assertSecurityExceptionOnStart(connection1);
+            assertThrows(JMSSecurityException.class, connection1::start);
 
             // The pool should process the async error
             assertTrue("Should get new connection", Wait.waitFor(new Wait.Condition() {
@@ -202,7 +202,7 @@ public class PooledConnectionSecurityExceptionTest {
 
             try (final PooledConnection connection2 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials")) {
                 assertNotSame(connection1.pool, connection2.pool);
-                assertSecurityExceptionOnStart(connection2);
+                assertThrows(JMSSecurityException.class, connection2::start);
             }
         }
     }
@@ -228,55 +228,6 @@ public class PooledConnectionSecurityExceptionTest {
 
     public String getName() {
         return name.getMethodName();
-    }
-
-    /**
-     * Helper method to assert that a connection start fails with security exception.
-     * On different test environments, the connection may be disposed asynchronously
-     * before the security exception is fully propagated, resulting in either JMSSecurityException
-     * or generic JMSException with "Disposed" message. Both indicate authentication failure.
-     *
-     * This method uses an ExceptionListener to detect when async disposal completes, providing
-     * more reliable detection of security failures across different Java versions and environments.
-     *
-     * @param connection the connection to start
-     * @throws AssertionError if no exception is thrown or the exception doesn't indicate auth failure
-     */
-    private void assertSecurityExceptionOnStart(final Connection connection) {
-        try {
-            final ExceptionListener listener =  connection.getExceptionListener();
-            if (listener == null) { // some tests already leverage the exception listener
-                final CountDownLatch exceptionLatch = new CountDownLatch(1);
-
-                // Install listener to capture async exception propagation
-                connection.setExceptionListener(new ExceptionListener() {
-                    @Override
-                    public void onException(final JMSException exception) {
-                        LOG.info("Connection received exception: {}", exception.getMessage());
-                        assertTrue(exception instanceof JMSSecurityException);
-                        exceptionLatch.countDown();
-                    }
-                });
-                connection.start(); // should trigger the security exception reliably and asynchronously
-                exceptionLatch.await(1, java.util.concurrent.TimeUnit.SECONDS);
-
-            } else {
-
-                // Attempt to start and capture the synchronous exception.
-                final JMSException thrownException = assertThrows(JMSException.class, connection::start);
-                assertTrue("Should be JMSSecurityException or disposed due to security exception",
-                           thrownException instanceof JMSSecurityException ||
-                           thrownException.getMessage().contains("Disposed"));
-            }
-
-
-        } catch (final JMSException e) {
-            // Ignore
-
-        } catch (final InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
     }
 
     @Before

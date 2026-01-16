@@ -77,108 +77,83 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
     @Test
     public void testMessageListener() {
 
-        try(JMSContext producerContext = activemqConnectionFactory.createContext(DEFAULT_JMS_USER, DEFAULT_JMS_PASS, ackMode)) {
-            assertNotNull(producerContext);
-            Destination destination = ActiveMQJMS2TestSupport.generateDestination(producerContext, destinationType, destinationName);
+        try(JMSContext jmsContext = activemqConnectionFactory.createContext(DEFAULT_JMS_USER, DEFAULT_JMS_PASS, ackMode)) {
+            assertNotNull(jmsContext);
+            Destination destination = ActiveMQJMS2TestSupport.generateDestination(jmsContext, destinationType, destinationName);
             assertNotNull(destination);
+            QueueViewMBean localQueueViewMBean = getQueueViewMBean((ActiveMQDestination)destination);
+            JMSConsumer jmsConsumer = jmsContext.createConsumer(destination);
 
-            // Use a separate context for consuming to avoid issues with AUTO_ACKNOWLEDGE mode
-            // when using the same context for both producing and consuming
-            try(JMSContext consumerContext = activemqConnectionFactory.createContext(DEFAULT_JMS_USER, DEFAULT_JMS_PASS, ackMode)) {
-                JMSConsumer jmsConsumer = consumerContext.createConsumer(destination);
+            AtomicInteger receivedMessageCount = new AtomicInteger();
+            AtomicInteger exceptionCount = new AtomicInteger();
+            CountDownLatch countDownLatch = new CountDownLatch(2);
 
-                AtomicInteger receivedMessageCount = new AtomicInteger();
-                AtomicInteger exceptionCount = new AtomicInteger();
-                CountDownLatch countDownLatch = new CountDownLatch(2);
-
-                jmsConsumer.setMessageListener(new MessageListener() {
-                    @Override
-                    public void onMessage(Message message) {
-                        receivedMessageCount.incrementAndGet();
-                        countDownLatch.countDown();
-                        try {
-                            switch(ackMode) {
-                            case Session.CLIENT_ACKNOWLEDGE: message.acknowledge(); break;
-                            case ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE: message.acknowledge(); break;
-                            default: break;
-                            }
-                        } catch (JMSException e) {
-                            exceptionCount.incrementAndGet();
+            jmsConsumer.setMessageListener(new MessageListener() {
+                @Override
+                public void onMessage(Message message) {
+                    receivedMessageCount.incrementAndGet();
+                    countDownLatch.countDown();
+                    try {
+                        switch(ackMode) {
+                        case Session.CLIENT_ACKNOWLEDGE: message.acknowledge(); break;
+                        case ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE: message.acknowledge(); break;
+                        default: break;
                         }
+                    } catch (JMSException e) {
+                        exceptionCount.incrementAndGet();
                     }
-                });
-
-                // Start consuming before sending messages (original test behavior)
-                consumerContext.start();
-
-                Message message = ActiveMQJMS2TestSupport.generateMessage(producerContext, "text", messagePayload);
-
-                List<String> sentMessageIds = new LinkedList<>();
-                for(int deliveryMode : Arrays.asList(DeliveryMode.NON_PERSISTENT, DeliveryMode.PERSISTENT)) {
-                    MessageData sendMessageData = new MessageData();
-                    sendMessageData.setMessage(message).setDeliveryMode(deliveryMode);
-                    sentMessageIds.add(ActiveMQJMS2TestSupport.sendMessage(producerContext, destination, sendMessageData));
                 }
+            });
+            jmsContext.start();
 
-                // Wait for the queue to be created and MBean to be registered before accessing it
-                final ActiveMQDestination activeMQDestination = (ActiveMQDestination)destination;
-                assertTrue("Queue MBean not registered in time", Wait.waitFor(new Wait.Condition() {
-                    @Override
-                    public boolean isSatisified() throws Exception {
-                        try {
-                            QueueViewMBean testMBean = getQueueViewMBean(activeMQDestination);
-                            return testMBean != null && testMBean.getEnqueueCount() >= 0;
-                        } catch (Exception e) {
-                            return false;
-                        }
-                    }
-                }, 5000L, 100L));
+            Message message = ActiveMQJMS2TestSupport.generateMessage(jmsContext, "text", messagePayload);
 
-                QueueViewMBean localQueueViewMBean = getQueueViewMBean(activeMQDestination);
+            List<String> sentMessageIds = new LinkedList<>();
+            for(int deliveryMode : Arrays.asList(DeliveryMode.NON_PERSISTENT, DeliveryMode.PERSISTENT)) {
+                MessageData sendMessageData = new MessageData();
+                sendMessageData.setMessage(message).setDeliveryMode(deliveryMode);
+                sentMessageIds.add(ActiveMQJMS2TestSupport.sendMessage(jmsContext, destination, sendMessageData));
+            }
 
-                // For session transacted ack we ack after all messages are sent
-                switch(ackMode) {
-                case ActiveMQSession.SESSION_TRANSACTED:
-                    assertEquals(Long.valueOf(0), Long.valueOf(localQueueViewMBean.getEnqueueCount()));
-                    producerContext.commit();
-                    assertEquals(Long.valueOf(2), Long.valueOf(localQueueViewMBean.getEnqueueCount()));
-                    break;
-                default:
-                    assertEquals(Long.valueOf(2), Long.valueOf(localQueueViewMBean.getEnqueueCount()));
-                    break;
+            // For session transacted ack we ack after all messages are sent
+            switch(ackMode) {
+            case ActiveMQSession.SESSION_TRANSACTED:
+                assertEquals(Long.valueOf(0), Long.valueOf(localQueueViewMBean.getEnqueueCount()));
+                jmsContext.commit();
+                assertEquals(Long.valueOf(2), Long.valueOf(localQueueViewMBean.getEnqueueCount()));
+                break;
+            default: 
+                assertEquals(Long.valueOf(2), Long.valueOf(localQueueViewMBean.getEnqueueCount()));
+                break;
+            }
+
+            assertTrue("Did not receive all messages in time", countDownLatch.await(10, TimeUnit.SECONDS));
+
+            assertEquals(Integer.valueOf(2), Integer.valueOf(receivedMessageCount.get()));
+            assertEquals(Integer.valueOf(0), Integer.valueOf(exceptionCount.get()));
+
+            // For session transacted we ack after all messages are received
+            switch(ackMode) {
+            case ActiveMQSession.SESSION_TRANSACTED:
+                assertEquals(Long.valueOf(0), Long.valueOf(localQueueViewMBean.getDequeueCount()));
+                jmsContext.commit();
+                break;
+            default: break;
+            }
+            jmsConsumer.close();
+
+            final Logger logger = LoggerFactory.getLogger(this.getClass());
+            assertTrue("Queue should drain in time", Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    logger.info("Current Queue size: " + localQueueViewMBean.getQueueSize() +
+                            ", dequeue count: " + localQueueViewMBean.getDequeueCount());
+                    return localQueueViewMBean.getQueueSize() == 0L && localQueueViewMBean.getDequeueCount() >= 2L;
                 }
-
-                assertTrue("Did not receive all messages in time", countDownLatch.await(10, TimeUnit.SECONDS));
-
-                assertEquals(Integer.valueOf(2), Integer.valueOf(receivedMessageCount.get()));
-                assertEquals(Integer.valueOf(0), Integer.valueOf(exceptionCount.get()));
-
-                // For session transacted we ack after all messages are received
-                switch(ackMode) {
-                case ActiveMQSession.SESSION_TRANSACTED:
-                    assertEquals(Long.valueOf(0), Long.valueOf(localQueueViewMBean.getDequeueCount()));
-                    consumerContext.commit();
-                    break;
-                default: break;
-                }
-                jmsConsumer.close();
-
-                final Logger logger = LoggerFactory.getLogger(this.getClass());
-                assertTrue("Queue should drain in time", Wait.waitFor(new Wait.Condition() {
-                    @Override
-                    public boolean isSatisified() throws Exception {
-                        logger.info("Current Queue size: " + localQueueViewMBean.getQueueSize() +
-                                ", dequeue count: " + localQueueViewMBean.getDequeueCount());
-                        return localQueueViewMBean.getQueueSize() == 0L && localQueueViewMBean.getDequeueCount() >= 2L;
-                    }
-                }, 60000L, 200L));
-            } // Close consumer context
+            }, 60000L, 200L));
 
         } catch (Exception e) {
-            e.printStackTrace();
-            Throwable cause = e.getCause();
-            String causeMsg = cause != null ? " Cause: " + cause.getClass().getName() + ": " + cause.getMessage() : "";
-            fail("Test failed: " + e.getClass().getName() + ": " + e.getMessage() + causeMsg);
+            fail(e.getMessage());
         }
     }
 }

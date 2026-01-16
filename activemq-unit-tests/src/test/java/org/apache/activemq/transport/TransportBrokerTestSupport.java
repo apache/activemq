@@ -40,7 +40,6 @@ public abstract class TransportBrokerTestSupport extends BrokerTest {
     protected BrokerService createBroker() throws Exception {
         BrokerService service = super.createBroker();
         connector = service.addConnector(getBindLocation());
-        service.setBrokerName("localhost-" + System.nanoTime()); // avoid potential timing issues between stop / start with JMX
         return service;
     }
 
