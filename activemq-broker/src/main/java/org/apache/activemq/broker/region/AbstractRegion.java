@@ -260,16 +260,21 @@ public abstract class AbstractRegion implements Region {
     }
 
     @Override
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
-            throws Exception {
-
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         // No timeout.. then try to shut down right way, fails if there are
         // current subscribers.
         if (timeout == 0) {
             for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
                 Subscription sub = iter.next();
                 if (sub.matches(destination) ) {
-                    throw new JMSException("Destination: " + destination + " still has an active subscription: " + sub);
+                    if(sub.isWildcard()) {
+                        var dest = destinations.get(destination);
+                        if(dest != null && dest.isGcWithOnlyWildcardConsumers()) {
+                            continue;
+                        }
+                    } else {
+                        throw new JMSException("Destination: " + destination + " still has an active subscription: " + sub);
+                    }
                 }
             }
         }
