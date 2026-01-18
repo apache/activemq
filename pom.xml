@@ -75,7 +75,7 @@
     <jolokia-version>2.4.3</jolokia-version>
     <junit-version>4.13.2</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
-    <karaf-version>4.3.7</karaf-version>
+    <karaf-version>4.4.9</karaf-version>
     <log4j-version>2.25.3</log4j-version>
     <mockito-version>4.8.1</mockito-version>
     <owasp-dependency-check-version>12.1.8</owasp-dependency-check-version>
