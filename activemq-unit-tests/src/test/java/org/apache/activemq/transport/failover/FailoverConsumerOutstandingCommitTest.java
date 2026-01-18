@@ -71,6 +71,8 @@ public class FailoverConsumerOutstandingCommitTest {
     public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
         broker = createBroker(deleteAllMessagesOnStartup);
         broker.start();
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
@@ -90,7 +92,7 @@ public class FailoverConsumerOutstandingCommitTest {
         policyMap.setDefaultEntry(defaultEntry);
         broker.setDestinationPolicy(policyMap);
 
-        url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        // Do not set url here - need to get it after broker starts when using ephemeral ports
 
         return broker;
     }
@@ -126,6 +128,9 @@ public class FailoverConsumerOutstandingCommitTest {
                 }
         });
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setWatchTopicAdvisories(watchTopicAdvisories);
@@ -181,6 +186,9 @@ public class FailoverConsumerOutstandingCommitTest {
         broker = createBroker(false, url);
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         assertTrue("consumer added through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
         assertTrue("another message was recieved after failover", messagesReceived.await(20, TimeUnit.SECONDS));
 
@@ -227,6 +235,9 @@ public class FailoverConsumerOutstandingCommitTest {
             }
         } });
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setWatchTopicAdvisories(watchTopicAdvisories);
@@ -288,6 +299,9 @@ public class FailoverConsumerOutstandingCommitTest {
         broker = createBroker(false, url);
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         assertTrue("commit done through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
         assertTrue("commit failed", gotCommitException.get());
         assertTrue("another message was received after failover", messagesReceived.await(20, TimeUnit.SECONDS));
@@ -307,6 +321,9 @@ public class FailoverConsumerOutstandingCommitTest {
     public void testRollbackFailoverConsumerTx() throws Exception {
         broker = createBroker(true);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setConsumerFailoverRedeliveryWaitPeriod(10000);
@@ -332,6 +349,9 @@ public class FailoverConsumerOutstandingCommitTest {
         broker.waitUntilStopped();
         broker = createBroker(false, url);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         consumerSession.rollback();
 

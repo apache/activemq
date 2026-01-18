@@ -53,6 +53,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     private ActiveMQConnection connection;
     private BrokerService broker;
+    private String actualBrokerUri;
 
     @Override
     protected void tearDown() throws Exception {
@@ -70,10 +71,10 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testCreateTcpConnectionUsingKnownPort() throws Exception {
         // Control case: check that the factory can create an ordinary (non-ssl) connection.
-        broker = createBroker("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
+        broker = createBroker("tcp://localhost:0?wireFormat.tcpNoDelayEnabled=true");
 
         // This should create the connection.
-        ActiveMQSslConnectionFactory cf = getFactory("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
+        ActiveMQSslConnectionFactory cf = getFactory(actualBrokerUri);
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
         connection.start();
@@ -83,11 +84,11 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testCreateTcpConnectionWithSocketParameters() throws Exception {
         // Control case: check that the factory can create an ordinary (non-ssl) connection.
-        String tcpUri = "tcp://localhost:61610?socket.OOBInline=true&socket.keepAlive=true&tcpNoDelay=true";
+        String tcpUri = "tcp://localhost:0?socket.OOBInline=true&socket.keepAlive=true&tcpNoDelay=true";
         broker = createBroker(tcpUri);
 
-        // This should create the connection.
-        ActiveMQSslConnectionFactory cf = getFactory(tcpUri);
+        // This should create the connection using the actual bound URI.
+        ActiveMQSslConnectionFactory cf = getFactory(actualBrokerUri);
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
 
@@ -103,10 +104,10 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testCreateFailoverTcpConnectionUsingKnownPort() throws Exception {
         // Control case: check that the factory can create an ordinary (non-ssl) connection.
-        broker = createBroker("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
+        broker = createBroker("tcp://localhost:0?wireFormat.tcpNoDelayEnabled=true");
 
-        // This should create the connection.
-        ActiveMQSslConnectionFactory cf = getFactory("failover:(tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true)");
+        // This should create the connection using the actual bound URI.
+        ActiveMQSslConnectionFactory cf = getFactory("failover:(" + actualBrokerUri + ")");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
         connection.start();
@@ -116,12 +117,12 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testCreateSslConnection() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-        String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:0";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
-        // This should create the connection.
-        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        // This should create the connection using the actual bound URI.
+        ActiveMQSslConnectionFactory cf = getFactory(actualBrokerUri);
         cf.setTrustStore("server.keystore");
         cf.setTrustStorePassword("password");
         connection = (ActiveMQConnection)cf.createConnection();
@@ -134,12 +135,12 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testCreateSslConnectionWithSocketParameters() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-        String sslUri = "ssl://localhost:61611?socket.enabledProtocols=TLSv1.3&socket.enableSessionCreation=true&socket.needClientAuth=true";
+        String sslUri = "ssl://localhost:0?socket.enabledProtocols=TLSv1.3&socket.enableSessionCreation=true&socket.needClientAuth=true";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
-        // This should create the connection.
-        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        // This should create the connection using the actual bound URI.
+        ActiveMQSslConnectionFactory cf = getFactory(actualBrokerUri);
         cf.setTrustStore("server.keystore");
         cf.setTrustStorePassword("password");
         connection = (ActiveMQConnection)cf.createConnection();
@@ -158,12 +159,12 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testCreateSslConnectionKeyStore() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-        String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:0";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
-        // This should create the connection.
-        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        // This should create the connection using the actual bound URI.
+        ActiveMQSslConnectionFactory cf = getFactory(actualBrokerUri);
         cf.setKeyStore("server.keystore");
         cf.setKeyStorePassword("password");
         cf.setTrustStore("server.keystore");
@@ -178,12 +179,12 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testFailoverSslConnection() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-        String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:0";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
-        // This should create the connection.
-        ActiveMQSslConnectionFactory cf = getFactory("failover:(" + sslUri + ")?maxReconnectAttempts=4");
+        // This should create the connection using the actual bound URI.
+        ActiveMQSslConnectionFactory cf = getFactory("failover:(" + actualBrokerUri + ")?maxReconnectAttempts=4");
         cf.setTrustStore("server.keystore");
         cf.setTrustStorePassword("password");
         connection = (ActiveMQConnection)cf.createConnection();
@@ -196,11 +197,11 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testFailoverSslConnectionWithKeyAndTrustManagers() throws Exception {
-        String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:0";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
-        ActiveMQSslConnectionFactory cf = getFactory("failover:(" + sslUri + ")?maxReconnectAttempts=4");
+        ActiveMQSslConnectionFactory cf = getFactory("failover:(" + actualBrokerUri + ")?maxReconnectAttempts=4");
         cf.setKeyAndTrustManagers(getKeyManager(), getTrustManager(), new SecureRandom());
         connection = (ActiveMQConnection)cf.createConnection();
         LOG.info("Created client connection");
@@ -213,12 +214,12 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testNegativeCreateSslConnectionWithWrongTrustStorePassword() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-        String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:0";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
         // This should FAIL to connect, due to wrong password.
-        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        ActiveMQSslConnectionFactory cf = getFactory(actualBrokerUri);
         cf.setTrustStore("server.keystore");
         cf.setTrustStorePassword("wrongPassword");
         try {
@@ -237,12 +238,12 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testCreateSslConnectionWithNullTrustStorePassword() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-        String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:0";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
         // This should create the connection.
-        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        ActiveMQSslConnectionFactory cf = getFactory(actualBrokerUri);
         cf.setTrustStore("server.keystore");
         //don't set a truststore password so it's null, this caused an NPE
         //before AMQ-8550. truststore password is used to protect the integrity
@@ -257,12 +258,12 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testNegativeCreateSslConnectionWithWrongKeyStorePassword() throws Exception {
         // Create SSL/TLS connection with keystore and trusted cert from truststore.
-        String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:0";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
         // This should FAIL to connect, due to wrong keystore password.
-        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        ActiveMQSslConnectionFactory cf = getFactory(actualBrokerUri);
         cf.setKeyStore("server.keystore");
         cf.setKeyStorePassword("badPassword");
         cf.setTrustStore("server.keystore");
@@ -283,13 +284,13 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testNegativeCreateSslConnectionWithNullKeyStorePassword() throws Exception {
         // Create SSL/TLS connection with keystore and trusted cert from truststore.
-        String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:0";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
         // This should FAIL to connect, due to null password for keystore.
         //Before AMQ-8550 this would fail with a NPE
-        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        ActiveMQSslConnectionFactory cf = getFactory(actualBrokerUri);
         cf.setKeyStore("server.keystore");
         //don't set keystore password so it's null
         cf.setTrustStore("server.keystore");
@@ -311,12 +312,12 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testNegativeCreateSslConnectionWithWrongCert() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-        String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:0";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
         // This should FAIL to connect, due to wrong password.
-        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
+        ActiveMQSslConnectionFactory cf = getFactory(actualBrokerUri);
         cf.setTrustStore("dummy.keystore");
         cf.setTrustStorePassword("password");
         try {
@@ -339,6 +340,9 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         service.addConnector(uri);
         service.start();
 
+        // Get the actual bound URI if ephemeral port was used
+        actualBrokerUri = service.getTransportConnectors().get(0).getPublishableConnectString();
+
         return service;
     }
 
@@ -355,6 +359,9 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         TrustManager[] tm = getTrustManager();
         service.addSslConnector(uri, km, tm, null);
         service.start();
+
+        // Get the actual bound URI if ephemeral port was used
+        actualBrokerUri = service.getTransportConnectors().get(0).getPublishableConnectString();
 
         return service;
     }
