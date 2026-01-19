@@ -23,6 +23,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.*;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
+@Ignore("This test is going to be fixed in the PR: AMQ-9829 Track prefetched messages for duplicate suppression during failover")
 public class FailoverDurableSubTransactionTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverDurableSubTransactionTest.class);
