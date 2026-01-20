@@ -25,6 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.jms.Connection;
 import jakarta.jms.Session;
@@ -125,7 +126,7 @@ public class ActiveMQConnectionFactoryTest {
     }
 
 
-    @Test
+    @Test(timeout = 60_000)
     public void testXAResourceReconnect() throws Exception {
 
         BrokerService brokerService = new BrokerService();
@@ -167,6 +168,9 @@ public class ActiveMQConnectionFactoryTest {
 
             // Wait for failover to reconnect and recover() to succeed
             // The ReconnectingXAResource should handle reconnection transparently
+            // Timeout: 30s accounts for maxReconnectAttempts=10 with exponential backoff
+            // up to the default maxReconnectDelay (30s per attempt)
+            // Poll interval: 500ms balances responsiveness without overwhelming the system
             final XAResource resource = resources[0];
             assertTrue("connection re-established and can recover", Wait.waitFor(new Wait.Condition() {
                 @Override
@@ -179,7 +183,7 @@ public class ActiveMQConnectionFactoryTest {
                         return false;
                     }
                 }
-            }, 30000, 500));
+            }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(500)));
 
             // should recover ok
             assertEquals("no pending transactions", 0, resources[0].recover(100).length);
