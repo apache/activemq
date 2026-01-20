@@ -27,6 +27,8 @@ import jakarta.jms.Session;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import static jakarta.jms.Message.DEFAULT_PRIORITY;
+
 public class ProducerCommand extends AbstractCommand {
     private static final Logger LOG = LoggerFactory.getLogger(ProducerCommand.class);
 
@@ -45,6 +47,8 @@ public class ProducerCommand extends AbstractCommand {
     String msgGroupID=null;
     int transactionBatchSize;
     private int parallelThreads = 1;
+    int priority = DEFAULT_PRIORITY;
+    boolean disableMessageTimestamp = false;
 
     @Override
     protected void runTask(List<String> tokens) throws Exception {
@@ -82,6 +86,8 @@ public class ProducerCommand extends AbstractCommand {
                 producer.setMsgGroupID(msgGroupID);
                 producer.setTextMessageSize(textMessageSize);
                 producer.setFinished(active);
+                producer.setMessagePriority(priority);
+                producer.setDisableMessageTimestamp(disableMessageTimestamp);
                 producer.start();
             }
 
@@ -211,6 +217,14 @@ public class ProducerCommand extends AbstractCommand {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public void setMessagePriority(int priority) {
+        this.priority = priority;
+    }
+
+    public void setDisableMessageTimestamp(boolean disableMessageTimestamp) {
+        this.disableMessageTimestamp = disableMessageTimestamp;
     }
 
     @Override

@@ -23,13 +23,16 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Timeout;
 
+@Category(ParallelTest.class)
 public class DataFileAppenderSyncStrategyTest  {
 
     @Rule

@@ -21,7 +21,6 @@ import java.util.Set;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.IndirectMessageReference;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
@@ -34,7 +33,7 @@ import org.apache.activemq.util.SubscriptionKey;
  * Creates a mapped Queue that can recover messages from subscription recovery
  * policy of its Virtual Topic.
  */
-public class MappedQueueFilter extends DestinationFilter {
+public class MappedQueueFilter extends BaseVirtualDestinationFilter {
 
     private final ActiveMQDestination virtualDestination;
 
@@ -85,15 +84,6 @@ public class MappedQueueFilter extends DestinationFilter {
                 }
             }
         }
-    }
-
-    private BaseDestination getBaseDestination(Destination virtualDest) {
-        if (virtualDest instanceof BaseDestination) {
-            return (BaseDestination) virtualDest;
-        } else if (virtualDest instanceof DestinationFilter) {
-            return ((DestinationFilter) virtualDest).getAdaptor(BaseDestination.class);
-        }
-        return null;
     }
 
     @Override

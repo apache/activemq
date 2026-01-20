@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.ConnectionControl;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for ConnectionControl
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.ConnectionControl;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class ConnectionControlTest extends BaseCommandTestSupport {
 
     public static final ConnectionControlTest SINGLETON = new ConnectionControlTest();

@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.2.0-SNAPSHOT</version>
+    <version>6.3.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-runtime-config</artifactId>
@@ -115,7 +115,7 @@
       <plugin>
         <groupId>org.apache.cxf</groupId>
         <artifactId>cxf-xjc-plugin</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.2</version>
         <executions>
           <execution>
             <id>compile-xsd</id>
@@ -150,16 +150,13 @@
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
           <argLine>-Xmx512M -Djava.awt.headless=true</argLine>
-          <systemProperties>
-            <property>
-              <name>org.apache.activemq.default.directory.prefix</name>
-              <value>target/</value>
-            </property>
+          <systemPropertyVariables>
+            <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
             <property>
               <name>log4j.configuration</name>
               <value>file:target/test-classes/log4j.properties</value>
             </property>
-          </systemProperties>
+          </systemPropertyVariables>
           <includes>
             <include>**/*Test.*</include>
           </includes>

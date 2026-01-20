@@ -37,6 +37,7 @@ import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.DeleteOnClose;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -44,10 +45,12 @@ import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for JMS temporary destination mappings to AMQP
  */
+@Category(ParallelTest.class)
 public class AmqpTempDestinationTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)

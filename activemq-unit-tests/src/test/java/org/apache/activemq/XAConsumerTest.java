@@ -44,7 +44,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class XAConsumerTest extends TestCase {
 
     static final Logger LOG = LoggerFactory.getLogger(XAConsumerTest.class);

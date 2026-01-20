@@ -42,6 +42,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.management.MessageFlowStats;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.SystemUsage;
@@ -298,6 +299,16 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     @Override
+    protected void processExpiredAck(ConnectionContext context, Destination dest,
+        MessageReference node) {
+
+        // Each subscription needs to expire both on the store and
+        // decrement the reference count
+        super.processExpiredAck(context, dest, node);
+        node.decrementReferenceCount();
+    }
+
+    @Override
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
         synchronized (pending) {
             pending.addRecoveredMessage(message);
@@ -373,6 +384,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             ((Destination)node.getRegionDestination()).getDestinationStatistics().getForwards().add(ack.getMessageCount());
             if(((Destination)node.getRegionDestination()).isAdvancedNetworkStatisticsEnabled() && getContext() != null && getContext().isNetworkConnection()) {
                 ((Destination)node.getRegionDestination()).getDestinationStatistics().getNetworkDequeues().add(ack.getMessageCount());
+            }
+
+            final MessageFlowStats tmpMessageFlowStats = ((Destination)node.getRegionDestination()).getDestinationStatistics().getMessageFlowStats();
+            if(tmpMessageFlowStats != null) {
+                tmpMessageFlowStats.dequeueStats(context.getClientId(), node.getMessageId().toString(), node.getMessage().getTimestamp(), node.getMessage().getBrokerInTime(), node.getMessage().getBrokerOutTime());
             }
         }
     }

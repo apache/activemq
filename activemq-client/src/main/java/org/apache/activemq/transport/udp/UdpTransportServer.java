@@ -154,7 +154,6 @@ public class UdpTransportServer extends TransportServerSupport {
         final UdpTransport transport = new UdpTransport(connectionWireFormat, address);
 
         final ReliableTransport reliableTransport = new ReliableTransport(transport, transport);
-        reliableTransport.getReplayer();
         reliableTransport.setReplayStrategy(replayStrategy);
 
         // Joiner must be on outside as the inbound messages must be processed

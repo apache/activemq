@@ -18,6 +18,9 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.ActiveMQObjectMessage;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
+
 /**
  * Test case for the OpenWire marshalling for ActiveMQObjectMessage
  * 
@@ -28,6 +31,7 @@ import org.apache.activemq.command.ActiveMQObjectMessage;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class ActiveMQObjectMessageTest extends ActiveMQMessageTest {
 
     public static final ActiveMQObjectMessageTest SINGLETON = new ActiveMQObjectMessageTest();

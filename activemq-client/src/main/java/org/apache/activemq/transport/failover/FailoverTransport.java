@@ -903,7 +903,7 @@ public class FailoverTransport implements CompositeTransport {
         if (fileURL != null) {
             BufferedReader in = null;
             String newUris = null;
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
 
             try {
                 in = new BufferedReader(getURLStream(fileURL));

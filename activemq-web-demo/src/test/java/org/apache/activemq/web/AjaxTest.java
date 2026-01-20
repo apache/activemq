@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import jakarta.jms.Message;
 import jakarta.jms.MessageProducer;
@@ -32,7 +33,6 @@ import jakarta.jms.MessageProducer;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.transport.stomp.StompFrame;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Result;
@@ -52,7 +52,7 @@ public class AjaxTest extends JettyTestSupport {
         assertTrue( "'"+actual+"' does not contain expected fragment '"+expected+"'", actual.indexOf( expected ) != -1 );
     }
     public void assertResponseCount( int expected, String actual ) {
-        int occurrences = StringUtils.countMatches( actual, "<response" );
+        int occurrences = occurences(actual, "<response");
         assertEquals( "Expected number of <response> elements is not correct.", expected, occurrences );
     }
 
@@ -498,5 +498,9 @@ public class AjaxTest extends JettyTestSupport {
             }
         });
         return latch;
+    }
+
+    private static int occurences(String content, String subString) {
+        return (content.length() - content.replaceAll(Pattern.quote(subString), "").length()) / subString.length();
     }
 }

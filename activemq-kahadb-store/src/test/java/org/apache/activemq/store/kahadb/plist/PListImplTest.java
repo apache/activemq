@@ -25,13 +25,16 @@ import java.io.File;
 
 import org.apache.activemq.store.PListStore;
 import org.apache.activemq.store.PListTestSupport;
+import org.apache.activemq.store.kahadb.ParallelTest;
 import org.apache.activemq.util.IOHelper;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
+@Category(ParallelTest.class)
 public class PListImplTest extends PListTestSupport {
 
 

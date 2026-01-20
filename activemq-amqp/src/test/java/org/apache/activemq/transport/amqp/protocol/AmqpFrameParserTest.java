@@ -28,13 +28,16 @@ import java.util.List;
 import org.apache.activemq.transport.amqp.AmqpFrameParser;
 import org.apache.activemq.transport.amqp.AmqpHeader;
 import org.apache.activemq.transport.amqp.AmqpWireFormat;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.DataByteArrayOutputStream;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class AmqpFrameParserTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpFrameParserTest.class);

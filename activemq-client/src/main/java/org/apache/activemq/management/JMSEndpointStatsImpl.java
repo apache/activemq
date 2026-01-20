@@ -21,6 +21,8 @@ import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 
+import java.util.Set;
+
 import org.apache.activemq.util.IndentPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,11 +79,7 @@ public class JMSEndpointStatsImpl extends StatsImpl {
         this.messageRateTime = messageRateTime;
 
         // lets add named stats
-        addStatistic("messageCount", messageCount);
-        addStatistic("pendingMessageCount", pendingMessageCount);
-        addStatistic("expiredMessageCount", expiredMessageCount);
-        addStatistic("messageWaitTime", messageWaitTime);
-        addStatistic("messageRateTime", messageRateTime);
+        addStatistics(Set.of(messageCount, pendingMessageCount, expiredMessageCount, messageWaitTime, messageRateTime));
     }
 
     public synchronized void reset() {
@@ -114,21 +112,19 @@ public class JMSEndpointStatsImpl extends StatsImpl {
     }
 
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append(messageCount);
-        buffer.append(" ");
-        buffer.append(messageRateTime);
-        buffer.append(" ");
-        buffer.append(pendingMessageCount);
-        buffer.append(" ");
-        buffer.append(expiredMessageCount);
-        buffer.append(" ");
-        buffer.append(messageWaitTime);
-        return buffer.toString();
+        return messageCount +
+                " " +
+                messageRateTime +
+                " " +
+                pendingMessageCount +
+                " " +
+                expiredMessageCount +
+                " " +
+                messageWaitTime;
     }
 
     public void onMessage() {
-        if (enabled) {
+        if (isEnabled()) {
             long start = messageCount.getLastSampleTime();
             messageCount.increment();
             long end = messageCount.getLastSampleTime();

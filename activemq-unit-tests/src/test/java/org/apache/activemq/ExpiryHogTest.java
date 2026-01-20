@@ -28,11 +28,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * User: gtully
  */
 @RunWith(BlockJUnit4ClassRunner.class)
+@Category(ParallelTest.class)
 public class ExpiryHogTest extends JmsMultipleClientsTestSupport {
     boolean sleep = false;
 

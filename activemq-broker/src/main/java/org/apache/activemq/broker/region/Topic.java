@@ -17,10 +17,12 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -29,6 +31,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import java.util.stream.Collectors;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -52,6 +55,7 @@ import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.store.MessageRecoveryListener;
+import org.apache.activemq.store.MessageStore.StoreType;
 import org.apache.activemq.store.NoLocalSubscriptionAware;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
@@ -701,6 +705,11 @@ public class Topic extends BaseDestination implements Task {
                     for (DurableTopicSubscription sub : durableSubscribers.values()) {
                         if (!sub.isActive() || sub.isEnableMessageExpirationOnActiveDurableSubs()) {
                             message.setRegionDestination(this);
+                            // AMQ-9721 - Remove message from the cursor if it exists after
+                            // loading from the store.  Store recoverExpired() does not inc
+                            // the ref count so we don't need to decrement here, but if
+                            // the cursor finds its own copy in memory it will dec that ref.
+                            sub.removePending(message);
                             messageExpired(connectionContext, sub, message);
                         }
                     }
@@ -779,6 +788,11 @@ public class Topic extends BaseDestination implements Task {
         // destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();
 
+        final var tmpMessageFlowStats = destinationStatistics.getMessageFlowStats();
+        if(tmpMessageFlowStats != null) {
+            tmpMessageFlowStats.enqueueStats(context.getClientId(), message.getMessageId().toString(), message.getTimestamp(), message.getBrokerInTime());
+        }
+
         if(isAdvancedNetworkStatisticsEnabled() && context != null && context.isNetworkConnection()) {
             destinationStatistics.getNetworkEnqueues().increment();
         }
@@ -819,15 +833,99 @@ public class Topic extends BaseDestination implements Task {
         }
     }
 
-    private final AtomicBoolean expiryTaskInProgress = new AtomicBoolean(false);
-    private final Runnable expireMessagesWork = new Runnable() {
+
+    /**
+     * Simple recovery listener that will check if the topic memory usage is full
+     * when hasSpace() is called. This could be enhanced in the future if needed.
+     */
+    private final MessageRecoveryListener expiryListener =  new MessageRecoveryListener() {
+
         @Override
-        public void run() {
-            List<Message> browsedMessages = new InsertionCountList<Message>();
-            doBrowse(browsedMessages, getMaxExpirePageSize());
+        public boolean recoverMessage(Message message) {
+            return true;
+        }
+
+        @Override
+        public boolean recoverMessageReference(MessageId ref)  {
+            return true;
+        }
+
+        @Override
+        public boolean hasSpace() {
+            return !Topic.this.memoryUsage.isFull();
+        }
+
+        @Override
+        public boolean isDuplicate(MessageId ref) {
+            return false;
+        }
+    };
+
+    private final AtomicBoolean expiryTaskInProgress = new AtomicBoolean(false);
+    private final Runnable expireMessagesWork = () -> {
+        try {
+            final TopicMessageStore store = Topic.this.topicStore;
+            if (store != null && store.getType() == StoreType.KAHADB) {
+                if (store.getMessageCount() == 0) {
+                    LOG.debug("Skipping topic expiration check for {}, store size is 0", destination);
+                    return;
+                }
+
+                // get the sub keys that should be checked for expired messages
+                final var subs = durableSubscribers.entrySet().stream()
+                    .filter(entry -> isEligibleForExpiration(entry.getValue()))
+                    .map(Entry::getKey).collect(Collectors.toSet());
+
+                if (subs.isEmpty()) {
+                    LOG.debug("Skipping topic expiration check for {}, no eligible subscriptions to check", destination);
+                    return;
+                }
+
+                // For each eligible subscription, return the messages in the store that are expired
+                // The same message refs are shared between subs if duplicated so this is efficient
+                var expired = store.recoverExpired(subs, getMaxExpirePageSize(),
+                    expiryListener);
+
+                final ConnectionContext connectionContext = createConnectionContext();
+                // Go through any expired messages and remove for each sub
+                for (Entry<SubscriptionKey, List<Message>> entry : expired.entrySet()) {
+                    DurableTopicSubscription sub = durableSubscribers.get(entry.getKey());
+                    List<Message> expiredMessages = entry.getValue();
+
+                    // If the sub still exists and there are expired messages then process
+                    if (sub != null && !expiredMessages.isEmpty()) {
+                        // There's a small race condition here if the sub comes online,
+                        // but it's not a big deal as at worst there maybe be duplicate acks for
+                        // the expired message but the store can handle it
+                        if (isEligibleForExpiration(sub)) {
+                            expiredMessages.forEach(message -> {
+                                message.setRegionDestination(Topic.this);
+                                try {
+                                    // AMQ-9721 - Remove message from the cursor if it exists after
+                                    // loading from the store.  Store recoverExpired() does not inc
+                                    // the ref count so we don't need to decrement here, but if
+                                    // the cursor finds its own copy in memory it will dec that ref.
+                                    sub.removePending(message);
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
+                                messageExpired(connectionContext, sub, message);
+                            });
+                        }
+                    }
+                }
+            } else {
+                // If not KahaDB, fall back to the legacy browse method because
+                // the recoverExpired() method is not supported
+                doBrowse(new InsertionCountList<>(), getMaxExpirePageSize());
+            }
+        } catch (Throwable e) {
+            LOG.warn("Failed to expire messages on Topic: {}", getActiveMQDestination().getPhysicalName(), e);
+        } finally {
             expiryTaskInProgress.set(false);
         }
     };
+
     private final Runnable expireMessagesTask = new Runnable() {
         @Override
         public void run() {
@@ -849,9 +947,6 @@ public class Topic extends BaseDestination implements Task {
         ack.setDestination(destination);
         ack.setMessageID(reference.getMessageId());
         try {
-            if (subs instanceof DurableTopicSubscription) {
-                ((DurableTopicSubscription)subs).removePending(reference);
-            }
             acknowledge(context, subs, ack, reference);
         } catch (Exception e) {
             LOG.error("Failed to remove expired Message from the store ", e);
@@ -919,6 +1014,10 @@ public class Topic extends BaseDestination implements Task {
                         exception);
             }
         }
+    }
+
+    private static boolean isEligibleForExpiration(DurableTopicSubscription sub) {
+        return sub.isEnableMessageExpirationOnActiveDurableSubs() || !sub.isActive();
     }
 
     public Map<SubscriptionKey, DurableTopicSubscription> getDurableTopicSubs() {

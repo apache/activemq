@@ -23,12 +23,15 @@ import org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * for durable subs, allow a dlq per subscriber such that poison messages are not duplicates
  * on the dlq and such that rejecting consumers can be identified
  * https://issues.apache.org/jira/browse/AMQ-3003
  */
+@Category(ParallelTest.class)
 public class PerDurableConsumerDeadLetterTest extends DeadLetterTest {
 
     private static final String CLIENT_ID = "george";

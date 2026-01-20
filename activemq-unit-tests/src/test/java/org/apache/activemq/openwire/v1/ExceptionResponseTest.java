@@ -18,6 +18,8 @@ package org.apache.activemq.openwire.v1;
 
 import org.apache.activemq.command.ExceptionResponse;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for the OpenWire marshalling for ExceptionResponse
  * 
@@ -28,6 +30,7 @@ import org.apache.activemq.command.ExceptionResponse;
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class ExceptionResponseTest extends ResponseTest {
 
     public static final ExceptionResponseTest SINGLETON = new ExceptionResponseTest();

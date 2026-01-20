@@ -179,8 +179,26 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("Topics (broadcasted 'queues'); generally system information.")
     ObjectName[] getTopics();
 
+    @MBeanInfo("Total number of topics")
+    int getTotalTopicsCount();
+
+    @MBeanInfo("Total number of non suppressed topics")
+    int getTotalManagedTopicsCount();
+
+    @MBeanInfo("Total number of temporary topics")
+    int getTotalTemporaryTopicsCount();
+
     @MBeanInfo("Standard Queues containing AIE messages.")
     ObjectName[] getQueues();
+
+    @MBeanInfo("Total number of queues")
+    int getTotalQueuesCount();
+
+    @MBeanInfo("Total number of non suppressed queues")
+    int getTotalManagedQueuesCount();
+
+    @MBeanInfo("Total number of temporary queues")
+    int getTotalTemporaryQueuesCount();
 
     /**
      * Queue Query API, take a look at {@link DestinationsViewFilter} for more information
@@ -335,4 +353,11 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo(value="The total number of times that the max number of uncommitted count has been exceeded across all destinations")
     long getTotalMaxUncommittedExceededCount();
+
+    @MBeanInfo("Dedicated Task Runner enabled.")
+    boolean isDedicatedTaskRunner();
+
+    @MBeanInfo("Virtual Thread Task Runner enabled.")
+    boolean isVirtualThreadTaskRunner();
+
 }

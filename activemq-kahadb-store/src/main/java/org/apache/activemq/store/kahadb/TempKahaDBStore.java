@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -63,6 +64,7 @@ import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.SubscriptionKey;
 import org.apache.activemq.wireformat.WireFormat;
 
 public class TempKahaDBStore extends TempMessageDatabase implements PersistenceAdapter, BrokerServiceAware {
@@ -242,41 +244,9 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         }
 
         @Override
-        public void recoverNextMessages(final int offset, final int maxReturned, final MessageRecoveryListener listener) throws Exception {
-            synchronized(indexMutex) {
-                pageFile.tx().execute(new Transaction.Closure<Exception>(){
-                    @Override
-                    public void execute(Transaction tx) throws Exception {
-                        StoredDestination sd = getStoredDestination(dest, tx);
-                        Entry<Long, MessageRecord> entry=null;
-                        int counter = 0;
-                        int position = 0;
-                        for (Iterator<Entry<Long, MessageRecord>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator.hasNext();) {
-                            entry = iterator.next();
-                            if(offset > 0 && offset > position) {
-                                position++;
-                                continue;
-                            }
-                            listener.recoverMessage( (Message) wireFormat.unmarshal(entry.getValue().data ) );
-                            counter++;
-                            position++;
-                            if( counter >= maxReturned ) {
-                                break;
-                            }
-                        }
-                        if( entry!=null ) {
-                            cursorPos = entry.getKey()+1;
-                        }
-                    }
-                });
-            }
-        }
-
-        @Override
         public void resetBatching() {
             cursorPos=0;
         }
-
 
         @Override
         public void setBatch(MessageId identity) throws IOException {
@@ -331,6 +301,10 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             getMessageStoreStatistics().getMessageCount().setCount(count);
         }
 
+        @Override
+        public StoreType getType() {
+            return StoreType.TEMP_KAHADB;
+        }
     }
 
     class KahaDBTopicMessageStore extends KahaDBMessageStore implements TopicMessageStore {
@@ -362,6 +336,12 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(subscriptionInfo);
             command.setSubscriptionInfo(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
             process(command);
+        }
+
+        @Override
+        public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max,
+            MessageRecoveryListener listener) {
+            throw new UnsupportedOperationException("recoverExpired not supported");
         }
 
         @Override

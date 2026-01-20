@@ -110,7 +110,7 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
         }
     }
 
-    private boolean isSSL(ConnectionContext context, ConnectionInfo info) throws Exception {
+    protected boolean isSSL(ConnectionContext context, ConnectionInfo info) throws Exception {
         boolean sslCapable = false;
         Connector connector = context.getConnector();
         if (connector instanceof TransportConnector) {

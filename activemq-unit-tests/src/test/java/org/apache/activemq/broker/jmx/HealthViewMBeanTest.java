@@ -32,9 +32,12 @@ import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MBeanTest.class);
     protected MBeanServer mbeanServer;

@@ -67,7 +67,7 @@ public class VirtualTopic implements VirtualDestination {
     public Destination interceptMappedDestination(Destination destination) {
         // do a reverse map from destination to get actual virtual destination
         final String physicalName = destination.getActiveMQDestination().getPhysicalName();
-        final Pattern pattern = Pattern.compile(getRegex(prefix) + "(.*)" + getRegex(postfix));
+        final Pattern pattern = Pattern.compile(getRegex(prefix) + "(.+)" + getRegex(postfix));
         final Matcher matcher = pattern.matcher(physicalName);
         if (matcher.matches()) {
             final String virtualName = matcher.group(1);

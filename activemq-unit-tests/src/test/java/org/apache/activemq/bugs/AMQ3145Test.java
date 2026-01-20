@@ -34,12 +34,15 @@ import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class AMQ3145Test {
     private static final Logger LOG = LoggerFactory.getLogger(AMQ3145Test.class);
     private final String MESSAGE_TEXT = new String(new byte[1024]);
@@ -58,7 +61,6 @@ public class AMQ3145Test {
     public void createBroker(boolean deleteAll) throws Exception {
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(deleteAll);
-        broker.setDataDirectory("target/AMQ3145Test");
         broker.setUseJmx(true);
         broker.getManagementContext().setCreateConnector(false);
         broker.addConnector("tcp://localhost:0");

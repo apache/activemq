@@ -89,4 +89,5 @@ public interface NetworkConnectorViewMBean extends Service {
 
     void setRemotePassword(String remotePassword);
 
+    boolean isAutoStart();
 }

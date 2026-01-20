@@ -27,11 +27,14 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.spring.ConsumerBean;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  *
  */
+@Category(ParallelTest.class)
 public class AMQ1687Test extends EmbeddedBrokerTestSupport {
 
     private Connection connection;

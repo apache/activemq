@@ -34,10 +34,13 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.spring.ConsumerBean;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class MessageAuthenticationTest extends EmbeddedBrokerTestSupport {
 
     private Connection connection;

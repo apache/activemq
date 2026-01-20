@@ -73,6 +73,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * This class duplicates most of the functionality in {@link NetworkTestSupport}
@@ -80,6 +82,7 @@ import org.slf4j.LoggerFactory;
  * and connectors are created. Also, this test asserts message counts via JMX on
  * each broker.
  */
+@Category(ParallelTest.class)
 public class BrokerNetworkWithStuckMessagesTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerNetworkWithStuckMessagesTest.class);

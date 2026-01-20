@@ -27,6 +27,10 @@ pipeline {
         }
     }
 
+    triggers {
+      cron('0 0 * * *')
+    }
+
     tools {
         // ... tell Jenkins what java version, maven version or other tools are required ...
         maven 'maven_3_latest'
@@ -42,9 +46,10 @@ pipeline {
     }
 
     parameters {
-        choice(name: 'nodeLabel', choices: ['ubuntu', 's390x', 'arm', 'Windows']) 
-        choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest', 'jdk_22_latest', 'jdk_17_latest_windows', 'jdk_21_latest_windows', 'jdk_22_latest_windows']) 
+        choice(name: 'nodeLabel', choices: [ 'ubuntu', 's390x', 'arm', 'Windows' ]) 
+        choice(name: 'jdkVersion', choices: ['jdk_17_latest', 'jdk_21_latest', 'jdk_24_latest', 'jdk_17_latest_windows', 'jdk_21_latest_windows', 'jdk_24_latest_windows'])
         booleanParam(name: 'deployEnabled', defaultValue: false)
+        booleanParam(name: 'parallelTestsEnabled', defaultValue: true)
         booleanParam(name: 'sonarEnabled', defaultValue: false)
         booleanParam(name: 'testsEnabled', defaultValue: true)
     }
@@ -72,12 +77,12 @@ pipeline {
             }
         }
 
-        stage('Build JDK 22') {
+        stage('Build JDK 24') {
             tools {
-                jdk "jdk_22_latest"
+                jdk "jdk_24_latest"
             }
             steps {
-                echo 'Building JDK 22'
+                echo 'Building JDK 24'
                 sh 'java -version'
                 sh 'mvn -version'
                 sh 'mvn -U -B -e clean install -DskipTests'
@@ -126,12 +131,20 @@ pipeline {
             }
             when { expression { return params.testsEnabled } }
             steps {
-                echo 'Running tests'
                 sh 'java -version'
                 sh 'mvn -version'
+
                 // all tests is very very long (10 hours on Apache Jenkins)
                 // sh 'mvn -B -e test -pl activemq-unit-tests -Dactivemq.tests=all'
-                sh 'mvn -B -e -fae test -Dsurefire.rerunFailingTestsCount=3'
+                script {
+                    if (params.parallelTestsEnabled == 'true') {
+                        sh 'echo "Running parallel-tests ..."'
+                        sh 'mvn -B -e -fae -Pparallel-tests test -Dsurefire.rerunFailingTestsCount=3'
+                    } else {
+                        sh 'echo "Running tests ..."'
+                        sh 'mvn -B -e -fae test -Dsurefire.rerunFailingTestsCount=3'
+                    }
+                }
             }
             post {
                 always {
@@ -147,7 +160,7 @@ pipeline {
             }
             when {
                 expression {
-                    params.deployEnabled && env.BRANCH_NAME ==~ /(activemq-5.18.x|activemq-5.17.x|main)/
+                    params.deployEnabled && env.BRANCH_NAME ==~ /(activemq-5.19.x|main)/
                 }
             }
             steps {
@@ -176,7 +189,7 @@ pipeline {
         // If this build failed, send an email to the list.
         failure {
             script {
-                if(env.BRANCH_NAME == "activemq-5.18.x" || env.BRANCH_NAME == "activemq-6.1.x" || env.BRANCH_NAME == "main") {
+                if(env.BRANCH_NAME == "activemq-5.19.x" || env.BRANCH_NAME == "main") {
                     emailext(
                             subject: "[BUILD-FAILURE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
@@ -193,7 +206,7 @@ Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BRANC
         // If this build didn't fail, but there were failing tests, send an email to the list.
         unstable {
             script {
-                if(env.BRANCH_NAME == "activemq-5.18.x" || env.BRANCH_NAME == "activemq-6.1.x" || env.BRANCH_NAME == "main") {
+                if(env.BRANCH_NAME == "activemq-5.19.x" || env.BRANCH_NAME == "main") {
                     emailext(
                             subject: "[BUILD-UNSTABLE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
@@ -213,7 +226,7 @@ Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BRANC
             // (in this cae we probably don't have to do any post-build analysis)
             deleteDir()
             script {
-                if ((env.BRANCH_NAME == "activemq-5.18.x" || env.BRANCH_NAME == "activemq-6.1.x" || env.BRANCH_NAME == "main") && (currentBuild.previousBuild != null) && (currentBuild.previousBuild.result != 'SUCCESS')) {
+                if ((env.BRANCH_NAME == "activemq-5.19.x" || env.BRANCH_NAME == "main") && (currentBuild.previousBuild != null) && (currentBuild.previousBuild.result != 'SUCCESS')) {
                     emailext (
                             subject: "[BUILD-STABLE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """

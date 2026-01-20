@@ -69,7 +69,7 @@ public final class DestinationPath {
      * @return
      */
     public static String toString(String[] paths) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < paths.length; i++) {
             if (i > 0) {
                 buffer.append(SEPARATOR);

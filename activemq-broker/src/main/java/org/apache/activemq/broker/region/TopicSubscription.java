@@ -25,6 +25,7 @@ import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.policy.MessageEvictionStrategy;
 import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
 import org.apache.activemq.command.*;
+import org.apache.activemq.management.MessageFlowStats;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.transport.TransmitCallback;
@@ -187,6 +188,9 @@ public class TopicSubscription extends AbstractSubscription {
                                 messagesToEvict = oldMessages.length;
                                 for (int i = 0; i < messagesToEvict; i++) {
                                     MessageReference oldMessage = oldMessages[i];
+                                    // AMQ-9721 - discard no longer removes from matched so remove here
+                                    oldMessage.decrementReferenceCount();
+                                    matched.remove(oldMessage);
                                     //Expired here is false as we are discarding due to the messageEvictingStrategy
                                     discard(oldMessage, false);
                                 }
@@ -452,6 +456,11 @@ public class TopicSubscription extends AbstractSubscription {
             if(destination.isAdvancedNetworkStatisticsEnabled() && getContext() != null && getContext().isNetworkConnection()) {
                 destination.getDestinationStatistics().getNetworkDequeues().add(count);
             }
+        }
+
+        final var tmpMessageFlowStats = destination.getDestinationStatistics().getMessageFlowStats();
+        if(tmpMessageFlowStats != null) {
+            tmpMessageFlowStats.dequeueStats(context.getClientId(), ack.getLastMessageId().toString());
         }
         if (ack.isExpiredAck()) {
             destination.getDestinationStatistics().getExpired().add(count);
@@ -745,8 +754,6 @@ public class TopicSubscription extends AbstractSubscription {
     private void discard(MessageReference message, boolean expired) {
         discarding = true;
         try {
-            message.decrementReferenceCount();
-            matched.remove(message);
             if (destination != null) {
                 destination.getDestinationStatistics().getDequeues().increment();
                 if(destination.isAdvancedNetworkStatisticsEnabled() && getContext() != null && getContext().isNetworkConnection()) {

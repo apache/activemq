@@ -33,7 +33,10 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.transport.RequestTimedOutIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 
     static final Logger LOG = LoggerFactory.getLogger(JmsTimeoutTest.class);

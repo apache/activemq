@@ -25,6 +25,8 @@ import jakarta.jms.*;
 import jakarta.jms.Queue;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /*
  * Test plan:
@@ -34,6 +36,7 @@ import java.util.concurrent.CountDownLatch;
  * Expected: for each group, messages 1-5 are handled by one consumer and messages 6-10 are handled by the other consumer.  Messages
  * 1 and 6 have the JMSXGroupFirstForConsumer property set to true.
  */
+@Category(ParallelTest.class)
 public class MessageGroupCloseTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(MessageGroupNewConsumerTest.class);
     private Connection connection;

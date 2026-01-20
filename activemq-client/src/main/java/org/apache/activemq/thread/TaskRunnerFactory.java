@@ -16,8 +16,12 @@
  */
 package org.apache.activemq.thread;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -56,6 +60,9 @@ public class TaskRunnerFactory implements Executor {
     private RejectedExecutionHandler rejectedTaskHandler = null;
     private ClassLoader threadClassLoader;
 
+    // [AMQ-9394] Virtual Thread support
+    private boolean virtualThreadTaskRunner = false;
+
     public TaskRunnerFactory() {
         this("ActiveMQ Task");
     }
@@ -72,13 +79,22 @@ public class TaskRunnerFactory implements Executor {
         this(name, priority, daemon, maxIterationsPerRun, dedicatedTaskRunner, getDefaultMaximumPoolSize());
     }
 
+    public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner, boolean virtualThreadTaskRunner) {
+        this(name, priority, daemon, maxIterationsPerRun, dedicatedTaskRunner, getDefaultMaximumPoolSize(), virtualThreadTaskRunner);
+    }
+
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner, int maxThreadPoolSize) {
+        this(name, priority, daemon, maxIterationsPerRun, dedicatedTaskRunner, maxThreadPoolSize, false);
+    }
+
+    public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner, int maxThreadPoolSize, boolean virtualThreadTaskRunner) {
         this.name = name;
         this.priority = priority;
         this.daemon = daemon;
         this.maxIterationsPerRun = maxIterationsPerRun;
         this.dedicatedTaskRunner = dedicatedTaskRunner;
         this.maxThreadPoolSize = maxThreadPoolSize;
+        this.virtualThreadTaskRunner = virtualThreadTaskRunner;
     }
 
     public void init() {
@@ -90,7 +106,9 @@ public class TaskRunnerFactory implements Executor {
             synchronized(this) {
                 //need to recheck if initDone is true under the lock
                 if (!initDone.get()) {
-                    if (dedicatedTaskRunner || "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
+                    if (virtualThreadTaskRunner || "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.UseVirtualThreadTaskRunner")) ) {
+                        executorRef.compareAndSet(null, createVirtualThreadExecutor());
+                    } else if (dedicatedTaskRunner || "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
                         executorRef.set(null);
                     } else {
                         executorRef.compareAndSet(null, createDefaultExecutor());
@@ -154,7 +172,11 @@ public class TaskRunnerFactory implements Executor {
         init();
         ExecutorService executor = executorRef.get();
         if (executor != null) {
-            return new PooledTaskRunner(executor, task, maxIterationsPerRun);
+            if(isVirtualThreadTaskRunner()) {
+                return createVirtualThreadTaskRunner(executor, task, maxIterationsPerRun);
+            } else {
+                return new PooledTaskRunner(executor, task, maxIterationsPerRun);
+            }
         } else {
             return new DedicatedTaskRunner(task, name, priority, daemon);
         }
@@ -217,6 +239,48 @@ public class TaskRunnerFactory implements Executor {
         return rc;
     }
 
+    protected ExecutorService createVirtualThreadExecutor() {
+        if(!(Runtime.version().feature() >= 21)) {
+            LOG.error("Virtual Thread support requires JDK 21 or higher");
+            throw new IllegalStateException("Virtual Thread support requires JDK 21 or higher");
+        }
+
+        try {
+            Class<?> virtualThreadExecutorClass = Class.forName("org.apache.activemq.thread.VirtualThreadExecutor", false, threadClassLoader);
+            Method method = virtualThreadExecutorClass.getMethod("createVirtualThreadExecutorService", String.class, AtomicLong.class, Logger.class);
+            Object result = method.invoke(null, name, id, LOG);
+            if(!ExecutorService.class.isAssignableFrom(result.getClass())) {
+                throw new IllegalStateException("VirtualThreadExecutor not returned");
+            }
+            LOG.info("VirtualThreadExecutor initialized name:{}", name);
+            return ExecutorService.class.cast(result);
+        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException | InvocationTargetException e) {
+            LOG.error("VirtualThreadExecutor class failed to load", e);
+            throw new IllegalStateException(e);
+        }
+    }
+
+    protected TaskRunner createVirtualThreadTaskRunner(Executor executor, Task task, int maxIterations) {
+        if(!(Runtime.version().feature() >= 21)) {
+            LOG.error("Virtual Thread support requires JDK 21 or higher");
+            throw new IllegalStateException("Virtual Thread support requires JDK 21 or higher");
+        }
+
+        try {
+            Class<?> virtualThreadTaskRunnerClass = Class.forName("org.apache.activemq.thread.VirtualThreadTaskRunner", false, threadClassLoader);
+            Constructor<?> constructor = virtualThreadTaskRunnerClass.getConstructor(Executor.class, Task.class, Integer.TYPE);
+            Object result = constructor.newInstance(executor, task, maxIterations);
+            if(!TaskRunner.class.isAssignableFrom(result.getClass())) {
+                throw new IllegalStateException("VirtualThreadTaskRunner not returned");
+            }
+            return TaskRunner.class.cast(result);
+        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException | InvocationTargetException | InstantiationException | IllegalArgumentException e) {
+            LOG.error("VirtualThreadTaskRunner class failed to load", e);
+            throw new IllegalStateException(e);
+        }
+    }
+
+
     public ExecutorService getExecutor() {
         return executorRef.get();
     }
@@ -263,6 +327,14 @@ public class TaskRunnerFactory implements Executor {
 
     public void setDedicatedTaskRunner(boolean dedicatedTaskRunner) {
         this.dedicatedTaskRunner = dedicatedTaskRunner;
+    }
+
+    public boolean isVirtualThreadTaskRunner() {
+        return virtualThreadTaskRunner;
+    }
+
+    public void setVirtualThreadTaskRunner(boolean virtualThreadTaskRunner) {
+        this.virtualThreadTaskRunner = virtualThreadTaskRunner;
     }
 
     public int getMaxThreadPoolSize() {

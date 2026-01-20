@@ -29,8 +29,11 @@ import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 @RunWith(BlockJUnit4ClassRunner.class)
+@Category(ParallelTest.class)
 public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
 
     protected BrokerService createBroker() throws Exception {

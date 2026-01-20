@@ -39,7 +39,9 @@ import org.fusesource.mqtt.client.QoS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AmqpAndMqttTest {
 
     protected BrokerService broker;

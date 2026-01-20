@@ -71,7 +71,7 @@ public class WireFormatInfoMarshaller extends BaseDataStreamMarshaller {
         
         info.setMagic(tightUnmarshalConstByteArray(dataIn, bs, 8));
         info.setVersion(dataIn.readInt());
-        info.setMarshalledProperties(tightUnmarshalByteSequence(dataIn, bs));
+        info.setMarshalledProperties(tightUnmarshalByteSequence(wireFormat, dataIn, bs));
 
         info.afterUnmarshall(wireFormat);
 
@@ -129,7 +129,7 @@ public class WireFormatInfoMarshaller extends BaseDataStreamMarshaller {
         
         info.setMagic(looseUnmarshalConstByteArray(dataIn, 8));
         info.setVersion(dataIn.readInt());
-        info.setMarshalledProperties(looseUnmarshalByteSequence(dataIn));
+        info.setMarshalledProperties(looseUnmarshalByteSequence(wireFormat, dataIn));
 
         info.afterUnmarshall(wireFormat);
 

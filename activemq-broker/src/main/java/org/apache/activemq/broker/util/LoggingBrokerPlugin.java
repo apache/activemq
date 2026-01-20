@@ -216,9 +216,9 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
         TransactionId[] result = super.getPreparedTransactions(context);
         if ((isLogAll() || isLogTransactionEvents()) && result != null) {
-            StringBuffer tids = new StringBuffer();
+            StringBuilder tids = new StringBuilder();
             for (TransactionId tid : result) {
-                if (tids.length() > 0) {
+                if (!tids.isEmpty()) {
                     tids.append(", ");
                 }
                 tids.append(tid.getTransactionKey());
@@ -311,9 +311,9 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
             if (result == null) {
                 LOG.info("Get Clients returned empty list.");
             } else {
-                StringBuffer cids = new StringBuffer();
+                StringBuilder cids = new StringBuilder();
                 for (Connection c : result) {
-                    cids.append(cids.length() > 0 ? ", " : "");
+                    cids.append(!cids.isEmpty() ? ", " : "");
                     cids.append(c.getConnectionId());
                 }
                 LOG.info("Connected clients: {}", cids);
@@ -347,9 +347,9 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
             if (result == null) {
                 LOG.info("Get Destinations returned empty list.");
             } else {
-                StringBuffer destinations = new StringBuffer();
+                StringBuilder destinations = new StringBuilder();
                 for (ActiveMQDestination dest : result) {
-                    destinations.append(destinations.length() > 0 ? ", " : "");
+                    destinations.append(!destinations.isEmpty() ? ", " : "");
                     destinations.append(dest.getPhysicalName());
                 }
                 LOG.info("Get Destinations: {}", destinations);
@@ -413,9 +413,9 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
             if (result == null) {
                 LOG.info("Get Peer Broker Infos returned empty list.");
             } else {
-                StringBuffer peers = new StringBuffer();
+                StringBuilder peers = new StringBuilder();
                 for (BrokerInfo bi : result) {
-                    peers.append(peers.length() > 0 ? ", " : "");
+                    peers.append(!peers.isEmpty() ? ", " : "");
                     peers.append(bi.getBrokerName());
                 }
                 LOG.info("Get Peer Broker Infos: {}", peers);
@@ -455,9 +455,9 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
             if (result == null) {
                 LOG.info("Get Durable Destinations returned empty list.");
             } else {
-                StringBuffer destinations = new StringBuffer();
+                StringBuilder destinations = new StringBuilder();
                 for (ActiveMQDestination dest : result) {
-                    destinations.append(destinations.length() > 0 ? ", " : "");
+                    destinations.append(!destinations.isEmpty() ? ", " : "");
                     destinations.append(dest.getPhysicalName());
                 }
                 LOG.info("Get Durable Destinations: {}", destinations);
@@ -563,12 +563,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     public void slowConsumer(ConnectionContext context, Destination destination, Subscription subs) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
             LOG.info("Detected slow consumer on {}", destination.getName());
-            StringBuffer buf = new StringBuffer("Connection(");
-            buf.append(subs.getConsumerInfo().getConsumerId().getConnectionId());
-            buf.append(") Session(");
-            buf.append(subs.getConsumerInfo().getConsumerId().getSessionId());
-            buf.append(")");
-            LOG.info(buf.toString());
+            LOG.info("Connection({}) Session({})", subs.getConsumerInfo().getConsumerId().getConnectionId(), subs.getConsumerInfo().getConsumerId().getSessionId());
         }
         super.slowConsumer(context, destination, subs);
     }
@@ -583,24 +578,22 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
-        buf.append("LoggingBrokerPlugin(");
-        buf.append("logAll=");
-        buf.append(isLogAll());
-        buf.append(", logConnectionEvents=");
-        buf.append(isLogConnectionEvents());
-        buf.append(", logSessionEvents=");
-        buf.append(isLogSessionEvents());
-        buf.append(", logConsumerEvents=");
-        buf.append(isLogConsumerEvents());
-        buf.append(", logProducerEvents=");
-        buf.append(isLogProducerEvents());
-        buf.append(", logTransactionEvents=");
-        buf.append(isLogTransactionEvents());
-        buf.append(", logInternalEvents=");
-        buf.append(isLogInternalEvents());
-        buf.append(")");
-        return buf.toString();
+        return "LoggingBrokerPlugin(" +
+                "logAll=" +
+                isLogAll() +
+                ", logConnectionEvents=" +
+                isLogConnectionEvents() +
+                ", logSessionEvents=" +
+                isLogSessionEvents() +
+                ", logConsumerEvents=" +
+                isLogConsumerEvents() +
+                ", logProducerEvents=" +
+                isLogProducerEvents() +
+                ", logTransactionEvents=" +
+                isLogTransactionEvents() +
+                ", logInternalEvents=" +
+                isLogInternalEvents() +
+                ")";
     }
 
     public void setPerDestinationLogger(boolean perDestinationLogger) {

@@ -28,11 +28,15 @@ import static org.junit.Assert.fail;
 import java.util.UUID;
 
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.qpid.jms.exceptions.IdConversionException;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+@Category(ParallelTest.class)
 
 public class AMQPMessageIdHelperTest {
 

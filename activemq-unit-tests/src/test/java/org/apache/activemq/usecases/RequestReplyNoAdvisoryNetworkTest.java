@@ -49,7 +49,10 @@ import org.apache.activemq.util.Wait;
 import org.apache.activemq.xbean.XBeanBrokerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(RequestReplyNoAdvisoryNetworkTest.class);
 
@@ -270,7 +273,7 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         tempReplyQPolicy.setOptimizedDispatch(true);
         tempReplyQPolicy.setGcInactiveDestinations(true);
         tempReplyQPolicy.setGcWithNetworkConsumers(true);
-        tempReplyQPolicy.setInactiveTimoutBeforeGC(1000);
+        tempReplyQPolicy.setInactiveTimeoutBeforeGC(1000);
         map.put(replyQWildcard, tempReplyQPolicy);
         broker.setDestinationPolicy(map);
 

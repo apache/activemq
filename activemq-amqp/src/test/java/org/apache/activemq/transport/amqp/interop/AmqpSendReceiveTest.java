@@ -48,6 +48,7 @@ import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.apache.activemq.util.Wait;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.UnsignedByte;
@@ -58,6 +59,7 @@ import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.message.impl.MessageImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +68,7 @@ import org.slf4j.LoggerFactory;
  * links.
  */
 @RunWith(ActiveMQTestRunner.class)
+@Category(ParallelTest.class)
 public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(AmqpSendReceiveTest.class);

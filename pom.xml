@@ -19,20 +19,22 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>30</version>
+    <version>35</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>6.2.0-SNAPSHOT</version>
+  <version>6.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
 
   <properties>
-    <!-- for reproducible builds -->	
-    <project.build.outputTimestamp>2024-04-29T15:51:45Z</project.build.outputTimestamp>
+    <maven.compiler.target>17</maven.compiler.target>
+
+    <surefire.argLine></surefire.argLine>
+    <maven.surefire.allow.securitymanager>-Djava.security.manager=allow</maven.surefire.allow.securitymanager>
 
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
@@ -45,17 +47,13 @@
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.10.15</ant-version>
     <aries-version>1.1.0</aries-version>
-    <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>4.4.3</camel-version>
-    <commons-beanutils-version>1.9.4</commons-beanutils-version>
+    <camel-version>4.14.4</camel-version>
+    <commons-beanutils-version>1.11.0</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
-    <commons-daemon-version>1.4.0</commons-daemon-version>
-    <commons-dbcp2-version>2.12.0</commons-dbcp2-version>
-    <commons-io-version>2.17.0</commons-io-version>
-    <commons-lang-version>3.14.0</commons-lang-version>
-    <commons-logging-version>1.3.4</commons-logging-version>
-    <commons-pool2-version>2.12.0</commons-pool2-version>
-    <commons-primitives-version>1.0</commons-primitives-version>
+    <commons-dbcp2-version>2.13.0</commons-dbcp2-version>
+    <commons-io-version>2.20.0</commons-io-version>
+    <commons-logging-version>1.3.5</commons-logging-version>
+    <commons-pool2-version>2.13.1</commons-pool2-version>
     <directory-version>2.0.0.AM25</directory-version>
     <ecj.version>3.17.0</ecj.version>
     <ftpserver-version>1.1.1</ftpserver-version>
@@ -65,45 +63,41 @@
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
-    <jackson-version>2.17.2</jackson-version>
+    <jackson-version>2.20.1</jackson-version>
+    <jackson-annotations-version>2.20</jackson-annotations-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
     <jasypt-version>1.9.3</jasypt-version>
-    <jaxb-version>4.0.5</jaxb-version>
+    <jaxb-version>4.0.6</jaxb-version>
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
-    <jetty-version>11.0.22</jetty-version>
+    <jetty-version>11.0.26</jetty-version>
     <jetty-version-range>[11,13)</jetty-version-range>
-    <jmdns-version>3.5.12</jmdns-version>
-    <tomcat-api-version>9.0.65</tomcat-api-version>
+    <jmdns-version>3.6.2</jmdns-version>
+    <javassist-version>3.30.2-GA</javassist-version>
     <jettison-version>1.5.4</jettison-version>
     <jmock-version>2.13.1</jmock-version>
-    <jolokia-version>2.0.3</jolokia-version>
-    <josql-version>1.5_5</josql-version>
-    <!-- for json-simple use same version as jolokia uses -->
-    <json-simple-version>1.1.1</json-simple-version>
+    <jolokia-version>2.4.3</jolokia-version>
     <junit-version>4.13.2</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <karaf-version>4.3.7</karaf-version>
-    <log4j-version>2.23.1</log4j-version>
+    <log4j-version>2.25.3</log4j-version>
     <mockito-version>4.8.1</mockito-version>
-    <owasp-dependency-check-version>9.2.0</owasp-dependency-check-version>
+    <owasp-dependency-check-version>12.1.8</owasp-dependency-check-version>
     <mqtt-client-version>1.16</mqtt-client-version>
     <org-apache-derby-version>10.16.1.1</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
     <qpid-proton-version>0.34.1</qpid-proton-version>
     <qpid-jms-version>2.4.0</qpid-jms-version>
     <netty-version>4.1.94.Final</netty-version>
-    <regexp-version>1.4</regexp-version>
     <rome-version>2.1.0</rome-version>
-    <shiro-version>1.13.0</shiro-version>
-    <slf4j-version>2.0.13</slf4j-version>
+    <shiro-version>2.0.6</shiro-version>
+    <slf4j-version>2.0.17</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
-    <spring-version>6.1.13</spring-version>
+    <spring-version>6.2.15</spring-version>
     <spring-version-range>[6,7)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
-    <velocity-version>2.3</velocity-version>
     <xpp3-version>1.1.4c</xpp3-version>
-    <xstream-version>1.4.20</xstream-version>
-    <xbean-version>4.25</xbean-version>
+    <xstream-version>1.4.21</xstream-version>
+    <xbean-version>4.28</xbean-version>
     <xerces-version>2.12.2</xerces-version>
     <jaxb-tools-version>4.0.8</jaxb-tools-version>
     <stompjms-version>3.1.0</stompjms-version>
@@ -120,39 +114,23 @@
     <javaee-javadoc-url>http://download.oracle.com/javaee/6/api/</javaee-javadoc-url>
 
     <!-- Maven Plugin Version for this Project -->
-    <maven-bundle-plugin-version>5.1.9</maven-bundle-plugin-version>
-    <maven-surefire-plugin-version>3.5.0</maven-surefire-plugin-version>
-    <maven-antrun-plugin-version>3.1.0</maven-antrun-plugin-version>
-    <maven-assembly-plugin-version>3.7.1</maven-assembly-plugin-version>
-    <maven-clean-plugin-version>3.4.0</maven-clean-plugin-version>
-    <maven-release-plugin-version>3.1.1</maven-release-plugin-version>
+    <maven-bundle-plugin-version>6.0.0</maven-bundle-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
-    <maven-enforcer-plugin-version>3.5.0</maven-enforcer-plugin-version>
-    <maven-war-plugin-version>3.4.0</maven-war-plugin-version>
-    <maven-compiler-plugin-version>3.13.0</maven-compiler-plugin-version>
     <maven-rar-plugin-version>3.0.0</maven-rar-plugin-version>
-    <maven-jar-plugin-version>3.4.2</maven-jar-plugin-version>
-    <maven-source-plugin-version>3.3.1</maven-source-plugin-version>
-    <maven-javadoc-plugin-version>3.10.0</maven-javadoc-plugin-version>
-    <maven-install-plugin-version>2.5.2</maven-install-plugin-version>
-    <maven-shade-plugin-version>3.5.3</maven-shade-plugin-version>
     <exec-maven-plugin-version>3.1.0</exec-maven-plugin-version>
-    <findbugs-maven-plugin-version>3.0.5</findbugs-maven-plugin-version>
-    <flatten-maven-plugin-version>1.6.0</flatten-maven-plugin-version>
-    <javacc-maven-plugin-version>3.1.0</javacc-maven-plugin-version>
+    <flatten-maven-plugin-version>1.7.3</flatten-maven-plugin-version>
+    <javacc-maven-plugin-version>3.1.1</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
-    <taglist-maven-plugin-version>3.1.0</taglist-maven-plugin-version>
-    <build-helper-maven-plugin-version>3.6.0</build-helper-maven-plugin-version>
+    <taglist-maven-plugin-version>3.2.1</taglist-maven-plugin-version>
+    <build-helper-maven-plugin-version>3.6.1</build-helper-maven-plugin-version>
     <replacer-maven-plugin-version>1.5.3</replacer-maven-plugin-version>
-    <sonar-maven-plugin-version>4.0.0.4121</sonar-maven-plugin-version>
-    <apache-rat-plugin-version>0.16.1</apache-rat-plugin-version>
+    <sonar-maven-plugin-version>5.2.0.4988</sonar-maven-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.5.0</depends-maven-plugin-version>
-    <maven-dependency-plugin-version>3.6.1</maven-dependency-plugin-version>
-    <maven-project-info-reports-plugin-version>3.7.0</maven-project-info-reports-plugin-version>
+    <maven-project-info-reports-plugin-version>3.9.0</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
-    <maven-plugin-plugin-version>3.13.1</maven-plugin-plugin-version>
     <maven-core-version>3.8.6</maven-core-version>
+    <maven-surefire-plugin-version>3.5.3</maven-surefire-plugin-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
@@ -245,7 +223,7 @@
     <connection>scm:git:http://gitbox.apache.org/repos/asf/activemq.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/activemq.git</developerConnection>
     <url>https://github.com/apache/activemq</url>
-    <tag>main</tag>
+    <tag>activemq-6.2.0</tag>
   </scm>
 
   <dependencyManagement>
@@ -469,7 +447,7 @@
       <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm</artifactId>
-        <version>9.7</version>
+        <version>9.9</version>
       </dependency>
 
      <!-- Servlet 5.0 and JSP -->
@@ -565,13 +543,6 @@
         <version>${jmdns-version}</version>
       </dependency>
 
-      <!-- For jsvc support -->
-      <dependency>
-        <groupId>commons-daemon</groupId>
-        <artifactId>commons-daemon</artifactId>
-        <version>${commons-daemon-version}</version>
-      </dependency>
-
       <!-- camel testing -->
       <dependency>
         <groupId>org.apache.camel</groupId>
@@ -610,7 +581,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>${jackson-version}</version>
+        <version>${jackson-annotations-version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
@@ -798,25 +769,6 @@
         <version>${org-apache-derby-version}</version>
       </dependency>
 
-      <!-- Optional Axion support -->
-      <dependency>
-        <groupId>axion</groupId>
-        <artifactId>axion</artifactId>
-        <version>${axion-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>commons-primitives</groupId>
-        <artifactId>commons-primitives</artifactId>
-        <version>${commons-primitives-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>jakarta-regexp</groupId>
-        <artifactId>jakarta-regexp</artifactId>
-        <version>${regexp-version}</version>
-      </dependency>
-
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-dbcp2</artifactId>
@@ -945,6 +897,11 @@
         <artifactId>jettison</artifactId>
         <version>${jettison-version}</version>
     </dependency>
+      <dependency>
+        <groupId>org.javassist</groupId>
+        <artifactId>javassist</artifactId>
+        <version>${javassist-version}</version>
+      </dependency>
 
       <dependency>
         <groupId>annogen</groupId>
@@ -978,17 +935,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.velocity</groupId>
-        <artifactId>velocity-engine-core</artifactId>
-        <version>${velocity-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.servicemix.bundles</groupId>
-        <artifactId>org.apache.servicemix.bundles.josql</artifactId>
-        <version>${josql-version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>jakarta.annotation</groupId>
         <artifactId>jakarta.annotation-api</artifactId>
         <version>2.1.1</version>
@@ -1008,41 +954,7 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-antrun-plugin</artifactId>
-          <version>${maven-antrun-plugin-version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <version>${maven-assembly-plugin-version}</version>
-          <configuration>
-            <tarLongFileMode>posix</tarLongFileMode>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>${maven-clean-plugin-version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-          <version>${maven-enforcer-plugin-version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>${maven-jar-plugin-version}</version>
-          <configuration>
-            <archive>
-              <compress>true</compress>
-            </archive>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
-          <version>${maven-release-plugin-version}</version>
           <configuration>
             <autoVersionSubmodules>true</autoVersionSubmodules>
             <allowTimestampedSnapshots>false</allowTimestampedSnapshots>
@@ -1055,24 +967,17 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>${maven-source-plugin-version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>${maven-surefire-plugin-version}</version>
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <forkCount>1</forkCount>
             <reuseForks>true</reuseForks>
-            <argLine>-enableassertions</argLine>
             <failIfNoTests>false</failIfNoTests>
             <systemPropertyVariables>
                 <java.awt.headless>true</java.awt.headless>
                 <org.apache.activemq.kahaDB.files.skipMetadataUpdate>true</org.apache.activemq.kahaDB.files.skipMetadataUpdate>
             </systemPropertyVariables>
-            <argLine>-Xmx512m</argLine>
+            <argLine>-enableassertions ${surefire.argLine} ${maven.surefire.allow.securitymanager}</argLine>
           </configuration>
         </plugin>
         <plugin>
@@ -1094,11 +999,6 @@
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>javacc-maven-plugin</artifactId>
           <version>${javacc-maven-plugin-version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.rat</groupId>
-          <artifactId>apache-rat-plugin</artifactId>
-          <version>${apache-rat-plugin-version}</version>
         </plugin>
         <plugin>
           <groupId>org.eclipse.jetty</groupId>
@@ -1128,23 +1028,8 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-war-plugin</artifactId>
-          <version>${maven-war-plugin-version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-rar-plugin</artifactId>
           <version>${maven-rar-plugin-version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>${maven-compiler-plugin-version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-plugin-plugin</artifactId>
-          <version>${maven-plugin-plugin-version}</version>
         </plugin>
         <plugin>
           <groupId>com.google.code.maven-replacer-plugin</groupId>
@@ -1244,18 +1129,6 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>${source-version}</source>
-          <target>${target-version}</target>
-          <optimize>true</optimize>
-          <debug>true</debug>
-          <showDeprecation>true</showDeprecation>
-          <showWarnings>true</showWarnings>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
           <execution>
@@ -1286,17 +1159,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifest>
-              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-            </manifest>
-          </archive>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.geronimo.genesis.plugins</groupId>
@@ -1371,18 +1233,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven-javadoc-plugin-version}</version>
         <configuration>
           <links>
             <link>${javase-javadoc-url}</link>
             <link>${javaee-javadoc-url}</link>
             <link>https://commons.apache.org/proper/commons-collections/javadocs/api-${commons-collections-version}/</link>
             <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
-            <link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
             <link>https://javadoc.io/doc/org.apache.httpcomponents/httpclient/${httpclient-version}/</link>
             <link>http://jakarta.apache.org/commons/pool/apidocs/</link>
             <link>https://junit.org/junit4/javadoc/latest/</link>
-            <link>https://logging.apache.org/log4j/2.x/javadoc/log4j-api/</link>
           </links>
           <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
           <maxmemory>2048m</maxmemory>
@@ -1405,7 +1264,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>${maven-source-plugin-version}</version>
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -1488,9 +1346,9 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>${maven-surefire-plugin-version}</version>
             <configuration>
-              <test>false</test>
+              <skipTests>true</skipTests>
+              <failIfNoTests>false</failIfNoTests>
             </configuration>
           </plugin>
           <plugin>

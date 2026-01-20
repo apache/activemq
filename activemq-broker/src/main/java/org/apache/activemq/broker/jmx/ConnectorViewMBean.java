@@ -18,8 +18,13 @@ package org.apache.activemq.broker.jmx;
 
 import org.apache.activemq.Service;
 
+import java.net.URI;
+
 public interface ConnectorViewMBean extends Service {
 
+    // [AMQ-9815] Non-getter makes this a JMX operation v attribute
+    // TODO: Remove for 7.0
+    @Deprecated(forRemoval = true)
     @MBeanInfo("Connection count")
     int connectionCount();
 
@@ -91,8 +96,53 @@ public interface ConnectorViewMBean extends Service {
     long getMaxConnectionExceededCount();
 
     /**
+     * @return true if transport connector auto start is enabled
+     */
+    @MBeanInfo("Auto-start enabled")
+    boolean isAutoStart();
+
+    /**
      * @return true if transport connector is started
      */
     @MBeanInfo("Connector started")
     boolean isStarted();
+
+    /**
+     * @return The direct connect uri
+     */
+    @MBeanInfo("Direct connect uri")
+    public String getConnectURI();
+
+    /**
+     * @return The publishable connect uri
+     */
+    @MBeanInfo("Publishable connect uri")
+    public String getPublishableConnectURI();
+
+    @MBeanInfo("Broker name")
+    public String getBrokerName();
+
+    @MBeanInfo("String of the BrokerInfo data")
+    public String getBrokerInfoString();
+
+    @MBeanInfo("StatusMonitor enabled")
+    public boolean isEnableStatusMonitor();
+
+    @MBeanInfo("Connector URI")
+    public String getURI();
+
+    @MBeanInfo("DiscoveryURI")
+    public String getDiscoveryURI();
+
+    @MBeanInfo("AuditNetworkProducers enabled")
+    public boolean isAuditNetworkProducers();
+
+    @MBeanInfo("Maximum number of producers allowed per-connection")
+    public int getMaximumProducersAllowedPerConnection();
+
+    @MBeanInfo("Maximum number of consumers allowed per-connection")
+    public int getMaximumConsumersAllowedPerConnection();
+
+    @MBeanInfo("Connection count")
+    public int getConnectionCount();
 }

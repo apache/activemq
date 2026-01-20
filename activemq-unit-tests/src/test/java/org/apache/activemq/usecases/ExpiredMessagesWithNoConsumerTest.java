@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.usecases;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-
 import jakarta.jms.Connection;
 import jakarta.jms.DeliveryMode;
 import jakarta.jms.Message;
@@ -29,10 +25,7 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import jakarta.jms.Topic;
 import jakarta.jms.TopicSubscriber;
-import javax.management.ObjectName;
-
 import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -49,6 +42,11 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.management.ObjectName;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 

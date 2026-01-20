@@ -14,6 +14,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ attribute name="name" type="java.lang.String" required="true"  %>
 <%@ attribute name="defaultValue" type="java.lang.String" required="false"  %>
 <%
@@ -24,7 +25,6 @@
 	if (value == null) {
 		value = "";
 	}
-	value = org.apache.commons.lang3.StringEscapeUtils.escapeHtml4(value);
-
 %>
-<input type="text" name="${name}" value="<%= value %>"/>
+<c:set var="sanitizedValue"><c:out value="<%= value %>" /></c:set>
+<input type="text" name="${name}" value="${sanitizedValue}"/>
