@@ -33,6 +33,9 @@
   <properties>
     <maven.compiler.target>17</maven.compiler.target>
 
+    <surefire.argLine></surefire.argLine>
+    <maven.surefire.allow.securitymanager>-Djava.security.manager=allow</maven.surefire.allow.securitymanager>
+
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
@@ -974,7 +977,7 @@
                 <java.awt.headless>true</java.awt.headless>
                 <org.apache.activemq.kahaDB.files.skipMetadataUpdate>true</org.apache.activemq.kahaDB.files.skipMetadataUpdate>
             </systemPropertyVariables>
-            <argLine>-enableassertions</argLine>
+            <argLine>-enableassertions ${surefire.argLine} ${maven.surefire.allow.securitymanager}</argLine>
           </configuration>
         </plugin>
         <plugin>
