@@ -167,14 +167,14 @@ public class Stomp12Test extends StompTestSupport {
         // that arrive due to redelivery (especially relevant for SSL transport)
         StompFrame error = null;
         for (int i = 0; i < 5; i++) {
-            error = stompConnection.receive();
+            error = stompConnection.receive(TimeUnit.SECONDS.toMillis(5));
             LOG.info("Broker sent: " + error);
-            if (error.getAction().equals("ERROR")) {
+            if (error != null && error.getAction().equals("ERROR")) {
                 break;
             }
             // If we get a MESSAGE, it's a redelivery - keep trying for ERROR
         }
-        assertNotNull("Did not receive any frame", error);
+        assertNotNull("Did not receive ERROR frame within timeout", error);
         assertTrue("Expected ERROR but got: " + error.getAction(), error.getAction().equals("ERROR"));
 
         // Re-subscribe to receive the message again and test correct ACK
