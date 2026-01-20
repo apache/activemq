@@ -33,11 +33,14 @@ import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.activemq.transport.amqp.client.sasl.PlainMechanism;
+import org.apache.activemq.transport.amqp.ParallelTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test broker behaviour when creating AMQP connections with SASL PLAIN mechanism.
  */
+@Category(ParallelTest.class)
 public class AmqpSaslPlainTest extends AmqpClientTestSupport {
 
     private static final String ADMIN = "admin";

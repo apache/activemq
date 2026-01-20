@@ -30,10 +30,13 @@ import javax.naming.spi.InitialContextFactory;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public abstract class JNDITestSupport extends TestCase {
 
     private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory

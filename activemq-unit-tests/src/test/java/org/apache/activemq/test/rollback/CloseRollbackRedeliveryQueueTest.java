@@ -29,7 +29,10 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.MessageCreator;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class CloseRollbackRedeliveryQueueTest extends EmbeddedBrokerTestSupport {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(CloseRollbackRedeliveryQueueTest.class);

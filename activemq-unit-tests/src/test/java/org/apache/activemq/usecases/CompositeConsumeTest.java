@@ -24,10 +24,13 @@ import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.apache.activemq.transport.udp.UdpTransportUsingServerTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class CompositeConsumeTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     private static final Logger LOG = LoggerFactory.getLogger(CompositeConsumeTest.class);
 

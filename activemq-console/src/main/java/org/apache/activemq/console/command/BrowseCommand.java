@@ -75,7 +75,6 @@ public class BrowseCommand extends AbstractJmxCommand {
     };
 
     private final List<String> queryAddObjects = new ArrayList<String>(10);
-    private final List<String> querySubObjects = new ArrayList<String>(10);
     private final Set<String> groupViews = new HashSet<String>(10);
     private final Set queryViews = new HashSet(10);
 
@@ -144,12 +143,6 @@ public class BrowseCommand extends AbstractJmxCommand {
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
                 context.printException(new IllegalArgumentException("Message selector not specified"));
-                return;
-            }
-
-            StringTokenizer queryTokens = new StringTokenizer((String)tokens.remove(0), COMMAND_OPTION_DELIMETER);
-            while (queryTokens.hasMoreTokens()) {
-                querySubObjects.add(queryTokens.nextToken());
             }
 
         } else if (token.startsWith("--view")) {

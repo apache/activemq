@@ -33,13 +33,16 @@ import jakarta.jms.MessageFormatException;
 import jakarta.jms.MessageNotReadableException;
 import jakarta.jms.MessageNotWriteableException;
 
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Test the MapMessage implementation for spec compliance.
  */
+@Category(ParallelTest.class)
 public class ActiveMQMapMessageTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMapMessageTest.class);

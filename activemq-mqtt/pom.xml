@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.2.0-SNAPSHOT</version>
+    <version>6.3.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-mqtt</artifactId>
@@ -205,12 +205,9 @@
           <reuseForks>false</reuseForks>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
-           <systemProperties>
-            <property>
-              <name>org.apache.activemq.default.directory.prefix</name>
-              <value>target/</value>
-            </property>
-           </systemProperties>
+           <systemPropertyValues>
+              <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
+           </systemPropertyValues>
            <!-- includes>
              <include>**/*Test.*</include>
            </includes -->

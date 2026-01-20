@@ -29,7 +29,10 @@ import org.apache.activemq.command.ActiveMQDestination;
 import jakarta.jms.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class UniquePropertyMessageEvictionStrategyTest extends EmbeddedBrokerTestSupport {
 
     @Override

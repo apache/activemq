@@ -19,6 +19,8 @@ package org.apache.activemq.broker.jmx;
 import org.apache.activemq.broker.Connector;
 import org.apache.activemq.command.BrokerInfo;
 
+import java.net.URI;
+
 public class ConnectorView implements ConnectorViewMBean {
 
     private final Connector connector;
@@ -32,6 +34,7 @@ public class ConnectorView implements ConnectorViewMBean {
         connector.start();
     }
 
+    @Override
     public String getBrokerName() {
         return getBrokerInfo().getBrokerName();
     }
@@ -143,7 +146,88 @@ public class ConnectorView implements ConnectorViewMBean {
     }
 
     @Override
+    public boolean isAutoStart() {
+        return this.connector.isAutoStart();
+    }
+
+    @Override
     public boolean isStarted() {
         return this.connector.isStarted();
     }
+
+    @Override
+    public String getConnectURI() {
+        URI tmpConnectUri = null;
+        try {
+            tmpConnectUri = this.connector.getConnectUri();
+        } catch (Exception e) {}
+        return (tmpConnectUri != null ? tmpConnectUri.toString() : null);
+    }
+
+    @Override
+    public String getPublishableConnectURI() {
+        URI publishableConnectURI = null;
+        try {
+            publishableConnectURI = this.connector.getPublishableConnectURI();
+        } catch (Exception e) {}
+
+        return (publishableConnectURI != null ? publishableConnectURI.toString() : null);
+    }
+
+    @Override
+    public String getBrokerInfoString() {
+        return getBrokerInfo().toString();
+    }
+
+    /**
+     * Returns true the status monitor is enabled
+     *
+     * @return true if status monitor is enabled
+     */
+    @Override
+    public boolean isEnableStatusMonitor() {
+        return this.connector.isEnableStatusMonitor();
+    }
+
+    @Override
+    public String getURI() {
+        URI tmpURI = this.connector.getUri();
+        return (tmpURI != null ? tmpURI.toString() : null);
+    }
+
+    @Override
+    public String getDiscoveryURI() {
+        URI tmpDiscoveryURI = this.connector.getDiscoveryUri();
+        return (tmpDiscoveryURI != null ? tmpDiscoveryURI.toString() : null);
+    }
+
+    @Override
+    public boolean isAuditNetworkProducers() {
+        return this.connector.isAuditNetworkProducers();
+    }
+
+    /**
+     * Returns the number of maximum producers allowed per-connection
+     */
+    @Override
+    public int getMaximumProducersAllowedPerConnection() {
+        return this.connector.getMaximumProducersAllowedPerConnection();
+    }
+
+    /**
+     * Returns the number of maximum consumers allowed per-connection
+     */
+    @Override
+    public int getMaximumConsumersAllowedPerConnection() {
+        return this.connector.getMaximumConsumersAllowedPerConnection();
+    }
+
+    /**
+     * Returns the number of current connections
+     */
+    @Override
+    public int getConnectionCount() {
+        return this.connector.connectionCount();
+    }
+
 }

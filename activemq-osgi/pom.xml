@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.2.0-SNAPSHOT</version>
+    <version>6.3.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-osgi</artifactId>
@@ -263,7 +263,7 @@
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-xbean</id>
+            <id>copy-activemq-spring-resources</id>
             <phase>validate</phase>
             <goals>
               <goal>copy-resources</goal>
@@ -275,6 +275,7 @@
                   <directory>${basedir}/../activemq-spring/target/classes/</directory>
                   <includes>
                     <include>activemq.xsd*</include>
+                    <include>META-INF/spring.schemas</include>
                   </includes>
                 </resource>
               </resources>
@@ -327,7 +328,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>${maven-source-plugin-version}</version>
             <configuration>
               <attach>false</attach>
             </configuration>

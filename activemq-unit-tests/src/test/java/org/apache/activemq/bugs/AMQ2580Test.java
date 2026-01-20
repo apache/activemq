@@ -34,6 +34,9 @@ import jakarta.jms.Topic;
 import jakarta.jms.TopicConnection;
 import jakarta.jms.TopicSession;
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
+@Category(ParallelTest.class)
 public class AMQ2580Test extends TestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2580Test.class);

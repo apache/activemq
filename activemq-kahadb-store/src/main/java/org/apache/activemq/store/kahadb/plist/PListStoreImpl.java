@@ -18,7 +18,6 @@ package org.apache.activemq.store.kahadb.plist;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
-import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.JournaledStore;
 import org.apache.activemq.store.PList;
 import org.apache.activemq.store.PListStore;
@@ -32,7 +31,6 @@ import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.util.*;
-import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

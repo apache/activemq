@@ -204,11 +204,9 @@
         <include>${pom.groupId}:activemq-shiro</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
-        <include>commons-io:commons-io</include>
         <include>org.apache.commons:commons-dbcp2</include>
         <include>org.apache.commons:commons-pool2</include>
         <include>commons-codec:commons-codec</include>
-        <include>org.apache.commons:commons-lang3</include>
         <include>org.apache.logging.log4j:log4j-slf4j2-impl</include>
         <include>org.apache.logging.log4j:log4j-api</include>
         <include>org.apache.logging.log4j:log4j-core</include>
@@ -227,8 +225,6 @@
         <include>com.thoughtworks.xstream:xstream</include>
         <include>xpp3:xpp3</include>
         <include>org.codehaus.jettison:jettison</include>
-        <include>org.apache.velocity:velocity-engine-core</include>
-        <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
         <include>org.jasypt:jasypt-spring4</include>
         <include>org.jmdns:jmdns</include>
@@ -314,9 +310,9 @@
 
         <!-- REST API -->
         <include>org.jolokia:jolokia-server-core</include>
+        <include>org.jolokia:jolokia-json</include>
         <include>org.jolokia:jolokia-service-jmx</include>
         <include>org.jolokia:jolokia-service-serializer</include>
-        <include>com.googlecode.json-simple:json-simple</include>
       </includes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>

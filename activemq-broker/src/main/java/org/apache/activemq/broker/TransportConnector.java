@@ -80,6 +80,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean allowLinkStealing = false;
     private boolean warnOnRemoteClose = false;
     private boolean displayStackTrace = false;
+    private boolean autoStart = true;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
     private AtomicBoolean started = new AtomicBoolean(false);
@@ -131,6 +132,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
         rc.setAllowLinkStealing(allowLinkStealing);
         rc.setWarnOnRemoteClose(isWarnOnRemoteClose());
+        rc.setAutoStart(isAutoStart());
         return rc;
     }
 
@@ -154,6 +156,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.server = server;
     }
 
+    @Override
     public URI getUri() {
         if (uri == null) {
             try {
@@ -299,6 +302,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         return publishableConnectString;
     }
 
+    @Override
     public URI getPublishableConnectURI() throws Exception {
         return publishedAddressPolicy.getPublishableConnectURI(this);
     }
@@ -373,6 +377,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.discoveryAgent = discoveryAgent;
     }
 
+    @Override
     public URI getDiscoveryUri() {
         return discoveryUri;
     }
@@ -381,6 +386,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.discoveryUri = discoveryUri;
     }
 
+    @Override
     public URI getConnectUri() throws IOException, URISyntaxException {
         if (server != null) {
             return server.getConnectURI();
@@ -517,6 +523,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     /**
      * @return the enableStatusMonitor
      */
+    @Override
     public boolean isEnableStatusMonitor() {
         return enableStatusMonitor;
     }
@@ -608,6 +615,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.updateClusterFilter = updateClusterFilter;
     }
 
+    @Deprecated(forRemoval = true)
     @Override
     public int connectionCount() {
         return connections.size();
@@ -622,6 +630,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.allowLinkStealing = allowLinkStealing;
     }
 
+    @Override
     public boolean isAuditNetworkProducers() {
         return auditNetworkProducers;
     }
@@ -635,6 +644,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.auditNetworkProducers = auditNetworkProducers;
     }
 
+    @Override
     public int getMaximumProducersAllowedPerConnection() {
         return maximumProducersAllowedPerConnection;
     }
@@ -643,6 +653,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.maximumProducersAllowedPerConnection = maximumProducersAllowedPerConnection;
     }
 
+    @Override
     public int getMaximumConsumersAllowedPerConnection() {
         return maximumConsumersAllowedPerConnection;
     }
@@ -695,5 +706,19 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     @Override
     public boolean isStarted() {
         return started.get();
+    }
+
+    public void setAutoStart(boolean autoStart) {
+        this.autoStart = autoStart;
+    }
+
+    @Override
+    public boolean isAutoStart() {
+        return autoStart;
+    }
+
+    @Override
+    public int getConnectionCount() {
+        return connections.size();
     }
 }

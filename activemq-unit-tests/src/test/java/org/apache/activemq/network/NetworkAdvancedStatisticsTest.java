@@ -17,20 +17,29 @@
 package org.apache.activemq.network;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageListener;
 import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.management.MessageFlowStats;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
 import org.junit.Test;
@@ -44,8 +53,9 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
     @Parameterized.Parameters(name="includedDestination={0}, excludedDestination={1}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                { new ActiveMQTopic("include.test.bar"), new ActiveMQTopic("exclude.test.bar")},
-                { new ActiveMQQueue("include.test.foo"), new ActiveMQQueue("exclude.test.foo")}});
+                { new ActiveMQTopic("include.test.durable"), new ActiveMQTopic("exclude.test.durable"), true},
+                { new ActiveMQTopic("include.test.nondurable"), new ActiveMQTopic("exclude.test.nondurable"), false},
+                { new ActiveMQQueue("include.test.foo"), new ActiveMQQueue("exclude.test.foo"), false}});
     }
 
     protected static final int MESSAGE_COUNT = 10;
@@ -55,15 +65,38 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
 
     private final ActiveMQDestination includedDestination;
     private final ActiveMQDestination excludedDestination;
+    private final boolean durable;
 
-    public NetworkAdvancedStatisticsTest(ActiveMQDestination includedDestionation, ActiveMQDestination excludedDestination) {
+    public NetworkAdvancedStatisticsTest(ActiveMQDestination includedDestionation, ActiveMQDestination excludedDestination, boolean durable) {
         this.includedDestination = includedDestionation;
         this.excludedDestination = excludedDestination;
+        this.durable = durable;
     }
 
     @Override
     protected void doSetUp(boolean deleteAllMessages) throws Exception {
-        super.doSetUp(deleteAllMessages);
+        remoteBroker = createRemoteBroker();
+        remoteBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
+        remoteBroker.start();
+        remoteBroker.waitUntilStarted();
+        localBroker = createLocalBroker();
+        localBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
+        localBroker.start();
+        localBroker.waitUntilStarted();
+        URI localURI = localBroker.getVmConnectorURI();
+        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(localURI);
+        fac.setAlwaysSyncSend(true);
+        fac.setDispatchAsync(false);
+        localConnection = fac.createConnection();
+        localConnection.setClientID("localClientId");
+
+        URI remoteURI = remoteBroker.getVmConnectorURI();
+        fac = new ActiveMQConnectionFactory(remoteURI);
+        remoteConnection = fac.createConnection();
+        remoteConnection.setClientID("remoteClientId");
+
+        localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        remoteSession = remoteConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     @Override
@@ -77,36 +110,59 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
     }
 
     //Added for AMQ-9437 test advancedStatistics for networkEnqueue and networkDequeue
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 120 * 1000)
     public void testNetworkAdvancedStatistics() throws Exception {
 
         // create a remote durable consumer to create demand
+        final Map<String, Message> receivedMessages = new ConcurrentHashMap<>();
+        final Collection<Exception> receivedExceptions = new ConcurrentLinkedQueue<>();
+
         MessageConsumer remoteConsumer;
-        if(includedDestination.isTopic()) {
+        if(includedDestination.isTopic() && durable) {
             remoteConsumer = remoteSession.createDurableSubscriber(ActiveMQTopic.class.cast(includedDestination), consumerName);
         } else {
             remoteConsumer = remoteSession.createConsumer(includedDestination);
-            remoteConsumer.setMessageListener(new MessageListener() {                
-                @Override
-                public void onMessage(Message message) {
-                }
-            });
         }
-        Thread.sleep(1000);
+        remoteConsumer.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                try {
+                    receivedMessages.put(message.getJMSMessageID(), message);
+                } catch (JMSException e) {
+                    receivedExceptions.add(e);
+                }
+            }
+        });
+
+        localConnection.start();
+        remoteConnection.start();
 
         MessageProducer producer = localSession.createProducer(includedDestination);
+        String lastIncludedSentMessageID = null;
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
+            lastIncludedSentMessageID = test.getJMSMessageID();
         }
-        Thread.sleep(1000);
 
         MessageProducer producerExcluded = localSession.createProducer(excludedDestination);
+        String lastExcludedSentMessageID = null;
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message test = localSession.createTextMessage("test-" + i);
             producerExcluded.send(test);
+            lastExcludedSentMessageID = test.getJMSMessageID();
         }
-        Thread.sleep(1000);
+
+        assertTrue(Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                // The number of message that remain is due to the exclude queue
+                return receivedMessages.size() == MESSAGE_COUNT;
+            }
+        }, 30000, 500));
+
+        assertTrue(receivedExceptions.isEmpty());
+        assertEquals(Integer.valueOf(MESSAGE_COUNT), Integer.valueOf(receivedMessages.size()));
 
         //Make sure stats are correct for local -> remote
         assertEquals(MESSAGE_COUNT, localBroker.getDestination(includedDestination).getDestinationStatistics().getEnqueues().getCount());
@@ -119,7 +175,36 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         assertEquals(MESSAGE_COUNT, remoteBroker.getDestination(includedDestination).getDestinationStatistics().getNetworkEnqueues().getCount());
         assertEquals(0, remoteBroker.getDestination(includedDestination).getDestinationStatistics().getNetworkDequeues().getCount());
 
-        // Make sure stats do not increment for local-only
+        // Advanced Message status - enqueue
+        MessageFlowStats localBrokerIncludedMessageFlowStats = localBroker.getDestination(includedDestination).getDestinationStatistics().getMessageFlowStats();
+        MessageFlowStats localBrokerExcludedMessageFlowStats = localBroker.getDestination(excludedDestination).getDestinationStatistics().getMessageFlowStats();
+        MessageFlowStats remoteBrokerExcludedMessageFlowStats = remoteBroker.getDestination(excludedDestination).getDestinationStatistics().getMessageFlowStats();
+
+        assertEquals(lastIncludedSentMessageID, localBrokerIncludedMessageFlowStats.getEnqueuedMessageID().getValue());
+        assertNotNull(localBrokerIncludedMessageFlowStats.getEnqueuedMessageBrokerInTime().getValue());
+        assertTrue(localBrokerIncludedMessageFlowStats.getEnqueuedMessageBrokerInTime().getValue() > 0l);
+        assertNotNull(localBrokerIncludedMessageFlowStats.getEnqueuedMessageTimestamp().getValue());
+        assertTrue(localBrokerIncludedMessageFlowStats.getEnqueuedMessageTimestamp().getValue() > 0l);
+        assertEquals("localClientId", localBrokerIncludedMessageFlowStats.getEnqueuedMessageClientID().getValue());
+
+        // Advanced Message status - dequeue
+        assertEquals(lastIncludedSentMessageID, localBrokerIncludedMessageFlowStats.getDequeuedMessageID().getValue());
+        assertNotNull(localBrokerIncludedMessageFlowStats.getDequeuedMessageBrokerInTime().getValue());
+        assertNotNull(localBrokerIncludedMessageFlowStats.getDequeuedMessageBrokerOutTime().getValue());
+        assertTrue(localBrokerIncludedMessageFlowStats.getDequeuedMessageClientID().getValue().startsWith("networkConnector"));
+        assertNotNull(localBrokerIncludedMessageFlowStats.getDequeuedMessageTimestamp().getValue());
+
+        if(includedDestination.isTopic() && !durable) {
+            assertEquals(Long.valueOf(0l), localBrokerIncludedMessageFlowStats.getDequeuedMessageBrokerInTime().getValue());
+            assertEquals(Long.valueOf(0l), localBrokerIncludedMessageFlowStats.getDequeuedMessageBrokerOutTime().getValue());
+            assertEquals(Long.valueOf(0l), localBrokerIncludedMessageFlowStats.getDequeuedMessageTimestamp().getValue());
+        } else {
+            assertTrue(localBrokerIncludedMessageFlowStats.getDequeuedMessageBrokerInTime().getValue() > 0l);
+            assertTrue(localBrokerIncludedMessageFlowStats.getDequeuedMessageBrokerOutTime().getValue() > 0l);
+            assertTrue(localBrokerIncludedMessageFlowStats.getDequeuedMessageTimestamp().getValue() > 0l);
+        }
+
+        // Make sure stats do not increment for local-only excluded destinations
         assertEquals(MESSAGE_COUNT, localBroker.getDestination(excludedDestination).getDestinationStatistics().getEnqueues().getCount());
         assertEquals(0, localBroker.getDestination(excludedDestination).getDestinationStatistics().getForwards().getCount());
         assertEquals(0, localBroker.getDestination(excludedDestination).getDestinationStatistics().getNetworkDequeues().getCount());
@@ -129,6 +214,21 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         assertEquals(0, remoteBroker.getDestination(excludedDestination).getDestinationStatistics().getForwards().getCount());
         assertEquals(0, remoteBroker.getDestination(excludedDestination).getDestinationStatistics().getNetworkEnqueues().getCount());
         assertEquals(0, remoteBroker.getDestination(excludedDestination).getDestinationStatistics().getNetworkDequeues().getCount());
+        assertEquals(lastExcludedSentMessageID, localBrokerExcludedMessageFlowStats.getEnqueuedMessageID().getValue());
+        assertNull(localBrokerExcludedMessageFlowStats.getDequeuedMessageID().getValue());
+
+        // Advanced Message status - enqueue
+        assertNull(remoteBrokerExcludedMessageFlowStats.getEnqueuedMessageID().getValue());
+        assertEquals(Long.valueOf(0l), remoteBrokerExcludedMessageFlowStats.getEnqueuedMessageBrokerInTime().getValue());
+        assertEquals(Long.valueOf(0l), remoteBrokerExcludedMessageFlowStats.getEnqueuedMessageTimestamp().getValue());
+        assertNull(remoteBrokerExcludedMessageFlowStats.getEnqueuedMessageClientID().getValue());
+
+        // Advanced Message status - dequeue
+        assertNull(lastIncludedSentMessageID, remoteBrokerExcludedMessageFlowStats.getDequeuedMessageID().getValue());
+        assertEquals(Long.valueOf(0l), remoteBrokerExcludedMessageFlowStats.getDequeuedMessageBrokerInTime().getValue());
+        assertEquals(Long.valueOf(0l), remoteBrokerExcludedMessageFlowStats.getDequeuedMessageBrokerOutTime().getValue());
+        assertEquals(Long.valueOf(0l), remoteBrokerExcludedMessageFlowStats.getDequeuedMessageTimestamp().getValue());
+        assertNull(remoteBrokerExcludedMessageFlowStats.getDequeuedMessageClientID().getValue());
 
         if(includedDestination.isTopic()) {
             assertTrue(Wait.waitFor(new Condition() {
@@ -136,7 +236,7 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
                 public boolean isSatisified() throws Exception {
                     return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
                 }
-            }, 10000, 500));
+            }, 30000, 500));
         } else {
             assertTrue(Wait.waitFor(new Condition() {
                 @Override
@@ -144,7 +244,7 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
                     // The number of message that remain is due to the exclude queue
                     return localBroker.getAdminView().getTotalMessageCount() == MESSAGE_COUNT;
                 }
-            }, 10000, 500));
+            }, 30000, 500));
         }
         remoteConsumer.close();
     }
@@ -164,4 +264,5 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
             }
         }));
     }
+
 }

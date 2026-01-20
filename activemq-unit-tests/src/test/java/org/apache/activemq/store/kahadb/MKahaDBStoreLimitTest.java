@@ -44,7 +44,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.*;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class MKahaDBStoreLimitTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(MKahaDBStoreLimitTest.class);

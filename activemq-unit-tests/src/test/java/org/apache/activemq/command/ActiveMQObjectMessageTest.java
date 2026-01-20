@@ -23,10 +23,13 @@ import jakarta.jms.MessageNotReadableException;
 import jakarta.jms.MessageNotWriteableException;
 
 import junit.framework.TestCase;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class ActiveMQObjectMessageTest extends TestCase {
 
     /**

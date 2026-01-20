@@ -17,6 +17,7 @@
 package org.apache.activemq.management;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.ActiveMQMessageProducer;
@@ -54,12 +55,7 @@ public class JMSSessionStatsImpl extends StatsImpl {
                                                      "Time taken to process a message (thoughtput rate)");
 
         // lets add named stats
-        addStatistic("messageCount", messageCount);
-        addStatistic("pendingMessageCount", pendingMessageCount);
-        addStatistic("expiredMessageCount", expiredMessageCount);
-        addStatistic("messageWaitTime", messageWaitTime);
-        addStatistic("durableSubscriptionCount", durableSubscriptionCount);
-        addStatistic("messageRateTime", messageRateTime);
+        addStatistics(Set.of(messageCount, pendingMessageCount, expiredMessageCount, messageWaitTime, durableSubscriptionCount, messageRateTime));
     }
 
     public JMSProducerStatsImpl[] getProducers() {
@@ -143,7 +139,7 @@ public class JMSSessionStatsImpl extends StatsImpl {
     }
 
     public String toString() {
-        StringBuffer buffer = new StringBuffer(" ");
+        StringBuilder buffer = new StringBuilder(" ");
         buffer.append(messageCount);
         buffer.append(" ");
         buffer.append(messageRateTime);

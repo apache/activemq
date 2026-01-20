@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,7 +73,7 @@ public class URISupport {
         }
 
         public URI toURI() throws URISyntaxException {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             if (scheme != null) {
                 sb.append(scheme);
                 sb.append(':');
@@ -199,7 +200,7 @@ public class URISupport {
      */
     public static URI applyParameters(URI uri, Map<String, String> queryParameters, String optionPrefix) throws URISyntaxException {
         if (queryParameters != null && !queryParameters.isEmpty()) {
-            StringBuffer newQuery = uri.getRawQuery() != null ? new StringBuffer(uri.getRawQuery()) : new StringBuffer() ;
+            StringBuilder newQuery = uri.getRawQuery() != null ? new StringBuilder(uri.getRawQuery()) : new StringBuilder() ;
             for ( Map.Entry<String, String> param: queryParameters.entrySet()) {
                 if (param.getKey().startsWith(optionPrefix)) {
                     if (newQuery.length()!=0) {
@@ -489,27 +490,23 @@ public class URISupport {
      * @throws URISyntaxException
      */
     public static String createQueryString(Map<String, ? extends Object> options) throws URISyntaxException {
-        try {
-            if (options.size() > 0) {
-                StringBuffer rc = new StringBuffer();
-                boolean first = true;
-                for (String key : options.keySet()) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        rc.append("&");
-                    }
-                    String value = (String)options.get(key);
-                    rc.append(URLEncoder.encode(key, "UTF-8"));
-                    rc.append("=");
-                    rc.append(URLEncoder.encode(value, "UTF-8"));
+        if (options.size() > 0) {
+            StringBuilder rc = new StringBuilder();
+            boolean first = true;
+            for (String key : options.keySet()) {
+                if (first) {
+                    first = false;
+                } else {
+                    rc.append("&");
                 }
-                return rc.toString();
-            } else {
-                return "";
+                String value = (String)options.get(key);
+                rc.append(URLEncoder.encode(key, StandardCharsets.UTF_8));
+                rc.append("=");
+                rc.append(URLEncoder.encode(value, StandardCharsets.UTF_8));
             }
-        } catch (UnsupportedEncodingException e) {
-            throw (URISyntaxException)new URISyntaxException(e.toString(), "Invalid encoding").initCause(e);
+            return rc.toString();
+        } else {
+            return "";
         }
     }
 

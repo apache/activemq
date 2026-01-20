@@ -16,6 +16,8 @@
  */
 package org.apache.activemq;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Date;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
@@ -31,8 +33,12 @@ import jakarta.jms.Session;
 import jakarta.jms.Topic;
 
 import org.apache.activemq.broker.BrokerRegistry;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,14 +57,19 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
     protected Destination producerDestination;
     protected boolean durable;
     protected int deliveryMode = DeliveryMode.PERSISTENT;
-    protected long timeToLive = 5000;
+    protected long timeToLive = 3000;
     protected boolean verbose;
 
     protected Connection connection;
+    protected BrokerService brokerService;
 
     protected void setUp() throws Exception {
 
         super.setUp();
+
+        brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.start();
 
         data = new String[messageCount];
 
@@ -225,7 +236,8 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
         consumerDestination = session.createTopic(getConsumerSubject());
         producerDestination = session.createTopic(getProducerSubject());
 
-        MessageConsumer consumer = createConsumer();
+        MessageConsumer consumer1 = createConsumer();
+        MessageConsumer consumer2 =  session.createConsumer(consumerDestination);
         connection.start();
 
         for (int i = 0; i < data.length; i++) {
@@ -247,7 +259,64 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
         Thread.sleep(timeToLive + 1000);
 
         // message should have expired.
-        assertNull(consumer.receive(1000));
+        assertNull(consumer1.receive(1000));
+        assertNull(consumer2.receive(100));
+
+        for (Subscription consumer : brokerService.getDestination(
+                (ActiveMQDestination) consumerDestination)
+            .getConsumers()) {
+            assertEquals(0, consumer.getPendingQueueSize());
+        }
+
+        // Memory usage should be 0 after expiration
+        assertEquals(0, brokerService.getDestination((ActiveMQDestination) consumerDestination)
+            .getMemoryUsage().getUsage());
+    }
+
+    public void testConsumeExpiredTopicDurable() throws Exception {
+        brokerService.stop();
+
+        // Use persistent broker and durables so restart
+        brokerService = new BrokerService();
+        brokerService.setPersistent(true);
+        brokerService.start();
+        connection.close();
+        connection = createConnection();
+        connection.setClientID(getClass().getName());
+        connection.start();
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        MessageProducer producer = createProducer(timeToLive);
+        Topic topic = session.createTopic("test.expiration.topic");
+        MessageConsumer consumer1 = session.createDurableSubscriber(topic, "sub1");
+        MessageConsumer consumer2 = session.createDurableSubscriber(topic, "sub2");
+
+        for (int i = 0; i < data.length; i++) {
+            Message message = session.createTextMessage(data[i]);
+            message.setStringProperty("stringProperty", data[i]);
+            message.setIntProperty("intProperty", i);
+            producer.send(topic, message);
+        }
+
+        // sleeps a second longer than the expiration time.
+        // Basically waits till topic expires.
+        Thread.sleep(timeToLive + 1000);
+
+        // message should have expired for both clients
+        assertNull(consumer1.receive(1000));
+        assertNull(consumer2.receive(100));
+
+        TopicMessageStore store = (TopicMessageStore) brokerService.getDestination((ActiveMQDestination) topic).getMessageStore();
+        assertEquals(0, store.getMessageCount(getClass().getName(), "sub1"));
+        assertEquals(0, store.getMessageCount(getClass().getName(), "sub2"));
+
+        for (Subscription consumer : brokerService.getDestination((ActiveMQDestination) topic)
+            .getConsumers()) {
+            assertEquals(0, consumer.getPendingQueueSize());
+        }
+        // Memory usage should be 0 after expiration
+        assertEquals(0, brokerService.getDestination((ActiveMQDestination) topic)
+            .getMemoryUsage().getUsage());
     }
 
     /**
@@ -303,8 +372,15 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
         LOG.info("Dumping stats...");
         LOG.info("Closing down connection");
 
-        session.close();
-        connection.close();
+        try {
+            session.close();
+            connection.close();
+        } catch (Exception e) {
+            // ignore
+        }
+        if (brokerService != null) {
+            brokerService.stop();
+        }
     }
 
 }

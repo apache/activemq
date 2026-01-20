@@ -19,6 +19,8 @@ package org.apache.activemq.openwire.v3;
 import org.apache.activemq.command.LastPartialCommand;
 
 
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 /**
  * Test case for the OpenWire marshalling for LastPartialCommand
  *
@@ -30,6 +32,8 @@ import org.apache.activemq.command.LastPartialCommand;
  *
  * 
  */
+@Category(ParallelTest.class)
+
 public class LastPartialCommandTest extends PartialCommandTest {
 
 

@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.2.0-SNAPSHOT</version>
+    <version>6.3.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>apache-activemq</artifactId>
@@ -504,11 +504,6 @@
       <groupId>org.jolokia</groupId>
       <artifactId>jolokia-service-serializer</artifactId>
       <version>${jolokia-version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.googlecode.json-simple</groupId>
-      <artifactId>json-simple</artifactId>
-      <version>${json-simple-version}</version>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.url</groupId>

@@ -206,7 +206,11 @@ public class HttpClientTransport extends HttpTransportSupport {
                     stream.close();
                 }
             } catch (Exception e) { // handle RuntimeException from unmarshal
-                onException(IOExceptionSupport.create("Failed to perform GET on: " + remoteUrl + " Reason: " + e.getMessage(), e));
+                if (isStopped() || isStopping()) {
+                    LOG.debug("While stopping/stopped failed to perform GET on: " + remoteUrl);
+                } else {
+                    onException(IOExceptionSupport.create("Failed to perform GET on: " + remoteUrl + " Reason: " + e.getMessage(), e));
+                }
                 break;
             } finally {
                 if (answer != null) {

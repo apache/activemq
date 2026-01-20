@@ -20,16 +20,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.jms.TextMessage;
 import javax.management.ObjectName;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Result;
 import org.eclipse.jetty.client.util.BufferingResponseListener;
@@ -87,20 +90,30 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
 
         // AMQ-9330 - test no 500 error on timeout and instead 204 error
-        Future<Result> result =
-            asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", new StringBuffer());
-        // try a second request while the first is running, this should get a 500 error since the first is still running and
-        // concurrent access to the same consumer is not allowed
-        Future<Result> errorResult = asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=10000&type=queue&clientId=test", new StringBuffer());
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR_500, errorResult.get().getResponse().getStatus());
-        //After the original request finishes, verify 204 and not 500 error
-        assertEquals(HttpStatus.NO_CONTENT_204, result.get().getResponse().getStatus());
+        Set<Integer> results =
+            Stream.of(asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", new StringBuffer()),
+            // try a second request while the first is running, this should get a 500 error since the first is still running and
+            // concurrent access to the same consumer is not allowed
+            asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=10000&type=queue&clientId=test", new StringBuffer()))
+            .map(RestTest::getStatus).collect(Collectors.toSet());
+
+        // Order of arrival is nondeterministic; one must fail (500) while the other times out (204).
+        assertEquals("Expected one 204 and one 500 but got " + results,
+            Set.of(HttpStatus.NO_CONTENT_204,  HttpStatus.INTERNAL_SERVER_ERROR_500), results);
 
         // AMQ-9481 - test to make sure we can re-use the consumer after timeout by trying again and ensuring
         // no 500 error. Before the fix in AMQ-9418 this would fail even after the previous request timed out
-        result =
+        Future<Result> result =
             asyncRequest(httpClient, "http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test", new StringBuffer());
-        assertEquals(HttpStatus.NO_CONTENT_204, result.get().getResponse().getStatus());
+        assertEquals(HttpStatus.NO_CONTENT_204, getStatus(result));
+    }
+
+    private static int getStatus(Future<Result> result) {
+        try {
+            return result.get().getResponse().getStatus();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test(timeout = 60 * 1000)
@@ -163,7 +176,9 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
 
         for (int i = 0; i < 200; i++) {
-            String correlId = "RESTY" + RandomStringUtils.randomNumeric(10);
+            String correlId = "RESTY" + new Random().ints(10l, 0, 10)
+                                            .mapToObj(String::valueOf)
+                                            .collect(Collectors.joining());
 
             TextMessage message = session.createTextMessage(correlId);
             message.setStringProperty("correlationId", correlId);

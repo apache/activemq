@@ -33,10 +33,13 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+@Category(ParallelTest.class)
 public class RecoverExpiredMessagesTest extends BrokerRestartTestSupport {
     final ArrayList<String> expected = new ArrayList<String>();
     final ActiveMQDestination destination = new ActiveMQQueue("TEST");

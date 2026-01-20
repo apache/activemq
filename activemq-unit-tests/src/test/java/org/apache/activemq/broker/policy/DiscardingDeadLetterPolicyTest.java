@@ -26,10 +26,13 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class DiscardingDeadLetterPolicyTest extends DeadLetterTest {
     private static final Logger LOG = LoggerFactory.getLogger(DiscardingDeadLetterPolicyTest.class);
 

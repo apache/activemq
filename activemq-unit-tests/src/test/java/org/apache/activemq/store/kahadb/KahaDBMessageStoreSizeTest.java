@@ -61,7 +61,7 @@ public class KahaDBMessageStoreSizeTest extends AbstractKahaDBMessageStoreSizeTe
 
         //Iterate over the order index and add up the size of the messages to compare
         //to the location index
-        kahaDbStore.indexLock.readLock().lock();
+        kahaDbStore.indexLock.lock();
         try {
             long size = kahaDbStore.pageFile.tx().execute(new Transaction.CallableClosure<Long, IOException>() {
                 @Override
@@ -79,7 +79,7 @@ public class KahaDBMessageStoreSizeTest extends AbstractKahaDBMessageStoreSizeTe
             assertEquals("Order index size values don't match message size",
                     size, messageStore.getMessageSize());
         } finally {
-            kahaDbStore.indexLock.readLock().unlock();
+            kahaDbStore.indexLock.unlock();
         }
     }
 

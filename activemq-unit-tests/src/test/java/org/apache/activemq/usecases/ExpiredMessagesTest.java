@@ -49,7 +49,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.apache.activemq.TestSupport.getDestination;
 import static org.apache.activemq.TestSupport.getDestinationConsumers;
 import static org.apache.activemq.TestSupport.getDestinationStatistics;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+
+
+@Category(ParallelTest.class)
 public class ExpiredMessagesTest extends CombinationTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExpiredMessagesTest.class);

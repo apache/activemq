@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker;
 
+import static org.junit.Assert.assertEquals;
+
 import jakarta.jms.DeliveryMode;
 
 import junit.framework.Test;
@@ -30,6 +32,9 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.util.Wait;
+
+
 
 public class MessageExpirationTest extends BrokerTestSupport {
 
@@ -261,6 +266,11 @@ public class MessageExpirationTest extends BrokerTestSupport {
         assertNoMessagesLeft(connection);
 
         connection.send(closeConnectionInfo(connectionInfo));
+
+        if (!destination.isTemporary()) {
+            assertTrue(Wait.waitFor(
+                () -> broker.getDestination(destination).getMemoryUsage().getUsage() == 0, 1000, 100));
+        }
     }
 
     public static Test suite() {

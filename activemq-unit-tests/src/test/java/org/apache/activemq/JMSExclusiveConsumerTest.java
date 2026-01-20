@@ -24,12 +24,15 @@ import jakarta.jms.Session;
 
 import junit.framework.Test;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test cases used to test the JMS message exclusive consumers.
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class JMSExclusiveConsumerTest extends JmsTestSupport {
 
     public int deliveryMode;
