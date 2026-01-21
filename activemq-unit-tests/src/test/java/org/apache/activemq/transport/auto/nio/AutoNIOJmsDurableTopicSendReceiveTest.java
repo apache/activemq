@@ -22,7 +22,7 @@ public class AutoNIOJmsDurableTopicSendReceiveTest extends NIOJmsDurableTopicSen
 
     @Override
     protected String getBrokerURL() {
-        return "auto+nio://localhost:61616";
+        return "auto+nio://localhost:0";
     }
 
 

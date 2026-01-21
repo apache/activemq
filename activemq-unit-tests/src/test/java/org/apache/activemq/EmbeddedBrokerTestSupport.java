@@ -63,7 +63,10 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
         if (broker != null) {
             try {
                 broker.stop();
+                broker.waitUntilStopped();
             } catch (Exception e) {
+            } finally {
+                broker = null;
             }
         }
     }

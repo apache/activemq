@@ -565,13 +565,27 @@ public class Stomp11Test extends StompTestSupport {
                      received.getHeaders().get("message-id") + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(ack);
 
-        StompFrame error = stompConnection.receive();
-        LOG.info("Received Frame: {}", error);
-        assertTrue("Expected ERROR but got: " + error.getAction(), error.getAction().equals("ERROR"));
-
+        // Unsubscribe immediately after invalid ACK to prevent message redelivery
+        // while waiting for ERROR frame. This avoids race condition where message
+        // could be redelivered before ERROR is received.
         String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
                        "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(unsub);
+
+        // Receive frames until we get the ERROR frame, ignoring any MESSAGE frames
+        // that arrive due to redelivery (especially relevant for SSL transport)
+        // Use timeout to fail fast if ERROR frame never arrives
+        StompFrame error = null;
+        for (int i = 0; i < 5; i++) {
+            error = stompConnection.receive(TimeUnit.SECONDS.toMillis(5));
+            LOG.info("Received Frame: {}", error);
+            if (error != null && error.getAction().equals("ERROR")) {
+                break;
+            }
+            // If we get a MESSAGE, it's a redelivery - keep trying for ERROR
+        }
+        assertNotNull("Did not receive ERROR frame within timeout", error);
+        assertTrue("Expected ERROR but got: " + error.getAction(), error.getAction().equals("ERROR"));
     }
 
     @Test(timeout = 60000)

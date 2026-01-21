@@ -44,6 +44,7 @@ public class AMQ9255Test {
     @Rule
     public TestName name = new TestName();
     private BrokerService broker;
+    private String brokerURL;
     private ActiveMQConnectionFactory connectionFactory;
     private Connection sendConnection, receiveConnection;
     private Session sendSession, receiveSession;
@@ -55,7 +56,11 @@ public class AMQ9255Test {
         if (broker == null) {
             broker = createBroker();
             broker.start();
+            // Get the actual bound URI after broker starts (important for ephemeral ports)
+            brokerURL = broker.getTransportConnectors().get(0).getPublishableConnectString();
+            LOG.info("Broker started with URL: " + brokerURL);
         }
+        LOG.info("Using broker URL: " + getBrokerURL());
         WaitForJettyListener.waitForJettySocketToAccept(getBrokerURL());
         connectionFactory = createConnectionFactory();
         LOG.info("Creating send connection");
@@ -121,13 +126,13 @@ public class AMQ9255Test {
     }
 
     protected String getBrokerURL() {
-        return "http://localhost:8161";
+        return brokerURL;
     }
 
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
         answer.setPersistent(false);
-        answer.addConnector(getBrokerURL());
+        answer.addConnector("http://localhost:0");
         answer.setUseJmx(false);
         return answer;
     }
