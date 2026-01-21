@@ -56,7 +56,9 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
 
     private Session connection;
+    private Throwable connectionError;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
+    private final CountDownLatch errorLatch = new CountDownLatch(1);
     private final MQTTWireFormat wireFormat = new MQTTWireFormat();
 
     private final BlockingQueue<MQTTFrame> prefetch = new LinkedBlockingDeque<>();
@@ -78,6 +80,10 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
 
     protected Session getConnection() {
         return connection;
+    }
+
+    public Throwable getConnectionError() {
+        return connectionError;
     }
 
     //----- Connection and Disconnection methods -----------------------------//
@@ -158,6 +164,10 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
 
     public boolean awaitConnection(long time, TimeUnit unit) throws InterruptedException {
         return connectLatch.await(time, unit);
+    }
+
+    public boolean awaitError(long time, TimeUnit unit) throws InterruptedException {
+        return errorLatch.await(time, unit);
     }
 
     //----- Property Accessors -----------------------------------------------//
@@ -285,5 +295,12 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
         this.connection = session;
         this.connection.setIdleTimeout(Duration.ZERO);
         this.connectLatch.countDown();
+    }
+
+    @Override
+    public void onWebSocketError(Throwable cause) {
+        this.connection = null;
+        this.connectionError = cause;
+        this.errorLatch.countDown();
     }
 }
