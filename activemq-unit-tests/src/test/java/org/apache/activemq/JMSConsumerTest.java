@@ -43,6 +43,8 @@ import javax.management.ObjectName;
 import junit.framework.Test;
 
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.QueueSubscription;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicSubscription;
@@ -254,26 +256,23 @@ public class JMSConsumerTest extends JmsTestSupport {
         }
 
         final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
-        Thread.sleep(1000);
 
-        assertTrue("prefetch extension..",
+        assertTrue("prefetch extension..", Wait.waitFor(() ->
                 subscriptions.stream().
                         filter(s -> s instanceof TopicSubscription).
                         mapToInt(s -> ((TopicSubscription)s).getPrefetchExtension().get()).
-                        allMatch(e -> e == 4));
+                        allMatch(e -> e == 4)
+        , TimeUnit.SECONDS.toMillis(5), 100));
 
         assertNull(consumer.receiveNoWait());
         message.acknowledge();
 
-        assertTrue("prefetch extension back to 0", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return subscriptions.stream().
+        assertTrue("prefetch extension back to 0", Wait.waitFor(() ->
+                subscriptions.stream().
                         filter(s -> s instanceof TopicSubscription).
                         mapToInt(s -> ((TopicSubscription)s).getPrefetchExtension().get()).
-                        allMatch(e -> e == 0);
-            }
-        }));
+                        allMatch(e -> e == 0)
+        ));
 
     }
 
@@ -299,29 +298,23 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
 
-        assertTrue("prefetch extension..", Wait.waitFor(new Wait.Condition() {
-                    @Override
-                    public boolean isSatisified() throws Exception {
-                        return subscriptions.stream().
-                                filter(s -> s instanceof QueueSubscription).
-                                mapToInt(s -> ((QueueSubscription)s).getPrefetchExtension().get()).
-                                allMatch(e -> e == 4);
-                    }
-                }));
+        assertTrue("prefetch extension..", Wait.waitFor(() ->
+                subscriptions.stream().
+                        filter(s -> s instanceof QueueSubscription).
+                        mapToInt(s -> ((QueueSubscription)s).getPrefetchExtension().get()).
+                        allMatch(e -> e == 4)
+        ));
 
 
         assertNull(consumer.receiveNoWait());
         message.acknowledge();
 
-        assertTrue("prefetch extension back to 0", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return subscriptions.stream().
+        assertTrue("prefetch extension back to 0", Wait.waitFor(() ->
+                subscriptions.stream().
                         filter(s -> s instanceof QueueSubscription).
                         mapToInt(s -> ((QueueSubscription)s).getPrefetchExtension().get()).
-                        allMatch(e -> e == 0);
-            }
-        }));
+                        allMatch(e -> e == 0)
+        ));
     }
 
     public void initCombosForTestDurableConsumerSelectorChange() {
@@ -429,10 +422,9 @@ public class JMSConsumerTest extends JmsTestSupport {
         });
 
         assertTrue(done.await(1000, TimeUnit.MILLISECONDS));
-        Thread.sleep(200);
 
         // Make sure only 4 messages were delivered.
-        assertEquals(4, counter.get());
+        assertNoAdditionalMessages(counter, 4);
     }
 
     public void initCombosForTestPassMessageListenerIntoCreateConsumer() {
@@ -463,10 +455,9 @@ public class JMSConsumerTest extends JmsTestSupport {
         sendMessages(session, destination, 4);
 
         assertTrue(done.await(1000, TimeUnit.MILLISECONDS));
-        Thread.sleep(200);
 
         // Make sure only 4 messages were delivered.
-        assertEquals(4, counter.get());
+        assertNoAdditionalMessages(counter, 4);
     }
 
     public void initCombosForTestMessageListenerOnMessageCloseUnackedWithPrefetch1StayInQueue() {
@@ -551,7 +542,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         });
 
         assertTrue(done2.await(1000, TimeUnit.MILLISECONDS));
-        Thread.sleep(200);
+        assertNoAdditionalMessages(counter, 5);
 
         // assert msg 2 was redelivered as close() from onMessages() will only ack in auto_ack and dups_ok mode
         assertEquals(5, counter.get());
@@ -637,11 +628,9 @@ public class JMSConsumerTest extends JmsTestSupport {
         });
 
         assertTrue(done2.await(1000, TimeUnit.MILLISECONDS));
-        Thread.sleep(200);
 
-        // close from onMessage with Auto_ack will ack
         // Make sure only 4 messages were delivered.
-        assertEquals(4, counter.get());
+        assertNoAdditionalMessages(counter, 4);
     }
 
     public void initCombosForTestMessageListenerWithConsumerWithPrefetch1() {
@@ -676,10 +665,9 @@ public class JMSConsumerTest extends JmsTestSupport {
         sendMessages(session, destination, 4);
 
         assertTrue(done.await(1000, TimeUnit.MILLISECONDS));
-        Thread.sleep(200);
 
         // Make sure only 4 messages were delivered.
-        assertEquals(4, counter.get());
+        assertNoAdditionalMessages(counter, 4);
     }
 
     public void initCombosForTestMessageListenerWithConsumer() {
@@ -712,10 +700,9 @@ public class JMSConsumerTest extends JmsTestSupport {
         sendMessages(session, destination, 4);
 
         assertTrue(done.await(1000, TimeUnit.MILLISECONDS));
-        Thread.sleep(200);
 
         // Make sure only 4 messages were delivered.
-        assertEquals(4, counter.get());
+        assertNoAdditionalMessages(counter, 4);
     }
 
     public void initCombosForTestUnackedWithPrefetch1StayInQueue() {
@@ -795,19 +782,16 @@ public class JMSConsumerTest extends JmsTestSupport {
         MessageConsumer consumer2 = session2.createConsumer(destination);
 
         // Wait for consumer2 to fully register with the broker
-        assertTrue("consumer2 registered", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return getDestinationConsumers(broker, destination).size() == 2;
-            }
-        }, 5000));
+        assertTrue("consumer2 registered", Wait.waitFor(() ->
+                getDestinationConsumers(broker, destination).size() == 2
+        , TimeUnit.SECONDS.toMillis(5), 100));
 
         // Pick up the first message.
-        Message message1 = consumer.receive(1000);
+        Message message1 = consumer.receive(10_000);
         assertNotNull(message1);
 
         // Pick up the 2nd messages.
-        Message message2 = consumer2.receive(5000);
+        Message message2 = consumer2.receive(10_000);
         assertNotNull(message2);
 
         session.commit();
@@ -1019,26 +1003,27 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         Session sendSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = sendSession.createProducer(destination);
-        producer.setTimeToLive(500);
+        final int ttl = 500;
+        producer.setTimeToLive(ttl);
         final int count = 4;
         for (int i = 0; i < count; i++) {
-            TextMessage message = sendSession.createTextMessage("" + i);
+            final TextMessage message = sendSession.createTextMessage("" + i);
             producer.send(message);
         }
 
-        // let first bunch in queue expire
-        Thread.sleep(1000);
+        // let first bunch expire - messages expire based on TTL
+        Thread.sleep(ttl * 2L);
 
         producer.setTimeToLive(0);
         for (int i = 0; i < count; i++) {
-            TextMessage message = sendSession.createTextMessage("no expiry" + i);
+            final TextMessage message = sendSession.createTextMessage("no expiry" + i);
             producer.send(message);
         }
 
-        ActiveMQMessageConsumer amqConsumer = (ActiveMQMessageConsumer) consumer;
+        final ActiveMQMessageConsumer amqConsumer = (ActiveMQMessageConsumer) consumer;
 
         for (int i=0; i<count; i++) {
-            TextMessage msg = (TextMessage) amqConsumer.receive();
+            final TextMessage msg = (TextMessage) amqConsumer.receive();
             assertNotNull(msg);
             assertTrue("message has \"no expiry\" text: " + msg.getText(), msg.getText().contains("no expiry"));
 
@@ -1047,12 +1032,14 @@ public class JMSConsumerTest extends JmsTestSupport {
         }
         assertEquals("consumer has expiredMessages", count, amqConsumer.getConsumerStats().getExpiredMessageCount().getCount());
 
-        DestinationViewMBean view = createView(destination);
-
-        assertEquals("Wrong inFlightCount: " + view.getInFlightCount(), 0, view.getInFlightCount());
-        assertEquals("Wrong dispatch count: " + view.getDispatchCount(), 8, view.getDispatchCount());
-        assertEquals("Wrong dequeue count: " + view.getDequeueCount(), 8, view.getDequeueCount());
-        assertEquals("Wrong expired count: " + view.getExpiredCount(), 4, view.getExpiredCount());
+        // Wait for broker to update statistics
+        assertTrue("broker statistics updated", Wait.waitFor(() -> {
+            final DestinationViewMBean view = createView(destination);
+            return view.getInFlightCount() == 0 &&
+                   view.getDispatchCount() == 8 &&
+                   view.getDequeueCount() == 8 &&
+                   view.getExpiredCount() == 4;
+        }, TimeUnit.SECONDS.toMillis(5), 100));
     }
 
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
@@ -1065,5 +1052,11 @@ public class JMSConsumerTest extends JmsTestSupport {
             name = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test");
         }
         return (DestinationViewMBean) broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class, true);
+    }
+
+    private void assertNoAdditionalMessages(final AtomicInteger counter, final int expected) throws Exception {
+        assertFalse("unexpected additional messages received", Wait.waitFor(
+            (Wait.Condition) () -> counter.get() > expected,
+            TimeUnit.SECONDS.toMillis(2), 50));
     }
 }
