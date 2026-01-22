@@ -25,6 +25,8 @@ import jakarta.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.transport.http.WaitForJettyListener;
 import org.junit.After;
 import org.junit.Before;
@@ -130,10 +132,19 @@ public class AMQ9255Test {
     }
 
     protected BrokerService createBroker() throws Exception {
-        BrokerService answer = new BrokerService();
+        final BrokerService answer = new BrokerService();
         answer.setPersistent(false);
         answer.addConnector("http://localhost:0");
         answer.setUseJmx(false);
+
+        // Configure broker to check for expired messages every second
+        // (default is 30 seconds which causes test timeout issues with the receive(30_000) bellow)
+        final PolicyEntry policy = new PolicyEntry();
+        policy.setExpireMessagesPeriod(1000);  // Check every 1 second
+        final PolicyMap policyMap = new PolicyMap();
+        policyMap.setDefaultEntry(policy);
+        answer.setDestinationPolicy(policyMap);
+
         return answer;
     }
 
