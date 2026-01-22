@@ -108,6 +108,8 @@ public class FailoverTransactionTest extends TestSupport {
     public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
         broker = createBroker(deleteAllMessagesOnStartup);
         broker.start();
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     public void startBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
@@ -132,7 +134,7 @@ public class FailoverTransactionTest extends TestSupport {
         policyMap.setDefaultEntry(defaultEntry);
         broker.setDestinationPolicy(policyMap);
 
-        url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        // Do not set url here - need to get it after broker starts when using ephemeral ports
 
         return broker;
     }
@@ -203,6 +205,9 @@ public class FailoverTransactionTest extends TestSupport {
         });
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
@@ -235,6 +240,9 @@ public class FailoverTransactionTest extends TestSupport {
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         assertTrue("tx committed through failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
 
         // new transaction
@@ -254,6 +262,9 @@ public class FailoverTransactionTest extends TestSupport {
         broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
@@ -298,6 +309,9 @@ public class FailoverTransactionTest extends TestSupport {
         });
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
@@ -331,6 +345,9 @@ public class FailoverTransactionTest extends TestSupport {
         broker.setPlugins(new BrokerPlugin[]{new DestinationPathSeparatorBroker()});
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         assertTrue("tx committed trough failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
 
         // new transaction
@@ -351,6 +368,9 @@ public class FailoverTransactionTest extends TestSupport {
         setDefaultPersistenceAdapter(broker);
         broker.setPlugins(new BrokerPlugin[]{new DestinationPathSeparatorBroker()});
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
@@ -409,6 +429,9 @@ public class FailoverTransactionTest extends TestSupport {
         });
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?jms.watchTopicAdvisories=false");
         configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
@@ -441,6 +464,9 @@ public class FailoverTransactionTest extends TestSupport {
         LOG.info("restarting....");
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         assertTrue("message sent through failover", sendDoneLatch.await(30, TimeUnit.SECONDS));
 
         // new transaction
@@ -463,6 +489,9 @@ public class FailoverTransactionTest extends TestSupport {
         broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
@@ -531,6 +560,9 @@ public class FailoverTransactionTest extends TestSupport {
         });
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         proxy.setTarget(new URI(url));
         proxy.open();
 
@@ -583,6 +615,9 @@ public class FailoverTransactionTest extends TestSupport {
         broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
@@ -752,6 +787,9 @@ public class FailoverTransactionTest extends TestSupport {
         });
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         Vector<Connection> connections = new Vector<Connection>();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         configureConnectionFactory(cf);
@@ -827,6 +865,9 @@ public class FailoverTransactionTest extends TestSupport {
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         assertTrue("tx committed through failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
 
         LOG.info("received message count: " + receivedMessages.size());
@@ -856,6 +897,9 @@ public class FailoverTransactionTest extends TestSupport {
         broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
@@ -896,6 +940,9 @@ public class FailoverTransactionTest extends TestSupport {
                 }
         });
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         Vector<Connection> connections = new Vector<Connection>();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
@@ -988,6 +1035,9 @@ public class FailoverTransactionTest extends TestSupport {
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         consumer = consumerSession.createConsumer(destination);
         LOG.info("finally consuming message: " + ((ActiveMQMessageConsumer) consumer).getConsumerId());
 
@@ -1007,6 +1057,10 @@ public class FailoverTransactionTest extends TestSupport {
     public void testAutoRollbackWithMissingRedeliveries() throws Exception {
         broker = createBroker(true);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
@@ -1036,6 +1090,9 @@ public class FailoverTransactionTest extends TestSupport {
         broker.stop();
         broker = createBroker(false, url);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         assertNotNull("should get rolledback message from original restarted broker", consumer.receive(20000));
         connection.close();
@@ -1067,6 +1124,9 @@ public class FailoverTransactionTest extends TestSupport {
         setPersistenceAdapter(broker, PersistenceAdapterChoice.JDBC);
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         final CountDownLatch commitDone = new CountDownLatch(1);
         final CountDownLatch gotException = new CountDownLatch(1);
         // will block pending re-deliveries
@@ -1088,6 +1148,9 @@ public class FailoverTransactionTest extends TestSupport {
         broker.stop();
         broker = createBroker(false, url);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         assertTrue("commit was successful", commitDone.await(30, TimeUnit.SECONDS));
         assertTrue("got exception on commit", gotException.await(30, TimeUnit.SECONDS));

@@ -137,7 +137,7 @@ public class ActiveMQConnectionFactoryTest {
         try {
             final TransportConnector transportConnector = brokerService.getTransportConnectors().get(0);
 
-            String failoverUrl = String.format("failover:(%s)?maxReconnectAttempts=10&initialReconnectDelay=100", transportConnector.getConnectUri());
+            String failoverUrl = String.format("failover:(%s)?startupMaxReconnectAttempts=10&maxReconnectAttempts=2&initialReconnectDelay=100&timeout=2000", transportConnector.getConnectUri());
 
             ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
             ra.start(null);
@@ -168,7 +168,7 @@ public class ActiveMQConnectionFactoryTest {
 
             // Wait for failover to reconnect and recover() to succeed
             // The ReconnectingXAResource should handle reconnection transparently
-            // Timeout: 30s accounts for maxReconnectAttempts=10 with exponential backoff
+            // Timeout: 30s accounts for startupMaxReconnectAttempts=10 with exponential backoff
             // up to the default maxReconnectDelay (30s per attempt)
             // Poll interval: 500ms balances responsiveness without overwhelming the system
             final XAResource resource = resources[0];

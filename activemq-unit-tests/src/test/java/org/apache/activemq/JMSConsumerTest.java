@@ -794,6 +794,14 @@ public class JMSConsumerTest extends JmsTestSupport {
         Session session2 = connection2.createSession(true, 0);
         MessageConsumer consumer2 = session2.createConsumer(destination);
 
+        // Wait for consumer2 to fully register with the broker
+        assertTrue("consumer2 registered", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getDestinationConsumers(broker, destination).size() == 2;
+            }
+        }, 5000));
+
         // Pick up the first message.
         Message message1 = consumer.receive(1000);
         assertNotNull(message1);

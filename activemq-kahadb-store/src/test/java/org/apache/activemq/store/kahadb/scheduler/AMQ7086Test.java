@@ -82,15 +82,17 @@ public class AMQ7086Test {
         produceWithScheduledDelayAndConsume();
 
         LOG.info("job store: " + jobSchedulerStore);
-        int numSchedulerFiles = jobSchedulerStore.getJournal().getFileMap().size();
         LOG.info("kahadb store: " + kahaDBPersistenceAdapter);
-        int numKahadbFiles = kahaDBPersistenceAdapter.getStore().getJournal().getFileMap().size();
-
-        LOG.info("Num files, job store: {}, message store: {}", numKahadbFiles, numKahadbFiles);
 
         // pull the dirs before we stop
         File jobDir = jobSchedulerStore.getJournal().getDirectory();
         File kahaDir = kahaDBPersistenceAdapter.getStore().getJournal().getDirectory();
+
+        // Count actual disk files before stop to avoid TOCTOU race with in-memory state
+        int numSchedulerFiles = verifyFilesOnDisk(jobDir);
+        int numKahadbFiles = verifyFilesOnDisk(kahaDir);
+
+        LOG.info("Num files, job store: {}, message store: {}", numSchedulerFiles, numKahadbFiles);
 
         brokerService.stop();
 

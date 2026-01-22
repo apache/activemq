@@ -224,6 +224,9 @@ public class JournalFdRecoveryTest {
         assertTrue("more than x files: " + numFiles, numFiles > 5);
         assertEquals("Drain", 30, tryConsume(destination, 30));
 
+        // Force checkpoint to ensure all acknowledgments are persisted before stopping
+        adapter.getStore().checkpoint(true);
+
         LOG.info("Num files after stopped: " + getNumberOfJournalFiles());
 
         File dataDir = broker.getPersistenceAdapter().getDirectory();

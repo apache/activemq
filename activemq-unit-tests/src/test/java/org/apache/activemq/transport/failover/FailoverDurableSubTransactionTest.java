@@ -178,6 +178,7 @@ public class FailoverDurableSubTransactionTest {
                 }
         });
         broker.start();
+
         // Get the actual bound URI after broker starts (important for ephemeral ports)
         url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
@@ -285,6 +286,7 @@ public class FailoverDurableSubTransactionTest {
 
         });
         broker.start();
+
         // Get the actual bound URI after broker starts (important for ephemeral ports)
         url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
