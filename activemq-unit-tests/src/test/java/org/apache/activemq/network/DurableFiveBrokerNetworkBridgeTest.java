@@ -838,12 +838,13 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         super.setAutoFail(true);
         super.setUp();
         deletePersistentMessagesOnStartup = true;
-        String options = new String("?persistent=true&useJmx=false");
-        createBroker(new URI("broker:(tcp://localhost:61616)/Broker_A_A" + options));
-        createBroker(new URI("broker:(tcp://localhost:61617)/Broker_B_B" + options));
-        createBroker(new URI("broker:(tcp://localhost:61618)/Broker_C_C" + options));
-        createBroker(new URI("broker:(tcp://localhost:61619)/Broker_D_D" + options));
-        createBroker(new URI("broker:(tcp://localhost:61620)/Broker_E_E" + options));
+        final String options = "?persistent=true&useJmx=false";
+        // Use ephemeral ports (0) to avoid port conflicts when tests run in parallel
+        createBroker(new URI("broker:(tcp://localhost:0)/Broker_A_A" + options));
+        createBroker(new URI("broker:(tcp://localhost:0)/Broker_B_B" + options));
+        createBroker(new URI("broker:(tcp://localhost:0)/Broker_C_C" + options));
+        createBroker(new URI("broker:(tcp://localhost:0)/Broker_D_D" + options));
+        createBroker(new URI("broker:(tcp://localhost:0)/Broker_E_E" + options));
     }
 
     @Override
