@@ -52,6 +52,7 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import javax.management.ObjectName;
 import java.io.IOException;
+import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -435,7 +436,23 @@ public class MKahaDBTxRecoveryTest {
             assertTrue("broker/store found corruption", foundSomeCorruption.get());
             assertTrue("broker/store ignored corruption", ignoringCorruption.get());
 
+            // effectively wait for the async process to clean up after corrupt detection
+            final File txStoreDir = new File(pathToDataDir, "mKahaDB/txStore");
+            assertTrue("txStore cleanup", Wait.waitFor(() -> {
+                File[] files = txStoreDir.listFiles((dir, name) -> name.endsWith(".log"));
+                if (files == null || files.length == 0) {
+                    return false;
+                }
+                for (File file : files) {
+                    if ("db-1.log".equals(file.getName())) {
+                        return false;
+                    }
+                }
+                return true;
+            }, TimeUnit.SECONDS.toMillis(5), 100));
+
             broker.stop();
+            broker.waitUntilStopped();
 
             foundSomeCorruption.set(false);
             ignoringCorruption.set(false);
