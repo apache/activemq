@@ -38,8 +38,8 @@ These pages are used to test out the environment and web framework.
         request.setAttribute("entry", iter.next());
 %>    
 <tr> 
-  <td class="label">${entry.key}</td>
-  <td>${entry.value}</td>
+  <td class="label">#{entry.key}</td>
+  <td>#{entry.value}</td>
 </tr>
 <%
 }

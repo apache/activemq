@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.ws.jetty11;
+package org.apache.activemq.transport.ws.jetty12;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,8 +26,8 @@ import org.apache.activemq.transport.mqtt.MQTTCodec;
 import org.apache.activemq.transport.ws.AbstractMQTTSocket;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.ee9.websocket.api.WebSocketListener;
+import org.eclipse.jetty.ee9.websocket.api.Session;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.DataByteArrayInputStream;
 import org.fusesource.mqtt.codec.DISCONNECT;
