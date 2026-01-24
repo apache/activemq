@@ -71,7 +71,7 @@
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty-version>11.0.26</jetty-version>
     <jetty-version-range>[11,13)</jetty-version-range>
-    <jmdns-version>3.6.2</jmdns-version>
+    <jmdns-version>3.6.3</jmdns-version>
     <javassist-version>3.30.2-GA</javassist-version>
     <jettison-version>1.5.4</jettison-version>
     <jmock-version>2.13.1</jmock-version>
