@@ -26,6 +26,8 @@ import jakarta.jms.Queue;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -331,14 +333,24 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
 
     // https://issues.apache.org/jira/browse/AMQ-4224
     public void testBrokerZeroPrefetchConfig() throws Exception {
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        MessageProducer producer = session.createProducer(brokerZeroQueue);
+        final MessageProducer producer = session.createProducer(brokerZeroQueue);
         producer.send(session.createTextMessage("Msg1"));
         // now lets receive it
-        MessageConsumer consumer = session.createConsumer(brokerZeroQueue);
+        final MessageConsumer consumer = session.createConsumer(brokerZeroQueue);
 
-        TextMessage answer = (TextMessage)consumer.receive(5000);
+        // Wait for broker subscription to be created and policy applied (same as testBrokerZeroPrefetchConfigWithConsumerControl)
+        final ActiveMQDestination transformedDest = ActiveMQDestination.transform(brokerZeroQueue);
+        org.apache.activemq.util.Wait.waitFor(new org.apache.activemq.util.Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getRegionBroker().getDestinationMap().get(transformedDest) != null
+                    && !broker.getRegionBroker().getDestinationMap().get(transformedDest).getConsumers().isEmpty();
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(100));
+
+        final TextMessage answer = (TextMessage)consumer.receive(TimeUnit.SECONDS.toMillis(5));
         assertNotNull("Consumer should have read a message", answer);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
     }
@@ -348,22 +360,37 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
     public void testBrokerZeroPrefetchConfigWithConsumerControl() throws Exception {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(brokerZeroQueue);
+        final ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(brokerZeroQueue);
+
+        // Wait for broker subscription to be created and policy applied
+        final ActiveMQDestination transformedDest = ActiveMQDestination.transform(brokerZeroQueue);
+        org.apache.activemq.util.Wait.waitFor(new org.apache.activemq.util.Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getRegionBroker().getDestinationMap().get(transformedDest) != null
+                    && !broker.getRegionBroker().getDestinationMap().get(transformedDest).getConsumers().isEmpty();
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(100));
+
         assertEquals("broker config prefetch in effect", 0, consumer.info.getCurrentPrefetchSize());
 
         // verify sub view broker
         Subscription sub =
-                broker.getRegionBroker().getDestinationMap().get(ActiveMQDestination.transform(brokerZeroQueue)).getConsumers().get(0);
+                broker.getRegionBroker().getDestinationMap().get(transformedDest).getConsumers().get(0);
         assertEquals("broker sub prefetch is correct", 0, sub.getConsumerInfo().getCurrentPrefetchSize());
 
         // manipulate Prefetch (like failover and stomp)
         ConsumerControl consumerControl = new ConsumerControl();
         consumerControl.setConsumerId(consumer.info.getConsumerId());
-        consumerControl.setDestination(ActiveMQDestination.transform(brokerZeroQueue));
+        consumerControl.setDestination(transformedDest);
         consumerControl.setPrefetch(1000); // default for a q
 
         Object reply = ((ActiveMQConnection) connection).getTransport().request(consumerControl);
         assertTrue("good request", !(reply instanceof ExceptionResponse));
+
+        // Wait for the ConsumerControl to be processed
+        Thread.sleep(500);
+
         assertEquals("broker config prefetch in effect", 0, consumer.info.getCurrentPrefetchSize());
         assertEquals("broker sub prefetch is correct", 0, sub.getConsumerInfo().getCurrentPrefetchSize());
     }

@@ -55,7 +55,7 @@ public class AMQ7086Test {
         LOG.info("kahadb store: " + kahaDBPersistenceAdapter);
         int numKahadbFiles = kahaDBPersistenceAdapter.getStore().getJournal().getFileMap().size();
 
-        LOG.info("Num files, job store: {}, message store: {}", numKahadbFiles, numKahadbFiles);
+        LOG.info("Num files, job store: {}, message store: {}", numSchedulerFiles, numKahadbFiles);
 
         // pull the dirs before we stop
         File jobDir = jobSchedulerStore.getJournal().getDirectory();
@@ -82,20 +82,24 @@ public class AMQ7086Test {
         produceWithScheduledDelayAndConsume();
 
         LOG.info("job store: " + jobSchedulerStore);
-        int numSchedulerFiles = jobSchedulerStore.getJournal().getFileMap().size();
         LOG.info("kahadb store: " + kahaDBPersistenceAdapter);
-        int numKahadbFiles = kahaDBPersistenceAdapter.getStore().getJournal().getFileMap().size();
-
-        LOG.info("Num files, job store: {}, message store: {}", numKahadbFiles, numKahadbFiles);
 
         // pull the dirs before we stop
         File jobDir = jobSchedulerStore.getJournal().getDirectory();
         File kahaDir = kahaDBPersistenceAdapter.getStore().getJournal().getDirectory();
 
+        // Count actual disk files before stop to avoid TOCTOU race with in-memory state
+        int numSchedulerFiles = verifyFilesOnDisk(jobDir);
+        int numKahadbFiles = verifyFilesOnDisk(kahaDir);
+
+        LOG.info("Num files, job store: {}, message store: {}", numSchedulerFiles, numKahadbFiles);
+
         brokerService.stop();
 
-        assertEquals("Expected job store data files", numSchedulerFiles, verifyFilesOnDisk(jobDir));
-        assertEquals("Expected kahadb data files", numKahadbFiles, verifyFilesOnDisk(kahaDir));
+        final int jobFilesOnDisk = verifyFilesOnDisk(jobDir);
+        final int kahaFilesOnDisk = verifyFilesOnDisk(kahaDir);
+        assertTrue("Expected job store data files at least " + numSchedulerFiles, jobFilesOnDisk >= numSchedulerFiles);
+        assertTrue("Expected kahadb data files at least " + numKahadbFiles, kahaFilesOnDisk >= numKahadbFiles);
     }
 
     private int verifyFilesOnDisk(File directory) {

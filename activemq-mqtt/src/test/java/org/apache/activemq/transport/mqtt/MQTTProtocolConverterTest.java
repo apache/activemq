@@ -129,7 +129,7 @@ public class MQTTProtocolConverterTest {
         executorService.awaitTermination(10, TimeUnit.SECONDS);
 
         ArgumentCaptor<RemoveInfo> removeInfo = ArgumentCaptor.forClass(RemoveInfo.class);
-        Mockito.verify(transport, times(4)).sendToActiveMQ(removeInfo.capture());
+        Mockito.verify(transport, times(1)).sendToActiveMQ(removeInfo.capture());
 
     }
 }

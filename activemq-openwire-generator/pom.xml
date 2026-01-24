@@ -32,12 +32,12 @@
     <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>5.0.2</version>
+      <version>5.0.4</version>
     </dependency>
     <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy-ant</artifactId>
-      <version>5.0.2</version>
+      <version>5.0.4</version>
     </dependency>
     <dependency>
       <groupId>annogen</groupId>

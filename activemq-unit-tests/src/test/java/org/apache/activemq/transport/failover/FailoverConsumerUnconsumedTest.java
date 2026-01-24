@@ -71,6 +71,8 @@ public class FailoverConsumerUnconsumedTest {
     public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
         broker = createBroker(deleteAllMessagesOnStartup);
         broker.start();
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
@@ -82,7 +84,7 @@ public class FailoverConsumerUnconsumedTest {
         broker.addConnector(bindAddress);
         broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
 
-        this.url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        // Do not set url here - need to get it after broker starts when using ephemeral ports
 
         return broker;
     }
@@ -130,6 +132,9 @@ public class FailoverConsumerUnconsumedTest {
                 }
         });
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setWatchTopicAdvisories(false);
@@ -201,6 +206,9 @@ public class FailoverConsumerUnconsumedTest {
         broker = createBroker(false, this.url);
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         assertTrue("consumer added through failover", shutdownConsumerAdded.await(30, TimeUnit.SECONDS));
 
         // each should again get prefetch messages - all unacked deliveries should be rolledback
@@ -265,6 +273,9 @@ public class FailoverConsumerUnconsumedTest {
         });
         broker.start();
 
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setWatchTopicAdvisories(watchTopicAdvisories);
 
@@ -326,6 +337,9 @@ public class FailoverConsumerUnconsumedTest {
 
         broker = createBroker(false, this.url);
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         assertTrue("consumer added through failover", shutdownConsumerAdded.await(30, TimeUnit.SECONDS));
 

@@ -43,6 +43,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.MessageIdList;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -316,8 +317,13 @@ public class JmsMultipleClientsTestSupport {
     }
 
     public void assertDestinationMemoryUsageGoesToZero() throws Exception {
-        assertEquals("destination memory is back to 0", 0,
-                TestSupport.getDestination(broker, ActiveMQDestination.transform(destination)).getMemoryUsage().getPercentUsage());
+        final ActiveMQDestination activeMQDestination = ActiveMQDestination.transform(destination);
+        assertTrue("destination memory is back to 0", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return TestSupport.getDestination(broker, activeMQDestination).getMemoryUsage().getPercentUsage() == 0;
+            }
+        }));
     }
 
 

@@ -153,8 +153,6 @@ public class AMQ4656Test {
 
         consumer.close();
 
-        LOG.info("Pending Queue Size with two receives: {}", sub.getPendingQueueSize());
-
         assertTrue("Should be an Active Subscription", Wait.waitFor(new Wait.Condition() {
 
             @Override
@@ -163,8 +161,11 @@ public class AMQ4656Test {
             }
         }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(25)));
 
+        ObjectName inactiveName = brokerView.getInactiveDurableTopicSubscribers()[0];
         final DurableSubscriptionViewMBean inactive = (DurableSubscriptionViewMBean)
-            brokerService.getManagementContext().newProxyInstance(subName, DurableSubscriptionViewMBean.class, true);
+            brokerService.getManagementContext().newProxyInstance(inactiveName, DurableSubscriptionViewMBean.class, true);
+
+        LOG.info("Pending Queue Size with two receives: {}", inactive.getPendingQueueSize());
 
         assertTrue("Should all be dispatched", Wait.waitFor(new Wait.Condition() {
 

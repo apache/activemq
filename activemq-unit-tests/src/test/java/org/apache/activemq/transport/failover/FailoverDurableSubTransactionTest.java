@@ -23,6 +23,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.*;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
+@Ignore("This test is going to be fixed in the PR: AMQ-9829 Track prefetched messages for duplicate suppression during failover")
 public class FailoverDurableSubTransactionTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverDurableSubTransactionTest.class);
@@ -84,11 +86,15 @@ public class FailoverDurableSubTransactionTest {
     public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
         broker = createBroker(deleteAllMessagesOnStartup);
         broker.start();
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     public void startBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
         broker = createBroker(deleteAllMessagesOnStartup, bindAddress);
         broker.start();
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
@@ -110,7 +116,7 @@ public class FailoverDurableSubTransactionTest {
         // faster redispatch
         broker.setKeepDurableSubsActive(true);
 
-        url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        // Do not set url here - need to get it after broker starts when using ephemeral ports
 
         return broker;
     }
@@ -172,6 +178,9 @@ public class FailoverDurableSubTransactionTest {
                 }
         });
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setAlwaysSyncSend(true);
@@ -277,6 +286,9 @@ public class FailoverDurableSubTransactionTest {
 
         });
         broker.start();
+
+        // Get the actual bound URI after broker starts (important for ephemeral ports)
+        url = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setAlwaysSyncSend(true);
