@@ -19,6 +19,11 @@ package org.apache.activemq.jaas;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -30,10 +35,7 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.apache.commons.io.FileUtils;
-
 import junit.framework.TestCase;
-
 
 /**
  * @version $Rev: $ $Date: $
@@ -73,8 +75,9 @@ public class PropertiesLoginModuleTest extends TestCase {
         File groupsFile = new File(targetPropDir, "groups.properties");
 
         //Set up initial properties
-        FileUtils.copyFile(new File(sourcePropDir, "users.properties"), usersFile);
-        FileUtils.copyFile(new File(sourcePropDir, "groups.properties"), groupsFile);
+        targetPropDir.mkdirs();
+        Files.copy(new File(sourcePropDir, "users.properties").toPath(), usersFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
+        Files.copy(new File(sourcePropDir, "groups.properties").toPath(), groupsFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
 
         LoginContext context = new LoginContext("PropertiesLoginReload",
                 new UserPassHandler("first", "secret"));
@@ -92,10 +95,10 @@ public class PropertiesLoginModuleTest extends TestCase {
 
         //Modify the file and test that the properties are reloaded
         Thread.sleep(1000);
-        FileUtils.copyFile(new File(sourcePropDir, "usersReload.properties"), usersFile);
-        FileUtils.copyFile(new File(sourcePropDir, "groupsReload.properties"), groupsFile);
-        FileUtils.touch(usersFile);
-        FileUtils.touch(groupsFile);
+        Files.copy(new File(sourcePropDir, "usersReload.properties").toPath(), usersFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
+        Files.copy(new File(sourcePropDir, "groupsReload.properties").toPath(), groupsFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
+        Files.setLastModifiedTime(usersFile.toPath(), FileTime.from(Instant.now()));
+        Files.setLastModifiedTime(groupsFile.toPath(), FileTime.from(Instant.now()));
 
         //Use new password to verify  users file was reloaded
         context = new LoginContext("PropertiesLoginReload", new UserPassHandler("first", "secrets"));
