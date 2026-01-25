@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.tool.ClientRunBasis;
 import org.apache.activemq.tool.properties.AbstractObjectProperties;
 import org.apache.activemq.tool.reports.PerformanceReportWriter;
-import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
