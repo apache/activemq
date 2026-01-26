@@ -32,11 +32,12 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
-import jakarta.jms.JMSSecurityException;
+import jakarta.jms.JMSException;
 import jakarta.jms.Session;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.activemq.util.TestUtils.findOpenPort;
 import static org.junit.Assert.assertEquals;
@@ -109,32 +110,47 @@ public class AMQ4889Test {
 
     @Test(timeout = 60000)
     public void testForConnectionLeak() throws Exception {
-        Integer expectedConnectionCount = 0;
-        for (int i=0; i < ITERATIONS; i++) {
-            try {
-                if (i % 2 == 0) {
-                    LOG.debug("Iteration {} adding bad connection", i);
-                    Connection connection = connectionFactory.createConnection(USER, WRONG_PASSWORD);
+        int successfulConnections = 0;
+        int failedConnections = 0;
+
+        for (int i = 0; i < ITERATIONS; i++) {
+            if (i % 2 == 0) {
+                // Expected to fail - bad password
+                // Use try-with-resources to ensure failed connections are cleaned up
+                LOG.debug("Iteration {} adding bad connection", i);
+                try (final Connection connection = connectionFactory.createConnection(USER, WRONG_PASSWORD)) {
                     connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                    fail("createSession should fail");
-                } else {
-                    LOG.debug("Iteration {} adding good connection", i);
-                    Connection connection = connectionFactory.createConnection(USER, GOOD_USER_PASSWORD);
-                    connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                    expectedConnectionCount++;
+                    fail("createSession should fail with bad password");
+                } catch (final JMSException e) {
+                    // Authentication failure can be JMSSecurityException (synchronous)
+                    // or JMSException "Disposed due to prior exception" (asynchronous)
+                    // we don't care much here as long as it fails, but we could add an ExceptionListener to the connection
+                    // to check more closely if desired.
+                    failedConnections++;
                 }
-            } catch (JMSSecurityException e) {
+            } else {
+                // Expected to succeed - good password
+                // Do NOT close - test verifies these connections persist
+                LOG.debug("Iteration {} adding good connection", i);
+                try { // do not use try-with-resources here, because we want to keep the connection open and assert at the end
+                    final Connection connection = connectionFactory.createConnection(USER, GOOD_USER_PASSWORD);
+                    connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                    successfulConnections++;
+                } catch (final JMSException e) {
+                    fail("Good connection should not fail: " + e.getMessage());
+                }
             }
             LOG.debug("Iteration {} Connections? {}", i, proxyConnector.getConnectionCount());
         }
-        final Integer val = expectedConnectionCount;
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return val.equals(proxyConnector.getConnectionCount());
-            }
-        }, 20);
-        assertEquals(val, proxyConnector.getConnectionCount());
+
+        // Verify we had the expected number of failures and successes
+        assertEquals("Failed connections", ITERATIONS / 2, failedConnections);
+        assertEquals("Successful connections", ITERATIONS / 2, successfulConnections);
+
+        // Wait for proxy connector to reflect only the successful (still open) connections
+        final int expectedConnections = successfulConnections;
+        Wait.waitFor(() -> expectedConnections == proxyConnector.getConnectionCount(), TimeUnit.SECONDS.toMillis(20));
+        assertEquals("Proxy connection count", expectedConnections, (int) proxyConnector.getConnectionCount());
     }
 
 }
