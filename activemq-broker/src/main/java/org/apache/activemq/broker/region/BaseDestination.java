@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 import jakarta.jms.ResourceAllocationException;
 
@@ -105,7 +106,8 @@ public abstract class BaseDestination implements Destination {
     private long inactiveTimeoutBeforeGC = DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean gcIfInactive;
     private boolean gcWithNetworkConsumers;
-    private long lastActiveTime=0l;
+    private boolean gcWithOnlyWildcardConsumers;
+    private long lastActiveTime = 0L;
     private boolean reduceMemoryFootprint = false;
     protected final Scheduler scheduler;
     private boolean disposed = false;
@@ -311,12 +313,37 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public boolean isActive() {
-        boolean isActive = destinationStatistics.getConsumers().getCount() > 0 ||
-                           destinationStatistics.getProducers().getCount() > 0;
-        if (isActive && isGcWithNetworkConsumers() && destinationStatistics.getConsumers().getCount() > 0) {
-            isActive = hasRegularConsumers(getConsumers());
+        // if we have producers then we are active
+        if (destinationStatistics.getProducers().getCount() > 0) {
+            return true;
         }
-        return isActive;
+
+        // Check if we have active consumers that should prevent GC
+        if (destinationStatistics.getConsumers().getCount() > 0) {
+            // if we have consumers and both gcWithNetwork and gcOnlyWildcard consumers
+            // are false we can just return true, otherwise we need to check each consumer
+            return (!isGcWithNetworkConsumers() && !isGcWithOnlyWildcardConsumers()) ||
+                    hasActiveConsumers();
+        }
+
+        return false;
+    }
+
+    protected Predicate<Subscription> canGcConsumer = subscription -> {
+        // if isGcWithNetworkConsumers() is true and this is a network subscription then we can GC
+        boolean canGcNetwork = isGcWithNetworkConsumers() && subscription.getConsumerInfo().isNetworkSubscription();
+        // if isGcWithOnlyWildcardConsumers() is true and this is a wildcard then we can GC
+        return canGcNetwork || (isGcWithOnlyWildcardConsumers() && subscription.isWildcard());
+    };
+
+    protected boolean hasActiveConsumers() {
+        final List<Subscription> consumers = getConsumers();
+        for (Subscription subscription: consumers) {
+            if (!canGcConsumer.test(subscription)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -824,19 +851,37 @@ public abstract class BaseDestination implements Destination {
         return gcWithNetworkConsumers;
     }
 
+    /**
+     * Indicate if it is ok to gc destinations that have only wildcard consumers
+     * @param gcWithOnlyWildcardConsumers
+     */
+    public void setGcWithOnlyWildcardConsumers(boolean gcWithOnlyWildcardConsumers) {
+        this.gcWithOnlyWildcardConsumers = gcWithOnlyWildcardConsumers;
+    }
+
+    public boolean isGcWithOnlyWildcardConsumers() {
+        return gcWithOnlyWildcardConsumers;
+    }
+
     @Override
     public void markForGC(long timeStamp) {
-        if (isGcIfInactive() && this.lastActiveTime == 0 && isActive() == false
-                && destinationStatistics.getMessages().getCount() == 0 && getInactiveTimeoutBeforeGC() > 0l) {
+        if (isGcIfInactive()
+            && this.lastActiveTime == 0
+            && destinationStatistics.getMessages().getCount() == 0
+            && getInactiveTimeoutBeforeGC() > 0L
+            && !isActive()) {
             this.lastActiveTime = timeStamp;
         }
     }
 
     @Override
     public boolean canGC() {
-        boolean result = false;
-        final long currentLastActiveTime = this.lastActiveTime;
-        if (isGcIfInactive() && currentLastActiveTime != 0l && destinationStatistics.getMessages().getCount() == 0L ) {
+        var result = false;
+        final var currentLastActiveTime = this.lastActiveTime;
+        if (isGcIfInactive()
+            && currentLastActiveTime != 0L
+            && destinationStatistics.getMessages().getCount() == 0L
+            && !isActive()) {
             if ((System.currentTimeMillis() - currentLastActiveTime) >= getInactiveTimeoutBeforeGC()) {
                 result = true;
             }
@@ -892,17 +937,6 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public abstract List<Subscription> getConsumers();
-
-    protected boolean hasRegularConsumers(List<Subscription> consumers) {
-        boolean hasRegularConsumers = false;
-        for (Subscription subscription: consumers) {
-            if (!subscription.getConsumerInfo().isNetworkSubscription()) {
-                hasRegularConsumers = true;
-                break;
-            }
-        }
-        return hasRegularConsumers;
-    }
 
     public ConnectionContext createConnectionContext() {
         ConnectionContext answer = new ConnectionContext();
