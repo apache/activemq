@@ -1898,7 +1898,7 @@ public class BrokerService implements Service {
         return virtualThreadTaskRunner;
     }
 
-    @Experimental("Tech Preview for Virtaul Thread support")
+    @Experimental("Tech Preview for Virtual Thread support")
     public void setVirtualThreadTaskRunner(boolean virtualThreadTaskRunner) {
         this.virtualThreadTaskRunner = virtualThreadTaskRunner;
     }
