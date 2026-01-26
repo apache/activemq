@@ -124,7 +124,7 @@
     <taglist-maven-plugin-version>3.2.2</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>3.6.1</build-helper-maven-plugin-version>
     <replacer-maven-plugin-version>1.5.3</replacer-maven-plugin-version>
-    <sonar-maven-plugin-version>5.2.0.4988</sonar-maven-plugin-version>
+    <sonar-maven-plugin-version>5.5.0.6356</sonar-maven-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.5.0</depends-maven-plugin-version>
     <maven-project-info-reports-plugin-version>3.9.0</maven-project-info-reports-plugin-version>
