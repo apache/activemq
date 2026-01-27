@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.security;
 
-import java.net.URI;
-import java.util.Arrays;
-
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
 import jakarta.jms.JMSSecurityException;
@@ -26,10 +23,7 @@ import jakarta.jms.Message;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import jakarta.jms.TemporaryTopic;
-import javax.management.ObjectName;
-
 import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
@@ -43,6 +37,12 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.management.ObjectName;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
 
@@ -107,15 +107,28 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
     }
 
     public void testConnectionStartThrowsJMSSecurityException() throws Exception {
+        final CountDownLatch exceptionLatch = new CountDownLatch(1);
 
-        Connection connection = factory.createConnection("badUser", "password");
-        try {
-            connection.start();
-            fail("Should throw JMSSecurityException");
-        } catch (JMSSecurityException jmsEx) {
-        } catch (Exception e) {
-            LOG.info("Expected JMSSecurityException but was: {}", e.getClass());
-            fail("Should throw JMSSecurityException");
+        try (final Connection connection = factory.createConnection("badUser", "password")) {
+            connection.setExceptionListener(e -> {
+                LOG.info("Connection received exception: {}", e.getMessage());
+                assertTrue(e instanceof JMSSecurityException);
+                exceptionLatch.countDown();
+            });
+
+            try {
+                connection.start();
+
+                // If start() doesn't throw synchronously, wait for async exception
+                assertTrue("Should receive security exception via listener", exceptionLatch.await(5, TimeUnit.SECONDS));
+
+            } catch (final JMSSecurityException jmsEx) {
+                // Synchronous security exception - expected
+            } catch (final JMSException e) {
+                // with the latch, we should always pass first into the listener and assert the right exception
+                LOG.info("Expected JMSSecurityException but was: {}", e.getClass());
+                fail("Should throw JMSSecurityException");
+            }
         }
     }
 

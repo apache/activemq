@@ -100,4 +100,5 @@ public class VirtualTopicsAndDurableSubsTest extends MBeanTest {
     public void testRetryMessages() throws Exception {}
     public void testMoveMessagesBySelector() throws Exception {}
     public void testCopyMessagesBySelector() throws Exception {}
+    public void testQueuePauseResume() throws Exception {}
 }

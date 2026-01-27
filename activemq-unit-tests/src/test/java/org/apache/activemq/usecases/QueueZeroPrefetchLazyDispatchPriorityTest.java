@@ -19,6 +19,7 @@ package org.apache.activemq.usecases;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -36,9 +37,11 @@ import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -203,9 +206,16 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
     @Test(timeout=120000)
     public void testJmsBrowserGetsPagedIn() throws Exception {
         final int numToSend = 5;
+        final ActiveMQQueue destination = new ActiveMQQueue("TestQ");
 
         for (int i = 0; i < ITERATIONS; i++) {
             produceMessages(numToSend, 4, "TestQ");
+
+            // Wait for messages to be enqueued
+            assertTrue("Messages enqueued", Wait.waitFor(() -> {
+                final Queue queue = (Queue) broker.getDestination(destination);
+                return queue != null && queue.getDestinationStatistics().getMessages().getCount() == numToSend;
+            }, 5000, 100));
 
             ArrayList<Message> browsed = browseMessages("TestQ");
 
@@ -221,6 +231,12 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
             LOG.info("Browsed: {}", browsed.size());
 
             assertEquals("see only the paged in for pull", 1, browsed.size());
+
+            // Wait for all messages to be available (including redelivery of unacked message)
+            assertTrue("All messages available for consumption", Wait.waitFor(() -> {
+                final Queue queue = (Queue) broker.getDestination(destination);
+                return queue != null && queue.getDestinationStatistics().getMessages().getCount() == numToSend;
+            }, 5000, 100));
 
             // consume messages
             ArrayList<Message> consumeList = consumeMessages("TestQ");
