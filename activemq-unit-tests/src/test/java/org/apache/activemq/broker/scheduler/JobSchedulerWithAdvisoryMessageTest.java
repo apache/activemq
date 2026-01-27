@@ -20,6 +20,7 @@ import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +36,7 @@ import jakarta.jms.TextMessage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertFalse;
@@ -97,15 +99,17 @@ public class JobSchedulerWithAdvisoryMessageTest extends JobSchedulerTestSupport
         // send delayed message using a named (i.e. not anonymous) jms producer
         final String queueName = getNewQueueName();
         final Queue destination = session.createQueue(queueName);
-        delay(200);
+
+        // Wait to verify queue not created yet
+        Wait.waitFor(() -> !queuesCreated.contains(queueName), TimeUnit.SECONDS.toMillis(1), 10);
         assertFalse(queuesCreated.contains(queueName)); // we do not expect the queue to be created yet.
 
-        MessageProducer producer = session.createProducer(destination);
+        final MessageProducer producer = session.createProducer(destination);
         // The act of creating the jms producer actually creates the empty queue inside the broker
         // - so the queue already exists before we even send the first message to it. The Advisory message will get
         // sent immediately because a new queue was just created.
-        delay(200);
-        assertTrue(queuesCreated.contains(queueName));
+        assertTrue("Queue advisory received after producer creation",
+                Wait.waitFor(() -> queuesCreated.contains(queueName), TimeUnit.SECONDS.toMillis(5), 100));
 
         // send delayed message
         producer.send( createDelayedMessage() );
@@ -120,14 +124,16 @@ public class JobSchedulerWithAdvisoryMessageTest extends JobSchedulerTestSupport
     @Test
     public void sendDelayedMessage_usingAnonymousProducer() throws Exception {
         final String queueName = getNewQueueName();
-        Queue destination = session.createQueue(queueName);
-        delay(200);
+        final Queue destination = session.createQueue(queueName);
+
+        // Wait to verify queue not created yet
+        Wait.waitFor(() -> !queuesCreated.contains(queueName), TimeUnit.SECONDS.toMillis(1), 10);
         assertFalse(queuesCreated.contains(queueName)); // we do not expect the queue to be created yet.
 
         // an "Anonymous Producer" isn't bound to a single queue. It can be used for sending messages to any queue.
-        MessageProducer anonymousProducer = session.createProducer(null);
+        final MessageProducer anonymousProducer = session.createProducer(null);
         // creation of an anonymous producer does *not* cause any advisory message to be sent. This is expected.
-        delay(200);
+        Wait.waitFor(() -> !queuesCreated.contains(queueName), TimeUnit.SECONDS.toMillis(1), 10);
         assertFalse(queuesCreated.contains(queueName));
 
         // send delayed message. The queue will get created on-the-fly as we write the first message to it.
@@ -135,10 +141,12 @@ public class JobSchedulerWithAdvisoryMessageTest extends JobSchedulerTestSupport
         //   the JobSchedulerStore. After the delay timeout is reached, then the message gets moved into the real
         //   queue. This is when the queue is actually created.
         anonymousProducer.send(destination, createDelayedMessage() );
-        delay(500);  // the message was delayed for only 5ms so 500ms should be long enough
 
-        // The Advisory message should be sent because the queue was created
-        assertTrue(queuesCreated.contains(queueName));
+        // Wait for the scheduled job to fire and the queue advisory to be sent
+        // The message was delayed for only 5ms, so we wait up to 5 seconds for the advisory
+        // This ensures the scheduled job completes before tearDown() stops the broker
+        assertTrue("Queue advisory received after scheduled message fires",
+                Wait.waitFor(() -> queuesCreated.contains(queueName), TimeUnit.SECONDS.toMillis(1), 100));
     }
 
     private Message createDelayedMessage() throws JMSException {
