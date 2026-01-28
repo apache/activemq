@@ -17,14 +17,19 @@
 package org.apache.activemq.security;
 
 import java.net.URI;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
 import jakarta.jms.JMSSecurityException;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.assertTrue;
 
 public class SimpleAuthenticationPluginNoUsersTest extends SecurityTestSupport {
 
@@ -47,13 +52,28 @@ public class SimpleAuthenticationPluginNoUsersTest extends SecurityTestSupport {
     }
 
     public void testConnectionStartThrowsJMSSecurityException() throws Exception {
+        final CountDownLatch exceptionLatch = new CountDownLatch(1);
 
-        Connection connection = factory.createConnection("user", "password");
-        try {
-            connection.start();
-            fail("Should throw JMSSecurityException");
-        } catch (JMSSecurityException jmsEx) {
-            //expected
+        try (final Connection connection = factory.createConnection("user", "password")) {
+            connection.setExceptionListener(e -> {
+                LOG.info("Connection received exception: {}", e.getMessage());
+                assertTrue(e instanceof JMSSecurityException);
+                exceptionLatch.countDown();
+            });
+
+            try {
+                connection.start();
+
+                // If start() doesn't throw synchronously, wait for async exception
+                assertTrue("Should receive security exception via listener", exceptionLatch.await(5, TimeUnit.SECONDS));
+
+            } catch (final JMSSecurityException jmsEx) {
+                // Synchronous security exception - expected
+            } catch (final JMSException e) {
+                // with the latch, we should always pass first into the listener and assert the right exception
+                LOG.info("Expected JMSSecurityException but was: {}", e.getClass());
+                fail("Should throw JMSSecurityException");
+            }
         }
     }
 }
