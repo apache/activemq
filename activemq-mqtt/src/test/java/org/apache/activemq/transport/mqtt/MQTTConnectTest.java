@@ -35,6 +35,7 @@ import org.fusesource.mqtt.client.MQTT;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -45,6 +46,7 @@ import org.slf4j.LoggerFactory;
  * Test that connection attempts that don't send a CONNECT frame will
  * get cleaned up by the inactivity monitor.
  */
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class MQTTConnectTest extends MQTTTestSupport {
 
