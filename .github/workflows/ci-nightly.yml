@@ -50,6 +50,8 @@ jobs:
 
     permissions:
       contents: read
+      checks: write
+      pull-requests: write
 
     strategy:
       matrix:
@@ -67,3 +69,36 @@ jobs:
           distribution: temurin
       - name: Test
         run: mvn -B -e -fae test
+      - name: Upload Test Results
+        if: (!cancelled())
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}-java${{ matrix.java-version }}
+          path: '**/target/surefire-reports/*.xml'
+      - name: Publish Test Results (Linux)
+        if: (!cancelled()) && runner.os == 'Linux'
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          large_files: true
+          report_individual_runs: true
+          report_suite_logs: error
+          check_name: Test Results (${{ matrix.os }}, Java ${{ matrix.java-version }})
+          files: '**/target/surefire-reports/*.xml'
+      - name: Publish Test Results (macOS)
+        if: (!cancelled()) && runner.os == 'macOS'
+        uses: EnricoMi/publish-unit-test-result-action/macos@v2
+        with:
+          large_files: true
+          report_individual_runs: true
+          report_suite_logs: error
+          check_name: Test Results (${{ matrix.os }}, Java ${{ matrix.java-version }})
+          files: '**/target/surefire-reports/*.xml'
+      - name: Publish Test Results (Windows)
+        if: (!cancelled()) && runner.os == 'Windows'
+        uses: EnricoMi/publish-unit-test-result-action/windows@v2
+        with:
+          large_files: true
+          report_individual_runs: true
+          report_suite_logs: error
+          check_name: Test Results (${{ matrix.os }}, Java ${{ matrix.java-version }})
+          files: '**/target/surefire-reports/*.xml'
