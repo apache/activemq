@@ -782,17 +782,19 @@ public class JMSConsumerTest extends JmsTestSupport {
         final MessageConsumer consumer2 = session2.createConsumer(destination);
 
         // Wait for consumer2 to fully register with the broker
-        final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
-        assertTrue("consumer2 registered", Wait.waitFor(() ->
-                subscriptions.size() == 2
-        , TimeUnit.SECONDS.toMillis(5), 100));
+        // Note: getDestinationConsumers must be called inside the condition because the list reference may change
+        assertTrue("consumer2 registered", Wait.waitFor(() -> {
+            final List<Subscription> subs = getDestinationConsumers(broker, destination);
+            return subs != null && subs.size() == 2;
+        }, TimeUnit.SECONDS.toMillis(5), 100));
 
         // Critical: Wait for message2 to be dispatched to consumer2 BEFORE consumer1 receives message1
         // Otherwise, when consumer1.receive() frees its prefetch slot, the broker may dispatch
         // message2 to consumer1 instead of consumer2, causing consumer2.receive() to timeout
         assertTrue("message2 dispatched to consumer2", Wait.waitFor(() -> {
+            final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
             // consumer2 is the second subscription (index 1)
-            if (subscriptions.size() >= 2) {
+            if (subscriptions != null && subscriptions.size() >= 2) {
                 final Subscription sub2 = subscriptions.get(1);
                 // Check if consumer2 has at least one message dispatched or pending
                 if (sub2 instanceof QueueSubscription) {
