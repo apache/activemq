@@ -161,17 +161,19 @@ public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
                     break;
                 default: break;
                 }
-                jmsConsumer.close();
 
                 final Logger logger = LoggerFactory.getLogger(this.getClass());
-                assertTrue("Queue should drain in time", Wait.waitFor(new Wait.Condition() {
-                    @Override
-                    public boolean isSatisified() throws Exception {
-                        logger.info("Current Queue size: " + localQueueViewMBean.getQueueSize() +
-                                ", dequeue count: " + localQueueViewMBean.getDequeueCount());
-                        return localQueueViewMBean.getQueueSize() == 0L && localQueueViewMBean.getDequeueCount() >= 2L;
-                    }
+
+                // Wait for all acknowledgments to be processed BEFORE closing the consumer.
+                // With CLIENT_ACKNOWLEDGE and INDIVIDUAL_ACKNOWLEDGE, the ack processing may be
+                // asynchronous and closing the consumer too early can cause messages to not be dequeued.
+                assertTrue("Queue should drain in time", Wait.waitFor(() -> {
+                    logger.info("Current Queue size: " + localQueueViewMBean.getQueueSize() +
+                            ", dequeue count: " + localQueueViewMBean.getDequeueCount());
+                    return localQueueViewMBean.getQueueSize() == 0L && localQueueViewMBean.getDequeueCount() >= 2L;
                 }, 60000L, 200L));
+
+                jmsConsumer.close();
             } // Close consumer context
 
         } catch (Exception e) {
