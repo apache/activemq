@@ -135,12 +135,12 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
 
         ActiveMQDestination queue = new ActiveMQQueue("test");
         ActiveMQDestination destination = AdvisorySupport.getConsumerAdvisoryTopic(queue);
-        
+
         // Setup a first connection
         StubConnection connection1 = createConnection();
         ConnectionInfo connectionInfo1 = createConnectionInfo();
         SessionInfo sessionInfo1 = createSessionInfo(connectionInfo1);
-        
+
         connection1.send(connectionInfo1);
         connection1.send(sessionInfo1);
 
@@ -149,12 +149,15 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
         ConnectionInfo connectionInfo2 = createConnectionInfo();
         SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);
         ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, queue);
-        consumerInfo2.setPrefetchSize(100);        
+        consumerInfo2.setPrefetchSize(100);
         connection2.send(connectionInfo2);
         connection2.send(sessionInfo2);
-        connection2.send(consumerInfo2);
-        
-        // We should get an advisory of the previous consumer.        
+        // Use request() to ensure consumer is fully registered and its "new consumer"
+        // advisory is fired before we create the advisory consumer. This prevents a race
+        // where the advisory consumer could receive both a replay AND the broadcast advisory.
+        connection2.request(consumerInfo2);
+
+        // We should get an advisory of the previous consumer.
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
         consumerInfo1.setPrefetchSize(100);
         connection1.send(consumerInfo1);
@@ -246,12 +249,15 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
         SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);
         ProducerInfo producerInfo2 = createProducerInfo(sessionInfo2);
         producerInfo2.setDestination(queue);
-        
+
         connection2.send(connectionInfo2);
         connection2.send(sessionInfo2);
-        connection2.send(producerInfo2);
-        
-        // Create the advisory consumer.. it should see the previous producer        
+        // Use request() to ensure producer is fully registered and its "new producer"
+        // advisory is fired before we create the advisory consumer. This prevents a race
+        // where the advisory consumer could receive both a replay AND the broadcast advisory.
+        connection2.request(producerInfo2);
+
+        // Create the advisory consumer.. it should see the previous producer
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
         consumerInfo1.setPrefetchSize(100);
         connection1.send(consumerInfo1);
