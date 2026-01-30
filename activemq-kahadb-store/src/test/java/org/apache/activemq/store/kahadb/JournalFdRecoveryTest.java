@@ -212,6 +212,7 @@ public class JournalFdRecoveryTest {
     public void testRecoveryWithMissingMssagesWithValidAcks() throws Exception {
 
         doCreateBroker(true);
+        adapter.setPreallocationScope(Journal.PreallocationScope.NONE.name());
         adapter.setCheckpointInterval(50000);
         adapter.setCleanupInterval(50000);
         broker.start();
