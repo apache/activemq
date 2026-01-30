@@ -367,6 +367,8 @@ public class AdvisoryBroker extends BrokerFilter {
             } finally {
                 consumersLock.writeLock().unlock();
             }
+            // Fire advisory outside the lock to avoid potential deadlocks
+            // (fireConsumerAdvisory calls next.send() which can acquire other locks)
             if (!dest.isTemporary() || destinations.containsKey(dest)) {
                 fireConsumerAdvisory(context, dest, topic, info.createRemoveCommand());
             }
