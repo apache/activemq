@@ -1671,9 +1671,10 @@ public class MQTTTest extends MQTTTestSupport {
         }
         connectionSub.disconnect();
 
-        // Wait for broker to process disconnect before publishing messages for offline delivery
+        // Wait for broker to process disconnect before publishing messages for offline delivery.
+        // Check for no active durable subscribers (works for both regular and virtual topic strategies)
         assertTrue("Subscription should become inactive",
-                Wait.waitFor(() -> brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1,
+                Wait.waitFor(() -> brokerService.getAdminView().getDurableTopicSubscribers().length == 0,
                         5000, 100));
 
         try {
@@ -1698,7 +1699,7 @@ public class MQTTTest extends MQTTTestSupport {
 
                 // Wait for broker to process disconnect before next iteration publishes
                 assertTrue("Subscription should become inactive",
-                        Wait.waitFor(() -> brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1,
+                        Wait.waitFor(() -> brokerService.getAdminView().getDurableTopicSubscribers().length == 0,
                                 5000, 100));
             }
         } catch (Exception exception) {
@@ -1732,9 +1733,10 @@ public class MQTTTest extends MQTTTestSupport {
             connectionSub.disconnect();
         }
 
-        // Wait for broker to process disconnect before publishing messages for offline delivery
+        // Wait for broker to process disconnect before publishing messages for offline delivery.
+        // Check for no active durable subscribers (works for both regular and virtual topic strategies)
         assertTrue("Subscription should become inactive",
-                Wait.waitFor(() -> brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1,
+                Wait.waitFor(() -> brokerService.getAdminView().getDurableTopicSubscribers().length == 0,
                         5000, 100));
 
         MQTT mqttPubLoop = createMQTTConnection("MQTT-Pub-Client", true);
