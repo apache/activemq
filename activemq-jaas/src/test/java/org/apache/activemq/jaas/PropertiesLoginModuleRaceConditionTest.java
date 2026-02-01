@@ -49,6 +49,7 @@ public class PropertiesLoginModuleRaceConditionTest {
     private static final String USERS_FILE = "users.properties";
     private static final String USERNAME = "first";
     private static final String PASSWORD = "secret";
+    private static final int TOTAL_LOGIN_ATTEMPTS = 25000;
 
     @Rule
     public final ErrorCollector e = new ErrorCollector();
@@ -112,7 +113,8 @@ public class PropertiesLoginModuleRaceConditionTest {
         options.put("org.apache.activemq.jaas.properties.group", GROUPS_FILE);
         options.put("baseDir", temp.getRoot().getAbsolutePath());
 
-        errors = new ArrayBlockingQueue<Exception>(processorCount());
+        // Large enough to hold all potential errors from concurrent attempts
+        errors = new ArrayBlockingQueue<Exception>(TOTAL_LOGIN_ATTEMPTS);
         pool = Executors.newFixedThreadPool(processorCount());
         callback = new JassCredentialCallbackHandler(USERNAME, PASSWORD);
     }
@@ -128,36 +130,33 @@ public class PropertiesLoginModuleRaceConditionTest {
     public void raceConditionInUsersAndGroupsLoading() throws InterruptedException, FileNotFoundException, IOException {
 
         // Brute force approach to increase the likelihood of the race condition occurring
-        for (int i = 0; i < 25000; i++) {
-            final CountDownLatch start = new CountDownLatch(1);
-            final CountDownLatch finished = new CountDownLatch(processorCount());
-            prepareLoginThreads(start, finished);
+        // Submit many concurrent login attempts and let the thread pool handle concurrency
+        final CountDownLatch start = new CountDownLatch(1);
+        final CountDownLatch finished = new CountDownLatch(TOTAL_LOGIN_ATTEMPTS);
 
-            // Releases every login thread simultaneously to increase our chances of
-            // encountering the race condition
-            start.countDown();
+        // Submit all login tasks to the pool
+        for (int i = 0; i < TOTAL_LOGIN_ATTEMPTS; i++) {
+            pool.submit(new LoginTester(start, finished, errors, options, callback));
+        }
 
-            finished.await();
-            if (isRaceConditionDetected()) {
-                e.addError(new AssertionError("At least one race condition in PropertiesLoginModule "
-                        + "has been encountered. Please examine the "
-                        + "following stack traces for more details:"));
-                for (Exception exception : errors) {
-                    e.addError(exception);
-                }
-                return;
+        // Release all threads simultaneously to maximize concurrent load
+        start.countDown();
+
+        // Wait for all attempts to complete
+        finished.await();
+
+        if (isRaceConditionDetected()) {
+            e.addError(new AssertionError("At least one race condition in PropertiesLoginModule "
+                    + "has been encountered. Please examine the "
+                    + "following stack traces for more details:"));
+            for (Exception exception : errors) {
+                e.addError(exception);
             }
         }
     }
 
     private boolean isRaceConditionDetected() {
         return errors.size() > 0;
-    }
-
-    private void prepareLoginThreads(final CountDownLatch start, final CountDownLatch finished) {
-        for (int processor = 1; processor <= processorCount() * 2; processor++) {
-            pool.submit(new LoginTester(start, finished, errors, options, callback));
-        }
     }
 
     private int processorCount() {
