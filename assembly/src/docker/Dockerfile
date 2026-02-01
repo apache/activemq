@@ -29,9 +29,6 @@ ENV PATH $PATH:$ACTIVEMQ_HOME/bin
 ENV ACTIVEMQ_OPTS $ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config -Djetty.host=0.0.0.0
 #WORKDIR $ACTIVEMQ_HOME
 
-ENV ACTIVEMQ_ADMIN_USER=admin
-ENV ACTIVEMQ_ADMIN_PASSWORD=admin
-
 # activemq_dist can point to a directory or a tarball on the local system
 ARG activemq_dist=NOT_SET
 
@@ -49,11 +46,7 @@ EXPOSE 8161 61616 5672 61613 1883 61614 1099
 STOPSIGNAL SIGTERM
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD curl -sf \
-    -u "${ACTIVEMQ_ADMIN_USER}:${ACTIVEMQ_ADMIN_PASSWORD}" \
-    -H "Origin: http://127.0.0.1" \
-    "http://127.0.0.1:8161/api/jolokia/search/org.apache.activemq:type=Broker,*" \
-    >/dev/null || exit 1
+        CMD curl -s "http://127.0.0.1:8161"/ >/dev/null || exit 1
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["activemq", "console"]
