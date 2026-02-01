@@ -1671,6 +1671,12 @@ public class MQTTTest extends MQTTTestSupport {
         }
         connectionSub.disconnect();
 
+        // Wait for broker to process disconnect before publishing messages for offline delivery.
+        // Check for no active durable subscribers (works for both regular and virtual topic strategies)
+        assertTrue("Subscription should become inactive",
+                Wait.waitFor(() -> brokerService.getAdminView().getDurableTopicSubscribers().length == 0,
+                        5000, 100));
+
         try {
             for (int j = 0; j < numberOfRuns; j++) {
 
@@ -1690,6 +1696,11 @@ public class MQTTTest extends MQTTTestSupport {
                     message.ack();
                 }
                 connectionSub.disconnect();
+
+                // Wait for broker to process disconnect before next iteration publishes
+                assertTrue("Subscription should become inactive",
+                        Wait.waitFor(() -> brokerService.getAdminView().getDurableTopicSubscribers().length == 0,
+                                5000, 100));
             }
         } catch (Exception exception) {
             LOG.error("unexpected exception", exception);
@@ -1721,6 +1732,12 @@ public class MQTTTest extends MQTTTestSupport {
             connectionSub.subscribe(topics);
             connectionSub.disconnect();
         }
+
+        // Wait for broker to process disconnect before publishing messages for offline delivery.
+        // Check for no active durable subscribers (works for both regular and virtual topic strategies)
+        assertTrue("Subscription should become inactive",
+                Wait.waitFor(() -> brokerService.getAdminView().getDurableTopicSubscribers().length == 0,
+                        5000, 100));
 
         MQTT mqttPubLoop = createMQTTConnection("MQTT-Pub-Client", true);
         BlockingConnection connectionPub = mqttPubLoop.blockingConnection();
