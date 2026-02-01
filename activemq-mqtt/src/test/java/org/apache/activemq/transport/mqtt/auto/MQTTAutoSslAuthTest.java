@@ -36,6 +36,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.transport.mqtt.ParallelTest;
+
+@Category(ParallelTest.class)
 @RunWith(Parameterized.class)
 public class MQTTAutoSslAuthTest extends MQTTTestSupport  {
 
