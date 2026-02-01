@@ -203,10 +203,16 @@ public class ManagementContext implements Service {
             // unregister the mbeans we have registered
             if (mbeanServer != null) {
                 for (Map.Entry<ObjectName, ObjectName> entry : registeredMBeanNames.entrySet()) {
-                    ObjectName actualName = entry.getValue();
+                    final ObjectName actualName = entry.getValue();
                     if (actualName != null && beanServer.isRegistered(actualName)) {
-                        LOG.debug("Unregistering MBean {}", actualName);
-                        mbeanServer.unregisterMBean(actualName);
+                        try {
+                            LOG.debug("Unregistering MBean {}", actualName);
+                            mbeanServer.unregisterMBean(actualName);
+                        } catch (javax.management.InstanceNotFoundException e) {
+                            // Ignore - the MBean was already unregistered (likely by advisory cleanup)
+                            // This is a benign race condition during shutdown
+                            LOG.trace("MBean already unregistered: {}", actualName);
+                        }
                     }
                 }
             }
@@ -449,10 +455,16 @@ public class ManagementContext implements Service {
      * Unregister an MBean
      */
     public void unregisterMBean(ObjectName name) throws JMException {
-        ObjectName actualName = this.registeredMBeanNames.get(name);
+        final ObjectName actualName = this.registeredMBeanNames.get(name);
         if (beanServer != null && actualName != null && beanServer.isRegistered(actualName) && this.registeredMBeanNames.remove(name) != null) {
-            LOG.debug("Unregistering MBean {}", actualName);
-            beanServer.unregisterMBean(actualName);
+            try {
+                LOG.debug("Unregistering MBean {}", actualName);
+                beanServer.unregisterMBean(actualName);
+            } catch (javax.management.InstanceNotFoundException e) {
+                // Ignore - the MBean was already unregistered (race condition during concurrent cleanup)
+                // This is benign since the MBean is already gone, which is what we wanted
+                LOG.trace("MBean already unregistered: {}", actualName);
+            }
         }
     }
 
