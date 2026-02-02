@@ -99,7 +99,9 @@ public class AMQ5426Test {
 		final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
 		    @Override
 		    public void append(LogEvent event) {
-		        if (event.getLevel().isMoreSpecificThan(Level.WARN))
+		        // Only flag ERROR level and above, not WARN - transport warnings like
+		        // "Broken pipe" are expected when connections close during message send
+		        if (event.getLevel().isMoreSpecificThan(Level.ERROR))
                     hasErrorInLogger.set(true);
 		    }
 		};
