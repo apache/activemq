@@ -278,28 +278,28 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             broker.waitUntilStarted();
         }
 
-        // Wait for all brokers to have their transport connectors ready to accept connections
-        // instead of using Thread.sleep which is unreliable across different machines
+        // Wait for all brokers with transport connectors to be ready to accept connections
+        // instead of using Thread.sleep which is unreliable across different machines.
+        // Skip this check for VM-only brokers (no transport connectors).
         for (final BrokerItem brokerItem : brokerList) {
             final BrokerService broker = brokerItem.broker;
-            assertTrue("Broker " + broker.getBrokerName() + " transport connectors ready",
-                Wait.waitFor(new Wait.Condition() {
-                    @Override
-                    public boolean isSatisified() throws Exception {
-                        // Verify broker is started and has transport connectors
-                        if (!broker.isStarted() || broker.getTransportConnectors().isEmpty()) {
+            // Only check transport connector readiness if the broker has transport connectors
+            // (skip VM-only brokers which have no TCP transport connectors)
+            if (!broker.getTransportConnectors().isEmpty()) {
+                assertTrue("Broker " + broker.getBrokerName() + " transport connectors ready",
+                    Wait.waitFor(() -> {
+                        if (!broker.isStarted()) {
                             return false;
                         }
-
                         // Try to create a test connection to verify transport is accepting connections
                         try (final Connection testConn = brokerItem.createConnection()) {
                             return true;
                         } catch (final Exception e) {
-                            LOG.debug("Broker " + broker.getBrokerName() + " not ready yet: " + e.getMessage());
+                            LOG.debug("Broker {} not ready yet: {}", broker.getBrokerName(), e.getMessage());
                             return false;
                         }
-                    }
-                }, TimeUnit.SECONDS.toMillis(30), TimeUnit.SECONDS.toMillis(2)));
+                    }, TimeUnit.SECONDS.toMillis(30), TimeUnit.SECONDS.toMillis(1)));
+            }
         }
     }
 
