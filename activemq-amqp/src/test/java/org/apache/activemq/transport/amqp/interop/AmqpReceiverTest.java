@@ -437,7 +437,10 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         assertNotNull(receiver2.receive(5, TimeUnit.SECONDS));
         assertNotNull(receiver2.receive(5, TimeUnit.SECONDS));
 
-        assertEquals(MSG_COUNT, queueView.getDispatchCount());
+        // Wait for dispatch count to be updated - it may not be synchronous
+        assertTrue("All messages should be dispatched",
+                Wait.waitFor(() -> queueView.getDispatchCount() == MSG_COUNT,
+                        5000, 50));
         assertEquals(0, queueView.getDequeueCount());
 
         receiver1.close();
