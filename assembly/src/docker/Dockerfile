@@ -35,18 +35,22 @@ ARG activemq_dist=NOT_SET
 COPY src/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+RUN groupadd -r activemq && useradd -r -g activemq -m activemq
+
 # Install build dependencies and activemq
 ADD $activemq_dist $ACTIVEMQ_INSTALL_PATH
 RUN set -x && \
   cp -r $ACTIVEMQ_INSTALL_PATH/apache-activemq-* $ACTIVEMQ_HOME && \
 	rm -r $ACTIVEMQ_INSTALL_PATH/apache-activemq-*
 
+RUN ls -l $ACTIVEMQ_HOME && \
+    chown -R activemq:activemq $ACTIVEMQ_HOME
+
 EXPOSE 8161 61616 5672 61613 1883 61614 1099
 
 STOPSIGNAL SIGTERM
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-        CMD curl -s "http://127.0.0.1:8161"/ >/dev/null || exit 1
+USER activemq
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["activemq", "console"]
