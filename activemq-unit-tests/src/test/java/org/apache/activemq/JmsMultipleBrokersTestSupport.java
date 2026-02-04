@@ -271,14 +271,46 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected void startAllBrokers() throws Exception {
-        Collection<BrokerItem> brokerList = brokers.values();
+        final Collection<BrokerItem> brokerList = brokers.values();
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
-            BrokerService broker = i.next().broker;
+            final BrokerService broker = i.next().broker;
             broker.start();
             broker.waitUntilStarted();
         }
 
-        Thread.sleep(maxSetupTime);
+        // Wait for all brokers with TCP transport connectors to be ready to accept connections
+        // instead of using Thread.sleep which is unreliable across different machines.
+        // Skip this check for VM-only brokers since VM transport doesn't require network readiness
+        // and some tests intentionally configure brokers to reject connections.
+        for (final BrokerItem brokerItem : brokerList) {
+            final BrokerService broker = brokerItem.broker;
+            // Only check transport connector readiness for TCP/network connectors
+            // (skip VM-only brokers which don't require network readiness checks)
+            final boolean hasTcpConnector = broker.getTransportConnectors().stream()
+                .anyMatch(tc -> {
+                    final String scheme = tc.getUri().getScheme();
+                    return scheme != null && !scheme.equals("vm");
+                });
+            if (hasTcpConnector) {
+                assertTrue("Broker " + broker.getBrokerName() + " transport connectors ready",
+                    Wait.waitFor(() -> {
+                        if (!broker.isStarted()) {
+                            return false;
+                        }
+                        // Try to create a test connection to verify transport is accepting connections
+                        try (final Connection testConn = brokerItem.createConnection()) {
+                            return true;
+                        } catch (final jakarta.jms.JMSSecurityException e) {
+                            // Security exception means the broker IS accepting connections,
+                            // it's just enforcing authentication - consider it ready
+                            return true;
+                        } catch (final Exception e) {
+                            LOG.debug("Broker {} not ready yet: {}", broker.getBrokerName(), e.getMessage());
+                            return false;
+                        }
+                    }, TimeUnit.SECONDS.toMillis(30), TimeUnit.SECONDS.toMillis(1)));
+            }
+        }
     }
 
     protected BrokerService createBroker(String brokerName) throws Exception {

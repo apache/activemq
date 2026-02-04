@@ -104,6 +104,10 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
         createConsumer("A", topic1);
         createConsumer("A", new ActiveMQTopic("A.FOO2"));
 
+        // Wait for network bridge to propagate consumers to broker B
+        waitForConsumerOnBroker(brokerB, advisoryTopic);
+        waitForConsumerOnBroker(brokerB, topic1);
+
         //verify that brokerB's advisory prefetch is 10 but normal topic prefetch is 1
         assertEquals(10, brokerB.getDestination(advisoryTopic).getConsumers().get(0).getPrefetchSize());
         assertEquals(1, brokerB.getDestination(topic1).getConsumers().get(0).getPrefetchSize());
@@ -137,6 +141,10 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
         createConsumer("A", topic1);
         createConsumer("A", new ActiveMQTopic("A.FOO2"));
 
+        // Wait for network bridge to propagate consumers to broker B
+        waitForConsumerOnBroker(brokerB, advisoryTopic);
+        waitForConsumerOnBroker(brokerB, topic1);
+
         //verify that brokerB's advisory prefetch is 1 but normal topic prefetch is 10
         assertEquals(1, brokerB.getDestination(advisoryTopic).getConsumers().get(0).getPrefetchSize());
         assertEquals(10, brokerB.getDestination(topic1).getConsumers().get(0).getPrefetchSize());
@@ -168,6 +176,10 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
         createConsumer("A", topic1);
         createConsumer("A", new ActiveMQTopic("A.FOO2"));
 
+        // Wait for network bridge to propagate consumers to broker B
+        waitForConsumerOnBroker(brokerB, advisoryTopic);
+        waitForConsumerOnBroker(brokerB, topic1);
+
         //verify that both consumers have a prefetch of 10
         assertEquals(10, brokerB.getDestination(advisoryTopic).getConsumers().get(0).getPrefetchSize());
         assertEquals(10, brokerB.getDestination(topic1).getConsumers().get(0).getPrefetchSize());
@@ -197,6 +209,10 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
 
         createConsumer("A", topic1);
         createConsumer("A", new ActiveMQTopic("A.FOO2"));
+
+        // Wait for network bridge to propagate consumers to broker B
+        waitForConsumerOnBroker(brokerB, advisoryTopic);
+        waitForConsumerOnBroker(brokerB, topic1);
 
         //verify that both consumers have a prefetch of 1
         assertEquals(1, brokerB.getDestination(advisoryTopic).getConsumers().get(0).getPrefetchSize());
@@ -390,6 +406,17 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
+    }
+
+    private void waitForConsumerOnBroker(final BrokerService broker, final ActiveMQTopic topic) throws Exception {
+        assertTrue("Consumer on " + broker.getBrokerName() + " for " + topic,
+            Wait.waitFor(() -> {
+                try {
+                    return !broker.getDestination(topic).getConsumers().isEmpty();
+                } catch (final Exception e) {
+                    return false;
+                }
+            }, 30000, 100));
     }
 
 }
