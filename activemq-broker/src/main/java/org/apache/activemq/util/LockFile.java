@@ -136,7 +136,7 @@ public class LockFile {
         closeReadFile();
 
         if (locked && deleteOnUnlock) {
-            file.delete();
+            IOHelper.deleteFileNonBlocking(file);
         }
     }
 
