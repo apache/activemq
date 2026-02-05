@@ -57,7 +57,7 @@ jobs:
       checks: write
       pull-requests: write
 
-    runs-on: ubuntu-24.04
+    runs-on: macos-26
 
     steps:
       - uses: actions/checkout@v4
