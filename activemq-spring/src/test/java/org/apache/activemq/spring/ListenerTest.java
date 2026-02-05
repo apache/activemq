@@ -51,38 +51,36 @@ public class ListenerTest {
     public void testSimple() throws Exception {
         sendMessages("SIMPLE", msgNum);
 
-        Thread.sleep(3000);
+        Assert.assertTrue("Expected " + msgNum + " messages but got " + listener.messages.size(),
+            Wait.waitFor(() -> msgNum == listener.messages.size(), 60_000));
 
         LOG.info("messages received= " + listener.messages.size());
-        Assert.assertEquals(msgNum, listener.messages.size());
     }
 
 
     @Test
     @DirtiesContext
     public void testComposite() throws Exception {
+        final int expectedMessages = 6 * msgNum;
         sendMessages("TEST.1,TEST.2,TEST.3,TEST.4,TEST.5,TEST.6", msgNum);
 
-        Wait.waitFor(new Wait.Condition() {
-            public boolean isSatisified() throws Exception {
-                return (6 * msgNum) == listener.messages.size();
-            }
-        });
+        Assert.assertTrue("Expected " + expectedMessages + " messages but got " + listener.messages.size(),
+            Wait.waitFor(() -> expectedMessages == listener.messages.size(), 120_000));
 
         LOG.info("messages received= " + listener.messages.size());
-        Assert.assertEquals(6 * msgNum, listener.messages.size());
     }
 
     public void sendMessages(String destName, int msgNum) throws Exception {
-        ConnectionFactory factory = new org.apache.activemq.ActiveMQConnectionFactory("tcp://localhost:61616");
-        Connection conn = factory.createConnection();
-        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination dest = sess.createQueue(destName);
-        MessageProducer producer = sess.createProducer(dest);
-        for (int i = 0; i < msgNum; i++) {
-            String messageText = i +" test";
-            LOG.info("sending message '" + messageText + "'");
-            producer.send(sess.createTextMessage(messageText));
+        final ConnectionFactory factory = new org.apache.activemq.ActiveMQConnectionFactory("tcp://localhost:61616");
+        try (Connection conn = factory.createConnection()) {
+            final Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            final Destination dest = sess.createQueue(destName);
+            final MessageProducer producer = sess.createProducer(dest);
+            for (int i = 0; i < msgNum; i++) {
+                final String messageText = i + " test";
+                LOG.info("sending message '" + messageText + "'");
+                producer.send(sess.createTextMessage(messageText));
+            }
         }
     }
 
