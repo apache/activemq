@@ -18,6 +18,8 @@
 # limitations under the License.
 ################################################################################
 
+set -e
+
 # Transport/connection security
 if [ -n "${ACTIVEMQ_CONNECTION_USER}" ]; then
   if [ -f "${ACTIVEMQ_HOME}/conf/connection.security.enabled" ]; then
@@ -77,5 +79,13 @@ if [ -n "${ACTIVEMQ_WEB_USER}" ]; then
     sed -i s/=admin/=${ACTIVEMQ_WEB_PASSWORD}/g ${ACTIVEMQ_HOME}/conf/users.properties
   fi
 fi
+
+_term() {
+  echo "Received SIGTERM, stopping ActiveMQ..."
+  activemq stop
+  sleep 2
+}
+
+trap _term TERM INT
 
 exec "$@"
