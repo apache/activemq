@@ -57,7 +57,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-24.04, ubuntu-22.04, macos-26, macos-15, windows-2025, windows-2022 ]
-        java-version: [ 17, 21 ]
+        java-version: [ 17, 21, 25 ]
 
     runs-on: ${{ matrix.os }}
 
@@ -69,7 +69,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
       - name: Test
-        run: mvn -B -e -fae test
+        run: mvn -B -e -fae verify
       - name: Upload Test Results
         if: (!cancelled())
         uses: actions/upload-artifact@v4
