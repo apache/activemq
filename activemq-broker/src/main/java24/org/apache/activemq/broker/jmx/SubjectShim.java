@@ -17,7 +17,6 @@
 package org.apache.activemq.broker.jmx;
 
 import javax.security.auth.Subject;
-import java.security.AccessController;
 
 /**
  * [AMQ-9563] JDK JAAS API conversion assistance
