@@ -100,7 +100,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     public synchronized boolean delete() throws IOException {
-        return file.delete();
+        return IOHelper.deleteFileNonBlocking(file);
     }
 
     public synchronized void move(File targetDirectory) throws IOException{

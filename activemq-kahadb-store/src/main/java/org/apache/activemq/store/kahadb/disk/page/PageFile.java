@@ -350,20 +350,15 @@ public class PageFile {
 
     /**
      * @param file
-     * @throws IOException
      */
-    private void delete(File file) throws IOException {
-        if (file.exists() && !file.delete()) {
-            throw new IOException("Could not delete: " + file.getPath());
-        }
+    private void delete(File file) {
+        IOHelper.deleteFileNonBlocking(file);
     }
 
     private void archive(File file, String suffix) throws IOException {
         if (file.exists()) {
-            File archive = new File(file.getPath() + "-" + suffix);
-            if (!file.renameTo(archive)) {
-                throw new IOException("Could not archive: " + file.getPath() + " to " + file.getPath());
-            }
+            final File archiveFile = new File(file.getPath() + "-" + suffix);
+            IOHelper.renameFile(file, archiveFile);
         }
     }
 
