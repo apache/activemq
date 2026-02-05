@@ -54,6 +54,7 @@ jobs:
       pull-requests: write
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-24.04, ubuntu-22.04, macos-26, macos-15, windows-2025, windows-2022 ]
         java-version: [ 17, 21 ]
