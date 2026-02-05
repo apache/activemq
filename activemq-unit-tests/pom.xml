@@ -465,18 +465,6 @@
             <exclude>**/ClientIdFilterDispatchPolicyTest.java</exclude>
             <exclude>**/StartAndConcurrentStopBrokerTest.java</exclude>
             <exclude>**/BlobTransferPolicyUriTest.java</exclude>
-
-            <!--
-              added when running under Java 21+, but it can't run as part of normal tests
-              because Maven Surefire will use activemq-client/target/classes instead of the MRJAR
-
-              This test needs to run as part of the integration test phase to ensure it's using the packaged version
-              We use failsafe instead which is a better choice for integration tests. See bellow the configuration.
-            -->
-            <exclude>**/VirtualThreadTaskRunnerBrokerTest.java</exclude>
-            <exclude>**/DLQRetryTest.java</exclude>
-            <exclude>**/JmxAuditLogTest.java</exclude>
-            <exclude>**/JmxCreateNCTest.java</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -518,37 +506,6 @@
             <version>1.5.1</version>
           </dependency>
         </dependencies>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.5.2</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <forkCount>1</forkCount>
-          <reuseForks>false</reuseForks>
-          <failIfNoTests>false</failIfNoTests>
-          <systemPropertyVariables>
-            <org.apache.activemq.default.directory.prefix>${project.build.directory}/</org.apache.activemq.default.directory.prefix>
-            <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
-            <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
-            <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
-          </systemPropertyVariables>
-          <argLine>-Xmx512m -javaagent:${org.mockito:mockito-core:jar}</argLine>
-          <includes>
-            <include>**/VirtualThreadTaskRunnerBrokerTest.java</include>
-            <include>**/DLQRetryTest.java</include>
-            <include>**/JmxAuditLogTest.java</include>
-            <include>**/JmxCreateNCTest.java</include>
-          </includes>
-        </configuration>
       </plugin>
 
       <plugin>
