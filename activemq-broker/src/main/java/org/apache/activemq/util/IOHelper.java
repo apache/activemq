@@ -28,18 +28,126 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Collection of File and Folder utility methods.
  */
 public final class IOHelper {
 
+    private static final Logger LOG = LoggerFactory.getLogger(IOHelper.class);
+
     protected static final int MAX_DIR_NAME_LENGTH;
     protected static final int MAX_FILE_NAME_LENGTH;
     private static final int DEFAULT_BUFFER_SIZE = 4096;
+    private static final boolean IS_WINDOWS = System.getProperty("os.name", "").toLowerCase().contains("win");
+
+    // Async cleanup for files that couldn't be deleted immediately (Windows file locking)
+    private static final Queue<File> PENDING_DELETES = new ConcurrentLinkedQueue<>();
+    private static final ScheduledExecutorService CLEANUP_EXECUTOR;
+
+    static {
+        MAX_DIR_NAME_LENGTH = Integer.getInteger("MaximumDirNameLength", 200);
+        MAX_FILE_NAME_LENGTH = Integer.getInteger("MaximumFileNameLength", 64);
+
+        // Only start cleanup thread on Windows where file locking is an issue
+        if (IS_WINDOWS) {
+            CLEANUP_EXECUTOR = Executors.newSingleThreadScheduledExecutor(r -> {
+                final Thread t = new Thread(r, "IOHelper-AsyncCleanup");
+                t.setDaemon(true);
+                return t;
+            });
+            CLEANUP_EXECUTOR.scheduleWithFixedDelay(IOHelper::processAsyncDeletes, 5, 5, TimeUnit.SECONDS);
+        } else {
+            CLEANUP_EXECUTOR = null;
+        }
+    }
 
     private IOHelper() {
+    }
+
+    /**
+     * Process pending async deletes. Called periodically on Windows.
+     */
+    private static void processAsyncDeletes() {
+        int processed = 0;
+        File file;
+        while ((file = PENDING_DELETES.poll()) != null && processed < 100) {
+            processed++;
+            if (file.exists()) {
+                if (file.delete()) {
+                    LOG.debug("Async cleanup: deleted {}", file);
+                } else {
+                    // Still locked, re-queue for later
+                    PENDING_DELETES.offer(file);
+                }
+            }
+        }
+    }
+
+    /**
+     * Schedule a file for async deletion. Used when immediate deletion fails on Windows.
+     * The file will be deleted in the background when it becomes unlocked.
+     */
+    public static void scheduleAsyncDelete(File file) {
+        if (file != null && file.exists()) {
+            if (IS_WINDOWS && CLEANUP_EXECUTOR != null) {
+                PENDING_DELETES.offer(file);
+                LOG.debug("Scheduled async delete for: {}", file);
+            } else {
+                // On non-Windows, just use deleteOnExit
+                file.deleteOnExit();
+            }
+        }
+    }
+
+    /**
+     * Non-blocking file deletion. Tries to delete once, and if it fails,
+     * schedules async cleanup instead of blocking with retries.
+     *
+     * This is safe to call from synchronized blocks as it never sleeps or retries.
+     *
+     * @param file the file to delete
+     * @return true if deleted immediately, false if scheduled for async cleanup
+     */
+    public static boolean deleteFileNonBlocking(File file) {
+        if (file == null || !file.exists()) {
+            return true;
+        }
+
+        // For directories, try to delete children first (non-blocking)
+        if (file.isDirectory()) {
+            final File[] children = file.listFiles();
+            if (children != null) {
+                for (final File child : children) {
+                    deleteFileNonBlocking(child);
+                }
+            }
+        }
+
+        // Single delete attempt - no retry
+        if (file.delete()) {
+            return true;
+        }
+
+        // Failed to delete - schedule for async cleanup
+        scheduleAsyncDelete(file);
+        return false;
+    }
+
+    /**
+     * Check if we're running on Windows.
+     */
+    public static boolean isWindows() {
+        return IS_WINDOWS;
     }
 
     public static String getDefaultDataDirectory() {
@@ -187,19 +295,89 @@ public final class IOHelper {
         return result;
     }
 
-    public static void moveFile(File src, File targetDirectory) throws IOException {
-        if (!src.renameTo(new File(targetDirectory, src.getName()))) {
-
-            // If rename fails we must do a true deep copy instead.
-            Path sourcePath = src.toPath();
-            Path targetDirPath = targetDirectory.toPath();
-
-            try {
-                Files.move(sourcePath, targetDirPath.resolve(sourcePath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException ex) {
-                throw new IOException("Failed to move " + src + " to " + targetDirectory + " - " + ex.getMessage(), ex);
-            }
+    /**
+     * Rename a file to a new name/path. Non-blocking on failure.
+     * Strategy: rename -> NIO move -> copy + async delete of source.
+     *
+     * @param src the source file
+     * @param dest the destination file (full path with new name)
+     */
+    public static void renameFile(File src, File dest) throws IOException {
+        if (src == null) {
+            throw new IOException("Source file is null");
         }
+        if (dest == null) {
+            throw new IOException("Destination file is null");
+        }
+        if (!src.exists()) {
+            return;
+        }
+
+        final Path sourcePath = src.toPath();
+        final Path targetPath = dest.toPath();
+
+        // Fast path: try rename
+        try {
+            if (src.renameTo(dest)) {
+                return;
+            }
+        } catch (Exception e) {
+            // Fall through to NIO move
+        }
+
+        // Try NIO move
+        try {
+            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            return;
+        } catch (IOException e) {
+            // Fall through to copy+delete
+        }
+
+        // Copy + async delete as last resort
+        Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        deleteFileNonBlocking(src);
+    }
+
+    /**
+     * Move a file to a target directory. Non-blocking - uses async cleanup for source on Windows.
+     * Strategy: rename -> NIO move -> copy + async delete of source.
+     *
+     * @param src the source file to move
+     * @param targetDirectory the target directory (must be a directory)
+     */
+    public static void moveFile(File src, File targetDirectory) throws IOException {
+        if (src == null) {
+            throw new IOException("Source file is null");
+        }
+        if (targetDirectory == null) {
+            throw new IOException("Target directory is null");
+        }
+        mkdirs(targetDirectory);
+        final File dest = new File(targetDirectory, src.getName());
+        final Path sourcePath = src.toPath();
+        final Path targetPath = dest.toPath();
+
+        // Fast path: try rename (works if same filesystem and no locks)
+        try {
+            if (src.renameTo(dest)) {
+                return;
+            }
+        } catch (Exception e) {
+            // Fall through to NIO move
+        }
+
+        // Try NIO move
+        try {
+            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            return;
+        } catch (IOException e) {
+            // Fall through to copy+delete
+        }
+
+        // Copy + async delete as last resort
+        Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        // Copy succeeded, schedule async cleanup of source (non-blocking)
+        deleteFileNonBlocking(src);
     }
 
     public static void moveFiles(File srcDirectory, File targetDirectory, FilenameFilter filter) throws IOException {
@@ -304,11 +482,6 @@ public final class IOHelper {
             in.close();
             out.close();
         }
-    }
-
-    static {
-        MAX_DIR_NAME_LENGTH = Integer.getInteger("MaximumDirNameLength", 200);
-        MAX_FILE_NAME_LENGTH = Integer.getInteger("MaximumFileNameLength", 64);
     }
 
     public static int getMaxDirNameLength() {

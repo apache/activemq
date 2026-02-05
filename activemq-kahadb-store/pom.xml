@@ -320,26 +320,6 @@
     </profile>
 
     <profile>
-      <id>activemq.tests.windows.excludes</id>
-      <activation>
-        <os>
-          <family>Windows</family>
-        </os>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <excludes combine.children="append">
-                <exclude>**/JournalArchiveTest.*</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
       <id>activemq.tests.aix.excludes</id>
       <activation>
         <property>
