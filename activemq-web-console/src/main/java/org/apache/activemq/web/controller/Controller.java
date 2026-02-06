@@ -16,32 +16,12 @@
  */
 package org.apache.activemq.web.controller;
 
-import org.apache.activemq.web.BrokerFacade;
-import org.apache.activemq.web.DestinationFacade;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@Component
-@RequestScope
-public class PauseDestination extends DestinationFacade implements Controller {
-
-    public PauseDestination(final BrokerFacade brokerFacade) {
-        super(brokerFacade);
-    }
-
-    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws Exception {
-        pauseDestination();
-        response.sendRedirect(isQueue() ? "queues.jsp" : "topics.jsp");
-    }
-
-    public void pauseDestination() throws Exception {
-        if (isQueue()) {
-            getQueueView().pause();
-        } else {
-            throw new UnsupportedOperationException("Pause supported for queues only. Received JMSDestinationType=" + getJMSDestinationType());
-        }
-    }
+/**
+ * Controller implementations contain the logic responsible for handling an HTTP Request.
+ */
+public interface Controller {
+    void handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception;
 }
