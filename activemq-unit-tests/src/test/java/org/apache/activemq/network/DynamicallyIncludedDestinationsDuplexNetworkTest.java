@@ -75,7 +75,7 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
         assertEquals("Destination not deleted", 0, remoteBroker.getAdminView().getTemporaryQueues().length);
     }
 
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testDynamicallyIncludedDestinationsForDuplex()  throws Exception{
         // Once the bridge is set up, we should see the filter used for the duplex end of the bridge
         // only subscribe to the specific destinations included in the <dynamicallyIncludedDestinations> list
@@ -83,11 +83,11 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
         // is correct
 
         // the bridge on the remote broker has the correct filter
-        TransportConnection bridgeConnection = getDuplexBridgeConnectionFromRemote();
+        final TransportConnection bridgeConnection = getDuplexBridgeConnectionFromRemote();
         assertNotNull(bridgeConnection);
-        DemandForwardingBridge duplexBridge = getDuplexBridgeFromConnection(bridgeConnection);
+        final DemandForwardingBridge duplexBridge = waitForDuplexBridge(bridgeConnection);
         assertNotNull(duplexBridge);
-        NetworkBridgeConfiguration configuration = getConfigurationFromNetworkBridge(duplexBridge);
+        final NetworkBridgeConfiguration configuration = getConfigurationFromNetworkBridge(duplexBridge);
         assertNotNull(configuration);
         assertFalse("This destinationFilter does not include ONLY the destinations specified in dynamicallyIncludedDestinations",
                 configuration.getDestinationFilter().equals(AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX + ">"));
@@ -110,17 +110,20 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
         return bridge;
     }
 
+    private DemandForwardingBridge waitForDuplexBridge(final TransportConnection bridgeConnection) throws Exception {
+        assertTrue("Timed out waiting for duplex bridge to be fully started",
+                Wait.waitFor(() -> {
+                    final DemandForwardingBridge bridge = getDuplexBridgeFromConnection(bridgeConnection);
+                    return bridge != null && bridge.getRemoteBrokerName() != null;
+                }));
+        return getDuplexBridgeFromConnection(bridgeConnection);
+    }
+
     public TransportConnection getDuplexBridgeConnectionFromRemote() throws Exception {
         final TransportConnector transportConnector = remoteBroker.getTransportConnectorByScheme("tcp");
         assertTrue("Timed out waiting for duplex bridge connection",
-                Wait.waitFor(new Wait.Condition() {
-                    @Override
-                    public boolean isSatisified() {
-                        return !transportConnector.getConnections().isEmpty();
-                    }
-                }));
-        CopyOnWriteArrayList<TransportConnection> transportConnections = transportConnector.getConnections();
-        return transportConnections.get(0);
+                Wait.waitFor(() -> !transportConnector.getConnections().isEmpty()));
+        return transportConnector.getConnections().get(0);
     }
 
     @Override
