@@ -58,7 +58,7 @@ public class XAConnectionPoolTest extends TestSupport {
         final Vector<Synchronization> syncs = new Vector<Synchronization>();
         ActiveMQTopic topic = new ActiveMQTopic("test");
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://xaConnectionPoolTest?broker.persistent=false"));
 
         final Xid xid = createXid();
         // simple TM that is in a tx and will track syncs
@@ -157,6 +157,7 @@ public class XAConnectionPoolTest extends TestSupport {
             sync.afterCompletion(1);
         }
         connection.close();
+        pcf.stop();
     }
 
     static long txGenerator = 22;
@@ -188,7 +189,7 @@ public class XAConnectionPoolTest extends TestSupport {
         final Vector<Synchronization> syncs = new Vector<Synchronization>();
         ActiveMQTopic topic = new ActiveMQTopic("test");
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false&jms.xaAckMode=" + Session.CLIENT_ACKNOWLEDGE));
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://xaConnectionPoolTest?broker.persistent=false&jms.xaAckMode=" + Session.CLIENT_ACKNOWLEDGE));
 
         // simple TM that is in a tx and will track syncs
         pcf.setTransactionManager(new TransactionManager() {
@@ -280,52 +281,57 @@ public class XAConnectionPoolTest extends TestSupport {
             sync.afterCompletion(1);
         }
         connection.close();
+        pcf.stop();
     }
 
     public void testInstanceOf() throws Exception {
-        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        assertTrue(pcf instanceof QueueConnectionFactory);
-        assertTrue(pcf instanceof TopicConnectionFactory);
+        try (final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory()) {
+            assertTrue(pcf instanceof QueueConnectionFactory);
+            assertTrue(pcf instanceof TopicConnectionFactory);
+        }
     }
 
     public void testBindable() throws Exception {
-        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        assertTrue(pcf instanceof ObjectFactory);
-        assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, null) instanceof XaPooledConnectionFactory);
-        assertTrue(pcf.isTmFromJndi());
+        try (final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory()) {
+            assertTrue(pcf instanceof ObjectFactory);
+            assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, null) instanceof XaPooledConnectionFactory);
+            assertTrue(pcf.isTmFromJndi());
+        }
     }
 
     public void testBindableEnvOverrides() throws Exception {
-        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        assertTrue(pcf instanceof ObjectFactory);
-        Hashtable<String, String> environment = new Hashtable<String, String>();
-        environment.put("tmFromJndi", String.valueOf(Boolean.FALSE));
-        assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, environment) instanceof XaPooledConnectionFactory);
-        assertFalse(pcf.isTmFromJndi());
+        try (final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory()) {
+            assertTrue(pcf instanceof ObjectFactory);
+            final Hashtable<String, String> environment = new Hashtable<>();
+            environment.put("tmFromJndi", String.valueOf(Boolean.FALSE));
+            assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, environment) instanceof XaPooledConnectionFactory);
+            assertFalse(pcf.isTmFromJndi());
+        }
     }
 
     public void testSenderAndPublisherDest() throws Exception {
-        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
+        try (final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory()) {
+            pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://xaConnectionPoolTest?broker.persistent=false"));
 
-        QueueConnection connection = pcf.createQueueConnection();
-        QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        QueueSender sender = session.createSender(session.createQueue("AA"));
-        assertNotNull(sender.getQueue().getQueueName());
+            final QueueConnection connection = pcf.createQueueConnection();
+            final QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+            final QueueSender sender = session.createSender(session.createQueue("AA"));
+            assertNotNull(sender.getQueue().getQueueName());
 
-        connection.close();
+            connection.close();
 
-        TopicConnection topicConnection = pcf.createTopicConnection();
-        TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-        TopicPublisher topicPublisher = topicSession.createPublisher(topicSession.createTopic("AA"));
-        assertNotNull(topicPublisher.getTopic().getTopicName());
+            final TopicConnection topicConnection = pcf.createTopicConnection();
+            final TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+            final TopicPublisher topicPublisher = topicSession.createPublisher(topicSession.createTopic("AA"));
+            assertNotNull(topicPublisher.getTopic().getTopicName());
 
-        topicConnection.close();
+            topicConnection.close();
+        }
     }
 
     public void testSessionArgsIgnoredWithTm() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://xaConnectionPoolTest?broker.persistent=false"));
         // simple TM that with no tx
         pcf.setTransactionManager(new TransactionManager() {
             @Override
@@ -374,10 +380,11 @@ public class XAConnectionPoolTest extends TestSupport {
             }
         });
 
-        QueueConnection connection = pcf.createQueueConnection();
+        final QueueConnection connection = pcf.createQueueConnection();
         // like ee tck
         assertNotNull("can create session(false, 0)", connection.createQueueSession(false, 0));
 
         connection.close();
+        pcf.stop();
     }
 }
