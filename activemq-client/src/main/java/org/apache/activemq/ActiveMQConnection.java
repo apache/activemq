@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -1949,12 +1950,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
                     @Override
                     public Response processConnectionError(final ConnectionError error) throws Exception {
-                        executor.execute(new Runnable() {
-                            @Override
-                            public void run() {
-                                onAsyncException(error.getException());
-                            }
-                        });
+                        executeAsync(() -> onAsyncException(error.getException()));
                         return null;
                     }
 
@@ -2018,18 +2014,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @param error the exception that the problem
      */
     public void onClientInternalException(final Throwable error) {
-        if ( !closed.get() && !closing.get() ) {
-            if ( this.clientInternalExceptionListener != null ) {
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        ActiveMQConnection.this.clientInternalExceptionListener.onException(error);
-                    }
-                });
-            } else {
-                LOG.debug("Async client internal exception occurred with no exception listener registered: {}",
-                        error, error);
+        if (this.clientInternalExceptionListener != null) {
+            if (!executeAsync(() -> clientInternalExceptionListener.onException(error))) {
+                LOG.debug("Async client internal exception occurred but connection is closing: {}", error, error);
             }
+        } else {
+            LOG.debug("Async client internal exception occurred with no exception listener registered: {}", error, error);
         }
     }
 
@@ -2045,14 +2035,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 if (!(error instanceof JMSException)) {
                     error = JMSExceptionSupport.create(error);
                 }
-                final JMSException e = (JMSException)error;
-
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        ActiveMQConnection.this.exceptionListener.onException(e);
-                    }
-                });
+                final JMSException e = (JMSException) error;
+                executeAsync(() -> exceptionListener.onException(e));
 
             } else {
                 LOG.debug("Async exception with no exception listener: {}", error, error);
@@ -2063,25 +2047,19 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     @Override
     public void onException(final IOException error) {
         onAsyncException(error);
-        if (!closed.get() && !closing.get()) {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    transportFailed(error);
-                    ServiceSupport.dispose(ActiveMQConnection.this.transport);
-                    brokerInfoReceived.countDown();
-                    try {
-                        doCleanup(true);
-                    } catch (JMSException e) {
-                        LOG.warn("Exception during connection cleanup, " + e, e);
-                    }
-                    for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
-                        TransportListener listener = iter.next();
-                        listener.onException(error);
-                    }
-                }
-            });
-        }
+        executeAsync(() -> {
+            transportFailed(error);
+            ServiceSupport.dispose(ActiveMQConnection.this.transport);
+            brokerInfoReceived.countDown();
+            try {
+                doCleanup(true);
+            } catch (JMSException e) {
+                LOG.warn("Exception during connection cleanup, " + e, e);
+            }
+            for (final TransportListener listener : transportListeners) {
+                listener.onException(error);
+            }
+        });
     }
 
     @Override
@@ -2488,6 +2466,31 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     protected ThreadPoolExecutor getExecutor() {
         return this.executor;
+    }
+
+    /**
+     * Safely executes a task on the connection's executor, handling the case where
+     * the executor may be shutdown due to connection closure. See #close() above.
+     * <p>
+     * We need to check if the connection is closed/closing and if the executor
+     * is shutdown before attempting to execute anything. We also need to catch
+     * {@link RejectedExecutionException} to handle check and call senario.
+     *
+     * @param task the task to execute
+     * @return true if the task was submitted successfully, false if the executor
+     *         was unavailable (connection closing or executor shutdown)
+     */
+    private boolean executeAsync(final Runnable task) {
+        if (closed.get() || closing.get() || executor.isShutdown()) {
+            return false;
+        }
+        try {
+            executor.execute(task);
+            return true;
+
+        } catch (final RejectedExecutionException e) {
+            return false; // connection already closing probably
+        }
     }
 
     protected CopyOnWriteArrayList<ActiveMQSession> getSessions() {
