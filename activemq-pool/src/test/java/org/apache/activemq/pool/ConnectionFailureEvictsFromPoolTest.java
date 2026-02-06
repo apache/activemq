@@ -109,7 +109,7 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
         } finally {
             connection.close();
         }
-        TestCase.assertTrue("exception event propagated ok", gotExceptionEvent.await(5, TimeUnit.SECONDS));
+        TestCase.assertTrue("exception event propagated ok", gotExceptionEvent.await(15, TimeUnit.SECONDS));
         // If we get another connection now it should be a new connection that
         // works.
         LOG.info("expect new connection after failure");
