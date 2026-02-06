@@ -32,27 +32,27 @@ import jakarta.annotation.Resource;
 import jakarta.jms.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-
 @ContextConfiguration(locations = {"classpath:spring/spring.xml"})
 @Transactional
 @Commit
 public class ListenerTest {
     private static final Logger LOG = LoggerFactory.getLogger(ListenerTest.class);
 
-    int msgNum = 10;
-
-    protected String bindAddress = "vm://localhost";    
+    private static final int MSG_NUM = 10;
 
     @Resource
-    Listener listener;
+    private Listener listener;
+
+    @Resource
+    private ConnectionFactory connectionFactory;
 
     @Test
     @DirtiesContext
     public void testSimple() throws Exception {
-        sendMessages("SIMPLE", msgNum);
+        sendMessages("SIMPLE", MSG_NUM);
 
-        Assert.assertTrue("Expected " + msgNum + " messages but got " + listener.messages.size(),
-            Wait.waitFor(() -> msgNum == listener.messages.size(), 60_000));
+        Assert.assertTrue("Expected " + MSG_NUM + " messages but got " + listener.messages.size(),
+            Wait.waitFor(() -> MSG_NUM == listener.messages.size(), 60_000));
 
         LOG.info("messages received= " + listener.messages.size());
     }
@@ -61,8 +61,8 @@ public class ListenerTest {
     @Test
     @DirtiesContext
     public void testComposite() throws Exception {
-        final int expectedMessages = 6 * msgNum;
-        sendMessages("TEST.1,TEST.2,TEST.3,TEST.4,TEST.5,TEST.6", msgNum);
+        final int expectedMessages = 6 * MSG_NUM;
+        sendMessages("TEST.1,TEST.2,TEST.3,TEST.4,TEST.5,TEST.6", MSG_NUM);
 
         Assert.assertTrue("Expected " + expectedMessages + " messages but got " + listener.messages.size(),
             Wait.waitFor(() -> expectedMessages == listener.messages.size(), 120_000));
@@ -70,17 +70,18 @@ public class ListenerTest {
         LOG.info("messages received= " + listener.messages.size());
     }
 
-    public void sendMessages(String destName, int msgNum) throws Exception {
-        final ConnectionFactory factory = new org.apache.activemq.ActiveMQConnectionFactory("tcp://localhost:61616");
-        try (Connection conn = factory.createConnection()) {
+    private void sendMessages(String destName, int messageCount) throws Exception {
+        try (Connection conn = connectionFactory.createConnection()) {
+            conn.start();
             final Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             final Destination dest = sess.createQueue(destName);
             final MessageProducer producer = sess.createProducer(dest);
-            for (int i = 0; i < msgNum; i++) {
+            for (int i = 0; i < messageCount; i++) {
                 final String messageText = i + " test";
-                LOG.info("sending message '" + messageText + "'");
+                LOG.info("sending message '{}' to {}", messageText, destName);
                 producer.send(sess.createTextMessage(messageText));
             }
+            LOG.info("Sent {} messages to {}", messageCount, destName);
         }
     }
 
