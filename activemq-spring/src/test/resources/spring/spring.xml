@@ -25,7 +25,7 @@
        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-    <amq:broker brokerName="listenerTest" useJmx="false" persistent="false">
+    <amq:broker brokerName="test" useJmx="false" persistent="false">
         <amq:managementContext>
             <amq:managementContext createConnector="false" />
         </amq:managementContext>
@@ -36,7 +36,7 @@
         <property name="maximumActiveSessionPerConnection" value="50"/>
         <property name="connectionFactory">
             <bean class="org.apache.activemq.ActiveMQConnectionFactory">
-                <property name="brokerURL" value="vm://listenerTest"/>
+                <property name="brokerURL" value="vm://test"/>
             </bean>
         </property>
     </bean>
