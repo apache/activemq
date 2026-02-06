@@ -25,23 +25,18 @@
        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-    <amq:broker brokerName="test" useJmx="true" persistent="false">
+    <amq:broker brokerName="listenerTest" useJmx="false" persistent="false">
         <amq:managementContext>
             <amq:managementContext createConnector="false" />
         </amq:managementContext>
-
-        <amq:transportConnectors>
-            <amq:transportConnector name="transport" uri="nio://0.0.0.0:61616"/>
-        </amq:transportConnectors>
     </amq:broker>
-
 
     <bean id="connectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" destroy-method="stop">
         <property name="maxConnections" value="100"/>
         <property name="maximumActiveSessionPerConnection" value="50"/>
         <property name="connectionFactory">
             <bean class="org.apache.activemq.ActiveMQConnectionFactory">
-                <property name="brokerURL" value="tcp://localhost:61616"/>
+                <property name="brokerURL" value="vm://listenerTest"/>
             </bean>
         </property>
     </bean>
