@@ -62,15 +62,14 @@ public class PooledConsumerTest {
 
     class PooledConsumer implements MessageListener {
 
-        private ConnectionFactory factory;
+        private final PooledConnectionFactory factory;
         private Connection connection;
         public boolean done = false;
 
         public PooledConsumer(String url) throws JMSException {
-            org.apache.activemq.pool.PooledConnectionFactory factory = new org.apache.activemq.pool.PooledConnectionFactory(url);
+            factory = new PooledConnectionFactory(url);
             factory.setMaxConnections(5);
             factory.setIdleTimeout(0);
-            this.factory = factory;
             init();
         }
 
@@ -140,11 +139,13 @@ public class PooledConsumerTest {
         public void done() {
             done = true;
             close();
+            factory.stop();
         }
     }
 
     public void startBroker(String group, String trasport) throws Exception {
         brokerService = new BrokerService();
+        brokerService.setBrokerName("pooledConsumerTest");
         brokerService.addConnector(trasport);
         brokerService.setPersistent(false);
         brokerService.setUseJmx(false);

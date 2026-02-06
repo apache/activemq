@@ -29,18 +29,19 @@ import org.slf4j.LoggerFactory;
  */
 public class PooledConnectionFactoryTest {
 
-    private final Logger LOG = LoggerFactory.getLogger(PooledConnectionFactoryTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PooledConnectionFactoryTest.class);
 
     @Test(timeout=240000)
     public void testGetReference() throws Exception {
-        PooledConnectionFactory factory = createPooledConnectionFactory();
-        Reference ref = factory.getReference();
-        assertNotNull(ref);
+        try (final PooledConnectionFactory factory = createPooledConnectionFactory()) {
+            final Reference ref = factory.getReference();
+            assertNotNull(ref);
+        }
     }
 
     protected PooledConnectionFactory createPooledConnectionFactory() {
-        PooledConnectionFactory cf = new PooledConnectionFactory(
-            "vm://localhost?broker.persistent=false");
+        final PooledConnectionFactory cf = new PooledConnectionFactory(
+            "vm://pooledConnectionFactoryTest?broker.persistent=false");
         LOG.debug("ConnectionFactory initialized.");
         return cf;
     }
