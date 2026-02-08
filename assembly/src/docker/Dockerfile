@@ -32,7 +32,10 @@ ENV ACTIVEMQ_OPTS $ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.
 # activemq_dist can point to a directory or a tarball on the local system
 ARG activemq_dist=NOT_SET
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN groupadd -r activemq && useradd -r -g activemq -m activemq
+
+COPY src/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh && chown activemq:activemq /usr/local/bin/entrypoint.sh
 
 # Install build dependencies and activemq
 ADD $activemq_dist $ACTIVEMQ_INSTALL_PATH
@@ -40,6 +43,14 @@ RUN set -x && \
   cp -r $ACTIVEMQ_INSTALL_PATH/apache-activemq-* $ACTIVEMQ_HOME && \
 	rm -r $ACTIVEMQ_INSTALL_PATH/apache-activemq-*
 
+RUN ls -l $ACTIVEMQ_HOME && \
+    chown -R activemq:activemq $ACTIVEMQ_HOME
+
 EXPOSE 8161 61616 5672 61613 1883 61614 1099
+
+STOPSIGNAL SIGTERM
+
+USER activemq
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["activemq", "console"]

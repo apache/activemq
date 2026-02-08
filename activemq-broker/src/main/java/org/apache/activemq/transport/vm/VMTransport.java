@@ -20,13 +20,17 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URI;
 import java.security.cert.X509Certificate;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.activemq.command.ShutdownInfo;
+import jakarta.jms.JMSException;
+import org.apache.activemq.command.*;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -35,6 +39,7 @@ import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
@@ -79,10 +84,6 @@ public class VMTransport implements Transport, Task {
 
     @Override
     public void oneway(Object command) throws IOException {
-
-        if (disposed.get()) {
-            throw new TransportDisposedIOException("Transport disposed.");
-        }
 
         if (peer == null) {
             throw new IOException("Peer not connected.");
@@ -161,8 +162,33 @@ public class VMTransport implements Transport, Task {
     }
 
     public void doDispatch(VMTransport transport, TransportListener transportListener, Object command) {
+        if (transportListener == null) {
+            try {
+                throw new IOException("TransportListener not set");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         transport.receiveCounter++;
-        transportListener.onCommand(command);
+
+        Object toSend = command;
+
+        if (command instanceof ActiveMQMessage) {
+            ActiveMQMessage original = (ActiveMQMessage) command;
+
+            try {
+                WireFormat wf = new OpenWireFormat();
+                ByteSequence data = wf.marshal(original);
+                ActiveMQMessage copy = (ActiveMQMessage) wf.unmarshal(data);
+                toSend = copy;
+            } catch (IOException e) {
+                LOG.warn("Failed to marshal/unmarshal message, sending original", e);
+                toSend = command;
+            }
+        }
+
+        transportListener.onCommand(toSend);
     }
 
     @Override
