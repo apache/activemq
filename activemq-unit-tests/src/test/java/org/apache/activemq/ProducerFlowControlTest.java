@@ -34,6 +34,7 @@ import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStorag
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.activemq.util.Wait;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
@@ -285,6 +286,9 @@ public class ProducerFlowControlTest extends JmsTestSupport {
             connection.start();
 
             fillQueue(queueB);
+            // Wait for the warning to be logged - there's a small delay between
+            // the producer being blocked and the Log4j appender processing the event
+            assertTrue("Warning should be logged", Wait.waitFor(() -> warnings.get() >= 1, TimeUnit.SECONDS.toMillis(5), 100));
             assertEquals(1, warnings.get());
 
             broker.getDestinationPolicy().getDefaultEntry().setBlockedProducerWarningInterval(0);
