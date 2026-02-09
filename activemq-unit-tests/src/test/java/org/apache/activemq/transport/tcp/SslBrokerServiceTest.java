@@ -81,14 +81,14 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
     }
 
     public void testNeedClientAuthReject() throws Exception {
-        SSLContext context = SSLContext.getInstance("TLS");    
+        final SSLContext context = SSLContext.getInstance("TLS");
         // no client cert
         context.init(null, getTrustManager(), null);
-        
+
         try {
             makeSSLConnection(context, null, needClientAuthConnector);
             fail("expected failure on no client cert");
-        } catch (SSLException expected) {
+        } catch (SSLException | SocketException expected) {
             expected.printStackTrace();
         }
         // should work with regular connector
@@ -109,27 +109,33 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
         try {
             makeSSLConnection(context, new String[]{ "SSL_RSA_WITH_RC4_128_MD5" }, limitedCipherSuites);
             fail("expected failure on non allowed cipher suite");
-        } catch (SSLException expectedOnNotAnAvailableSuite) {
+        } catch (SSLException | SocketException expectedOnNotAnAvailableSuite) {
         }
 
         // ok with the enabled one
         makeSSLConnection(context, new String[]{ "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256" }, limitedCipherSuites);
     }
 
-    private void makeSSLConnection(SSLContext context, String enabledSuites[], TransportConnector connector) throws Exception,
-            UnknownHostException, SocketException {
-        SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket("localhost", connector.getUri().getPort());
-        
-        if (enabledSuites != null) {
-            sslSocket.setEnabledCipherSuites(enabledSuites);
+    private void makeSSLConnection(final SSLContext context, final String[] enabledSuites, final TransportConnector connector) throws Exception {
+        final SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket("localhost", connector.getUri().getPort());
+        try {
+            if (enabledSuites != null) {
+                sslSocket.setEnabledCipherSuites(enabledSuites);
+            }
+            sslSocket.setSoTimeout(5000);
+
+            sslSocket.startHandshake();
+            // In TLS 1.3, client certificate requests happen post-handshake.
+            // Reading from the stream forces the full authentication to complete,
+            // which will trigger SSLException if client auth is required but no cert was provided.
+            sslSocket.getInputStream().read(new byte[64]);
+            final SSLSession session = sslSocket.getSession();
+            LOG.info("cyphersuite: " + session.getCipherSuite());
+            LOG.info("peer port: " + session.getPeerPort());
+            LOG.info("peer cert: " + session.getPeerCertificates()[0].toString());
+        } finally {
+            sslSocket.close();
         }
-        sslSocket.setSoTimeout(5000);
-        
-        SSLSession session = sslSocket.getSession();
-        sslSocket.startHandshake();
-        LOG.info("cyphersuite: " + session.getCipherSuite());
-        LOG.info("peer port: " + session.getPeerPort());
-        LOG.info("peer cert: " + session.getPeerCertificateChain()[0].toString());    
     }
     
     public static TrustManager[] getTrustManager() throws Exception {
