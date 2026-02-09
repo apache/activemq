@@ -23,20 +23,21 @@
 
   <!-- an embedded broker -->
 
-  <bean id="broker" class="org.apache.activemq.broker.BrokerService" 
+  <bean id="broker" class="org.apache.activemq.broker.BrokerService"
     init-method="start">
+    <property name="brokerName" value="springTestBroker" />
+    <property name="persistent" value="false" />
     <property name="transportConnectorURIs">
       <list>
-        <value>tcp://localhost:61616</value>
-        <value>tcp://localhost:61636</value>
+        <value>tcp://localhost:0</value>
       </list>
     </property>
   </bean>
 
-  <!-- JMS ConnectionFactory to use -->
+  <!-- JMS ConnectionFactory to use - VM transport for embedded broker -->
   <bean id="jmsFactory"
     class="org.apache.activemq.ActiveMQConnectionFactory">
-    <property name="brokerURL" value="tcp://localhost:61636" />
+    <property name="brokerURL" value="vm://springTestBroker" />
   </bean>
 
   <!-- Spring JMS Template -->
@@ -47,7 +48,7 @@
       <bean
         class="org.springframework.jms.connection.SingleConnectionFactory">
         <property name="targetConnectionFactory">
-          <ref local="jmsFactory" />
+          <ref bean="jmsFactory" />
         </property>
       </bean>
     </property>
