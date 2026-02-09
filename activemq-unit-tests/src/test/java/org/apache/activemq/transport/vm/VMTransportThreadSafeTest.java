@@ -555,9 +555,9 @@ public class VMTransportThreadSafeTest {
     @Test(timeout=60000)
     public void testStopWhileStartingAsyncWithNoAsyncLimit() throws Exception {
         // In the async case the iterate method should see that we are stopping and
-        // drop out before we dispatch all the messages but it should get at least 49 since
-        // the stop thread waits 500 mills and the listener is waiting 10 mills on each receive.
-        doTestStopWhileStartingWithNoAsyncLimit(true, 49);
+        // drop out before we dispatch all the messages but it should get at least some since
+        // stop is called after a minimum number of messages have been processed.
+        doTestStopWhileStartingWithNoAsyncLimit(true, 20);
     }
 
     @Test(timeout=60000)
@@ -566,7 +566,7 @@ public class VMTransportThreadSafeTest {
         doTestStopWhileStartingWithNoAsyncLimit(false, 100);
     }
 
-    private void doTestStopWhileStartingWithNoAsyncLimit(boolean async, final int expect) throws Exception {
+    private void doTestStopWhileStartingWithNoAsyncLimit(final boolean async, final int expect) throws Exception {
 
         final VMTransport local = new VMTransport(new URI(location1));
         final VMTransport remote = new VMTransport(new URI(location2));
@@ -576,24 +576,33 @@ public class VMTransportThreadSafeTest {
         local.setPeer(remote);
         remote.setPeer(local);
 
+        // Use a latch to wait until enough messages have been processed before calling stop(),
+        // instead of relying on Thread.sleep() timing which is unreliable on slow CI.
+        final int minMessagesBeforeStop = async ? expect : 0;
+        final CountDownLatch enoughMessagesReceived = new CountDownLatch(1);
+
         local.setTransportListener(new VMTestTransportListener(localReceived));
-        remote.setTransportListener(new SlowVMTestTransportListener(remoteReceived));
+        remote.setTransportListener(new SlowVMTestTransportListener(remoteReceived) {
+            @Override
+            public void onCommand(final Object command) {
+                super.onCommand(command);
+                if (received.size() >= minMessagesBeforeStop) {
+                    enoughMessagesReceived.countDown();
+                }
+            }
+        });
 
         local.start();
 
-        for(int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 100; ++i) {
             local.oneway(new DummyCommand(i));
         }
 
-        Thread t = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(1000);
-                    remote.stop();
-                } catch (Exception e) {
-                }
+        final Thread t = new Thread(() -> {
+            try {
+                enoughMessagesReceived.await(30, TimeUnit.SECONDS);
+                remote.stop();
+            } catch (Exception e) {
             }
         });
 
@@ -601,23 +610,15 @@ public class VMTransportThreadSafeTest {
 
         t.start();
 
-        assertTrue("Remote should receive: " + expect + ", commands but got: " + remoteReceived.size(), Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return remoteReceived.size() >= expect;
-            }
-        }));
+        assertTrue("Remote should receive: " + expect + ", commands but got: " + remoteReceived.size(),
+            Wait.waitFor(() -> remoteReceived.size() >= expect));
 
         LOG.debug("Remote listener received " + remoteReceived.size() + " messages");
 
         local.stop();
 
-        assertTrue("Remote transport never was disposed.", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return remote.isDisposed();
-            }
-        }));
+        assertTrue("Remote transport never was disposed.",
+            Wait.waitFor(() -> remote.isDisposed()));
     }
 
     @Test(timeout=120000)

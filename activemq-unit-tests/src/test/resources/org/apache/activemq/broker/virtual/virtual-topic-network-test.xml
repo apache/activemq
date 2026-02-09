@@ -28,15 +28,12 @@
 	<!-- Broker 1 definition -->
 	<amq:broker xmlns="http://activemq.apache.org/schema/core" id="broker1" brokerName="B1" useJmx="false" useShutdownHook="false" useVirtualTopics="true" persistent="false" start="true" startAsync="true">
 
-		<!-- Transport protocol -->
+		<!-- Transport protocol - use ephemeral port to avoid conflicts -->
 		<amq:transportConnectors>
-			<amq:transportConnector uri="tcp://localhost:61616" />
+			<amq:transportConnector uri="tcp://localhost:0" />
 		</amq:transportConnectors>
 
-		<!-- Network of brokers setup -->
-		<!--amq:networkConnectors>
-			<amq:networkConnector name="linkToBrokerB2" uri="static:(tcp://localhost:62616)" networkTTL="1" duplex="false"/>
-		</amq:networkConnectors-->
+		<!-- Network connector is added programmatically in the test after both brokers start -->
 
 		<amq:destinationInterceptors>
 
@@ -76,15 +73,12 @@
 	<!-- Broker 2 definition -->
 	<amq:broker xmlns="http://activemq.apache.org/schema/core" id="broker2" brokerName="B2" useJmx="false" useShutdownHook="false" useVirtualTopics="true" persistent="false" start="true" startAsync="true">
 
-		<!-- Transport protocol -->
+		<!-- Transport protocol - use ephemeral port to avoid conflicts -->
 		<amq:transportConnectors>
-			<amq:transportConnector uri="tcp://localhost:62616" />
+			<amq:transportConnector uri="tcp://localhost:0" />
 		</amq:transportConnectors>
 
-		<!-- Network of brokers setup -->
-		<amq:networkConnectors>
-			<amq:networkConnector name="linkToBrokerB1" uri="static:(tcp://localhost:61616)" networkTTL="1" duplex="true" />
-		</amq:networkConnectors>
+		<!-- Network connector is added programmatically in the test after both brokers start -->
 
 		<amq:destinationInterceptors>
 
