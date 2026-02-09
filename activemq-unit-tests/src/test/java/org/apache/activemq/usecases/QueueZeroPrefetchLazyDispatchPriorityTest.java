@@ -232,11 +232,16 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
 
             assertEquals("see only the paged in for pull", 1, browsed.size());
 
-            // Wait for all messages to be available (including redelivery of unacked message)
-            assertTrue("All messages available for consumption", Wait.waitFor(() -> {
+            // Wait for the unacked message to be redelivered after connection close.
+            // With zero prefetch + lazy dispatch, the broker needs time to process the
+            // connection close, redeliver the unacked message, and make it available again.
+            // Check that inflight count drops to 0, meaning the message has been returned.
+            assertTrue("Unacked message redelivered after connection close", Wait.waitFor(() -> {
                 final Queue queue = (Queue) broker.getDestination(destination);
-                return queue != null && queue.getDestinationStatistics().getMessages().getCount() == numToSend;
-            }, 5000, 100));
+                return queue != null
+                    && queue.getDestinationStatistics().getMessages().getCount() == numToSend
+                    && queue.getDestinationStatistics().getInflight().getCount() == 0;
+            }, TimeUnit.SECONDS.toMillis(20), 100));
 
             // consume messages
             ArrayList<Message> consumeList = consumeMessages("TestQ");
@@ -280,7 +285,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
             boolean finished = false;
 
             while (!finished) {
-                Message message = consumer.receive(returnedMessages.isEmpty() ? 5000 : 1000);
+                Message message = consumer.receive(returnedMessages.isEmpty() ? TimeUnit.SECONDS.toMillis(20) : 500);
                 if (message == null) {
                     finished = true;
                 }
