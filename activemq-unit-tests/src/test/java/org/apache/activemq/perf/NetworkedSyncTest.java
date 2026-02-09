@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.perf;
 
+import java.net.URI;
+
 import jakarta.jms.Connection;
 import jakarta.jms.DeliveryMode;
 import jakarta.jms.Destination;
@@ -32,22 +34,22 @@ import junit.textui.TestRunner;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.NetworkConnector;
-import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 
 
 public class NetworkedSyncTest extends TestCase {
 
     // constants
     public static final int MESSAGE_COUNT = 10000; //100000;
-    public final static String config = "org/apache/activemq/perf/networkSync.xml";
-    public final static String broker1URL = "tcp://localhost:61616";
-    public final static String broker2URL = "tcp://localhost:62616";
-    private final String networkConnectorURL = "static://(" + broker2URL + ")";
+    public static final String config = "org/apache/activemq/perf/networkSync.xml";
     private static final Logger LOG = LoggerFactory.getLogger(NetworkedSyncTest.class);
+
+    // Broker URLs resolved after startup from ephemeral ports
+    static String broker1URL;
+    static String broker2URL;
+
     BrokerService broker1 = null;
     BrokerService broker2 = null;
     NetworkConnector connector = null;
@@ -55,12 +57,12 @@ public class NetworkedSyncTest extends TestCase {
     /**
      * @param name
      */
-    public NetworkedSyncTest(String name) {
+    public NetworkedSyncTest(final String name) {
         super(name);
         LOG.info("Testcase started.");
     }
 
-   public static void main(String args[]) {
+   public static void main(final String[] args) {
        TestRunner.run(NetworkedSyncTest.class);
    }
 
@@ -70,53 +72,51 @@ public class NetworkedSyncTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         LOG.info("setUp() called.");
-        ClassPathXmlApplicationContext context1 = null;
-        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(config));
-        assertNotNull(brokerFactory);
 
         /* start up first broker instance */
         try {
-            // resolve broker1
             Thread.currentThread().setContextClassLoader(
                     NetworkedSyncTest.class.getClassLoader());
-            context1 = new ClassPathXmlApplicationContext(config);
+            final ClassPathXmlApplicationContext context1 = new ClassPathXmlApplicationContext(config);
             broker1 = (BrokerService) context1.getBean("broker1");
 
-            // start the broker
             if (!broker1.isStarted()) {
                 LOG.info("Broker broker1 not yet started. Kicking it off now.");
                 broker1.start();
-            } else {
-                LOG.info("Broker broker1 already started. Not kicking it off a second time.");
-                broker1.waitUntilStopped();
+                broker1.waitUntilStarted();
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.error("Error: " + e.getMessage());
             throw e;
-            // brokerService.stop();
         }
 
         /* start up second broker instance */
         try {
             Thread.currentThread().setContextClassLoader(
                     NetworkedSyncTest.class.getClassLoader());
-            context1 = new ClassPathXmlApplicationContext(config);
-            broker2 = (BrokerService) context1.getBean("broker2");
+            final ClassPathXmlApplicationContext context2 = new ClassPathXmlApplicationContext(config);
+            broker2 = (BrokerService) context2.getBean("broker2");
 
-            // start the broker
             if (!broker2.isStarted()) {
                 LOG.info("Broker broker2 not yet started. Kicking it off now.");
                 broker2.start();
-            } else {
-                LOG.info("Broker broker2 already started. Not kicking it off a second time.");
-                broker2.waitUntilStopped();
+                broker2.waitUntilStarted();
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.error("Error: " + e.getMessage());
             throw e;
         }
 
-        // setup network connector from broker1 to broker2
+        // Resolve actual broker URLs from ephemeral ports assigned after startup
+        final URI broker1ConnectURI = broker1.getTransportConnectors().get(0).getConnectUri();
+        final URI broker2ConnectURI = broker2.getTransportConnectors().get(0).getConnectUri();
+        broker1URL = broker1ConnectURI.toString();
+        broker2URL = broker2ConnectURI.toString();
+        LOG.info("Broker1 URL: " + broker1URL);
+        LOG.info("Broker2 URL: " + broker2URL);
+
+        // setup network connector from broker1 to broker2 using actual assigned port
+        final String networkConnectorURL = "static://(" + broker2URL + ")";
         connector = broker1.addNetworkConnector(networkConnectorURL);
         connector.setBrokerName(broker1.getBrokerName());
         connector.setDuplex(true);
@@ -132,41 +132,45 @@ public class NetworkedSyncTest extends TestCase {
 
         LOG.info("tearDown() called.");
 
+        if (connector != null) {
+            connector.stop();
+        }
+
         if (broker1 != null && broker1.isStarted()) {
             LOG.info("Broker1 still running, stopping it now.");
             broker1.stop();
+            broker1.waitUntilStopped();
         } else {
             LOG.info("Broker1 not running, nothing to shutdown.");
         }
         if (broker2 != null && broker2.isStarted()) {
             LOG.info("Broker2 still running, stopping it now.");
             broker2.stop();
+            broker2.waitUntilStopped();
         } else {
             LOG.info("Broker2 not running, nothing to shutdown.");
         }
-
     }
 
     public void testMessageExchange() throws Exception {
         LOG.info("testMessageExchange() called.");
 
-        long start = System.currentTimeMillis();
+        final long start = System.currentTimeMillis();
 
         // create producer and consumer threads
-        Thread producer = new Thread(new Producer());
-        Thread consumer = new Thread(new Consumer());
+        final Thread producer = new Thread(new Producer());
+        final Thread consumer = new Thread(new Consumer());
         // start threads
         consumer.start();
         Thread.sleep(2000);
         producer.start();
 
-
         // wait for threads to finish
         producer.join();
         consumer.join();
-        long end = System.currentTimeMillis();
+        final long end = System.currentTimeMillis();
 
-        System.out.println("Duration: "+(end-start));
+        System.out.println("Duration: " + (end - start));
     }
 }
 
@@ -191,20 +195,15 @@ class Producer implements Runnable {
         MessageProducer producer = null;
 
         try {
-            ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            final ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
                     NetworkedSyncTest.broker1URL);
             connection = amq.createConnection();
 
-            connection.setExceptionListener(new jakarta.jms.ExceptionListener() {
-                @Override
-                public void onException(jakarta.jms.JMSException e) {
-                    e.printStackTrace();
-                }
-            });
+            connection.setExceptionListener(e -> e.printStackTrace());
 
             connection.start();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            Topic destination = session.createTopic("TEST.FOO");
+            final Topic destination = session.createTopic("TEST.FOO");
 
             producer = session.createProducer(destination);
             producer.setDeliveryMode(DeliveryMode.PERSISTENT);
@@ -214,10 +213,10 @@ class Producer implements Runnable {
             // Create and send message
             for (int i = 0; i < NetworkedSyncTest.MESSAGE_COUNT; i++) {
 
-                String text = "Hello world! From: "
+                final String text = "Hello world! From: "
                         + Thread.currentThread().getName() + " : "
                         + this.hashCode() + ":" + counter;
-                TextMessage message = session.createTextMessage(text);
+                final TextMessage message = session.createTextMessage(text);
                 producer.send(message);
                 counter++;
 
@@ -225,7 +224,7 @@ class Producer implements Runnable {
                     LOG.info("sent " + counter + " messages");
 
             }
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             LOG.error(ex.toString());
             return;
         } finally {
@@ -236,7 +235,7 @@ class Producer implements Runnable {
                     session.close();
                 if (connection != null)
                     connection.close();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 LOG.error("Problem closing down JMS objects: " + e);
             }
         }
@@ -250,8 +249,7 @@ class Producer implements Runnable {
  */
 class Consumer implements Runnable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);;
-
+    private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);
 
     /**
      * connect to broker and receive messages
@@ -263,42 +261,35 @@ class Consumer implements Runnable {
         MessageConsumer consumer = null;
 
         try {
-            ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            final ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
                     NetworkedSyncTest.broker2URL);
             connection = amq.createConnection();
             // need to set clientID when using durable subscription.
             connection.setClientID("tmielke");
 
-            connection.setExceptionListener(new jakarta.jms.ExceptionListener() {
-                @Override
-                public void onException(jakarta.jms.JMSException e) {
-                    e.printStackTrace();
-                }
-            });
+            connection.setExceptionListener(e -> e.printStackTrace());
 
             connection.start();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            Destination destination = session.createTopic("TEST.FOO");
-            consumer = session.createDurableSubscriber((Topic) destination,"tmielke");
+            final Destination destination = session.createTopic("TEST.FOO");
+            consumer = session.createDurableSubscriber((Topic) destination, "tmielke");
 
             long counter = 0;
             // Wait for a message
             for (int i = 0; i < NetworkedSyncTest.MESSAGE_COUNT; i++) {
-                Message message2 = consumer.receive();
+                final Message message2 = consumer.receive();
                 if (message2 instanceof TextMessage) {
-                    TextMessage textMessage = (TextMessage) message2;
+                    final TextMessage textMessage = (TextMessage) message2;
                     textMessage.getText();
-                    // logger.info("Received: " + text);
                 } else {
-                    LOG.error("Received message of unsupported type. Expecting TextMessage. "+ message2);
+                    LOG.error("Received message of unsupported type. Expecting TextMessage. " + message2);
                 }
                 counter++;
                 if ((counter % 1000) == 0)
                     LOG.info("received " + counter + " messages");
 
-
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.error("Error in Consumer: " + e);
             return;
         } finally {
@@ -309,7 +300,7 @@ class Consumer implements Runnable {
                     session.close();
                 if (connection != null)
                     connection.close();
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 LOG.error("Error closing down JMS objects: " + ex);
             }
         }

@@ -27,22 +27,22 @@
   <!-- Broker1 -->
   <broker brokerName="broker1" id="broker1" useJmx="true" persistent="true" deleteAllMessagesOnStartup="true" start="false" xmlns="http://activemq.apache.org/schema/core">
     <transportConnectors>
-      <transportConnector uri="tcp://localhost:61616" />
+      <transportConnector uri="tcp://localhost:0" />
     </transportConnectors>
  
     <persistenceAdapter>
-      <amqPersistenceAdapter directory="target/Broker1-data/activemq-data" syncOnWrite="true"  indexPageSize="16kb" indexBinSize="100" maxReferenceFileLength="8192"/>
+      <kahaDB directory="target/Broker1-data/activemq-data" journalMaxFileLength="32mb"/>
     </persistenceAdapter>
   </broker>
- 
- 
+
+
   <!-- Broker2 -->
   <broker brokerName="broker2" id="broker2" useJmx="true" persistent="false" deleteAllMessagesOnStartup="true" start="false" xmlns="http://activemq.apache.org/schema/core">
     <transportConnectors>
-      <transportConnector uri="tcp://localhost:62616" />
+      <transportConnector uri="tcp://localhost:0" />
     </transportConnectors>
      <persistenceAdapter>
-      <amqPersistenceAdapter directory="target/Broker2-data/activemq-data" syncOnWrite="true"  indexPageSize="16kb" indexBinSize="100" maxReferenceFileLength="8192"/>
+      <kahaDB directory="target/Broker2-data/activemq-data" journalMaxFileLength="32mb"/>
     </persistenceAdapter>
   </broker>
 </beans>
