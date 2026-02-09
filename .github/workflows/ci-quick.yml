@@ -64,8 +64,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          # temporary using 25 until all tests pass on Java 25 - to be changed back to 17 for quick. 25 will run nightly only
-          java-version: 25
+          java-version: 17
           distribution: temurin
       - name: Test
         run: mvn -B -e -fae verify -Pactivemq.tests-quick
