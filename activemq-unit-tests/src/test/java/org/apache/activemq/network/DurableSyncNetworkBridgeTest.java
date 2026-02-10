@@ -330,8 +330,13 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         //before sync, the old NC should exist
         restartBroker(broker2, true);
-        assertNCDurableSubsCount(broker2, topic, 1);
-        assertNCDurableSubsCount(broker2, topic2, 0);
+        // In REVERSE, broker2=localBroker (has bridge) connects immediately to
+        // already-running remoteBroker, so the durable sync may have already removed the old NC sub.
+        // In FORWARD, broker2=remoteBroker (no bridge), NC durable is just persisted.
+        if (flow == FLOW.FORWARD) {
+            assertNCDurableSubsCount(broker2, topic, 1);
+            assertNCDurableSubsCount(broker2, topic2, 0);
+        }
 
         //After sync, remove old NC and create one for topic 2
         restartBroker(broker1, true);

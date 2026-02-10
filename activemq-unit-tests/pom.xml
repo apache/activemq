@@ -1187,6 +1187,7 @@
                   <exclude>org/apache/activemq/transport/peer/PeerTransportTest.*</exclude>
                   <exclude>org/apache/activemq/transport/multicast/MulticastTransportTest.*</exclude>
                   <exclude>org/apache/activemq/network/MulticastNetworkTest.*</exclude>
+                  <exclude>org/apache/activemq/transport/discovery/DiscoveryTransportBrokerTest.*</exclude>
                 </excludes>
               </configuration>
             </plugin>

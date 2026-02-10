@@ -19,6 +19,8 @@ package org.apache.activemq.broker;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
 import jakarta.jms.ConnectionFactory;
 import jakarta.jms.DeliveryMode;
 import jakarta.jms.Destination;
@@ -47,6 +49,7 @@ import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -240,6 +243,13 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
         }
 
         connection.getTransport().narrow(TcpTransport.class).getTransportListener().onException(new IOException("Die"));
+
+        // Wait for broker to fully process the connection failure and return
+        // dispatched messages to the queue with updated redelivery counters
+        final ActiveMQQueue destQueue = new ActiveMQQueue(queueName);
+        assertTrue("broker processed connection failure",
+            Wait.waitFor(() -> broker.getDestination(destQueue).getConsumers().isEmpty(),
+                         TimeUnit.SECONDS.toMillis(10), 100));
 
         connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
