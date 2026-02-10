@@ -86,6 +86,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         policyMap.setDefaultEntry(getDefaultPolicy());
         broker.setDestinationPolicy(policyMap);
         broker.start();
+        broker.waitUntilStarted();
     }
 
     protected PolicyEntry getDefaultPolicy() {

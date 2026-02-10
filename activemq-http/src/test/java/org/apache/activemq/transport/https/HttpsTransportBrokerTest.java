@@ -25,7 +25,7 @@ public class HttpsTransportBrokerTest extends HttpTransportBrokerTest {
 
     @Override
     protected String getBindLocation() {
-        return "https://localhost:8161";
+        return "https://localhost:0";
     }
 
     @Override
