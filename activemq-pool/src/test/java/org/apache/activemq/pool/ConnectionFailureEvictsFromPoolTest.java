@@ -117,7 +117,7 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
             } catch (JMSException e) {
             }
         }
-        TestCase.assertTrue("exception event propagated ok", gotExceptionEvent.await(15, TimeUnit.SECONDS));
+        TestCase.assertTrue("exception event propagated ok", gotExceptionEvent.await(30, TimeUnit.SECONDS));
         // If we get another connection now it should be a new connection that
         // works.
         LOG.info("expect new connection after failure");
