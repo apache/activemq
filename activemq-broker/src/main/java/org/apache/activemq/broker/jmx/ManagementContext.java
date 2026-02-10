@@ -26,6 +26,8 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMIServerSocketFactory;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,8 +52,11 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXServiceURL;
 import javax.management.remote.rmi.RMIConnectorServer;
 import javax.management.remote.rmi.RMIJRMPServerImpl;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
+import javax.rmi.ssl.SslRMIServerSocketFactory;
 
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.SslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -115,6 +120,7 @@ public class ManagementContext implements Service {
     private List<ObjectName> suppressMBeanList;
     private Remote serverStub;
     private RMIJRMPServerImpl server;
+    private SslContext sslContext;
 
     public ManagementContext() {
         this(null);
@@ -549,11 +555,28 @@ public class ManagementContext implements Service {
     }
 
     private void createConnector(MBeanServer mbeanServer) throws IOException {
+        // Resolve SSL socket factories first, so they can be shared by registry and connector
+        final RMIClientSocketFactory csf;
+        final RMIServerSocketFactory ssf;
+        if (sslContext != null) {
+            try {
+                final javax.net.ssl.SSLContext ctx = sslContext.getSSLContext();
+                csf = new SslRMIClientSocketFactory();
+                ssf = new SslRMIServerSocketFactory(ctx, null, null, false);
+                LOG.info("JMX connector will use SSL from configured sslContext");
+            } catch (Exception e) {
+                throw new IOException("Failed to initialize SSL for JMX connector", e);
+            }
+        } else {
+            csf = null;
+            ssf = null;
+        }
+
         // Create the NamingService, needed by JSR 160
         try {
             if (registry == null) {
                 LOG.debug("Creating RMIRegistry on port {}", connectorPort);
-                registry = jmxRegistry(connectorPort);
+                registry = jmxRegistry(connectorPort, csf, ssf);
             }
 
             namingServiceObjectName = ObjectName.getInstance("naming:type=rmiregistry");
@@ -579,7 +602,7 @@ public class ManagementContext implements Service {
             rmiServer = ""+getConnectorHost()+":" + rmiServerPort;
         }
 
-        server = new RMIJRMPServerImpl(connectorPort, null, null, environment);
+        server = new RMIJRMPServerImpl(connectorPort, csf, ssf, environment);
 
         final String serviceURL = "service:jmx:rmi://" + rmiServer + "/jndi/rmi://" +getConnectorHost()+":" + connectorPort + connectorPath;
         final JMXServiceURL url = new JMXServiceURL(serviceURL);
@@ -659,6 +682,28 @@ public class ManagementContext implements Service {
         this.environment = environment;
     }
 
+    /**
+     * Get the SSL context used for the JMX connector.
+     */
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+
+    /**
+     * Set the SSL context to use for the JMX connector.
+     * When configured, the JMX RMI connector will use SSL with the
+     * keyStore and trustStore from this context, allowing reuse of
+     * the broker's {@code <sslContext>} configuration.
+     *
+     * Example XML configuration:
+     * <pre>
+     * &lt;managementContext createConnector="true" sslContext="#brokerSslContext"/&gt;
+     * </pre>
+     */
+    public void setSslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
     public boolean isAllowRemoteAddressInMBeanNames() {
         return allowRemoteAddressInMBeanNames;
     }
@@ -683,9 +728,11 @@ public class ManagementContext implements Service {
     }
 
     // do not use sun.rmi.registry.RegistryImpl! it is not always easily available
-    private Registry jmxRegistry(final int port) throws RemoteException {
+    private Registry jmxRegistry(final int port, final RMIClientSocketFactory csf, final RMIServerSocketFactory ssf) throws RemoteException {
         final var loader = Thread.currentThread().getContextClassLoader();
-        final var delegate = LocateRegistry.createRegistry(port);
+        final var delegate = (csf != null && ssf != null)
+                ? LocateRegistry.createRegistry(port, csf, ssf)
+                : LocateRegistry.createRegistry(port);
         return Registry.class.cast(Proxy.newProxyInstance(
                 loader == null ? getSystemClassLoader() : loader,
                 new Class<?>[]{Registry.class}, (proxy, method, args) -> {
