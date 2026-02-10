@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * default the value is -1 which means no eviction thread will be run.  Set to a non-negative value to
  * configure the idle eviction thread to run.
  */
-public class PooledConnectionFactory implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, AutoCloseable {
+public class PooledConnectionFactory implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory {
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledConnectionFactory.class);
 
     protected final AtomicBoolean stopped = new AtomicBoolean(false);
@@ -352,11 +352,6 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
             } catch (Exception e) {
             }
         }
-    }
-
-    @Override
-    public void close() {
-        stop();
     }
 
     /**

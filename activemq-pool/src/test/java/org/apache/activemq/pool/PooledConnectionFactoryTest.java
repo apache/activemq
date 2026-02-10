@@ -33,9 +33,12 @@ public class PooledConnectionFactoryTest {
 
     @Test(timeout=240000)
     public void testGetReference() throws Exception {
-        try (final PooledConnectionFactory factory = createPooledConnectionFactory()) {
+        final PooledConnectionFactory factory = createPooledConnectionFactory();
+        try {
             final Reference ref = factory.getReference();
             assertNotNull(ref);
+        } finally {
+            factory.stop();
         }
     }
 

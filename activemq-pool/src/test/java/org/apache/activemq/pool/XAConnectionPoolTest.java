@@ -285,47 +285,57 @@ public class XAConnectionPoolTest extends TestSupport {
     }
 
     public void testInstanceOf() throws Exception {
-        try (final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory()) {
+        final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        try {
             assertTrue(pcf instanceof QueueConnectionFactory);
             assertTrue(pcf instanceof TopicConnectionFactory);
+        } finally {
+            pcf.stop();
         }
     }
 
     public void testBindable() throws Exception {
-        try (final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory()) {
+        final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        try {
             assertTrue(pcf instanceof ObjectFactory);
             assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, null) instanceof XaPooledConnectionFactory);
             assertTrue(pcf.isTmFromJndi());
+        } finally {
+            pcf.stop();
         }
     }
 
     public void testBindableEnvOverrides() throws Exception {
-        try (final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory()) {
+        final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        try {
             assertTrue(pcf instanceof ObjectFactory);
             final Hashtable<String, String> environment = new Hashtable<>();
             environment.put("tmFromJndi", String.valueOf(Boolean.FALSE));
             assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, environment) instanceof XaPooledConnectionFactory);
             assertFalse(pcf.isTmFromJndi());
+        } finally {
+            pcf.stop();
         }
     }
 
     public void testSenderAndPublisherDest() throws Exception {
-        try (final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory()) {
+        final XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        try {
             pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://xaConnectionPoolTest?broker.persistent=false"));
 
-            final QueueConnection connection = pcf.createQueueConnection();
-            final QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-            final QueueSender sender = session.createSender(session.createQueue("AA"));
-            assertNotNull(sender.getQueue().getQueueName());
+            try (final QueueConnection connection = pcf.createQueueConnection()) {
+                final QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+                final QueueSender sender = session.createSender(session.createQueue("AA"));
+                assertNotNull(sender.getQueue().getQueueName());
+            }
 
-            connection.close();
-
-            final TopicConnection topicConnection = pcf.createTopicConnection();
-            final TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-            final TopicPublisher topicPublisher = topicSession.createPublisher(topicSession.createTopic("AA"));
-            assertNotNull(topicPublisher.getTopic().getTopicName());
-
-            topicConnection.close();
+            try (final TopicConnection topicConnection = pcf.createTopicConnection()) {
+                final TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+                final TopicPublisher topicPublisher = topicSession.createPublisher(topicSession.createTopic("AA"));
+                assertNotNull(topicPublisher.getTopic().getTopicName());
+            }
+        } finally {
+            pcf.stop();
         }
     }
 

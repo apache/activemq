@@ -26,12 +26,15 @@ public class ConfigFromPropsTest {
 
     @Test
     public void testBrokerUrlForRarAdminObject() throws Exception {
-        try (final XaPooledConnectionFactory underTest = new XaPooledConnectionFactory()) {
+        final XaPooledConnectionFactory underTest = new XaPooledConnectionFactory();
+        try {
             underTest.setBrokerUrl("vm://configFromPropsTest?broker.persistent=false");
             final Connection connection = underTest.createConnection();
             assertNotNull(connection);
             connection.close();
             assertNotNull(underTest.getBrokerUrl());
+        } finally {
+            underTest.stop();
         }
     }
 }
