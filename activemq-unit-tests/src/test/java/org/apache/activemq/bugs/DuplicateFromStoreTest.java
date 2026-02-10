@@ -123,7 +123,7 @@ public class DuplicateFromStoreTest {
         }
     }
 
-    @Test
+    @Test(timeout = 120_000)
     public void testDuplicateMessage() throws Exception {
         LOG.info("Testing for duplicate messages.");
 
@@ -134,10 +134,10 @@ public class DuplicateFromStoreTest {
         createOpenwireClients(producers, consumers);
 
         LOG.info("All producers and consumers got started. Awaiting their termination");
-        producersFinished.await(100, TimeUnit.MINUTES);
+        producersFinished.await(2, TimeUnit.MINUTES);
         LOG.info("All producers have terminated. remaining to send: " + totalMessagesToSend.get() + ", sent:" + totalMessagesSent.get());
 
-        consumersFinished.await(100, TimeUnit.MINUTES);
+        consumersFinished.await(2, TimeUnit.MINUTES);
         LOG.info("All consumers have terminated.");
 
         producers.shutdownNow();
