@@ -73,6 +73,7 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
 
         SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
         sslContextFactory.setTrustAll(true);
+        sslContextFactory.setEndpointIdentificationAlgorithm(null);
         ClientConnector clientConnector = new ClientConnector();
         clientConnector.setSslContextFactory(sslContextFactory);
 
@@ -97,6 +98,9 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
         if (wsMQTTConnection != null) {
             wsMQTTConnection.close();
             wsMQTTConnection = null;
+        }
+        if (wsClient != null) {
+            wsClient.stop();
             wsClient = null;
         }
 

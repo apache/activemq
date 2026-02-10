@@ -20,7 +20,7 @@ public class StompWSSTransportTest extends StompWSTransportTest {
 
     @Override
     protected String getWSConnectorURI() {
-        return "wss://localhost:61623";
+        return "wss://localhost:0";
     }
 
 }
