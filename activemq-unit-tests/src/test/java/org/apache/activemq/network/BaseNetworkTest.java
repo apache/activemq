@@ -93,11 +93,15 @@ public class BaseNetworkTest {
         // Use startNetworkConnector() instead of connector.start() to ensure proper JMX MBean registration.
         addNetworkConnectors();
 
-        // Wait for both network bridges to be FULLY started (advisory consumers registered).
+        // Wait for network bridges to be FULLY started (advisory consumers registered).
         // activeBridges().isEmpty() is NOT sufficient because bridges are added to the map
         // before start() completes asynchronously. We must wait for the startedLatch.
         waitForBridgeFullyStarted(localBroker, "Local");
-        waitForBridgeFullyStarted(remoteBroker, "Remote");
+        // Only wait for remote bridge if the remote broker has its own network connector
+        // (duplex bridges don't add a separate connector on the remote side)
+        if (!remoteBroker.getNetworkConnectors().isEmpty()) {
+            waitForBridgeFullyStarted(remoteBroker, "Remote");
+        }
 
         final URI localURI = localBroker.getVmConnectorURI();
         ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(localURI);

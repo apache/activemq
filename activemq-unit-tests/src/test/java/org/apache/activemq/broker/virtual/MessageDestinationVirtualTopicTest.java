@@ -18,6 +18,7 @@ package org.apache.activemq.broker.virtual;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
@@ -130,6 +131,20 @@ public class MessageDestinationVirtualTopicTest {
         listener1.setCountDown(monitor);
         listener2.setCountDown(monitor);
         listener3.setCountDown(monitor);
+
+        // Wait for the consumer on broker2 to be visible on broker1 via the network bridge.
+        // The virtual topic Consumer.D.VirtualTopic.T1 on broker2 must be forwarded to broker1
+        // before sending, otherwise the message won't reach listener2.
+        assertTrue("Consumer.D queue should exist on broker1 via network bridge",
+            Wait.waitFor(() -> {
+                try {
+                    final org.apache.activemq.broker.region.Destination dest =
+                        broker1.getDestination(new ActiveMQQueue("Consumer.D.VirtualTopic.T1"));
+                    return dest != null && dest.getConsumers().size() >= 1;
+                } catch (final Exception e) {
+                    return false;
+                }
+            }, 10_000, 200));
 
         LOG.info("Sending message");
         // Send a message on the topic
