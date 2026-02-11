@@ -213,7 +213,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkCount>1</forkCount>
-          <reuseForks>false</reuseForks>
           <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
           <runOrder>alphabetical</runOrder>
            <systemPropertyValues>

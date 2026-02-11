@@ -191,7 +191,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkCount>1</forkCount>
-          <reuseForks>false</reuseForks>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <argLine>-Xmx256m</argLine>
           <excludes>
