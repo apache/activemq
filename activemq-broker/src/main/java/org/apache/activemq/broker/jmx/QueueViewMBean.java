@@ -71,6 +71,14 @@ public interface QueueViewMBean extends DestinationViewMBean {
     void purge() throws Exception;
 
     /**
+     * Removes the first number of messages in the queue.
+     *
+     * @throws Exception
+     */
+    @MBeanInfo("Removes the first number of messages in the queue.")
+    void purge(long number) throws Exception;
+
+    /**
      * Copies a given message to another destination.
      * 
      * @param messageId
