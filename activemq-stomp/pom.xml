@@ -173,7 +173,6 @@
               <excludedGroups combine.self="override"/>
               <groups>org.apache.activemq.transport.stomp.ParallelTest</groups>
               <forkCount>2C</forkCount>
-              <reuseForks>false</reuseForks>
               <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
               <failIfNoTests>false</failIfNoTests>
               <systemPropertyVariables>

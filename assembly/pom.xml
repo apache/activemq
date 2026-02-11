@@ -596,7 +596,6 @@
             </goals>
             <configuration>
              <forkCount>1</forkCount>
-             <reuseForks>false</reuseForks>
              <environmentVariables>
                  <ACTIVEMQ_ENCRYPTION_PASSWORD>activemq</ACTIVEMQ_ENCRYPTION_PASSWORD>
              </environmentVariables>
