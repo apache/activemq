@@ -23,7 +23,8 @@ import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
 
 public abstract class DefaultTestAppender implements Appender {
-    
+
+    private volatile boolean started = false;
     String name = this.getClass().getSimpleName();
 
     @Override
@@ -68,21 +69,21 @@ public abstract class DefaultTestAppender implements Appender {
 
     @Override
     public void start() {
-
+        started = true;
     }
 
     @Override
     public void stop() {
-
+        started = false;
     }
 
     @Override
     public boolean isStarted() {
-        return false;
+        return started;
     }
 
     @Override
     public boolean isStopped() {
-        return false;
+        return !started;
     }
 }
