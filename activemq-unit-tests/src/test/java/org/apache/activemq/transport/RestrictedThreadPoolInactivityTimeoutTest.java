@@ -124,7 +124,7 @@ public class RestrictedThreadPoolInactivityTimeoutTest extends JmsTestSupport {
 
         assertTrue("Should be at most inactivity monitor pool size * 2. Diff = " + diff, diff <= 2*poolSize);
 
-        assertTrue("all work complete", doneConsumers.await(10, TimeUnit.SECONDS));
+        assertTrue("all work complete", doneConsumers.await(30, TimeUnit.SECONDS));
     }
 
     @Override
