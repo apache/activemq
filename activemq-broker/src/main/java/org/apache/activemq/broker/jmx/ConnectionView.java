@@ -105,6 +105,7 @@ public class ConnectionView implements ConnectionViewMBean {
         return connection.getConnectionId();
     }
 
+    @Override
     public String getConnectionId() {
         return connection.getConnectionId();
     }
