@@ -22,6 +22,6 @@ public class WSSTransportLinkStealingTest extends WSTransportLinkStealingTest {
 
     @Override
     protected String getWSConnectorURI() {
-        return "wss://localhost:61623?allowLinkStealing=true";
+        return "wss://localhost:0?allowLinkStealing=true";
     }
 }

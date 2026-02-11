@@ -43,7 +43,7 @@ public class WSTransportHttpTraceTest extends WSTransportTestSupport {
 
     @Override
     protected String getWSConnectorURI() {
-        String uri = "ws://127.0.0.1:61623?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
+        String uri = "ws://127.0.0.1:0?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
         uri = enableTraceParam != null ? uri + "&" + enableTraceParam : uri;
         return uri;
     }
@@ -54,7 +54,8 @@ public class WSTransportHttpTraceTest extends WSTransportTestSupport {
      */
     @Test(timeout=10000)
     public void testHttpTraceEnabled() throws Exception {
-        HttpTraceTestSupport.testHttpTraceEnabled("http://127.0.0.1:61623", expectedStatus, null);
+        HttpTraceTestSupport.testHttpTraceEnabled("http://127.0.0.1:" + wsConnectUri.getPort(),
+                expectedStatus, null);
     }
 
 }

@@ -17,14 +17,14 @@
 package org.apache.activemq.transport.ws;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.URI;
 
 import jakarta.jms.JMSException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.net.ServerSocketFactory;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -70,11 +70,14 @@ public class WSTransportTestSupport {
     }
 
     protected String getWSConnectionURI() {
+        if (wsConnectUri != null) {
+            return wsConnectUri.toString();
+        }
         return "ws://127.0.0.1:" + getProxyPort();
     }
 
     protected String getWSConnectorURI() {
-        return "ws://127.0.0.1:" + getProxyPort() +
+        return "ws://127.0.0.1:0" +
                "?allowLinkStealing=" + isAllowLinkStealing() +
                "&websocket.maxTextMessageSize=99999" +
                "&transport.idleTimeout=1001" +
@@ -101,7 +104,8 @@ public class WSTransportTestSupport {
         context.afterPropertiesSet();
         broker.setSslContext(context);
 
-        wsConnectUri = broker.addConnector(getWSConnectorURI()).getPublishableConnectURI();
+        org.apache.activemq.broker.TransportConnector wsConnector =
+                broker.addConnector(getWSConnectorURI());
 
         broker.setAdvisorySupport(advisorySupport);
         broker.setUseJmx(true);
@@ -112,6 +116,8 @@ public class WSTransportTestSupport {
         broker.waitUntilStarted();
 
         addAdditionalConnectors(broker);
+
+        wsConnectUri = wsConnector.getPublishableConnectURI();
 
         return broker;
     }
@@ -126,18 +132,12 @@ public class WSTransportTestSupport {
 
     protected int getProxyPort() {
         if (proxyPort == 0) {
-            ServerSocket ss = null;
-            try {
-                ss = ServerSocketFactory.getDefault().createServerSocket(0);
+            try (ServerSocket ss = new ServerSocket()) {
+                ss.setReuseAddress(true);
+                ss.bind(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0));
                 proxyPort = ss.getLocalPort();
-            } catch (IOException e) { // ignore
-            } finally {
-                try {
-                    if (ss != null ) {
-                        ss.close();
-                    }
-                } catch (IOException e) { // ignore
-                }
+            } catch (IOException e) {
+                throw new IllegalStateException("Could not find a free TCP/IP port for WS tests", e);
             }
         }
 
