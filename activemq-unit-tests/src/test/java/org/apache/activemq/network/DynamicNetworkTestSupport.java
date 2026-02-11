@@ -226,8 +226,9 @@ public abstract class DynamicNetworkTestSupport {
     protected DemandForwardingBridge findDuplexBridge(final TransportConnector connector) throws Exception {
         assertNotNull(connector);
 
-        for (TransportConnection tc : connector.getConnections()) {
-            if (tc.getConnectionId().startsWith("networkConnector_")) {
+        for (final TransportConnection tc : connector.getConnections()) {
+            final String connectionId = tc.getConnectionId();
+            if (connectionId != null && connectionId.startsWith("networkConnector_")) {
                 final Field bridgeField = TransportConnection.class.getDeclaredField("duplexBridge");
                 bridgeField.setAccessible(true);
                 return (DemandForwardingBridge) bridgeField.get(tc);

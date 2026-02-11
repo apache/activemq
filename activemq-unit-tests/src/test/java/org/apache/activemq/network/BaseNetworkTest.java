@@ -93,11 +93,15 @@ public class BaseNetworkTest {
         // Use startNetworkConnector() instead of connector.start() to ensure proper JMX MBean registration.
         addNetworkConnectors();
 
-        // Wait for both network bridges to be FULLY started (advisory consumers registered).
+        // Wait for network bridges to be FULLY started (advisory consumers registered).
         // activeBridges().isEmpty() is NOT sufficient because bridges are added to the map
         // before start() completes asynchronously. We must wait for the startedLatch.
         waitForBridgeFullyStarted(localBroker, "Local");
-        waitForBridgeFullyStarted(remoteBroker, "Remote");
+        // Only wait for remote bridge if the remote broker has its own network connector
+        // (duplex bridges don't add a separate connector on the remote side)
+        if (!remoteBroker.getNetworkConnectors().isEmpty()) {
+            waitForBridgeFullyStarted(remoteBroker, "Remote");
+        }
 
         final URI localURI = localBroker.getVmConnectorURI();
         ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(localURI);
@@ -155,13 +159,9 @@ public class BaseNetworkTest {
     }
 
     protected void waitForBridgeFullyStarted(final BrokerService broker, final String label) throws Exception {
-        // Skip if broker has no network connectors (e.g., duplex target broker receives
-        // bridge connections but doesn't initiate them)
-        if (broker.getNetworkConnectors().isEmpty()) {
-            return;
-        }
         assertTrue(label + " broker bridge should be fully started", Wait.waitFor(() -> {
-            if (broker.getNetworkConnectors().get(0).activeBridges().isEmpty()) {
+            if (broker.getNetworkConnectors().isEmpty()
+                    || broker.getNetworkConnectors().get(0).activeBridges().isEmpty()) {
                 return false;
             }
             final NetworkBridge bridge = broker.getNetworkConnectors().get(0).activeBridges().iterator().next();

@@ -6,9 +6,9 @@
     The ASF licenses this file to You under the Apache License, Version 2.0
     (the "License"); you may not use this file except in compliance with
     the License.  You may obtain a copy of the License at
-   
+
     http://www.apache.org/licenses/LICENSE-2.0
-   
+
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,28 +25,10 @@
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
     <broker brokerName="localBroker" start="false" persistent="true" useShutdownHook="false" xmlns="http://activemq.apache.org/schema/core">
-        <networkConnectors>
-            <networkConnector uri="static:(tcp://localhost:61617)"
-                              duplex="true"
-                              dynamicOnly = "false"
-                              conduitSubscriptions = "true"
-                              decreaseNetworkConsumerPriority = "false">
-
-                <dynamicallyIncludedDestinations>
-                    <queue physicalName="include.test.foo"/>
-                    <topic physicalName="include.test.bar"/>
-                </dynamicallyIncludedDestinations>
-
-                <excludedDestinations>
-                    <queue physicalName="exclude.test.foo"/>
-                    <topic physicalName="exclude.test.bar"/>
-                </excludedDestinations>
-
-            </networkConnector>
-        </networkConnectors>
+        <!-- Network connector is added programmatically in the test to use ephemeral ports -->
 
         <transportConnectors>
-            <transportConnector uri="tcp://localhost:61616"/>
+            <transportConnector uri="tcp://localhost:0"/>
         </transportConnectors>
 
     </broker>

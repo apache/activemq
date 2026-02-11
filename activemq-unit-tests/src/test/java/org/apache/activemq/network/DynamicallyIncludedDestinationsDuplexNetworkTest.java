@@ -22,7 +22,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.jms.MessageProducer;
 import jakarta.jms.TemporaryQueue;
@@ -31,6 +33,9 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
 
@@ -38,8 +43,6 @@ import org.junit.Test;
  * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
  */
 public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetworkTest {
-
-    private static final int REMOTE_BROKER_TCP_PORT = 61617;
 
     @Override
     protected String getLocalBrokerURI() {
@@ -50,13 +53,35 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
     protected BrokerService createRemoteBroker() throws Exception {
         final BrokerService broker = new BrokerService();
         broker.setBrokerName("remoteBroker");
-        broker.addConnector("tcp://localhost:" + REMOTE_BROKER_TCP_PORT);
+        broker.addConnector("tcp://localhost:0");
         return broker;
     }
 
     @Override
     protected void addNetworkConnectors() throws Exception {
-        // No-op: duplex network connector is already defined in duplexDynamicIncludedDestLocalBroker.xml
+        // For duplex test: only one connector from local to remote, with duplex=true
+        final URI remoteConnectURI = remoteBroker.getTransportConnectors().get(0).getConnectUri();
+
+        final DiscoveryNetworkConnector localToRemote = new DiscoveryNetworkConnector(
+                new URI("static:(" + remoteConnectURI + ")"));
+        localToRemote.setName("networkConnector");
+        localToRemote.setDuplex(true);
+        localToRemote.setDynamicOnly(false);
+        localToRemote.setConduitSubscriptions(true);
+        localToRemote.setDecreaseNetworkConsumerPriority(false);
+
+        final List<ActiveMQDestination> dynamicallyIncluded = new ArrayList<>();
+        dynamicallyIncluded.add(new ActiveMQQueue("include.test.foo"));
+        dynamicallyIncluded.add(new ActiveMQTopic("include.test.bar"));
+        localToRemote.setDynamicallyIncludedDestinations(dynamicallyIncluded);
+
+        final List<ActiveMQDestination> excluded = new ArrayList<>();
+        excluded.add(new ActiveMQQueue("exclude.test.foo"));
+        excluded.add(new ActiveMQTopic("exclude.test.bar"));
+        localToRemote.setExcludedDestinations(excluded);
+
+        localBroker.addNetworkConnector(localToRemote);
+        localBroker.startNetworkConnector(localToRemote, null);
     }
 
     // we have to override this, because with dynamicallyIncludedDestinations working properly
@@ -70,14 +95,14 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
 
     @Test
     public void testTempQueues() throws Exception {
-        TemporaryQueue temp = localSession.createTemporaryQueue();
-        MessageProducer producer = localSession.createProducer(temp);
+        final TemporaryQueue temp = localSession.createTemporaryQueue();
+        final MessageProducer producer = localSession.createProducer(temp);
         producer.send(localSession.createTextMessage("test"));
-        Thread.sleep(100);
-        assertEquals("Destination not created", 1, remoteBroker.getAdminView().getTemporaryQueues().length);
+        assertTrue("Destination created on remote",
+            Wait.waitFor(() -> remoteBroker.getAdminView().getTemporaryQueues().length == 1, 5000, 100));
         temp.delete();
-        Thread.sleep(100);
-        assertEquals("Destination not deleted", 0, remoteBroker.getAdminView().getTemporaryQueues().length);
+        assertTrue("Destination deleted on remote",
+            Wait.waitFor(() -> remoteBroker.getAdminView().getTemporaryQueues().length == 0, 5000, 100));
     }
 
     @Test
@@ -101,18 +126,16 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
                 configuration.getDestinationFilter());
     }
 
-    private NetworkBridgeConfiguration getConfigurationFromNetworkBridge(DemandForwardingBridgeSupport duplexBridge) throws NoSuchFieldException, IllegalAccessException {
-        Field f = DemandForwardingBridgeSupport.class.getDeclaredField("configuration");
+    private NetworkBridgeConfiguration getConfigurationFromNetworkBridge(final DemandForwardingBridgeSupport duplexBridge) throws NoSuchFieldException, IllegalAccessException {
+        final Field f = DemandForwardingBridgeSupport.class.getDeclaredField("configuration");
         f.setAccessible(true);
-        NetworkBridgeConfiguration configuration = (NetworkBridgeConfiguration) f.get(duplexBridge);
-        return configuration;
+        return (NetworkBridgeConfiguration) f.get(duplexBridge);
     }
 
-    private DemandForwardingBridge getDuplexBridgeFromConnection(TransportConnection bridgeConnection) throws NoSuchFieldException, IllegalAccessException {
-        Field f = TransportConnection.class.getDeclaredField("duplexBridge");
+    private DemandForwardingBridge getDuplexBridgeFromConnection(final TransportConnection bridgeConnection) throws NoSuchFieldException, IllegalAccessException {
+        final Field f = TransportConnection.class.getDeclaredField("duplexBridge");
         f.setAccessible(true);
-        DemandForwardingBridge bridge = (DemandForwardingBridge) f.get(bridgeConnection);
-        return bridge;
+        return (DemandForwardingBridge) f.get(bridgeConnection);
     }
 
     public TransportConnection getDuplexBridgeConnectionFromRemote() throws Exception {
@@ -133,13 +156,9 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
 
         final NetworkBridge localBridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
 
-        assertTrue(Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return expectedLocalSent == localBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
-                        expectedRemoteSent == localBridge.getNetworkBridgeStatistics().getReceivedCount().getCount();
-            }
-        }));
+        assertTrue(Wait.waitFor(() ->
+                expectedLocalSent == localBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
+                expectedRemoteSent == localBridge.getNetworkBridgeStatistics().getReceivedCount().getCount()));
 
     }
 }
