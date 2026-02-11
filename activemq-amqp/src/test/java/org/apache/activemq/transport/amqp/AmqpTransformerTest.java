@@ -67,42 +67,42 @@ public class AmqpTransformerTest {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=native"));
 
         // send "text message" with AMQP JMS API
-        Connection amqpConnection = JMSClientContext.INSTANCE.createConnection(amqpConnectionURI);
-        amqpConnection.start();
+        try (Connection amqpConnection = JMSClientContext.INSTANCE.createConnection(amqpConnectionURI)) {
+            amqpConnection.start();
 
-        Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = amqpSession.createQueue(TEST_QUEUE);
-        MessageProducer p = amqpSession.createProducer(queue);
-        p.setPriority(7);
+            Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = amqpSession.createQueue(TEST_QUEUE);
+            MessageProducer p = amqpSession.createProducer(queue);
+            p.setPriority(7);
 
-        TextMessage amqpMessage = amqpSession.createTextMessage();
-        amqpMessage.setText("hello");
-        p.send(amqpMessage);
+            TextMessage amqpMessage = amqpSession.createTextMessage();
+            amqpMessage.setText("hello");
+            p.send(amqpMessage);
 
-        p.close();
-        amqpSession.close();
-        amqpConnection.close();
+            p.close();
+            amqpSession.close();
+        }
 
         // receive with openwire JMS
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireConnectionURI);
-        Connection openwireConn = factory.createConnection();
-        openwireConn.start();
-        Session session = openwireConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue jmsDest = session.createQueue(TEST_QUEUE);
+        try (Connection openwireConn = factory.createConnection()) {
+            openwireConn.start();
+            Session session = openwireConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue jmsDest = session.createQueue(TEST_QUEUE);
 
-        MessageConsumer c = session.createConsumer(jmsDest);
+            MessageConsumer c = session.createConsumer(jmsDest);
 
-        Message message = c.receive(1000);
+            Message message = c.receive(1000);
 
-        assertTrue(message instanceof BytesMessage);
-        Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
-        assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
-        assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
-        assertEquals(7, message.getJMSPriority());
+            assertTrue(message instanceof BytesMessage);
+            Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
+            assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
+            assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
+            assertEquals(7, message.getJMSPriority());
 
-        c.close();
-        session.close();
-        openwireConn.close();
+            c.close();
+            session.close();
+        }
     }
 
     @Test(timeout = 30000)
@@ -112,46 +112,46 @@ public class AmqpTransformerTest {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=raw"));
 
         // send "text message" with AMQP JMS API
-        Connection amqpConnection = JMSClientContext.INSTANCE.createConnection(amqpConnectionURI);
-        amqpConnection.start();
+        try (Connection amqpConnection = JMSClientContext.INSTANCE.createConnection(amqpConnectionURI)) {
+            amqpConnection.start();
 
-        Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = amqpSession.createQueue(TEST_QUEUE);
-        MessageProducer p = amqpSession.createProducer(queue);
-        p.setPriority(7);
+            Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = amqpSession.createQueue(TEST_QUEUE);
+            MessageProducer p = amqpSession.createProducer(queue);
+            p.setPriority(7);
 
-        TextMessage amqpMessage = amqpSession.createTextMessage();
-        amqpMessage.setText("hello");
-        p.send(amqpMessage);
+            TextMessage amqpMessage = amqpSession.createTextMessage();
+            amqpMessage.setText("hello");
+            p.send(amqpMessage);
 
-        p.close();
-        amqpSession.close();
-        amqpConnection.close();
+            p.close();
+            amqpSession.close();
+        }
 
         // receive with openwire JMS
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireConnectionURI);
-        Connection openwireConn = factory.createConnection();
-        openwireConn.start();
-        Session session = openwireConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue jmsDest = session.createQueue(TEST_QUEUE);
+        try (Connection openwireConn = factory.createConnection()) {
+            openwireConn.start();
+            Session session = openwireConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue jmsDest = session.createQueue(TEST_QUEUE);
 
-        MessageConsumer c = session.createConsumer(jmsDest);
+            MessageConsumer c = session.createConsumer(jmsDest);
 
-        Message message = c.receive(2000);
+            Message message = c.receive(2000);
 
-        assertNotNull("Should have received a message", message);
-        LOG.info("Recieved message: {}", message);
-        assertTrue(message instanceof BytesMessage);
-        Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
-        assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
-        assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
+            assertNotNull("Should have received a message", message);
+            LOG.info("Recieved message: {}", message);
+            assertTrue(message instanceof BytesMessage);
+            Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
+            assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
+            assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
 
-        // should not equal 7 (should equal the default) because "raw" does not map headers
-        assertEquals(4, message.getJMSPriority());
+            // should not equal 7 (should equal the default) because "raw" does not map headers
+            assertEquals(4, message.getJMSPriority());
 
-        c.close();
-        session.close();
-        openwireConn.close();
+            c.close();
+            session.close();
+        }
     }
 
     @Test(timeout = 30 * 1000)
@@ -161,40 +161,40 @@ public class AmqpTransformerTest {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=jms"));
 
         // send "text message" with AMQP JMS API
-        Connection amqpConnection = JMSClientContext.INSTANCE.createConnection(amqpConnectionURI);
-        amqpConnection.start();
+        try (Connection amqpConnection = JMSClientContext.INSTANCE.createConnection(amqpConnectionURI)) {
+            amqpConnection.start();
 
-        Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = amqpSession.createQueue(TEST_QUEUE);
-        MessageProducer p = amqpSession.createProducer(queue);
+            Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = amqpSession.createQueue(TEST_QUEUE);
+            MessageProducer p = amqpSession.createProducer(queue);
 
-        TextMessage amqpMessage = amqpSession.createTextMessage();
-        amqpMessage.setText("hello");
-        p.send(amqpMessage);
+            TextMessage amqpMessage = amqpSession.createTextMessage();
+            amqpMessage.setText("hello");
+            p.send(amqpMessage);
 
-        p.close();
-        amqpSession.close();
-        amqpConnection.close();
+            p.close();
+            amqpSession.close();
+        }
 
         // receive with openwire JMS
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireConnectionURI);
-        Connection openwireConn = factory.createConnection();
-        openwireConn.start();
-        Session session = openwireConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue jmsDest = session.createQueue(TEST_QUEUE);
+        try (Connection openwireConn = factory.createConnection()) {
+            openwireConn.start();
+            Session session = openwireConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue jmsDest = session.createQueue(TEST_QUEUE);
 
-        MessageConsumer c = session.createConsumer(jmsDest);
+            MessageConsumer c = session.createConsumer(jmsDest);
 
-        Message message = c.receive(1000);
+            Message message = c.receive(1000);
 
-        assertTrue(message instanceof TextMessage);
-        Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
-        assertFalse("Didn't use the correct transformation, expected NOT to be NATIVE", nativeTransformationUsed);
-        assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
+            assertTrue(message instanceof TextMessage);
+            Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
+            assertFalse("Didn't use the correct transformation, expected NOT to be NATIVE", nativeTransformationUsed);
+            assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
 
-        c.close();
-        session.close();
-        openwireConn.close();
+            c.close();
+            session.close();
+        }
     }
 
     @Test(timeout = 60000)
@@ -225,9 +225,7 @@ public class AmqpTransformerTest {
             session.close();
 
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireConnectionURI);
-            Connection connection2 = factory.createConnection();
-            try {
-
+            try (Connection connection2 = factory.createConnection()) {
                 Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
                 connection2.start();
                 MessageConsumer consumer = session2.createConsumer(session2.createQueue(TEST_QUEUE));
@@ -235,10 +233,6 @@ public class AmqpTransformerTest {
                 Message received = consumer.receive(5000);
                 assertNotNull(received);
                 assertEquals(42, received.getIntProperty("IntProperty"));
-
-                connection2.close();
-            } finally {
-                connection2.close();
             }
         } finally {
             connection.close();
