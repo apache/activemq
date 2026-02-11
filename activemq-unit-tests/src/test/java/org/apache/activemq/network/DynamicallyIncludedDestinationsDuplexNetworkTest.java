@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import jakarta.jms.MessageProducer;
 import jakarta.jms.TemporaryQueue;
