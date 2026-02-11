@@ -22,11 +22,8 @@ FROM eclipse-temurin:17-jre
 ENV ACTIVEMQ_INSTALL_PATH /opt
 ENV ACTIVEMQ_HOME $ACTIVEMQ_INSTALL_PATH/apache-activemq
 ENV ACTIVEMQ_CONF $ACTIVEMQ_HOME/conf
-ENV ACTIVEMQ_OPTS_MEMORY -Xms64M -Xmx1G
 ENV ACTIVEMQ_EXEC exec
 ENV PATH $PATH:$ACTIVEMQ_HOME/bin
-# Make the Web console accesible from outside the container
-ENV ACTIVEMQ_OPTS $ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config -Djetty.host=0.0.0.0
 #WORKDIR $ACTIVEMQ_HOME
 
 # activemq_dist can point to a directory or a tarball on the local system
