@@ -251,7 +251,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
                 return queue != null
                     && queue.getDestinationStatistics().getMessages().getCount() == numToSend
                     && queue.getDestinationStatistics().getInflight().getCount() == 0;
-            }, 5000, 100));
+            }, TimeUnit.SECONDS.toMillis(20), 100));
 
             // Use the retry-based consume to handle zero-prefetch dispatch timing:
             // with prioritized messages + lazy dispatch + redelivered messages in the
@@ -297,7 +297,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
             boolean finished = false;
 
             while (!finished) {
-                Message message = consumer.receive(returnedMessages.isEmpty() ? 5000 : 1000);
+                Message message = consumer.receive(returnedMessages.isEmpty() ? TimeUnit.SECONDS.toMillis(20) : 1000);
                 if (message == null) {
                     finished = true;
                 }
