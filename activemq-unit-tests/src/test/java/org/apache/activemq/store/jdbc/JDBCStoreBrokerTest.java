@@ -22,19 +22,29 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTest;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
+import javax.sql.DataSource;
+
 public class JDBCStoreBrokerTest extends BrokerTest {
 
+    protected void configureJDBCPersistenceAdapter(JDBCPersistenceAdapter jdbc, final String name) throws Exception {
+
+    }
+
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
-        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        var jdbc = new JDBCPersistenceAdapter();
+        configureJDBCPersistenceAdapter(jdbc, "JDBCStoreBrokerTest");
         jdbc.deleteAllMessages();
         broker.setPersistenceAdapter(jdbc);
         return broker;
     }
-    
+
     protected BrokerService x_createRestartedBroker() throws Exception {
         BrokerService broker = new BrokerService();
-        broker.setPersistenceAdapter(new JDBCPersistenceAdapter());
+        var jdbc = new JDBCPersistenceAdapter();
+        configureJDBCPersistenceAdapter(jdbc, "JDBCStoreBrokerTest");
+        broker.setPersistenceAdapter(jdbc);
         return broker;
     }
     
