@@ -1672,10 +1672,12 @@ public class MQTTTest extends MQTTTestSupport {
         connectionSub.disconnect();
 
         // Wait for broker to process disconnect before publishing messages for offline delivery.
-        // Check for no active durable subscribers (works for both regular and virtual topic strategies)
+        // Ensure the durable subscription is inactive and registered.
         assertTrue("Subscription should become inactive",
-                Wait.waitFor(() -> brokerService.getAdminView().getDurableTopicSubscribers().length == 0,
-                        5000, 100));
+                Wait.waitFor(() ->
+                        brokerService.getAdminView().getDurableTopicSubscribers().length == 0 &&
+                        brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1,
+                        TimeUnit.SECONDS.toMillis(5), 100));
 
         try {
             for (int j = 0; j < numberOfRuns; j++) {
@@ -1699,8 +1701,10 @@ public class MQTTTest extends MQTTTestSupport {
 
                 // Wait for broker to process disconnect before next iteration publishes
                 assertTrue("Subscription should become inactive",
-                        Wait.waitFor(() -> brokerService.getAdminView().getDurableTopicSubscribers().length == 0,
-                                5000, 100));
+                        Wait.waitFor(() ->
+                                brokerService.getAdminView().getDurableTopicSubscribers().length == 0 &&
+                                brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1,
+                                     TimeUnit.SECONDS.toMillis(5), 100));
             }
         } catch (Exception exception) {
             LOG.error("unexpected exception", exception);
