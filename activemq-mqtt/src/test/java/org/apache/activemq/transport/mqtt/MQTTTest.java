@@ -1672,11 +1672,8 @@ public class MQTTTest extends MQTTTestSupport {
         connectionSub.disconnect();
 
         // Wait for broker to process disconnect before publishing messages for offline delivery.
-        // Ensure the durable subscription is inactive and registered.
         assertTrue("Subscription should become inactive",
-                Wait.waitFor(() ->
-                        brokerService.getAdminView().getDurableTopicSubscribers().length == 0 &&
-                        brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1,
+                Wait.waitFor(() -> isSubscriptionInactive(topics[0], mqttSub.getClientId()),
                         TimeUnit.SECONDS.toMillis(5), 100));
 
         try {
@@ -1701,16 +1698,39 @@ public class MQTTTest extends MQTTTestSupport {
 
                 // Wait for broker to process disconnect before next iteration publishes
                 assertTrue("Subscription should become inactive",
-                        Wait.waitFor(() ->
-                                brokerService.getAdminView().getDurableTopicSubscribers().length == 0 &&
-                                brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1,
-                                     TimeUnit.SECONDS.toMillis(5), 100));
+                        Wait.waitFor(() -> isSubscriptionInactive(topics[0], mqttSub.getClientId()),
+                                TimeUnit.SECONDS.toMillis(5), 100));
             }
         } catch (Exception exception) {
             LOG.error("unexpected exception", exception);
             exception.printStackTrace();
         }
         assertEquals("Should have received " + (messagesPerRun * (numberOfRuns + 1)) + " messages", (messagesPerRun * (numberOfRuns + 1)), received);
+    }
+
+    private boolean isSubscriptionInactive(Topic topic, String clientId) throws Exception {
+        if (isVirtualTopicSubscriptionStrategy()) {
+            String queueName = buildVirtualTopicQueueName(topic, clientId);
+            try {
+                return getProxyToQueue(queueName).getConsumerCount() == 0;
+            } catch (Exception ignore) {
+                return false;
+            }
+        } else {
+            return brokerService.getAdminView().getDurableTopicSubscribers().length == 0 &&
+                   brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1;
+        }
+    }
+
+    private boolean isVirtualTopicSubscriptionStrategy() {
+        String config = getProtocolConfig();
+        return config != null && config.contains("mqtt-virtual-topic-subscriptions");
+    }
+
+    private String buildVirtualTopicQueueName(Topic topic, String clientId) {
+        String activeMqClientId = MQTTProtocolSupport.convertMQTTToActiveMQ(clientId);
+        String activeMqTopic = MQTTProtocolSupport.convertMQTTToActiveMQ(topic.name().toString());
+        return "Consumer." + activeMqClientId + ":" + topic.qos() + ".VirtualTopic." + activeMqTopic;
     }
 
     @Test(timeout = 60 * 1000)
@@ -1738,9 +1758,8 @@ public class MQTTTest extends MQTTTestSupport {
         }
 
         // Wait for broker to process disconnect before publishing messages for offline delivery.
-        // Check for no active durable subscribers (works for both regular and virtual topic strategies)
         assertTrue("Subscription should become inactive",
-                Wait.waitFor(() -> brokerService.getAdminView().getDurableTopicSubscribers().length == 0,
+                Wait.waitFor(() -> isSubscriptionInactive(topics[0], "MQTT-Sub-Client"),
                         5000, 100));
 
         MQTT mqttPubLoop = createMQTTConnection("MQTT-Pub-Client", true);
