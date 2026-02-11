@@ -979,7 +979,6 @@
                 <exclude>org/apache/activemq/transport/SoWriteTimeoutTest.*</exclude>
                 <exclude>org/apache/activemq/transport/TopicClusterTest.*</exclude>
                 <exclude>org/apache/activemq/transport/discovery/DiscoveryNetworkReconnectTest.*</exclude>
-                <exclude>org/apache/activemq/transport/discovery/DiscoveryTransportBrokerTest.*</exclude>
                 <exclude>org/apache/activemq/transport/discovery/DiscoveryTransportNoBrokerTest.*</exclude>
                 <exclude>org/apache/activemq/transport/discovery/DiscoveryUriTest.*</exclude>
                 <exclude>org/apache/activemq/transport/discovery/MasterSlaveDiscoveryTest.*</exclude>
