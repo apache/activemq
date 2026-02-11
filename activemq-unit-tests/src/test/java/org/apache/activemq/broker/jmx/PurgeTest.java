@@ -109,6 +109,39 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         producer.close();
     }
 
+    public void testPurgeCount() throws Exception {
+        // Send some messages
+        int messagesSent = 1_000;
+        int messagesPurge = 200;
+
+        connection = connectionFactory.createConnection();
+        connection.setClientID(clientID);
+        connection.start();
+        Session session = connection.createSession(transacted, authMode);
+        destination = createDestination();
+        MessageProducer producer = session.createProducer(destination);
+        for (int i = 0; i < messagesSent; i++) {
+            Message message = session.createTextMessage("Message: " + i);
+            producer.send(message);
+        }
+
+        // Now get the QueueViewMBean and purge
+        String objectNameStr = broker.getBrokerObjectName().toString();
+        objectNameStr += ",destinationType=Queue,destinationName="+getDestinationString();
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(objectNameStr);
+        QueueViewMBean proxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        long count = proxy.getQueueSize();
+        assertEquals("Queue size", count, messagesSent);
+
+        for (int i = 1; i <= 5; i++) {
+            proxy.purge(messagesPurge);
+            count = proxy.getQueueSize();
+            assertEquals("Queue size", count, messagesSent - (messagesPurge * i));
+        }
+        producer.close();
+    }
+
     public void initCombosForTestDelete() {
         addCombinationValues("persistenceAdapter", new Object[] {new MemoryPersistenceAdapter(), new KahaDBPersistenceAdapter()});
     }
