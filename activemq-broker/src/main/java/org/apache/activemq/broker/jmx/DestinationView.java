@@ -31,7 +31,6 @@ import jakarta.jms.InvalidSelectorException;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
@@ -522,6 +521,11 @@ public class DestinationView implements DestinationViewMBean {
     @Override
     public void setMaxPageSize(int pageSize) {
         destination.setMaxPageSize(pageSize);
+    }
+
+    @Override
+    public int getMaxBrowsePageSize() {
+        return destination.getMaxBrowsePageSize();
     }
 
     @Override
