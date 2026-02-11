@@ -89,4 +89,17 @@ if [ -z "${ACTIVEMQ_OPTS}" ]; then
   export ACTIVEMQ_OPTS
 fi
 
-exec "$@"
+_term() {
+  echo "Received signal, stopping ActiveMQ..."
+  if [ -n "${child_pid:-}" ] && kill -0 "${child_pid}" 2>/dev/null; then
+    kill -TERM "${child_pid}" 2>/dev/null || true
+  fi
+}
+
+trap _term TERM INT
+
+"$@" &
+child_pid=$!
+wait "${child_pid}"
+
+exit $?
