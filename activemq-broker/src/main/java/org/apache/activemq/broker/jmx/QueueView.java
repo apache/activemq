@@ -64,6 +64,14 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         LOG.info("{} purge of {} messages", destination.getActiveMQDestination().getQualifiedName(), originalMessageCount);
     }
 
+    public synchronized void purge(long numberOfMessages) throws Exception {
+        final long originalMessageCount = destination.getDestinationStatistics().getMessages().getCount();
+
+        ((Queue)destination).purge(numberOfMessages);
+
+        LOG.info("{} purge of {} of {} messages", destination.getActiveMQDestination().getQualifiedName(), numberOfMessages, originalMessageCount);
+    }
+
     public synchronized boolean removeMessage(String messageId) throws Exception {
         return ((Queue)destination).removeMessage(messageId);
     }

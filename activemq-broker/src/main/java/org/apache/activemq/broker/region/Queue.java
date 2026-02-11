@@ -1313,9 +1313,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     public void purge() throws Exception {
+        purge(this.destinationStatistics.getMessages().getCount());
+    }
+
+    public void purge(long numberOfMessages) throws Exception {
         ConnectionContext c = createConnectionContext();
         List<MessageReference> list = null;
         sendLock.lock();
+
+        long purgeCount = 0L;
         try {
             long originalMessageCount = this.destinationStatistics.getMessages().getCount();
             do {
@@ -1327,20 +1333,28 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     pagedInMessagesLock.readLock().unlock();
                 }
 
-                for (MessageReference ref : list) {
+                int deleteCount = list.size();
+                if ((numberOfMessages - purgeCount) < list.size()) {
+                    deleteCount = (int)(numberOfMessages - purgeCount);
+                }
+
+                for (int n=0; n < deleteCount; n++) {
                     try {
-                        QueueMessageReference r = (QueueMessageReference) ref;
+                        QueueMessageReference r = (QueueMessageReference) list.get(n);
                         removeMessage(c, r);
                         messages.rollback(r.getMessageId());
+                        purgeCount++;
                     } catch (IOException e) {
                     }
                 }
                 // don't spin/hang if stats are out and there is nothing left in the
                 // store
-            } while (!list.isEmpty() && this.destinationStatistics.getMessages().getCount() > 0);
+            } while (!list.isEmpty() &&
+                    this.destinationStatistics.getMessages().getCount() > 0 &&
+                    purgeCount < numberOfMessages);
 
             if (this.destinationStatistics.getMessages().getCount() > 0) {
-                LOG.warn("{} after purge of {} messages, message count stats report: {}", getActiveMQDestination().getQualifiedName(), originalMessageCount, this.destinationStatistics.getMessages().getCount());
+                LOG.warn("{} after purge of {} messages, message count stats report: {}", getActiveMQDestination().getQualifiedName(), numberOfMessages, this.destinationStatistics.getMessages().getCount());
             }
         } finally {
             sendLock.unlock();
