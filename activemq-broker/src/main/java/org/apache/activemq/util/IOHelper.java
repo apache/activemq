@@ -197,7 +197,7 @@ public final class IOHelper {
             try {
                 Files.move(sourcePath, targetDirPath.resolve(sourcePath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException ex) {
-                throw new IOException("Failed to move " + src + " to " + targetDirectory + " - " + ex.getMessage());
+                throw new IOException("Failed to move " + src + " to " + targetDirectory + " - " + ex.getMessage(), ex);
             }
         }
     }
