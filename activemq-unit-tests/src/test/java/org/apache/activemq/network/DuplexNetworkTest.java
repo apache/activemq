@@ -40,10 +40,15 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
 
     @Override
     protected BrokerService createRemoteBroker() throws Exception {
-        BrokerService broker = new BrokerService();
+        final BrokerService broker = new BrokerService();
         broker.setBrokerName("remoteBroker");
         broker.addConnector("tcp://localhost:61617?transport.connectAttemptTimeout=2000");
         return broker;
+    }
+
+    @Override
+    protected void addNetworkConnectors() throws Exception {
+        // No-op: duplex network connector is already defined in duplexLocalBroker.xml
     }
 
     @Test

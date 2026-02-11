@@ -48,10 +48,15 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
 
     @Override
     protected BrokerService createRemoteBroker() throws Exception {
-        BrokerService broker = new BrokerService();
+        final BrokerService broker = new BrokerService();
         broker.setBrokerName("remoteBroker");
         broker.addConnector("tcp://localhost:" + REMOTE_BROKER_TCP_PORT);
         return broker;
+    }
+
+    @Override
+    protected void addNetworkConnectors() throws Exception {
+        // No-op: duplex network connector is already defined in duplexDynamicIncludedDestLocalBroker.xml
     }
 
     // we have to override this, because with dynamicallyIncludedDestinations working properly
