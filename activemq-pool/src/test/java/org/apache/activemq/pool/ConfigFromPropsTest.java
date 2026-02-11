@@ -24,15 +24,17 @@ import static junit.framework.Assert.assertNotNull;
 
 public class ConfigFromPropsTest {
 
-    XaPooledConnectionFactory underTest;
-
     @Test
     public void testBrokerUrlForRarAdminObject() throws Exception {
-        underTest = new XaPooledConnectionFactory();
-        underTest.setBrokerUrl("vm://localhost?broker.persistent=false");
-        Connection connection = underTest.createConnection();
-        assertNotNull(connection);
-        connection.close();
-        assertNotNull(underTest.getBrokerUrl());
+        final XaPooledConnectionFactory underTest = new XaPooledConnectionFactory();
+        try {
+            underTest.setBrokerUrl("vm://configFromPropsTest?broker.persistent=false");
+            final Connection connection = underTest.createConnection();
+            assertNotNull(connection);
+            connection.close();
+            assertNotNull(underTest.getBrokerUrl());
+        } finally {
+            underTest.stop();
+        }
     }
 }
