@@ -24,6 +24,7 @@
 name: CI Weekly (on-demand)
 
 on:
+  workflow_dispatch:
 
 jobs:
   build:
