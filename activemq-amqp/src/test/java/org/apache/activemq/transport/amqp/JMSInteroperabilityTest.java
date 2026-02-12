@@ -127,6 +127,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
             openwireProducer.send(outbound);
 
             Message inbound = amqpConsumer.receive(2500);
+            assertNotNull("Timed out waiting for message", inbound);
 
             propertyNames = inbound.getPropertyNames();
             int propertyCount = 0;
