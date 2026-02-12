@@ -15,6 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+#
+# This build runs every 6 hours. It runs the same tests as ci-quick.yaml but on a schedule (4 times a day).
+# The goal here is to run the same as ci-quick.yaml but on a schedule to make sure we catch any issue that may be
+# introduced in the main branch as soon as possible.
+# This build is also used to validate the build on various os (Ubuntu, Windows, MacOS) and various Java versions (17, 21, 25)
+# on a regular basis to make sure we catch any issue that may be introduced by a change in the build or in the dependencies.
+#
 name: CI Nightly
 
 on:
@@ -69,7 +76,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
       - name: Test
-        run: mvn -B -e -fae verify
+        run: mvn -B -e -fae verify -Pactivemq.tests-quick
       - name: Upload Test Results
         if: (!cancelled())
         uses: actions/upload-artifact@v4
