@@ -16,18 +16,14 @@
 # under the License.
 
 #
-# This is our most used build and the one used when a new PR is created/updated. It needs to
-# be and remain as green as possible. It is also executed when a PR is actually merged to make sure
-# apache/main stays stable. It runs a subset of the tests (the ones in the quick profile) to make sure it finishes
-# in a reasonable time.
+# This build runs manually for now. It takes a very long time to run, so until we can
+# work on the stability to make it scheduled weekly, we'd better run it manually.
+# The build does the same as ci-quickly.yaml but runs all the possible tests
+# (as opposed to quick profile only for the other one running on PR/Merge)
 #
-name: CI Quick
+name: CI Weekly (on-demand)
 
 on:
-  push:
-    branches: [ "main", "activemq-6.1.x", "activemq-5.19.x" ]
-  pull_request:
-    branches: [ "main", "activemq-6.1.x", "activemq-5.19.x" ]
 
 jobs:
   build:
@@ -73,7 +69,7 @@ jobs:
           java-version: 17
           distribution: temurin
       - name: Test
-        run: mvn -B -e -fae verify -Pactivemq.tests-quick
+        run: mvn -B -e -fae verify
       - name: Upload Test Results
         if: (!cancelled())
         uses: actions/upload-artifact@v4
