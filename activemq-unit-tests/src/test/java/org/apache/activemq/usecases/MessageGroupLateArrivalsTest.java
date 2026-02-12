@@ -217,7 +217,7 @@ public class MessageGroupLateArrivalsTest {
 
         log.info("worker2  received " + messageCount.get("worker2") + " messages from groups " + messageGroups.get("worker2"));
         assertEquals("worker2 received " + messageCount.get("worker2") + " messages from groups " + messageGroups.get("worker2")
-                , 2 * perBatch, messageCount.get("worker1").intValue());
+                , perBatch, messageCount.get("worker2").intValue());
         assertEquals("worker2 received " + messageCount.get("worker2") + " messages from groups " + messageGroups.get("worker2")
                 , 1, messageGroups.get("worker2").size());
     }
