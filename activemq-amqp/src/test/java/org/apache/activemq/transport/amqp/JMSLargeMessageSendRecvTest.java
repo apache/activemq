@@ -172,7 +172,6 @@ public class JMSLargeMessageSendRecvTest extends AmqpClientTestSupport {
             assertNotNull(receivedMessage);
             assertTrue(receivedMessage instanceof BytesMessage);
             BytesMessage receivedBytesMessage = (BytesMessage) receivedMessage;
-            assertNotNull(receivedMessage);
             endTime = System.currentTimeMillis();
             LOG.info("Returned from receive after {} ms", endTime - startTime);
             byte[] receivedBytes = new byte[(int) receivedBytesMessage.getBodyLength()];
