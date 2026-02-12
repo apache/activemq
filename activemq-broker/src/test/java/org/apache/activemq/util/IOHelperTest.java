@@ -113,6 +113,27 @@ public class IOHelperTest {
     }
 
     @Test
+    public void testRenameFile() throws Exception {
+        final Path srcFile = baseDir.resolve("rename-src.txt");
+        final Path destFile = baseDir.resolve("rename-dest.txt");
+        Files.writeString(srcFile, "rename test", StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+        IOHelper.renameFile(srcFile.toFile(), destFile.toFile());
+
+        assertTrue("renamed file should exist", Files.exists(destFile));
+        assertEquals("content preserved", "rename test", Files.readString(destFile));
+        assertFalse("source should not exist after rename", Files.exists(srcFile));
+    }
+
+    @Test(expected = IOException.class)
+    public void testRenameFileSourceDoesNotExist() throws Exception {
+        final File src = baseDir.resolve("does-not-exist.txt").toFile();
+        final File dest = baseDir.resolve("dest.txt").toFile();
+
+        IOHelper.renameFile(src, dest);
+    }
+
+    @Test
     public void testIsWindows() {
         // Just verify the method works without exceptions
         final boolean isWindows = IOHelper.isWindows();

@@ -82,13 +82,17 @@ public final class IOHelper {
         File file;
         while ((file = PENDING_DELETES.poll()) != null && processed < 100) {
             processed++;
-            if (file.exists()) {
-                if (file.delete()) {
-                    LOG.debug("Async cleanup: deleted {}", file);
-                } else {
-                    // Still locked, re-queue for later
-                    PENDING_DELETES.offer(file);
+            try {
+                if (file.exists()) {
+                    if (file.delete()) {
+                        LOG.debug("Async cleanup: deleted {}", file);
+                    } else {
+                        // Still locked, re-queue for later
+                        PENDING_DELETES.offer(file);
+                    }
                 }
+            } catch (final Exception e) {
+                LOG.warn("Async cleanup: failed to delete {}", file, e);
             }
         }
     }
@@ -310,7 +314,7 @@ public final class IOHelper {
             throw new IOException("Destination file is null");
         }
         if (!src.exists()) {
-            return;
+            throw new IOException("Source file does not exist: " + src);
         }
 
         final Path sourcePath = src.toPath();
@@ -321,16 +325,17 @@ public final class IOHelper {
             if (src.renameTo(dest)) {
                 return;
             }
-        } catch (Exception e) {
-            // Fall through to NIO move
+            LOG.debug("rename failed for {} -> {}, trying NIO move", src, dest);
+        } catch (final Exception e) {
+            LOG.debug("rename threw exception for {} -> {}, trying NIO move", src, dest, e);
         }
 
         // Try NIO move
         try {
             Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
             return;
-        } catch (IOException e) {
-            // Fall through to copy+delete
+        } catch (final IOException e) {
+            LOG.debug("NIO move failed for {} -> {}, falling back to copy+delete", src, dest, e);
         }
 
         // Copy + async delete as last resort
@@ -362,16 +367,17 @@ public final class IOHelper {
             if (src.renameTo(dest)) {
                 return;
             }
-        } catch (Exception e) {
-            // Fall through to NIO move
+            LOG.debug("rename failed for {} -> {}, trying NIO move", src, dest);
+        } catch (final Exception e) {
+            LOG.debug("rename threw exception for {} -> {}, trying NIO move", src, dest, e);
         }
 
         // Try NIO move
         try {
             Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
             return;
-        } catch (IOException e) {
-            // Fall through to copy+delete
+        } catch (final IOException e) {
+            LOG.debug("NIO move failed for {} -> {}, falling back to copy+delete", src, dest, e);
         }
 
         // Copy + async delete as last resort
