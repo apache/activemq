@@ -972,7 +972,7 @@
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <forkCount>1</forkCount>
-            <reuseForks>true</reuseForks>
+            <reuseForks>false</reuseForks>
             <failIfNoTests>false</failIfNoTests>
             <systemPropertyVariables>
                 <java.awt.headless>true</java.awt.headless>
