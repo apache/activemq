@@ -25,7 +25,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>6.2.1-SNAPSHOT</version>
+  <version>6.2.1</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
@@ -219,7 +219,7 @@
     <connection>scm:git:http://gitbox.apache.org/repos/asf/activemq.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/activemq.git</developerConnection>
     <url>https://github.com/apache/activemq</url>
-    <tag>activemq-6.2.0</tag>
+    <tag>activemq-6.2.1</tag>
   </scm>
 
   <dependencyManagement>
