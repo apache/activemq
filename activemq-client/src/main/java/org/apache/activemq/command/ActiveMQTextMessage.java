@@ -55,8 +55,10 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     }
 
     private void copy(ActiveMQTextMessage copy) {
-        super.copy(copy);
-        copy.text = text;
+        synchronized(this) {
+            super.copy(copy);
+            copy.text = this.text;
+        }
     }
 
     @Override
@@ -70,14 +72,14 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     }
 
     @Override
-    public void setText(String text) throws MessageNotWriteableException {
+    public synchronized void setText(String text) throws MessageNotWriteableException {
         checkReadOnlyBody();
         this.text = text;
         setContent(null);
     }
 
     @Override
-    public String getText() throws JMSException {
+    public synchronized String getText() throws JMSException {
         ByteSequence content = getContent();
 
         if (text == null && content != null) {
@@ -116,19 +118,19 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     }
 
     @Override
-    public void beforeMarshall(WireFormat wireFormat) throws IOException {
+    public synchronized void beforeMarshall(WireFormat wireFormat) throws IOException {
         super.beforeMarshall(wireFormat);
         storeContentAndClear();
     }
 
     @Override
-    public void storeContentAndClear() {
+    public synchronized void storeContentAndClear() {
         storeContent();
         text=null;
     }
 
     @Override
-    public void storeContent() {
+    public synchronized void storeContent() {
         try {
             ByteSequence content = getContent();
             String text = this.text;
@@ -153,13 +155,18 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     // see https://issues.apache.org/activemq/browse/AMQ-2103
     // and https://issues.apache.org/activemq/browse/AMQ-2966
     @Override
-    public void clearUnMarshalledState() throws JMSException {
+    public synchronized void clearUnMarshalledState() throws JMSException {
+        // Crucial: Store the content before we wipe the text
+        // This ensures we don't end up with BOTH being null
+        if (this.text != null && getContent() == null) {
+            storeContent();
+        }
         super.clearUnMarshalledState();
         this.text = null;
     }
 
     @Override
-    public boolean isContentMarshalled() {
+    public synchronized boolean isContentMarshalled() {
         return content != null || text == null;
     }
 
@@ -175,13 +182,13 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
      *                 due to some internal error.
      */
     @Override
-    public void clearBody() throws JMSException {
+    public synchronized void clearBody() throws JMSException {
         super.clearBody();
         this.text = null;
     }
 
     @Override
-    public int getSize() {
+    public synchronized int getSize() {
         String text = this.text;
         if (size == 0 && content == null && text != null) {
             size = getMinimumMessageSize();
@@ -194,7 +201,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     }
 
     @Override
-    public String toString() {
+    public synchronized String toString() {
         try {
             String text = this.text;
             if( text == null ) {
