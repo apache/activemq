@@ -140,7 +140,7 @@ public class AmqpTransformerTest {
             Message message = c.receive(2000);
 
             assertNotNull("Should have received a message", message);
-            LOG.info("Recieved message: {}", message);
+            LOG.info("Received message: {}", message);
             assertTrue(message instanceof BytesMessage);
             Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
             assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
