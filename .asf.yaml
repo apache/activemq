@@ -32,8 +32,8 @@ github:
 
   enabled_merge_buttons:
     squash: true
-    merge: false
-    rebase: false
+    merge: true
+    rebase: true
 
   del_branch_on_merge: true
 
@@ -41,7 +41,7 @@ github:
     main:
       required_pull_request_reviews:
         require_code_owner_reviews: false
-        required_approving_review_count: 0
+        required_approving_review_count: 1
       required_linear_history: true
       required_status_checks:
         strict: false
