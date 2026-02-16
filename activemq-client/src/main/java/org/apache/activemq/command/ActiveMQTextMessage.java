@@ -55,10 +55,8 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     }
 
     private void copy(ActiveMQTextMessage copy) {
-        synchronized(this) {
             super.copy(copy);
             copy.text = this.text;
-        }
     }
 
     @Override
@@ -72,14 +70,14 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     }
 
     @Override
-    public synchronized void setText(String text) throws MessageNotWriteableException {
+    public void setText(String text) throws MessageNotWriteableException {
         checkReadOnlyBody();
         this.text = text;
         setContent(null);
     }
 
     @Override
-    public synchronized String getText() throws JMSException {
+    public String getText() throws JMSException {
         ByteSequence content = getContent();
 
         if (text == null && content != null) {
@@ -118,19 +116,19 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     }
 
     @Override
-    public synchronized void beforeMarshall(WireFormat wireFormat) throws IOException {
+    public void beforeMarshall(WireFormat wireFormat) throws IOException {
         super.beforeMarshall(wireFormat);
         storeContentAndClear();
     }
 
     @Override
-    public synchronized void storeContentAndClear() {
+    public void storeContentAndClear() {
         storeContent();
         text=null;
     }
 
     @Override
-    public synchronized void storeContent() {
+    public void storeContent() {
         try {
             ByteSequence content = getContent();
             String text = this.text;
@@ -155,7 +153,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     // see https://issues.apache.org/activemq/browse/AMQ-2103
     // and https://issues.apache.org/activemq/browse/AMQ-2966
     @Override
-    public synchronized void clearUnMarshalledState() throws JMSException {
+    public void clearUnMarshalledState() throws JMSException {
         // Crucial: Store the content before we wipe the text
         // This ensures we don't end up with BOTH being null
         if (this.text != null && getContent() == null) {
@@ -166,7 +164,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     }
 
     @Override
-    public synchronized boolean isContentMarshalled() {
+    public boolean isContentMarshalled() {
         return content != null || text == null;
     }
 
