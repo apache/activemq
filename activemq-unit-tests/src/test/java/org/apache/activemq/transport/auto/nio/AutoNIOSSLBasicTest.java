@@ -17,7 +17,10 @@
 package org.apache.activemq.transport.auto.nio;
 
 import org.apache.activemq.transport.nio.NIOSSLBasicTest;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AutoNIOSSLBasicTest extends NIOSSLBasicTest {
 
     @Override
