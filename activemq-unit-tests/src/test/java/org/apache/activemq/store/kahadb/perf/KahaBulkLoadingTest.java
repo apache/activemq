@@ -36,12 +36,15 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This tests bulk loading and unloading of messages to a Queue.s
  *
  *
  */
+@Category(ParallelTest.class)
 public class KahaBulkLoadingTest extends JmsTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(KahaBulkLoadingTest.class);

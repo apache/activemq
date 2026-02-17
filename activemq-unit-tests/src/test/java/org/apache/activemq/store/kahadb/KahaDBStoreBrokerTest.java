@@ -23,12 +23,15 @@ import junit.framework.Test;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTest;
 import org.apache.activemq.util.IOHelper;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Once the wire format is completed we can test against real persistence storage.
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class KahaDBStoreBrokerTest extends BrokerTest {
 
     protected void setUp() throws Exception {
