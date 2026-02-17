@@ -18,7 +18,10 @@
 package org.apache.activemq.transport.auto.failover;
 
 import org.apache.activemq.transport.failover.FailoverRandomTest;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class FailoverAutoRandomTest extends FailoverRandomTest {
 
     @Override

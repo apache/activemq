@@ -19,7 +19,10 @@ package org.apache.activemq.transport.auto;
 import junit.framework.Test;
 import junit.textui.TestRunner;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AutoTransportBrokerTest extends TransportBrokerTestSupport {
 
     @Override
