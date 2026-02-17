@@ -22,10 +22,13 @@ import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @version
  */
+@Category(ParallelTest.class)
 public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTestSupport {
 
     private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory

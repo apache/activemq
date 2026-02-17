@@ -17,11 +17,14 @@
 package org.apache.activemq;
 
 import org.apache.activemq.test.JmsResourceProvider;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class JmsTopicTransactionTest extends JmsTransactionTestSupport {
 
     /**
