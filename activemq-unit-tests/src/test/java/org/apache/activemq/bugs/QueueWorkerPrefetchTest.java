@@ -39,11 +39,14 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test case demonstrating situation where messages are not delivered to
  * consumers.
  */
+@Category(ParallelTest.class)
 public class QueueWorkerPrefetchTest extends TestCase implements
         MessageListener {
     private static final Logger LOG = LoggerFactory
