@@ -35,9 +35,12 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 
 
+@Category(ParallelTest.class)
 public class BrokerTest extends BrokerTestSupport {
 
     public ActiveMQDestination destination;

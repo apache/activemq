@@ -35,6 +35,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
@@ -47,7 +48,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class ProducerFlowControlTest extends JmsTestSupport {
     static final Logger LOG = LoggerFactory.getLogger(ProducerFlowControlTest.class);
     ActiveMQQueue queueA = new ActiveMQQueue("QUEUE.A");

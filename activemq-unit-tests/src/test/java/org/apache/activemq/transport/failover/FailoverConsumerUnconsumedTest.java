@@ -46,12 +46,15 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 // see https://issues.apache.org/activemq/browse/AMQ-2573
+@Category(ParallelTest.class)
 public class FailoverConsumerUnconsumedTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverConsumerUnconsumedTest.class);

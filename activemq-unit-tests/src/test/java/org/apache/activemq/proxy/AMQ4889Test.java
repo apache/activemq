@@ -24,9 +24,11 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.security.AuthenticationUser;
 import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +45,7 @@ import static org.apache.activemq.util.TestUtils.findOpenPort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+@Category(ParallelTest.class)
 public class AMQ4889Test {
 
     protected static final Logger LOG = LoggerFactory.getLogger(AMQ4889Test.class);

@@ -37,11 +37,14 @@ import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class AMQ2982Test {
 
     private static final int MAX_MESSAGES = 500;

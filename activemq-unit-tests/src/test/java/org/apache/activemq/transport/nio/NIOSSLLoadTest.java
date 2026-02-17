@@ -23,10 +23,12 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.util.ConsumerThread;
 import org.apache.activemq.util.ProducerThread;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+@Category(ParallelTest.class)
 public class NIOSSLLoadTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(NIOSSLLoadTest.class);

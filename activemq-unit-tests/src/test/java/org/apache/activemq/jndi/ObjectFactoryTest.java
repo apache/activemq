@@ -22,9 +22,12 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 
 
+@Category(ParallelTest.class)
 public class ObjectFactoryTest extends CombinationTestSupport {
     public void testConnectionFactory() throws Exception {
         // Create sample connection factory

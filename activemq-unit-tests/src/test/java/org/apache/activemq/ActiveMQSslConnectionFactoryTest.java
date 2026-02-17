@@ -38,6 +38,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -45,7 +46,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory.getLog(ActiveMQSslConnectionFactoryTest.class);
 

@@ -40,9 +40,12 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class FailoverDuplicateTest extends TestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverDuplicateTest.class);

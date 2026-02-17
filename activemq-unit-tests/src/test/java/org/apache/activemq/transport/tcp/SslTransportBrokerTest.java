@@ -21,7 +21,10 @@ import java.net.URISyntaxException;
 import junit.framework.Test;
 import junit.textui.TestRunner;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class SslTransportBrokerTest extends TransportBrokerTestSupport {
 
     public static final String KEYSTORE_TYPE = "jks";

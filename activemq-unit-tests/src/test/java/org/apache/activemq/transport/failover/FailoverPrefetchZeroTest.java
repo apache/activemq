@@ -35,15 +35,18 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 
 import static org.junit.Assert.assertTrue;
 
 // see: https://issues.apache.org/activemq/browse/AMQ-2877
+@Category(ParallelTest.class)
 public class FailoverPrefetchZeroTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverPrefetchZeroTest.class);

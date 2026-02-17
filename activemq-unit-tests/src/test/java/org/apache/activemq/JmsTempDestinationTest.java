@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.vm.VMTransport;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,10 +45,12 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.experimental.categories.Category;
 
 /**
  * @version
  */
+@Category(ParallelTest.class)
 public class JmsTempDestinationTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(JmsTempDestinationTest.class);

@@ -31,6 +31,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +39,12 @@ import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.junit.experimental.categories.Category;
 
 /**
  * An AMQ-2401 Test
  */
+@Category(ParallelTest.class)
 public class AMQ2401Test extends TestCase implements MessageListener {
     private BrokerService broker;
     private ActiveMQConnectionFactory factory;
