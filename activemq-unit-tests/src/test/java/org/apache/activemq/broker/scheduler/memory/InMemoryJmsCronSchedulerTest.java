@@ -17,10 +17,13 @@
 package org.apache.activemq.broker.scheduler.memory;
 
 import org.apache.activemq.broker.scheduler.JmsCronSchedulerTest;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * In memory version of the cron scheduler test.
  */
+@Category(ParallelTest.class)
 public class InMemoryJmsCronSchedulerTest extends JmsCronSchedulerTest {
 
     @Override
