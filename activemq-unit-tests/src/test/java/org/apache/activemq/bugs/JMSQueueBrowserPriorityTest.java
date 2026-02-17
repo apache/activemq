@@ -35,8 +35,11 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 // https://issues.apache.org/jira/browse/AMQ-6128
+@Category(ParallelTest.class)
 public class JMSQueueBrowserPriorityTest extends TestCase {
 
     static final Logger LOG = LoggerFactory.getLogger(JMSQueueBrowserPriorityTest.class);

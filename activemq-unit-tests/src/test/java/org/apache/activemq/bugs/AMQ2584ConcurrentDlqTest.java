@@ -45,10 +45,13 @@ import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 // variation on AMQ2584 where the DLQ consumer works in parallel to producer so
 // that some dups are not suppressed as they are already acked by the consumer
 // the audit needs to be disabled to allow these dupes to be consumed
+@Category(ParallelTest.class)
 public class AMQ2584ConcurrentDlqTest extends org.apache.activemq.TestSupport {
 
     static final Logger LOG = LoggerFactory.getLogger(AMQ2584ConcurrentDlqTest.class);

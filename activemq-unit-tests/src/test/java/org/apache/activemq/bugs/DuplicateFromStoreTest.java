@@ -48,7 +48,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DuplicateFromStoreTest {
     static Logger LOG = LoggerFactory.getLogger(DuplicateFromStoreTest.class);
     String activemqURL;

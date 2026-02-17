@@ -35,11 +35,14 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test to determine if expired messages are being reaped if there is
  * no active consumer connected to the broker.
  */
+@Category(ParallelTest.class)
 public class MessageExpirationReaperTest {
 
     private BrokerService broker;

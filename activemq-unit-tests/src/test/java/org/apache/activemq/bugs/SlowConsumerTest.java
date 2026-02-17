@@ -35,7 +35,10 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class SlowConsumerTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(SlowConsumerTest.class);
