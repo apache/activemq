@@ -318,7 +318,7 @@
         </plugins>
       </build>
     </profile>
-    
+
     <profile>
       <id>activemq.tests.aix.excludes</id>
       <activation>
