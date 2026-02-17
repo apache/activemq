@@ -33,11 +33,14 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.usage.SystemUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author gtully
  * https://issues.apache.org/activemq/browse/AMQ-2020
  **/
+@Category(ParallelTest.class)
 public class StoreQueueCursorNoDuplicateTest extends TestCase {
     static final Logger LOG = LoggerFactory.getLogger(StoreQueueCursorNoDuplicateTest.class);
             ActiveMQQueue destination = new ActiveMQQueue("queue-"

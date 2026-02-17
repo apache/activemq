@@ -36,7 +36,10 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class MemoryMessageStoreQueueCursorTest {
     private static final Logger LOG = LoggerFactory.getLogger(MemoryMessageStoreQueueCursorTest.class);
 
