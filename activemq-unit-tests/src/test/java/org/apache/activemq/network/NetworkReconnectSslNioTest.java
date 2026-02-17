@@ -22,7 +22,9 @@ import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +36,7 @@ import static org.apache.activemq.ActiveMQSslConnectionFactoryTest.getKeyManager
 import static org.apache.activemq.ActiveMQSslConnectionFactoryTest.getTrustManager;
 import static org.junit.Assert.assertTrue;
 
+@Category(ParallelTest.class)
 public class NetworkReconnectSslNioTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(NetworkReconnectSslNioTest.class);

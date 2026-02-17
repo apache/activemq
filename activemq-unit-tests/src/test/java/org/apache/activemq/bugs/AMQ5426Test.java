@@ -41,6 +41,7 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
@@ -51,9 +52,11 @@ import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Category(ParallelTest.class)
 public class AMQ5426Test {
 
 	private static final Logger LOG = LoggerFactory

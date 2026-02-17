@@ -19,7 +19,10 @@ package org.apache.activemq.transport.nio;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsDurableTopicSendReceiveTest;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class NIOJmsDurableTopicSendReceiveTest extends JmsDurableTopicSendReceiveTest {
     protected BrokerService broker;
 

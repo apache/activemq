@@ -49,6 +49,8 @@ import org.apache.activemq.plugin.java.JavaRuntimeConfigurationPlugin;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -58,10 +60,12 @@ import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(DurableSyncNetworkBridgeTest.class);
@@ -571,7 +575,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertTrue(Wait.waitFor(() ->
                 localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1 &&
                 localBroker.getNetworkConnectors().get(1).activeBridges().size() == 1,
-            TimeUnit.SECONDS.toMillis(10), 500));
+            TimeUnit.SECONDS.toMillis(15), 500));
 
         //Make sure NC durables exist for both bridges
         assertNCDurableSubsCount(broker2, topic2, 1);
@@ -732,7 +736,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
                 return ((DemandForwardingBridgeSupport) bridge).startedLatch.getCount() == 0;
             }
             return true;
-        }, TimeUnit.SECONDS.toMillis(10), 100));
+        }, TimeUnit.SECONDS.toMillis(15), 100));
 
         // Also wait for the duplex bridge on the remote broker to be fully started.
         // The duplex connector creates a separate DemandForwardingBridge on the remote side
@@ -741,7 +745,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
             final DemandForwardingBridge duplexBridge = findDuplexBridge(
                 remoteBroker.getTransportConnectors().get(0));
             return duplexBridge != null && duplexBridge.startedLatch.getCount() == 0;
-        }, TimeUnit.SECONDS.toMillis(10), 100));
+        }, TimeUnit.SECONDS.toMillis(15), 100));
     }
 
     protected void restartLocalBroker(boolean startNetworkConnector) throws Exception {
@@ -779,7 +783,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
             // relying on the bridge connecting later when remoteBroker restarts.
             // Tests that need the bridge to be fully started call assertBridgeStarted() explicitly.
             Wait.waitFor(() -> localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1,
-                         TimeUnit.SECONDS.toMillis(10), 500);
+                         TimeUnit.SECONDS.toMillis(15), 500);
         }
         localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -907,7 +911,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
             }
             // If subscription doesn't exist, it's considered inactive
             return true;
-        }, TimeUnit.SECONDS.toMillis(10), 100));
+        }, TimeUnit.SECONDS.toMillis(15), 100));
     }
 
 }

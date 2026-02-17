@@ -27,6 +27,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,9 @@ import javax.management.ObjectName;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class ConcurrentMoveTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ConcurrentMoveTest.class);
 
