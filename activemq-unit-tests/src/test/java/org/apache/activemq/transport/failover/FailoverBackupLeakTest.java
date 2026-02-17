@@ -29,10 +29,13 @@ import org.apache.activemq.util.Wait;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Ensures connections aren't leaked when when we use backup=true and randomize=false
  */
+@Category(ParallelTest.class)
 public class FailoverBackupLeakTest {
 
     private static BrokerService s1, s2;
