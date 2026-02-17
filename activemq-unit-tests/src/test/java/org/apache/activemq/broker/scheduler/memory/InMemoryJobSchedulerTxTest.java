@@ -17,10 +17,13 @@
 package org.apache.activemq.broker.scheduler.memory;
 
 import org.apache.activemq.broker.scheduler.JobSchedulerTxTest;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * In memory version of the TX test case
  */
+@Category(ParallelTest.class)
 public class InMemoryJobSchedulerTxTest extends JobSchedulerTxTest {
 
     @Override

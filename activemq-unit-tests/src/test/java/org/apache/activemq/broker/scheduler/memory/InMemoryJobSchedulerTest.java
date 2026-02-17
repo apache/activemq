@@ -33,10 +33,13 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * In-Memory store based variation of the JobSchedulerTest
  */
+@Category(ParallelTest.class)
 public class InMemoryJobSchedulerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JobSchedulerTest.class);

@@ -44,10 +44,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *Test that the store recovers even if some log files are missing.
  */
+@Category(ParallelTest.class)
 public class KahaDBSchedulerMissingJournalLogsTest {
 
     static final Logger LOG = LoggerFactory.getLogger(KahaDBSchedulerIndexRebuildTest.class);
