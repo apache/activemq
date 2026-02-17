@@ -61,6 +61,7 @@ jobs:
       pull-requests: write
 
     runs-on: ubuntu-24.04
+    timeout-minutes: 480
 
     steps:
       - uses: actions/checkout@v4
@@ -72,13 +73,13 @@ jobs:
       - name: Test
         run: mvn -B -e -fae verify -Dsurefire.rerunFailingTestsCount=3
       - name: Upload Test Results
-        if: (!cancelled())
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: '**/target/surefire-reports/*.xml'
       - name: Publish Test Results
-        if: (!cancelled())
+        if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           large_files: true
