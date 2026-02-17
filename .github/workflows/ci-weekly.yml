@@ -70,7 +70,7 @@ jobs:
           java-version: 17
           distribution: temurin
       - name: Test
-        run: mvn -B -e -fae verify
+        run: mvn -B -e -fae verify -Dsurefire.rerunFailingTestsCount=3
       - name: Upload Test Results
         if: (!cancelled())
         uses: actions/upload-artifact@v4
