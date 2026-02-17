@@ -32,7 +32,10 @@ import jakarta.jms.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ7270Test extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(AMQ7270Test.class);
     final int messageCount = 150;

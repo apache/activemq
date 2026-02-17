@@ -41,7 +41,10 @@ import java.net.URI;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ7077Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ7077Test.class);

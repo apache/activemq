@@ -57,11 +57,14 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import jakarta.jms.TransactionRolledBackException;
 import java.io.IOException;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * The FailoverTransport maintains state is the ConnectionStateTracker object. Aborted slow consumers must be removed
  * from this state tracker so that the FailoverTransport does not re-register the aborted slow consumers.
  */
+@Category(ParallelTest.class)
 public class AMQ5844Test {
 
     static final Logger LOG = LoggerFactory.getLogger(AMQ5844Test.class);

@@ -37,8 +37,11 @@ import jakarta.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
+@Category(ParallelTest.class)
 public class AMQ1917Test extends TestCase {
 
         private static final int NUM_MESSAGES = 4000;

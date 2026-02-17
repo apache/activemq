@@ -27,10 +27,13 @@ import org.apache.activemq.transport.failover.FailoverTransport;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test for priority backup URI handling.
  */
+@Category(ParallelTest.class)
 public class AMQ5336Test {
 
     private BrokerService brokerService;
