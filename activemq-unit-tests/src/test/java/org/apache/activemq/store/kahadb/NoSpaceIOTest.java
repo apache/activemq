@@ -32,7 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class NoSpaceIOTest {
     private static final Logger LOG = LoggerFactory.getLogger(NoSpaceIOTest.class);
 

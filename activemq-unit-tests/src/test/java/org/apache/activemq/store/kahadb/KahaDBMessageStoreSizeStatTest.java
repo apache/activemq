@@ -34,6 +34,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This test checks that KahaDB properly sets the new storeMessageSize
@@ -43,6 +45,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class KahaDBMessageStoreSizeStatTest extends
         AbstractMessageStoreSizeStatTest {
     protected static final Logger LOG = LoggerFactory
