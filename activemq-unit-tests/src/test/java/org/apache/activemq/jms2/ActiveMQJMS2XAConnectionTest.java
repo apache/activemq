@@ -18,7 +18,10 @@ package org.apache.activemq.jms2;
 
 import org.junit.Test;
 import jakarta.jms.Session;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class ActiveMQJMS2XAConnectionTest extends ActiveMQJMS2XATestBase {
 
 

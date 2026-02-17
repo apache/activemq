@@ -49,8 +49,11 @@ import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class ActiveMQJMS2MessageTypesTest extends ActiveMQJMS2TestBase {
 
     private final Set<Integer> VALID_PRIORITIES = Set.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
