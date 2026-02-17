@@ -49,7 +49,10 @@ import org.slf4j.LoggerFactory;
 
 
 import static org.junit.Assert.*;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class FailoverTxSlowAckTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverTxSlowAckTest.class);
