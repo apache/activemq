@@ -41,13 +41,16 @@ github:
     main:
       required_pull_request_reviews:
         require_code_owner_reviews: false
+        dismiss_stale_reviews: true
+        require_last_push_approval: false
         required_approving_review_count: 1
       required_linear_history: true
 
   features:
     wiki: false
-    issues: false
-    projects: false
+    issues: true
+    projects: true
+    discussions: true
 
   autolink_jira:
     - AMQ
@@ -56,4 +59,5 @@ notifications:
   commits: commits@activemq.apache.org
   issues: gitbox@activemq.apache.org
   pullrequests: gitbox@activemq.apache.org
+  discussions: dev@activemq.apache.org
   jira_options: link label worklog
