@@ -65,7 +65,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.*;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class MKahaDBTxRecoveryTest {
 
     static final Logger LOG = LoggerFactory.getLogger(MKahaDBTxRecoveryTest.class);

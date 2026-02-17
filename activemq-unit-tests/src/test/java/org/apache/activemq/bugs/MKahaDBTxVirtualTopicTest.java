@@ -56,8 +56,11 @@ import java.util.Collection;
 
 import static org.apache.activemq.util.TestUtils.createXid;
 import static org.junit.Assert.*;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class MKahaDBTxVirtualTopicTest {
 
     static final Logger LOG = LoggerFactory.getLogger(MKahaDBTxVirtualTopicTest.class);
