@@ -44,6 +44,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.After;
@@ -51,6 +52,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.experimental.categories.Category;
 
 /**
  * This unit test is to test that setting the property "sendDuplicateFromStoreToDLQ" on
@@ -58,6 +60,7 @@ import org.junit.runners.Parameterized;
  *
  */
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class SendDuplicateFromStoreToDLQTest {
     private static final Logger LOG = LoggerFactory.getLogger(SendDuplicateFromStoreToDLQTest.class);
 

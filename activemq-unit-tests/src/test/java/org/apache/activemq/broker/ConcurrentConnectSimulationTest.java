@@ -23,9 +23,12 @@ import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.SessionId;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 
 
+@Category(ParallelTest.class)
 public class ConcurrentConnectSimulationTest extends BrokerTestSupport {
 
     /*
