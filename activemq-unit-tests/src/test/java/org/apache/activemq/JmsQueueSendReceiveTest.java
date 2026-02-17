@@ -17,10 +17,13 @@
 package org.apache.activemq;
 
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class JmsQueueSendReceiveTest extends JmsTopicSendReceiveTest {
 
     /**
