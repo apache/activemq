@@ -43,8 +43,11 @@ import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
+@Category(ParallelTest.class)
 public class AMQ4157Test {
     static final Logger LOG = LoggerFactory.getLogger(AMQ4157Test.class);
     private BrokerService broker;

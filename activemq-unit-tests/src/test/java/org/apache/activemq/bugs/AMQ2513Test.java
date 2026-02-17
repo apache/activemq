@@ -28,6 +28,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This unit test verifies an issue when
@@ -35,6 +37,7 @@ import org.apache.activemq.broker.jmx.ManagementContext;
  * managementContext createConnector="false"
  *
  */
+@Category(ParallelTest.class)
 public class AMQ2513Test extends TestCase {
 
     private BrokerService broker;

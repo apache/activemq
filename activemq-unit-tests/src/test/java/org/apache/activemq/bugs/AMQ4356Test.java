@@ -33,7 +33,10 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ4356Test {
 
     private static BrokerService brokerService;

@@ -43,8 +43,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class AMQ2870Test extends org.apache.activemq.TestSupport  {
 
     static final Logger LOG = LoggerFactory.getLogger(AMQ2870Test.class);

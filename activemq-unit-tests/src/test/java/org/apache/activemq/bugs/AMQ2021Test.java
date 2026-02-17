@@ -47,12 +47,15 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This is a test case for the issue reported at: https://issues.apache.org/activemq/browse/AMQ-2021 Bug is modification
  * of inflight message properties so the failure can manifest itself in a bunch or ways, from message receipt with null
  * properties to marshall errors
  */
+@Category(ParallelTest.class)
 public class AMQ2021Test implements ExceptionListener, UncaughtExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(AMQ2021Test.class);

@@ -39,7 +39,10 @@ import org.slf4j.LoggerFactory;
 
 
 import static org.junit.Assert.assertEquals;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ6094Test {
 
     private static Logger LOG = LoggerFactory.getLogger(AMQ6094Test.class);

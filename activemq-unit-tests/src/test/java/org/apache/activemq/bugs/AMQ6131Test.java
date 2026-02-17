@@ -50,10 +50,13 @@ import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This class is to show that a durable can lose messages after index deletion.
  */
+@Category(ParallelTest.class)
 public class AMQ6131Test {
 
     protected BrokerService broker;
